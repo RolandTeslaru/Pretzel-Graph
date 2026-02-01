@@ -1,0 +1,25 @@
+{
+    "name": "@vx-agent-editor/backend",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.93.3",
+        "@vx-agent-editor/shared": "*",
+        "bullmq": "^5.67.2",
+        "cors": "^2.8.6",
+        "dotenv": "^17.2.3",
+        "express": "^5.2.1",
+        "ioredis": "^5.9.2",
+        "zod": "^4.3.6"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.6",
+        "supabase": "^2.74.5"
+    }
+}
