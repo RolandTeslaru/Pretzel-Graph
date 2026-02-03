@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { immer } from "zustand/middleware/immer";
-import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance, ReactFlowJsonObject } from "@xyflow/react";
+import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance } from "@xyflow/react";
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
 import { _createWorkbenchReducers_, type _WorkbenchSDKReducers } from "./reducers";
 import { _createWorkbenchSelectors_, type _WorkBenchSDKSelectors } from "./selectors";
@@ -8,12 +8,11 @@ import React from "react";
 import { Workflow } from "@vx-agent-editor/shared/types"
 import { temporal } from 'zundo';
 import { cloneDeep } from "lodash";
-import { LibrarySDK } from "../LibrarySDK/sdk";
 import { isConnectionValid } from "./utils";
 import { BaseSDK } from "../Base";
 import { useShallow } from "zustand/react/shallow";
 import { SDK } from "../SDKManager";
-import { EMPTY_WORKFLOW } from "../VaultSDK/defaults";
+import { EMPTY_WORKFLOW } from "./defaults";
 import { WorkflowAPI } from "./api";
 
 @SDK("Workbench")
@@ -21,11 +20,12 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     
     constructor() { super() }
 
-    private readonly TEMPORAL_STACK_SIZE = 10
+    private readonly TEMPORAL_STACK_SIZE = 4
 
+    // Mutatable non reactive state
     public readonly runtime = {
         isReconnectionSuccessful: true,
-        canvasDriver: null as ReactFlowInstance<WorkbenchSDK.NodeDriver, WorkbenchSDK.EdgeDriver> | null
+        canvasDriver: null as ReactFlowInstance<WorkbenchSDK.NodeDriver, WorkbenchSDK.EdgeDriver> | null,
     }
 
     public readonly useStore: BaseSDK.Store<WorkbenchSDK.State> = create(
@@ -48,7 +48,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
             partialize: (s) => ({
                 isDirty: true,
                 workflow: s.workflow,
-                cache: s.cache
+                // cache: s.cache
             })
         }
         )
@@ -84,16 +84,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         if (!workflow) {
             throw new Error("Workflow not found")
         }
-        this.openWorkflow(workflow)
-    }
-
-    public openWorkflow(workflow: Workflow) {
-        console.log("Workflow ", workflow)
-        LibrarySDK.useStore.setState({ currentWorkflowId: workflow.id });
-
-        const cache = this.reducers.createCache(workflow);
-
-        this.setState({ workflow, cache, isDirty: false });
+        this.actions.workflow.open(workflow)
     }
 
     public isConnectionValid = isConnectionValid;

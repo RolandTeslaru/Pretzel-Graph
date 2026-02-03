@@ -94,7 +94,7 @@ export namespace VaultAPI {
             export type Response = z.infer<typeof Response>
 
             export async function execute(query: Query): Promise<Response> {
-                const { data, status } = await supabase
+                await supabase
                     .from('user_credentials')
                     .delete()
                     .eq('id', query.id)

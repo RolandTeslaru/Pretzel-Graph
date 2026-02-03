@@ -1,7 +1,7 @@
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
 import { Button } from '@/vx-ui/foundations'
 import { SystemIcons } from '@/vx-ui/icons'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { OrchestratorSDK } from '../sdk'
 
 const execution = OrchestratorSDK.actions.execution
@@ -27,7 +27,7 @@ const RunnerPanel = () => {
   },[currentJob])
 
   return (
-    <div className='flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 translate-x-1/2 z-10'>
+    <div className='flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 -translate-x-1/2 z-10'>
         <Button className='my-auto' variant="success" onClick={handleRun}>
           <SystemIcons.Play />
           Run

@@ -7,7 +7,7 @@ export abstract class BaseSDK<T_State> {
 
     public get state() { return this.useStore.getState() }
     public get subscribe() { return this.useStore.subscribe }
-    protected get setState() { return this.useStore.setState }
+    public get setState() { return this.useStore.setState }
 }
 
 export namespace BaseSDK {
