@@ -1,6 +1,6 @@
 import { createAuthenticatedClient } from "../../utils/supabase";
-import { ShelfContract } from "@vx-agent-builder/shared/api";
-import { Shelf } from "@vx-agent-builder/shared/types";
+import { ShelfContract } from "@vx-agent-editor/shared/api";
+import { Shelf } from "@vx-agent-editor/shared/types";
 
 export class BlueprintService {
 

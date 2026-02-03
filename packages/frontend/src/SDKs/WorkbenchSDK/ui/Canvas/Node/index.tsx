@@ -4,9 +4,8 @@ import { NodeHeader } from './Header';
 import NodeInputs from './Inputs';
 import NodeOutputs from './Outputs';
 
-import { NodeProps } from '@xyflow/react';
-import { Workflow } from '@vx-agent-builder/shared/types';
-import MinimizedHandles from './MinimizedHandles';
+import type { NodeProps } from '@xyflow/react';
+import { Workflow } from '@vx-agent-editor/shared/types';
 
 const WorkbenchNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const node = WorkbenchSDK.useStore(s => s.workflow.data.nodes[props.id as Workflow.Node.Id])

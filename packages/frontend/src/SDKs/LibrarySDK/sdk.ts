@@ -33,9 +33,6 @@ export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
 
 export const LibrarySDK = SDK.get<LibrarySDKImpl>("Library")
 
-
-
-
 export namespace LibrarySDK {
 
     export type State = {

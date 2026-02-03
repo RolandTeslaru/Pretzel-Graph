@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react'
 import { WorkbenchSDK } from '../../../../sdk'
-import { Workflow } from '@vx-agent-builder/shared/types';
+import { Workflow } from '@vx-agent-editor/shared/types';
 import { InputLabel, INPUT_FIELD_RENDERER_MAP } from '../../../InputRenderer'
 import NodeHandle from '../Handle'
 
@@ -29,7 +29,7 @@ const InputComponent: React.FC<{
         return gatheredInputs
     }, [input.runtimeSubInputsRegistry])
 
-    if(!input)
+    if (!input)
         return;
 
     return (
@@ -49,7 +49,7 @@ const InputComponent: React.FC<{
                     <Renderer input={input} nodeId={nodeId} showTypeBadges={false} />
                 }
             </div>
-            {runtimeInputs.map(runtimeInput => 
+            {runtimeInputs.map(runtimeInput =>
                 <InputComponent nodeId={nodeId} input={runtimeInput} isWorkflowLocked={isWorkflowLocked} />
             )}
         </>

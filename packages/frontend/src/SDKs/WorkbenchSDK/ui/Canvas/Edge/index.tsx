@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { BaseEdge, EdgeProps, getBezierPath } from '@xyflow/react';
+import { BaseEdge, type EdgeProps, getBezierPath } from '@xyflow/react';
 
 const WorkflowEdge = memo(({
     id,

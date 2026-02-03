@@ -1,4 +1,4 @@
-import { Workflow } from "@vx-agent-builder/shared/types/Workflow"
+import { Workflow } from "@vx-agent-editor/shared/types/Workflow"
 import { z } from "zod"
 
 
@@ -9,10 +9,10 @@ export namespace Engine {
 }
 
 export namespace Foundations {
+
     export abstract class Node<TDefinition extends Foundations.Node.Definition> {
 
         public workflowNode: Workflow.Node;
-
         public id: Workflow.Node.Id;
 
         constructor(workflowNode: Workflow.Node) {
@@ -25,20 +25,20 @@ export namespace Foundations {
             incomingValues: Foundations.InferInputs<TDefinition>
         ): Promise<Foundations.InferOutputs<TDefinition>>;
 
-        protected onReconcile(
+        protected async onReconcile(
             changedInputId: Workflow.Node.Input.Id,
             newValue: any,
             currentDefinition: TDefinition
-        ): TDefinition {
-            return currentDefinition;
+        ): Promise<TDefinition> {
+            return Promise.resolve(currentDefinition);
         }
     }
 
     export namespace Node {
         export type Definition = {
             id: string,
-            inputs: Record<string, any>
-            outputs: Record<string, any>
+            inputs: Record<string, Workflow.Node.Input>
+            outputs: Record<string, Workflow.Node.Output>
             displayName: string
             description: string
         }
@@ -70,41 +70,5 @@ export namespace Foundations {
     export type InferOutputs<D extends Node.Definition> = {
         [K in keyof D["outputs"]]: any
     };
-
-
-    export namespace Input {
-
-
-        export function Float(props: {
-            initialValue: number,
-            required: boolean,
-            displayName: string,
-            tooltip: string,
-            placeholder: string,
-            langChainDataTypes: Workflow.Node.LangChainDataType[],
-            reconcile: true,
-            min?: number,
-            max?: number,
-            step?: number,
-            slider?: boolean,
-        }) {
-
-        }
-
-        export function MultiOption(props: {
-            initialValue: string,
-            variant: Workflow.Node.Input.MultiOption["data"]["variant"],
-            options: string[],
-            required: boolean,
-            displayName: string,
-            tooltip: string,
-            placeholder: string,
-            langChainDataTypes: Workflow.Node.LangChainDataType[],
-            reconcile: true,
-        }) {
-
-        }
-
-    }
 }
 

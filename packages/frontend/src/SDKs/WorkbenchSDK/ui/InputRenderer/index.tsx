@@ -1,18 +1,17 @@
 import { memo, useMemo, useEffect } from 'react'
 import { Switch } from '@/vx-ui/foundations/switch'
 import { Label } from '@/vx-ui/foundations/label'
-import { Textarea } from '@/vx-ui/foundations/textarea'
 import { Input } from "@/vx-ui/foundations/input"
 import { Select } from "@/vx-ui/foundations/select"
-import { Workflow } from '@vx-agent-builder/shared/types';
+import { Workflow } from '@vx-agent-editor/shared/types';
 import { WorkbenchSDK } from '../../sdk'
-import { TypeBadge } from '@/components/TypeBadge'
 import { Slider, Tabs, Tooltip, Badge, Button } from '@/vx-ui/foundations'
-import { HighlightedTextarea } from '@/components/HighlightedTextarea'
 import { debounce } from 'lodash'
 import { VaultSDK } from '../../../VaultSDK/sdk'
 import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK'
 import VaultPanel from '@/SDKs/VaultSDK/ui/VaultPanel'
+import LangchainTypeBadge from '../LangchainTypeBadge'
+import { HighlightedTextarea } from './HighlightedTextarea'
 
 export const InputLabel = ({ input, showTypeBadges = true }: { input: Workflow.Node.Input, showTypeBadges?: boolean }) => {
   return (
@@ -33,7 +32,7 @@ export const InputLabel = ({ input, showTypeBadges = true }: { input: Workflow.N
       {showTypeBadges && (
         <div className='ml-auto flex flex-row gap-1 my-auto'>
           {Array.from(input.langChainDataTypes).map(dataType =>
-            <TypeBadge key={dataType} dataType={dataType} left={true} isInput={true} />
+            <LangchainTypeBadge key={dataType} dataType={dataType} left={true} isInput={true} />
           )}
         </div>
       )}

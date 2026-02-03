@@ -1,6 +1,6 @@
 import z from "zod"
 import { supabase } from "@/libs/supabase";
-import { Vault } from "@vx-agent-builder/shared/types";
+import { Vault } from "@vx-agent-editor/shared/types";
 
 export namespace VaultAPI {
     export namespace Credential {

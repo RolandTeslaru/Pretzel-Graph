@@ -1,8 +1,8 @@
-import { Workflow } from '@vx-agent-builder/shared/types';
+import { Workflow } from '@vx-agent-editor/shared/types';
 import React, { memo } from 'react'
 import { INPUT_FIELD_RENDERER_MAP, InputLabel } from '../InputRenderer';
-import { GripVertical } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
+import { SystemIcons } from '@/vx-ui/icons';
 
 interface NodeInputCardProps extends React.HTMLAttributes<HTMLDivElement> {
     input: Workflow.Node.Input
@@ -29,13 +29,13 @@ export const NodeInputCard: React.FC<NodeInputCardProps> = ({ input, isDragging,
             {...props}
         >
             <div className='w-full pl-1'>
-                {isConnected ? 
-                    <InputLabel input={input}/>
+                {isConnected ?
+                    <InputLabel input={input} />
                     :
                     <Renderer input={input} nodeId={nodeId} />
                 }
             </div>
-            <GripVertical className={`${isDragging ? "cursor-grabbing" : "cursor-grab"} w-[18px] h-[18px] text-muted-foreground ml-auto my-auto `}
+            <SystemIcons.GripVertical className={`${isDragging ? "cursor-grabbing" : "cursor-grab"} w-[18px] h-[18px] text-muted-foreground ml-auto my-auto `}
                 {...listeners}
             />
         </div>

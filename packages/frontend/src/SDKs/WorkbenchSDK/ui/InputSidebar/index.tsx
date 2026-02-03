@@ -1,9 +1,8 @@
-import { Button, DropdownMenu, Input, ScrollArea, Separator } from '@/vx-ui/foundations'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { Button, DropdownMenu, ScrollArea, Separator } from '@/vx-ui/foundations'
+import { useCallback, useMemo, useState } from 'react'
 import { WorkbenchSDK } from '../../sdk'
-import { Workflow } from '@vx-agent-builder/shared/types';
+import { Workflow } from '@vx-agent-editor/shared/types';
 import { Accordion } from '@/vx-ui/foundations/accordion';
-import { NodeIcon } from '@/CustomNodes/GenericNode/components/nodeIcon';
 import NodeInputField, { NodeInputCard } from './nodeInputField';
 import {
     DndContext,
@@ -11,9 +10,9 @@ import {
     PointerSensor,
     useSensor,
     useSensors,
-    DragEndEvent,
+    type DragEndEvent,
     DragOverlay,
-    DragStartEvent,
+    type DragStartEvent,
 } from '@dnd-kit/core';
 import {
     SortableContext,
@@ -22,9 +21,7 @@ import {
 import { _includes } from 'zod/v4/core';
 import { SystemIcons } from '@/vx-ui/icons/system';
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk';
-import DataViewerWrapper from '@/CustomNodes/GenericNode/DataViewerWrapper';
-import JsonView from 'react18-json-view';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 
 
 const InputSidebar = () => {
@@ -124,7 +121,7 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                 border border-border pt-2 rounded-2xl shadow-lg shadow-black/30
             `}>
                 <div className='flex flex-row gap-2 px-4 relative'>
-                    <NodeIcon className='text-primary my-auto h-5 w-5' dataType={node.data.ui.icon as string} />
+                    {/* <NodeIcon className='text-primary my-auto h-5 w-5' dataType={node.data.ui.icon as string} /> */}
                     <h4 className='text-primary font-mono font-semibold text-xl'>
                         {node.display_name}
                     </h4>
@@ -210,10 +207,7 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                             <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
                                 <h4 className='text-md font-medium'>JSON</h4>
                             </Accordion.Trigger>
-                            <Accordion.Content className='flex flex-col gap-4 bg-background/50'>
-                                <JsonView src={node} collapsed={({ depth }) => depth > 2}
-                                />
-                            </Accordion.Content>
+                     
                         </Accordion.Item>
                     </Accordion.Root>
                 </ScrollArea.Root>

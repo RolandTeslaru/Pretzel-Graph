@@ -2,7 +2,7 @@ import { Service } from "../ServiceManager";
 import { Router } from "express";
 import { withAuth } from "@/utils/withAuth";
 import { createAuthenticatedClient, getUserId } from "@/utils/supabase";
-import { Auth, Orchestrator, Workflow } from "@vx-agent-builder/shared/types";
+import { Auth, Orchestrator, Workflow } from "@vx-agent-editor/shared/types";
 import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
 import { SupabaseClient } from "@supabase/supabase-js";
@@ -19,7 +19,7 @@ export class OrchestratorServiceImpl {
 
     private readonly dbOps: OrchestratorService.DbOps = {
         job: {
-            create: async (supabase, {workflowId, userId}) => {
+            create: async (supabase, { workflowId, userId }) => {
                 const jobId = crypto.randomUUID() as Orchestrator.Job.Id
                 await supabase.from('jobs').insert({
                     id: jobId,
@@ -32,7 +32,7 @@ export class OrchestratorServiceImpl {
                 });
                 return jobId
             },
-            update: async (supabase, {jobId, status}) => {
+            update: async (supabase, { jobId, status }) => {
                 await supabase.from('jobs').update({
                     status,
                     updated_at: new Date()
@@ -51,7 +51,7 @@ export class OrchestratorServiceImpl {
 
                 const userId = await getUserId(supabase) as Auth.User.Id
 
-                const jobId = await this.dbOps.job.create(supabase, {workflowId: payload.id, userId})
+                const jobId = await this.dbOps.job.create(supabase, { workflowId: payload.id, userId })
 
                 const queueItem: Orchestrator.ExecutionQueue.Item = {
                     jobId,
@@ -70,7 +70,7 @@ export class OrchestratorServiceImpl {
             },
             resume: async (token, payload) => {
                 const supabase = createAuthenticatedClient(token);
-                const {jobId} = payload
+                const { jobId } = payload
 
                 await this.dbOps.job.update(supabase, { jobId, status: "running" })
             },
@@ -112,20 +112,20 @@ export const OrchestratorService = Service.get<OrchestratorServiceImpl>("Orchest
 
 
 export namespace OrchestratorService {
-    
+
     export type DbOps = {
         job: {
-            create: (supabase: SupabaseClient, {workflowId, userId}: {workflowId: Workflow.Id, userId: Auth.User.Id}) => Promise<Orchestrator.Job.Id>
-            update: (supabase: SupabaseClient, {jobId, status}: {jobId: Orchestrator.Job.Id, status: Orchestrator.Job.Status}) => Promise<void>
+            create: (supabase: SupabaseClient, { workflowId, userId }: { workflowId: Workflow.Id, userId: Auth.User.Id }) => Promise<Orchestrator.Job.Id>
+            update: (supabase: SupabaseClient, { jobId, status }: { jobId: Orchestrator.Job.Id, status: Orchestrator.Job.Status }) => Promise<void>
             delete: (supabase: SupabaseClient, jobId: Orchestrator.Job.Id) => Promise<void>
         }
     }
 
     export type Ops = {
         execution: {
-            run:       (token: string, payload: Orchestrator.API.Execution.Run.Request) => Promise<Orchestrator.API.Execution.Run.Response>
-            pause:     (token: string, payload: Orchestrator.API.Execution.Pause.Request) => Promise<void>
-            resume:    (token: string, payload: Orchestrator.API.Execution.Resume.Request) => Promise<void>
+            run: (token: string, payload: Orchestrator.API.Execution.Run.Request) => Promise<Orchestrator.API.Execution.Run.Response>
+            pause: (token: string, payload: Orchestrator.API.Execution.Pause.Request) => Promise<void>
+            resume: (token: string, payload: Orchestrator.API.Execution.Resume.Request) => Promise<void>
             terminate: (token: string, payload: Orchestrator.API.Execution.Terminate.Request) => Promise<void>
         }
     }

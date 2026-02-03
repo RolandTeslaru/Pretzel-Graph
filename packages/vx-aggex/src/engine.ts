@@ -1,5 +1,5 @@
 import { GraphCompiler } from "./compiler/GraphCompiler";
-import { Workflow } from "@vx-agent-builder/shared/types/Workflow"; // Placeholder
+import { Workflow } from "@vx-agent-editor/shared/types/Workflow"; // Placeholder
 import { INITIAL_STATE } from "./runtime/state";
 
 export class AggexEngine {

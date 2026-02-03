@@ -11,10 +11,10 @@ export namespace Auth {
             display_name: z.string(),
             is_admin: z.boolean(),
 
-            avatar_url: z.string(),
+            avatar_url: z.string().nullable(),
 
-            create_at: z.iso.datetime(),
-            updated_at: z.iso.datetime(),
+            created_at: z.string(),
+            updated_at: z.string(),
         })
     }
     export type User = z.infer<typeof User.Schema>

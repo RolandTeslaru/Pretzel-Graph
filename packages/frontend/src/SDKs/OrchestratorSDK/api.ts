@@ -1,5 +1,5 @@
 import z from "zod"
-import { Orchestrator } from "@vx-agent-builder/shared/types";
+import { Orchestrator } from "@vx-agent-editor/shared/types";
 import { api } from "../ApiInterceptorSDK"
 
 export namespace OrchestratorAPI {

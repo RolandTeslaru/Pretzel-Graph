@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { CatalogueService } from "../../../../services/Catalogue/service";
 import { Engine, Foundations } from "../../../foundations";
-import { Workflow } from "@vx-agent-builder/shared/types/Workflow";
+import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 import { InputBuilder, OutputBuilder } from "src/nodes/builders";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage } from "@langchain/core/messages";
@@ -89,17 +89,15 @@ export class Node extends Foundations.Node<typeof Definition> {
     }
 
     public override async run(
-
         state: Engine.GlobalState,
         incomingValues: Foundations.InferInputs<typeof Definition>
-
     ): Promise<Foundations.InferOutputs<typeof Definition>> {
 
         const { model, prompt, api_key, temperature, maxOutputTokens, topP, topK } = incomingValues;
 
         const llm = new ChatGoogleGenerativeAI({
             model: model,
-            apiKey: api_key || process.env.GOOGLE_API_KEY,
+            apiKey: api_key,
             maxOutputTokens: maxOutputTokens,
             temperature: temperature,
             topP: topP,
@@ -114,11 +112,11 @@ export class Node extends Foundations.Node<typeof Definition> {
     }
 
 
-    public override onReconcile(
+    public override async onReconcile(
         changedInputId: Workflow.Node.Input.Id,
         newValue: any,
         currentDefinition: typeof Definition
-    ): typeof Definition {
-        return currentDefinition;
+    ): Promise<typeof Definition> {
+        return Promise.resolve(currentDefinition);
     }
 }

@@ -1,5 +1,5 @@
 import { StateGraph, Annotation, START, END } from "@langchain/langgraph";
-import { Workflow } from "@vx-agent-builder/shared/types/Workflow";
+import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 import { BaseMessage } from "@langchain/core/messages";
 
 // 1. Define the State Annotation (The Schema)

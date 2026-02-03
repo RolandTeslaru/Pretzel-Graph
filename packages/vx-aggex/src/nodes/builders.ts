@@ -1,4 +1,4 @@
-import { Workflow } from "@vx-agent-builder/shared/types/Workflow";
+import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 
 // ============================================
 // INPUT BUILDER

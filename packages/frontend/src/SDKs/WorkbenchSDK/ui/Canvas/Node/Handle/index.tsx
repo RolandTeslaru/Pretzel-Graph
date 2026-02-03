@@ -1,10 +1,9 @@
-import React, { useCallback, useMemo } from 'react'
-import { Connection, Handle, Position, Edge } from "@xyflow/react";
-import { nodeColorsName } from '@/utils/styleUtils';
-import { cn } from "@/utils/utils";
+import React, { useMemo } from 'react'
+import { type Connection, Handle, Position, type Edge } from "@xyflow/react";
+import { cn, nodeColorsName } from '@/utils/styleUtils';
 import { Tooltip } from '@/vx-ui/foundations/Tooltip';
 import HandleTooltipContent from './tooltip';
-import { Workflow } from '@vx-agent-builder/shared/types';
+import { Workflow } from '@vx-agent-editor/shared/types';
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
 import { isConnectionValid } from '@/SDKs/WorkbenchSDK/utils';
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk';

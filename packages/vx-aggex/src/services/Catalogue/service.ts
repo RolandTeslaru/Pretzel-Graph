@@ -1,7 +1,7 @@
 import path from "path";
 import { singleton } from "tsyringe";
 import { Foundations } from "../../nodes/foundations";
-import { Workflow } from "@vx-agent-builder/shared/types/Workflow";
+import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 
 export interface NodeConstructor {
     new(workflowNode: Workflow.Node): Foundations.Node<Foundations.Node.Definition>;

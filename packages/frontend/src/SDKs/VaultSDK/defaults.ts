@@ -1,4 +1,4 @@
-import { Workflow } from "@vx-agent-builder/shared/types";
+import { Workflow } from "@vx-agent-editor/shared/types";
 
 export const EMPTY_WORKFLOW: Workflow = {
     id: "" as Workflow.Id,

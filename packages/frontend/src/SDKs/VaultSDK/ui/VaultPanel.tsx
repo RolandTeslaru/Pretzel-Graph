@@ -4,15 +4,13 @@ import {
   Button,
   Input,
   Label,
-  DropdownMenu,
   Icon,
   Text,
-  Badge,
   Dialog, // Still needed for Header/Title etc if they are not exposed by standard dialog
 } from '@/vx-ui/foundations'
-import { Vault } from '@vx-agent-builder/shared/types'
+import { Vault } from '@vx-agent-editor/shared/types'
 import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK'
-import { LockClosedIcon } from '@radix-ui/react-icons'
+import { SystemIcons } from '@/vx-ui/icons'
 
 const VaultPanel = () => {
   const credentials = VaultSDK.useStore(s => s.credentials)
@@ -24,7 +22,7 @@ const VaultPanel = () => {
   return (
     <div className='flex flex-col h-full w-full p-4 gap-4'>
       <div className='flex flex-row w-full gap-3'>
-        <LockClosedIcon className=' size-7' />
+        <SystemIcons.LockClosed className=' size-7' />
         <h1 className='text-lg font-bold my-auto'>VAULT</h1>
         <Button className='ml-auto' onClick={() => {
           DialogSDK.actions.push("add-credential", (props) => (
@@ -39,7 +37,7 @@ const VaultPanel = () => {
 
       </div>
 
-        <Text className='text-sm text-muted-foreground my-auto'>Manage your API keys and secrets securely.</Text>
+      <Text className='text-sm text-muted-foreground my-auto'>Manage your API keys and secrets securely.</Text>
 
 
       <div className='flex flex-col gap-2 bg-background rounded-md border border-border'>

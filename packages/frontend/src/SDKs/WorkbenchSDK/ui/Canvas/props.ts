@@ -1,4 +1,5 @@
-import { addEdge, applyEdgeChanges, applyNodeChanges, Connection, ReactFlow, ReactFlowProps, reconnectEdge } from '@xyflow/react'
+import { addEdge, applyEdgeChanges, applyNodeChanges, reconnectEdge } from '@xyflow/react'
+import type { ReactFlowProps } from "@xyflow/react"
 import { WorkbenchSDK } from "../../sdk"
 import WorkflowEdge from './Edge'
 import WorkbenchNode from './Node'
@@ -6,7 +7,7 @@ import WorkbenchNote from './Note'
 import { nodeColorsName } from '@/utils/styleUtils'
 import { isConnectionValid } from '../../utils'
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
-import { Workflow, Shelf } from "@vx-agent-builder/shared/types"
+import { Workflow, Shelf } from "@vx-agent-editor/shared/types"
 
 type NodeDriver = WorkbenchSDK.NodeDriver
 type EdgeDriver = WorkbenchSDK.EdgeDriver
@@ -166,7 +167,7 @@ export const createCanvasCallbacks = (
 
                 const movedNodes = (nodes && nodes.length > 0) ? nodes : [node];
 
-                const layout = (s.workflow.data.ui ??= { layout: {}, viewport: { x: 0, y: 0, zoom: 1 }, icon: null, icon_bg_color: null }).layout
+                const layout = (s.workflow.data.ui ??= { layout: {}, viewport: { x: 0, y: 0, zoom: 1 }, icon: null, icon_color: null }).layout
 
                 for (const _node of movedNodes) {
                     if (!_node?.id)

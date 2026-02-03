@@ -72,28 +72,33 @@ export namespace Shelf {
                 export const Request = z.object({
                     id: Shelf.Drawer.Id,
                 })
-
                 export const Response = z.object({
                     drawers: z.record(Shelf.Drawer.Id, Shelf.Drawer.Schema),
                 })
+
+                export type Request = z.infer<typeof Drawer.Get.Request>
+                export type Response = z.infer<typeof Drawer.Get.Response>
             }
 
             export namespace GetAllIds {
                 export const Request = z.object({})
-
                 export const Response = z.object({
                     drawerIds: z.array(Shelf.Drawer.Id)
                 })
+                export type Request = z.infer<typeof Drawer.Get.Request>
+                export type Response = z.infer<typeof Drawer.Get.Response>
             }
         }
 
         export namespace Blueprint {
             export namespace Get {
                 export const Request = z.object({
-                    id: Shelf.Blueprint.Id,
+                    blueprintId: Shelf.Blueprint.Id,
                 })
-
                 export const Response = Shelf.Blueprint.Schema;
+                
+                export type Request = z.infer<typeof Blueprint.Get.Request>
+                export type Response = z.infer<typeof Blueprint.Get.Response>
             }
 
             export namespace List {
@@ -101,19 +106,23 @@ export namespace Shelf {
                     drawerId: z.string().optional()
                 });
                 // Returns array of Meta (lighter payload) or full blueprints
-                export const ResponseSchema = z.array(Shelf.Blueprint.Schema);
-                export type Response = z.infer<typeof ResponseSchema>;
+                export const Response = z.array(Shelf.Blueprint.Schema);
+                
+                export type Request = z.infer<typeof Blueprint.List.Request>
+                export type Response = z.infer<typeof Blueprint.List.Response>;
             }
 
             export namespace Create {
                 // We accept a full Blueprint object
                 export const Request = Shelf.Blueprint.Schema;
+                export const Response = z.object({});
                 export type Request = z.infer<typeof Request>;
                 export type Response = Shelf.Blueprint;
             }
 
             export namespace Update {
                 export const Request = Shelf.Blueprint.Schema;
+                export const Response = z.object({})
                 export type Request = z.infer<typeof Request>;
                 export type Response = Shelf.Blueprint;
             }

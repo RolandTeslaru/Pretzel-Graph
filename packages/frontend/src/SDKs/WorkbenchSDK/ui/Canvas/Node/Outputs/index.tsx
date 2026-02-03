@@ -1,5 +1,5 @@
-import React, { memo, useMemo } from 'react'
-import { Workflow } from '@vx-agent-builder/shared/types';
+import React, { useMemo } from 'react'
+import { Workflow } from '@vx-agent-editor/shared/types';
 import NodeHandle from '../Handle'
 
 interface NodeOutputProps {

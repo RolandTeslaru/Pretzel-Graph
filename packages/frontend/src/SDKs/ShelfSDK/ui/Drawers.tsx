@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useState } from 'react'
+import React, { memo, useEffect, useState } from 'react'
 import { ShelfSDK } from '../sdk'
 import { Shelf } from "@vx-agent-editor/shared/types";
 import BlueprintItem from './BlueprintItem';
@@ -45,7 +45,7 @@ const ITEM_H = 32;      // h-8
 const GAP = 4;          // gap-1
 const PADDING_Y = 8 // py-1
 
-const Drawer: React.FC<Props> = memo(({ drawer, ...props }) => {
+const Drawer: React.FC<Props> = memo(({ drawer }) => {
     const isOpen = ShelfSDK.useStore(s => s.openedDrawers.has(drawer.id));
 
     const [shouldRender, setShouldRender] = useState(isOpen);
