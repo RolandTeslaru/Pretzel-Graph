@@ -1,6 +1,7 @@
 import axios from "axios";
 import { supabase } from "@/libs/supabase"; // You need to create this!
-import { baseURL } from "@/customization/constants";
+
+const baseURL = ""
 
 export class _ApiInterceptorSDK_ {
     private constructor() {

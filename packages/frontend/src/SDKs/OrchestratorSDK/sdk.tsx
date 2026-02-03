@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Orchestrator, Realtime, Workflow } from "@vx-agent-builder/shared/types";
+import { Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/types";
 import { OrchestratorAPI } from "./api";
 import { useEffect } from "react";
 import { RealtimeSDK } from "../Realtime/sdk";
@@ -37,7 +37,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
     public readonly selectors: OrchestratorSDK.Selectors = {}
 
     public useJobEvents = (
-        jobId: Orchestrator.Job.Id, 
+        jobId: Orchestrator.Job.Id,
         callback: (event: Orchestrator.Event.Job) => void
     ) => {
         useEffect(() => {

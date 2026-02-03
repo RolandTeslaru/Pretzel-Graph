@@ -4,21 +4,37 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import './index.css'
 import { SystemSDK } from './SDKs/SystemSDK/sdk'
-
-// Initialize System SDK (Applies Dark Mode)
-SystemSDK.init()
-
-// Import the generated route tree
+import { AuthSDK } from './SDKs/AuthSDK/sdk'
 import { routeTree } from './routeTree.gen'
+import { Spinner } from "./vx-ui/foundations"
 
-// Create a new router instance
-const router = createRouter({ routeTree })
+SystemSDK.init()
+AuthSDK.init()
 
-// Register the router instance for type safety
+
+const router = createRouter({
+  routeTree,
+  context: {
+    auth: undefined!, // passed in the provider
+  },
+})
+
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router
   }
+}
+
+function App() {
+  const auth = AuthSDK.useStore()
+
+  if (auth.isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <Spinner/>
+    </div>
+  }
+
+  return <RouterProvider router={router} context={{ auth }} />
 }
 
 // Render the app
@@ -27,7 +43,7 @@ if (!rootElement.innerHTML) {
   const root = createRoot(rootElement)
   root.render(
     <StrictMode>
-      <RouterProvider router={router} />
+      <App />
     </StrictMode>,
   )
 }

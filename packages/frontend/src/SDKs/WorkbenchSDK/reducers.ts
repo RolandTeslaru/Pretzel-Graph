@@ -1,11 +1,12 @@
 import { WorkbenchSDK } from './sdk';
-import { Connection } from '@xyflow/react';
-import { Workflow, Shelf } from "@vx-agent-builder/shared/types";
-import ShortUniqueId from 'short-unique-id';
+import type { Connection } from '@xyflow/react';
+import { Workflow, Shelf } from "@vx-agent-editor/shared/types";
 import { cloneDeep } from 'lodash';
-import { InputContainer, insertBeforeOrEndInPlace, moveInArray, removeInPlace, reorderSubsetInPlace } from './utils';
+import { type InputContainer, insertBeforeOrEndInPlace, moveInArray, removeInPlace, reorderSubsetInPlace } from './utils';
 
-const uid = new ShortUniqueId();
+const uid = {
+    randomUUID: (length: number) => Math.random().toString(36).substring(2, 2 + length)
+}
 
 const createNodeId: NodeReducers["createId"] = (blueprintId) => {
     return `${blueprintId}-${uid.randomUUID(5)}` as Workflow.Node.Id
@@ -318,17 +319,17 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
                 input.runtimeSubInputsRegistry ??= {}
                 const registry = input.runtimeSubInputsRegistry;
 
-                const toBeAdded:string[] = []
+                const toBeAdded: string[] = []
 
                 displayNames.forEach(name => {
-                    if((name in registry) === false){
+                    if ((name in registry) === false) {
                         toBeAdded.push(name)
                     }
                 })
 
                 // Remove inputs that are no longer present
                 Object.entries(registry).forEach(([_, runtimeItem]) => {
-                    if(displayNames.includes(runtimeItem.display_name) === false){
+                    if (displayNames.includes(runtimeItem.display_name) === false) {
                         inputReducers.remove(s, nodeId, runtimeItem.id);
                         delete registry[runtimeItem.id]
                     }

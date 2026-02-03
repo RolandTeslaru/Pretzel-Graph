@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Input, Form, Button, Select, Tabs } from '@/vx-ui/foundations'
+import { Input, Form, Button, Select, Tabs, Spinner } from '@/vx-ui/foundations'
 import { useState } from 'react'
 import { AuthSDK } from '../sdk'
 
@@ -126,7 +126,7 @@ const SignUpPanel = () => {
                         )}
                     />
                     <Form.Item>
-                        <Button type="submit">Login</Button>
+                        <Button type="submit" disabled={disabled}>Login</Button>
                     </Form.Item>
                 </form>
             </Form.Root>
@@ -183,7 +183,14 @@ const LoginPanel = () => {
                         )}
                     />
                     <Form.Item>
-                        <Button type="submit">Login</Button>
+                        <Button type="submit" disabled={disabled}>
+                            {disabled ? 
+                            <>
+                                <Spinner/>
+                            </>
+                            : <>Login</>
+                            }
+                        </Button>
                     </Form.Item>
                 </form>
             </Form.Root>

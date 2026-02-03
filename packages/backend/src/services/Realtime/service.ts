@@ -1,8 +1,8 @@
 import { Service } from "../ServiceManager";
 import IORedis, { Redis } from 'ioredis';
-import { REDIS_HOST, REDIS_PORT } from "@vx-agent-builder/shared/constants";
+import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
 import { WebSocketServer, WebSocket } from 'ws';
-import { Realtime } from "@vx-agent-builder/shared/types/Realtime";
+import { Realtime } from "@vx-agent-editor/shared/types/Realtime";
 
 @Service("Realtime")
 export class RealtimeServiceImpl {
@@ -10,19 +10,19 @@ export class RealtimeServiceImpl {
 
 
     constructor() { }
-    
-    private subscriptions = new Map<Realtime.Topic.Id, Set<WebSocket>>() 
+
+    private subscriptions = new Map<Realtime.Topic.Id, Set<WebSocket>>()
     // {
     //   [topic]: Set<client WebSocket>
     // }
-    
+
     public initWebSocket(wss: WebSocketServer) {
         wss.on('connection', (ws, req) => {
             console.log('WebSocket client connected');
 
             ws.on('message', (data) => {
                 const msg = JSON.parse(data.toString());
-                
+
                 if (msg.action === "subscribe") {
                     this.subscribe(ws, msg.topic);  // e.g., "job:abc-123:events"
                 }
@@ -57,11 +57,11 @@ export class RealtimeServiceImpl {
         }
         this.subscriptions.get(topicId)!.add(ws);
     }
-    
+
     private unsubscribe(ws: WebSocket, topicId: Realtime.Topic.Id) {
         this.subscriptions.get(topicId)?.delete(ws);
     }
-    
+
     private removeClientFromAll(ws: WebSocket) {
         this.subscriptions.forEach((clients, topicId) => {
             clients.delete(ws);

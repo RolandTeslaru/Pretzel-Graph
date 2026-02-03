@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UiPreviewIndexRouteImport } from './routes/ui-preview/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
+import { Route as WorkflowWorkflowidRouteImport } from './routes/workflow/$workflowid'
+import { Route as WorkflowWorkflowidIndexRouteImport } from './routes/workflow/$workflowid/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,33 +30,60 @@ const AuthIndexRoute = AuthIndexRouteImport.update({
   path: '/auth/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WorkflowWorkflowidRoute = WorkflowWorkflowidRouteImport.update({
+  id: '/workflow/$workflowid',
+  path: '/workflow/$workflowid',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkflowWorkflowidIndexRoute = WorkflowWorkflowidIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => WorkflowWorkflowidRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/workflow/$workflowid': typeof WorkflowWorkflowidRouteWithChildren
   '/auth/': typeof AuthIndexRoute
   '/ui-preview/': typeof UiPreviewIndexRoute
+  '/workflow/$workflowid/': typeof WorkflowWorkflowidIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthIndexRoute
   '/ui-preview': typeof UiPreviewIndexRoute
+  '/workflow/$workflowid': typeof WorkflowWorkflowidIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/workflow/$workflowid': typeof WorkflowWorkflowidRouteWithChildren
   '/auth/': typeof AuthIndexRoute
   '/ui-preview/': typeof UiPreviewIndexRoute
+  '/workflow/$workflowid/': typeof WorkflowWorkflowidIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth/' | '/ui-preview/'
+  fullPaths:
+    | '/'
+    | '/workflow/$workflowid'
+    | '/auth/'
+    | '/ui-preview/'
+    | '/workflow/$workflowid/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/ui-preview'
-  id: '__root__' | '/' | '/auth/' | '/ui-preview/'
+  to: '/' | '/auth' | '/ui-preview' | '/workflow/$workflowid'
+  id:
+    | '__root__'
+    | '/'
+    | '/workflow/$workflowid'
+    | '/auth/'
+    | '/ui-preview/'
+    | '/workflow/$workflowid/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  WorkflowWorkflowidRoute: typeof WorkflowWorkflowidRouteWithChildren
   AuthIndexRoute: typeof AuthIndexRoute
   UiPreviewIndexRoute: typeof UiPreviewIndexRoute
 }
@@ -82,11 +111,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/workflow/$workflowid': {
+      id: '/workflow/$workflowid'
+      path: '/workflow/$workflowid'
+      fullPath: '/workflow/$workflowid'
+      preLoaderRoute: typeof WorkflowWorkflowidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/workflow/$workflowid/': {
+      id: '/workflow/$workflowid/'
+      path: '/'
+      fullPath: '/workflow/$workflowid/'
+      preLoaderRoute: typeof WorkflowWorkflowidIndexRouteImport
+      parentRoute: typeof WorkflowWorkflowidRoute
+    }
   }
 }
 
+interface WorkflowWorkflowidRouteChildren {
+  WorkflowWorkflowidIndexRoute: typeof WorkflowWorkflowidIndexRoute
+}
+
+const WorkflowWorkflowidRouteChildren: WorkflowWorkflowidRouteChildren = {
+  WorkflowWorkflowidIndexRoute: WorkflowWorkflowidIndexRoute,
+}
+
+const WorkflowWorkflowidRouteWithChildren =
+  WorkflowWorkflowidRoute._addFileChildren(WorkflowWorkflowidRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  WorkflowWorkflowidRoute: WorkflowWorkflowidRouteWithChildren,
   AuthIndexRoute: AuthIndexRoute,
   UiPreviewIndexRoute: UiPreviewIndexRoute,
 }

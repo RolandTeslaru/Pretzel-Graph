@@ -1,9 +1,9 @@
-import { Shelf, Workflow } from "@vx-agent-builder/shared/types";
-import type { _ShelfSDK_, ShelfSDK } from "./sdk";
+import { Shelf, Workflow } from "@vx-agent-editor/shared/types";
+import type { ShelfSDKImpl, ShelfSDK } from "./sdk";
 
 export type State = ShelfSDK.State
 
-export function _createShelfReducers_(sdk: _ShelfSDK_) {
+export function _createShelfReducers_(sdk: ShelfSDKImpl) {
 
     const drawerReducers = {
         open: (s, drawerId) => {

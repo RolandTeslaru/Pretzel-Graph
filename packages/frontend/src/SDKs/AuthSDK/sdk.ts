@@ -1,56 +1,106 @@
 import { create } from "zustand";
 import { BaseSDK } from "../Base";
-import type { SDKStore } from "../types";
 import { immer } from "zustand/middleware/immer";
 import { supabase } from "@/libs/supabase";
 import { SDK } from "../SDKManager";
 import { Auth } from "@vx-agent-editor/shared/types";
+import type {PostgrestError, Session} from "@supabase/supabase-js"
+import { NotificationSDK } from "@/vx-ui/SDKs/NotificationSDK";
 
 @SDK("Auth")
 export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
   constructor() { super() }
 
-  public readonly useStore: SDKStore<AuthSDK.State> = create(
-    immer<AuthSDK.State>((set, get) => ({
+  public readonly useStore: BaseSDK.Store<AuthSDK.State> = create(
+    immer<AuthSDK.State>(() => ({
       isAuthenticated: false,
       user: null,
+      isLoading: true,
     }))
   )
 
-  public readonly actions = {
-    login: async (props: {email: string, password: string}) => {
-      debugger
+  private readonly db: AuthSDK.Db = {
+      getUser: async (userId: Auth.User.Id) => {
+        const { data, error } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", userId)
+          .single();
+
+        if (error) {
+          NotificationSDK.actions.error(error.message)
+          return { user: null, error }
+        }
+
+        console.log("Fetched User", data)
+
+        const parsedUser = Auth.User.Schema.parse(data)
+
+        return { user: parsedUser, error: null }
+      },
+      getSession: async () => {
+          const { data: { session } } = await supabase.auth.getSession();
+          return session;
+      }
+  }
+
+  /**
+   * Initialize the Auth SDK.
+   * Recover session and set up listeners.
+   */
+  public async init() {
+    // Check active session
+    const session = await this.db.getSession();
+    if (session?.user) {
+      await this.actions.syncUser(session.user.id as Auth.User.Id);
+    } else {
+      this.setState(s => { s.isLoading = false })
+    }
+
+    // Listen for changes
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        await this.actions.syncUser(session.user.id as Auth.User.Id);
+      } 
+      else if (event === 'SIGNED_OUT') {
+        this.setState(s => {
+          s.user = null;
+          s.isAuthenticated = false;
+          s.isLoading = false;
+        })
+      }
+    })
+  }
+
+  public readonly actions: AuthSDK.Actions = {
+    login: async (props) => {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: props.email,
         password: props.password,
       })
       if (error || !data.user)
-        alert(error?.message)
+        NotificationSDK.actions.error(error?.message || "Could not login")
 
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", data.user!.id)
-        .single()
+      const userId = data.user!.id as Auth.User.Id
+
+      const { user, error: userError } = await this.db.getUser(userId)
 
       if (userError) {
-        alert(userError.message)
+        NotificationSDK.actions.error(userError.message)
         return
       }
 
-      const parsedUser = Auth.User.Schema.parse(userData);
-
       this.setState(s => {
-        s.user = parsedUser;
+        s.user = user;
         s.isAuthenticated = true;
       })
-      alert("Logged In! Token is ready.")
+      NotificationSDK.actions.info("Logged In! Token is ready.")
     },
     logout: async () => {
       const { error } = await supabase.auth.signOut();
 
       if (error) {
-        alert(error.message)
+        NotificationSDK.actions.error(error.message)
         return;
       }
 
@@ -59,7 +109,7 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
           s.isAuthenticated = false
       })
     },
-    signup: async (props: { email: string, password: string, username: string, displayName: string}) => {
+    signup: async (props) => {
       const { email, password, username, displayName } = props
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -72,28 +122,45 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
       });
 
       if (error || !data.user) {
-        alert(error?.message ?? "Signup failed");
+        NotificationSDK.actions.error(error?.message ?? "Signup failed");
         return;
       }
 
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", data.user.id)
-        .single();
+      const userId = data.user!.id as Auth.User.Id
+
+      const { user, error: userError } = await this.db.getUser(userId)
 
       if (userError) {
-        alert(userError.message);
+        NotificationSDK.actions.error(userError.message)
+        return
+      }
+
+      this.setState(s => {
+        s.user = user;
+        s.isAuthenticated = true;
+      })
+      NotificationSDK.actions.info("Logged In! Token is ready.")
+    },
+    syncUser: async (userId) => {
+      const { user, error } = await this.db.getUser(userId)
+
+      if (error) {
+        console.error("Failed to fetch user profile", error);
+        this.setState(s => { s.isLoading = false });
+        return
+      }
+
+      if (!user) {
+        console.error("User not found");
+        this.setState(s => { s.isLoading = false })
         return;
       }
 
-      const parsedUser = Auth.User.Schema.parse(userData);
-
       this.setState(s => {
-        s.user = parsedUser;
+        s.user = user;
         s.isAuthenticated = true;
+        s.isLoading = false;
       })
-      alert("Logged In! Token is ready.")
     }
   }
 }
@@ -102,6 +169,19 @@ export namespace AuthSDK {
   export type State = {
     isAuthenticated: boolean;
     user: null | Auth.User;
+    isLoading: boolean;
+  }
+
+  export type Db = {
+      getUser: (userId: Auth.User.Id) => Promise<{ user: Auth.User | null, error: PostgrestError | null }>
+      getSession: () => Promise<Session | null>
+  }
+
+  export type Actions = {
+    login: (props: { email: string, password: string }) => Promise<void>
+    logout: () => Promise<void>
+    signup: (props: { email: string, password: string, username: string, displayName: string }) => Promise<void>
+    syncUser: (userId: Auth.User.Id) => Promise<void>
   }
 }
 

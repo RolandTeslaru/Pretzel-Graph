@@ -1,22 +1,20 @@
 import { create } from "zustand"
 import { immer } from "zustand/middleware/immer";
 import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance, ReactFlowJsonObject } from "@xyflow/react";
-import { _createWorkbenchActions_, _WorkbenchSDKActions } from "./actions";
-import { _createWorkbenchReducers_, _WorkbenchSDKReducers } from "./reducers";
-import { _createWorkbenchSelectors_, _WorkBenchSDKSelectors } from "./selectors";
+import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
+import { _createWorkbenchReducers_, type _WorkbenchSDKReducers } from "./reducers";
+import { _createWorkbenchSelectors_, type _WorkBenchSDKSelectors } from "./selectors";
 import React from "react";
-import { Workflow } from "@vx-agent-builder/shared/types"
+import { Workflow } from "@vx-agent-editor/shared/types"
 import { temporal } from 'zundo';
 import { cloneDeep } from "lodash";
 import { LibrarySDK } from "../LibrarySDK/sdk";
-import { fetchFlow } from "@/controllers/API/queries/flows/use-get-flow";
-import { SanitizationLayer } from "@/SanitizationLayer";
-import { Flow } from "@/types/flow";
 import { isConnectionValid } from "./utils";
 import { BaseSDK } from "../Base";
 import { useShallow } from "zustand/react/shallow";
 import { SDK } from "../SDKManager";
 import { EMPTY_WORKFLOW } from "../VaultSDK/defaults";
+import { WorkflowAPI } from "./api";
 
 @SDK("Workbench")
 export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
@@ -81,11 +79,18 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public readonly canvasWrapper = React.createRef<HTMLDivElement>();
 
 
-    public async openWorkflow(id: Workflow.Id) {
-        LibrarySDK.useStore.setState({ currentWorkflowId: id });
+    public async loadWorkflow(workflowId: Workflow.Id) {
+        const { workflow } = await WorkflowAPI.Get.fetch({ workflowId })
+        if (!workflow) {
+            throw new Error("Workflow not found")
+        }
+        this.openWorkflow(workflow)
+    }
 
-        const lfFlow: Flow.Data = await fetchFlow({ id });
-        const workflow = SanitizationLayer.sanitizeFlowAPIResponse(lfFlow);
+    public openWorkflow(workflow: Workflow) {
+        console.log("Workflow ", workflow)
+        LibrarySDK.useStore.setState({ currentWorkflowId: workflow.id });
+
         const cache = this.reducers.createCache(workflow);
 
         this.setState({ workflow, cache, isDirty: false });

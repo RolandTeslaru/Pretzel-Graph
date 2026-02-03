@@ -1,10 +1,9 @@
 import type { StoreApi, UseBoundStore } from "zustand"
-import type { SDKStore } from "./types"
 
 export abstract class BaseSDK<T_State> {
     protected constructor() { }
 
-    public abstract readonly useStore: SDKStore<T_State>
+    public abstract readonly useStore: BaseSDK.Store<T_State>
 
     public get state() { return this.useStore.getState() }
     public get subscribe() { return this.useStore.subscribe }

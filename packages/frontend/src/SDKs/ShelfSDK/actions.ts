@@ -1,7 +1,7 @@
-import type { _ShelfSDK_, ShelfSDK } from "./sdk";
-import { DropFirstArg } from "../types";
+import type { ShelfSDKImpl, ShelfSDK } from "./sdk";
+import type { DropFirstArg } from "../types";
 
-export function _createShelfActions_(sdk: _ShelfSDK_){
+export function _createShelfActions_(sdk: ShelfSDKImpl){
     const setState = sdk.useStore.setState;
     return {
         drawer: {

@@ -1,7 +1,7 @@
-import { Workflow } from '@vx-agent-builder/shared/types';
+import { Workflow } from '@vx-agent-editor/shared/types';
 import React, { useMemo } from 'react'
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
-import { TypeBadge } from '@/components/TypeBadge';
+import LangchainTypeBadge from '../../../LangchainTypeBadge';
 
 interface Props {
   handleType: 'target' | 'source'
@@ -43,7 +43,7 @@ const HandleTooltipContent: React.FC<Props> = ({
         />
 
         {mappedTypes.map((dataType, index) => (
-          <TypeBadge
+          <LangchainTypeBadge
             key={`${index}-${dataType}`}
             dataType={dataType}
             left={handleType === 'target'}

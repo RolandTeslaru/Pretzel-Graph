@@ -1,9 +1,9 @@
 import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
-import { EXECUTION_QUEUE_ID, REDIS_HOST, REDIS_PORT } from "@vx-agent-builder/shared/constants"
-import { Orchestrator } from '@vx-agent-builder/shared/types';
+import { EXECUTION_QUEUE_ID, REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants"
+import { Orchestrator } from '@vx-agent-editor/shared/types';
 import { AggexEngine } from 'src/engine';
-import { Realtime } from '@vx-agent-builder/shared/types/Realtime';
+import { Realtime } from '@vx-agent-editor/shared/types/Realtime';
 
 
 export class AggexWorkerImpl {
@@ -26,7 +26,7 @@ export class AggexWorkerImpl {
     private redis = new IORedis({ host: REDIS_HOST, port: REDIS_PORT })
 
     private processQueueItem = async (
-        { data: queueItem }: {data: Orchestrator.ExecutionQueue.Item}
+        { data: queueItem }: { data: Orchestrator.ExecutionQueue.Item }
     ) => {
         const { workflow, jobId } = queueItem;
 

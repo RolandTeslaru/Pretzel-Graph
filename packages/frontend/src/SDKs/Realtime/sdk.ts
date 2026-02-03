@@ -2,10 +2,10 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Realtime } from "@vx-agent-builder/shared/types";
+import { Realtime } from "@vx-agent-editor/shared/types";
 
 @SDK("Realtime")
-export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State>{
+export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
     constructor() { super() }
 
     public readonly useStore: BaseSDK.Store<RealtimeSDK.State> = create(
@@ -18,7 +18,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State>{
     private listeners = new Map<Realtime.Topic.Id, Set<(data: any) => void>>();
 
     public subscribeToTopic<T>(
-        topic: Realtime.Topic.Id, 
+        topic: Realtime.Topic.Id,
         callback: (data: T) => void
     ) {
         if (!this.listeners.has(topic)) {
@@ -30,7 +30,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State>{
 
         return () => {
             const topicListeners = this.listeners.get(topic);
-            if(!topicListeners)
+            if (!topicListeners)
                 return
 
             topicListeners.delete(callback);
@@ -43,7 +43,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State>{
     }
 
     private send(message: any) {
-        if(!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+        if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
             console.warn("RealtimeSDK: Socket not connected, cannot send message", message);
             return;
         }

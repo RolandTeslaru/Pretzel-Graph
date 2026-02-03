@@ -449,6 +449,32 @@ const MoveHorizontal: React.FC<BaseIconProps> = (props) => (
 )
 MoveHorizontal.displayName = "MoveHorizontal"
 
+
+const OctagonX: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="m15 9-6 6"/>
+        <path d="M2.586 16.726A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2h6.624a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586z"/>
+        <path d="m9 9 6 6"/>
+    </BaseIcon>
+)
+OctagonX.displayName = "OctagonX"
+
+
+const GripVertical: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/>
+    </BaseIcon>
+)
+GripVertical.displayName = "GripVertical"
+
+
+const LockClosed: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M5 4.63601C5 3.76031 5.24219 3.1054 5.64323 2.67357C6.03934 2.24705 6.64582 1.9783 7.5014 1.9783C8.35745 1.9783 8.96306 2.24652 9.35823 2.67208C9.75838 3.10299 10 3.75708 10 4.63325V5.99999H5V4.63601ZM4 5.99999V4.63601C4 3.58148 4.29339 2.65754 4.91049 1.99307C5.53252 1.32329 6.42675 0.978302 7.5014 0.978302C8.57583 0.978302 9.46952 1.32233 10.091 1.99162C10.7076 2.65557 11 3.57896 11 4.63325V5.99999H12C12.5523 5.99999 13 6.44771 13 6.99999V13C13 13.5523 12.5523 14 12 14H3C2.44772 14 2 13.5523 2 13V6.99999C2 6.44771 2.44772 5.99999 3 5.99999H4ZM3 6.99999H12V13H3V6.99999Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path>
+    </BaseIcon>
+)
+LockClosed.displayName = "LockClosed"
+
 export const SystemIcons = {
     AlertTriangle,
     ArrowLeft,
@@ -464,6 +490,8 @@ export const SystemIcons = {
     Check,
     Clock,
     Move,
+    OctagonX,
+    LockClosed,
     Archive,
     Trash,
     FolderSearch,
@@ -490,6 +518,7 @@ export const SystemIcons = {
     Tag,
     Bluetooth,
     SkipForward,
+    GripVertical,
     SkipBack,
     Star,
     Logout,

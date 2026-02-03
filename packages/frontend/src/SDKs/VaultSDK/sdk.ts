@@ -2,8 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { supabase } from "@/libs/supabase";
-import { Vault } from "@vx-agent-builder/shared/types";
+import { Vault } from "@vx-agent-editor/shared/types";
 import { VaultAPI } from "./api";
 
 @SDK("Vault")

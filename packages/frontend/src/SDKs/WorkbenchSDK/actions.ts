@@ -1,5 +1,5 @@
 import { WorkbenchSDKImpl, WorkbenchSDK } from './sdk';
-import { DropFirstArg } from '../types';
+import type { DropFirstArg } from '../types';
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 

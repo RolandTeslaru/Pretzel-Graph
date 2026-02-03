@@ -1,8 +1,8 @@
-import { Shelf } from "@vx-agent-builder/shared/types";
 import React, { memo } from 'react'
 import { ShelfSDK } from '../sdk';
 import { Icon, Tooltip } from '@/vx-ui/foundations';
-import { GripVertical } from 'lucide-react';
+import type { Shelf } from '@vx-agent-editor/shared/types';
+import { SystemIcons } from '@/vx-ui/icons';
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
   blueprintId: Shelf.Blueprint.Id
@@ -53,7 +53,7 @@ const BlueprintItem = memo(({ blueprintId, ...props }: Props) => {
           <p className='text-sm my-auto truncate flex-1 min-w-0'>
             {blueprint.display_name}
           </p>
-          <GripVertical className='w-[18px] h-[18px] text-muted-foreground ml-auto my-auto ' />
+          <SystemIcons.GripVertical className='w-[18px] h-[18px] text-muted-foreground ml-auto my-auto ' />
         </div>
       </Tooltip.Trigger>
       <Tooltip.Content side="left" className='max-w-[250px] gap-2' >

@@ -1,40 +1,22 @@
 import { BaseSDK } from "../Base";
-import { SDKStore } from "../types";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { Shelf } from "@vx-agent-builder/shared/types";
-import { _createShelfActions_, _ShelfActions } from "./actions";
-import { _createShelfSelectors_, _ShelfSelectors } from "./selectors";
-import { _createShelfReducers_, _ShelfReducers } from "./reducers";
-import { fetchShelfData } from "./dummyEndpoint";
-import { SanitizationLayer } from "@/SanitizationLayer";
+import { Shelf } from "@vx-agent-editor/shared/types";
+import { _createShelfActions_, type _ShelfActions } from "./actions";
+import { _createShelfSelectors_, type _ShelfSelectors } from "./selectors";
+import { _createShelfReducers_, type _ShelfReducers } from "./reducers";
 import { enableMapSet } from "immer";
+import { SDK } from "../SDKManager";
 enableMapSet();
 
-export class _ShelfSDK_ extends BaseSDK<ShelfSDK.State> {
-    private constructor() {
+@SDK("Shelf")
+export class ShelfSDKImpl extends BaseSDK<ShelfSDK.State> {
+    constructor() {
         super()
-        this.initialize();
     }
 
-    public static readonly instance = new _ShelfSDK_();
 
-    public async initialize(){
-        try {
-            const rawData = await fetchShelfData();
-            const shelfData = SanitizationLayer.sanitizeTypesIntoShelf(rawData);
-            this.setState({
-                sections: shelfData.sections,
-                drawers: shelfData.drawers,
-                blueprints: shelfData.blueprints,
-                filteredDrawers: shelfData.drawers
-            })
-        } catch (err) {
-            console.error("Failed to initialzie ShelfSDK", err)
-        }
-    }
-    
-    public readonly useStore: SDKStore<ShelfSDK.State> = create(
+    public readonly useStore: BaseSDK.Store<ShelfSDK.State> = create(
         immer<ShelfSDK.State>(() => ({
             sections: {
                 core: [],
@@ -62,7 +44,7 @@ export class _ShelfSDK_ extends BaseSDK<ShelfSDK.State> {
 
 
 
-export const ShelfSDK = _ShelfSDK_.instance;
+export const ShelfSDK = SDK.get<ShelfSDKImpl>("Shelf")
 
 
 export namespace ShelfSDK {

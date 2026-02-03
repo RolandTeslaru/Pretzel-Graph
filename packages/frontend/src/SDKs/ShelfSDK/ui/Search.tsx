@@ -9,7 +9,6 @@ const Search = () => {
     const searchQuery = ShelfSDK.useStore(s => s.searchFilter.query);
     const [localValue, setLocalValue] = useState(searchQuery ?? '');
 
-    // Create debounced function inside component
     const debouncedSetQuery = useMemo(
         () => debounce((value: string) => {
             ShelfSDK.actions.searchFilter.setQuery(value);
@@ -17,14 +16,12 @@ const Search = () => {
         []
     );
 
-    // Cleanup debounce on unmount
     useEffect(() => {
         return () => {
             debouncedSetQuery.cancel();
         };
     }, [debouncedSetQuery]);
 
-    // Sync local value with store when store changes externally
     useEffect(() => {
         setLocalValue(searchQuery ?? '');
     }, [searchQuery]);

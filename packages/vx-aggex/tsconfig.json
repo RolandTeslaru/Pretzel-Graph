@@ -15,10 +15,10 @@
         "emitDecoratorMetadata": true,
         "baseUrl": ".",
         "paths": {
-            "@vx-agent-builder/shared/*": [
+            "@vx-agent-editor/shared/*": [
                 "../shared/*"
             ],
-            "@vx-agent-builder/blueprints/*": [
+            "@vx-agent-editor/blueprints/*": [
                 "../blueprints/src/*"
             ]
         }

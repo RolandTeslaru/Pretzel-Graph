@@ -4,8 +4,7 @@ import { immer } from "zustand/middleware/immer"
 import React from "react";
 import { enableMapSet } from 'immer';
 import { BaseSDK } from "../Base";
-import { AlertDialog, Dialog, WindowStyling } from "../../foundations";
-import { TRIANGLE_RENDER_MAP } from "./components/triangles";
+import { AlertDialog, Dialog } from "../../foundations";
 import { SDK } from "@/SDKs/SDKManager";
 import { type _DialogSDKActions_, createDialogSDKActions } from "./actions";
 
@@ -24,7 +23,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
         }))
     )
 
-    public readonly UILayer: DialogSDK.UILayer = memo(() => {
+    public readonly UIOverlay: DialogSDK.UILayer = memo(() => {
 
         const dialogs = this.useStore(state => state.dialogs)
 
