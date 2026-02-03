@@ -90,44 +90,47 @@ export const createCanvasCallbacks = (
         },
 
         onNodesChange: (changes) => {
-            changes.forEach(change => {
-                switch (change.type) {
-                    case "add":
-                        break;
-                    case "remove":
-                        setState(s => {
+            WorkbenchSDK.useStore.setState(s => {
+                changes.forEach(change => {
+                    switch (change.type) {
+                        // case "position" is handled in onNodeDragStop
+                        case "add":
+                            break;
+                        case "remove":
                             WorkbenchSDK.reducers.node.remove(s, change.id as Workflow.Node.Id)
-                        })
-                        break;
-                    case "replace":
-                        break;
-                    case "position":
-                        break;
-                    case "select":
-                        break;
-                }
+                            break;
+                        case "replace":
+                            break;
+                        case "select":
+                            break;
+                    }
+                })
             })
 
+            WorkbenchSDK.actions.commit();
+            
             setNodeDrivers(prev => applyNodeChanges(changes, prev))
         },
 
         onEdgesChange: (changes) => {
-            changes.forEach(change => {
-                switch (change.type) {
-                    case "add":
-                        break;
-                    case "remove":
-                        setState(s => {
+            WorkbenchSDK.setState(s => {
+                changes.forEach(change => {
+                    switch (change.type) {
+                        case "add":
+                            break;
+                        case "remove":
                             WorkbenchSDK.reducers.edge.remove(s, change.id as Workflow.Edge.Id);
-                        })
-                        break;
-                    case "select":
-                        break;
-
-                    case "replace":
-                        break;
-                }
+                            break;
+                        case "select":
+                            break;
+    
+                        case "replace":
+                            break;
+                    }
+                })
             })
+
+            WorkbenchSDK.actions.commit();
 
             setEdgeDrivers(prev => applyEdgeChanges(changes, prev))
         },
@@ -156,28 +159,24 @@ export const createCanvasCallbacks = (
         },
         onNodeDrag: (e, node) => {
             // TODO: Helper lines in the future
-
         },
         onNodeDragStart: () => {
             setState(s => { s.isDraggingNode = true })
         },
         onNodeDragStop: (e, node, nodes) => {
-            setState(s => {
+            WorkbenchSDK.setState(s => {
                 s.isDraggingNode = false
 
                 const movedNodes = (nodes && nodes.length > 0) ? nodes : [node];
 
-                const layout = (s.workflow.data.ui ??= { layout: {}, viewport: { x: 0, y: 0, zoom: 1 }, icon: null, icon_color: null }).layout
-
                 for (const _node of movedNodes) {
-                    if (!_node?.id)
-                        continue
-                    layout[_node.id as Workflow.Node.Id] = {
-                        x: _node.position.x,
-                        y: _node.position.y
-                    }
+                    const newPosition = _node.position;
+                    const nodeId = _node.id as Workflow.Node.Id;
+                    WorkbenchSDK.reducers.layout.node.setPosition(s, nodeId, newPosition)
                 }
             })
+
+            WorkbenchSDK.actions.commit();
         },
         onNodeContextMenu: (e, nodeDriver) => {
             e.preventDefault();
@@ -186,7 +185,9 @@ export const createCanvasCallbacks = (
             WorkbenchSDK.actions
                 .setClickedNodeId(nodeDriver.id as Workflow.Node.Id)
         },
-
+        onMoveEnd: (event, viewport) => {
+            WorkbenchSDK.actions.layout.viewport.set(viewport)
+        },
         onConnect: (conn) => {
             const { source, sourceHandle, target, targetHandle } = conn as WorkbenchSDK.DriverConn
             if (!sourceHandle || !targetHandle || !source || !target) return;
@@ -269,9 +270,9 @@ export const createCanvasCallbacks = (
             }
 
             const sourceNode = WorkbenchSDK.state.workflow.data.nodes[edge.source] as Workflow.Node;
-            const outputField = sourceNode.data.outputs[edge.sourceHandle]
+            const outputField = sourceNode.data.outputs[edge.sourceHandle as Workflow.Node.Output.Id]
 
-            const selectedAccentColor = nodeColorsName[outputField.dataTypes[0]] ?? "cyan";
+            const selectedAccentColor = nodeColorsName[outputField.langChainDataTypes[0]] ?? "cyan";
             WorkbenchSDK.canvasWrapper.current?.style.setProperty("--selected", `var(--datatype-${selectedAccentColor})`);
         },
         onNodeClick: (event, node) => {

@@ -1,39 +1,51 @@
 import { WorkbenchSDKImpl, WorkbenchSDK } from './sdk';
 import type { DropFirstArg } from '../types';
+import { WorkflowAPI } from './api';
+import { debounce } from '../../decorators/debounce';
+import { NotificationSDK } from '@/vx-ui/SDKs/NotificationSDK';
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
     const setState = sdk.useStore.setState;
     const reducers = sdk.reducers;
 
+    const commit: () => void = debounce(async () => {
+        if(sdk.state.isDirty === false)
+            return
+        const workflow = sdk.state.workflow;
+
+
+        try {
+            await WorkflowAPI.Commit.execute({ workflow })
+        } catch (error) {
+            NotificationSDK.actions.error("Could not save to cloud")
+        }
+        sdk.actions.setDirty(false);
+    }, 1000)
+
     return {
+        commit: commit,
         node: {
-            remove: (...props) => setState(s => { reducers.node.remove(s, ...props) }),
-            create: (...props) => setState(s => { reducers.node.create(s, ...props) }),
-            setMinimized: (...props) => setState(s => { reducers.node.setMinimized(s, ...props) }),
-            setDisplayName: (...props) => setState(s => { reducers.node.setDisplayName(s, ...props) }),
-            setDescription: (...props) => setState(s => { reducers.node.setDescription(s, ...props) }),
+            remove:         (...props) => { setState(s => { reducers.node.remove(s, ...props) }); commit() },
+            create:         (...props) => { setState(s => { reducers.node.create(s, ...props) }); commit() },
+            setMinimized:   (...props) => { setState(s => { reducers.node.setMinimized(s, ...props) }); commit() },
+            setDisplayName: (...props) => { setState(s => { reducers.node.setDisplayName(s, ...props) }); commit() },
+            setDescription: (...props) => { setState(s => { reducers.node.setDescription(s, ...props) }); commit() },
         },
-        flow: {
-            setLock: (value: boolean) => setState(s => {
-                s.workflow.locked = value
-            }),
-        },
-        setDirty: (value) => setState(s => { s.isDirty = value }),
         edge: {
-            add: (...props) => setState(s => { reducers.edge.add(s, ...props) }),
-            remove: (...props) => setState(s => { reducers.edge.remove(s, ...props) })
+            add:    (...props) => { setState(s => { reducers.edge.add(s, ...props) }); commit() },
+            remove: (...props) => { setState(s => { reducers.edge.remove(s, ...props) }); commit() }
         },
         input: {
-            setValue: (...props) => setState(s => { reducers.input.setValue(s, ...props) }),
-            changeOrder: (...props) => setState(s => { reducers.input.changeOrder(s, ...props) }),
-            resetOrder: (...props) => setState(s => { reducers.input.resetOrder(s, ...props) }),
+            setValue:   (...props) => { setState(s => { reducers.input.setValue(s, ...props) }); commit() },
+            changeOrder:(...props) => { setState(s => { reducers.input.changeOrder(s, ...props) }); commit() },
+            resetOrder: (...props) => { setState(s => { reducers.input.resetOrder(s, ...props) }); commit() },
         },
         runtime: {
             input: {
-                set: (...props) => setState(s => { reducers.runtime.input.set(s, ...props) }),
-                clear: (...props) => setState(s => { reducers.runtime.input.clear(s, ...props) }),
-                ensure: (...props) => setState(s => { reducers.runtime.input.ensure(s, ...props) })
+                set: (...props) => { setState(s => { reducers.runtime.input.set(s, ...props) }); commit() },
+                clear: (...props) => { setState(s => { reducers.runtime.input.clear(s, ...props) }); commit() },
+                ensure: (...props) => { setState(s => { reducers.runtime.input.ensure(s, ...props) }); commit() }
             }
         },
         history: {
@@ -44,7 +56,31 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
             }
         },
+        layout: {
+            node: {
+                add: (...props) => { setState(s => { reducers.layout.node.add(s, ...props) }); commit() },
+                remove: (...props) => { setState(s => { reducers.layout.node.remove(s, ...props) }); commit() },
+                setPosition: (...props) => { setState(s => { reducers.layout.node.setPosition(s, ...props) }); commit() },
+            },
+            viewport: {
+                setZoom: (...props) => { setState(s => { reducers.layout.viewport.setZoom(s, ...props) }); commit() },
+                setPosition: (...props) => { setState(s => { reducers.layout.viewport.setPosition(s, ...props) }); commit() },
+                set: (...props) => { setState(s => { reducers.layout.viewport.set(s, ...props) }); commit() }
+            },
+            flushUpdates: () => {
+
+            }
+        },
+        workflow: {
+            setLock: (...props) => { setState(s => { reducers.workflow.setLock(s, ...props) }); commit() },
+            close: (...props) => { setState(s => { reducers.workflow.close(s, ...props) }); commit() },
+            open: (...props) => setState(s => { reducers.workflow.open(s, ...props) }),
+        },
         setClickedNodeId: (nodeId) => setState(s => { reducers.setClickedNodeId(s, nodeId) }),
+        setDirty: (value) => setState(s => { 
+            if(s.isDirty !== value)
+                s.isDirty = value;
+         }),
         takeSnapshot: () => { },
         copy: () => { },
         paste: () => { },
@@ -55,8 +91,11 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 }
 
 export type _WorkbenchSDKActions = {
-    flow: {
+    commit: () => void
+    workflow: {
         setLock: DropFirstArg<WorkbenchSDK.Reducers['workflow']['setLock']>;
+        close: DropFirstArg<WorkbenchSDK.Reducers['workflow']['close']>
+        open: DropFirstArg<WorkbenchSDK.Reducers["workflow"]["open"]>
     },
     node: {
         remove: DropFirstArg<WorkbenchSDK.Reducers['node']['remove']>;
@@ -79,6 +118,19 @@ export type _WorkbenchSDKActions = {
             set: DropFirstArg<WorkbenchSDK.Reducers["runtime"]["input"]["set"]>;
             clear: DropFirstArg<WorkbenchSDK.Reducers["runtime"]["input"]["clear"]>;
             ensure: DropFirstArg<WorkbenchSDK.Reducers["runtime"]["input"]["ensure"]>
+        }
+    },
+    layout: {
+        flushUpdates: () => void,
+        node: {
+            add: DropFirstArg<WorkbenchSDK.Reducers["layout"]["node"]["add"]>,
+            remove: DropFirstArg<WorkbenchSDK.Reducers["layout"]["node"]["remove"]>,
+            setPosition: DropFirstArg<WorkbenchSDK.Reducers["layout"]["node"]["setPosition"]>,
+        },
+        viewport: {
+            setZoom: DropFirstArg<WorkbenchSDK.Reducers["layout"]["viewport"]["setZoom"]>,
+            setPosition: DropFirstArg<WorkbenchSDK.Reducers["layout"]["viewport"]["setPosition"]>,
+            set: DropFirstArg<WorkbenchSDK.Reducers["layout"]["viewport"]["set"]>
         }
     }
     setClickedNodeId: DropFirstArg<WorkbenchSDK.Reducers['setClickedNodeId']>;

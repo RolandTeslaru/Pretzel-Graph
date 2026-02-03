@@ -30,6 +30,13 @@ const CanvasRenderer = memo(() => {
         setEdgeDrivers(initial.edgeDrivers)
     }, [initial.nodeDrivers, initial.edgeDrivers, setNodeDrivers, setEdgeDrivers])
 
+    useEffect(() => {
+        const driver = WorkbenchSDK.runtime.canvasDriver
+        if(driver)
+            driver.setViewport(workflow.data.ui.viewport);
+
+    }, [workflow.id])
+
     const canvasCallbacks = useMemo(() =>
         createCanvasCallbacks(setNodeDrivers, setEdgeDrivers),
         [setNodeDrivers, setEdgeDrivers]

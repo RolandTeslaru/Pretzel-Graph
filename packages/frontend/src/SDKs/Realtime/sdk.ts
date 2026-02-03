@@ -51,9 +51,23 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
         this.socket.send(JSON.stringify(message));
     }
 
+    private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+    private reconnectAttempts = 0;
+    private readonly MAX_RECONNECT_DELAY = 30000; // 30 seconds
+    private readonly BASE_RECONNECT_DELAY = 1000; // 1 second
+    private currentUrl: string | null = null;
+    private isIntentionalClose = false;
+
     public connect(url: string) {
+        this.currentUrl = url;
+        this.isIntentionalClose = false;
+
         if (this.socket) {
             this.socket.close();
+        }
+        if (this.reconnectTimeout) {
+            clearTimeout(this.reconnectTimeout);
+            this.reconnectTimeout = null;
         }
 
         this.socket = new WebSocket(url);
@@ -61,6 +75,8 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
         this.socket.onopen = () => {
             console.log("RealtimeSDK: Connected");
             this.useStore.setState((state) => { state.isConnected = true; });
+            this.reconnectAttempts = 0;
+
             // Resubscribe to existing topics if any (reconnection logic)
             this.listeners.forEach((_, topic) => {
                 this.send({ action: "subscribe", topic });
@@ -70,7 +86,10 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
         this.socket.onclose = () => {
             console.log("RealtimeSDK: Disconnected");
             this.useStore.setState((state) => { state.isConnected = false; });
-            // TODO: Implement auto-reconnect with backoff
+
+            if (!this.isIntentionalClose) {
+                this.scheduleReconnect();
+            }
         };
 
         this.socket.onmessage = (event) => {
@@ -86,6 +105,39 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
                 console.error("RealtimeSDK: Failed to parse message", err);
             }
         };
+    }
+
+    private scheduleReconnect() {
+        if (this.reconnectTimeout) return;
+
+        // Exponential backoff with jitter to prevent thundering herd
+        const delay = Math.min(
+            this.BASE_RECONNECT_DELAY * Math.pow(2, this.reconnectAttempts),
+            this.MAX_RECONNECT_DELAY
+        );
+        const jitter = Math.random() * 1000; // 0-1000ms jitter
+
+        console.log(`RealtimeSDK: Reconnecting in ${(delay + jitter).toFixed(0)}ms (Attempt ${this.reconnectAttempts + 1})`);
+
+        this.reconnectTimeout = setTimeout(() => {
+            this.reconnectTimeout = null;
+            this.reconnectAttempts++;
+            if (this.currentUrl) {
+                this.connect(this.currentUrl);
+            }
+        }, delay + jitter);
+    }
+
+    public disconnect() {
+        this.isIntentionalClose = true;
+        if (this.reconnectTimeout) {
+            clearTimeout(this.reconnectTimeout);
+            this.reconnectTimeout = null;
+        }
+        if (this.socket) {
+            this.socket.close();
+            this.socket = null;
+        }
     }
 
     public readonly reducers: RealtimeSDK.Reducers = {}

@@ -3,6 +3,7 @@ import type { Connection } from '@xyflow/react';
 import { Workflow, Shelf } from "@vx-agent-editor/shared/types";
 import { cloneDeep } from 'lodash';
 import { type InputContainer, insertBeforeOrEndInPlace, moveInArray, removeInPlace, reorderSubsetInPlace } from './utils';
+import { EMPTY_WORKFLOW } from './defaults';
 
 const uid = {
     randomUUID: (length: number) => Math.random().toString(36).substring(2, 2 + length)
@@ -18,6 +19,9 @@ const createRuntimeInputId = (parentInputId: Workflow.Node.Input.Id, display_nam
 
 export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
 
+    // ════════════════════════════════════════════════════════════════════════════
+    // CACHE REDUCERS (Internal - maintains lookup maps for fast graph traversal)
+    // ════════════════════════════════════════════════════════════════════════════
     const cacheReducers = {
         deleteEdge: (s, { source, target }) => {
             const inNodes = sel.ensureInNodesCache(s, target.nodeId);
@@ -72,11 +76,53 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             const edge = s.cache.inputHandlesMap[nodeId][inputId];
             if (edge)
                 edgeReducers.remove(s, edge);
+        },
+        createAll: (_, wf) => {
+            const outgoersEdgesMap: WorkbenchSDK.State["cache"]["outgoersEdgesMap"] = {};
+            const ingoersEdgesMap: WorkbenchSDK.State["cache"]["ingoersEdgesMap"] = {};
+            const inputHandlesMap: WorkbenchSDK.State["cache"]["inputHandlesMap"] = {};
+            const outputHandlesMap: WorkbenchSDK.State["cache"]["outputHandlesMap"] = {};
+
+            Object.values(wf.data.nodes).forEach(node => {
+                outgoersEdgesMap[node.id] = {};
+                ingoersEdgesMap[node.id] = {};
+                inputHandlesMap[node.id] = {};
+                outputHandlesMap[node.id] = {};
+            })
+
+            Object.values(wf.data.edges).forEach(edge => {
+                const sourceNodeId = edge.source.nodeId;
+                const targetNodeId = edge.target.nodeId;
+
+                const sourceHandleId = edge.source.handleId;
+                const targetHandleId = edge.target.handleId
+
+                // Outgoers Edges Map
+                outgoersEdgesMap[sourceNodeId][targetNodeId] = edge.id
+
+                // Ingoers Edges Map
+                ingoersEdgesMap[targetNodeId][sourceNodeId] = edge.id
+
+                inputHandlesMap[targetNodeId][targetHandleId] = edge.id
+
+                outputHandlesMap[sourceNodeId][sourceHandleId] = edge.id
+            })
+
+            return {
+                outgoersEdgesMap,
+                ingoersEdgesMap,
+                inputHandlesMap,
+                outputHandlesMap,
+            }
         }
     } satisfies INTERNAL_CacheReducers
 
+    // ════════════════════════════════════════════════════════════════════════════
+    // EDGE REDUCERS
+    // ════════════════════════════════════════════════════════════════════════════
     const edgeReducers = {
         add: (s, edgeId, conn) => {
+            s.isDirty = true;
             const { source: sourceNodeId, sourceHandle, target: targetNodeId, targetHandle } = conn as {
                 source: Workflow.Node.Id,
                 sourceHandle: Workflow.Node.Output.Id,
@@ -107,6 +153,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             cacheReducers.addEdge(s, newEdge)
         },
         remove: (s, edgeId) => {
+            s.isDirty = true;
             const edges = s.workflow.data.edges
 
             const edge = edges[edgeId];
@@ -118,8 +165,56 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
         },
     } satisfies EdgeReducers;
 
+    // ════════════════════════════════════════════════════════════════════════════
+    // LAYOUT REDUCERS (UI positioning - node positions and viewport)
+    // ════════════════════════════════════════════════════════════════════════════
+    const layoutReducers = {
+        node: {
+            setPosition: (s, nodeId, newLayout) => {
+                if(!newLayout)
+                    return
+                const oldNodeLayout = s.workflow.data.ui.layout[nodeId];
+                if (newLayout.x === oldNodeLayout.x && newLayout.y === oldNodeLayout.y) {
+                    return
+                }
+                s.isDirty = true
+                s.workflow.data.ui.layout[nodeId] = newLayout;
+            },
+            remove: (s, nodeId) => {
+                s.isDirty = true;
+                const layout = s.workflow.data.ui.layout;
+                delete layout[nodeId];
+            },
+            add: (s, nodeId, position) => {
+                s.isDirty = true;
+                s.workflow.data.ui.layout[nodeId] = position;
+            }
+        },
+        viewport: {
+            setPosition: (s, position) => {
+                s.isDirty = true;
+                const viewport = s.workflow.data.ui.viewport
+                viewport.x = position.x;
+                viewport.y = position.y;
+            },
+            setZoom: (s, zoom) => {
+                s.isDirty = true;
+                const viewport = s.workflow.data.ui.viewport
+                viewport.zoom = zoom;
+            },
+            set: (s, viewport) => {
+                s.isDirty = true;
+                s.workflow.data.ui.viewport = viewport;
+            }
+        }
+    } satisfies LayoutReducers
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // NODE REDUCERS
+    // ════════════════════════════════════════════════════════════════════════════
     const nodeReducers = {
         remove: (s, deletedNodeId) => {
+            s.isDirty = true;
             const nodes = s.workflow.data.nodes
             const fieldValues = s.workflow.data.fieldValues
 
@@ -129,9 +224,11 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             delete fieldValues[deletedNodeId];
 
             cacheReducers.deleteNode(s, deletedNodeId);
+            layoutReducers.node.remove(s, deletedNodeId);
         },
         createId: createNodeId,
         create: (s, blueprint, position) => {
+            s.isDirty = true;
             const nodeId = createNodeId(blueprint.id);
 
             const newNode: Workflow.Node = {
@@ -158,47 +255,47 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
 
             s.workflow.data.nodes[nodeId] = newNode;
 
-            if (position)
-                s.workflow.data.ui.layout[nodeId] = {
-                    x: position.x,
-                    y: position.y,
-                };
-            else
-                s.workflow.data.ui.layout[nodeId] = {
-                    x: 0,
-                    y: 0
-                }
+            layoutReducers.node.add(s, nodeId, position);
 
             s.workflow.data.fieldValues[nodeId] = {}
 
             cacheReducers.createNode(s, newNode);
         },
         setMinimized: (s, nodeId, isMinimized) => {
+            s.isDirty = true;
             s.workflow.data.nodes[nodeId].data.ui.isMinimized = isMinimized;
         },
         setDisplayName: (s, nodeId, newDisplayName) => {
+            s.isDirty = true;
             s.workflow.data.nodes[nodeId].display_name = newDisplayName;
         },
         setDescription: (s, nodeId, newDescription) => {
+            s.isDirty = true;
             s.workflow.data.nodes[nodeId].data.ui.description = newDescription;
         }
     } satisfies NodeReducers
 
+    // ════════════════════════════════════════════════════════════════════════════
+    // INPUT REDUCERS
+    // ════════════════════════════════════════════════════════════════════════════
     const inputReducers = {
         resetOrder: (s, nodeId, blueprint) => {
             const node = s.workflow.data.nodes[nodeId];
             if (!node) return
 
+            s.isDirty = true;
             node.data.inputs = cloneDeep(blueprint.data.inputs)
             node.data.outputs = cloneDeep(blueprint.data.outputs);
             node.data.ui.normalInputsOrder = cloneDeep(blueprint.data.ui.normalInputsOrder)
             node.data.ui.advancedInputsOrder = cloneDeep(blueprint.data.ui.advancedInputsOrder)
         },
         setValue: (s, nodeId, inputId, value) => {
+            s.isDirty = true;
             s.workflow.data.fieldValues[nodeId] ??= {}
             s.workflow.data.fieldValues[nodeId][inputId] = value
         },
         remove: (s, nodeId, inputId) => {
+            s.isDirty = true;
             const node = s.workflow.data.nodes[nodeId]
             const fieldValues = s.workflow.data.fieldValues[nodeId];
 
@@ -208,6 +305,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             delete fieldValues[inputId];
         },
         disconnectIfConnected: (s, nodeId, inputId) => {
+            s.isDirty = true;
             const edgeId = s.cache.inputHandlesMap[nodeId][inputId]
 
             if (edgeId) {
@@ -217,6 +315,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             return false;
         },
         changeOrder: (s, nodeId, active, over) => {
+            s.isDirty = true;
             const node = s.workflow.data.nodes[nodeId];
             if (!node) return;
 
@@ -297,9 +396,13 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
         }
     } satisfies InputReducers
 
+    // ════════════════════════════════════════════════════════════════════════════
+    // RUNTIME REDUCERS (Dynamic inputs created at runtime)
+    // ════════════════════════════════════════════════════════════════════════════
     const runtimeReducers = {
         input: {
             clear: (s, nodeId, inputId) => {
+                s.isDirty = true;
                 const node = s.workflow.data.nodes[nodeId]
                 const input = node.data.inputs[inputId];
 
@@ -313,6 +416,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
                 })
             },
             set: (s, nodeId, inputId, displayNames) => {
+                s.isDirty = true;
                 const node = s.workflow.data.nodes[nodeId]
                 const input = node.data.inputs[inputId];
 
@@ -396,8 +500,16 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
     } satisfies RuntimeReducers
 
 
+    // ════════════════════════════════════════════════════════════════════════════
+    // WORKFLOW REDUCERS (Top-level workflow operations)
+    // ════════════════════════════════════════════════════════════════════════════
     const workflowReducers = {
-        setLock: (s, lock) => { s.workflow.locked = lock; },
+        setLock: (s, lock) => {
+            if (s.workflow.locked === lock)
+                return
+            s.isDirty = true;
+            s.workflow.locked = lock;
+        },
         executeRuntime: (s) => {
             Object.entries(s.workflow.data.nodes).forEach(([_, node]) => {
                 Object.entries(node.data.inputs).forEach(([_, input]) => {
@@ -405,8 +517,13 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
                 })
             })
         },
-        open: (s, wf) => {
-
+        open: (s, workflow) => {
+            s.workflow = workflow;
+            s.cache = cacheReducers.createAll(s, workflow);
+        },
+        close: (s) => {
+            s.workflow = cloneDeep(EMPTY_WORKFLOW);
+            s.cache = cacheReducers.createAll(s, cloneDeep(EMPTY_WORKFLOW));
         }
     } satisfies WorkflowReducers
 
@@ -416,51 +533,18 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
         input: inputReducers,
         workflow: workflowReducers,
         runtime: runtimeReducers,
+        layout: layoutReducers,
         createNodeId: createNodeId,
         setClickedNodeId: (s, nodeId) => { s.clickedNodeId = nodeId; },
         createEdgeId: (_sourceNodeId, _sourceHandleId, _targetNodeId, _targetHandleId) => {
             return `${_sourceNodeId}|${_sourceHandleId}|${_targetNodeId}|${_targetHandleId}` as Workflow.Edge.Id
-        },
-        createCache: (wf) => {
-            const outgoersEdgesMap: WorkbenchSDK.State["cache"]["outgoersEdgesMap"] = {};
-            const ingoersEdgesMap: WorkbenchSDK.State["cache"]["ingoersEdgesMap"] = {};
-            const inputHandlesMap: WorkbenchSDK.State["cache"]["inputHandlesMap"] = {};
-            const outputHandlesMap: WorkbenchSDK.State["cache"]["outputHandlesMap"] = {};
-
-            Object.values(wf.data.nodes).forEach(node => {
-                outgoersEdgesMap[node.id] = {};
-                ingoersEdgesMap[node.id] = {};
-                inputHandlesMap[node.id] = {};
-                outputHandlesMap[node.id] = {};
-            })
-
-            Object.values(wf.data.edges).forEach(edge => {
-                const sourceNodeId = edge.source.nodeId;
-                const targetNodeId = edge.target.nodeId;
-
-                const sourceHandleId = edge.source.handleId;
-                const targetHandleId = edge.target.handleId
-
-                // Outgoers Edges Map
-                outgoersEdgesMap[sourceNodeId][targetNodeId] = edge.id
-
-                // Ingoers Edges Map
-                ingoersEdgesMap[targetNodeId][sourceNodeId] = edge.id
-
-                inputHandlesMap[targetNodeId][targetHandleId] = edge.id
-
-                outputHandlesMap[sourceNodeId][sourceHandleId] = edge.id
-            })
-
-            return {
-                outgoersEdgesMap,
-                ingoersEdgesMap,
-                inputHandlesMap,
-                outputHandlesMap,
-            }
         }
     } satisfies _WorkbenchSDKReducers
 }
+
+// ════════════════════════════════════════════════════════════════════════════════
+// TYPE DEFINITIONS
+// ════════════════════════════════════════════════════════════════════════════════
 
 type INTERNAL_CacheReducers = {
     deleteEdge: (state: WorkbenchSDK.State, edge: Workflow.Edge) => void
@@ -468,6 +552,7 @@ type INTERNAL_CacheReducers = {
     deleteNode: (state: WorkbenchSDK.State, deletedNodeId: Workflow.Node.Id) => void
     createNode: (state: WorkbenchSDK.State, newNode: Workflow.Node) => void
     deleteInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Workflow.Node.Input.Id) => void
+    createAll: (state: WorkbenchSDK.State, workflow: Workflow) => WorkbenchSDK.State["cache"]
 }
 
 type EdgeReducers = {
@@ -482,6 +567,19 @@ type NodeReducers = {
     setMinimized: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void
     setDisplayName: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDisplayName: string) => void
     setDescription: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDescription: string) => void
+}
+
+type LayoutReducers = {
+    node: {
+        setPosition: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, position: { x: number, y: number } | undefined) => void
+        remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
+        add: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, position: { x: number, y: number }) => void
+    },
+    viewport: {
+        setPosition: (state: WorkbenchSDK.State, newLayout: { x: number, y: number }) => void
+        setZoom: (state: WorkbenchSDK.State, zoom: number) => void
+        set: (state: WorkbenchSDK.State, viewport: { x: number, y: number, zoom: number }) => void
+    }
 }
 
 type InputReducers = {
@@ -530,6 +628,7 @@ type WorkflowReducers = {
     setLock: (state: WorkbenchSDK.State, lock: boolean) => void
     executeRuntime: (state: WorkbenchSDK.State) => void
     open: (state: WorkbenchSDK.State, workflow: Workflow) => void
+    close: (state: WorkbenchSDK.State) => void
 }
 
 export type _WorkbenchSDKReducers = {
@@ -537,10 +636,10 @@ export type _WorkbenchSDKReducers = {
     node: NodeReducers,
     input: InputReducers,
     workflow: WorkflowReducers,
+    layout: LayoutReducers,
     runtime: RuntimeReducers,
     setClickedNodeId: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id | null) => void
     createNodeId: (blueprintId: Shelf.Blueprint.Id) => Workflow.Node.Id
-    createCache: (workflow: Workflow) => WorkbenchSDK.State["cache"]
     createEdgeId: (
         sourceNodeId: Workflow.Node.Id,
         sourceHandleId: Workflow.Node.Output.Id,
