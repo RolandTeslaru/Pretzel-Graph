@@ -1,3 +1,4 @@
+export { Foundations } from "./Foundations"
 export { Auth } from "./Auth"
 export { Library } from "./Library"
 export { Shelf } from "./Shelf"

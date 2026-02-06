@@ -10,21 +10,23 @@ const UIOverlay = memo((props) => {
         <Sonner
             theme={theme as ToasterProps["theme"]}
             className="toaster group"
+            position="top-center"
+            richColors
             icons={{
                 success: (
-                    <SystemIcons.CircleCheck className="size-4" />
+                    <SystemIcons.Check className="size-5" />
                 ),
                 info: (
-                    <SystemIcons.Info className="size-4" />
+                    <SystemIcons.Info className="size-5" />
                 ),
                 warning: (
-                    <SystemIcons.AlertTriangle className="size-4" />
+                    <SystemIcons.AlertTriangle className="size-5" />
                 ),
                 error: (
-                    <SystemIcons.OctagonX className="size-4" />
+                    <SystemIcons.OctagonX className="size-5" />
                 ),
                 loading: (
-                    <Spinner className="size-4" />
+                    <Spinner className="size-5" />
                 ),
             }}
             style={
@@ -32,13 +34,24 @@ const UIOverlay = memo((props) => {
                     "--normal-bg": "var(--popover)",
                     "--normal-text": "var(--popover-foreground)",
                     "--normal-border": "var(--border)",
-                    "--border-radius": "var(--radius)",
+                    "--border-radius": "var(--radius-xl)",
+
+                    "--success-bg": "var(--color-green-950)",
+                    "--success-border": "color-mix(in srgb, var(--color-green-500) 10%, transparent)",
+
+                    // Warning
+                    "--warning-bg": "var(--color-yellow-950)",
+                    "--warning-border": "color-mix(in srgb, var(--color-yellow-500) 10%, transparent)",
+                    "--toast-icon-margin-end": "10px",
                 } as React.CSSProperties
             }
             toastOptions={{
                 classNames: {
                     toast: "cn-toast",
                 },
+                style: {
+                    boxShadow: "0px 5px 20px 1px rgba(0, 0, 0, 0.3)"
+                }
             }}
             {...props}
         />

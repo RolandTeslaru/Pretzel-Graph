@@ -1,16 +1,15 @@
 import { immer } from "zustand/middleware/immer";
 import { create } from "zustand";
-import { useEffect } from "react";
-import type { SDKStore } from "../types";
 import { BaseSDK } from "../Base";
+import { SDK } from "../SDKManager";
 
-class _SystemSDK extends BaseSDK<SystemSDK.State> {
-    private constructor() {super()}
+@SDK("System")
+class SystemSDKImpl extends BaseSDK<SystemSDK.State> {
+    constructor() {super()}
 
     public NOTIFICATION_DURATION = 400
-    public static readonly instance = new _SystemSDK()
 
-    public readonly useStore: SDKStore<SystemSDK.State> = create(
+    public readonly useStore: BaseSDK.Store<SystemSDK.State> = create(
         immer<SystemSDK.State>(() => ({
             theme: "dark"
         }))
@@ -32,7 +31,7 @@ class _SystemSDK extends BaseSDK<SystemSDK.State> {
     }
 }
 
-export const SystemSDK = _SystemSDK.instance
+export const SystemSDK = SDK.get<SystemSDKImpl>("System")
 
 
 export namespace SystemSDK {

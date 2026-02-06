@@ -11,7 +11,7 @@ export class VaultSDKImpl extends BaseSDK<VaultSDK.State> {
 
     public readonly useStore: BaseSDK.Store<VaultSDK.State> = create(
         immer<VaultSDK.State>(() => ({
-            credentials: [],
+            credentials: [], 
         }))
     )
 

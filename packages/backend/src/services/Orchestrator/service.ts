@@ -46,20 +46,23 @@ export class OrchestratorServiceImpl {
 
     public readonly ops: OrchestratorService.Ops = {
         execution: {
-            run: async (token, payload) => {
+            run: async (token, workflow) => {
+                console.log("Preparing to run Workflow", workflow.id)
                 const supabase = createAuthenticatedClient(token);
-
                 const userId = await getUserId(supabase) as Auth.User.Id
+                console.log("Retrieved Authenticated client", userId)
 
-                const jobId = await this.dbOps.job.create(supabase, { workflowId: payload.id, userId })
+                const jobId = await this.dbOps.job.create(supabase, { workflowId: workflow.id, userId })
+
+                console.log("Created job", jobId)
 
                 const queueItem: Orchestrator.ExecutionQueue.Item = {
                     jobId,
-                    workflow: payload,
+                    workflow,
                     userId
                 }
                 await this.executionQueue.add('run', queueItem);
-
+                console.log("Added job to queue")
                 return { jobId }
             },
             pause: async (token, payload) => {

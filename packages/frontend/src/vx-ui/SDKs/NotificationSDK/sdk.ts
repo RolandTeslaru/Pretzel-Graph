@@ -10,8 +10,6 @@ class NotificationSDKImpl extends BaseSDK<NotificationSDK.State>{
 
     constructor() {super()}
 
-    public storageName = null
-
     public readonly useStore: BaseSDK.Store<NotificationSDK.State> = create(
         immer<NotificationSDK.State>(() => ({
         }))
@@ -19,13 +17,7 @@ class NotificationSDKImpl extends BaseSDK<NotificationSDK.State>{
     
     public readonly UIOverlay = UILayer
     
-    public readonly actions = {
-        success: (message: string) => toast.success(message),
-        error: (message: string) => toast.error(message),
-        info: (message: string) => toast.info(message),
-        warning: (message: string) => toast.warning(message),
-        toast: toast
-    }
+    public readonly toast = toast
 
 }
 

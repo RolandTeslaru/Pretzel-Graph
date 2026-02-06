@@ -204,7 +204,7 @@ code {
 }
 
 .dark {
-  --background:             #090605;
+  --background:             #040202;
   --foreground:             theme(--color-white);
   --card:                   #1d1714;
   --card-foreground:        theme(--color-white);

@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { Workflow } from "./Workflow";
+import { Foundations } from "./Foundations";
 
 
 export namespace Shelf {
@@ -9,57 +10,15 @@ export namespace Shelf {
         export type Id = z.infer<typeof Id>;
     }
 
-    export namespace Blueprint {
-        export const Id = z.string().brand("BlueprintId");
-        export type Id = z.infer<typeof Id>;
-    }
 
     export namespace Drawer {
         export const Schema = z.object({
             id: Drawer.Id,
             display_name: z.string(),
             icon: z.string(),
-            blueprints: z.array(Blueprint.Id).optional(),
+            blueprints: z.array(Workflow.Node.Id).optional(),
         })
     }
-
-
-    export namespace Blueprint {
-        export const VersionId = z.string().brand("NodeVersionId")
-        export type VersionId = z.infer<typeof VersionId>
-
-        export const Schema = z.object({
-            id: Blueprint.Id,
-            versionId: VersionId,
-            legacy_id: z.string().optional(),
-            drawer_id: Drawer.Id,
-
-            display_name: z.string(),
-            description: z.string(),
-
-            created_at: z.iso.datetime(),
-            updated_at: z.iso.datetime(),
-
-            data: z.object({
-                inputs: z.record(Workflow.Node.Input.Id, Workflow.Node.Input.Schema),
-                outputs: z.record(Workflow.Node.Output.Id, Workflow.Node.Output.Schema),
-
-                ui: z.object({
-                    icon: z.string(),
-                    icon_color: z.string(),
-                    normalInputsOrder: z.array(Workflow.Node.Input.Id),
-                    advancedInputsOrder: z.array(Workflow.Node.Input.Id),
-                })
-            })
-        })
-
-        export namespace Meta {
-            export const Schema = Blueprint.Schema.omit({ data: true })
-        }
-        export type Meta = z.infer<typeof Blueprint.Meta.Schema>
-    }
-    export type Blueprint = z.infer<typeof Blueprint.Schema>
-
 
     export type Drawer = z.infer<typeof Drawer.Schema>
 
@@ -90,15 +49,15 @@ export namespace Shelf {
             }
         }
 
-        export namespace Blueprint {
+        export namespace Node {
             export namespace Get {
                 export const Request = z.object({
-                    blueprintId: Shelf.Blueprint.Id,
+                    definitionId: Foundations.NodeDefinition.Id,
                 })
-                export const Response = Shelf.Blueprint.Schema;
+                export const Response = Workflow.Node;
                 
-                export type Request = z.infer<typeof Blueprint.Get.Request>
-                export type Response = z.infer<typeof Blueprint.Get.Response>
+                export type Request = z.infer<typeof API.Node.Get.Request>
+                export type Response = z.infer<typeof API.Node.Get.Response>
             }
 
             export namespace List {
@@ -106,25 +65,10 @@ export namespace Shelf {
                     drawerId: z.string().optional()
                 });
                 // Returns array of Meta (lighter payload) or full blueprints
-                export const Response = z.array(Shelf.Blueprint.Schema);
+                export const Response = z.array(Workflow.Node.Schema);
                 
-                export type Request = z.infer<typeof Blueprint.List.Request>
-                export type Response = z.infer<typeof Blueprint.List.Response>;
-            }
-
-            export namespace Create {
-                // We accept a full Blueprint object
-                export const Request = Shelf.Blueprint.Schema;
-                export const Response = z.object({});
-                export type Request = z.infer<typeof Request>;
-                export type Response = Shelf.Blueprint;
-            }
-
-            export namespace Update {
-                export const Request = Shelf.Blueprint.Schema;
-                export const Response = z.object({})
-                export type Request = z.infer<typeof Request>;
-                export type Response = Shelf.Blueprint;
+                export type Request = z.infer<typeof API.Node.List.Request>
+                export type Response = z.infer<typeof API.Node.List.Response>;
             }
         }
     }

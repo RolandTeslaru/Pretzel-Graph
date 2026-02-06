@@ -1,6 +1,6 @@
 import { WorkbenchSDK } from './sdk';
 import type { Connection } from '@xyflow/react';
-import { Workflow, Shelf } from "@vx-agent-editor/shared/types";
+import { Workflow, Foundations } from "@vx-agent-editor/shared/types";
 import { cloneDeep } from 'lodash';
 import { type InputContainer, insertBeforeOrEndInPlace, moveInArray, removeInPlace, reorderSubsetInPlace } from './utils';
 import { EMPTY_WORKFLOW } from './defaults';
@@ -13,8 +13,8 @@ const createNodeId: NodeReducers["createId"] = (blueprintId) => {
     return `${blueprintId}-${uid.randomUUID(5)}` as Workflow.Node.Id
 }
 
-const createRuntimeInputId = (parentInputId: Workflow.Node.Input.Id, display_name: string) => {
-    return `__${parentInputId}|${display_name}__` as Workflow.Node.Input.Id
+const createRuntimeInputId = (parentInputId: Foundations.Input.Id, display_name: string) => {
+    return `__${parentInputId}|${display_name}__` as Foundations.Input.Id
 }
 
 export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
@@ -125,9 +125,9 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             s.isDirty = true;
             const { source: sourceNodeId, sourceHandle, target: targetNodeId, targetHandle } = conn as {
                 source: Workflow.Node.Id,
-                sourceHandle: Workflow.Node.Output.Id,
+                sourceHandle: Foundations.Output.Id,
                 target: Workflow.Node.Id,
-                targetHandle: Workflow.Node.Input.Id
+                targetHandle: Foundations.Input.Id
             }
             if (!sourceHandle || !targetHandle || !sourceNodeId || !targetNodeId) return;
 
@@ -233,8 +233,8 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
 
             const newNode: Workflow.Node = {
                 id: nodeId,
-                versionId: blueprint.versionId,
-                blueprintId: blueprint.id,
+                // TODO: FIX THIS ASAP
+                definitionId: blueprint.id,
                 display_name: blueprint.display_name,
 
                 data: {
@@ -279,16 +279,16 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
     // INPUT REDUCERS
     // ════════════════════════════════════════════════════════════════════════════
     const inputReducers = {
-        resetOrder: (s, nodeId, blueprint) => {
-            const node = s.workflow.data.nodes[nodeId];
-            if (!node) return
+        // resetOrder: (s, nodeId, blueprint) => {
+        //     const node = s.workflow.data.nodes[nodeId];
+        //     if (!node) return
 
-            s.isDirty = true;
-            node.data.inputs = cloneDeep(blueprint.data.inputs)
-            node.data.outputs = cloneDeep(blueprint.data.outputs);
-            node.data.ui.normalInputsOrder = cloneDeep(blueprint.data.ui.normalInputsOrder)
-            node.data.ui.advancedInputsOrder = cloneDeep(blueprint.data.ui.advancedInputsOrder)
-        },
+        //     s.isDirty = true;
+        //     node.data.inputs = cloneDeep(blueprint.data.inputs)
+        //     node.data.outputs = cloneDeep(blueprint.data.outputs);
+        //     node.data.ui.normalInputsOrder = cloneDeep(blueprint.data.ui.normalInputsOrder)
+        //     node.data.ui.advancedInputsOrder = cloneDeep(blueprint.data.ui.advancedInputsOrder)
+        // },
         setValue: (s, nodeId, inputId, value) => {
             s.isDirty = true;
             s.workflow.data.fieldValues[nodeId] ??= {}
@@ -463,7 +463,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
                         data: {
                             multiline: false
                         }
-                    } satisfies Workflow.Node.Input.String
+                    } satisfies Foundations.Input.String
 
                     node.data.inputs[runtimeInputSchema.id] = runtimeInput;
                 })
@@ -491,7 +491,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
                         data: {
                             multiline: false
                         }
-                    } satisfies Workflow.Node.Input.String
+                    } satisfies Foundations.Input.String
 
                     node.data.inputs[runtimeInputSchema.id] = runtimeInput;
                 })
@@ -551,7 +551,7 @@ type INTERNAL_CacheReducers = {
     addEdge: (state: WorkbenchSDK.State, newEdge: Workflow.Edge) => void
     deleteNode: (state: WorkbenchSDK.State, deletedNodeId: Workflow.Node.Id) => void
     createNode: (state: WorkbenchSDK.State, newNode: Workflow.Node) => void
-    deleteInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Workflow.Node.Input.Id) => void
+    deleteInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => void
     createAll: (state: WorkbenchSDK.State, workflow: Workflow) => WorkbenchSDK.State["cache"]
 }
 
@@ -562,8 +562,8 @@ type EdgeReducers = {
 
 type NodeReducers = {
     remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
-    createId: (blueprintId: Shelf.Blueprint.Id) => Workflow.Node.Id
-    create: (state: WorkbenchSDK.State, blueprint: Shelf.Blueprint, position: { x: number, y: number }) => void
+    createId: (definitionId: Foundations.NodeDefinition.Id) => Workflow.Node.Id
+    create: (state: WorkbenchSDK.State, definitionId: Foundations.NodeDefinition.Id, position: { x: number, y: number }) => void
     setMinimized: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void
     setDisplayName: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDisplayName: string) => void
     setDescription: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDescription: string) => void
@@ -586,41 +586,41 @@ type InputReducers = {
     setValue: (
         state: WorkbenchSDK.State,
         nodeId: Workflow.Node.Id,
-        inputId: Workflow.Node.Input.Id,
+        inputId: Foundations.Input.Id,
         value: any
     ) => void
     disconnectIfConnected: (
         state: WorkbenchSDK.State,
         nodeId: Workflow.Node.Id,
-        inputId: Workflow.Node.Input.Id
+        inputId: Foundations.Input.Id
     ) => boolean
-    resetOrder: (
-        state: WorkbenchSDK.State,
-        nodeId: Workflow.Node.Id,
-        blueprint: Shelf.Blueprint
-    ) => void,
+    // resetOrder: (
+    //     state: WorkbenchSDK.State,
+    //     nodeId: Workflow.Node.Id,
+    //     definition: Foundations.NodeDefinition
+    // ) => void,
     changeOrder: (
         state: WorkbenchSDK.State,
         nodeId: Workflow.Node.Id,
         active: {
-            id: Workflow.Node.Input.Id,
-            items: Workflow.Node.Input.Id[], // holds the current items where id is from
+            id: Foundations.Input.Id,
+            items: Foundations.Input.Id[], // holds the current items where id is from
             containerId: InputContainer      // holds the current container id where the id is from
         },
         over: {
-            id: Workflow.Node.Input.Id,
-            items: Workflow.Node.Input.Id[],
+            id: Foundations.Input.Id,
+            items: Foundations.Input.Id[],
             containerId: InputContainer
         }
     ) => void,
-    remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Workflow.Node.Input.Id) => void
+    remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => void
 }
 
 type RuntimeReducers = {
     input: {
-        clear: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Workflow.Node.Input.Id) => void
-        set: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Workflow.Node.Input.Id, displayNames: string[]) => void
-        ensure: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Workflow.Node.Input.Id) => void
+        clear: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => void
+        set: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id, displayNames: string[]) => void
+        ensure: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => void
     }
 }
 
@@ -639,11 +639,11 @@ export type _WorkbenchSDKReducers = {
     layout: LayoutReducers,
     runtime: RuntimeReducers,
     setClickedNodeId: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id | null) => void
-    createNodeId: (blueprintId: Shelf.Blueprint.Id) => Workflow.Node.Id
+    createNodeId: (definitionId: Foundations.NodeDefinition.Id) => Workflow.Node.Id
     createEdgeId: (
         sourceNodeId: Workflow.Node.Id,
-        sourceHandleId: Workflow.Node.Output.Id,
+        sourceHandleId: Foundations.Output.Id,
         targetNodeId: Workflow.Node.Id,
-        targetHandleId: Workflow.Node.Input.Id
+        targetHandleId: Foundations.Input.Id
     ) => Workflow.Edge.Id
 }

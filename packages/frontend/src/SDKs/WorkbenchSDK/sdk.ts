@@ -5,7 +5,7 @@ import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
 import { _createWorkbenchReducers_, type _WorkbenchSDKReducers } from "./reducers";
 import { _createWorkbenchSelectors_, type _WorkBenchSDKSelectors } from "./selectors";
 import React from "react";
-import { Workflow } from "@vx-agent-editor/shared/types"
+import { Foundations, Workflow } from "@vx-agent-editor/shared/types"
 import { temporal } from 'zundo';
 import { cloneDeep } from "lodash";
 import { isConnectionValid } from "./utils";
@@ -14,6 +14,7 @@ import { useShallow } from "zustand/react/shallow";
 import { SDK } from "../SDKManager";
 import { EMPTY_WORKFLOW } from "./defaults";
 import { WorkflowAPI } from "./api";
+import { toast } from "sonner";
 
 @SDK("Workbench")
 export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
@@ -65,7 +66,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     }
 
 
-    public useInputValue(nodeId: Workflow.Node.Id, input: Workflow.Node.Input) {
+    public useInputValue(nodeId: Workflow.Node.Id, input: Foundations.Input) {
         const value = this.useStore(useShallow(s => {
             const val = s.workflow.data.fieldValues[nodeId]?.[input.id];
             if (!val)
@@ -80,11 +81,18 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
 
     public async loadWorkflow(workflowId: Workflow.Id) {
-        const { workflow } = await WorkflowAPI.Get.fetch({ workflowId })
-        if (!workflow) {
-            throw new Error("Workflow not found")
+        try{
+            const { workflow } = await WorkflowAPI.Get.fetch({ workflowId })
+            if (!workflow) {
+                throw new Error("Workflow not found")
+            }
+            Workflow.Schema.parse(workflow);      
+            this.actions.workflow.open(workflow)
+        } catch(error) {
+            console.error(error)
+            toast.error("Failed to parse workflow")
+            throw error
         }
-        this.actions.workflow.open(workflow)
     }
 
     public isConnectionValid = isConnectionValid;
@@ -139,14 +147,14 @@ export namespace WorkbenchSDK {
         cache: {
             ingoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
             outgoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
-            inputHandlesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Input.Id, Workflow.Edge.Id>>
-            outputHandlesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Output.Id, Workflow.Edge.Id>>
+            inputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Input.Id, Workflow.Edge.Id>>
+            outputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Output.Id, Workflow.Edge.Id>>
         }
     }
 
     export type Handle = {
         nodeId: Workflow.Node.Id,
-        field: Workflow.Node.Input | Workflow.Node.Output,
+        field: Foundations.Input | Foundations.Output,
         handleType: "source" | "target"
     }
     // Edges are ui view only
@@ -162,8 +170,8 @@ export namespace WorkbenchSDK {
 
     export type DriverConn = {
         source: Workflow.Node.Id
-        sourceHandle: Workflow.Node.Output.Id
+        sourceHandle: Foundations.Output.Id
         target: Workflow.Node.Id
-        targetHandle: Workflow.Node.Input.Id
+        targetHandle: Foundations.Input.Id
     }
 }
