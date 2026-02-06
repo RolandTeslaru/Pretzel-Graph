@@ -4,10 +4,11 @@ import { EXECUTION_QUEUE_ID, REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/sha
 import { Orchestrator } from '@vx-agent-editor/shared/types';
 import { AggexEngine } from 'src/engine';
 import { Realtime } from '@vx-agent-editor/shared/types/Realtime';
+import { container, singleton } from 'tsyringe';
 
-
+@singleton()
 export class AggexWorkerImpl {
-    private constructor() { }
+    constructor() { }
 
     public init() {
         this.worker.run()
@@ -20,38 +21,43 @@ export class AggexWorkerImpl {
         });
 
     }
-
-    public static Instance = new AggexWorkerImpl();
-
-    private redis = new IORedis({ host: REDIS_HOST, port: REDIS_PORT })
+    private engine = new AggexEngine();
+    private redis = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
 
     private processQueueItem = async (
         { data: queueItem }: { data: Orchestrator.ExecutionQueue.Item }
     ) => {
+        console.log("Processing Queue Item ", queueItem.jobId, " worlflow id ", queueItem.workflow.id)
         const { workflow, jobId } = queueItem;
+        const payloadMeta = { jobId: jobId, workflowId: workflow.id}
 
         const topicId = `job:${jobId}:events` as Realtime.Topic.Id
 
         const startEvent: Orchestrator.Event.Job.Started = {
             type: "job:started",
             topicId,
-            payload: { jobId, workflowId: workflow.id },
+            payload: {...payloadMeta},
             timestamp: Date.now()
         }
 
         await this.emit(startEvent)
 
-        const engineInstance = new AggexEngine(workflow);
+        const compiledGraph = await this.engine.compile(workflow)
 
-        for await (const event of await engineInstance.stream({})) {
-            // Publish progress to Redis PubSub
-            await this.emit(event);
+
+        for await (const update of await this.engine.stream(compiledGraph, {})) {
+            await this.emit({
+                type: "job:update",
+                topicId,
+                payload: { update, ...payloadMeta },
+                timestamp: Date.now()
+            } satisfies Orchestrator.Event.Job.Update);
         }
 
         await this.emit({
             type: "job:completed",
             topicId,
-            payload: { jobId, workflowId: workflow.id },
+            payload: { ...payloadMeta },
             timestamp: Date.now()
         } as Orchestrator.Event.Job.Completed)
 
@@ -61,7 +67,7 @@ export class AggexWorkerImpl {
     private worker = new Worker(
         EXECUTION_QUEUE_ID,
         this.processQueueItem,
-        { connection: this.redis }
+        { connection: this.redis, autorun: false }
     )
 
     public async emit(event: Realtime.Event) {
@@ -69,4 +75,4 @@ export class AggexWorkerImpl {
     }
 }
 
-export const AggexWorker = AggexWorkerImpl.Instance   
+export const AggexWorker = container.resolve(AggexWorkerImpl);

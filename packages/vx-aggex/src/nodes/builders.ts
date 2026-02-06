@@ -1,3 +1,4 @@
+import { Foundations } from "@vx-agent-editor/shared/types";
 import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 
 // ============================================
@@ -18,10 +19,10 @@ export namespace InputBuilder {
     // Helper to build base fields
     function buildBase(
         props: BaseProps,
-        langChainDataType: Workflow.Node.LangChainDataType
-    ): Omit<Workflow.Node.Input.Base, "variant" | "initialValue" | "data"> {
+        langChainDataType: Foundations.LangChainDataType
+    ): Omit<Foundations.Input.Base, "variant" | "initialValue" | "data"> {
         return {
-            id: "" as Workflow.Node.Input.Id, // Will be assigned by transform layer
+            id: "" as Foundations.Input.Id, // Will be assigned by transform layer
             required: props.required ?? true,
             reconcile: props.reconcile ?? false,
             asTool: false,
@@ -42,7 +43,7 @@ export namespace InputBuilder {
         initialValue?: string;
         multiline?: boolean;
         hasHandle: boolean
-    } & BaseProps): Workflow.Node.Input.String {
+    } & BaseProps): Foundations.Input.String {
         return {
             ...buildBase(props, "Text"),
             variant: "string",
@@ -63,7 +64,7 @@ export namespace InputBuilder {
         step?: number;
         slider?: boolean;
         hasHandle: boolean
-    } & BaseProps): Workflow.Node.Input.Integer {
+    } & BaseProps): Foundations.Input.Integer {
         return {
             ...buildBase(props, "Data"),
             variant: "integer",
@@ -87,7 +88,7 @@ export namespace InputBuilder {
         step?: number;
         slider?: boolean;
         hasHandle: boolean
-    } & BaseProps): Workflow.Node.Input.Float {
+    } & BaseProps): Foundations.Input.Float {
         return {
             ...buildBase(props, "Data"),
             variant: "float",
@@ -106,7 +107,7 @@ export namespace InputBuilder {
     // ------------------------------------------
     export function Boolean(props: {
         initialValue?: boolean;
-    } & BaseProps): Workflow.Node.Input.Boolean {
+    } & BaseProps): Foundations.Input.Boolean {
         return {
             ...buildBase(props, "Data"),
             variant: "boolean",
@@ -121,7 +122,7 @@ export namespace InputBuilder {
         initialValue: string;
         options: string[];
         variant?: "select" | "tab";
-    } & BaseProps): Workflow.Node.Input.MultiOption {
+    } & BaseProps): Foundations.Input.MultiOption {
         return {
             ...buildBase(props, "Text"),
             variant: "multiOption",
@@ -140,7 +141,7 @@ export namespace InputBuilder {
         initialValue?: string;
         fileTypes?: string[];
         hasHandle: boolean
-    } & BaseProps): Workflow.Node.Input.File {
+    } & BaseProps): Foundations.Input.File {
         return {
             ...buildBase(props, "Data"),
             variant: "file",
@@ -157,7 +158,7 @@ export namespace InputBuilder {
     export function List(props: {
         initialValue?: string[];
         hasHandle: boolean
-    } & BaseProps): Workflow.Node.Input.List {
+    } & BaseProps): Foundations.Input.List {
         return {
             ...buildBase(props, "Data"),
             variant: "list",
@@ -171,7 +172,7 @@ export namespace InputBuilder {
     export function Json(props: {
         initialValue?: any;
         hasHandle: boolean
-    } & BaseProps): Workflow.Node.Input.Json {
+    } & BaseProps): Foundations.Input.Json {
         return {
             ...buildBase(props, "Data"),
             variant: "json",
@@ -184,7 +185,7 @@ export namespace InputBuilder {
     // ------------------------------------------
     export function Secret(props: {
         initialValue?: string;
-    } & BaseProps): Workflow.Node.Input.Secret {
+    } & BaseProps): Foundations.Input.Secret {
         return {
             ...buildBase(props, "Text"),
             variant: "secret",
@@ -197,7 +198,7 @@ export namespace InputBuilder {
     // ------------------------------------------
     export function Script(props: {
         initialValue?: string;
-    } & BaseProps): Workflow.Node.Input.Script {
+    } & BaseProps): Foundations.Input.Script {
         return {
             ...buildBase(props, "Text"),
             variant: "script",
@@ -208,7 +209,7 @@ export namespace InputBuilder {
     // ------------------------------------------
     // MESSAGE (LangChain Message Handle - Always has handle)
     // ------------------------------------------
-    export function Message(props: Omit<BaseProps, "hasHandle">): Workflow.Node.Input.String {
+    export function Message(props: Omit<BaseProps, "hasHandle">): Foundations.Input.String {
         return {
             ...buildBase({ ...props, hasHandle: true }, "Message"),
             variant: "string",
@@ -220,7 +221,7 @@ export namespace InputBuilder {
     // ------------------------------------------
     // LANGUAGE MODEL (LLM Handle - Always has handle)
     // ------------------------------------------
-    export function LanguageModel(props: Omit<BaseProps, "hasHandle">): Workflow.Node.Input.String {
+    export function LanguageModel(props: Omit<BaseProps, "hasHandle">): Foundations.Input.String {
         return {
             ...buildBase({ ...props, hasHandle: true }, "LanguageModel"),
             variant: "string",
@@ -232,7 +233,7 @@ export namespace InputBuilder {
     // ------------------------------------------
     // DOCUMENT (RAG Handle - Always has handle)
     // ------------------------------------------
-    export function Document(props: Omit<BaseProps, "hasHandle">): Workflow.Node.Input.String {
+    export function Document(props: Omit<BaseProps, "hasHandle">): Foundations.Input.String {
         return {
             ...buildBase({ ...props, hasHandle: true }, "Document"),
             variant: "string",
@@ -244,7 +245,7 @@ export namespace InputBuilder {
     // ------------------------------------------
     // RETRIEVER (RAG Handle - Always has handle)
     // ------------------------------------------
-    export function Retriever(props: Omit<BaseProps, "hasHandle">): Workflow.Node.Input.String {
+    export function Retriever(props: Omit<BaseProps, "hasHandle">): Foundations.Input.String {
         return {
             ...buildBase({ ...props, hasHandle: true }, "Retriever"),
             variant: "string",
@@ -268,10 +269,10 @@ export namespace OutputBuilder {
 
     function buildBase(
         props: BaseProps,
-        dataType: Workflow.Node.LangChainDataType
-    ): Workflow.Node.Output {
+        dataType: Foundations.LangChainDataType
+    ): Foundations.Output {
         return {
-            id: "" as Workflow.Node.Output.Id, // Will be assigned by transform layer
+            id: "" as Foundations.Output.Id, // Will be assigned by transform layer
             langChainDataTypes: [dataType],
             asTool: false,
             uiData: {
@@ -283,56 +284,56 @@ export namespace OutputBuilder {
     // ------------------------------------------
     // TEXT OUTPUT
     // ------------------------------------------
-    export function Text(props: BaseProps): Workflow.Node.Output {
+    export function Text(props: BaseProps): Foundations.Output {
         return buildBase(props, "Text");
     }
 
     // ------------------------------------------
     // MESSAGE OUTPUT
     // ------------------------------------------
-    export function Message(props: BaseProps): Workflow.Node.Output {
+    export function Message(props: BaseProps): Foundations.Output {
         return buildBase(props, "Message");
     }
 
     // ------------------------------------------
     // LANGUAGE MODEL OUTPUT
     // ------------------------------------------
-    export function LanguageModel(props: BaseProps): Workflow.Node.Output {
+    export function LanguageModel(props: BaseProps): Foundations.Output {
         return buildBase(props, "LanguageModel");
     }
 
     // ------------------------------------------
     // DOCUMENT OUTPUT
     // ------------------------------------------
-    export function Document(props: BaseProps): Workflow.Node.Output {
+    export function Document(props: BaseProps): Foundations.Output {
         return buildBase(props, "Document");
     }
 
     // ------------------------------------------
     // RETRIEVER OUTPUT
     // ------------------------------------------
-    export function Retriever(props: BaseProps): Workflow.Node.Output {
+    export function Retriever(props: BaseProps): Foundations.Output {
         return buildBase(props, "Retriever");
     }
 
     // ------------------------------------------
     // EMBEDDINGS OUTPUT
     // ------------------------------------------
-    export function Embeddings(props: BaseProps): Workflow.Node.Output {
+    export function Embeddings(props: BaseProps): Foundations.Output {
         return buildBase(props, "Embeddings");
     }
 
     // ------------------------------------------
     // VECTOR STORE OUTPUT
     // ------------------------------------------
-    export function VectorStore(props: BaseProps): Workflow.Node.Output {
+    export function VectorStore(props: BaseProps): Foundations.Output {
         return buildBase(props, "VectorStore");
     }
 
     // ------------------------------------------
     // TOOL OUTPUT
     // ------------------------------------------
-    export function Tool(props: BaseProps): Workflow.Node.Output {
+    export function Tool(props: BaseProps): Foundations.Output {
         return {
             ...buildBase(props, "Tool"),
             asTool: true,
@@ -342,14 +343,14 @@ export namespace OutputBuilder {
     // ------------------------------------------
     // CHAIN / RUNNABLE OUTPUT
     // ------------------------------------------
-    export function Chain(props: BaseProps): Workflow.Node.Output {
+    export function Chain(props: BaseProps): Foundations.Output {
         return buildBase(props, "Chain");
     }
 
     // ------------------------------------------
     // DATA (Generic Object)
     // ------------------------------------------
-    export function Data(props: BaseProps): Workflow.Node.Output {
+    export function Data(props: BaseProps): Foundations.Output {
         return buildBase(props, "Data");
     }
 }

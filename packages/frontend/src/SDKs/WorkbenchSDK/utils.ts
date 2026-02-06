@@ -1,4 +1,4 @@
-import { Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
 import { WorkbenchSDK } from "./sdk"
 import {
   type Connection,
@@ -102,9 +102,9 @@ function detectCycle(
 function doesEdgeAlreadyExist(
   workflow:       Workflow,
   sourceNodeId:   Workflow.Node.Id,
-  sourceHandleId: Workflow.Node.Output.Id,
+  sourceHandleId: Foundations.Output.Id,
   targetNodeId:   Workflow.Node.Id,
-  targetHandleId: Workflow.Node.Input.Id
+  targetHandleId: Foundations.Input.Id
 ) {
   const edgeId = WorkbenchSDK.reducers.createEdgeId(sourceNodeId, sourceHandleId, targetNodeId, targetHandleId);
   return !!workflow.data.edges[edgeId]
@@ -113,7 +113,7 @@ function doesEdgeAlreadyExist(
 function isTargetAlreadyConnected(
   s:              WorkbenchSDK.State,
   targetNodeId:   Workflow.Node.Id,
-  targetHandleId: Workflow.Node.Input.Id
+  targetHandleId: Foundations.Input.Id
 ) {
   const edgeId = s.cache.inputHandlesMap[targetNodeId][targetHandleId]
   if (edgeId)
@@ -123,9 +123,9 @@ function isTargetAlreadyConnected(
 
 function areHandlesDataTypesCompatible(
   sourceNode:     Workflow.Node,
-  sourceHandleId: Workflow.Node.Output.Id,
+  sourceHandleId: Foundations.Output.Id,
   targetNode:     Workflow.Node,
-  targetHandleId: Workflow.Node.Input.Id
+  targetHandleId: Foundations.Input.Id
 ) {
   const sourceHandle = sourceNode.data.outputs[sourceHandleId];
   const targetHandle = targetNode.data.inputs[targetHandleId];
@@ -147,8 +147,8 @@ export function isConnectionValid(s: WorkbenchSDK.State, conn: Connection) {
   const sourceNode = workflow.data.nodes[conn.source as Workflow.Node.Id];
   const targetNode = workflow.data.nodes[conn.target as Workflow.Node.Id];
 
-  const sourceHandleId = conn.sourceHandle as Workflow.Node.Output.Id;
-  const targetHandleId = conn.targetHandle as Workflow.Node.Input.Id;
+  const sourceHandleId = conn.sourceHandle as Foundations.Output.Id;
+  const targetHandleId = conn.targetHandle as Foundations.Input.Id;
 
   if (!sourceNode || !targetNode || !sourceHandleId || !targetHandleId)
     return false;
