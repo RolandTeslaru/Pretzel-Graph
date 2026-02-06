@@ -12,7 +12,6 @@ const RunnerPanel = () => {
 
   const handleRun = useCallback(() => {
     const workflow = WorkbenchSDK.state.workflow;
-    debugger
     execution.run(workflow);
   }, [])
 

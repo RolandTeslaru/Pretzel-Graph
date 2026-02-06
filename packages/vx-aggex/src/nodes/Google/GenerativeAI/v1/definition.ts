@@ -1,15 +1,10 @@
-import { z } from "zod"
-import { CatalogueService } from "../../../../services/Catalogue/service";
-import { Engine, Foundations } from "../../../foundations";
-import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
+import { Foundations } from "@vx-agent-editor/shared/types";
 import { InputBuilder, OutputBuilder } from "src/nodes/builders";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { HumanMessage } from "@langchain/core/messages";
 
 export const Definition = {
-    id: "Google.Chat.v1",
-    displayName: "Google Chat Node",
-    description: "This node talks to google chat api",
+    id: "Google.GenerativeAI.v1" as Foundations.NodeDefinition.Id,
+    displayName: "Google Generative AI Node",
+    description: "This node talks to google generative ai api",
     inputs: {
         api_key: InputBuilder.Secret({
             displayName: "API Key",
@@ -75,48 +70,4 @@ export const Definition = {
             tooltip: "The response from the model",
         })
     }
-} satisfies Foundations.Node.Definition
-
-
-
-@CatalogueService.Register(Definition.id)
-export class Node extends Foundations.Node<typeof Definition> {
-
-    public static Definition = Definition;
-
-    constructor(workflowNode: Workflow.Node) {
-        super(workflowNode);
-    }
-
-    public override async run(
-        state: Engine.GlobalState,
-        incomingValues: Foundations.InferInputs<typeof Definition>
-    ): Promise<Foundations.InferOutputs<typeof Definition>> {
-
-        const { model, prompt, api_key, temperature, maxOutputTokens, topP, topK } = incomingValues;
-
-        const llm = new ChatGoogleGenerativeAI({
-            model: model,
-            apiKey: api_key,
-            maxOutputTokens: maxOutputTokens,
-            temperature: temperature,
-            topP: topP,
-            topK: topK,
-        });
-
-        const response = await llm.invoke([
-            new HumanMessage(prompt)
-        ]);
-
-        return { response: response }
-    }
-
-
-    public override async onReconcile(
-        changedInputId: Workflow.Node.Input.Id,
-        newValue: any,
-        currentDefinition: typeof Definition
-    ): Promise<typeof Definition> {
-        return Promise.resolve(currentDefinition);
-    }
-}
+} as const satisfies Foundations.NodeDefinition

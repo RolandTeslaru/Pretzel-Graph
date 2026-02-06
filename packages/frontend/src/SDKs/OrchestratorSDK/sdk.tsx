@@ -6,6 +6,7 @@ import { Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/types"
 import { OrchestratorAPI } from "./api";
 import { useEffect } from "react";
 import { RealtimeSDK } from "../Realtime/sdk";
+import { toast } from "sonner";
 
 @SDK("Orchestrator")
 export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
@@ -22,7 +23,24 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
     public readonly actions: OrchestratorSDK.Actions = {
         execution: {
             run: async (workflow) => {
-                const data = await OrchestratorAPI.Execution.Run.execute(workflow);
+                if(this.state.currentJob){
+                    toast.warning("Workflow is already running")
+                    return this.state.currentJob.id
+                }
+
+                const executionPromise = OrchestratorAPI.Execution.Run.execute(workflow);
+
+                toast.promise(executionPromise, {
+                    loading: "Executing workflow",
+                    success: (data) => {
+                        return `Workflow ${data.jobId} executed successfully`
+                    },
+                    error: (error) => {
+                        return `Workflow execution failed: ${error.message}`
+                    }
+                })
+
+                const data = await executionPromise;
                 return data.jobId;
             },
             pause: async (jobId) => {

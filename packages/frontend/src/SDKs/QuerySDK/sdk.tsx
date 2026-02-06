@@ -1,10 +1,11 @@
-import { QueryClient, QueryClientProvider, useMutation, UseMutationOptions, UseMutationResult, useQuery, UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
-import { ReactNode } from "react";
+import { QueryClient, QueryClientProvider, useMutation, useQuery } from "@tanstack/react-query";
+import type { UseMutationOptions, UseMutationResult, UseQueryOptions, UseQueryResult } from "@tanstack/react-query"
+import type { ReactNode } from "react";
+import { SDK } from "../SDKManager";
 
-export class _QuerySDK_ {
-    private constructor() { }
-
-    public static readonly instance = new _QuerySDK_();
+@SDK("Query")
+export class QuerySDKImpl {
+    constructor() { }
 
     public readonly client = new QueryClient();
 
@@ -52,7 +53,7 @@ export class _QuerySDK_ {
     }
 }
 
-export const QuerySDK = _QuerySDK_.instance
+export const QuerySDK = SDK.get<QuerySDKImpl>("Query")
 
 
 export namespace QuerySDK {

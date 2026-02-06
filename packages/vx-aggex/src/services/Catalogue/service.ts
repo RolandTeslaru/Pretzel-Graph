@@ -1,71 +1,61 @@
 import path from "path";
-import { singleton } from "tsyringe";
-import { Foundations } from "../../nodes/foundations";
+import { container, singleton } from "tsyringe";
 import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
+import { Runtime } from "src/runtime";
+import { Foundations } from "@vx-agent-editor/shared/types";
 
 export interface NodeConstructor {
-    new(workflowNode: Workflow.Node): Foundations.Node<Foundations.Node.Definition>;
-    Definition: Foundations.Node.Definition
+    new(workflowNode: Workflow.Node): Runtime.Node<Foundations.NodeDefinition>;
+    Definition: Foundations.NodeDefinition
 }
 
 @singleton()
-export class CatalogueService {
-    // Static Registry accessible by Decorators
-    public static Registry = new Map<string, NodeConstructor>();
+class CatalogueServiceImpl {
+    // Seperete static and instance registry because i cannot use the instance registry in the static method Register
+    private static registry = new Map<Foundations.NodeDefinition.Id, NodeConstructor>();
+    private __registry = CatalogueServiceImpl.registry;
 
-    // The Decorator Factory
-    public static Register(nodeType: string) {
+    public Register(definitionId: Foundations.NodeDefinition.Id) {
+        
         return function (constructor: NodeConstructor) {
-            if (CatalogueService.Registry.has(nodeType)) {
-                console.warn(`[NodeRegistry] Overwriting node type: ${nodeType}`);
-            }
-            CatalogueService.Registry.set(nodeType, constructor);
+            if (CatalogueServiceImpl.registry.has(definitionId))
+                console.warn(`[NodeRegistry] Overwriting node type: ${definitionId}`);
+
+            CatalogueServiceImpl.registry.set(definitionId, constructor);
         };
     }
 
     private nodesRoot: string;
 
     constructor() {
-        // Assuming this code runs in dist/services/Catalogue/service.js
-        // trying to reach dist/nodes
-        // We might need to adjust this based on actual project structure (src vs dist)
         this.nodesRoot = path.resolve(__dirname, "../../nodes");
     }
 
-    /**
-     * Resolves a node by its namespace path (e.g., "Google/Chat" or "Google.Chat").
-     * This relies on the file structure matching the identifier.
-     * 
-     * @param nodeIdentifier The structural identifier (e.g. "Google/Chat")
-     */
-    async getNode(nodeIdentifier: string) {
+    public async getNode(definitionId: Foundations.NodeDefinition.Id) {
         // 1. Check Memory Cache (Registry)
-        if (CatalogueService.Registry.has(nodeIdentifier)) {
-            return CatalogueService.Registry.get(nodeIdentifier);
-        }
+        if (this.__registry.has(definitionId))
+            return this.__registry.get(definitionId);
 
         // 2. Convention over Configuration: Resolve Path
-        // "Google.Chat" -> "Google/Chat"
-        const relativePath = nodeIdentifier.replace(/\./g, "/");
+        // "Google.Chat.v1" -> "Google/Chat/v1"
+        const relativePath = definitionId.replace(/\./g, "/");
         const fullPath = path.join(this.nodesRoot, relativePath);
 
         try {
-            // 3. Dynamic Import (Triggers @RegisterNode side-effect)
             await import(fullPath);
 
-            // 4. Check Registry Again
-            if (CatalogueService.Registry.has(nodeIdentifier)) {
-                return CatalogueService.Registry.get(nodeIdentifier);
-            }
+            // check registry after dynamic import
+            if (this.__registry.has(definitionId))
+                return this.__registry.get(definitionId);
 
-            // Fallback: If the decorator ID didn't match the filename ID
-            // We might want to warn or just fail.
-            // But usually, strict convention means they match.
-            throw new Error(`Module loaded from ${relativePath} but it did not register '${nodeIdentifier}'. Check the @RegisterNode decorator.`);
+            throw new Error(`Module loaded from ${relativePath} but it did not register '${definitionId}'. Check the @RegisterNode decorator.`);
 
         } catch (error) {
-            console.error(`[CatalogueService] Failed to load node '${nodeIdentifier}':`, error);
+            console.error(`[CatalogueService] Failed to load node '${definitionId}':`, error);
             return null;
         }
     }
 }
+
+
+export const CatalogueService = container.resolve(CatalogueServiceImpl);

@@ -2,6 +2,7 @@ import z from "zod"
 import { Workflow } from "./Workflow"
 import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
+import { Runtime } from "src/runtime"
 
 export namespace Orchestrator {
 
@@ -25,6 +26,7 @@ export namespace Orchestrator {
     export type Job = z.infer<typeof Job.Schema>
 
 
+
     export namespace ExecutionQueue {
         export namespace Item {
             export const Schema = z.object({
@@ -38,8 +40,8 @@ export namespace Orchestrator {
 
     export namespace Event {
         export const Type = z.enum([
-            "job:started",
-            "job:progress",
+            "job:tarted",
+            "job:update",
             "job:node:started",
             "job:node:completed",
             "job:node:error",
@@ -57,91 +59,83 @@ export namespace Orchestrator {
             })
         })
         export namespace Job {
-            export namespace Started {
-                export const Schema = Base.extend({
-                    type: z.literal('job:started'),
-                })
-            }
+            export const Started = Base.extend({
+                type: z.literal('job:started'),
+            })
 
-            export namespace Progress {
-                export const Schema = Base.extend({
-                    type: z.literal('job:progress'),
-                    progress: z.number().min(0).max(100),
+            export const Update = Base.extend({
+                type: z.literal('job:update'),
+                payload: Base.shape.payload.extend({
+                    update: Runtime.State.Update
                 })
-            }
+            })
 
-            export namespace Terminated {
-                export const Schema = Base.extend({
-                    type: z.literal('job:terminated'),
-                })
-            }
 
-            export namespace Paused {
-                export const Schema = Base.extend({
-                    type: z.literal('job:paused'),
-                })
-            }
+            export const Terminated = Base.extend({
+                type: z.literal('job:terminated'),
+            })
 
-            export namespace Failed {
-                export const Schema = Base.extend({
-                    type: z.literal('job:failed'),
+
+            export const Paused = Base.extend({
+                type: z.literal('job:paused'),
+            })
+
+
+            export const Failed = Base.extend({
+                type: z.literal('job:failed'),
+                payload: Base.shape.payload.extend({
                     error: z.string()
                 })
-            }
+            })
 
-            export namespace Completed {
-                export const Schema = Base.extend({
-                    type: z.literal('job:completed'),
-                    result: z.unknown()
+            export const Completed = Base.extend({
+                type: z.literal('job:completed'),
+                payload: Base.shape.payload.extend({
+                    result: z.string()
                 })
-            }
+            })
 
-            export type Started = z.infer<typeof Started.Schema>
-            export type Progress = z.infer<typeof Progress.Schema>
-            export type Terminated = z.infer<typeof Terminated.Schema>
-            export type Paused = z.infer<typeof Paused.Schema>
-            export type Failed = z.infer<typeof Failed.Schema>
-            export type Completed = z.infer<typeof Completed.Schema>
+            export type Started = z.infer<typeof Started>
+            export type Update = z.infer<typeof Update>
+            export type Terminated = z.infer<typeof Terminated>
+            export type Paused = z.infer<typeof Paused>
+            export type Failed = z.infer<typeof Failed>
+            export type Completed = z.infer<typeof Completed>
 
             export const Schema = z.discriminatedUnion("type", [
-                Job.Started.Schema,
-                Job.Progress.Schema,
-                Job.Terminated.Schema,
-                Job.Paused.Schema,
-                Job.Failed.Schema,
-                Job.Completed.Schema,
+                Job.Started,
+                Job.Update,
+                Job.Terminated,
+                Job.Paused,
+                Job.Failed,
+                Job.Completed,
             ])
 
             export namespace Node {
-                export namespace Started {
-                    export const Schema = Base.extend({
-                        type: z.literal('job:node:started'),
-                        nodeId: Workflow.Node.Id
-                    })
-                }
+                export const Started = Base.extend({
+                    type: z.literal('job:node:started'),
+                    nodeId: Workflow.Node.Id
+                })
 
-                export namespace Completed {
-                    export const Schema = Base.extend({
-                        type: z.literal('job:node:completed'),
-                        nodeId: Workflow.Node.Id,
-                        output: z.unknown()
-                    })
-                }
+                export const Completed = Base.extend({
+                    type: z.literal('job:node:completed'),
+                    nodeId: Workflow.Node.Id,
+                    output: z.unknown()
+                })
 
-                export namespace Error {
-                    export const Schema = Base.extend({
-                        type: z.literal('job:node:error'),
-                        nodeId: Workflow.Node.Id
-                    })
-                }
+                export const Error = Base.extend({
+                    type: z.literal('job:node:error'),
+                    nodeId: Workflow.Node.Id
+                })
 
-                export type Started = z.infer<typeof Started.Schema>
-                export type Completed = z.infer<typeof Completed.Schema>
-                export type Error = z.infer<typeof Error.Schema>
-                export const Schema = z.discriminatedUnion("type",[
-                    Job.Node.Started.Schema,
-                    Job.Node.Completed.Schema,
-                    Job.Node.Error.Schema,
+                export type Started = z.infer<typeof Started>
+                export type Completed = z.infer<typeof Completed>
+                export type Error = z.infer<typeof Error>
+
+                export const Schema = z.discriminatedUnion("type", [
+                    Started,
+                    Completed,
+                    Error,
                 ])
             }
             export type Node = z.infer<typeof Node.Schema>
@@ -149,15 +143,15 @@ export namespace Orchestrator {
         export type Job = z.infer<typeof Job.Schema>
 
         export const Schema = z.discriminatedUnion("type", [
-            Job.Started.Schema,
-            Job.Progress.Schema,
-            Job.Terminated.Schema,
-            Job.Paused.Schema,
-            Job.Failed.Schema,
-            Job.Completed.Schema,
-            Job.Node.Started.Schema,
-            Job.Node.Completed.Schema,
-            Job.Node.Error.Schema
+            Job.Started,
+            Job.Update,
+            Job.Terminated,
+            Job.Paused,
+            Job.Failed,
+            Job.Completed,
+            Job.Node.Started,
+            Job.Node.Completed,
+            Job.Node.Error
         ])
     }
     export type Event = z.infer<typeof Event.Schema>
@@ -208,8 +202,8 @@ export namespace Orchestrator {
         export namespace Schedule {
             export namespace Create {
                 export const Request = z.object({
-                    workflowId: z.string(),
-                    schedule: z.string()
+                    workflowId: Workflow.Id,
+                    schedule: Schedule
                 })
                 export const Response = z.object({
                     scheduleId: z.string()
