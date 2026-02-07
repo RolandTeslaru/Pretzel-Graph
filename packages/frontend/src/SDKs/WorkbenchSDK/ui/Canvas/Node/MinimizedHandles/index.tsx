@@ -1,4 +1,4 @@
-import { Workflow } from '@vx-agent-editor/shared/types'
+import { Foundations, Workflow } from '@vx-agent-editor/shared/types'
 import React, { useMemo } from 'react'
 import NodeHandle from '../Handle'
 
@@ -11,7 +11,7 @@ interface Props {
 const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, children }) => {
 
     const inputs = useMemo(() => {
-        const inputs: Workflow.Node.Input[] = [];
+        const inputs: Foundations.Input[] = [];
         node.data.ui.normalInputsOrder.forEach(inputId => {
             const input = node.data.inputs[inputId]
             if (input.langChainDataTypes.length === 0)
@@ -28,7 +28,7 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, children })
     }, [node.data.inputs, node.data.ui.normalInputsOrder])
 
     const outputs = useMemo(() => {
-        const outputs: Workflow.Node.Output[] = [];
+        const outputs: Foundations.Output[] = [];
         Object.entries(node.data.outputs).forEach(([_, output]) => {
             if (output.langChainDataTypes.length === 0)
                 return
@@ -41,9 +41,8 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, children })
         <div className='flex flex-row w-full'>
             <div className='flex flex-col h-auto my-auto gap-2'>
                 {inputs.map(input =>
-                    <div className='h-2 relative '>
+                    <div className='h-2 relative' key={input.id}>
                         <NodeHandle
-                            key={input.id}
                             type="target"
                             field={input}
                             nodeId={node.id}
@@ -55,9 +54,8 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, children })
             {children}
             <div className='flex flex-col h-auto my-auto gap-2 relative ml-auto'>
                 {outputs.map(output =>
-                    <div className='h-2 relative'>
+                    <div className='h-2 relative' key={output.id}>
                         <NodeHandle
-                            key={output.id}
                             type="source"
                             field={output}
                             nodeId={node.id}

@@ -5,17 +5,12 @@ import { Foundations, Orchestrator } from "@vx-agent-editor/shared/types";
 import { Runtime } from "src/runtime";
 
 export class WorkflowCompiler {
-    private vertices: Record<
-        Workflow.Node.Id,
-        Runtime.Node<Foundations.NodeDefinition>
-    > = {};
-
     constructor() {}
 
-
     private async runNode(
-        state: Runtime.State, 
-        activeNode: Workflow.Node, 
+        state: Runtime.State,
+        activeNode: Workflow.Node,
+        Vertex: Runtime.Node<Foundations.NodeDefinition>,
         edges: Workflow["data"]["edges"],
         emit: Runtime.Emitter
     ) {
@@ -25,9 +20,7 @@ export class WorkflowCompiler {
 
         const inputs = this.resolveInputs(state, activeNode.id, edges);
 
-        const Vertice = this.vertices[activeNode.id];
-
-        const result = await Vertice.run(state, inputs)
+        const result = await Vertex.run(state, inputs)
 
         emit(b => b.nodeCompleted(activeNode.id, result))
 
@@ -50,11 +43,11 @@ export class WorkflowCompiler {
 
             if (!VerticeConstructor)
                 throw new Error(`Could not find vertice with definitionId ${node.definitionId}`)
-
-            this.vertices[node.id] = new VerticeConstructor(node);
+            
+            const Vertex = new VerticeConstructor(node);
 
             graph.addNode(node.id, async (state) => {
-                return this.runNode(state, node, edges, emit)
+                return this.runNode(state, node, Vertex, edges, emit)
             });
         }
 
