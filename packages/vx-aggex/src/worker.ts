@@ -47,7 +47,7 @@ export class AggexWorkerImpl {
         const compiledGraph = await this.engine.compile(workflow, emit)
 
 
-        for await (const update of this.engine.stream(emit, compiledGraph, {})) {
+        for await (const update of this.engine.stream(compiledGraph, {})) {
             emit(builder => builder.update(update))
         }
 

@@ -253,6 +253,14 @@ export namespace InputBuilder {
             data: { multiline: false }
         };
     }
+
+    export function Structure(props: BaseProps): Foundations.Input.Structure {
+        return {
+            ...buildBase(props, "Structure"),
+            variant: "structure",
+            initialValue: {},
+        };
+    }
 }
 
 

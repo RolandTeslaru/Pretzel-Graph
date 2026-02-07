@@ -6,7 +6,7 @@ import { Foundations } from "@vx-agent-editor/shared/types";
 
 export interface NodeConstructor {
     new(workflowNode: Workflow.Node): Runtime.Node<Foundations.NodeDefinition>;
-    Definition: Foundations.NodeDefinition
+    // Definition: Foundations.NodeDefinition
 }
 
 @singleton()
@@ -36,7 +36,7 @@ class CatalogueServiceImpl {
         // 2. Convention over Configuration: Resolve Path
         // "Google.Chat.v1" -> "Google/Chat/v1"
         const relativePath = definitionId.replace(/\./g, "/");
-        const fullPath = path.join(this.nodesRoot, relativePath);
+        const fullPath = path.join(this.nodesRoot, relativePath + "/node");
 
         try {
             await import(fullPath);

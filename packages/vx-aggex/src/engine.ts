@@ -7,10 +7,11 @@ export class AggexEngine {
     private compiler = new WorkflowCompiler();
     constructor() { }
 
-    public compile = this.compiler.compile;
+    public compile(workflow: Workflow, emit: Runtime.Emitter){
+        return this.compiler.compile(workflow, emit)
+    }
 
     public async *stream(
-        emit: Runtime.Emitter,
         compiledGraph: Runtime.CompiledGraph,
         initialInputs: Record<string, any>
     ): AsyncIterable<typeof Runtime.State.Update> {

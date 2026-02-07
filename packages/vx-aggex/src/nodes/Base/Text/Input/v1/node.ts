@@ -1,8 +1,6 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Definition } from "./definition";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/types";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { HumanMessage } from "@langchain/core/messages";
 import { Runtime } from "src/runtime";
 
 @RegisterNode(Definition.id)
@@ -19,22 +17,9 @@ export class Node extends Runtime.Node<typeof Definition> {
         incomingValues: Runtime.InferInputs<typeof Definition>
     ): Promise<Runtime.InferOutputs<typeof Definition>> {
 
-        const { model, prompt, api_key, temperature, maxOutputTokens, topP, topK } = incomingValues;
+        const { text } = incomingValues;
 
-        const llm = new ChatGoogleGenerativeAI({
-            model,
-            apiKey: api_key,
-            maxOutputTokens,
-            temperature,
-            topP,
-            topK,
-        });
-
-        const response = await llm.invoke([
-            new HumanMessage(prompt)
-        ]);
-
-        return { response: response }
+        return { output: text }
     }
 
 

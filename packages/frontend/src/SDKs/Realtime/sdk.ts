@@ -44,7 +44,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
 
     private send(message: any) {
         if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-            console.warn("RealtimeSDK: Socket not connected, cannot send message", message);
+            console.warn("RealtimeSDK: Socket not connected, cannot send message", message,`. ${this.socket ? `The socket does exist but it is in state ${this.socket.readyState}` : "The socket does not exist"}`);
             return;
         }
 
@@ -146,6 +146,8 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
 }
 
 export const RealtimeSDK = SDK.get<RealtimeSDKImpl>("Realtime")
+
+RealtimeSDK.connect("ws://localhost:3001");
 
 export namespace RealtimeSDK {
 
