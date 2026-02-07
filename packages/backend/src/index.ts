@@ -27,6 +27,16 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
+import { RealtimeService } from './services/Realtime/service';
+
+const server = createServer(app);
+const wss = new WebSocketServer({ server });
+
+RealtimeService.initWebSocket(wss);
+
+server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`WebSocket server initialized`);
 });

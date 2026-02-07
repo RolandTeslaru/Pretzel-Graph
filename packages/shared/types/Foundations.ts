@@ -4,7 +4,7 @@ export namespace Foundations {
     export const ArtifactId = z.string().brand("ArtifactId")
     export type ArtifactId = z.infer<typeof ArtifactId>
 
-    export const LangChainDataType = z.enum([
+    export const HandleVariant = z.enum([
         "Message",
         "Document",
         "Text",
@@ -18,9 +18,10 @@ export namespace Foundations {
         "Memory",
         "OutputParser",
         "DataFrame",
-        "Unknown"
+        "Unknown",
+        "Structure"
     ])
-    export type LangChainDataType = z.infer<typeof LangChainDataType>
+    export type HandleVariant = z.infer<typeof HandleVariant>
 
 
     export namespace Input {
@@ -35,7 +36,7 @@ export namespace Foundations {
 
             isRuntime: z.boolean().default(false),
 
-            langChainDataTypes: z.array(LangChainDataType),
+            handleVariants: z.array(HandleVariant),
 
             runtimeSubInputsRegistry: z.record(Input.Id, z.object({
                 id: Input.Id,
@@ -124,6 +125,11 @@ export namespace Foundations {
                 variant: z.literal("list"),
                 initialValue: z.array(z.string()),
             })
+
+            export const Structure = Base.extend({
+                variant: z.literal("structure"),
+                initialValue: z.record(z.string(), z.any()),
+            })
         }
 
         export const Schema = z.discriminatedUnion("variant", [
@@ -137,20 +143,22 @@ export namespace Foundations {
             DerivedSchemas.Json,
             DerivedSchemas.Integer,
             DerivedSchemas.Script,
+            DerivedSchemas.Structure
         ]);
 
         export type Schema = z.infer<typeof Schema>;
 
-        export type Integer = z.infer<typeof DerivedSchemas.Integer>;
-        export type Float = z.infer<typeof DerivedSchemas.Float>;
-        export type Secret = z.infer<typeof DerivedSchemas.Secret>;
-        export type Boolean = z.infer<typeof DerivedSchemas.Boolean>;
+        export type Integer     = z.infer<typeof DerivedSchemas.Integer>;
+        export type Float       = z.infer<typeof DerivedSchemas.Float>;
+        export type Secret      = z.infer<typeof DerivedSchemas.Secret>;
+        export type Boolean     = z.infer<typeof DerivedSchemas.Boolean>;
         export type MultiOption = z.infer<typeof DerivedSchemas.MultiOption>;
-        export type File = z.infer<typeof DerivedSchemas.File>;
-        export type List = z.infer<typeof DerivedSchemas.List>;
-        export type Json = z.infer<typeof DerivedSchemas.Json>;
-        export type String = z.infer<typeof DerivedSchemas.String>;
-        export type Script = z.infer<typeof DerivedSchemas.Script>;
+        export type File        = z.infer<typeof DerivedSchemas.File>;
+        export type List        = z.infer<typeof DerivedSchemas.List>;
+        export type Json        = z.infer<typeof DerivedSchemas.Json>;
+        export type String      = z.infer<typeof DerivedSchemas.String>;
+        export type Script      = z.infer<typeof DerivedSchemas.Script>;
+        export type Structure   = z.infer<typeof DerivedSchemas.Structure>;
     }
     export type Input = z.infer<typeof Input.Schema>
 
@@ -160,7 +168,7 @@ export namespace Foundations {
 
         export const Schema = z.object({
             id: Output.Id,
-            langChainDataTypes: z.array(LangChainDataType),
+            handleVariants: z.array(HandleVariant),
             /** If true, this output is exposed as a Tool Handle (allowing the node to be used as a tool by an Agent) */
             asTool: z.boolean().optional(),
             uiData: z.object({
