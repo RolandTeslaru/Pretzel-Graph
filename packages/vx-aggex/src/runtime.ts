@@ -1,13 +1,17 @@
 import { CompiledStateGraph, MessagesValue, ReducedValue, StateSchema } from "@langchain/langgraph";
-import { Foundations } from "@vx-agent-editor/shared/types";
-import { Workflow } from "@vx-agent-editor/shared/types/Workflow"
+import { Foundations, Orchestrator } from "@vx-agent-editor/shared/types";
+import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 import z from "zod";
+import { EventBuilder } from "./eventBuilder";
 
 
 // 1. Define the State Annotation (The Schema)
 
 export namespace Runtime {
 
+    export type Emitter = (
+        callbackFn: (eventBuilder: EventBuilder) => Orchestrator.Event
+    ) => void
 
     export namespace State {
         export const Schema = new StateSchema({

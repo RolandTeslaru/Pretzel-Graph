@@ -1,10 +1,12 @@
 import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { EXECUTION_QUEUE_ID, REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants"
-import { Orchestrator } from '@vx-agent-editor/shared/types';
+import { Orchestrator, Realtime } from '@vx-agent-editor/shared/types';
 import { AggexEngine } from 'src/engine';
-import { Realtime } from '@vx-agent-editor/shared/types/Realtime';
 import { container, singleton } from 'tsyringe';
+import { EventBuilder } from './eventBuilder';
+import { Runtime } from './runtime';
+
 
 @singleton()
 export class AggexWorkerImpl {
@@ -29,37 +31,27 @@ export class AggexWorkerImpl {
     ) => {
         console.log("Processing Queue Item ", queueItem.jobId, " worlflow id ", queueItem.workflow.id)
         const { workflow, jobId } = queueItem;
-        const payloadMeta = { jobId: jobId, workflowId: workflow.id}
 
-        const topicId = `job:${jobId}:events` as Realtime.Topic.Id
+        const eventBuilder = new EventBuilder(
+            jobId, 
+            workflow.id, 
+            `job:${jobId}:events` as Realtime.Topic.Id
+        )
 
-        const startEvent: Orchestrator.Event.Job.Started = {
-            type: "job:started",
-            topicId,
-            payload: {...payloadMeta},
-            timestamp: Date.now()
+        const emit: Runtime.Emitter = (builderFn) => {
+            this.publishToRedis(builderFn(eventBuilder))
         }
 
-        await this.emit(startEvent)
+        emit(builder => builder.started());
 
-        const compiledGraph = await this.engine.compile(workflow)
+        const compiledGraph = await this.engine.compile(workflow, emit)
 
 
-        for await (const update of await this.engine.stream(compiledGraph, {})) {
-            await this.emit({
-                type: "job:update",
-                topicId,
-                payload: { update, ...payloadMeta },
-                timestamp: Date.now()
-            } satisfies Orchestrator.Event.Job.Update);
+        for await (const update of this.engine.stream(emit, compiledGraph, {})) {
+            emit(builder => builder.update(update))
         }
 
-        await this.emit({
-            type: "job:completed",
-            topicId,
-            payload: { ...payloadMeta },
-            timestamp: Date.now()
-        } as Orchestrator.Event.Job.Completed)
+        emit(builder => builder.completed(""))
 
         return { status: 'completed' };
     }
@@ -70,7 +62,7 @@ export class AggexWorkerImpl {
         { connection: this.redis, autorun: false }
     )
 
-    public async emit(event: Realtime.Event) {
+    public async publishToRedis(event: Orchestrator.Event) {
         this.redis.publish(event.topicId, JSON.stringify(event));
     }
 }

@@ -1,7 +1,7 @@
 import { Button, DropdownMenu, ScrollArea, Separator } from '@/vx-ui/foundations'
 import { useCallback, useMemo, useState } from 'react'
 import { WorkbenchSDK } from '../../sdk'
-import { Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
 import { Accordion } from '@/vx-ui/foundations/accordion';
 import NodeInputField, { NodeInputCard } from './nodeInputField';
 import {
@@ -56,10 +56,10 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
         }
     }, [nodeInHandles, node.data.ui.normalInputsOrder, node.data.ui.advancedInputsOrder])
 
-    const [activeId, setActiveId] = useState<Workflow.Node.Input.Id | null>(null);
+    const [activeId, setActiveId] = useState<Foundations.Input.Id | null>(null);
 
     const handleDragStart = useCallback((event: DragStartEvent) => {
-        setActiveId(event.active.id as Workflow.Node.Input.Id);
+        setActiveId(event.active.id as Foundations.Input.Id);
     }, []);
 
     const sensors = useSensors(
@@ -153,7 +153,7 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                                         <NodeInputField
                                             key={inputId}
                                             nodeId={node.id}
-                                            input={node.data.inputs[inputId] as Workflow.Node.Input}
+                                            input={node.data.inputs[inputId] as Foundations.Input}
                                             isConnected={false}
                                         />
                                     )}
@@ -175,7 +175,7 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                                         <NodeInputField
                                             key={inputId}
                                             nodeId={node.id}
-                                            input={node.data.inputs[inputId] as Workflow.Node.Input}
+                                            input={node.data.inputs[inputId] as Foundations.Input}
                                             isConnected={false}
                                         />
                                     ))}
@@ -196,7 +196,7 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                                         <NodeInputField
                                             key={inputId}
                                             nodeId={node.id}
-                                            input={node.data.inputs[inputId] as Workflow.Node.Input}
+                                            input={node.data.inputs[inputId] as Foundations.Input}
                                             isConnected={true}
                                         />
                                     ))}

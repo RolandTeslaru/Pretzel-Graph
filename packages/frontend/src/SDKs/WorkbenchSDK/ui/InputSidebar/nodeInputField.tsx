@@ -1,11 +1,11 @@
-import { Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
 import React, { memo } from 'react'
 import { INPUT_FIELD_RENDERER_MAP, InputLabel } from '../InputRenderer';
 import { useSortable } from '@dnd-kit/sortable';
 import { SystemIcons } from '@/vx-ui/icons';
 
 interface NodeInputCardProps extends React.HTMLAttributes<HTMLDivElement> {
-    input: Workflow.Node.Input
+    input: Foundations.Input
     isDragging?: boolean
     listeners?: any
     attributes?: any
@@ -43,7 +43,7 @@ export const NodeInputCard: React.FC<NodeInputCardProps> = ({ input, isDragging,
 }
 
 const NodeInputField: React.FC<{
-    input: Workflow.Node.Input
+    input: Foundations.Input
     nodeId: Workflow.Node.Id
     isConnected: boolean
 }> = memo(({ input, nodeId, isConnected }) => {

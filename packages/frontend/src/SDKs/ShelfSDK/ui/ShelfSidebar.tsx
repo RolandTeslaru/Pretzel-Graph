@@ -38,7 +38,7 @@ const FilterDataTypesIndicator = () => {
     if (!dataTypes) return null;
     return (
         <div className='absolute left-1/2 -translate-x-1/2 top-[51px] flex flex-row gap-2'>
-            {Array.from(dataTypes).map(type => <TypeIndicator dataType={type} />)}
+            {Array.from(dataTypes).map(type => <TypeIndicator dataType={type} key={type} />)}
         </div>
     )
 }

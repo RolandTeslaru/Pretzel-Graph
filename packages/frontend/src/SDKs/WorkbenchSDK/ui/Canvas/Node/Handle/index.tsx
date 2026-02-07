@@ -3,7 +3,7 @@ import { type Connection, Handle, Position, type Edge } from "@xyflow/react";
 import { cn, nodeColorsName } from '@/utils/styleUtils';
 import { Tooltip } from '@/vx-ui/foundations/Tooltip';
 import HandleTooltipContent from './tooltip';
-import { Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
 import { isConnectionValid } from '@/SDKs/WorkbenchSDK/utils';
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk';
@@ -11,7 +11,7 @@ import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk';
 interface Props {
     type: "target" | "source";
     isWorkflowLocked: boolean
-    field: Workflow.Node.Input | Workflow.Node.Output
+    field: Foundations.Input | Foundations.Output
     nodeId: Workflow.Node.Id
 }
 
@@ -74,7 +74,6 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, field, nodeId }) 
 
     return (
         <Tooltip.Root>
-            <Tooltip.Trigger asChild>
                 <Handle
                     type={type}
                     position={position}
@@ -100,6 +99,7 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, field, nodeId }) 
                         } as React.CSSProperties}
                     />
                 </Handle>
+            <Tooltip.Trigger asChild>
             </Tooltip.Trigger>
             <Tooltip.Content side={type === "target" ? "left" : "right"} sideOffset={3}>
                 <HandleTooltipContent
