@@ -2,7 +2,6 @@ import z from "zod"
 import { Workflow } from "./Workflow"
 import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
-import { Runtime } from "src/runtime"
 
 export namespace Orchestrator {
 
@@ -25,6 +24,13 @@ export namespace Orchestrator {
     }
     export type Job = z.infer<typeof Job.Schema>
 
+    export const GraphState = z.object({
+        node_outputs: z.record(Workflow.Node.Id, z.any()),
+        messages: z.array(z.any()),
+        artifacts: z.record(z.string(), z.any()),
+        metadata: z.record(z.string(), z.any()),
+    })
+    export type GraphState = z.infer<typeof GraphState>
 
 
     export namespace ExecutionQueue {
@@ -39,24 +45,10 @@ export namespace Orchestrator {
     }
 
     export namespace Event {
-        export const Type = z.enum([
-            "job:tarted",
-            "job:update",
-            "job:node:started",
-            "job:node:completed",
-            "job:node:error",
-            "job:completed",
-            "job:failed",
-            "job:paused",
-            "job:terminated"
-        ])
-        export type Type = z.infer<typeof Type>
-
+        // Create a base from the realtime event base
         const Base = Realtime.Event.Base.extend({
-            payload: z.object({
-                jobId: Orchestrator.Job.Id,
-                workflowId: Workflow.Id,
-            })
+            jobId: Orchestrator.Job.Id,
+            workflowId: Workflow.Id,
         })
         export namespace Job {
             export const Started = Base.extend({
@@ -65,8 +57,11 @@ export namespace Orchestrator {
 
             export const Update = Base.extend({
                 type: z.literal('job:update'),
-                payload: Base.shape.payload.extend({
-                    update: Runtime.State.Update
+                update: z.object({
+                    node_outputs: z.record(z.string(), z.any()).optional(),
+                    messages: z.any().optional(),
+                    artifacts: z.record(z.string(), z.any()).optional(),
+                    metadata: z.record(z.string(), z.any()).optional(),
                 })
             })
 
@@ -83,16 +78,12 @@ export namespace Orchestrator {
 
             export const Failed = Base.extend({
                 type: z.literal('job:failed'),
-                payload: Base.shape.payload.extend({
-                    error: z.string()
-                })
+                error: z.string()
             })
 
             export const Completed = Base.extend({
                 type: z.literal('job:completed'),
-                payload: Base.shape.payload.extend({
-                    result: z.string()
-                })
+                result: z.string()
             })
 
             export type Started = z.infer<typeof Started>

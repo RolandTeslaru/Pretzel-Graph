@@ -15,14 +15,11 @@ class CatalogueServiceImpl {
     private static registry = new Map<Foundations.NodeDefinition.Id, NodeConstructor>();
     private __registry = CatalogueServiceImpl.registry;
 
-    public Register(definitionId: Foundations.NodeDefinition.Id) {
-        
-        return function (constructor: NodeConstructor) {
-            if (CatalogueServiceImpl.registry.has(definitionId))
-                console.warn(`[NodeRegistry] Overwriting node type: ${definitionId}`);
+    public static register(definitionId: Foundations.NodeDefinition.Id, constructor: NodeConstructor) {
+        if (CatalogueServiceImpl.registry.has(definitionId))
+            console.warn(`[NodeRegistry] Overwriting node type: ${definitionId}`);
 
-            CatalogueServiceImpl.registry.set(definitionId, constructor);
-        };
+        CatalogueServiceImpl.registry.set(definitionId, constructor);
     }
 
     private nodesRoot: string;
@@ -59,3 +56,9 @@ class CatalogueServiceImpl {
 
 
 export const CatalogueService = container.resolve(CatalogueServiceImpl);
+
+export function RegisterNode(definitionId: Foundations.NodeDefinition.Id) {
+    return function (constructor: NodeConstructor) {
+        CatalogueServiceImpl.register(definitionId, constructor);
+    };
+}

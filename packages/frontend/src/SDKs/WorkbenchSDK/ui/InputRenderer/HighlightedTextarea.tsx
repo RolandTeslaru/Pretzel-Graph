@@ -18,7 +18,7 @@ export const HighlightedTextarea: React.FC<HighlightedTextareaProps> = ({ classN
         return parts.map((part, index) => {
             if (part.match(regex)) {
                 return (
-                    <span key={index} className="bg-primary/20 py-0.5 rounded-sm text-primary rounded-[3px] font-medium z-0">
+                    <span key={index} className="bg-primary/20 py-0.5 rounded-sm text-primary font-medium z-0">
                         {part}
                     </span>
                 );
@@ -37,8 +37,8 @@ export const HighlightedTextarea: React.FC<HighlightedTextareaProps> = ({ classN
         <div
             className={cn(
                 // Container styles mimicking the original Textarea component
-                "relative grid w-full rounded-lg border border-input shadow-xs transition-[color,box-shadow]",
-                "dark:bg-input/30 bg-transparent",
+                "relative grid w-full rounded-lg border border-input/70 shadow-xs transition-[color,box-shadow]",
+                "bg-input/30",
                 "focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]",
                 "min-h-16 field-sizing-content", // Allow auto-sizing
                 className

@@ -3,7 +3,7 @@ import { Switch } from '@/vx-ui/foundations/switch'
 import { Label } from '@/vx-ui/foundations/label'
 import { Input } from "@/vx-ui/foundations/input"
 import { Select } from "@/vx-ui/foundations/select"
-import { Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
 import { WorkbenchSDK } from '../../sdk'
 import { Slider, Tabs, Tooltip, Badge, Button } from '@/vx-ui/foundations'
 import { debounce } from 'lodash'
@@ -13,20 +13,10 @@ import VaultPanel from '@/SDKs/VaultSDK/ui/VaultPanel'
 import LangchainTypeBadge from '../LangchainTypeBadge'
 import { HighlightedTextarea } from './HighlightedTextarea'
 
-export const InputLabel = ({ input, showTypeBadges = true }: { input: Workflow.Node.Input, showTypeBadges?: boolean }) => {
+export const InputLabel = ({ input, showTypeBadges = true }: { input: Foundations.Input, showTypeBadges?: boolean }) => {
   return (
     <Label className="text-sm font-medium flex items-center">
-      {input.uiData.tooltip ?
-        <Tooltip.Root>
-          <Tooltip.Trigger>
-            {input.uiData.displayName}
-          </Tooltip.Trigger>
-          <Tooltip.Content className='max-w-[300px]'>
-            {input.uiData.tooltip}
-          </Tooltip.Content>
-        </Tooltip.Root>
-        : input.uiData.displayName
-      }
+      {input.uiData.displayName}
       {input.required && <span className="text-red-500 ml-1">*</span>}
       {input.isRuntime && <span className="text-neutral-500 ml-auto">runtime</span>}
       {showTypeBadges && (
@@ -41,20 +31,16 @@ export const InputLabel = ({ input, showTypeBadges = true }: { input: Workflow.N
 }
 
 
-
-
-type Input = Workflow.Node.Input
-
 type InputFieldMapRendererType = {
-  [K in Input['variant']]?:
+  [K in Foundations.Input['variant']]?:
   React.ComponentType<{
-    input: Extract<Input, { variant: K }>
+    input: Extract<Foundations.Input, { variant: K }>
     nodeId: Workflow.Node.Id
   }>
 }
 
-type RendererProps<K extends Input['variant']> = {
-  input: Extract<Input, { variant: K }>
+type RendererProps<K extends Foundations.Input['variant']> = {
+  input: Extract<Foundations.Input, { variant: K }>
   nodeId: Workflow.Node.Id
   className?: string
   showTypeBadges?: boolean
@@ -63,7 +49,7 @@ type RendererProps<K extends Input['variant']> = {
 
 const VAR_REGEX = /\$\{([a-zA-Z0-9_]+)\}/g
 
-const handleDynamicInputDetection = debounce((text: string, nodeId: Workflow.Node.Id, inputId: Workflow.Node.Input.Id) => {
+const handleDynamicInputDetection = debounce((text: string, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => {
   VAR_REGEX.lastIndex = 0; // Safety reset for global regex
 
   const foundVars = new Set<string>();
@@ -299,7 +285,7 @@ FileInput.displayName = "FileInput"
 
 
 
-const OtherInput = memo(({ input, nodeId, showTypeBadges }: { input: Workflow.Node.Input, nodeId: Workflow.Node.Id, showTypeBadges: boolean }) => {
+const OtherInput = memo(({ input, nodeId, showTypeBadges }: { input: Foundations.Input, nodeId: Workflow.Node.Id, showTypeBadges: boolean }) => {
   const value = WorkbenchSDK.useInputValue(nodeId, input)
 
   return (

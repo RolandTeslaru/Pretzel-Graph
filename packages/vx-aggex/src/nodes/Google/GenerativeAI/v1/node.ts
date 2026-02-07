@@ -1,12 +1,11 @@
-import { CatalogueService } from "src/services/Catalogue/service";
+import { RegisterNode } from "src/services/Catalogue/service";
 import { Definition } from "./definition";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/types";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage } from "@langchain/core/messages";
 import { Runtime } from "src/runtime";
 
-
-@CatalogueService.Register(Definition.id)
+@RegisterNode(Definition.id)
 export class Node extends Runtime.Node<typeof Definition> {
 
     public static Definition = Definition;
