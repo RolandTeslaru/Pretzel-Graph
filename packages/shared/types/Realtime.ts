@@ -15,7 +15,6 @@ export namespace Realtime {
         export const Base = z.object({
             topicId: Topic.Id,
             type: Type,
-            payload: z.unknown(),
             timestamp: z.number().default(Date.now()),
         })
     }

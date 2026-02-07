@@ -3,12 +3,13 @@ import { Button } from '@/vx-ui/foundations'
 import { SystemIcons } from '@/vx-ui/icons'
 import { useCallback } from 'react'
 import { OrchestratorSDK } from '../sdk'
+import type { Orchestrator } from '@vx-agent-editor/shared/types'
 
 const execution = OrchestratorSDK.actions.execution
 
 const RunnerPanel = () => {
 
-  const currentJob = OrchestratorSDK.useStore(s => s.currentJob);
+  const currentJobId = OrchestratorSDK.useStore(s => s.currentJobId);
 
   const handleRun = useCallback(() => {
     const workflow = WorkbenchSDK.state.workflow;
@@ -16,29 +17,51 @@ const RunnerPanel = () => {
   }, [])
 
   const handlePause = useCallback(() => {
-    if (!currentJob) return;
-    execution.pause(currentJob.id);
-  },[currentJob])
+    if (!currentJobId) return;
+    execution.pause(currentJobId);
+  }, [currentJobId])
 
   const handleTerminate = useCallback(() => {
-    if (!currentJob) return;
-    execution.terminate(currentJob.id);
-  },[currentJob])
+    if (!currentJobId) return;
+    execution.terminate(currentJobId);
+  }, [currentJobId])
+
+  OrchestratorSDK.useJobEvents(currentJobId || "" as Orchestrator.Job.Id, (event) => {
+    if (event.type === "job:started") {
+      OrchestratorSDK.setState(s => s.currentJobId = event.payload.jobId)
+    }
+    if (event.type === "job:update") {
+      OrchestratorSDK.setState(s => s.graphState = event.payload.update)
+    }
+    if (event.type === "job:completed") {
+      OrchestratorSDK.setState(s => s.currentJobId = undefined)
+    }
+  })
 
   return (
     <div className='flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 -translate-x-1/2 z-10'>
-        <Button className='my-auto' variant="success" onClick={handleRun}>
-          <SystemIcons.Play />
-          Run
-        </Button>
-        <Button className='my-auto' variant="destructive" onClick={handleTerminate}>
-          <SystemIcons.X className='size-4'/>
-          Terminate
-        </Button>
-        <Button className='my-auto' variant="warning" onClick={handlePause}>
-          <SystemIcons.PauseFill />
-          Pause
-        </Button>
+
+      {currentJobId === undefined ? (
+        <>
+          <Button className='my-auto' variant="success" onClick={handleRun}>
+            <SystemIcons.Play />
+            Run
+          </Button>
+        </>
+      )
+        : (
+          <>
+            <Button className='my-auto' variant="destructive" onClick={handleTerminate}>
+              <SystemIcons.X className='size-4' />
+              Terminate
+            </Button>
+            <Button className='my-auto' variant="warning" onClick={handlePause}>
+              <SystemIcons.PauseFill />
+              Pause
+            </Button>
+          </>
+        )
+      }
     </div>
   )
 }

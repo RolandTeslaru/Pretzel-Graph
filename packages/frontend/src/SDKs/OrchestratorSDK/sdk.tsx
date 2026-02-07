@@ -14,7 +14,10 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
 
     public readonly useStore: BaseSDK.Store<OrchestratorSDK.State> = create(
         immer<OrchestratorSDK.State>(() => ({
-            currentJob: undefined,
+            currentJobId: undefined,
+            graphState: {
+
+            }
         }))
     )
 
@@ -23,9 +26,9 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
     public readonly actions: OrchestratorSDK.Actions = {
         execution: {
             run: async (workflow) => {
-                if(this.state.currentJob){
+                if(this.state.currentJobId){
                     toast.warning("Workflow is already running")
-                    return this.state.currentJob.id
+                    return this.state.currentJobId
                 }
 
                 const executionPromise = OrchestratorAPI.Execution.Run.execute(workflow);
@@ -48,6 +51,8 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
             },
             terminate: async (jobId) => {
                 await OrchestratorAPI.Execution.Terminate.execute({ jobId });
+
+                this.setState(s => s.currentJobId = undefined)
             }
         }
     }
@@ -71,7 +76,7 @@ export const OrchestratorSDK = SDK.get<OrchestratorSDKImpl>("Orchestrator")
 export namespace OrchestratorSDK {
 
     export type State = {
-        currentJob: Orchestrator.Job | undefined
+        currentJobId: Orchestrator.Job.Id | undefined
     }
 
     export type Reducers = {

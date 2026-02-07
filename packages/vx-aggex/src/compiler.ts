@@ -1,12 +1,11 @@
 import { StateGraph, START, END } from "@langchain/langgraph";
 import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 import { CatalogueService } from "src/services/Catalogue/service";
-import { Foundations } from "@vx-agent-editor/shared/types";
+import { Foundations, Orchestrator } from "@vx-agent-editor/shared/types";
 import { Runtime } from "src/runtime";
 
-
-export class AggexCompiler {
-    private verticies: Record<
+export class WorkflowCompiler {
+    private vertices: Record<
         Workflow.Node.Id,
         Runtime.Node<Foundations.NodeDefinition>
     > = {};
@@ -17,15 +16,20 @@ export class AggexCompiler {
     private async runNode(
         state: Runtime.State, 
         activeNode: Workflow.Node, 
-        edges: Workflow["data"]["edges"]
+        edges: Workflow["data"]["edges"],
+        emit: Runtime.Emitter
     ) {
         console.log(`Executing Node: ${activeNode.display_name} (${activeNode.id})`);
+        
+        emit(b => b.nodeStarted(activeNode.id))
 
         const inputs = this.resolveInputs(state, activeNode.id, edges);
 
-        const Vertice = this.verticies[activeNode.id];
+        const Vertice = this.vertices[activeNode.id];
 
         const result = await Vertice.run(state, inputs)
+
+        emit(b => b.nodeCompleted(activeNode.id, result))
 
         return {
             node_outputs: {
@@ -35,7 +39,7 @@ export class AggexCompiler {
     }
 
 
-    public async compile(workflow: Workflow) {
+    public async compile(workflow: Workflow, emit: Runtime.Emitter) {
         const graph = new StateGraph(Runtime.State.Schema);
         const nodes = workflow.data.nodes;
         const edges = workflow.data.edges;
@@ -47,10 +51,10 @@ export class AggexCompiler {
             if (!VerticeConstructor)
                 throw new Error(`Could not find vertice with definitionId ${node.definitionId}`)
 
-            this.verticies[node.id] = new VerticeConstructor(node);
+            this.vertices[node.id] = new VerticeConstructor(node);
 
             graph.addNode(node.id, async (state) => {
-                return this.runNode(state, node, edges)
+                return this.runNode(state, node, edges, emit)
             });
         }
 

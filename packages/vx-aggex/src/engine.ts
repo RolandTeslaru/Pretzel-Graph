@@ -1,32 +1,30 @@
-import { AggexCompiler } from "./compiler";
+import { WorkflowCompiler } from "./compiler";
 import { Workflow } from "@vx-agent-editor/shared/types/Workflow"; // Placeholder
 import { Runtime } from "./runtime";
+import { Orchestrator, Realtime } from "@vx-agent-editor/shared/types";
 
 export class AggexEngine {
-    private compiler = new AggexCompiler();
+    private compiler = new WorkflowCompiler();
     constructor() { }
 
-    /**
-     * Run the graph with initial inputs.
-     * Returns a stream of events.
-     */
-    public async stream(
+    public compile = this.compiler.compile;
+
+    public async *stream(
+        emit: Runtime.Emitter,
         compiledGraph: Runtime.CompiledGraph,
         initialInputs: Record<string, any>
-    ): Promise<AsyncIterable<typeof Runtime.State.Update>> {
+    ): AsyncIterable<typeof Runtime.State.Update> {
         const state = {
             ...Runtime.State.INITIAL,
             // Pre-seed inputs if necessary
         };
 
-        return await compiledGraph.stream(state);
+        for await (const update of await compiledGraph.stream(state)){
+            yield update
+        }
     }
 
-    public compile = this.compiler.compile;
 
-    /**
-     * Run and get final result.
-     */
     public async run(initialInputs: Record<string, any>) {
         const state = {
             ...Runtime.State.INITIAL,
