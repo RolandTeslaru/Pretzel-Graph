@@ -81,31 +81,35 @@ export namespace Runtime {
         }
     }
 
-    /**
-     * Extracts the runtime value type from an input definition.
-     * Input.String with initialValue: string → string
-     * Input.Float with initialValue: number → number
-     * Input.Boolean with initialValue: boolean → boolean
-     * etc.
-     */
-    type ExtractInputValue<T> = T extends { initialValue: infer V } ? V : any;
+    // Note i didnt write this.
+    // This was written by claude opus 4.5
+    // This is all sorts of crazy
 
     /**
      * Infer runtime InputValues from a Definition.
+     * Uses the __literalId phantom property if available, falls back to id.
      * Usage: type Inputs = InferInputs<typeof Definition>;
      */
-    export type InferInputs<D extends Foundations.NodeDefinition> = {
-        [K in keyof D["inputs"]]: ExtractInputValue<D["inputs"][K]>
-    };
+    export type InferInputs<D> = D extends { inputs: infer T }
+        ? T extends readonly { id: string; initialValue?: unknown }[]
+        ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
+            ? Id
+            : K extends { id: infer Id extends string } ? Id : never
+            ]: K extends { initialValue: infer V } ? V : any }
+        : never
+        : never;
 
     /**
      * Infer runtime OutputValues from a Definition.
-     * Maps output keys to their expected return types.
-     * For now, outputs are typed as `any` since output types are dynamic.
-     * You can refine this based on langChainDataTypes if needed.
+     * Uses the __literalId phantom property if available, falls back to id.
+     * Usage: type Outputs = InferOutputs<typeof Definition>;
      */
-    export type InferOutputs<D extends Foundations.NodeDefinition> = {
-        [K in keyof D["outputs"]]: any
-    };
+    export type InferOutputs<D> = D extends { outputs: infer T }
+        ? T extends readonly { id: string }[]
+        ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
+            ? Id
+            : K extends { id: infer Id extends string } ? Id : never
+            ]: any }
+        : never
+        : never;
 }
-

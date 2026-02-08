@@ -1,6 +1,5 @@
 import { singleton, container } from "tsyringe";
 
-// Registry: Maps SDK name -> Class Constructor
 const serviceRegistry = new Map<string, any>();
 
 /**
@@ -20,13 +19,11 @@ const serviceRegistry = new Map<string, any>();
  */
 function createSerivceDecorator(name: string) {
     return function <T extends new (...args: any[]) => any>(target: T) {
-        // Apply singleton behavior
         singleton()(target);
 
-        // Register in our central registry
-        if (serviceRegistry.has(name)) {
+        if (serviceRegistry.has(name))
             console.warn(`[SDK] Overwriting SDK: ${name}`);
-        }
+
         serviceRegistry.set(name, target);
 
         return target;
@@ -36,9 +33,10 @@ function createSerivceDecorator(name: string) {
 // Attach utility methods to the decorator function
 createSerivceDecorator.get = function <T>(name: string): T {
     const SDKClass = serviceRegistry.get(name);
-    if (!SDKClass) {
+
+    if (!SDKClass)
         throw new Error(`[SDK] SDK "${name}" is not registered. Did you forget to import it?`);
-    }
+   
     return container.resolve(SDKClass) as T;
 };
 

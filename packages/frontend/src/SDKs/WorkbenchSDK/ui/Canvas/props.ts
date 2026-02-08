@@ -108,7 +108,7 @@ export const createCanvasCallbacks = (
             })
 
             WorkbenchSDK.actions.commit();
-            
+
             setNodeDrivers(prev => applyNodeChanges(changes, prev))
         },
 
@@ -123,7 +123,7 @@ export const createCanvasCallbacks = (
                             break;
                         case "select":
                             break;
-    
+
                         case "replace":
                             break;
                     }
@@ -272,7 +272,7 @@ export const createCanvasCallbacks = (
             const sourceNode = WorkbenchSDK.state.workflow.data.nodes[edge.source] as Workflow.Node;
             const outputField = sourceNode.data.outputs[edge.sourceHandle as Workflow.Node.Output.Id]
 
-            const selectedAccentColor = nodeColorsName[outputField.langChainDataTypes[0]] ?? "cyan";
+            const selectedAccentColor = nodeColorsName[outputField.handleVariants[0]] ?? "cyan";
             WorkbenchSDK.canvasWrapper.current?.style.setProperty("--selected", `var(--datatype-${selectedAccentColor})`);
         },
         onNodeClick: (event, node) => {

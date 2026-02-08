@@ -4,7 +4,6 @@ import SectionTabs from './SectionTabs'
 import Search from './Search'
 import { ShelfSDK } from '../sdk'
 import { nodeColorsName } from '@/utils/styleUtils'
-import { NotificationSDKTestPanel } from '@/vx-ui/SDKs/NotificationSDK/components/testPanel'
 
 const ShelfSidebar = () => {
     return (
@@ -15,8 +14,6 @@ const ShelfSidebar = () => {
             <Search />
 
             <Separator />
-
-            <NotificationSDKTestPanel/>
 
             <FilterDataTypesIndicator />
 

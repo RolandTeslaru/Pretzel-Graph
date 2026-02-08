@@ -1,5 +1,5 @@
 import { RegisterNode } from "src/services/Catalogue/service";
-import { Definition } from "./definition";
+import { Definition } from "./definition"
 import { Foundations, Workflow } from "@vx-agent-editor/shared/types";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage } from "@langchain/core/messages";

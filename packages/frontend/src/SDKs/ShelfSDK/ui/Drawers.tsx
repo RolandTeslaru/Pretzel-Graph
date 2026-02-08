@@ -1,10 +1,10 @@
 import React, { memo, useEffect, useState } from 'react'
 import { ShelfSDK } from '../sdk'
 import { Shelf } from "@vx-agent-editor/shared/types";
-import BlueprintItem from './BlueprintItem';
-import { Icon } from '@/vx-ui/foundations';
+import { Icon, Spinner } from '@/vx-ui/foundations';
 import { useShallow } from 'zustand/react/shallow';
 import { SystemIcons } from '@/vx-ui/icons';
+import DrawerItem from './DrawerItem';
 
 
 export const Drawers = () => {
@@ -20,15 +20,16 @@ export const Drawers = () => {
         return Object.values(s.filteredDrawers)
     }))
 
+    console.log("filtered Drawers", filteredDrawers)
+
     return (
         <div className='flex flex-col gap-1 w-full h-full px-2'>
             {filteredDrawers.map(drawer => {
-                if (drawer.blueprints?.length === 0)
+                if (drawer.definitionIds?.length === 0)
                     return;
 
                 return <Drawer drawer={drawer} key={drawer.id} />
-            }
-            )}
+            })}
         </div>
     )
 }
@@ -64,10 +65,13 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
         return () => window.clearTimeout(t);
     }, [isOpen]);
 
-    if (!drawer || drawer.blueprints?.length === 0) return;
+    if (!drawer || drawer.definitionIds?.length === 0) return;
 
-    const count = drawer.blueprints?.length ?? 0;
+    const count = drawer.definitionIds?.length ?? 0;
     const contentMaxH = count > 0 ? count * ITEM_H + (count - 1) * GAP + PADDING_Y : 0;
+
+
+    const isFetchingNodeDefinitions = shouldRender && !!!drawer.definitionIds;
 
     return (
         <div>
@@ -78,9 +82,14 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
             >
                 <Icon fallback={null} name={drawer.icon} className={`w-[20px] h-[20px] my-auto ${isOpen ? "text-primary" : ""}`} />
                 <p className='text-sm font-medium my-auto w-full text-left!'>
-                    {drawer.display_name}
+                    {drawer.displayName}
                 </p>
-                <SystemIcons.ChevronRight className={`h-8 w-8 stroke-3! stroke-label-white scale-[60%] m-auto transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`} />
+                {
+                    isFetchingNodeDefinitions === false ?
+                    <SystemIcons.ChevronRight className={`h-8 w-8 stroke-3! stroke-label-white scale-[60%] m-auto transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`} />
+                    :
+                    <Spinner className='my-auto mr-1'/>
+                }
             </div>
 
             {/* Content */}
@@ -91,8 +100,8 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
                 }}
             >
                 <div className=' flex flex-col gap-1 py-1'>
-                    {shouldRender && drawer.blueprints?.map(blueprintId => (
-                        <BlueprintItem blueprintId={blueprintId} key={blueprintId} />
+                    {shouldRender && drawer.definitionIds?.map(nodeDefinitionId => (
+                        <DrawerItem nodeDefinitionId={nodeDefinitionId} key={nodeDefinitionId} />
                     ))}
                 </div>
             </div>

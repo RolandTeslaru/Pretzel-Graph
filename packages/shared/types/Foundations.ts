@@ -50,7 +50,7 @@ export namespace Foundations {
                 placeholder: z.string().optional(),
             }),
         })
-        export type Base = z.infer<typeof Base>
+        export interface Base extends z.infer<typeof Base> { }
 
         export namespace DerivedSchemas {
             export const Integer = Base.extend({
@@ -148,17 +148,17 @@ export namespace Foundations {
 
         export type Schema = z.infer<typeof Schema>;
 
-        export type Integer     = z.infer<typeof DerivedSchemas.Integer>;
-        export type Float       = z.infer<typeof DerivedSchemas.Float>;
-        export type Secret      = z.infer<typeof DerivedSchemas.Secret>;
-        export type Boolean     = z.infer<typeof DerivedSchemas.Boolean>;
-        export type MultiOption = z.infer<typeof DerivedSchemas.MultiOption>;
-        export type File        = z.infer<typeof DerivedSchemas.File>;
-        export type List        = z.infer<typeof DerivedSchemas.List>;
-        export type Json        = z.infer<typeof DerivedSchemas.Json>;
-        export type String      = z.infer<typeof DerivedSchemas.String>;
-        export type Script      = z.infer<typeof DerivedSchemas.Script>;
-        export type Structure   = z.infer<typeof DerivedSchemas.Structure>;
+        export interface Integer extends z.infer<typeof DerivedSchemas.Integer> { }
+        export interface Float extends z.infer<typeof DerivedSchemas.Float> { }
+        export interface Secret extends z.infer<typeof DerivedSchemas.Secret> { }
+        export interface Boolean extends z.infer<typeof DerivedSchemas.Boolean> { }
+        export interface MultiOption extends z.infer<typeof DerivedSchemas.MultiOption> { }
+        export interface File extends z.infer<typeof DerivedSchemas.File> { }
+        export interface List extends z.infer<typeof DerivedSchemas.List> { }
+        export interface Json extends z.infer<typeof DerivedSchemas.Json> { }
+        export interface String extends z.infer<typeof DerivedSchemas.String> { }
+        export interface Script extends z.infer<typeof DerivedSchemas.Script> { }
+        export interface Structure extends z.infer<typeof DerivedSchemas.Structure> { }
     }
     export type Input = z.infer<typeof Input.Schema>
 
@@ -176,7 +176,7 @@ export namespace Foundations {
             }),
         })
     }
-    export type Output = z.infer<typeof Output.Schema>;
+    export interface Output extends z.infer<typeof Output.Schema> { }
 
 
     export namespace NodeDefinition {
@@ -185,11 +185,14 @@ export namespace Foundations {
 
         export const Schema = z.object({
             id: NodeDefinition.Id,
-            inputs: z.record(z.string(), Foundations.Input.Schema),
-            outputs: z.record(z.string(), Foundations.Output.Schema),
+            inputs: z.array(Foundations.Input.Schema).readonly(),
+            outputs: z.array(Foundations.Output.Schema).readonly(),
             displayName: z.string(),
-            description: z.string()
-        })
+            description: z.string(),
+            icon: z.string(),
+            drawerId: z.string().brand("DrawerId"),
+        }).readonly()
     }
+
     export type NodeDefinition = z.infer<typeof NodeDefinition.Schema>
 }

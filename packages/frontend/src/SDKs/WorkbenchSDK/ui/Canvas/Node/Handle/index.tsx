@@ -61,7 +61,7 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, field, nodeId }) 
 
     // Resolve the color name from the data type
     const colorName = useMemo(() => {
-        const firstType = field.langChainDataTypes[0] as string
+        const firstType = field.handleVariants[0] as string
         // Lookup the color name (e.g., "String" -> "blue")
         return nodeColorsName[firstType] || "gray";
     }, [field]);
@@ -85,7 +85,7 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, field, nodeId }) 
                         "group transition-all",
                     )}
                     onClick={() => {
-                        ShelfSDK.actions.searchFilter.setDataTypes(new Set(field.langChainDataTypes))
+                        ShelfSDK.actions.searchFilter.setDataTypes(new Set(field.handleVariants))
                     }}
                 >
                     {/* Visual Representation of the Handle */}

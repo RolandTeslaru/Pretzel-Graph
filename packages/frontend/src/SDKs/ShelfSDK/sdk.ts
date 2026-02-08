@@ -1,7 +1,7 @@
 import { BaseSDK } from "../Base";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { Shelf } from "@vx-agent-editor/shared/types";
+import { Foundations, Shelf } from "@vx-agent-editor/shared/types";
 import { _createShelfActions_, type _ShelfActions } from "./actions";
 import { _createShelfSelectors_, type _ShelfSelectors } from "./selectors";
 import { _createShelfReducers_, type _ShelfReducers } from "./reducers";
@@ -19,13 +19,13 @@ export class ShelfSDKImpl extends BaseSDK<ShelfSDK.State> {
     public readonly useStore: BaseSDK.Store<ShelfSDK.State> = create(
         immer<ShelfSDK.State>(() => ({
             sections: {
-                core: [],
-                bundles: [],
+                core: Shelf.Drawer.SECTIONS.core,
+                bundles: Shelf.Drawer.SECTIONS.bundles,
                 mcp: []
             },
             selectedSection: "core",
-            drawers: {},
-            blueprints: {},
+            drawers: Shelf.Drawer.ALL_DRAWERS,
+            nodeDefinitions: {},
             filteredDrawers: {},
             openedDrawers: new Set<Shelf.Drawer.Id>(),
             searchFilter: {
@@ -55,7 +55,7 @@ export namespace ShelfSDK {
         sections:           Record<Section, Shelf.Drawer.Id[]>
         drawers:            Record<Shelf.Drawer.Id, Shelf.Drawer>
         filteredDrawers:    Record<Shelf.Drawer.Id, Shelf.Drawer>   
-        blueprints:         Record<Shelf.Blueprint.Id, Shelf.Blueprint>
+        nodeDefinitions:    Record<Foundations.NodeDefinition.Id, Foundations.NodeDefinition>
         selectedSection:    Section
         openedDrawers:      Set<Shelf.Drawer.Id>
         searchFilter: {
