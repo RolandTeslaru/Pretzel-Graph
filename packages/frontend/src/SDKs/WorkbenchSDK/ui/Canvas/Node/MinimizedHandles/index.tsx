@@ -14,7 +14,7 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, children })
         const inputs: Foundations.Input[] = [];
         node.data.ui.normalInputsOrder.forEach(inputId => {
             const input = node.data.inputs[inputId]
-            if (input.langChainDataTypes.length === 0)
+            if (input.handleVariants.length === 0)
                 return;
             inputs.push(input)
             if (!input.runtimeSubInputsRegistry)
@@ -30,7 +30,7 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, children })
     const outputs = useMemo(() => {
         const outputs: Foundations.Output[] = [];
         Object.entries(node.data.outputs).forEach(([_, output]) => {
-            if (output.langChainDataTypes.length === 0)
+            if (output.handleVariants.length === 0)
                 return
             outputs.push(output)
         })

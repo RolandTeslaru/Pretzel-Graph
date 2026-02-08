@@ -1,9 +1,27 @@
-import { Foundations } from "@vx-agent-editor/shared/types";
-import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
+import { Foundations, Shelf } from "@vx-agent-editor/shared/types";
 
 // ============================================
 // INPUT BUILDER
 // ============================================
+
+
+export type InputWithLiteralId<
+    TId extends string,
+    DerviedInput extends Foundations.Input
+> = {
+    id: TId & Foundations.Input.Id;
+    /** Phantom type property for extracting the literal ID */
+    readonly __literalId?: TId;
+} & Omit<DerviedInput, "id">
+
+export type OutputWithLiteralId<
+    TId extends string,
+    DerivedOutput extends Foundations.Output
+> = {
+    id: TId & Foundations.Output.Id;
+    /** Phantom type property for extracting the literal ID */
+    readonly __literalId?: TId;
+} & Omit<DerivedOutput, "id">
 
 export namespace InputBuilder {
 
@@ -19,15 +37,14 @@ export namespace InputBuilder {
     // Helper to build base fields
     function buildBase(
         props: BaseProps,
-        langChainDataType: Foundations.LangChainDataType
-    ): Omit<Foundations.Input.Base, "variant" | "initialValue" | "data"> {
+        handleVariant: Foundations.HandleVariant
+    ): Omit<Foundations.Input.Base, "variant" | "initialValue" | "data" | "id"> {
         return {
-            id: "" as Foundations.Input.Id, // Will be assigned by transform layer
             required: props.required ?? true,
             reconcile: props.reconcile ?? false,
             asTool: false,
             isRuntime: false,
-            langChainDataTypes: props.hasHandle ? [langChainDataType] : [],
+            handleVariants: props.hasHandle ? [handleVariant] : [],
             uiData: {
                 displayName: props.displayName,
                 tooltip: props.tooltip,
@@ -39,17 +56,21 @@ export namespace InputBuilder {
     // ------------------------------------------
     // STRING
     // ------------------------------------------
-    export function String(props: {
-        initialValue?: string;
-        multiline?: boolean;
-        hasHandle: boolean
-    } & BaseProps): Foundations.Input.String {
+    export function String<TId extends string>(
+        config: {
+            id: TId
+            initialValue?: string;
+            multiline?: boolean;
+            hasHandle: boolean
+        } & BaseProps
+    ): InputWithLiteralId<TId, Foundations.Input.String> {
         return {
-            ...buildBase(props, "Text"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase(config, "Text"),
             variant: "string",
-            initialValue: props.initialValue ?? "",
+            initialValue: config.initialValue ?? "",
             data: {
-                multiline: props.multiline ?? false,
+                multiline: config.multiline ?? false,
             }
         };
     }
@@ -57,23 +78,25 @@ export namespace InputBuilder {
     // ------------------------------------------
     // INTEGER
     // ------------------------------------------
-    export function Integer(props: {
+    export function Integer<TId extends string>(config: {
+        id: TId;
         initialValue?: number;
         min?: number;
         max?: number;
         step?: number;
         slider?: boolean;
         hasHandle: boolean
-    } & BaseProps): Foundations.Input.Integer {
+    } & BaseProps): InputWithLiteralId<TId, Foundations.Input.Integer> {
         return {
-            ...buildBase(props, "Data"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase(config, "Data"),
             variant: "integer",
-            initialValue: props.initialValue ?? 0,
+            initialValue: config.initialValue ?? 0,
             data: {
-                min: props.min,
-                max: props.max,
-                step: props.step ?? 1,
-                slider: props.slider,
+                min: config.min,
+                max: config.max,
+                step: config.step ?? 1,
+                slider: config.slider,
             }
         };
     }
@@ -81,23 +104,25 @@ export namespace InputBuilder {
     // ------------------------------------------
     // FLOAT
     // ------------------------------------------
-    export function Float(props: {
+    export function Float<TId extends string>(config: {
+        id: TId;
         initialValue?: number;
         min?: number;
         max?: number;
         step?: number;
         slider?: boolean;
         hasHandle: boolean
-    } & BaseProps): Foundations.Input.Float {
+    } & BaseProps): InputWithLiteralId<TId, Foundations.Input.Float> {
         return {
-            ...buildBase(props, "Data"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase(config, "Data"),
             variant: "float",
-            initialValue: props.initialValue ?? 0.0,
+            initialValue: config.initialValue ?? 0.0,
             data: {
-                min: props.min,
-                max: props.max,
-                step: props.step ?? 0.1,
-                slider: props.slider,
+                min: config.min,
+                max: config.max,
+                step: config.step ?? 0.1,
+                slider: config.slider,
             }
         };
     }
@@ -105,31 +130,35 @@ export namespace InputBuilder {
     // ------------------------------------------
     // BOOLEAN
     // ------------------------------------------
-    export function Boolean(props: {
+    export function Boolean<TId extends string>(config: {
+        id: TId;
         initialValue?: boolean;
-    } & BaseProps): Foundations.Input.Boolean {
+    } & BaseProps): InputWithLiteralId<TId, Foundations.Input.Boolean> {
         return {
-            ...buildBase(props, "Data"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase(config, "Data"),
             variant: "boolean",
-            initialValue: props.initialValue ?? false,
+            initialValue: config.initialValue ?? false,
         };
     }
 
     // ------------------------------------------
     // MULTI OPTION (Dropdown/Select/Tab)
     // ------------------------------------------
-    export function MultiOption(props: {
+    export function MultiOption<TId extends string>(config: {
+        id: TId;
         initialValue: string;
         options: string[];
         variant?: "select" | "tab";
-    } & BaseProps): Foundations.Input.MultiOption {
+    } & BaseProps): InputWithLiteralId<TId, Foundations.Input.MultiOption> {
         return {
-            ...buildBase(props, "Text"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase(config, "Text"),
             variant: "multiOption",
-            initialValue: props.initialValue,
+            initialValue: config.initialValue,
             data: {
-                options: props.options,
-                variant: props.variant ?? "select",
+                options: config.options,
+                variant: config.variant ?? "select",
             }
         };
     }
@@ -137,17 +166,19 @@ export namespace InputBuilder {
     // ------------------------------------------
     // FILE
     // ------------------------------------------
-    export function File(props: {
+    export function File<TId extends string>(config: {
+        id: TId;
         initialValue?: string;
         fileTypes?: string[];
         hasHandle: boolean
-    } & BaseProps): Foundations.Input.File {
+    } & BaseProps): InputWithLiteralId<TId, Foundations.Input.File> {
         return {
-            ...buildBase(props, "Data"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase(config, "Data"),
             variant: "file",
-            initialValue: props.initialValue ?? "",
+            initialValue: config.initialValue ?? "",
             data: {
-                fileTypes: props.fileTypes,
+                fileTypes: config.fileTypes,
             }
         };
     }
@@ -155,63 +186,74 @@ export namespace InputBuilder {
     // ------------------------------------------
     // LIST
     // ------------------------------------------
-    export function List(props: {
+    export function List<TId extends string>(config: {
+        id: TId;
         initialValue?: string[];
         hasHandle: boolean
-    } & BaseProps): Foundations.Input.List {
+    } & BaseProps): InputWithLiteralId<TId, Foundations.Input.List> {
         return {
-            ...buildBase(props, "Data"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase(config, "Data"),
             variant: "list",
-            initialValue: props.initialValue ?? [],
+            initialValue: config.initialValue ?? [],
         };
     }
 
     // ------------------------------------------
     // JSON
     // ------------------------------------------
-    export function Json(props: {
+    export function Json<TId extends string>(config: {
+        id: TId;
         initialValue?: any;
         hasHandle: boolean
-    } & BaseProps): Foundations.Input.Json {
+    } & BaseProps): InputWithLiteralId<TId, Foundations.Input.Json> {
         return {
-            ...buildBase(props, "Data"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase(config, "Data"),
             variant: "json",
-            initialValue: props.initialValue ?? {},
+            initialValue: config.initialValue ?? {},
         };
     }
 
     // ------------------------------------------
     // SECRET (Password)
     // ------------------------------------------
-    export function Secret(props: {
+    export function Secret<TId extends string>(config: {
+        id: TId;
         initialValue?: string;
-    } & BaseProps): Foundations.Input.Secret {
+    } & BaseProps): InputWithLiteralId<TId, Foundations.Input.Secret> {
         return {
-            ...buildBase(props, "Text"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase(config, "Text"),
             variant: "secret",
-            initialValue: props.initialValue ?? "",
+            initialValue: config.initialValue ?? "",
         };
     }
 
     // ------------------------------------------
     // SCRIPT / CODE
     // ------------------------------------------
-    export function Script(props: {
+    export function Script<TId extends string>(config: {
+        id: TId;
         initialValue?: string;
-    } & BaseProps): Foundations.Input.Script {
+    } & BaseProps): InputWithLiteralId<TId, Foundations.Input.Script> {
         return {
-            ...buildBase(props, "Text"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase(config, "Text"),
             variant: "script",
-            initialValue: props.initialValue ?? "",
+            initialValue: config.initialValue ?? "",
         };
     }
 
     // ------------------------------------------
     // MESSAGE (LangChain Message Handle - Always has handle)
     // ------------------------------------------
-    export function Message(props: Omit<BaseProps, "hasHandle">): Foundations.Input.String {
+    export function Message<TId extends string>(config: {
+        id: TId;
+    } & Omit<BaseProps, "hasHandle">): InputWithLiteralId<TId, Foundations.Input.String> {
         return {
-            ...buildBase({ ...props, hasHandle: true }, "Message"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase({ ...config, hasHandle: true }, "Message"),
             variant: "string",
             initialValue: "",
             data: { multiline: false }
@@ -221,9 +263,12 @@ export namespace InputBuilder {
     // ------------------------------------------
     // LANGUAGE MODEL (LLM Handle - Always has handle)
     // ------------------------------------------
-    export function LanguageModel(props: Omit<BaseProps, "hasHandle">): Foundations.Input.String {
+    export function LanguageModel<TId extends string>(config: {
+        id: TId;
+    } & Omit<BaseProps, "hasHandle">): InputWithLiteralId<TId, Foundations.Input.String> {
         return {
-            ...buildBase({ ...props, hasHandle: true }, "LanguageModel"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase({ ...config, hasHandle: true }, "LanguageModel"),
             variant: "string",
             initialValue: "",
             data: { multiline: false }
@@ -233,9 +278,12 @@ export namespace InputBuilder {
     // ------------------------------------------
     // DOCUMENT (RAG Handle - Always has handle)
     // ------------------------------------------
-    export function Document(props: Omit<BaseProps, "hasHandle">): Foundations.Input.String {
+    export function Document<TId extends string>(config: {
+        id: TId;
+    } & Omit<BaseProps, "hasHandle">): InputWithLiteralId<TId, Foundations.Input.String> {
         return {
-            ...buildBase({ ...props, hasHandle: true }, "Document"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase({ ...config, hasHandle: true }, "Document"),
             variant: "string",
             initialValue: "",
             data: { multiline: false }
@@ -245,18 +293,22 @@ export namespace InputBuilder {
     // ------------------------------------------
     // RETRIEVER (RAG Handle - Always has handle)
     // ------------------------------------------
-    export function Retriever(props: Omit<BaseProps, "hasHandle">): Foundations.Input.String {
+    export function Retriever<TId extends string>(config: {
+        id: TId;
+    } & Omit<BaseProps, "hasHandle">): InputWithLiteralId<TId, Foundations.Input.String> {
         return {
-            ...buildBase({ ...props, hasHandle: true }, "Retriever"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase({ ...config, hasHandle: true }, "Retriever"),
             variant: "string",
             initialValue: "",
             data: { multiline: false }
         };
     }
 
-    export function Structure(props: BaseProps): Foundations.Input.Structure {
+    export function Structure<TId extends string>(config: BaseProps & { id: TId }): InputWithLiteralId<TId, Foundations.Input.Structure> {
         return {
-            ...buildBase(props, "Structure"),
+            id: config.id as TId & Foundations.Input.Id,
+            ...buildBase(config, "Structure"),
             variant: "structure",
             initialValue: {},
         };
@@ -277,11 +329,10 @@ export namespace OutputBuilder {
 
     function buildBase(
         props: BaseProps,
-        dataType: Foundations.LangChainDataType
-    ): Foundations.Output {
+        handleVariant: Foundations.HandleVariant
+    ): Omit<Foundations.Output, "id"> { // Return Omitted ID
         return {
-            id: "" as Foundations.Output.Id, // Will be assigned by transform layer
-            langChainDataTypes: [dataType],
+            handleVariants: [handleVariant],
             asTool: false,
             uiData: {
                 displayName: props.displayName,
@@ -292,58 +343,80 @@ export namespace OutputBuilder {
     // ------------------------------------------
     // TEXT OUTPUT
     // ------------------------------------------
-    export function Text(props: BaseProps): Foundations.Output {
-        return buildBase(props, "Text");
+    export function Text<TId extends string>(config: BaseProps & { id: TId }): OutputWithLiteralId<TId, Foundations.Output> {
+        return {
+            id: config.id as TId & Foundations.Output.Id,
+            ...buildBase(config, "Text"),
+        };
     }
 
     // ------------------------------------------
     // MESSAGE OUTPUT
     // ------------------------------------------
-    export function Message(props: BaseProps): Foundations.Output {
-        return buildBase(props, "Message");
+    export function Message<TId extends string>(config: BaseProps & { id: TId }): OutputWithLiteralId<TId, Foundations.Output> {
+        return {
+            id: config.id as TId & Foundations.Output.Id,
+            ...buildBase(config, "Message"),
+        };
     }
 
     // ------------------------------------------
     // LANGUAGE MODEL OUTPUT
     // ------------------------------------------
-    export function LanguageModel(props: BaseProps): Foundations.Output {
-        return buildBase(props, "LanguageModel");
+    export function LanguageModel<TId extends string>(config: BaseProps & { id: TId }): OutputWithLiteralId<TId, Foundations.Output> {
+        return {
+            id: config.id as TId & Foundations.Output.Id,
+            ...buildBase(config, "LanguageModel"),
+        };
     }
 
     // ------------------------------------------
     // DOCUMENT OUTPUT
     // ------------------------------------------
-    export function Document(props: BaseProps): Foundations.Output {
-        return buildBase(props, "Document");
+    export function Document<TId extends string>(config: BaseProps & { id: TId }): OutputWithLiteralId<TId, Foundations.Output> {
+        return {
+            id: config.id as TId & Foundations.Output.Id,
+            ...buildBase(config, "Document"),
+        };
     }
 
     // ------------------------------------------
     // RETRIEVER OUTPUT
     // ------------------------------------------
-    export function Retriever(props: BaseProps): Foundations.Output {
-        return buildBase(props, "Retriever");
+    export function Retriever<TId extends string>(config: BaseProps & { id: TId }): OutputWithLiteralId<TId, Foundations.Output> {
+        return {
+            id: config.id as TId & Foundations.Output.Id,
+            ...buildBase(config, "Retriever"),
+        };
     }
 
     // ------------------------------------------
     // EMBEDDINGS OUTPUT
     // ------------------------------------------
-    export function Embeddings(props: BaseProps): Foundations.Output {
-        return buildBase(props, "Embeddings");
+    export function Embeddings<TId extends string>(config: BaseProps & { id: TId }): OutputWithLiteralId<TId, Foundations.Output> {
+        return {
+            id: config.id as TId & Foundations.Output.Id,
+            ...buildBase(config, "Embeddings"),
+        };
     }
 
     // ------------------------------------------
     // VECTOR STORE OUTPUT
     // ------------------------------------------
-    export function VectorStore(props: BaseProps): Foundations.Output {
-        return buildBase(props, "VectorStore");
+    export function VectorStore<TId extends string>(config: BaseProps & { id: TId }): OutputWithLiteralId<TId, Foundations.Output> {
+        return {
+            id: config.id as TId & Foundations.Output.Id,
+            ...buildBase(config, "VectorStore"),
+        };
     }
 
     // ------------------------------------------
     // TOOL OUTPUT
     // ------------------------------------------
-    export function Tool(props: BaseProps): Foundations.Output {
+    export function Tool<TId extends string>(config: BaseProps & { id: TId }): OutputWithLiteralId<TId, Foundations.Output> {
         return {
-            ...buildBase(props, "Tool"),
+            id: config.id as TId & Foundations.Output.Id,
+            ...buildBase(config, "Tool"),
             asTool: true,
         };
     }
@@ -351,14 +424,62 @@ export namespace OutputBuilder {
     // ------------------------------------------
     // CHAIN / RUNNABLE OUTPUT
     // ------------------------------------------
-    export function Chain(props: BaseProps): Foundations.Output {
-        return buildBase(props, "Chain");
+    export function Chain<TId extends string>(config: BaseProps & { id: TId }): OutputWithLiteralId<TId, Foundations.Output> {
+        return {
+            id: config.id as TId & Foundations.Output.Id,
+            ...buildBase(config, "Chain"),
+        };
     }
 
     // ------------------------------------------
     // DATA (Generic Object)
     // ------------------------------------------
-    export function Data(props: BaseProps): Foundations.Output {
-        return buildBase(props, "Data");
+    export function Data<TId extends string>(config: BaseProps & { id: TId }): OutputWithLiteralId<TId, Foundations.Output> {
+        return {
+            id: config.id as TId & Foundations.Output.Id,
+            ...buildBase(config, "Data"),
+        };
     }
+}
+
+
+// Explicit return type to avoid "cannot be named without reference to zod internals" error
+type DefineNodeReturn<
+    TId extends string,
+    TDrawerId extends string,
+    TInputs extends readonly Foundations.Input[],
+    TOutputs extends readonly Foundations.Output[]
+> = {
+    readonly id: TId & Foundations.NodeDefinition.Id;
+    readonly drawerId: TDrawerId & Shelf.Drawer.Id;
+    readonly displayName: string;
+    readonly description: string;
+    readonly icon: string;
+    readonly inputs: TInputs;
+    readonly outputs: TOutputs;
+}
+
+export function defineNode<
+    const TId extends string,
+    const TDrawerId extends string,
+    const TInputs extends readonly Foundations.Input[],
+    const TOutputs extends readonly Foundations.Output[]
+>(config: {
+    id: TId;
+    drawerId: TDrawerId;
+    displayName: string;
+    description: string;
+    icon: string;
+    inputs: TInputs;
+    outputs: TOutputs;
+}): DefineNodeReturn<TId, TDrawerId, TInputs, TOutputs> {
+    return {
+        id: config.id as TId & Foundations.NodeDefinition.Id,
+        drawerId: config.drawerId as TDrawerId & Shelf.Drawer.Id,
+        displayName: config.displayName,
+        description: config.description,
+        icon: config.icon,
+        inputs: config.inputs,
+        outputs: config.outputs,
+    };
 }

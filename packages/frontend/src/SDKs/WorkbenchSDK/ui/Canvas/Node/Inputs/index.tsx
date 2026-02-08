@@ -12,7 +12,7 @@ const InputComponent: React.FC<{
     const Renderer = INPUT_FIELD_RENDERER_MAP[input.variant] ?? INPUT_FIELD_RENDERER_MAP["other"] as React.ElementType;
 
     const hasEdge = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.doesInputhaveEdge(s, nodeId, input.id))
-    const hasHandle = input.langChainDataTypes.length > 0;
+    const hasHandle = input.handleVariants.length > 0;
 
     const runtimeInputs = useMemo(() => {
         const registry = input.runtimeSubInputsRegistry;
@@ -67,7 +67,7 @@ const NodeInputs: React.FC<Props> = memo(({ node, isWorkflowLocked }) => {
             {node.data.ui.normalInputsOrder
                 .map((inputId) => {
                     const input = node.data.inputs[inputId]
-                    if (!input || input.langChainDataTypes.length === 0) return null;
+                    if (!input || input.handleVariants.length === 0) return null;
                     return (
                         <InputComponent
                             key={input.id}

@@ -22,6 +22,27 @@ code {
   fill: var(--canvas-dot) !important;
 }
 
+
+*::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--muted) !important;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--input) !important;
+  border-radius: 999px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--placeholder-foreground) !important;
+}
+
 :root {
   --bakcground:             #F2E3DA;
   --card-foreground:        #422616;

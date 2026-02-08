@@ -1,4 +1,4 @@
-import { Shelf, Workflow } from "@vx-agent-editor/shared/types";
+import { Foundations, Shelf, Workflow } from "@vx-agent-editor/shared/types";
 import type { ShelfSDKImpl, ShelfSDK } from "./sdk";
 
 export type State = ShelfSDK.State
@@ -20,10 +20,10 @@ export function _createShelfReducers_(sdk: ShelfSDKImpl) {
         }
     } satisfies DrawerReducers
 
-    const checkIfBlueprintHasLcDataType = (s: State, blueprint: Shelf.Blueprint, dataTypes: Set<string>) => {
-        return Object.values(blueprint.data.outputs).some(output => {
+    const checkIfDefintionHasHandles = (s: State, definition: Foundations.NodeDefinition, dataTypes: Set<string>) => {
+        return Object.values(definition.outputs).some(output => {
             return Array.from(dataTypes).some(
-                (type) => output.langChainDataTypes.includes(type as Workflow.Node.LangChainDataType)
+                (type) => output.handleVariants.includes(type as Foundations.HandleVariant)
             )
         })
     }
@@ -42,20 +42,20 @@ export function _createShelfReducers_(sdk: ShelfSDKImpl) {
         const filteredDrawers: typeof s.filteredDrawers = {}
 
         Object.entries(s.drawers).forEach(([_drawerId, drawer]) => {
-            const blueprints = drawer.blueprints?.filter(blueprintId => {
-                const blueprint = s.blueprints[blueprintId]
-                if (!blueprint) return false
+            const definitionIds = drawer.definitionIds?.filter(definitionId => {
+                const definition = s.nodeDefinitions[definitionId]
+                if (!definition) return false
 
-                const hasDisplayNameCheck = searchQuery ? blueprint.display_name.toLowerCase().includes(searchQuery.toLowerCase()) : true
+                const hasDisplayNameCheck = searchQuery ? definition.displayName.toLowerCase().includes(searchQuery.toLowerCase()) : true
 
-                const hasLangChainDataType = dataTypes && dataTypes.size > 0 ? checkIfBlueprintHasLcDataType(s, blueprint, dataTypes) : true
+                const hasLangChainDataType = dataTypes && dataTypes.size > 0 ? checkIfDefintionHasHandles(s, definition, dataTypes) : true
                 return hasDisplayNameCheck && hasLangChainDataType
             })
 
-            if (blueprints && blueprints.length > 0) {
+            if (definitionIds && definitionIds.length > 0) {
                 filteredDrawers[_drawerId as Shelf.Drawer.Id] = {
                     ...drawer,
-                    blueprints
+                    definitionIds
                 }
                 s.openedDrawers.add(_drawerId as Shelf.Drawer.Id)
             }

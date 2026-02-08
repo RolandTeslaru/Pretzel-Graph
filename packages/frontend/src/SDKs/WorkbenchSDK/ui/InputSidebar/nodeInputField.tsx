@@ -20,7 +20,7 @@ export const NodeInputCard: React.FC<NodeInputCardProps> = ({ input, isDragging,
     return (
         <div
             ref={innerRef}
-            className={`${isDragging ? " bg-card backdrop-blur-lg shadow-xl" : ""} relative py-2 flex flex-row gap-2 px-2 ${className ?? ""}`}
+            className={`${isDragging ? " bg-card backdrop-blur-lg shadow-xl" : ""} relative py-2 flex flex-row gap-1 px-2 ${className ?? ""}`}
             style={{
                 zIndex: isDragging ? 999 : undefined,
                 ...style
@@ -35,7 +35,7 @@ export const NodeInputCard: React.FC<NodeInputCardProps> = ({ input, isDragging,
                     <Renderer input={input} nodeId={nodeId} />
                 }
             </div>
-            <SystemIcons.GripVertical className={`${isDragging ? "cursor-grabbing" : "cursor-grab"} w-[18px] h-[18px] text-muted-foreground ml-auto my-auto `}
+            <SystemIcons.GripVertical className={`${isDragging ? "cursor-grabbing" : "cursor-grab"} w-[15px] h-[15px] text-neutral-300/40 ml-auto my-auto`}
                 {...listeners}
             />
         </div>

@@ -20,12 +20,15 @@
             ],
             "@vx-agent-editor/blueprints/*": [
                 "../blueprints/src/*"
+            ],
+            "@vx-agent-editor/nodes/*": [
+                "../nodes/src/*"
             ]
         }
     },
     "include": [
         "src/**/*"
-    ],
+, "src/nodes/Core/Chat/Input/definition.ts"    ],
     "exclude": [
         "node_modules",
         "dist"
