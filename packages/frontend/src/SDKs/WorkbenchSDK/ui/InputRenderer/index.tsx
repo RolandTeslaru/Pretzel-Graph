@@ -12,6 +12,7 @@ import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK'
 import VaultPanel from '@/SDKs/VaultSDK/ui/VaultPanel'
 import LangchainTypeBadge from '../LangchainTypeBadge'
 import { HighlightedTextarea } from './HighlightedTextarea'
+import { SystemIcons } from '@/vx-ui/icons'
 
 export const InputLabel = ({ input, showTypeBadges = true }: { input: Foundations.Input, showTypeBadges?: boolean }) => {
   return (
@@ -21,7 +22,7 @@ export const InputLabel = ({ input, showTypeBadges = true }: { input: Foundation
       {input.isRuntime && <span className="text-neutral-500 ml-auto">runtime</span>}
       {showTypeBadges && (
         <div className='ml-auto flex flex-row gap-1 my-auto'>
-          {Array.from(input.langChainDataTypes).map(dataType =>
+          {Array.from(input.handleVariants).map(dataType =>
             <LangchainTypeBadge key={dataType} dataType={dataType} left={true} isInput={true} />
           )}
         </div>
@@ -79,9 +80,10 @@ const StringInput = memo(({ input, nodeId, className, showTypeBadges }: Renderer
           WorkbenchSDK.actions.input.setValue(nodeId, input.id, text)
         }}
         value={value}
-        className=""
+        input={input}
+        nodeId={nodeId}
+        className="max-h-24 text-ellipsis overflow-hidden"
       />
-
     </div>
   )
 })

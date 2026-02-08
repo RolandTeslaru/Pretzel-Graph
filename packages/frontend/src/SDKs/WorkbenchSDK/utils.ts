@@ -100,10 +100,10 @@ function detectCycle(
 }
 
 function doesEdgeAlreadyExist(
-  workflow:       Workflow,
-  sourceNodeId:   Workflow.Node.Id,
+  workflow: Workflow,
+  sourceNodeId: Workflow.Node.Id,
   sourceHandleId: Foundations.Output.Id,
-  targetNodeId:   Workflow.Node.Id,
+  targetNodeId: Workflow.Node.Id,
   targetHandleId: Foundations.Input.Id
 ) {
   const edgeId = WorkbenchSDK.reducers.createEdgeId(sourceNodeId, sourceHandleId, targetNodeId, targetHandleId);
@@ -111,8 +111,8 @@ function doesEdgeAlreadyExist(
 }
 
 function isTargetAlreadyConnected(
-  s:              WorkbenchSDK.State,
-  targetNodeId:   Workflow.Node.Id,
+  s: WorkbenchSDK.State,
+  targetNodeId: Workflow.Node.Id,
   targetHandleId: Foundations.Input.Id
 ) {
   const edgeId = s.cache.inputHandlesMap[targetNodeId][targetHandleId]
@@ -122,9 +122,9 @@ function isTargetAlreadyConnected(
 }
 
 function areHandlesDataTypesCompatible(
-  sourceNode:     Workflow.Node,
+  sourceNode: Workflow.Node,
   sourceHandleId: Foundations.Output.Id,
-  targetNode:     Workflow.Node,
+  targetNode: Workflow.Node,
   targetHandleId: Foundations.Input.Id
 ) {
   const sourceHandle = sourceNode.data.outputs[sourceHandleId];
@@ -134,8 +134,8 @@ function areHandlesDataTypesCompatible(
     return false
 
   // Check if any of the source data types are accepted by the target handle
-  for (const sourceDataType of Array.from(sourceHandle.langChainDataTypes))
-    if (targetHandle.langChainDataTypes.includes(sourceDataType))
+  for (const sourceDataType of Array.from(sourceHandle.handleVariants))
+    if (targetHandle.handleVariants.includes(sourceDataType))
       return true
 
   return false

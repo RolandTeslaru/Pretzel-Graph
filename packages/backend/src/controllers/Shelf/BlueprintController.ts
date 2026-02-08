@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { BlueprintService } from '../../services/Shelf/BlueprintService';
+import { BlueprintService } from '../../services/Shelf/service';
 import { Shelf } from '@vx-agent-editor/shared/types';
 
 export class BlueprintController {

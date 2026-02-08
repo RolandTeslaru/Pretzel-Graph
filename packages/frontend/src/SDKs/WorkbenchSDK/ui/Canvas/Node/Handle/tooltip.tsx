@@ -22,8 +22,8 @@ const HandleTooltipContent: React.FC<Props> = ({
   const isDifferentNode = draggedHandle?.nodeId !== nodeId
 
   const mappedTypes = useMemo(() => {
-    return Array.from(field.langChainDataTypes)
-  }, [field.langChainDataTypes])
+    return Array.from(field.handleVariants)
+  }, [field.handleVariants])
 
   const isConnecting = !!draggedHandle && isDifferentNode;
   const isInput = handleType === 'target';

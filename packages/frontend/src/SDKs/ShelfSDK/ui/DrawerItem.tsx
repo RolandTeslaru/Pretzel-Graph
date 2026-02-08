@@ -1,0 +1,75 @@
+import React, { memo } from 'react'
+import { ShelfSDK } from '../sdk';
+import { Icon, Tooltip } from '@/vx-ui/foundations';
+import type { Foundations } from '@vx-agent-editor/shared/types';
+import { SystemIcons } from '@/vx-ui/icons';
+
+
+interface Props extends React.HTMLAttributes<HTMLDivElement> {
+  nodeDefinitionId: Foundations.NodeDefinition.Id
+}
+
+const DrawerItem: React.FC<Props> = memo(({ nodeDefinitionId, ...props }) => {
+  const nodeDefinition = ShelfSDK.useStore(s => s.nodeDefinitions[nodeDefinitionId]);
+
+  if (!nodeDefinition) return null;
+
+
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger>
+        <div
+          className='cursor-grab h-8 px-2 bg-input/50 text-left rounded-lg flex flex-row gap-2 max-w-[210px]'
+          draggable={true}
+          data-node-definition-id={nodeDefinitionId}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          {...props}
+        >
+          <Icon name={nodeDefinition.icon} className='w-[18px] h-[18px] my-auto ' />
+          <p className='text-sm my-auto truncate flex-1 min-w-0'>
+            {nodeDefinition.displayName}
+          </p>
+          <SystemIcons.GripVertical className='w-[18px] h-[18px] text-muted-foreground ml-auto my-auto ' />
+        </div>
+      </Tooltip.Trigger>
+      <Tooltip.Content side="left" className='max-w-[250px] gap-2' >
+        <div className='flex flex-row justify-between'>
+          <h4 className='font-semibold text-sm'>{nodeDefinition.displayName}</h4>
+          <Icon name={nodeDefinition.icon} className='w-[18px] h-[18px] text-muted-foreground' />
+        </div>
+        {/* <DataViewerWrapper src={blueprint}/> */}
+        <p>{nodeDefinition.description}</p>
+      </Tooltip.Content>
+    </Tooltip.Root>
+  )
+})
+
+DrawerItem.displayName = 'DrawerItem';
+
+export default DrawerItem
+
+const onDragStart: React.DragEventHandler<HTMLDivElement> = (event) => {
+  const crt = event.currentTarget.cloneNode(true) as HTMLElement;
+  const blueprintId = event.currentTarget.dataset.blueprintId;
+
+  crt.style.position = "absolute";
+  crt.style.width = "215px";
+  crt.style.top = "-500px";
+  crt.style.right = "-500px";
+  crt.classList.add("cursor-grabbing");
+
+  document.body.appendChild(crt);
+  event.dataTransfer.setDragImage(crt, 0, 0);
+
+  if (blueprintId)
+    event.dataTransfer.setData("blueprintId", blueprintId);
+}
+
+
+
+const onDragEnd: React.DragEventHandler<HTMLDivElement> = (event) => {
+  const dragImage = document.getElementsByClassName("cursor-grabbing")[0];
+  if (dragImage)
+    document.body.removeChild(dragImage);
+}

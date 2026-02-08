@@ -171,7 +171,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
     const layoutReducers = {
         node: {
             setPosition: (s, nodeId, newLayout) => {
-                if(!newLayout)
+                if (!newLayout)
                     return
                 const oldNodeLayout = s.workflow.data.ui.layout[nodeId];
                 if (newLayout.x === oldNodeLayout.x && newLayout.y === oldNodeLayout.y) {
@@ -227,39 +227,40 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             layoutReducers.node.remove(s, deletedNodeId);
         },
         createId: createNodeId,
+        // TODO: Migrate from DB schema creation to runtime schema creation from backend
         create: (s, blueprint, position) => {
             s.isDirty = true;
-            const nodeId = createNodeId(blueprint.id);
+            // const nodeId = createNodeId(blueprint.id);
 
-            const newNode: Workflow.Node = {
-                id: nodeId,
-                // TODO: FIX THIS ASAP
-                definitionId: blueprint.id,
-                display_name: blueprint.display_name,
+            // const newNode: Workflow.Node = {
+            //     id: nodeId,
+            //     // TODO: FIX THIS ASAP
+            //     definitionId: blueprint.id,
+            //     display_name: blueprint.display_name,
 
-                data: {
-                    inputs: cloneDeep(blueprint.data.inputs),
-                    outputs: cloneDeep(blueprint.data.outputs),
-                    ui: {
-                        ...blueprint.data.ui,
-                        isMinimized: false
-                    },
-                }
-            }
+            //     data: {
+            //         inputs: cloneDeep(blueprint.data.inputs),
+            //         outputs: cloneDeep(blueprint.data.outputs),
+            //         ui: {
+            //             ...blueprint.data.ui,
+            //             isMinimized: false
+            //         },
+            //     }
+            // }
 
-            const result = Workflow.Node.Schema.safeParse(newNode)
-            if (!result.success) {
-                console.error("WorkbenchSDK: Node schema validation failed:", result.error)
-                return;
-            }
+            // const result = Workflow.Node.Schema.safeParse(newNode)
+            // if (!result.success) {
+            //     console.error("WorkbenchSDK: Node schema validation failed:", result.error)
+            //     return;
+            // }
 
-            s.workflow.data.nodes[nodeId] = newNode;
+            // s.workflow.data.nodes[nodeId] = newNode;
 
-            layoutReducers.node.add(s, nodeId, position);
+            // layoutReducers.node.add(s, nodeId, position);
 
-            s.workflow.data.fieldValues[nodeId] = {}
+            // s.workflow.data.fieldValues[nodeId] = {}
 
-            cacheReducers.createNode(s, newNode);
+            // cacheReducers.createNode(s, newNode);
         },
         setMinimized: (s, nodeId, isMinimized) => {
             s.isDirty = true;
@@ -451,7 +452,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
                     const runtimeInput = {
                         id: runtimeInputId,
                         variant: "string",
-                        langChainDataTypes: ["Message"],
+                        handleVariants: ["Message"],
                         required: false,
                         asTool: false,
                         reconcile: false,
@@ -479,7 +480,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
                     const runtimeInput = {
                         id: runtimeInputId,
                         variant: "string",
-                        langChainDataTypes: ["Message"],
+                        handleVariants: ["Message"],
                         required: false,
                         asTool: false,
                         reconcile: false,

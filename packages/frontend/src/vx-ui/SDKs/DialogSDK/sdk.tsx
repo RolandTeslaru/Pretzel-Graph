@@ -52,6 +52,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     }}
                     darkenBackground={index === 0}
                     blockTransparency={dialogsSize - index > 1}
+                    className={className}
                 >
                     {children}
                 </Dialog.Content>

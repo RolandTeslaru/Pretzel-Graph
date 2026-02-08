@@ -32,7 +32,7 @@ export namespace Workflow {
             })
         });
     }
-    export type Node = z.infer<typeof Node.Schema>
+    export interface Node extends z.infer<typeof Node.Schema> {}
 
 
 
@@ -52,7 +52,7 @@ export namespace Workflow {
             })
         })
     }
-    export type Edge = z.infer<typeof Edge.Schema>;
+    export interface Edge extends z.infer<typeof Edge.Schema> {}
 
 
 
@@ -106,7 +106,7 @@ export namespace Workflow {
     });
 
 }
-export type Workflow = z.infer<typeof Workflow.Schema>;
+export interface Workflow extends z.infer<typeof Workflow.Schema> {}
 
 
 

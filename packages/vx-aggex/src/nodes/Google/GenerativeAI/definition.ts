@@ -1,22 +1,26 @@
-import { Foundations } from "@vx-agent-editor/shared/types";
-import { InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { defineNode, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
-export const Definition = {
-    id: "Google.GenerativeAI.v1" as Foundations.NodeDefinition.Id,
+export const Definition = defineNode({
+    id: "Google.GenerativeAI",
+    icon: "Google",
     displayName: "Google Generative AI Node",
     description: "This node talks to google generative ai api",
-    inputs: {
-        api_key: InputBuilder.Secret({
+    drawerId: "google",
+    inputs: [
+        InputBuilder.Secret({
+            id: "api_key",
             displayName: "API Key",
             initialValue: "",
         }),
-        prompt: InputBuilder.String({
+        InputBuilder.String({
+            id: "prompt",
             displayName: "Prompt",
             required: true,
             initialValue: "",
             hasHandle: true,
         }),
-        model: InputBuilder.MultiOption({
+        InputBuilder.MultiOption({
+            id: "model",
             displayName: "Model",
             options: [
                 "gemini-1.5-flash",
@@ -25,7 +29,8 @@ export const Definition = {
             ],
             initialValue: "gemini-1.5-flash",
         }),
-        temperature: InputBuilder.Float({
+        InputBuilder.Float({
+            id: "temperature",
             displayName: "Temperature",
             required: false,
             initialValue: 0.7,
@@ -35,7 +40,8 @@ export const Definition = {
             tooltip: "Controls randomness in the output. Higher values are more creative.",
             hasHandle: false,
         }),
-        maxOutputTokens: InputBuilder.Integer({
+        InputBuilder.Integer({
+            id: "maxOutputTokens",
             displayName: "Max Output Tokens",
             required: false,
             initialValue: 2048,
@@ -44,7 +50,8 @@ export const Definition = {
             tooltip: "Maximum number of tokens to generate.",
             hasHandle: false,
         }),
-        topP: InputBuilder.Float({
+        InputBuilder.Float({
+            id: "topP",
             displayName: "Top P",
             required: false,
             initialValue: 0.95,
@@ -54,7 +61,8 @@ export const Definition = {
             tooltip: "Nucleus sampling probability.",
             hasHandle: false,
         }),
-        topK: InputBuilder.Integer({
+        InputBuilder.Integer({
+            id: "topK",
             displayName: "Top K",
             required: false,
             initialValue: 64,
@@ -63,11 +71,12 @@ export const Definition = {
             tooltip: "Top-K sampling parameter.",
             hasHandle: false,
         }),
-    },
-    outputs: {
-        response: OutputBuilder.Message({
+    ],
+    outputs: [
+        OutputBuilder.Message({
+            id: "response",
             displayName: "Response",
             tooltip: "The response from the model",
         })
-    }
-} as const satisfies Foundations.NodeDefinition
+    ]
+})

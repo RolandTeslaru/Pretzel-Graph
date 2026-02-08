@@ -1,7 +1,6 @@
 import { z } from "zod"
-import { Workflow } from "./Workflow";
 import { Foundations } from "./Foundations";
-
+import { SECTIONS as _SECTIONS, CORE_DRAWERS as _CORE_DRAWERS, BUNDLE_DRAWERS as _BUNDLE_DRAWERS, ALL_DRAWERS as _ALL_DRAWERS } from "../constants/drawers"
 
 export namespace Shelf {
 
@@ -14,61 +13,94 @@ export namespace Shelf {
     export namespace Drawer {
         export const Schema = z.object({
             id: Drawer.Id,
-            display_name: z.string(),
+            displayName: z.string(),
             icon: z.string(),
-            blueprints: z.array(Workflow.Node.Id).optional(),
+            definitionIds: z.array(Foundations.NodeDefinition.Id),
         })
+
+        export const SECTIONS = _SECTIONS
+        export const CORE_DRAWERS = _CORE_DRAWERS
+        export const BUNDLE_DRAWERS = _BUNDLE_DRAWERS
+        export const ALL_DRAWERS = _ALL_DRAWERS
     }
 
     export type Drawer = z.infer<typeof Drawer.Schema>
 
 
+    export namespace NodeMeta {
+        export const Schema = z.object({
+            definitionId: Foundations.NodeDefinition.Id,
+            displayName: z.string(),
+            icon: z.string(),
+            drawerId: Drawer.Id
+        })
+    }
+    export type NodeMeta = z.infer<typeof NodeMeta.Schema>
 
 
     export namespace API {
-        export namespace Drawer {
+        /**
+         * Get the full index (metas + drawer → definitionIds mapping)
+         * Called on page mount
+         */
+        export namespace Index {
             export namespace Get {
-                export const Request = z.object({
-                    id: Shelf.Drawer.Id,
-                })
-                export const Response = z.object({
-                    drawers: z.record(Shelf.Drawer.Id, Shelf.Drawer.Schema),
-                })
-
-                export type Request = z.infer<typeof Drawer.Get.Request>
-                export type Response = z.infer<typeof Drawer.Get.Response>
-            }
-
-            export namespace GetAllIds {
                 export const Request = z.object({})
                 export const Response = z.object({
-                    drawerIds: z.array(Shelf.Drawer.Id)
+                    version: z.string(),
+                    generatedAt: z.string(),
+                    drawers: z.record(Shelf.Drawer.Id, Shelf.Drawer.Schema),
+                    nodeDefinitionMetas: z.record(Foundations.NodeDefinition.Id, Shelf.NodeMeta.Schema)
                 })
-                export type Request = z.infer<typeof Drawer.Get.Request>
-                export type Response = z.infer<typeof Drawer.Get.Response>
+
+                export type Request = z.infer<typeof Request>
+                export type Response = z.infer<typeof Response>
             }
         }
 
+        /**
+         * Get full node definitions for a specific drawer
+         * Called when user opens a drawer
+         */
+        export namespace Drawer {
+            export namespace GetDefinitions {
+                export const Request = z.object({
+                    drawerId: Shelf.Drawer.Id,
+                })
+                export const Response = z.object({
+                    definitions: z.array(Foundations.NodeDefinition.Schema)
+                })
+
+                export type Request = z.infer<typeof Request>
+                export type Response = z.infer<typeof Response>
+            }
+        }
+
+        /**
+         * Get a single full node definition
+         * Called when user drags a node (if not already cached)
+         */
         export namespace Node {
             export namespace Get {
                 export const Request = z.object({
-                    definitionId: Foundations.NodeDefinition.Id,
+                    definitionId: Foundations.NodeDefinition.Id
                 })
-                export const Response = Workflow.Node;
-                
-                export type Request = z.infer<typeof API.Node.Get.Request>
-                export type Response = z.infer<typeof API.Node.Get.Response>
+                export const Response = Foundations.NodeDefinition.Schema
+
+                export type Request = z.infer<typeof Request>
+                export type Response = z.infer<typeof Response>
             }
 
-            export namespace List {
+            export namespace Batch {
                 export const Request = z.object({
-                    drawerId: z.string().optional()
-                });
-                // Returns array of Meta (lighter payload) or full blueprints
-                export const Response = z.array(Workflow.Node.Schema);
-                
-                export type Request = z.infer<typeof API.Node.List.Request>
-                export type Response = z.infer<typeof API.Node.List.Response>;
+                    definitionIds: z.array(Foundations.NodeDefinition.Id)
+                })
+                export const Response = z.object({
+                    definitions: z.array(Foundations.NodeDefinition.Schema)
+                })
+
+                export type Request = z.infer<typeof Request>
+                export type Response = z.infer<typeof Response>
             }
         }
     }
