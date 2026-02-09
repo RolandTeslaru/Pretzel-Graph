@@ -1,6 +1,7 @@
 import { z } from "zod"
+import type { AxiosInstance } from "axios";
 import { Foundations } from "./Foundations";
-import { SECTIONS as _SECTIONS, CORE_DRAWERS as _CORE_DRAWERS, BUNDLE_DRAWERS as _BUNDLE_DRAWERS, ALL_DRAWERS as _ALL_DRAWERS } from "../constants/drawers"
+import { SECTIONS as _SECTIONS, CORE_DRAWERS as _CORE_DRAWERS, BUNDLE_DRAWERS as _BUNDLE_DRAWERS, ALL_DRAWERS as _ALL_DRAWERS, SECTIONS } from "../constants/drawers"
 
 export namespace Shelf {
 
@@ -15,7 +16,7 @@ export namespace Shelf {
             id: Drawer.Id,
             displayName: z.string(),
             icon: z.string(),
-            definitionIds: z.array(Foundations.NodeDefinition.Id),
+            blueprintIds: z.array(Foundations.Blueprint.Id),
         })
 
         export const SECTIONS = _SECTIONS
@@ -26,81 +27,83 @@ export namespace Shelf {
 
     export type Drawer = z.infer<typeof Drawer.Schema>
 
-
-    export namespace NodeMeta {
+    export namespace Index {
         export const Schema = z.object({
-            definitionId: Foundations.NodeDefinition.Id,
-            displayName: z.string(),
-            icon: z.string(),
-            drawerId: Drawer.Id
+            version: z.string(),
+            generatedAt: z.string(),
+            drawers: z.record(Drawer.Id, Drawer.Schema),
+            blueprints: z.record(Foundations.Blueprint.Id, Foundations.Blueprint.Schema)
         })
     }
-    export type NodeMeta = z.infer<typeof NodeMeta.Schema>
-
+    export type Index = z.infer<typeof Index.Schema>
 
     export namespace API {
-        /**
-         * Get the full index (metas + drawer → definitionIds mapping)
-         * Called on page mount
-         */
-        export namespace Index {
-            export namespace Get {
-                export const Request = z.object({})
-                export const Response = z.object({
-                    version: z.string(),
-                    generatedAt: z.string(),
-                    drawers: z.record(Shelf.Drawer.Id, Shelf.Drawer.Schema),
-                    nodeDefinitionMetas: z.record(Foundations.NodeDefinition.Id, Shelf.NodeMeta.Schema)
-                })
 
-                export type Request = z.infer<typeof Request>
-                export type Response = z.infer<typeof Response>
-            }
-        }
-
-        /**
-         * Get full node definitions for a specific drawer
-         * Called when user opens a drawer
-         */
-        export namespace Drawer {
-            export namespace GetDefinitions {
-                export const Request = z.object({
-                    drawerId: Shelf.Drawer.Id,
-                })
-                export const Response = z.object({
-                    definitions: z.array(Foundations.NodeDefinition.Schema)
-                })
-
-                export type Request = z.infer<typeof Request>
-                export type Response = z.infer<typeof Response>
-            }
-        }
-
-        /**
-         * Get a single full node definition
-         * Called when user drags a node (if not already cached)
-         */
-        export namespace Node {
+        export namespace Blueprint {
             export namespace Get {
                 export const Request = z.object({
-                    definitionId: Foundations.NodeDefinition.Id
+                    blueprintId: Foundations.Blueprint.Id
                 })
-                export const Response = Foundations.NodeDefinition.Schema
+                export const Response = z.object({
+                    blueprint: Foundations.Blueprint
+                })
+
+                export type Request = z.infer<typeof Request>
+                export type Response = z.infer<typeof Response>
+            }
+            
+            export namespace GetBatch {
+                export const Request = z.object({
+                    blueprintIds: z.array(Foundations.Blueprint.Id)
+                })
+                export const Response = z.object({
+                    blueprints: z.record(Foundations.Blueprint.Id, Foundations.Blueprint.Schema)
+                })
 
                 export type Request = z.infer<typeof Request>
                 export type Response = z.infer<typeof Response>
             }
 
-            export namespace Batch {
+            export namespace GetAllInSection{
                 export const Request = z.object({
-                    definitionIds: z.array(Foundations.NodeDefinition.Id)
+                    section: z.literal(["core", "bundle"])
                 })
                 export const Response = z.object({
-                    definitions: z.array(Foundations.NodeDefinition.Schema)
+                    blueprints: z.record(Foundations.Blueprint.Id, Foundations.Blueprint.Schema)
                 })
 
                 export type Request = z.infer<typeof Request>
                 export type Response = z.infer<typeof Response>
+            }
+
+            export async function get(
+                api: AxiosInstance,
+                req: Get.Request
+            ): Promise<Get.Response> {
+                const { data } = await api.post<Get.Response>(
+                    '/api/shelf/blueprint/get', req 
+                );
+                return data;
+            }
+
+            export async function getBatch(
+                api: AxiosInstance,
+                req: GetBatch.Request
+            ): Promise<GetBatch.Response> {
+                const { data } = await api.post<GetBatch.Response>(
+                    '/api/shelf/blueprint/getBatch', req
+                )
+                return data;
+            }
+
+            export async function getAllInSection(
+                api: AxiosInstance,
+                req: GetAllInSection.Request
+            ): Promise<GetAllInSection.Response> {
+                const { data } = await api.post<GetAllInSection.Response>(
+                    '/api/shelf/blueprint/getAllInSection', req
+                )
+                return data;
             }
         }
     }

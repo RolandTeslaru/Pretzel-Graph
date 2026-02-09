@@ -14,10 +14,8 @@
     "dependencies": {
         "@langchain/core": "^1.1.17",
         "@langchain/google-genai": "^2.1.13",
-        "@langchain/graph-state": "^0.1.0",
-        "@langchain/langgraph": "^0.0.31",
-        "@vx-agent-editor/nodes": "workspace:*",
-        "@vx-agent-editor/shared": "workspace:*",
+        "@langchain/langgraph": "^1.1.4",
+        "@vx-agent-editor/shared": "*",
         "bullmq": "^5.67.2",
         "ioredis": "^5.9.2",
         "reflect-metadata": "^0.2.2",

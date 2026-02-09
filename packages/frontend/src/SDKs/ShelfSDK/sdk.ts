@@ -11,22 +11,21 @@ enableMapSet();
 
 @SDK("Shelf")
 export class ShelfSDKImpl extends BaseSDK<ShelfSDK.State> {
-    constructor() {
-        super()
-    }
 
+    constructor() { super()}
 
     public readonly useStore: BaseSDK.Store<ShelfSDK.State> = create(
         immer<ShelfSDK.State>(() => ({
             sections: {
                 core: Shelf.Drawer.SECTIONS.core,
-                bundles: Shelf.Drawer.SECTIONS.bundles,
+                bundle: Shelf.Drawer.SECTIONS.bundle,
                 mcp: []
             },
             selectedSection: "core",
             drawers: Shelf.Drawer.ALL_DRAWERS,
-            nodeDefinitions: {},
+            blueprints: {},
             filteredDrawers: {},
+            loadedSections: new Set<ShelfSDK.Section>(),
             openedDrawers: new Set<Shelf.Drawer.Id>(),
             searchFilter: {
                 query: null,
@@ -40,7 +39,7 @@ export class ShelfSDKImpl extends BaseSDK<ShelfSDK.State> {
     public readonly reducers: ShelfSDK.Reducers = _createShelfReducers_(this);
     public readonly actions: ShelfSDK.Actions = _createShelfActions_(this);
 
-} 
+}
 
 
 
@@ -49,15 +48,16 @@ export const ShelfSDK = SDK.get<ShelfSDKImpl>("Shelf")
 
 export namespace ShelfSDK {
 
-    export type Section = "core" | "bundles" | "mcp"
+    export type Section = "core" | "bundle" | "mcp"
 
     export type State = {
-        sections:           Record<Section, Shelf.Drawer.Id[]>
-        drawers:            Record<Shelf.Drawer.Id, Shelf.Drawer>
-        filteredDrawers:    Record<Shelf.Drawer.Id, Shelf.Drawer>   
-        nodeDefinitions:    Record<Foundations.NodeDefinition.Id, Foundations.NodeDefinition>
-        selectedSection:    Section
-        openedDrawers:      Set<Shelf.Drawer.Id>
+        sections: Record<Section, Shelf.Drawer.Id[]>
+        drawers: Record<Shelf.Drawer.Id, Shelf.Drawer>
+        blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint>
+        filteredDrawers: Record<Shelf.Drawer.Id, Shelf.Drawer>
+        selectedSection: Section
+        openedDrawers: Set<Shelf.Drawer.Id>
+        loadedSections: Set<Section>
         searchFilter: {
             query: string | null,
             selectionFilters: Set<Section>

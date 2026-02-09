@@ -6,13 +6,13 @@ import { SystemIcons } from '@/vx-ui/icons';
 
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
-  nodeDefinitionId: Foundations.NodeDefinition.Id
+  blueprintId: Foundations.Blueprint.Id
 }
 
-const DrawerItem: React.FC<Props> = memo(({ nodeDefinitionId, ...props }) => {
-  const nodeDefinition = ShelfSDK.useStore(s => s.nodeDefinitions[nodeDefinitionId]);
+const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
+  const blueprint = ShelfSDK.useStore(s => s.blueprints[blueprintId]);
 
-  if (!nodeDefinition) return null;
+  if (!blueprint) return null;
 
 
   return (
@@ -21,25 +21,25 @@ const DrawerItem: React.FC<Props> = memo(({ nodeDefinitionId, ...props }) => {
         <div
           className='cursor-grab h-8 px-2 bg-input/50 text-left rounded-lg flex flex-row gap-2 max-w-[210px]'
           draggable={true}
-          data-node-definition-id={nodeDefinitionId}
+          data-blueprint-id={blueprintId}
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
           {...props}
         >
-          <Icon name={nodeDefinition.icon} className='w-[18px] h-[18px] my-auto ' />
+          <Icon name={blueprint.icon} className='w-[18px] h-[18px] my-auto ' />
           <p className='text-sm my-auto truncate flex-1 min-w-0'>
-            {nodeDefinition.displayName}
+            {blueprint.displayName}
           </p>
           <SystemIcons.GripVertical className='w-[18px] h-[18px] text-muted-foreground ml-auto my-auto ' />
         </div>
       </Tooltip.Trigger>
       <Tooltip.Content side="left" className='max-w-[250px] gap-2' >
         <div className='flex flex-row justify-between'>
-          <h4 className='font-semibold text-sm'>{nodeDefinition.displayName}</h4>
-          <Icon name={nodeDefinition.icon} className='w-[18px] h-[18px] text-muted-foreground' />
+          <h4 className='font-semibold text-sm'>{blueprint.displayName}</h4>
+          <Icon name={blueprint.icon} className='w-[18px] h-[18px] text-muted-foreground' />
         </div>
         {/* <DataViewerWrapper src={blueprint}/> */}
-        <p>{nodeDefinition.description}</p>
+        <p>{blueprint.description}</p>
       </Tooltip.Content>
     </Tooltip.Root>
   )

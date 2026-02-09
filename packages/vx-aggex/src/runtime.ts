@@ -59,9 +59,11 @@ export namespace Runtime {
 
 
 
-    export abstract class Node<TDefinition extends Foundations.NodeDefinition> {
+    export abstract class Node<TBlueprint extends Foundations.Blueprint> {
 
         public workflowNode: Workflow.Node;
+
+        public abstract Blueprint: TBlueprint;
 
         constructor(workflowNode: Workflow.Node) {
             this.workflowNode = workflowNode;
@@ -69,15 +71,15 @@ export namespace Runtime {
 
         public abstract run(
             globalState: Runtime.State,
-            incomingValues: InferInputs<TDefinition>
-        ): Promise<InferOutputs<TDefinition>>;
+            incomingValues: InferInputs<TBlueprint>
+        ): Promise<InferOutputs<TBlueprint>>;
 
         protected async onReconcile(
             changedInputId: Foundations.Input.Id,
             newValue: any,
-            currentDefinition: TDefinition
-        ): Promise<TDefinition> {
-            return Promise.resolve(currentDefinition);
+            currentBlueprint: TBlueprint
+        ): Promise<TBlueprint> {
+            return Promise.resolve(currentBlueprint);
         }
     }
 

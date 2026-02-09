@@ -27,8 +27,9 @@
         }
     },
     "include": [
-        "src/**/*"
-, "src/nodes/Core/Chat/Input/definition.ts"    ],
+        "src/**/*",
+        "src/nodes/Core/Chat/Input/blueprint.ts"
+    ],
     "exclude": [
         "node_modules",
         "dist"

@@ -1,12 +1,12 @@
 {
-  "version": "1770581925457",
-  "generatedAt": "2026-02-08T20:18:45.457Z",
+  "version": "1770634236874",
+  "generatedAt": "2026-02-09T10:50:36.874Z",
   "drawers": {
     "input_output": {
       "id": "input_output",
       "displayName": "Input & Output",
       "icon": "Cable",
-      "definitionIds": [
+      "blueprintIds": [
         "Core.Chat.Input",
         "Core.Text.Input"
       ]
@@ -15,7 +15,7 @@
       "id": "google",
       "displayName": "Google",
       "icon": "Google",
-      "definitionIds": [
+      "blueprintIds": [
         "Google.GenerativeAI"
       ]
     },
@@ -23,35 +23,516 @@
       "id": "openai",
       "displayName": "OpenAI",
       "icon": "OpenAI",
-      "definitionIds": [
-        "OpenAI.Chat.v1"
+      "blueprintIds": [
+        "OpenAI.Chat"
       ]
     }
   },
-  "nodeDefinitionMetas": {
+  "blueprints": {
     "Core.Chat.Input": {
-      "definitionId": "Core.Chat.Input",
+      "id": "Core.Chat.Input",
+      "drawerId": "input_output",
       "displayName": "Chat Input",
+      "description": "This node is a chat input",
       "icon": "MessagesSquare",
-      "drawerId": "input_output"
+      "inputs": [
+        {
+          "id": "api_key",
+          "required": true,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "API Key"
+          },
+          "variant": "secret",
+          "initialValue": ""
+        },
+        {
+          "id": "prompt",
+          "required": true,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [
+            "Text"
+          ],
+          "uiData": {
+            "displayName": "Prompt"
+          },
+          "variant": "string",
+          "initialValue": "",
+          "data": {
+            "multiline": false
+          }
+        },
+        {
+          "id": "model",
+          "required": true,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Model"
+          },
+          "variant": "multiOption",
+          "initialValue": "gemini-1.5-flash",
+          "data": {
+            "options": [
+              "gemini-1.5-flash",
+              "gemini-1.5-pro",
+              "gemini-1.0-pro"
+            ],
+            "variant": "select"
+          }
+        },
+        {
+          "id": "temperature",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Temperature",
+            "tooltip": "Controls randomness in the output. Higher values are more creative."
+          },
+          "variant": "float",
+          "initialValue": 0.7,
+          "data": {
+            "min": 0,
+            "max": 2,
+            "step": 0.1
+          }
+        },
+        {
+          "id": "maxOutputTokens",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Max Output Tokens",
+            "tooltip": "Maximum number of tokens to generate."
+          },
+          "variant": "integer",
+          "initialValue": 2048,
+          "data": {
+            "min": 1,
+            "step": 1
+          }
+        },
+        {
+          "id": "topP",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Top P",
+            "tooltip": "Nucleus sampling probability."
+          },
+          "variant": "float",
+          "initialValue": 0.95,
+          "data": {
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          }
+        },
+        {
+          "id": "topK",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Top K",
+            "tooltip": "Top-K sampling parameter."
+          },
+          "variant": "integer",
+          "initialValue": 64,
+          "data": {
+            "min": 1,
+            "step": 1
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "id": "response",
+          "handleVariants": [
+            "Message"
+          ],
+          "asTool": false,
+          "uiData": {
+            "displayName": "Response"
+          }
+        }
+      ]
     },
     "Core.Text.Input": {
-      "definitionId": "Core.Text.Input",
+      "id": "Core.Text.Input",
+      "drawerId": "input_output",
       "displayName": "Text Input",
+      "description": "This node is a Text input",
       "icon": "type",
-      "drawerId": "input_output"
+      "inputs": [
+        {
+          "id": "text",
+          "required": true,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [
+            "Text"
+          ],
+          "uiData": {
+            "displayName": "Text"
+          },
+          "variant": "string",
+          "initialValue": "",
+          "data": {
+            "multiline": false
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "id": "output",
+          "handleVariants": [
+            "Message"
+          ],
+          "asTool": false,
+          "uiData": {
+            "displayName": "Output"
+          }
+        }
+      ]
     },
     "Google.GenerativeAI": {
-      "definitionId": "Google.GenerativeAI",
+      "id": "Google.GenerativeAI",
+      "drawerId": "google",
       "displayName": "Google Generative AI Node",
+      "description": "This node talks to google generative ai api",
       "icon": "Google",
-      "drawerId": "google"
+      "inputs": [
+        {
+          "id": "api_key",
+          "required": true,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "API Key"
+          },
+          "variant": "secret",
+          "initialValue": ""
+        },
+        {
+          "id": "prompt",
+          "required": true,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [
+            "Text"
+          ],
+          "uiData": {
+            "displayName": "Prompt"
+          },
+          "variant": "string",
+          "initialValue": "",
+          "data": {
+            "multiline": false
+          }
+        },
+        {
+          "id": "model",
+          "required": true,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Model"
+          },
+          "variant": "multiOption",
+          "initialValue": "gemini-1.5-flash",
+          "data": {
+            "options": [
+              "gemini-1.5-flash",
+              "gemini-1.5-pro",
+              "gemini-1.0-pro"
+            ],
+            "variant": "select"
+          }
+        },
+        {
+          "id": "temperature",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Temperature",
+            "tooltip": "Controls randomness in the output. Higher values are more creative."
+          },
+          "variant": "float",
+          "initialValue": 0.7,
+          "data": {
+            "min": 0,
+            "max": 2,
+            "step": 0.1
+          }
+        },
+        {
+          "id": "maxOutputTokens",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Max Output Tokens",
+            "tooltip": "Maximum number of tokens to generate."
+          },
+          "variant": "integer",
+          "initialValue": 2048,
+          "data": {
+            "min": 1,
+            "step": 1
+          }
+        },
+        {
+          "id": "topP",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Top P",
+            "tooltip": "Nucleus sampling probability."
+          },
+          "variant": "float",
+          "initialValue": 0.95,
+          "data": {
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          }
+        },
+        {
+          "id": "topK",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Top K",
+            "tooltip": "Top-K sampling parameter."
+          },
+          "variant": "integer",
+          "initialValue": 64,
+          "data": {
+            "min": 1,
+            "step": 1
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "id": "response",
+          "handleVariants": [
+            "Message"
+          ],
+          "asTool": false,
+          "uiData": {
+            "displayName": "Response"
+          }
+        }
+      ]
     },
-    "OpenAI.Chat.v1": {
-      "definitionId": "OpenAI.Chat.v1",
+    "OpenAI.Chat": {
+      "id": "OpenAI.Chat",
+      "drawerId": "openai",
       "displayName": "OpenAI Chat",
+      "description": "This node talks to OpenAI's GPT chat models via the Chat Completions API",
       "icon": "OpenAI",
-      "drawerId": "openai"
+      "inputs": [
+        {
+          "id": "api_key",
+          "required": true,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "API Key"
+          },
+          "variant": "secret",
+          "initialValue": ""
+        },
+        {
+          "id": "prompt",
+          "required": true,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [
+            "Text"
+          ],
+          "uiData": {
+            "displayName": "Prompt"
+          },
+          "variant": "string",
+          "initialValue": "",
+          "data": {
+            "multiline": false
+          }
+        },
+        {
+          "id": "model",
+          "required": true,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Model"
+          },
+          "variant": "multiOption",
+          "initialValue": "gpt-4.1",
+          "data": {
+            "options": [
+              "gpt-4.1",
+              "gpt-4.1-mini",
+              "gpt-4.1-nano",
+              "gpt-4o",
+              "gpt-4o-mini",
+              "gpt-4-turbo",
+              "gpt-4",
+              "gpt-3.5-turbo"
+            ],
+            "variant": "select"
+          }
+        },
+        {
+          "id": "temperature",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Temperature",
+            "tooltip": "Controls randomness in the output. Higher values (e.g., 0.8) make output more random, lower values (e.g., 0.2) make it more focused and deterministic."
+          },
+          "variant": "float",
+          "initialValue": 0.7,
+          "data": {
+            "min": 0,
+            "max": 2,
+            "step": 0.1
+          }
+        },
+        {
+          "id": "maxTokens",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Max Tokens",
+            "tooltip": "The maximum number of tokens to generate in the chat completion."
+          },
+          "variant": "integer",
+          "initialValue": 2048,
+          "data": {
+            "min": 1,
+            "step": 1
+          }
+        },
+        {
+          "id": "topP",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Top P",
+            "tooltip": "Nucleus sampling: considers the tokens with top_p probability mass. 0.1 means only tokens comprising the top 10% probability mass are considered."
+          },
+          "variant": "float",
+          "initialValue": 1,
+          "data": {
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          }
+        },
+        {
+          "id": "frequencyPenalty",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Frequency Penalty",
+            "tooltip": "Penalizes new tokens based on their existing frequency in the text so far. Positive values decrease the model's likelihood to repeat the same line verbatim."
+          },
+          "variant": "float",
+          "initialValue": 0,
+          "data": {
+            "min": -2,
+            "max": 2,
+            "step": 0.1
+          }
+        },
+        {
+          "id": "presencePenalty",
+          "required": false,
+          "reconcile": false,
+          "asTool": false,
+          "isRuntime": false,
+          "handleVariants": [],
+          "uiData": {
+            "displayName": "Presence Penalty",
+            "tooltip": "Penalizes new tokens based on whether they appear in the text so far. Positive values increase the model's likelihood to talk about new topics."
+          },
+          "variant": "float",
+          "initialValue": 0,
+          "data": {
+            "min": -2,
+            "max": 2,
+            "step": 0.1
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "id": "response",
+          "handleVariants": [
+            "Message"
+          ],
+          "asTool": false,
+          "uiData": {
+            "displayName": "Response"
+          }
+        }
+      ]
     }
   }
 }
