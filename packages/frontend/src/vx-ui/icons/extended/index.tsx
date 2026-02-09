@@ -1,5 +1,5 @@
 import React from "react"
-import { BaseIcon, BaseIconProps } from "../baseIcon"
+import { BaseIcon, type BaseIconProps } from "../baseIcon"
 
 export const HardDrive: React.FC<BaseIconProps> = (props) => (
     <BaseIcon {...props}><path d="M22 12H2M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11zM6 16h.01M10 16h.01"></path></BaseIcon>
@@ -110,22 +110,3 @@ export const Bookmark: React.FC<BaseIconProps> = (props) => (
     <BaseIcon strokeWidth={2} {...props}><path d="M3.5 2C3.22386 2 3 2.22386 3 2.5V13.5C3 13.6818 3.09864 13.8492 3.25762 13.9373C3.41659 14.0254 3.61087 14.0203 3.765 13.924L7.5 11.5896L11.235 13.924C11.3891 14.0203 11.5834 14.0254 11.7424 13.9373C11.9014 13.8492 12 13.6818 12 13.5V2.5C12 2.22386 11.7761 2 11.5 2H3.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></BaseIcon>
 )
 Bookmark.displayName = "Bookmark"
-
-
-export const ExtendedIconsMap = {
-    HardDrive,
-    Server,
-    Sun,
-    Sunset,
-    Video,
-    Engine,
-    Display,
-    Film,
-    Material,
-    Bot,
-    Database,
-    Health,
-    Heart,
-    Table,
-    Bookmark,
-}
