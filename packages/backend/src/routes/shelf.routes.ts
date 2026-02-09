@@ -1,11 +1,8 @@
 import { Router } from 'express';
-import { BlueprintController } from '../controllers/Shelf/BlueprintController';
+import { ShelfService } from '../services/Shelf/service';
 
 const router = Router();
 
-// /api/shelf/blueprints
-router.post('/blueprints', BlueprintController.create);
-router.get('/blueprints/:id', BlueprintController.get);
-router.get('/blueprints', BlueprintController.list);
+router.use('/', ShelfService.routes);
 
 export const ShelfRoutes = router;

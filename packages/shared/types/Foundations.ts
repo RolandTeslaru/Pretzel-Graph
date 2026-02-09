@@ -179,20 +179,27 @@ export namespace Foundations {
     export interface Output extends z.infer<typeof Output.Schema> { }
 
 
-    export namespace NodeDefinition {
-        export const Id = z.string().brand("NodeDefinitionId")
+    export namespace Blueprint {
+        export const Id = z.string().brand("BlueprintId")
         export type Id = z.infer<typeof Id>
 
-        export const Schema = z.object({
-            id: NodeDefinition.Id,
+
+        export namespace Meta {
+            export const Schema = z.object({
+                id: Blueprint.Id,
+                displayName: z.string(),
+                icon: z.string(),
+            })
+        }
+        export type Meta = z.infer<typeof Meta.Schema>
+
+        export const Schema = Meta.Schema.extend({
             inputs: z.array(Foundations.Input.Schema).readonly(),
             outputs: z.array(Foundations.Output.Schema).readonly(),
-            displayName: z.string(),
             description: z.string(),
-            icon: z.string(),
-            drawerId: z.string().brand("DrawerId"),
         }).readonly()
+
     }
 
-    export type NodeDefinition = z.infer<typeof NodeDefinition.Schema>
+    export type Blueprint = z.infer<typeof Blueprint.Schema>
 }

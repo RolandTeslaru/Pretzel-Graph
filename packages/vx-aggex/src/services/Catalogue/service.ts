@@ -5,21 +5,21 @@ import { Runtime } from "src/runtime";
 import { Foundations } from "@vx-agent-editor/shared/types";
 
 export interface NodeConstructor {
-    new(workflowNode: Workflow.Node): Runtime.Node<Foundations.NodeDefinition>;
+    new(workflowNode: Workflow.Node): Runtime.Node<Foundations.Blueprint>;
     // Definition: Foundations.NodeDefinition
 }
 
 @singleton()
 class CatalogueServiceImpl {
     // Seperete static and instance registry because i cannot use the instance registry in the static method Register
-    private static registry = new Map<Foundations.NodeDefinition.Id, NodeConstructor>();
+    private static registry = new Map<Foundations.Blueprint.Id, NodeConstructor>();
     private __registry = CatalogueServiceImpl.registry;
 
-    public static register(definitionId: Foundations.NodeDefinition.Id, constructor: NodeConstructor) {
-        if (CatalogueServiceImpl.registry.has(definitionId))
-            console.warn(`[NodeRegistry] Overwriting node type: ${definitionId}`);
+    public static register(blueprintId: Foundations.Blueprint.Id, constructor: NodeConstructor) {
+        if (CatalogueServiceImpl.registry.has(blueprintId))
+            console.warn(`[NodeRegistry] Overwriting node type: ${blueprintId}`);
 
-        CatalogueServiceImpl.registry.set(definitionId, constructor);
+        CatalogueServiceImpl.registry.set(blueprintId, constructor);
     }
 
     private nodesRoot: string;
@@ -28,27 +28,27 @@ class CatalogueServiceImpl {
         this.nodesRoot = path.resolve(__dirname, "../../nodes");
     }
 
-    public async getNode(definitionId: Foundations.NodeDefinition.Id) {
+    public async getNode(blueprintId: Foundations.Blueprint.Id) {
         // 1. Check Memory Cache (Registry)
-        if (this.__registry.has(definitionId))
-            return this.__registry.get(definitionId);
+        if (this.__registry.has(blueprintId))
+            return this.__registry.get(blueprintId);
 
         // 2. Convention over Configuration: Resolve Path
         // "Google.Chat.v1" -> "Google/Chat/v1"
-        const relativePath = definitionId.replace(/\./g, "/");
+        const relativePath = blueprintId.replace(/\./g, "/");
         const fullPath = path.join(this.nodesRoot, relativePath + "/node");
 
         try {
             await import(fullPath);
 
             // check registry after dynamic import
-            if (this.__registry.has(definitionId))
-                return this.__registry.get(definitionId);
+            if (this.__registry.has(blueprintId))
+                return this.__registry.get(blueprintId);
 
-            throw new Error(`Module loaded from ${relativePath} but it did not register '${definitionId}'. Check the @RegisterNode decorator.`);
+            throw new Error(`Module loaded from ${relativePath} but it did not register '${blueprintId}'. Check the @RegisterNode decorator.`);
 
         } catch (error) {
-            console.error(`[CatalogueService] Failed to load node '${definitionId}':`, error);
+            console.error(`[CatalogueService] Failed to load node '${blueprintId}':`, error);
             return null;
         }
     }
@@ -57,8 +57,8 @@ class CatalogueServiceImpl {
 
 export const CatalogueService = container.resolve(CatalogueServiceImpl);
 
-export function RegisterNode(definitionId: Foundations.NodeDefinition.Id) {
+export function RegisterNode(blueprintId: Foundations.Blueprint.Id) {
     return function (constructor: NodeConstructor) {
-        CatalogueServiceImpl.register(definitionId, constructor);
+        CatalogueServiceImpl.register(blueprintId, constructor);
     };
 }

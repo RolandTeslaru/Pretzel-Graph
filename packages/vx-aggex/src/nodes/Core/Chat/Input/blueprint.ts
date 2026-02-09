@@ -1,11 +1,10 @@
-import { defineNode, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
-export const Definition = defineNode({
+export const Blueprint = defineBlueprint({
     id: "Core.Chat.Input",
     displayName: "Chat Input",
     description: "This node is a chat input",
     icon: "MessagesSquare",
-    drawerId: "input_output",
     inputs: [
         InputBuilder.Secret({
             id: "api_key",
