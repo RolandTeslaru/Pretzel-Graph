@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { Foundations, Shelf } from "@vx-agent-editor/shared/types";
-import { Runtime } from "../src/runtime"
 
 const NODES_ROOT = path.resolve(__dirname, "../src/nodes");
 const OUTPUT_PATH = path.resolve(__dirname, "../dist/node_index.json")
@@ -23,50 +22,28 @@ async function traverseDir(dir: string, callback: (filePath: string) => Promise<
 }
 
 async function generateIndex() {
-    const nodeDefinitionMetas: Record<Foundations.NodeDefinition.Id, Shelf.NodeMeta> = {}
-
+    const blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint> = {}
     const drawers: Record<Shelf.Drawer.Id, Shelf.Drawer> = {}
 
     await traverseDir(NODES_ROOT, async (filePath) => {
-        if (!filePath.endsWith("definition.ts"))
+        if (!filePath.endsWith("blueprint.ts"))
             return
 
         const module = await import(filePath);
-        const def = module.Definition as Foundations.NodeDefinition
+        const blueprint = module.Blueprint as Foundations.Blueprint
 
-        nodeDefinitionMetas[def.id] = {
-            definitionId: def.id,
-            displayName: def.displayName,
-            icon: def.icon,
-            drawerId: def.drawerId
-        }
-
-        if (!drawers[def.drawerId]) {
-
-            const savedDrawer = Shelf.Drawer.ALL_DRAWERS[def.drawerId]
-            if (!savedDrawer)
-                throw new Error(`No Drawer found for id: ${def.drawerId}. Current NodeDefintion is ${def.id}`)
-
-            drawers[def.drawerId] = {
-                id: def.drawerId,
-                displayName: savedDrawer.displayName,
-                icon: savedDrawer.icon,
-                definitionIds: []
-            }
-        }
-
-        drawers[def.drawerId].definitionIds.push(def.id)
+        blueprints[blueprint.id] = blueprint
     })
 
     const index = {
         version: Date.now().toString(),
         generatedAt: new Date().toISOString(),
         drawers,
-        nodeDefinitionMetas,
+        blueprints,
     }
 
     fs.writeFileSync(OUTPUT_PATH, JSON.stringify(index, null, 2))
-    console.log("Successfully indexed the nodes folder")
+    console.log(`Successfully indexed ${Object.keys(blueprints).length} nodes in ${Object.keys(drawers).length} drawers`)
 }
 
 generateIndex().catch(err => {

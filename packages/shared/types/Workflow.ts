@@ -13,7 +13,7 @@ export namespace Workflow {
 
         export const Schema = z.object({
             id:           Node.Id,
-            definitionId: Foundations.NodeDefinition.Id.default("Google.GenerativeAI.v1" as const as Foundations.NodeDefinition.Id),
+            blueprintId:  Foundations.Blueprint.Id.default("Google.GenerativeAI" as const as Foundations.Blueprint.Id),
 
             display_name: z.string(),
 

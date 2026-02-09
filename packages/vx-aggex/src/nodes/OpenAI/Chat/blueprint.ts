@@ -1,11 +1,10 @@
-import { defineNode, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
-export const Definition = defineNode({
-    id: "OpenAI.Chat.v1",
+export const Blueprint = defineBlueprint({
+    id: "OpenAI.Chat",
     displayName: "OpenAI Chat",
     description: "This node talks to OpenAI's GPT chat models via the Chat Completions API",
     icon: "OpenAI",
-    drawerId: "openai",
     inputs: [
         InputBuilder.Secret({
             id: "api_key",

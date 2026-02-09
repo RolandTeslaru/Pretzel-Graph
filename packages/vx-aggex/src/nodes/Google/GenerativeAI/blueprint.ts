@@ -1,11 +1,10 @@
-import { defineNode, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
-export const Definition = defineNode({
+export const Blueprint = defineBlueprint({
     id: "Google.GenerativeAI",
     icon: "Google",
     displayName: "Google Generative AI Node",
     description: "This node talks to google generative ai api",
-    drawerId: "google",
     inputs: [
         InputBuilder.Secret({
             id: "api_key",

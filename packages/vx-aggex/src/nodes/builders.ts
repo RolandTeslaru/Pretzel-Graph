@@ -444,14 +444,12 @@ export namespace OutputBuilder {
 
 
 // Explicit return type to avoid "cannot be named without reference to zod internals" error
-type DefineNodeReturn<
+type DefineBlueprintReturn<
     TId extends string,
-    TDrawerId extends string,
     TInputs extends readonly Foundations.Input[],
     TOutputs extends readonly Foundations.Output[]
 > = {
-    readonly id: TId & Foundations.NodeDefinition.Id;
-    readonly drawerId: TDrawerId & Shelf.Drawer.Id;
+    readonly id: TId & Foundations.Blueprint.Id;
     readonly displayName: string;
     readonly description: string;
     readonly icon: string;
@@ -459,23 +457,20 @@ type DefineNodeReturn<
     readonly outputs: TOutputs;
 }
 
-export function defineNode<
+export function defineBlueprint<
     const TId extends string,
-    const TDrawerId extends string,
     const TInputs extends readonly Foundations.Input[],
     const TOutputs extends readonly Foundations.Output[]
 >(config: {
     id: TId;
-    drawerId: TDrawerId;
     displayName: string;
     description: string;
     icon: string;
     inputs: TInputs;
     outputs: TOutputs;
-}): DefineNodeReturn<TId, TDrawerId, TInputs, TOutputs> {
+}): DefineBlueprintReturn<TId, TInputs, TOutputs> {
     return {
-        id: config.id as TId & Foundations.NodeDefinition.Id,
-        drawerId: config.drawerId as TDrawerId & Shelf.Drawer.Id,
+        id: config.id as TId & Foundations.Blueprint.Id,
         displayName: config.displayName,
         description: config.description,
         icon: config.icon,

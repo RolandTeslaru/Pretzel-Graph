@@ -10,7 +10,7 @@ export class WorkflowCompiler {
     private async runNode(
         state: Runtime.State,
         activeNode: Workflow.Node,
-        Vertex: Runtime.Node<Foundations.NodeDefinition>,
+        Vertex: Runtime.Node<Foundations.Blueprint>,
         edges: Workflow["data"]["edges"],
         emit: Runtime.Emitter
     ) {
@@ -39,10 +39,10 @@ export class WorkflowCompiler {
 
         for (const node of Object.values(nodes)) {
 
-            const VerticeConstructor = await CatalogueService.getNode(node.definitionId);
+            const VerticeConstructor = await CatalogueService.getNode(node.blueprintId);
 
             if (!VerticeConstructor)
-                throw new Error(`Could not find vertice with definitionId ${node.definitionId}`)
+                throw new Error(`Could not find vertice with blueprintId ${node.blueprintId}`)
             
             const Vertex = new VerticeConstructor(node);
 

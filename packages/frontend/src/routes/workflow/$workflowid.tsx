@@ -1,4 +1,5 @@
 import RunnerPanel from '@/SDKs/OrchestratorSDK/ui/runnerPanel'
+import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
 import ShelfSidebar from '@/SDKs/ShelfSDK/ui/ShelfSidebar'
 import WorkflowCanvas from '@/SDKs/WorkbenchSDK/ui/Canvas'
 import InputSidebar from '@/SDKs/WorkbenchSDK/ui/InputSidebar'
@@ -10,6 +11,8 @@ export const Route = createFileRoute('/workflow/$workflowid')({
         if (!context.auth.isAuthenticated) {
             throw redirect({ to: '/auth' })
         }
+
+        ShelfSDK.actions.loadSection("core");
     },
     component: WorkflowLayoutComponent,
 })

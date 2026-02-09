@@ -9,10 +9,10 @@ import DrawerItem from './DrawerItem';
 
 export const Drawers = () => {
     const filteredDrawers = ShelfSDK.useStore(useShallow(s => {
+        if (s.loadedSections.has(s.selectedSection) === false)
+            return undefined;
+        
         const drawerIds = s.sections[s.selectedSection]
-
-        if (!drawerIds || drawerIds.length === 0)
-            return [];
 
         if (s.searchFilter.query === "" || !s.searchFilter.query)
             return drawerIds.map(id => s.drawers[id])
@@ -22,14 +22,23 @@ export const Drawers = () => {
 
     console.log("filtered Drawers", filteredDrawers)
 
+
     return (
         <div className='flex flex-col gap-1 w-full h-full px-2'>
-            {filteredDrawers.map(drawer => {
-                if (drawer.definitionIds?.length === 0)
-                    return;
+            {filteredDrawers === undefined ?
+                <div className='flex flex-row gap-2 text-foreground m-auto mt-1'>
+                    <Spinner className='h-5'/>
+                </div>
+                :
+                <>
+                    {filteredDrawers.map(drawer => {
+                        if (drawer.blueprintIds.length === 0)
+                            return;
 
-                return <Drawer drawer={drawer} key={drawer.id} />
-            })}
+                        return <Drawer drawer={drawer} key={drawer.id} />
+                    })}
+                </>
+            }
         </div>
     )
 }
@@ -65,13 +74,13 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
         return () => window.clearTimeout(t);
     }, [isOpen]);
 
-    if (!drawer || drawer.definitionIds?.length === 0) return;
+    if (!drawer || drawer.blueprintIds?.length === 0) return;
 
-    const count = drawer.definitionIds?.length ?? 0;
+    const count = drawer.blueprintIds?.length ?? 0;
     const contentMaxH = count > 0 ? count * ITEM_H + (count - 1) * GAP + PADDING_Y : 0;
 
 
-    const isFetchingNodeDefinitions = shouldRender && !!!drawer.definitionIds;
+    const isFetchingNodeDefinitions = shouldRender && !!!drawer.blueprintIds;
 
     return (
         <div>
@@ -86,9 +95,9 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
                 </p>
                 {
                     isFetchingNodeDefinitions === false ?
-                    <SystemIcons.ChevronRight className={`h-8 w-8 stroke-3! stroke-label-white scale-[60%] m-auto transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`} />
-                    :
-                    <Spinner className='my-auto mr-1'/>
+                        <SystemIcons.ChevronRight className={`h-8 w-8 stroke-3! stroke-label-white scale-[60%] m-auto transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`} />
+                        :
+                        <Spinner className='my-auto mr-1' />
                 }
             </div>
 
@@ -100,8 +109,8 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
                 }}
             >
                 <div className=' flex flex-col gap-1 py-1'>
-                    {shouldRender && drawer.definitionIds?.map(nodeDefinitionId => (
-                        <DrawerItem nodeDefinitionId={nodeDefinitionId} key={nodeDefinitionId} />
+                    {shouldRender && drawer.blueprintIds.map(blueprintId => (
+                        <DrawerItem blueprintId={blueprintId} key={blueprintId} />
                     ))}
                 </div>
             </div>

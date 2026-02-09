@@ -86,7 +86,7 @@ export class OrchestratorServiceImpl {
         }
     }
 
-    public readonly controller = {
+    public readonly controller: OrchestratorService.Controller = {
         execution: {
             run: withAuth(async (token, req) => {
                 const payload = Orchestrator.API.Execution.Run.Request.parse(req.body);
@@ -130,6 +130,14 @@ export namespace OrchestratorService {
             pause: (token: string, payload: Orchestrator.API.Execution.Pause.Request) => Promise<void>
             resume: (token: string, payload: Orchestrator.API.Execution.Resume.Request) => Promise<void>
             terminate: (token: string, payload: Orchestrator.API.Execution.Terminate.Request) => Promise<void>
+        }
+    }
+
+    export type Controller = {
+        execution: {
+            run: (req: any, res: any) => void
+            pause: (req: any, res: any) => void
+            terminate: (req: any, res: any) => void
         }
     }
 }

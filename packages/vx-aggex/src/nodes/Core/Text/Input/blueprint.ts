@@ -1,11 +1,10 @@
-import { defineNode, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
-export const Definition = defineNode({
+export const Blueprint = defineBlueprint({
     id: "Core.Text.Input",
     displayName: "Text Input",
     description: "This node is a Text input",
     icon: "type",
-    drawerId: "input_output",
     inputs: [
         InputBuilder.String({
             id: "text",
