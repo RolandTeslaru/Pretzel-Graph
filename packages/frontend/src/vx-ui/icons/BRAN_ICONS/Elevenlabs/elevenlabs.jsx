@@ -1,6 +1,0 @@
-const Icon = (props) => (
-  <>
-    <path d="M5,5v40h40V5H5z M24,34h-4V16h4V34z M30,34h-4V16h4V34z" />
-  </>
-);
-export default Icon;
