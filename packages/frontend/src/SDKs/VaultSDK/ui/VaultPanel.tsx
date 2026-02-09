@@ -4,9 +4,9 @@ import {
   Button,
   Input,
   Label,
-  Icon,
   Text,
-  Dialog, // Still needed for Header/Title etc if they are not exposed by standard dialog
+  Dialog,
+  Spinner, // Still needed for Header/Title etc if they are not exposed by standard dialog
 } from '@/vx-ui/foundations'
 import { Vault } from '@vx-agent-editor/shared/types'
 import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK'
@@ -31,7 +31,7 @@ const VaultPanel = () => {
             </DialogSDK.Template>
           ))
         }} size='sm'>
-          <Icon name='Plus' className='mr-2 h-4 w-4' />
+          <SystemIcons.Plus className='mr-2 h-4 w-4' />
           Add New
         </Button>
 
@@ -43,7 +43,7 @@ const VaultPanel = () => {
       <div className='flex flex-col gap-2 bg-background rounded-md border border-border'>
         {credentials.length === 0 && (
           <div className='flex flex-col bg-background items-center justify-center p-8 border border-dashed rounded-md gap-2'>
-            <Icon name='Key' className='h-8 w-8 text-muted-foreground' />
+            <SystemIcons.KeyRound className='h-8 w-8 text-muted-foreground' />
             <Text className='text-muted-foreground'>No credentials found. Add one to get started.</Text>
           </div>
         )}
@@ -183,22 +183,22 @@ const CredentialItem = ({ credential }: { credential: Vault.Credential }) => {
         {isDirty ? (
           <>
             <Button variant='ghost' size='icon' onClick={handleUndo} disabled={isLoading}>
-              <Icon name='X' className='text-red-500' />
+              <SystemIcons.X className='text-red-500'/>
             </Button>
             <Button variant='ghost' size='icon' onClick={handleSave} disabled={isLoading}>
-              <Icon name='Check' className='text-green-500' />
+              <SystemIcons.Check className='text-green-500'/>
             </Button>
           </>
         ) :
           <>
             <Button variant='ghost' size='icon' onClick={handleReveal} disabled={isLoading}>
-              {isLoading ? <Icon name='Loader2' className='h-4 w-4 animate-spin' /> : (
-                isRevealed ? <Icon name='EyeOff' className='h-4 w-4' /> : <Icon name='Eye' className='h-4 w-4' />
+              {isLoading ? <Spinner className='h-4 w-4' /> : (
+                isRevealed ? <SystemIcons.EyeOff className='h-4 w-4' /> : <SystemIcons.Eye className='h-4 w-4' />
               )}
               <span className="sr-only">Toggle visibility</span>
             </Button>
             <Button variant='ghost' size='icon' onClick={handleDelete} disabled={isLoading}>
-              <Icon name='Trash' className='text-red-500' />
+              <SystemIcons.Trash className='text-red-500' />
               <span className="sr-only">Delete</span>
             </Button>
           </>
@@ -283,7 +283,7 @@ const AddCredentialContent = () => {
         <Dialog.Footer>
           <Button type='button' variant='outline' onClick={() => DialogSDK.actions.pop("add-credential")}>Cancel</Button>
           <Button type='submit' disabled={isLoading}>
-            {isLoading && <Icon name='Loader2' className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading && <Spinner className="mr-2 h-4 w-4" />}
             Save Credential
           </Button>
         </Dialog.Footer>

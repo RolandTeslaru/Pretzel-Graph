@@ -1,7 +1,8 @@
-import { Icon, Input } from '@/vx-ui/foundations'
+import { Input } from '@/vx-ui/foundations'
 import React, { useMemo, useEffect, useState } from 'react'
 import { ShelfSDK } from '../sdk';
 import { debounce } from 'lodash';
+import { SystemIcons } from '@/vx-ui/icons';
 
 
 const Search = () => {
@@ -40,7 +41,7 @@ const Search = () => {
                 className='w-full'
                 placeholder='Search for nodes'
             />
-            <Icon name='search' className='absolute right-4 top-[15px] h-[18px] w-[18px] text-muted-foreground' />
+            <SystemIcons.Search  className='absolute right-4 top-[15px] h-[18px] w-[18px] text-muted-foreground'/>
         </div>
     )
 }
