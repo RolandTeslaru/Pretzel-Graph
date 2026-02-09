@@ -1,9 +1,5 @@
 const SvgDuckDuckGo = ({ ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 122.88 122.88"
-    {...props}
-  >
+  <>
     <defs>
       <style>{".b{fill:#fff}"}</style>
     </defs>
@@ -52,6 +48,6 @@ const SvgDuckDuckGo = ({ ...props }) => (
         fill: "#148",
       }}
     />
-  </svg>
+  </>
 );
 export default SvgDuckDuckGo;

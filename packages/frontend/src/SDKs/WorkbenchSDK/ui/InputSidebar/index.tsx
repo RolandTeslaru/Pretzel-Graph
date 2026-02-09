@@ -19,9 +19,9 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { _includes } from 'zod/v4/core';
-import { SystemIcons } from '@/vx-ui/icons/system';
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk';
 import { AnimatePresence, motion } from 'motion/react';
+import { SystemIcons } from '@/vx-ui/icons';
 
 
 const InputSidebar = () => {

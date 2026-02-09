@@ -1,17 +1,5 @@
 const SvgDocling = (props) => (
-  <svg
-    width="1em"
-    height="1em"
-    viewBox="0 0 1024 1024"
-    style={{
-      fillRule: "evenodd",
-      clipRule: "evenodd",
-      strokeLinecap: "round",
-      strokeLinejoin: "round",
-      strokeMiterlimit: 1.5,
-    }}
-    {...props}
-  >
+  <>
     <g id="Docling" transform="matrix(1.07666,0,0,1.07666,-35.9018,-84.1562)">
       <g id="Outline" transform="matrix(1,0,0,1,-0.429741,55.0879)">
         <path
@@ -332,7 +320,7 @@ const SvgDocling = (props) => (
         />
       </linearGradient>
     </defs>
-  </svg>
+  </>
 );
 
 export default SvgDocling;

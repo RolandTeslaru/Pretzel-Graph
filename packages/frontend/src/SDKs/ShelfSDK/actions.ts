@@ -11,7 +11,7 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
     return {
         loadSection: async (section) => {
             try {
-                const { blueprints } = await Shelf.API.Blueprint.getAllInSection(api, {section})
+                const { blueprints } = await Shelf.API.Blueprint.getAllInSection(api, { section })
                 console.log("Loaded Blueprints", blueprints)
                 setState(s => {
                     s.blueprints = {
@@ -20,8 +20,10 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
                     }
                     s.loadedSections.add(section);
                 })
+                return true // Return value for TanStack Query (used for deduplication)
             } catch (error) {
                 toast.error(`Could not fetch shelf section ${section}. ${JSON.stringify(error)}`)
+                return false
             }
         },
 
@@ -62,7 +64,7 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
 }
 
 export type _ShelfActions = {
-    loadSection: (section: "core" | "bundle") => Promise<void>;
+    loadSection: (section: "core" | "bundle") => Promise<boolean>;
     drawer: {
         open: (drawerId: Shelf.Drawer.Id) => void;
         close: (drawerId: Shelf.Drawer.Id) => void;

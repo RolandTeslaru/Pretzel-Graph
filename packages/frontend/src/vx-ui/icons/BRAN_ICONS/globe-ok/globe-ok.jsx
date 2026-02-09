@@ -1,10 +1,5 @@
 const SvgGlobeOkIcon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 16 16"
-    {...props}
-  >
+  <>
     <g
       stroke="#059669"
       strokeLinecap="round"
@@ -20,6 +15,6 @@ const SvgGlobeOkIcon = (props) => (
         <path fill="#fff" d="M0 0H16V16H0z"></path>
       </clipPath>
     </defs>
-  </svg>
+  </>
 );
 export default SvgGlobeOkIcon;

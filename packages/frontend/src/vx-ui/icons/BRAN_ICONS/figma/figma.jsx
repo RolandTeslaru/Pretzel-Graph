@@ -1,11 +1,5 @@
 const Icon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 48 48"
-    e
-    width="20px"
-    height="20px"
-  >
+  <>
     <path
       fill="#e64a19"
       d="M26,17h-8c-3.866,0-7-3.134-7-7v0c0-3.866,3.134-7,7-7h8V17z"
@@ -23,6 +17,6 @@ const Icon = (props) => (
       d="M32,17h-7V3h7c3.866,0,7,3.134,7,7v0C39,13.866,35.866,17,32,17z"
     />
     <circle cx="32" cy="24" r="7" fill="#29b6f6" />
-  </svg>
+  </>
 );
 export default Icon;

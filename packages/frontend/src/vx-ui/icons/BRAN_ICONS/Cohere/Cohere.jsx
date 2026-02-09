@@ -1,11 +1,5 @@
 const SvgCohere = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="165.883 110.821 117.8 117.78"
-    width="1em"
-    height="1em"
-    {...props}
-  >
+  <>
     <g transform="translate(97.843 -127.708)">
       <clipPath id="cohere_svg__a">
         <path
@@ -47,6 +41,6 @@ const SvgCohere = (props) => (
         />
       </g>
     </g>
-  </svg>
+  </>
 );
 export default SvgCohere;

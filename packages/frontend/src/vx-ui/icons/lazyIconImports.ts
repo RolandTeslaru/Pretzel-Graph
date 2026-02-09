@@ -1,6 +1,4 @@
-import { SystemIcons } from ".";
-
-// Export the lazy loading mapping for icons
+// Export the lazy loading mapping for brand icons (lazy-loaded)
 export const lazyIconsMapping = {
   AIML: () => import("./BRAN_ICONS/AIML").then((mod) => ({ default: mod.AIMLIcon })),
   AgentQL: () =>
@@ -478,5 +476,4 @@ export const lazyIconsMapping = {
     import("./BRAN_ICONS/Youtube").then((mod) => ({ default: mod.YoutubeIcon })),
   ZepMemory: () =>
     import("./BRAN_ICONS/ZepMemory").then((mod) => ({ default: mod.ZepMemoryIcon })),
-  ...SystemIcons
 };

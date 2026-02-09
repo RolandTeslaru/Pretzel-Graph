@@ -1,12 +1,5 @@
 const SvgMissive = (props) => (
-  <svg
-    version="1.1"
-    xmlns="http://www.w3.org/2000/svg"
-    width="20px"
-    height="20px"
-    viewBox="0 0 200 200"
-    {...props}
-  >
+  <>
     <path
       d="M0 0 C66 0 132 0 200 0 C200 66 200 132 200 200 C134 200 68 200 0 200 C0 134 0 68 0 0 Z "
       fill="#FEFEFE"
@@ -27,6 +20,6 @@ const SvgMissive = (props) => (
       fill="#26292B"
       transform="translate(58,110)"
     />
-  </svg>
+  </>
 );
 export default SvgMissive;

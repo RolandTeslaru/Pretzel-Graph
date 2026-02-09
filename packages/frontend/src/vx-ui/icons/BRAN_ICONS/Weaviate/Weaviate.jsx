@@ -1,12 +1,5 @@
 const SvgWeaviate = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    xmlnsXlink="http://www.w3.org/1999/xlink"
-    width="1em"
-    height="1em"
-    viewBox="0 0 413 413"
-    {...props}
-  >
+  <>
     <defs>
       <clipPath id="weaviate_svg__clippath">
         <path
@@ -352,6 +345,6 @@ const SvgWeaviate = (props) => (
         transform="matrix(.48 0 0 -.48 324.15 306.18)"
       />
     </g>
-  </svg>
+  </>
 );
 export default SvgWeaviate;

@@ -1,10 +1,5 @@
 const GooglemeetIcon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 48 48"
-    width="21px"
-    height="21px"
-  >
+  <>
     <rect
       width="16"
       height="16"
@@ -29,6 +24,6 @@ const GooglemeetIcon = (props) => (
       fill="#4caf50"
       d="M46,10.11v27.78c0,0.84-0.98,1.31-1.63,0.78L37,32.45v-16.9l7.37-6.22C45.02,8.8,46,9.27,46,10.11z"
     />
-  </svg>
+  </>
 );
 export default GooglemeetIcon;

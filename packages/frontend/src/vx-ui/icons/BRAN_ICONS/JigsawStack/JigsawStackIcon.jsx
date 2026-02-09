@@ -1,12 +1,5 @@
 const JigsawStackIconSVG = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="278"
-    height="278"
-    fill="none"
-    viewBox="0 0 278 278"
-    {...props}
-  >
+  <>
     <path
       fill={
         props.isDark
@@ -39,7 +32,7 @@ const JigsawStackIconSVG = (props) => (
         <stop offset="0.958" stopColor="#EF5B3C"></stop>
       </linearGradient>
     </defs>
-  </svg>
+  </>
 );
 
 export default JigsawStackIconSVG;

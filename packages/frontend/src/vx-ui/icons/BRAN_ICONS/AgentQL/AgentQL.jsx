@@ -1,12 +1,5 @@
 const SvgAgentQL = (props) => (
-  <svg
-    width="512"
-    height="512"
-    viewBox="0 0 512 512"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
+  <>
     <path
       fillRule="evenodd"
       clipRule="evenodd"
@@ -43,6 +36,6 @@ const SvgAgentQL = (props) => (
         <stop offset="0.705" stopColor="#0B30B2" stopOpacity="0" />
       </radialGradient>
     </defs>
-  </svg>
+  </>
 );
 export default SvgAgentQL;

@@ -1,13 +1,5 @@
 const DeepSeekSVG = (props) => (
-  <svg
-    version="1.0"
-    xmlns="http://www.w3.org/2000/svg"
-    width="225.000000pt"
-    height="225.000000pt"
-    viewBox="0 0 225.000000 225.000000"
-    preserveAspectRatio="xMidYMid meet"
-    {...props}
-  >
+  <>
     <g
       transform="translate(0.000000,225.000000) scale(0.100000,-0.100000)"
       fill={props.isDark ? "#1f3a94" : "#4c6cfc"}
@@ -36,7 +28,7 @@ m943 -79 c50 -25 130 -115 166 -186 25 -50 27 -57 13 -71 -9 -8 -36 -18 -61
 -46 30 3 8 12 15 19 15 8 0 20 -7 27 -15z"
       />
     </g>
-  </svg>
+  </>
 );
 
 export default DeepSeekSVG;

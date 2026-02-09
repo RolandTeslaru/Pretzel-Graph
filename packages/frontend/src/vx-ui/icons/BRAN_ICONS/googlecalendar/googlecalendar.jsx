@@ -1,5 +1,5 @@
 const Icon = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" {...props}>
+  <>
     <rect width="23" height="23" x="13" y="13" fill="#fff" />
     <polygon
       fill="#1e88e5"
@@ -18,6 +18,6 @@ const Icon = (props) => (
     <polygon fill="#e53935" points="34,34 34,42 42,34" />
     <path fill="#1565c0" d="M39,6h-5v8h8V9C42,7.343,40.657,6,39,6z" />
     <path fill="#1565c0" d="M9,42h5v-8H6v5C6,40.657,7.343,42,9,42z" />
-  </svg>
+  </>
 );
 export default Icon;

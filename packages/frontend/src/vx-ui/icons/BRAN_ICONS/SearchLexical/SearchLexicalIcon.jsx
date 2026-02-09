@@ -1,10 +1,5 @@
 const SvgSearchLexicalIcon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 18 18"
-    fill="none"
-    {...props}
-  >
+  <>
     <path d="M15.75 15.75L12.525 12.525L15.75 15.75Z" fill="currentColor" />
     <path d="M3.75 15H5.25H6.75" fill="currentColor" />
     <path d="M5.25 9.75V15V9.75Z" fill="currentColor" />
@@ -16,6 +11,6 @@ const SvgSearchLexicalIcon = (props) => (
       stroke-linecap="round"
       stroke-linejoin="round"
     />
-  </svg>
+  </>
 );
 export default SvgSearchLexicalIcon;

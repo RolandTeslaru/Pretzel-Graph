@@ -1,11 +1,5 @@
 const SvgSlackIcon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 54 54"
-    width="1em"
-    height="1em"
-    {...props}
-  >
+  <>
     <g fill="none" fillRule="evenodd">
       <path
         fill="#36C5F0"
@@ -24,6 +18,6 @@ const SvgSlackIcon = (props) => (
         d="M0 34.249a5.381 5.381 0 0 0 5.376 5.386 5.381 5.381 0 0 0 5.376-5.386v-5.387H5.376A5.381 5.381 0 0 0 0 34.25m14.336-.001v14.364A5.381 5.381 0 0 0 19.712 54a5.381 5.381 0 0 0 5.376-5.387V34.25a5.381 5.381 0 0 0-5.376-5.387 5.381 5.381 0 0 0-5.376 5.387"
       />
     </g>
-  </svg>
+  </>
 );
 export default SvgSlackIcon;

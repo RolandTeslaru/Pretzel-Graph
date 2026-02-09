@@ -1,10 +1,5 @@
 const HCDSVG = (props) => (
-  <svg
-    viewBox="12 33 72 29"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
+  <>
     <g clipPath="url(#clip0_702_1449)">
       {/* <rect width="96" height="96" rx="6" fill="white"/> */}
       <path
@@ -21,6 +16,6 @@ const HCDSVG = (props) => (
         <rect width="96" height="96" fill="white" />
       </clipPath>
     </defs>
-  </svg>
+  </>
 );
 export default HCDSVG;

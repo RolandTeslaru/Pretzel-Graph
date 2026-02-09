@@ -1,14 +1,6 @@
 import { cn } from "@/utils/utils";
 export const AthenaComponent = ({ className, ...props }) => (
-  <svg
-    width="300"
-    className={cn("dark:invert", className)}
-    height="239"
-    viewBox="0 0 300 239"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
+  <>
     <path
       d="M275.757 193.713L300 234.575H275.757H251.515L275.757 193.713Z"
       fill="#CDCDCD"
@@ -140,5 +132,5 @@ export const AthenaComponent = ({ className, ...props }) => (
       transform="rotate(27 141.847 3.71234)"
       fill="#242424"
     />
-  </svg>
+  </>
 );

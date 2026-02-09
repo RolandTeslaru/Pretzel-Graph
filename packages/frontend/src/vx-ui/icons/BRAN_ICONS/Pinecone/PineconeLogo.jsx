@@ -2,14 +2,7 @@ const SvgPineconeLogo = (props) => {
   const color = props.isDark ? "#fff" : "#000";
 
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="1em"
-      height="1em"
-      fill="none"
-      viewBox="0 0 32 35"
-      {...props}
-    >
+    <>
       <path
         fill={color}
         d="M13.855 34.296c1.077 0 1.95-.85 1.95-1.9 0-1.05-.873-1.901-1.95-1.901-1.076 0-1.95.85-1.95 1.9 0 1.05.874 1.901 1.95 1.901Z"
@@ -131,7 +124,7 @@ const SvgPineconeLogo = (props) => {
         strokeWidth={2.058}
         d="m12.29 6.775-4.487.187-.79 4.303"
       />
-    </svg>
+    </>
   );
 };
 export default SvgPineconeLogo;

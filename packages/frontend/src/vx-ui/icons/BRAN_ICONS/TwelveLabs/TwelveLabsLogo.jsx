@@ -1,10 +1,5 @@
 const SvgTwelveLogo = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 204 146.6"
-    fill="none"
-    {...props}
-  >
+  <>
     <rect
       fill="currentColor"
       x="43.9"
@@ -241,7 +236,7 @@ const SvgTwelveLogo = (props) => (
       rx="2.6"
       ry="2.6"
     />
-  </svg>
+  </>
 );
 
 export default SvgTwelveLogo;

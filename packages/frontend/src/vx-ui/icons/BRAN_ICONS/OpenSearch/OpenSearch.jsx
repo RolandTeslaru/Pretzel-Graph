@@ -1,16 +1,5 @@
 const OpenSearchSVG = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    shapeRendering="geometricPrecision"
-    textRendering="geometricPrecision"
-    imageRendering="optimizeQuality"
-    fillRule="evenodd"
-    clipRule="evenodd"
-    viewBox="0 0 384 384"
-    width="1em"
-    height="1em"
-    {...props}
-  >
+  <>
     <defs>
       <clipPath id="clip-corners">
         <path
@@ -143,7 +132,7 @@ const OpenSearchSVG = (props) => (
         "
       />
     </g>
-  </svg>
+  </>
 );
 
 export default OpenSearchSVG;

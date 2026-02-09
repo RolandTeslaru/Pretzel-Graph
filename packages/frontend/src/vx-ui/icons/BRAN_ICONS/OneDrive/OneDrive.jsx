@@ -1,11 +1,5 @@
 const SvgOneDrive = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 5.5 32 20.5"
-    width="1em"
-    height="1em"
-    {...props}
-  >
+  <>
     <title>OfficeCore10_32x_24x_20x_16x_01-22-2019</title>
     <g id="STYLE_COLOR">
       <path
@@ -25,6 +19,6 @@ const SvgOneDrive = (props) => (
         fill="#28a8ea"
       />
     </g>
-  </svg>
+  </>
 );
 export default SvgOneDrive;

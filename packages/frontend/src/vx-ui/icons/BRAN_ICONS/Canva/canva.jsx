@@ -1,15 +1,5 @@
 const Icon = (props) => (
-  <svg
-    viewBox="0 0 508 508"
-    xmlns="http://www.w3.org/2000/svg"
-    width="19"
-    height="19"
-    fill-rule="evenodd"
-    clip-rule="evenodd"
-    stroke-linejoin="round"
-    stroke-miterlimit="2"
-    {...props}
-  >
+  <>
     <g transform="matrix(.26718 0 0 .26718 0 0)">
       <circle cx="950" cy="950" r="950" fill="#7d2ae7" />
       <circle cx="950" cy="950" r="950" fill="url(#prefix___Radial1)" />
@@ -69,6 +59,6 @@ const Icon = (props) => (
         <stop offset="1" stop-color="#00c4cc" stop-opacity="0" />
       </radialGradient>
     </defs>
-  </svg>
+  </>
 );
 export default Icon;

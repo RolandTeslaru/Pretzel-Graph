@@ -1,11 +1,5 @@
 const SvgFacebookMessengerLogo2020 = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 800 800"
-    width="1em"
-    height="1em"
-    {...props}
-  >
+  <>
     <radialGradient
       id="Facebook_Messenger_logo_2020_svg__a"
       cx={101.9}
@@ -47,6 +41,6 @@ const SvgFacebookMessengerLogo2020 = (props) => (
       fill="#FFF"
       d="m159.8 501.5 117.5-186.4a60 60 0 0 1 86.8-16l93.5 70.1a24 24 0 0 0 28.9-.1l126.2-95.8c16.8-12.8 38.8 7.4 27.6 25.3L522.7 484.9a60 60 0 0 1-86.8 16l-93.5-70.1a24 24 0 0 0-28.9.1l-126.2 95.8c-16.8 12.8-38.8-7.3-27.5-25.2z"
     />
-  </svg>
+  </>
 );
 export default SvgFacebookMessengerLogo2020;

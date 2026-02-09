@@ -1,15 +1,7 @@
 import { cn } from "@/utils/utils";
 
 export const AIMLComponent = ({ className, ...props }) => (
-  <svg
-    className={cn("dark:invert", className)}
-    width="225"
-    height="225"
-    viewBox="0 0 225 225"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
+  <>
     <mask
       id="mask0_13070_4340"
       style={{ maskType: "alpha" }}
@@ -328,5 +320,5 @@ export const AIMLComponent = ({ className, ...props }) => (
         />
       </filter>
     </defs>
-  </svg>
+  </>
 );

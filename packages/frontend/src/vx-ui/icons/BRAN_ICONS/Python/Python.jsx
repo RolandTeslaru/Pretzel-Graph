@@ -1,11 +1,5 @@
 export const SvgPython = (props) => (
-  <svg
-    version="1.0"
-    viewBox="0 0 810 810"
-    xmlns="http://www.w3.org/2000/svg"
-    zoomAndPan="magnify"
-    {...props}
-  >
+  <>
     <defs>
       <clipPath id="e">
         <path d="m0 0h601v602h-601z" />
@@ -151,6 +145,6 @@ export const SvgPython = (props) => (
         <path d="m193.24 196.26v609.02h616.7v-609.02z" fill="url(#d)" />
       </g>
     </g>
-  </svg>
+  </>
 );
 export default SvgPython;

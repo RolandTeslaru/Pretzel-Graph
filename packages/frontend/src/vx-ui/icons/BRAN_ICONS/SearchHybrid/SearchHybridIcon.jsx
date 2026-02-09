@@ -1,10 +1,5 @@
 const SvgSearchHybridIcon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 18 18"
-    fill="none"
-    {...props}
-  >
+  <>
     <path d="M15.75 15.75L12.525 12.525L15.75 15.75Z" fill="currentColor" />
     <path
       d="M1.5 11.625C3.36396 11.625 4.875 10.114 4.875 8.25C4.875 10.114 6.38604 11.625 8.25 11.625C6.38604 11.625 4.875 13.136 4.875 15C4.875 13.136 3.36396 11.625 1.5 11.625Z"
@@ -17,6 +12,6 @@ const SvgSearchHybridIcon = (props) => (
       stroke-linecap="round"
       stroke-linejoin="round"
     />
-  </svg>
+  </>
 );
 export default SvgSearchHybridIcon;

@@ -1,10 +1,5 @@
 const Icon = (props) => (
-  <svg
-    version="1.1"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 204 204"
-    {...props}
-  >
+  <>
     <path
       d="M0 0 C67.32 0 134.64 0 204 0 C204 67.32 204 134.64 204 204 C136.68 204 69.36 204 0 204 C0 136.68 0 69.36 0 0 Z "
       fill="#FEFEFE"
@@ -25,6 +20,6 @@ const Icon = (props) => (
       fill="#E74031"
       transform="translate(118,47)"
     />
-  </svg>
+  </>
 );
 export default Icon;

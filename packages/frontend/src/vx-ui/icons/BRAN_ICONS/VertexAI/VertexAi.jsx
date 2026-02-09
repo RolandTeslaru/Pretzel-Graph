@@ -1,5 +1,5 @@
 const SvgVertexAi = (props) => (
-  <svg viewBox="0 0 32 32" width="1em" height="1em" {...props}>
+  <>
     <path
       fill="#80868b"
       d="M26.69 18.53a1 1 0 0 0-1.4-.22L16 25.17v.29a1 1 0 1 1 0 1.91v.05a1 1 0 0 0 .6-.19l9.88-7.3a1 1 0 0 0 .21-1.4z"
@@ -47,6 +47,6 @@ const SvgVertexAi = (props) => (
       fill="#9ba0a5"
       d="M12 17a1 1 0 0 1-1-1v-2.54a1 1 0 0 1 2 0V16a1 1 0 0 1-1 1z"
     />
-  </svg>
+  </>
 );
 export default SvgVertexAi;

@@ -1,17 +1,5 @@
 const SvgMistralIcon = (props) => (
-  <svg
-    viewBox="0 0 129 91"
-    version="1.1"
-    style={{
-      fillRule: "evenodd",
-      clipRule: "evenodd",
-      strokeLinejoin: "round",
-      strokeMiterlimit: 2,
-    }}
-    xmlns="http://www.w3.org/2000/svg"
-    preserveAspectRatio="xMidYMid"
-    {...props}
-  >
+  <>
     <g>
       <rect
         x="18.292"
@@ -84,6 +72,6 @@ const SvgMistralIcon = (props) => (
         style={{ fill: "#e10500", fillRule: "nonzero" }}
       />
     </g>
-  </svg>
+  </>
 );
 export default SvgMistralIcon;

@@ -1,11 +1,5 @@
 const SvgQDrant = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="168.419 120.023 131.984 152.407"
-    width="1em"
-    height="1em"
-    {...props}
-  >
+  <>
     <defs>
       <linearGradient
         id="QDrant_svg__a"
@@ -58,6 +52,6 @@ const SvgQDrant = (props) => (
       fill="url(#QDrant_svg__a)"
       d="M234.421 246.523v-25.914l-21-12.086v25.871l21 12.129Z"
     />
-  </svg>
+  </>
 );
 export default SvgQDrant;

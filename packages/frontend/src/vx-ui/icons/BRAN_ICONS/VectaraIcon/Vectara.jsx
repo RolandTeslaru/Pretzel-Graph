@@ -1,12 +1,5 @@
 export const SvgVectara = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    xmlnsXlink="http://www.w3.org/1999/xlink"
-    zoomAndPan="magnify"
-    viewBox="0 0 750 749.999995"
-    preserveAspectRatio="xMidYMid meet"
-    {...props}
-  >
+  <>
     <defs>
       <filter x="0%" y="0%" width="100%" height="100%" id="143604a479">
         <feColorMatrix
@@ -76,6 +69,6 @@ export const SvgVectara = (props) => (
         </g>
       </g>
     </g>
-  </svg>
+  </>
 );
 export default SvgVectara;

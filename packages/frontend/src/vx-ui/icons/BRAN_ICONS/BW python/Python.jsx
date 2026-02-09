@@ -1,12 +1,5 @@
 export const BWSvgPython = (props) => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
+  <>
     <g id="method-card / logo" clipPath="url(#clip0_2342_182)">
       <path
         id="path1948"
@@ -24,6 +17,6 @@ export const BWSvgPython = (props) => (
         <rect width="16" height="16" fill={props.isDark ? "black" : "white"} />
       </clipPath>
     </defs>
-  </svg>
+  </>
 );
 export default BWSvgPython;

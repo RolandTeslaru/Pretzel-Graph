@@ -1,10 +1,5 @@
 const Icon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 40.343 42"
-    width="20px"
-    height="20px"
-  >
+  <>
     <g data-name="Слой 2">
       <path
         fill="#2684ff"
@@ -51,6 +46,6 @@ const Icon = (props) => (
         d="M20.172,27.858,13.314,21H2.172v3l18,18s3-2,3-7A11.639,11.639,0,0,0,20.172,27.858Z"
       />
     </g>
-  </svg>
+  </>
 );
 export default Icon;

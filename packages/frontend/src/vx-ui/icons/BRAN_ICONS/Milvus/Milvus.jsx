@@ -1,5 +1,5 @@
 export const SvgMilvus = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1600" {...props}>
+  <>
     <path
       fill="none"
       fillOpacity="0"
@@ -306,6 +306,6 @@ export const SvgMilvus = (props) => (
       stroke="None"
       d="M515 1156s.64-.23 1 0c.57-1.86-2.27-2.72-1 0Z"
     ></path>
-  </svg>
+  </>
 );
 export default SvgMilvus;

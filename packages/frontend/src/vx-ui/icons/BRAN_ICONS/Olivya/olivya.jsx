@@ -1,14 +1,5 @@
 const OlivyaSVG = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    xmlSpace="preserve"
-    id="Layer_1"
-    x="0"
-    y="0"
-    version="1.1"
-    viewBox="0 0 588.1 604.9"
-    {...props}
-  >
+  <>
     <linearGradient
       id="SVGOLIV_1_"
       x1="465.383"
@@ -473,6 +464,6 @@ const OlivyaSVG = (props) => (
       strokeWidth="10.332"
       d="M515.2 448.3c13.7-26.7 21.8-56.5 24-86.6 4.8-66.7-19.3-129.9-51.7-186.9-27.7-48.8-65.3-99.3-118.8-121.2-125.1-51.3-230 43-285.5 162-78.4 168.3-19.6 323 123.2 343.9 96.4 14.1 209.9 8.5 279.8-69 11.6-12.7 21.2-27 29-42.2z"
     ></path>
-  </svg>
+  </>
 );
 export default OlivyaSVG;

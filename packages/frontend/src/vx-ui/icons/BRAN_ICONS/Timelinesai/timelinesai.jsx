@@ -1,11 +1,5 @@
 const Icon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 400 400"
-    width="20"
-    height="20"
-    {...props}
-  >
+  <>
     <g
       fill="none"
       fillOpacity="0.0"
@@ -1852,6 +1846,6 @@ C 355.36 325.13 334.02 318.78 315.00 321.00 C 295.98 323.22 276.09 319.26 257.00
 C 257.00 321.00 256.75 321.74 257.00 322.00 Z"
       />
     </g>
-  </svg>
+  </>
 );
 export default Icon;

@@ -1,13 +1,5 @@
 const Icon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={24}
-    height={24}
-    viewBox="0 0 32 32"
-    fill="none"
-    style="backgroundColor: #9100ff; borderRadius: 6px;"
-    {...props}
-  >
+  <>
     <g transform="translate(7, 7)">
       <path
         fillRule="evenodd"
@@ -16,6 +8,6 @@ const Icon = (props) => (
         fill={props.isDark ? "white" : "black"}
       />
     </g>
-  </svg>
+  </>
 );
 export default Icon;

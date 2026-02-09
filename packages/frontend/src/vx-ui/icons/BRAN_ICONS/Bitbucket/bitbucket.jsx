@@ -1,12 +1,5 @@
 const Icon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 18 18"
-    id="Bitbucket-Logo--Streamline-Logos"
-    height="18"
-    width="18"
-  >
+  <>
     <desc>Bitbucket Logo Streamline Icon: https://streamlinehq.com</desc>
     <path
       fill="#0083ff"
@@ -15,6 +8,6 @@ const Icon = (props) => (
       clip-rule="evenodd"
       stroke-width="0.75"
     ></path>
-  </svg>
+  </>
 );
 export default Icon;

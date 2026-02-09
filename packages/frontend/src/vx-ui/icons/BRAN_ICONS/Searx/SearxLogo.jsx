@@ -1,11 +1,5 @@
 const SvgSearxLogo = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    xmlnsXlink="http://www.w3.org/1999/xlink"
-    width="1em"
-    height="1em"
-    {...props}
-  >
+  <>
     <defs>
       <linearGradient id="Searx_logo_svg__b">
         <stop
@@ -146,6 +140,6 @@ const SvgSearxLogo = (props) => (
         transform="matrix(.74467 -.84318 .84318 .74467 -35.543 -26.35)"
       />
     </g>
-  </svg>
+  </>
 );
 export default SvgSearxLogo;

@@ -1,11 +1,5 @@
 const Tavily = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 375 375"
-    {...props}
-  >
+  <>
     <defs>
       <clipPath id="a">
         <path d="M109.379 231.133h37.105v37.105H109.38Zm0 0" />
@@ -64,6 +58,6 @@ const Tavily = (props) => (
         <path fill="#32b37f" d="M109.379 231.133h37.105v37.105H109.38Zm0 0" />
       </g>
     </g>
-  </svg>
+  </>
 );
 export default Tavily;

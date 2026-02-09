@@ -1,12 +1,5 @@
 const SvgAttio = (props) => (
-  <svg
-    version="1.1"
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 400 400"
-    {...props}
-  >
+  <>
     <path
       d="M0 0 C132 0 264 0 400 0 C400 132 400 264 400 400 C268 400 136 400 0 400 C0 268 0 136 0 0 Z "
       fill="#202124"
@@ -32,6 +25,6 @@ const SvgAttio = (props) => (
       fill="#222326"
       transform="translate(280,206)"
     />
-  </svg>
+  </>
 );
 export default SvgAttio;

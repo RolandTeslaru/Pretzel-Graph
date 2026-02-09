@@ -1,10 +1,5 @@
 const SvgNotDiamondIcon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 54 32"
-    fill="none"
-    {...props}
-  >
+  <>
     {" "}
     <g clipPath="url(#clip0_14_604)">
       {" "}
@@ -24,6 +19,6 @@ const SvgNotDiamondIcon = (props) => (
         <rect width="54" height="32" fill="white" />
       </clipPath>
     </defs>
-  </svg>
+  </>
 );
 export default SvgNotDiamondIcon;

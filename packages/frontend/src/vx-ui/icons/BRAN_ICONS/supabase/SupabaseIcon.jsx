@@ -1,14 +1,5 @@
 const SvgSupabaseIcon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1.1em"
-    height="1.1em"
-    style={{
-      fill: "none",
-    }}
-    viewBox="0 0 64 64"
-    {...props}
-  >
+  <>
     <path
       d="M37.412 62.937c-1.635 2.059-4.95.93-4.99-1.698l-.575-38.453h25.855c4.683 0 7.295 5.41 4.383 9.077z"
       style={{
@@ -57,6 +48,6 @@ const SvgSupabaseIcon = (props) => (
         <stop offset={1} stopOpacity={0} />
       </linearGradient>
     </defs>
-  </svg>
+  </>
 );
 export default SvgSupabaseIcon;

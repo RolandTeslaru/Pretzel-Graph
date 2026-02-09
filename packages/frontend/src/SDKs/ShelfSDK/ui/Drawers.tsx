@@ -1,10 +1,11 @@
 import React, { memo, useEffect, useState } from 'react'
 import { ShelfSDK } from '../sdk'
 import { Shelf } from "@vx-agent-editor/shared/types";
-import { Icon, Spinner } from '@/vx-ui/foundations';
+import { Spinner } from '@/vx-ui/foundations';
 import { useShallow } from 'zustand/react/shallow';
 import { SystemIcons } from '@/vx-ui/icons';
 import DrawerItem from './DrawerItem';
+import { LazyIcon } from '@/vx-ui/icons/LazyIcon';
 
 
 export const Drawers = () => {
@@ -89,7 +90,7 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
                 className='flex flex-row gap-2 h-8 px-2 cursor-pointer hover:bg-primary/40 rounded-lg'
                 onClick={() => ShelfSDK.actions.drawer.toggle(drawer.id)}
             >
-                <Icon fallback={null} name={drawer.icon} className={`w-[20px] h-[20px] my-auto ${isOpen ? "text-primary" : ""}`} />
+                <LazyIcon name={drawer.icon} className={`w-[20px] h-[20px] my-auto ${isOpen ? "text-primary" : ""}`} />
                 <p className='text-sm font-medium my-auto w-full text-left!'>
                     {drawer.displayName}
                 </p>

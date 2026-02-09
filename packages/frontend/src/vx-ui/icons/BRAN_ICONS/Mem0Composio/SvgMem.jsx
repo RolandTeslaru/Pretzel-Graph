@@ -1,13 +1,6 @@
 export default function SvgMem0(props) {
   return (
-    <svg
-      viewBox="0 0 126 127"
-      width="21"
-      height="21"
-      preserveAspectRatio="xMidYMid meet"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
+    <>
       <g
         transform="translate(0.000000,127.000000) scale(0.100000,-0.100000)"
         fill={props.isDark ? "#ffffff" : "#000000"}
@@ -31,6 +24,6 @@ export default function SvgMem0(props) {
         <path d="M987 242 c-32 -35 -15 -82 28 -82 44 0 61 52 27 83 -24 22 -35 21 -55 -1z" />
         <path d="M566 94 c-33 -32 -13 -74 36 -74 38 0 55 33 33 66 -18 28 -46 31 -69 8z" />
       </g>
-    </svg>
+    </>
   );
 }

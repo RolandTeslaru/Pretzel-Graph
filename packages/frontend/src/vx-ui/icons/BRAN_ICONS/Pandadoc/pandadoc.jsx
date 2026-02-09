@@ -1,18 +1,5 @@
 const Icon = (props) => (
-  <svg
-    version="1.1"
-    xmlns="http://www.w3.org/2000/svg"
-    xmlnsXlink="http://www.w3.org/1999/xlink"
-    x="0px"
-    y="0px"
-    width="20"
-    height="20"
-    viewBox="0 0 80 80"
-    style={{ enableBackground: "new 0 0 80 80" }}
-    xmlSpace="preserve"
-    preserveAspectRatio="xMidYMid meet"
-    {...props}
-  >
+  <>
     <style type="text/css">{`
   .st0{fill:#47B972;}
 	.st1{fill:#FFFFFF;}
@@ -32,6 +19,6 @@ const Icon = (props) => (
     </g>
     <g id="logo_on_black-alpha"></g>
     <g id="logo_on_green-alpha"></g>
-  </svg>
+  </>
 );
 export default Icon;

@@ -1,12 +1,5 @@
 const Icon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    id="Contentful--Streamline-Svg-Logos"
-    height="19"
-    width="19"
-  >
+  <>
     <desc>Contentful Streamline Icon: https://streamlinehq.com</desc>
     <path
       fill="#fae501"
@@ -33,6 +26,6 @@ const Icon = (props) => (
       d="M6.8777 21.03285c1.419525 0 2.5703 -1.150775 2.5703 -2.570325 0 -1.41955 -1.150775 -2.570325 -2.5703 -2.570325 -1.41955 0 -2.570325 1.150775 -2.570325 2.570325 0 1.41955 1.150775 2.570325 2.570325 2.570325Z"
       stroke-width="0.25"
     ></path>
-  </svg>
+  </>
 );
 export default Icon;

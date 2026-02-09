@@ -1,10 +1,5 @@
 const Icon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 48 48"
-    width="20px"
-    height="20px"
-  >
+  <>
     <linearGradient
       id="NqAl5bicO~9wmXV3Tvu1Ra"
       x1="24.5"
@@ -65,6 +60,6 @@ const Icon = (props) => (
       fill="url(#NqAl5bicO~9wmXV3Tvu1Rd)"
       d="M46.709,33.175c-0.463-0.292-9.875-6.238-18.252-11.288	C18.495,25.885,2.111,32.748,2.05,32.774C2.467,33.388,5.627,38,11.904,38c5.03,0,16.176,0,26.354,0	C43.669,38,46.148,34.146,46.709,33.175z"
     />
-  </svg>
+  </>
 );
 export default Icon;

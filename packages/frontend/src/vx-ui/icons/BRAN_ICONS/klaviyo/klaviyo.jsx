@@ -1,12 +1,5 @@
 const SvgKlaviyo = (props) => (
-  <svg
-    version="1.1"
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 128 128"
-    {...props}
-  >
+  <>
     <path
       d="M0 0 C42.24 0 84.48 0 128 0 C128 42.24 128 84.48 128 128 C85.76 128 43.52 128 0 128 C0 85.76 0 43.52 0 0 Z "
       fill="#232525"
@@ -22,6 +15,6 @@ const SvgKlaviyo = (props) => (
       fill="#EBE8E6"
       transform="translate(94,80)"
     />
-  </svg>
+  </>
 );
 export default SvgKlaviyo;

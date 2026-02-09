@@ -1,11 +1,5 @@
 const UpstashIcon = (props) => (
-  <svg
-    viewBox="0 0 256 341"
-    version="1.1"
-    xmlns="http://www.w3.org/2000/svg"
-    preserveAspectRatio="xMidYMid"
-    {...props}
-  >
+  <>
     <title>upstash</title>
     <g>
       <path
@@ -35,7 +29,7 @@ const UpstashIcon = (props) => (
         fill="#FFFFFF"
       ></path>
     </g>
-  </svg>
+  </>
 );
 
 export default UpstashIcon;

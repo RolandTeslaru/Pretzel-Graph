@@ -1,12 +1,5 @@
 const SvgMetaIcon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    data-name="Layer 1"
-    viewBox="0 0 287.56 191"
-    width="1em"
-    height="1em"
-    {...props}
-  >
+  <>
     <defs>
       <linearGradient
         id="meta-icon_svg__a"
@@ -53,6 +46,6 @@ const SvgMetaIcon = (props) => (
         fill: "url(#meta-icon_svg__b)",
       }}
     />
-  </svg>
+  </>
 );
 export default SvgMetaIcon;

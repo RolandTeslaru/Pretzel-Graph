@@ -1,5 +1,5 @@
 const SvgGlean = (props) => (
-  <svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg" {...props}>
+  <>
     <g
       fill="None"
       fillOpacity="0"
@@ -4512,6 +4512,6 @@ const SvgGlean = (props) => (
     <g fill="#987FF7" fillOpacity=".18" stroke="None">
       <path d="m431 1068h43s-0.24-0.8 0-1c-13.87 1.3-29.07 0.53-43 0 0 0-0.04 1 0 1z" />
     </g>
-  </svg>
+  </>
 );
 export default SvgGlean;

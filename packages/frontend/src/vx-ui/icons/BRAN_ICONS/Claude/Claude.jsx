@@ -1,13 +1,6 @@
 const ClaudeSVG = (props) => {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      {...props}
-    >
+    <>
       <g clip-path="url(#clip0_216_1303)">
         <path
           fill-rule="evenodd"
@@ -25,7 +18,7 @@ const ClaudeSVG = (props) => {
           <rect width="16" height="16" fill="white" />
         </clipPath>
       </defs>
-    </svg>
+    </>
   );
 };
 

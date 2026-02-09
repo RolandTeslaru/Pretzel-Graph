@@ -1,13 +1,5 @@
 const Icon = (props) => (
-  <svg
-    version="1.1"
-    xmlns="http://www.w3.org/2000/svg"
-    width="20"
-    height="20"
-    viewBox="0 0 400 400"
-    preserveAspectRatio="xMidYMid meet"
-    {...props}
-  >
+  <>
     <path
       d="M0 0 C132 0 264 0 400 0 C400 132 400 264 400 400 C268 400 136 400 0 400 C0 268 0 136 0 0 Z "
       fill="#FEFEFE"
@@ -23,6 +15,6 @@ const Icon = (props) => (
       fill="#C1C1C1"
       transform="translate(146,151)"
     />
-  </svg>
+  </>
 );
 export default Icon;

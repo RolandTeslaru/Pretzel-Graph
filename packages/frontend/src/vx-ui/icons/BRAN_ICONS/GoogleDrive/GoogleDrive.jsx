@@ -1,11 +1,5 @@
 const SvgGoogleDrive = (props) => (
-  <svg
-    width="1em"
-    height="1em"
-    viewBox="0 0 87.3 78"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
+  <>
     <path
       d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z"
       fill="#0066da"
@@ -30,6 +24,6 @@ const SvgGoogleDrive = (props) => (
       d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z"
       fill="#ffba00"
     />
-  </svg>
+  </>
 );
 export default SvgGoogleDrive;
