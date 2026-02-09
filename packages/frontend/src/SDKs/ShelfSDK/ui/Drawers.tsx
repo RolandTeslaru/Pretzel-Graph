@@ -85,12 +85,11 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
 
     return (
         <div>
-            {/* Header*/}
             <div
-                className='flex flex-row gap-2 h-8 px-2 cursor-pointer hover:bg-primary/40 rounded-lg'
+                className='flex flex-row gap-2 h-8 px-1 cursor-pointer hover:bg-primary/40 rounded-lg'
                 onClick={() => ShelfSDK.actions.drawer.toggle(drawer.id)}
             >
-                <LazyIcon name={drawer.icon} className={`w-[20px] h-[20px] my-auto ${isOpen ? "text-primary" : ""}`} />
+                <LazyIcon name={drawer.icon} className={`min-w-4 h-4 my-auto ${isOpen ? "text-primary" : ""}`} />
                 <p className='text-sm font-medium my-auto w-full text-left!'>
                     {drawer.displayName}
                 </p>

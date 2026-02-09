@@ -27,7 +27,7 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
           onDragEnd={onDragEnd}
           {...props}
         >
-          <LazyIcon name={blueprint.icon} className='w-[18px] h-[18px] my-auto ' />
+          <LazyIcon name={blueprint.icon} className='w-4 h-4 my-auto ' />
           <p className='text-sm my-auto truncate flex-1 min-w-0'>
             {blueprint.displayName}
           </p>

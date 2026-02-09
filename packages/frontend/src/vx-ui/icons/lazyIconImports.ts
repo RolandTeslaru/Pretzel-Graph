@@ -1,479 +1,343 @@
 // Export the lazy loading mapping for brand icons (lazy-loaded)
 export const lazyIconsMapping = {
-  AIML: () => import("./BRAN_ICONS/AIML").then((mod) => ({ default: mod.AIMLIcon })),
+  AIML: () => import("./BRAND_ICONS/AIML"),
   AgentQL: () =>
-    import("./BRAN_ICONS/AgentQL").then((mod) => ({ default: mod.AgentQLIcon })),
+    import("./BRAND_ICONS/AgentQL"),
   Agiled: () =>
-    import("./BRAN_ICONS/Agiled").then((mod) => ({ default: mod.AgiledIcon })),
+    import("./BRAND_ICONS/Agiled"),
   Airbyte: () =>
-    import("./BRAN_ICONS/Airbyte").then((mod) => ({ default: mod.AirbyteIcon })),
+    import("./BRAND_ICONS/Airbyte"),
   Anthropic: () =>
-    import("./BRAN_ICONS/Anthropic").then((mod) => ({ default: mod.AnthropicIcon })),
+    import("./BRAND_ICONS/Anthropic"),
   Apify: () =>
-    import("./BRAN_ICONS/Apify").then((mod) => ({ default: mod.ApifyIcon })),
+    import("./BRAND_ICONS/Apify"),
   ApifyWhite: () =>
-    import("./BRAN_ICONS/Apify").then((mod) => ({ default: mod.ApifyWhiteIcon })),
+    import("./BRAND_ICONS/Apify"),
   ArXiv: () =>
-    import("./BRAN_ICONS/ArXiv").then((mod) => ({ default: mod.ArXivIcon })),
+    import("./BRAND_ICONS/ArXiv"),
   Arize: () =>
-    import("./BRAN_ICONS/Arize").then((mod) => ({ default: mod.ArizeIcon })),
+    import("./BRAND_ICONS/Arize"),
   Apollo: () =>
-    import("./BRAN_ICONS/Apollo").then((mod) => ({ default: mod.ApolloIcon })),
+    import("./BRAND_ICONS/Apollo"),
   Bitbucket: () =>
-    import("./BRAN_ICONS/Bitbucket").then((mod) => ({ default: mod.BitbucketIcon })),
+    import("./BRAND_ICONS/Bitbucket"),
   Canva: () =>
-    import("./BRAN_ICONS/Canva").then((mod) => ({ default: mod.CanvaIcon })),
-  Coda: () => import("./BRAN_ICONS/Coda").then((mod) => ({ default: mod.CodaIcon })),
+    import("./BRAND_ICONS/Canva"),
+  Coda: () => import("./BRAND_ICONS/Coda"),
   AssemblyAI: () =>
-    import("./BRAN_ICONS/AssemblyAI").then((mod) => ({ default: mod.AssemblyAIIcon })),
+    import("./BRAND_ICONS/AssemblyAI"),
   Elevenlabs: () =>
-    import("./BRAN_ICONS/Elevenlabs").then((mod) => ({ default: mod.ElevenlabsIcon })),
+    import("./BRAND_ICONS/Elevenlabs"),
   Googlebigquery: () =>
-    import("./BRAN_ICONS/Googlebigquery").then((mod) => ({ default: mod.GooglebigqueryIcon })),
+    import("./BRAND_ICONS/Googlebigquery"),
   Heygen: () =>
-    import("./BRAN_ICONS/Heygen").then((mod) => ({ default: mod.HeygenIcon })),
+    import("./BRAND_ICONS/Heygen"),
   Peopledatalabs: () =>
-    import("./BRAN_ICONS/Peopledatalabs").then((mod) => ({
-      default: mod.PeopledatalabsIcon,
-    })),
+    import("./BRAND_ICONS/Peopledatalabs"),
   Snowflake: () =>
-    import("./BRAN_ICONS/Snowflake").then((mod) => ({ default: mod.SnowflakeIcon })),
+    import("./BRAND_ICONS/Snowflake"),
   Googledocs: () =>
-    import("./BRAN_ICONS/googledocs").then((mod) => ({
-      default: mod.GoogledocsIcon,
-    })),
+    import("./BRAND_ICONS/googledocs"),
   Googlesheets: () =>
-    import("./BRAN_ICONS/googlesheets").then((mod) => ({
-      default: mod.GooglesheetsIcon,
-    })),
+    import("./BRAND_ICONS/googlesheets"),
   Klaviyo: () =>
-    import("./BRAN_ICONS/klaviyo").then((mod) => ({ default: mod.KlaviyoIcon })),
+    import("./BRAND_ICONS/klaviyo"),
   Klipfolio: () =>
-    import("./BRAN_ICONS/Klipfolio").then((mod) => ({ default: mod.KlipfolioIcon })),
+    import("./BRAND_ICONS/Klipfolio"),
   One_Drive: () =>
-    import("./BRAN_ICONS/one_drive").then((mod) => ({ default: mod.One_DriveIcon })),
+    import("./BRAND_ICONS/one_drive"),
   Wrike: () =>
-    import("./BRAN_ICONS/wrike").then((mod) => ({ default: mod.WrikeIcon })),
-  Miro: () => import("./BRAN_ICONS/miro").then((mod) => ({ default: mod.MiroIcon })),
+    import("./BRAND_ICONS/wrike"),
+  Miro: () => import("./BRAND_ICONS/miro"),
   Figma: () =>
-    import("./BRAN_ICONS/figma").then((mod) => ({ default: mod.FigmaIcon })),
+    import("./BRAND_ICONS/figma"),
   discord: () =>
-    import("./BRAN_ICONS/discord").then((mod) => ({
-      default: mod.DiscordIcon,
-    })),
+    import("./BRAND_ICONS/discord"),
   Digicert: () =>
-    import("./BRAN_ICONS/Digicert").then((mod) => ({ default: mod.DigicertIcon })),
+    import("./BRAND_ICONS/Digicert"),
   Contentful: () =>
-    import("./BRAN_ICONS/contentful").then((mod) => ({
-      default: mod.ContentfulIcon,
-    })),
+    import("./BRAND_ICONS/contentful"),
   Calendly: () =>
-    import("./BRAN_ICONS/calendly").then((mod) => ({
-      default: mod.CalendlyIcon,
-    })),
+    import("./BRAND_ICONS/calendly"),
   CapsuleCRM: () =>
-    import("./BRAN_ICONS/Capsulecrm").then((mod) => ({
-      default: mod.CapsulecrmIcon,
-    })),
+    import("./BRAND_ICONS/Capsulecrm"),
   Canvas: () =>
-    import("./BRAN_ICONS/Canvas").then((mod) => ({ default: mod.CanvasIcon })),
+    import("./BRAND_ICONS/Canvas"),
   Canvaas: () =>
-    import("./BRAN_ICONS/Canvas").then((mod) => ({ default: mod.CanvasIcon })),
+    import("./BRAND_ICONS/Canvas"),
   Attio: () =>
-    import("./BRAN_ICONS/attio").then((mod) => ({ default: mod.AttioIcon })),
+    import("./BRAND_ICONS/attio"),
   Asana: () =>
-    import("./BRAN_ICONS/asana").then((mod) => ({ default: mod.AsanaIcon })),
+    import("./BRAND_ICONS/asana"),
   Airtable: () =>
-    import("./BRAN_ICONS/airtable").then((mod) => ({ default: mod.AirtableIcon })),
+    import("./BRAND_ICONS/airtable"),
   AstraDB: () =>
-    import("./BRAN_ICONS/AstraDB").then((mod) => ({ default: mod.AstraDBIcon })),
+    import("./BRAND_ICONS/AstraDB"),
   Athena: () =>
-    import("./BRAN_ICONS/athena").then((mod) => ({ default: mod.AthenaIcon })),
-  AWS: () => import("./BRAN_ICONS/AWS").then((mod) => ({ default: mod.AWSIcon })),
+    import("./BRAND_ICONS/athena"),
+  AWS: () => import("./BRAND_ICONS/AWS"),
   AWSInverted: () =>
-    import("./BRAN_ICONS/AWSInverted").then((mod) => ({
-      default: mod.AWSInvertedIcon,
-    })),
+    import("./BRAND_ICONS/AWSInverted"),
   Azure: () =>
-    import("./BRAN_ICONS/Azure").then((mod) => ({ default: mod.AzureIcon })),
-  Bing: () => import("./BRAN_ICONS/Bing").then((mod) => ({ default: mod.BingIcon })),
+    import("./BRAND_ICONS/Azure"),
+  Bing: () => import("./BRAND_ICONS/Bing"),
   Bolna: () =>
-    import("./BRAN_ICONS/Bolna").then((mod) => ({ default: mod.BolnaIcon })),
+    import("./BRAND_ICONS/Bolna"),
   BotMessageSquareIcon: () =>
-    import("./BRAN_ICONS/BotMessageSquare").then((mod) => ({
-      default: mod.BotMessageSquareIcon,
-    })),
+    import("./BRAND_ICONS/BotMessageSquare"),
   Brandfetch: () =>
-    import("./BRAN_ICONS/Brandfetch").then((mod) => ({
-      default: mod.BrandfetchIcon,
-    })),
+    import("./BRAND_ICONS/Brandfetch"),
   Brightdata: () =>
-    import("./BRAN_ICONS/Brightdata").then((mod) => ({
-      default: mod.BrightdataIcon,
-    })),
+    import("./BRAND_ICONS/Brightdata"),
   BWPython: () =>
-    import("./BRAN_ICONS/BW python").then((mod) => ({ default: mod.BWPythonIcon })),
+    import("./BRAND_ICONS/BW python"),
   Cassandra: () =>
-    import("./BRAN_ICONS/Cassandra").then((mod) => ({ default: mod.CassandraIcon })),
+    import("./BRAND_ICONS/Cassandra"),
   Chroma: () =>
-    import("./BRAN_ICONS/ChromaIcon").then((mod) => ({ default: mod.ChromaIcon })),
+    import("./BRAND_ICONS/ChromaIcon"),
   Cleanlab: () =>
-    import("./BRAN_ICONS/Cleanlab").then((mod) => ({ default: mod.CleanlabIcon })),
+    import("./BRAND_ICONS/Cleanlab"),
   Clickhouse: () =>
-    import("./BRAN_ICONS/Clickhouse").then((mod) => ({
-      default: mod.ClickhouseIcon,
-    })),
+    import("./BRAND_ICONS/Clickhouse"),
   Cloudflare: () =>
-    import("./BRAN_ICONS/Cloudflare").then((mod) => ({
-      default: mod.CloudflareIcon,
-    })),
+    import("./BRAND_ICONS/Cloudflare"),
   Cohere: () =>
-    import("./BRAN_ICONS/Cohere").then((mod) => ({ default: mod.CohereIcon })),
+    import("./BRAND_ICONS/Cohere"),
   CometAPI: () =>
-    import("./BRAN_ICONS/CometAPI").then((mod) => ({ default: mod.CometAPIIcon })),
+    import("./BRAND_ICONS/CometAPI"),
   Composio: () =>
-    import("./BRAN_ICONS/Composio").then((mod) => ({ default: mod.ComposioIcon })),
+    import("./BRAND_ICONS/Composio"),
   Confluence: () =>
-    import("./BRAN_ICONS/Confluence").then((mod) => ({
-      default: mod.ConfluenceIcon,
-    })),
+    import("./BRAND_ICONS/Confluence"),
   Couchbase: () =>
-    import("./BRAN_ICONS/Couchbase").then((mod) => ({ default: mod.CouchbaseIcon })),
+    import("./BRAND_ICONS/Couchbase"),
   Classroom: () =>
-    import("./BRAN_ICONS/Classroom").then((mod) => ({ default: mod.ClassroomIcon })),
+    import("./BRAND_ICONS/Classroom"),
   Claude: () =>
-    import("./BRAN_ICONS/Claude").then((mod) => ({ default: mod.ClaudeIcon })),
+    import("./BRAND_ICONS/Claude"),
   CrewAI: () =>
-    import("./BRAN_ICONS/CrewAI").then((mod) => ({ default: mod.CrewAiIcon })),
+    import("./BRAND_ICONS/CrewAI"),
   Cursor: () =>
-    import("./BRAN_ICONS/Cursor").then((mod) => ({ default: mod.CursorIcon })),
+    import("./BRAND_ICONS/Cursor"),
   DeepSeek: () =>
-    import("./BRAN_ICONS/DeepSeek").then((mod) => ({ default: mod.DeepSeekIcon })),
+    import("./BRAND_ICONS/DeepSeek"),
   Docling: () =>
-    import("./BRAN_ICONS/Docling").then((mod) => ({ default: mod.DoclingIcon })),
+    import("./BRAND_ICONS/Docling"),
   Dropbox: () =>
-    import("./BRAN_ICONS/Dropbox").then((mod) => ({ default: mod.DropboxIcon })),
+    import("./BRAND_ICONS/Dropbox"),
   DuckDuckGo: () =>
-    import("./BRAN_ICONS/DuckDuckGo").then((mod) => ({
-      default: mod.DuckDuckGoIcon,
-    })),
+    import("./BRAND_ICONS/DuckDuckGo"),
   ElasticsearchStore: () =>
-    import("./BRAN_ICONS/ElasticsearchStore").then((mod) => ({
-      default: mod.ElasticsearchIcon,
-    })),
+    import("./BRAND_ICONS/ElasticsearchStore"),
   Evernote: () =>
-    import("./BRAN_ICONS/Evernote").then((mod) => ({ default: mod.EvernoteIcon })),
-  Exa: () => import("./BRAN_ICONS/Exa").then((mod) => ({ default: mod.ExaIcon })),
+    import("./BRAND_ICONS/Evernote"),
+  Exa: () => import("./BRAND_ICONS/Exa"),
   ExaComposio: () =>
-    import("./BRAN_ICONS/ExaComposio").then((mod) => ({
-      default: mod.ExaIconComposio,
-    })),
+    import("./BRAND_ICONS/ExaComposio"),
   Fireflies: () =>
-    import("./BRAN_ICONS/Fireflies").then((mod) => ({ default: mod.FirefliesIcon })),
+    import("./BRAND_ICONS/Fireflies"),
   Excel: () =>
-    import("./BRAN_ICONS/Excel").then((mod) => ({ default: mod.ExcelIcon })),
+    import("./BRAND_ICONS/Excel"),
   FacebookMessenger: () =>
-    import("./BRAN_ICONS/FacebookMessenger").then((mod) => ({
-      default: mod.FBIcon,
-    })),
+    import("./BRAND_ICONS/FacebookMessenger"),
   Firecrawl: () =>
-    import("./BRAN_ICONS/Firecrawl").then((mod) => ({ default: mod.FirecrawlIcon })),
+    import("./BRAND_ICONS/Firecrawl"),
   Finage: () =>
-    import("./BRAN_ICONS/Finage").then((mod) => ({ default: mod.FinageIcon })),
+    import("./BRAND_ICONS/Finage"),
   Fixer: () =>
-    import("./BRAN_ICONS/Fixer").then((mod) => ({ default: mod.FixerIcon })),
+    import("./BRAND_ICONS/Fixer"),
   Flexisign: () =>
-    import("./BRAN_ICONS/Flexisign").then((mod) => ({ default: mod.FlexisignIcon })),
+    import("./BRAND_ICONS/Flexisign"),
   FreezeAll: () =>
-    import("./BRAN_ICONS/freezeAll").then((mod) => ({ default: mod.freezeAllIcon })),
+    import("./BRAND_ICONS/freezeAll"),
   Freshdesk: () =>
-    import("./BRAN_ICONS/Freshdesk").then((mod) => ({ default: mod.FreshdeskIcon })),
+    import("./BRAND_ICONS/Freshdesk"),
   GitBook: () =>
-    import("./BRAN_ICONS/GitBook").then((mod) => ({ default: mod.GitBookIcon })),
+    import("./BRAND_ICONS/GitBook"),
   GitLoader: () =>
-    import("./BRAN_ICONS/GitLoader").then((mod) => ({ default: mod.GitLoaderIcon })),
+    import("./BRAND_ICONS/GitLoader"),
   Github: () =>
-    import("./BRAN_ICONS/github").then((mod) => ({ default: mod.GithubIcon })),
+    import("./BRAND_ICONS/github"),
   Glean: () =>
-    import("./BRAN_ICONS/Glean").then((mod) => ({ default: mod.GleanIcon })),
+    import("./BRAND_ICONS/Glean"),
   GlobeOk: () =>
-    import("./BRAN_ICONS/globe-ok").then((mod) => ({ default: mod.GlobeOkIcon })),
+    import("./BRAND_ICONS/globe-ok"),
   Google: () =>
-    import("./BRAN_ICONS/Google").then((mod) => ({ default: mod.GoogleIcon })),
+    import("./BRAND_ICONS/Google"),
   GoogleDrive: () =>
-    import("./BRAN_ICONS/GoogleDrive").then((mod) => ({
-      default: mod.GoogleDriveIcon,
-    })),
+    import("./BRAND_ICONS/GoogleDrive"),
   Googlemeet: () =>
-    import("./BRAN_ICONS/googlemeet").then((mod) => ({
-      default: mod.GooglemeetIcon,
-    })),
+    import("./BRAND_ICONS/googlemeet"),
   GoogleTasks: () =>
-    import("./BRAN_ICONS/GoogleTasks").then((mod) => ({
-      default: mod.GoogleTasksIcon,
-    })),
+    import("./BRAND_ICONS/GoogleTasks"),
   GoogleGenerativeAI: () =>
-    import("./BRAN_ICONS/GoogleGenerativeAI").then((mod) => ({
-      default: mod.GoogleGenerativeAIIcon,
-    })),
+    import("./BRAND_ICONS/GoogleGenerativeAI"),
   Gmail: () =>
-    import("./BRAN_ICONS/gmail").then((mod) => ({ default: mod.GmailIcon })),
+    import("./BRAND_ICONS/gmail"),
   Outlook: () =>
-    import("./BRAN_ICONS/outlook").then((mod) => ({ default: mod.OutlookIcon })),
+    import("./BRAND_ICONS/outlook"),
   Pandadoc: () =>
-    import("./BRAN_ICONS/Pandadoc").then((mod) => ({ default: mod.PandadocIcon })),
+    import("./BRAND_ICONS/Pandadoc"),
   Googlecalendar: () =>
-    import("./BRAN_ICONS/googlecalendar").then((mod) => ({
-      default: mod.GooglecalendarIcon,
-    })),
-  GradientInfinity: () =>
-    import("./BRAN_ICONS/GradientSparkles").then((mod) => ({
-      default: mod.GradientInfinity,
-    })),
+    import("./BRAND_ICONS/googlecalendar"),
   Googlemaps: () =>
-    import("./BRAN_ICONS/googlemaps").then((mod) => ({
-      default: mod.GooglemapsIcon,
-    })),
+    import("./BRAND_ICONS/googlemaps"),
   Todoist: () =>
-    import("./BRAN_ICONS/todoist").then((mod) => ({
-      default: mod.TodoistIcon,
-    })),
+    import("./BRAND_ICONS/todoist"),
   Zoom: () =>
-    import("./BRAN_ICONS/zoom").then((mod) => ({
-      default: mod.ZoomIcon,
-    })),
-  GradientUngroup: () =>
-    import("./BRAN_ICONS/GradientSparkles").then((mod) => ({
-      default: mod.GradientUngroup,
-    })),
-  GradientSave: () =>
-    import("./BRAN_ICONS/GradientSparkles").then((mod) => ({
-      default: mod.GradientSave,
-    })),
+    import("./BRAND_ICONS/zoom"),
   GridHorizontal: () =>
-    import("./BRAN_ICONS/GridHorizontal").then((mod) => ({
-      default: mod.GridHorizontalIcon,
-    })),
-  Groq: () => import("./BRAN_ICONS/Groq").then((mod) => ({ default: mod.GroqIcon })),
+    import("./BRAND_ICONS/GridHorizontal"),
+  Groq: () => import("./BRAND_ICONS/Groq"),
   HackerNews: () =>
-    import("./BRAN_ICONS/hackerNews").then((mod) => ({
-      default: mod.HackerNewsIcon,
-    })),
-  HCD: () => import("./BRAN_ICONS/HCD").then((mod) => ({ default: mod.HCDIcon })),
+    import("./BRAND_ICONS/hackerNews"),
+  HCD: () => import("./BRAND_ICONS/HCD"),
   HomeAssistant: () =>
-    import("./BRAN_ICONS/HomeAssistant").then((mod) => ({
-      default: mod.HomeAssistantIcon,
-    })),
+    import("./BRAND_ICONS/HomeAssistant"),
   HuggingFace: () =>
-    import("./BRAN_ICONS/HuggingFace").then((mod) => ({
-      default: mod.HuggingFaceIcon,
-    })),
+    import("./BRAND_ICONS/HuggingFace"),
   Icosa: () =>
-    import("./BRAN_ICONS/Icosa").then((mod) => ({ default: mod.IcosaIcon })),
+    import("./BRAND_ICONS/Icosa"),
   IFixIt: () =>
-    import("./BRAN_ICONS/IFixIt").then((mod) => ({ default: mod.IFixIcon })),
+    import("./BRAND_ICONS/IFixIt"),
   Instagram: () =>
-    import("./BRAN_ICONS/Instagram").then((mod) => ({ default: mod.InstagramIcon })),
+    import("./BRAND_ICONS/Instagram"),
   javascript: () =>
-    import("./BRAN_ICONS/JSicon").then((mod) => ({ default: mod.JSIcon })),
+    import("./BRAND_ICONS/JSicon"),
   JigsawStack: () =>
-    import("./BRAN_ICONS/JigsawStack").then((mod) => ({
-      default: mod.JigsawStackIcon,
-    })),
-  Jira: () => import("./BRAN_ICONS/Jira").then((mod) => ({ default: mod.JiraIcon })),
+    import("./BRAND_ICONS/JigsawStack"),
+  Jira: () => import("./BRAND_ICONS/Jira"),
   Jotform: () =>
-    import("./BRAN_ICONS/Jotform").then((mod) => ({ default: mod.JotformIcon })),
+    import("./BRAND_ICONS/Jotform"),
   Linear: () =>
-    import("./BRAN_ICONS/linear").then((mod) => ({ default: mod.LinearIcon })),
+    import("./BRAND_ICONS/linear"),
   LangChain: () =>
-    import("./BRAN_ICONS/LangChain").then((mod) => ({ default: mod.LangChainIcon })),
+    import("./BRAND_ICONS/LangChain"),
   Langwatch: () =>
-    import("./BRAN_ICONS/Langwatch").then((mod) => ({ default: mod.LangwatchIcon })),
+    import("./BRAND_ICONS/Langwatch"),
   LMStudio: () =>
-    import("./BRAN_ICONS/LMStudio").then((mod) => ({ default: mod.LMStudioIcon })),
+    import("./BRAND_ICONS/LMStudio"),
   Listennotes: () =>
-    import("./BRAN_ICONS/Listennotes").then((mod) => ({
-      default: mod.ListennotesIcon,
-    })),
+    import("./BRAND_ICONS/Listennotes"),
   Maritalk: () =>
-    import("./BRAN_ICONS/Maritalk").then((mod) => ({ default: mod.MaritalkIcon })),
-  Mcp: () => import("./BRAN_ICONS/MCP").then((mod) => ({ default: mod.McpIcon })),
-  Mem0: () => import("./BRAN_ICONS/Mem0").then((mod) => ({ default: mod.Mem0 })),
+    import("./BRAND_ICONS/Maritalk"),
+  Mcp: () => import("./BRAND_ICONS/MCP"),
+  Mem0: () => import("./BRAND_ICONS/Mem0"),
   Mem0Composio: () =>
-    import("./BRAN_ICONS/Mem0Composio").then((mod) => ({
-      default: mod.Mem0IconComposio,
-    })),
-  Meta: () => import("./BRAN_ICONS/Meta").then((mod) => ({ default: mod.MetaIcon })),
+    import("./BRAND_ICONS/Mem0Composio"),
+  Meta: () => import("./BRAND_ICONS/Meta"),
   Midjourney: () =>
-    import("./BRAN_ICONS/Midjorney").then((mod) => ({
-      default: mod.MidjourneyIcon,
-    })),
+    import("./BRAND_ICONS/Midjorney"),
   Milvus: () =>
-    import("./BRAN_ICONS/Milvus").then((mod) => ({ default: mod.MilvusIcon })),
+    import("./BRAND_ICONS/Milvus"),
   Missive: () =>
-    import("./BRAN_ICONS/Missive").then((mod) => ({ default: mod.MissiveIcon })),
+    import("./BRAND_ICONS/Missive"),
   Mistral: () =>
-    import("./BRAN_ICONS/mistral").then((mod) => ({ default: mod.MistralIcon })),
+    import("./BRAND_ICONS/mistral"),
   MongoDB: () =>
-    import("./BRAN_ICONS/MongoDB").then((mod) => ({ default: mod.MongoDBIcon })),
-  Needle: () =>
-    import("./BRAN_ICONS/Needle").then((mod) => ({ default: mod.NeedleIcon })),
-  Neon: () => import("./BRAN_ICONS/Neon").then((mod) => ({ default: mod.NeonIcon })),
+    import("./BRAND_ICONS/MongoDB"),
+  Neon: () => import("./BRAND_ICONS/Neon"),
   Newsapi: () =>
-    import("./BRAN_ICONS/Newsapi").then((mod) => ({ default: mod.NewsapiIcon })),
+    import("./BRAND_ICONS/Newsapi"),
   NotDiamond: () =>
-    import("./BRAN_ICONS/NotDiamond").then((mod) => ({
-      default: mod.NotDiamondIcon,
-    })),
+    import("./BRAND_ICONS/NotDiamond"),
   Notion: () =>
-    import("./BRAN_ICONS/Notion").then((mod) => ({ default: mod.NotionIcon })),
+    import("./BRAND_ICONS/Notion"),
   Novita: () =>
-    import("./BRAN_ICONS/Novita").then((mod) => ({ default: mod.NovitaIcon })),
+    import("./BRAND_ICONS/Novita"),
   NVIDIA: () =>
-    import("./BRAN_ICONS/Nvidia").then((mod) => ({ default: mod.NvidiaIcon })),
+    import("./BRAND_ICONS/Nvidia"),
   Olivya: () =>
-    import("./BRAN_ICONS/Olivya").then((mod) => ({ default: mod.OlivyaIcon })),
+    import("./BRAND_ICONS/Olivya"),
   Ollama: () =>
-    import("./BRAN_ICONS/Ollama").then((mod) => ({ default: mod.OllamaIcon })),
+    import("./BRAND_ICONS/Ollama"),
   OpenAI: () =>
-    import("./BRAN_ICONS/OpenAi").then((mod) => ({ default: mod.OpenAiIcon })),
+    import("./BRAND_ICONS/OpenAi"),
   OpenAICopy: () =>
-    import("./BRAN_ICONS/OpenAI copy").then((mod) => ({ default: mod.OpenAIIcon })),
+    import("./BRAND_ICONS/OpenAI copy"),
   OpenRouter: () =>
-    import("./BRAN_ICONS/OpenRouter").then((mod) => ({
-      default: mod.OpenRouterIcon,
-    })),
+    import("./BRAND_ICONS/OpenRouter"),
   OpenSearch: () =>
-    import("./BRAN_ICONS/OpenSearch").then((mod) => ({ default: mod.OpenSearch })),
+    import("./BRAND_ICONS/OpenSearch"),
   Perplexity: () =>
-    import("./BRAN_ICONS/Perplexity").then((mod) => ({
-      default: mod.PerplexityIcon,
-    })),
+    import("./BRAND_ICONS/Perplexity"),
   PerplexityComposio: () =>
-    import("./BRAN_ICONS/PerplexityComposio").then((mod) => ({
-      default: mod.PerplexityIconComposio,
-    })),
+    import("./BRAND_ICONS/PerplexityComposio"),
   Pinecone: () =>
-    import("./BRAN_ICONS/Pinecone").then((mod) => ({ default: mod.PineconeIcon })),
+    import("./BRAND_ICONS/Pinecone"),
   Postgres: () =>
-    import("./BRAN_ICONS/Postgres").then((mod) => ({ default: mod.PostgresIcon })),
+    import("./BRAND_ICONS/Postgres"),
   Python: () =>
-    import("./BRAN_ICONS/Python").then((mod) => ({ default: mod.PythonIcon })),
+    import("./BRAND_ICONS/Python"),
   QDrant: () =>
-    import("./BRAN_ICONS/QDrant").then((mod) => ({ default: mod.QDrantIcon })),
+    import("./BRAND_ICONS/QDrant"),
   QianFanChat: () =>
-    import("./BRAN_ICONS/QianFanChat").then((mod) => ({
-      default: mod.QianFanChatIcon,
-    })),
+    import("./BRAND_ICONS/QianFanChat"),
   Redis: () =>
-    import("./BRAN_ICONS/Redis").then((mod) => ({ default: mod.RedisIcon })),
+    import("./BRAND_ICONS/Redis"),
   Reddit: () =>
-    import("./BRAN_ICONS/reddit").then((mod) => ({ default: mod.RedditIcon })),
+    import("./BRAND_ICONS/reddit"),
   SambaNova: () =>
-    import("./BRAN_ICONS/SambaNova").then((mod) => ({ default: mod.SambaNovaIcon })),
+    import("./BRAND_ICONS/SambaNova"),
   ScrapeGraph: () =>
-    import("./BRAN_ICONS/ScrapeGraphAI").then((mod) => ({
-      default: mod.ScrapeGraph,
-    })),
+    import("./BRAND_ICONS/ScrapeGraphAI"),
   SearchAPI: () =>
-    import("./BRAN_ICONS/SearchAPI").then((mod) => ({ default: mod.SearchAPIIcon })),
+    import("./BRAND_ICONS/SearchAPI"),
   SearchLexical: () =>
-    import("./BRAN_ICONS/SearchLexical").then((mod) => ({
-      default: mod.SearchLexicalIcon,
-    })),
+    import("./BRAND_ICONS/SearchLexical"),
   SearchHybrid: () =>
-    import("./BRAN_ICONS/SearchHybrid").then((mod) => ({
-      default: mod.SearchHybridIcon,
-    })),
+    import("./BRAND_ICONS/SearchHybrid"),
   SearchVector: () =>
-    import("./BRAN_ICONS/SearchVector").then((mod) => ({
-      default: mod.SearchVectorIcon,
-    })),
+    import("./BRAND_ICONS/SearchVector"),
   Searx: () =>
-    import("./BRAN_ICONS/Searx").then((mod) => ({ default: mod.SearxIcon })),
+    import("./BRAND_ICONS/Searx"),
   SerpSearch: () =>
-    import("./BRAN_ICONS/SerpSearch").then((mod) => ({
-      default: mod.SerpSearchIcon,
-    })),
+    import("./BRAND_ICONS/SerpSearch"),
   SerpSearchComposio: () =>
-    import("./BRAN_ICONS/SerpAPIComposio").then((mod) => ({
-      default: mod.SerpSearchIconComposio,
-    })),
+    import("./BRAND_ICONS/SerpAPIComposio"),
   Serper: () =>
-    import("./BRAN_ICONS/Serper").then((mod) => ({ default: mod.SerperIcon })),
+    import("./BRAND_ICONS/Serper"),
   Share2: () =>
-    import("./BRAN_ICONS/Share2").then((mod) => ({ default: mod.Share2Icon })),
-  Slack: () =>
-    import("./BRAN_ICONS/Slack/SlackIcon").then((mod) => ({ default: mod.default })),
+    import("./BRAND_ICONS/Share2"),
   SlackComposio: () =>
-    import("./BRAN_ICONS/slackComposio").then((mod) => ({
-      default: mod.SlackIcons,
-    })),
+    import("./BRAND_ICONS/slackComposio"),
   Slides: () =>
-    import("./BRAN_ICONS/Slides").then((mod) => ({ default: mod.SlidesIcon })),
+    import("./BRAND_ICONS/Slides"),
   Spider: () =>
-    import("./BRAN_ICONS/Spider").then((mod) => ({ default: mod.SpiderIcon })),
+    import("./BRAND_ICONS/Spider"),
   Streamlit: () =>
-    import("./BRAN_ICONS/Streamlit").then((mod) => ({ default: mod.Streamlit })),
+    import("./BRAND_ICONS/Streamlit"),
   Supabase: () =>
-    import("./BRAN_ICONS/supabase").then((mod) => ({ default: mod.SupabaseIcon })),
+    import("./BRAND_ICONS/supabase"),
   Tavily: () =>
-    import("./BRAN_ICONS/Tavily").then((mod) => ({ default: mod.TavilyIcon })),
-  ThumbDownCustom: () =>
-    import("./BRAN_ICONS/thumbs").then((mod) => ({
-      default: mod.ThumbDownIconCustom,
-    })),
-  ThumbUpCustom: () =>
-    import("./BRAN_ICONS/thumbs").then((mod) => ({
-      default: mod.ThumbUpIconCustom,
-    })),
+    import("./BRAND_ICONS/Tavily"),
   Timelinesai: () =>
-    import("./BRAN_ICONS/Timelinesai").then((mod) => ({
-      default: mod.TimelinesaiIcon,
-    })),
+    import("./BRAND_ICONS/Timelinesai"),
   TwelveLabs: () =>
-    import("./BRAN_ICONS/TwelveLabs").then((mod) => ({
-      default: mod.TwelveLabsIcon,
-    })),
+    import("./BRAND_ICONS/TwelveLabs"),
   TwitterX: () =>
-    import("./BRAN_ICONS/Twitter X").then((mod) => ({
-      default: mod.TwitterXIcon,
-    })),
-  VLMRun: () =>
-    import("./BRAN_ICONS/VLMRun").then((mod) => ({
-      default: mod.VLMRunIcon,
-    })),
+    import("./BRAND_ICONS/Twitter X"),
   Unstructured: () =>
-    import("./BRAN_ICONS/Unstructured").then((mod) => ({
-      default: mod.UnstructuredIcon,
-    })),
+    import("./BRAND_ICONS/Unstructured"),
   Upstash: () =>
-    import("./BRAN_ICONS/Upstash").then((mod) => ({ default: mod.UpstashSvgIcon })),
+    import("./BRAND_ICONS/Upstash"),
   Vectara: () =>
-    import("./BRAN_ICONS/VectaraIcon").then((mod) => ({ default: mod.VectaraIcon })),
+    import("./BRAND_ICONS/VectaraIcon"),
   VectorStores: () =>
-    import("./BRAN_ICONS/vectorstores").then((mod) => ({
-      default: mod.VectorStoresIcon,
-    })),
+    import("./BRAND_ICONS/vectorstores"),
   VertexAI: () =>
-    import("./BRAN_ICONS/VertexAI").then((mod) => ({ default: mod.VertexAIIcon })),
+    import("./BRAND_ICONS/VertexAI"),
   WatsonxAI: () =>
-    import("./BRAN_ICONS/IBMWatsonx").then((mod) => ({
-      default: mod.WatsonxAiIcon,
-    })),
+    import("./BRAND_ICONS/IBMWatsonx"),
   Weaviate: () =>
-    import("./BRAN_ICONS/Weaviate").then((mod) => ({ default: mod.WeaviateIcon })),
-  Wikipedia: () =>
-    import("./BRAN_ICONS/Wikipedia/Wikipedia").then((mod) => ({
-      default: mod.default,
-    })),
+    import("./BRAND_ICONS/Weaviate"),
   Windsurf: () =>
-    import("./BRAN_ICONS/Windsurf").then((mod) => ({ default: mod.WindsurfIcon })),
+    import("./BRAND_ICONS/Windsurf"),
   Wolfram: () =>
-    import("./BRAN_ICONS/Wolfram").then((mod) => ({ default: mod.WolframIcon })),
-  xAI: () => import("./BRAN_ICONS/xAI").then((mod) => ({ default: mod.XAIIcon })),
+    import("./BRAND_ICONS/Wolfram"),
+  xAI: () => import("./BRAND_ICONS/xAI"),
   youTube: () =>
-    import("./BRAN_ICONS/Youtube").then((mod) => ({ default: mod.YoutubeIcon })),
+    import("./BRAND_ICONS/Youtube"),
   ZepMemory: () =>
-    import("./BRAN_ICONS/ZepMemory").then((mod) => ({ default: mod.ZepMemoryIcon })),
+    import("./BRAND_ICONS/ZepMemory"),
 };
