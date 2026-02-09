@@ -1,4 +1,5 @@
 import RunnerPanel from '@/SDKs/OrchestratorSDK/ui/runnerPanel'
+import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
 import ShelfSidebar from '@/SDKs/ShelfSDK/ui/ShelfSidebar'
 import WorkflowCanvas from '@/SDKs/WorkbenchSDK/ui/Canvas'
@@ -11,8 +12,20 @@ export const Route = createFileRoute('/workflow/$workflowid')({
         if (!context.auth.isAuthenticated) {
             throw redirect({ to: '/auth' })
         }
+    },
+    loader: async () => {
+        QuerySDK.client.prefetchQuery({
+            queryKey: ["core-blueprints"],
+            queryFn: () => ShelfSDK.actions.loadSection("core"),
+            staleTime: Infinity,
+        })
+        QuerySDK.client.prefetchQuery({
+            queryKey: ["bundle-blueprints"],
+            queryFn: () => ShelfSDK.actions.loadSection("bundle"),
+            staleTime: Infinity
+        })
 
-        ShelfSDK.actions.loadSection("core");
+        return null;
     },
     component: WorkflowLayoutComponent,
 })

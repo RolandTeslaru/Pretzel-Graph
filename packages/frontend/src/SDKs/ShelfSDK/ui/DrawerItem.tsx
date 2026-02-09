@@ -1,8 +1,9 @@
 import React, { memo } from 'react'
 import { ShelfSDK } from '../sdk';
-import { Icon, Tooltip } from '@/vx-ui/foundations';
+import { Tooltip } from '@/vx-ui/foundations';
 import type { Foundations } from '@vx-agent-editor/shared/types';
 import { SystemIcons } from '@/vx-ui/icons';
+import { LazyIcon } from '@/vx-ui/icons/LazyIcon';
 
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
@@ -26,7 +27,7 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
           onDragEnd={onDragEnd}
           {...props}
         >
-          <Icon name={blueprint.icon} className='w-[18px] h-[18px] my-auto ' />
+          <LazyIcon name={blueprint.icon} className='w-[18px] h-[18px] my-auto ' />
           <p className='text-sm my-auto truncate flex-1 min-w-0'>
             {blueprint.displayName}
           </p>
@@ -36,7 +37,7 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
       <Tooltip.Content side="left" className='max-w-[250px] gap-2' >
         <div className='flex flex-row justify-between'>
           <h4 className='font-semibold text-sm'>{blueprint.displayName}</h4>
-          <Icon name={blueprint.icon} className='w-[18px] h-[18px] text-muted-foreground' />
+          <LazyIcon name={blueprint.icon} className='w-[18px] h-[18px] text-muted-foreground' />
         </div>
         {/* <DataViewerWrapper src={blueprint}/> */}
         <p>{blueprint.description}</p>

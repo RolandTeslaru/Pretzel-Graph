@@ -71,4 +71,3 @@ export * from "./separator"
 export * from "./calendar"
 export * from "./form"
 
-export { Icon } from "./Icon"
