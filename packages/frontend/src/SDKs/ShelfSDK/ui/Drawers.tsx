@@ -6,9 +6,18 @@ import { useShallow } from 'zustand/react/shallow';
 import { SystemIcons } from '@/vx-ui/icons';
 import DrawerItem from './DrawerItem';
 import { LazyIcon } from '@/vx-ui/icons/LazyIcon';
+import { QuerySDK } from '@/SDKs/QuerySDK/sdk';
 
 
 export const Drawers = () => {
+
+    const selectedSection = ShelfSDK.useStore(s => s.selectedSection);
+
+    QuerySDK.useQuery(
+        [`${selectedSection}-blueprints`], 
+        () => ShelfSDK.actions.loadSection(selectedSection)
+    )
+
     const filteredDrawers = ShelfSDK.useStore(useShallow(s => {
         if (s.loadedSections.has(s.selectedSection) === false)
             return undefined;
@@ -20,9 +29,6 @@ export const Drawers = () => {
 
         return Object.values(s.filteredDrawers)
     }))
-
-    console.log("filtered Drawers", filteredDrawers)
-
 
     return (
         <div className='flex flex-col gap-1 w-full h-full px-2'>
@@ -86,10 +92,10 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
     return (
         <div>
             <div
-                className='flex flex-row gap-2 h-8 px-1 cursor-pointer hover:bg-primary/40 rounded-lg'
+                className='flex flex-row gap-2 h-8 px-2 cursor-pointer hover:bg-primary/40 rounded-lg'
                 onClick={() => ShelfSDK.actions.drawer.toggle(drawer.id)}
             >
-                <LazyIcon name={drawer.icon} className={`min-w-4 h-4 my-auto ${isOpen ? "text-primary" : ""}`} />
+                <LazyIcon name={drawer.icon} className={`min-w-4 size-4 h-4 my-auto ${isOpen ? "text-primary" : ""}`} />
                 <p className='text-sm font-medium my-auto w-full text-left!'>
                     {drawer.displayName}
                 </p>

@@ -23,6 +23,9 @@ export namespace Foundations {
     ])
     export type HandleVariant = z.infer<typeof HandleVariant>
 
+    
+
+
 
     export namespace Input {
         export const Id = z.string().brand("InputId");
@@ -33,6 +36,7 @@ export namespace Foundations {
             required: z.boolean(),
             reconcile: z.boolean(),
             asTool: z.boolean(),
+            advanced: z.boolean(),
 
             isRuntime: z.boolean().default(false),
 

@@ -10,6 +10,7 @@ export const Blueprint = defineBlueprint({
             id: "api_key",
             displayName: "API Key",
             initialValue: "",
+            advanced: false,
         }),
         InputBuilder.String({
             id: "prompt",
@@ -17,6 +18,7 @@ export const Blueprint = defineBlueprint({
             required: true,
             initialValue: "",
             hasHandle: true,
+            advanced: false,
         }),
         InputBuilder.MultiOption({
             id: "model",
@@ -27,6 +29,7 @@ export const Blueprint = defineBlueprint({
                 "gemini-1.0-pro"
             ],
             initialValue: "gemini-1.5-flash",
+            advanced: false,
         }),
         InputBuilder.Float({
             id: "temperature",
@@ -38,6 +41,7 @@ export const Blueprint = defineBlueprint({
             step: 0.1,
             tooltip: "Controls randomness in the output. Higher values are more creative.",
             hasHandle: false,
+            advanced: false,
         }),
         InputBuilder.Integer({
             id: "maxOutputTokens",
@@ -48,6 +52,7 @@ export const Blueprint = defineBlueprint({
             step: 1,
             tooltip: "Maximum number of tokens to generate.",
             hasHandle: false,
+            advanced: false,
         }),
         InputBuilder.Float({
             id: "topP",
@@ -59,6 +64,7 @@ export const Blueprint = defineBlueprint({
             step: 0.01,
             tooltip: "Nucleus sampling probability.",
             hasHandle: false,
+            advanced: false,
         }),
         InputBuilder.Integer({
             id: "topK",
@@ -69,6 +75,7 @@ export const Blueprint = defineBlueprint({
             step: 1,
             tooltip: "Top-K sampling parameter.",
             hasHandle: false,
+            advanced: false,
         }),
     ],
     outputs: [

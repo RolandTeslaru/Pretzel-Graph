@@ -13,23 +13,16 @@ export namespace Workflow {
 
         export const Schema = z.object({
             id:           Node.Id,
-            blueprintId:  Foundations.Blueprint.Id.default("Google.GenerativeAI" as const as Foundations.Blueprint.Id),
+            blueprintId:  Foundations.Blueprint.Id,
 
-            display_name: z.string(),
+            displayName: z.string(),
 
-            data: z.object({
-                inputs:        z.record(Foundations.Input.Id, Foundations.Input.Schema),
-                outputs:       z.record(Foundations.Output.Id, Foundations.Output.Schema),
+            inputs:  z.array(Foundations.Input.Schema),
+            outputs: z.array(Foundations.Output.Schema),
 
-                ui: z.object({
-                    icon:        z.string().nullable().optional(),
-                    description: z.string().optional(),
-                    isMinimized: z.boolean().default(false),       
-
-                    normalInputsOrder:   z.array(Foundations.Input.Id),
-                    advancedInputsOrder: z.array(Foundations.Input.Id),
-                })
-            })
+            icon:        z.string().nullable().optional(),
+            description: z.string().optional(),
+            isMinimized: z.boolean().default(false),       
         });
     }
     export interface Node extends z.infer<typeof Node.Schema> {}
@@ -105,6 +98,26 @@ export namespace Workflow {
         })
     });
 
+
+    export const INITIAL = {
+        id: "" as Workflow.Id,
+        locked: false,
+        display_name: "",
+        description: "",
+        created_at: new Date(),
+        updated_at: new Date(),
+        data: {
+            nodes: {},
+            edges: {},
+            fieldValues: {},
+            ui: {
+                layout: {},
+                viewport: { x: 0, y: 0, zoom: 1 },
+                icon: null,
+                icon_color: null,
+            }
+        }
+    } as const satisfies z.infer<typeof Schema>
 }
 export interface Workflow extends z.infer<typeof Workflow.Schema> {}
 

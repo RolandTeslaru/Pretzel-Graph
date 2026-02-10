@@ -1,11 +1,11 @@
-import { Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
 import React, { useMemo } from 'react'
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
 import LangchainTypeBadge from '../../../LangchainTypeBadge';
 
 interface Props {
   handleType: 'target' | 'source'
-  field: Workflow.Node.Input | Workflow.Node.Output
+  field: Foundations.Input | Foundations.Output
   nodeId: Workflow.Node.Id
   isDraggedHandleCompatible: boolean
   draggedHandle: WorkbenchSDK.Handle | null

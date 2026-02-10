@@ -25,11 +25,11 @@ export class ShelfSDKImpl extends BaseSDK<ShelfSDK.State> {
             drawers: Shelf.Drawer.ALL_DRAWERS,
             blueprints: {},
             filteredDrawers: {},
-            loadedSections: new Set<ShelfSDK.Section>(),
+            loadedSections: new Set<Shelf.Section>(),
             openedDrawers: new Set<Shelf.Drawer.Id>(),
             searchFilter: {
                 query: null,
-                selectionFilters: new Set<ShelfSDK.Section>(["core"]),
+                selectionFilters: new Set<Shelf.Section>(["core"]),
                 dataTypes: null
             }
         }))
@@ -47,21 +47,18 @@ export const ShelfSDK = SDK.get<ShelfSDKImpl>("Shelf")
 
 
 export namespace ShelfSDK {
-
-    export type Section = "core" | "bundle" | "mcp"
-
     export type State = {
-        sections: Record<Section, Shelf.Drawer.Id[]>
+        sections: Record<Shelf.Section, Shelf.Drawer.Id[]>
         drawers: Record<Shelf.Drawer.Id, Shelf.Drawer>
         blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint>
         filteredDrawers: Record<Shelf.Drawer.Id, Shelf.Drawer>
-        selectedSection: Section
+        selectedSection: Shelf.Section
         openedDrawers: Set<Shelf.Drawer.Id>
-        loadedSections: Set<Section>
+        loadedSections: Set<Shelf.Section>
         searchFilter: {
             query: string | null,
-            selectionFilters: Set<Section>
-            dataTypes: Set<string> | null
+            selectionFilters: Set<Shelf.Section>
+            dataTypes: Set<Foundations.HandleVariant> | null
         }
     }
 

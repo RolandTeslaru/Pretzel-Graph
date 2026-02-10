@@ -1,14 +1,15 @@
 import React, { memo, useMemo } from 'react'
 import { WorkbenchSDK } from '../../../../sdk'
-import { Workflow } from '@vx-agent-editor/shared/types';
+import { Workflow, Foundations } from '@vx-agent-editor/shared/types';
 import { InputLabel, INPUT_FIELD_RENDERER_MAP } from '../../../InputRenderer'
 import NodeHandle from '../Handle'
 
 const InputComponent: React.FC<{
-    input: Workflow.Node.Input
+    input: Foundations.Input
     nodeId: Workflow.Node.Id
     isWorkflowLocked: boolean
 }> = memo(({ input, nodeId, isWorkflowLocked }) => {
+    // @ts-ignore
     const Renderer = INPUT_FIELD_RENDERER_MAP[input.variant] ?? INPUT_FIELD_RENDERER_MAP["other"] as React.ElementType;
 
     const hasEdge = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.doesInputhaveEdge(s, nodeId, input.id))
@@ -19,15 +20,16 @@ const InputComponent: React.FC<{
         if (!registry)
             return []
 
-        const gatheredInputs: Workflow.Node.Input.String[] = []
+        const node = WorkbenchSDK.state.workflow.data.nodes[nodeId];
+        const gatheredInputs: Foundations.Input.String[] = []
         Object.entries(registry).forEach(([_, runtimeInputSchema]) => {
-            const runtimeInput = WorkbenchSDK.state.workflow.data.nodes[nodeId].data.inputs[runtimeInputSchema.id] as Workflow.Node.Input.String;
-            gatheredInputs.push(
-                runtimeInput
-            )
+            const runtimeInput = node.inputs.find(i => i.id === (runtimeInputSchema as { id: Foundations.Input.Id }).id) as Foundations.Input.String | undefined;
+            if (runtimeInput) {
+                gatheredInputs.push(runtimeInput)
+            }
         })
         return gatheredInputs
-    }, [input.runtimeSubInputsRegistry])
+    }, [input.runtimeSubInputsRegistry, nodeId])
 
     if (!input)
         return;
@@ -62,22 +64,21 @@ interface Props {
 }
 
 const NodeInputs: React.FC<Props> = memo(({ node, isWorkflowLocked }) => {
+    // Filter to non-advanced inputs that have handles (for display on the canvas node)
+    const displayInputs = node.inputs.filter(input =>
+        !input.advanced && input.handleVariants.length > 0
+    );
+
     return (
         <div className="flex flex-col relative py-1 gap-2">
-            {node.data.ui.normalInputsOrder
-                .map((inputId) => {
-                    const input = node.data.inputs[inputId]
-                    if (!input || input.handleVariants.length === 0) return null;
-                    return (
-                        <InputComponent
-                            key={input.id}
-                            input={input}
-                            nodeId={node.id}
-                            isWorkflowLocked={isWorkflowLocked}
-                        />
-                    )
-                }
-                )}
+            {displayInputs.map(input => (
+                <InputComponent
+                    key={input.id}
+                    input={input}
+                    nodeId={node.id}
+                    isWorkflowLocked={isWorkflowLocked}
+                />
+            ))}
         </div>
     )
 })

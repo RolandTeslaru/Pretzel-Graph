@@ -1,165 +1,30 @@
 {
-  "version": "1770634236874",
-  "generatedAt": "2026-02-09T10:50:36.874Z",
-  "drawers": {
-    "input_output": {
-      "id": "input_output",
-      "displayName": "Input & Output",
-      "icon": "Cable",
-      "blueprintIds": [
-        "Core.Chat.Input",
-        "Core.Text.Input"
-      ]
-    },
-    "google": {
-      "id": "google",
-      "displayName": "Google",
-      "icon": "Google",
-      "blueprintIds": [
-        "Google.GenerativeAI"
-      ]
-    },
-    "openai": {
-      "id": "openai",
-      "displayName": "OpenAI",
-      "icon": "OpenAI",
-      "blueprintIds": [
-        "OpenAI.Chat"
-      ]
-    }
-  },
+  "version": "1770724221575",
+  "generatedAt": "2026-02-10T11:50:21.575Z",
+  "drawers": {},
   "blueprints": {
     "Core.Chat.Input": {
       "id": "Core.Chat.Input",
-      "drawerId": "input_output",
       "displayName": "Chat Input",
-      "description": "This node is a chat input",
       "icon": "MessagesSquare",
       "inputs": [
         {
-          "id": "api_key",
+          "id": "text",
           "required": true,
           "reconcile": false,
           "asTool": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "API Key"
-          },
-          "variant": "secret",
-          "initialValue": ""
-        },
-        {
-          "id": "prompt",
-          "required": true,
-          "reconcile": false,
-          "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [
             "Text"
           ],
           "uiData": {
-            "displayName": "Prompt"
+            "displayName": "Text"
           },
           "variant": "string",
           "initialValue": "",
           "data": {
             "multiline": false
-          }
-        },
-        {
-          "id": "model",
-          "required": true,
-          "reconcile": false,
-          "asTool": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Model"
-          },
-          "variant": "multiOption",
-          "initialValue": "gemini-1.5-flash",
-          "data": {
-            "options": [
-              "gemini-1.5-flash",
-              "gemini-1.5-pro",
-              "gemini-1.0-pro"
-            ],
-            "variant": "select"
-          }
-        },
-        {
-          "id": "temperature",
-          "required": false,
-          "reconcile": false,
-          "asTool": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Temperature",
-            "tooltip": "Controls randomness in the output. Higher values are more creative."
-          },
-          "variant": "float",
-          "initialValue": 0.7,
-          "data": {
-            "min": 0,
-            "max": 2,
-            "step": 0.1
-          }
-        },
-        {
-          "id": "maxOutputTokens",
-          "required": false,
-          "reconcile": false,
-          "asTool": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Max Output Tokens",
-            "tooltip": "Maximum number of tokens to generate."
-          },
-          "variant": "integer",
-          "initialValue": 2048,
-          "data": {
-            "min": 1,
-            "step": 1
-          }
-        },
-        {
-          "id": "topP",
-          "required": false,
-          "reconcile": false,
-          "asTool": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Top P",
-            "tooltip": "Nucleus sampling probability."
-          },
-          "variant": "float",
-          "initialValue": 0.95,
-          "data": {
-            "min": 0,
-            "max": 1,
-            "step": 0.01
-          }
-        },
-        {
-          "id": "topK",
-          "required": false,
-          "reconcile": false,
-          "asTool": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Top K",
-            "tooltip": "Top-K sampling parameter."
-          },
-          "variant": "integer",
-          "initialValue": 64,
-          "data": {
-            "min": 1,
-            "step": 1
           }
         }
       ],
@@ -174,20 +39,20 @@
             "displayName": "Response"
           }
         }
-      ]
+      ],
+      "description": "This node is a chat input"
     },
     "Core.Text.Input": {
       "id": "Core.Text.Input",
-      "drawerId": "input_output",
       "displayName": "Text Input",
-      "description": "This node is a Text input",
-      "icon": "type",
+      "icon": "Type",
       "inputs": [
         {
           "id": "text",
           "required": true,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [
             "Text"
@@ -213,13 +78,12 @@
             "displayName": "Output"
           }
         }
-      ]
+      ],
+      "description": "This node is a Text input"
     },
     "Google.GenerativeAI": {
       "id": "Google.GenerativeAI",
-      "drawerId": "google",
       "displayName": "Google Generative AI Node",
-      "description": "This node talks to google generative ai api",
       "icon": "Google",
       "inputs": [
         {
@@ -227,6 +91,7 @@
           "required": true,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -240,6 +105,7 @@
           "required": true,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [
             "Text"
@@ -258,6 +124,7 @@
           "required": true,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -279,6 +146,7 @@
           "required": false,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -298,6 +166,7 @@
           "required": false,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -316,6 +185,7 @@
           "required": false,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -335,6 +205,7 @@
           "required": false,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -360,13 +231,12 @@
             "displayName": "Response"
           }
         }
-      ]
+      ],
+      "description": "This node talks to google generative ai api"
     },
     "OpenAI.Chat": {
       "id": "OpenAI.Chat",
-      "drawerId": "openai",
       "displayName": "OpenAI Chat",
-      "description": "This node talks to OpenAI's GPT chat models via the Chat Completions API",
       "icon": "OpenAI",
       "inputs": [
         {
@@ -374,6 +244,7 @@
           "required": true,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -387,6 +258,7 @@
           "required": true,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [
             "Text"
@@ -405,6 +277,7 @@
           "required": true,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -431,6 +304,7 @@
           "required": false,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -450,6 +324,7 @@
           "required": false,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -468,6 +343,7 @@
           "required": false,
           "reconcile": false,
           "asTool": false,
+          "advanced": false,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -487,6 +363,7 @@
           "required": false,
           "reconcile": false,
           "asTool": false,
+          "advanced": true,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -506,6 +383,7 @@
           "required": false,
           "reconcile": false,
           "asTool": false,
+          "advanced": true,
           "isRuntime": false,
           "handleVariants": [],
           "uiData": {
@@ -532,7 +410,8 @@
             "displayName": "Response"
           }
         }
-      ]
+      ],
+      "description": "This node talks to OpenAI's GPT chat models via the Chat Completions API"
     }
   }
 }

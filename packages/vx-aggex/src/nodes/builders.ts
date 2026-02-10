@@ -30,6 +30,7 @@ export namespace InputBuilder {
         hasHandle?: boolean;
         tooltip?: string;
         placeholder?: string;
+        advanced: boolean;
         required?: boolean;
         reconcile?: boolean;
     }
@@ -43,6 +44,7 @@ export namespace InputBuilder {
             required: props.required ?? true,
             reconcile: props.reconcile ?? false,
             asTool: false,
+            advanced: props.advanced,
             isRuntime: false,
             handleVariants: props.hasHandle ? [handleVariant] : [],
             uiData: {

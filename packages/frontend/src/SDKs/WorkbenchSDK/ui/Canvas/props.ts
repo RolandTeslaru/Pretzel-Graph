@@ -7,7 +7,7 @@ import WorkbenchNote from './Note'
 import { nodeColorsName } from '@/utils/styleUtils'
 import { isConnectionValid } from '../../utils'
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
-import { Workflow, Shelf } from "@vx-agent-editor/shared/types"
+import { Workflow, Shelf, Foundations } from "@vx-agent-editor/shared/types"
 
 type NodeDriver = WorkbenchSDK.NodeDriver
 type EdgeDriver = WorkbenchSDK.EdgeDriver
@@ -73,14 +73,14 @@ export const createCanvasCallbacks = (
             if (WorkbenchSDK.isLocked)
                 return;
 
-            const blueprintId = event.dataTransfer.getData("blueprintId");
+            const blueprintId = event.dataTransfer.getData("blueprintId") as Foundations.Blueprint.Id
             if (!blueprintId) return
 
             const grabbedElements = document.getElementsByClassName("cursor-grabbing");
             if (grabbedElements.length > 0)
                 document.body.removeChild(grabbedElements[0]);
 
-            const blueprint = ShelfSDK.state.blueprints[blueprintId as Shelf.Blueprint.Id];
+            const blueprint = ShelfSDK.state.blueprints[blueprintId];
             if (!blueprint) return;
 
             WorkbenchSDK.actions.node.create(
@@ -215,19 +215,19 @@ export const createCanvasCallbacks = (
             if (nodeId === null || handleId === null || handleType === null)
                 return
 
-            let field: Workflow.Node.Input | Workflow.Node.Output | null;
+            let field: Foundations.Input | Foundations.Output | null;
 
             if (handleType === "source")
                 field = WorkbenchSDK.selectors.getOutput(
                     WorkbenchSDK.state,
                     nodeId as Workflow.Node.Id,
-                    handleId as Workflow.Node.Output.Id
+                    handleId as Foundations.Output.Id
                 )
             else
                 field = WorkbenchSDK.selectors.getInput(
                     WorkbenchSDK.state,
                     nodeId as Workflow.Node.Id,
-                    handleId as Workflow.Node.Input.Id
+                    handleId as Foundations.Input.Id
                 )
 
             if (field === null)
@@ -269,9 +269,11 @@ export const createCanvasCallbacks = (
                 return;
             }
 
-            const sourceNode = WorkbenchSDK.state.workflow.data.nodes[edge.source] as Workflow.Node;
-            const outputField = sourceNode.data.outputs[edge.sourceHandle as Workflow.Node.Output.Id]
 
+            const sourceNode = WorkbenchSDK.state.workflow.data.nodes[edge.source as Workflow.Node.Id];
+            const outputField = sourceNode.outputs.find(o => o.id === edge.sourceHandle as Foundations.Output.Id)
+
+            if (!outputField) return;
             const selectedAccentColor = nodeColorsName[outputField.handleVariants[0]] ?? "cyan";
             WorkbenchSDK.canvasWrapper.current?.style.setProperty("--selected", `var(--datatype-${selectedAccentColor})`);
         },

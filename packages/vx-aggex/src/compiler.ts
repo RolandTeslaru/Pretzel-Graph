@@ -14,7 +14,7 @@ export class WorkflowCompiler {
         edges: Workflow["data"]["edges"],
         emit: Runtime.Emitter
     ) {
-        console.log(`Executing Node: ${activeNode.display_name} (${activeNode.id})`);
+        console.log(`Executing Node: ${activeNode.displayName} (${activeNode.id})`);
         
         emit(b => b.nodeStarted(activeNode.id))
 

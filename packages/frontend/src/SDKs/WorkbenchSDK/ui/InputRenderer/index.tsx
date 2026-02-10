@@ -12,7 +12,6 @@ import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK'
 import VaultPanel from '@/SDKs/VaultSDK/ui/VaultPanel'
 import LangchainTypeBadge from '../LangchainTypeBadge'
 import { HighlightedTextarea } from './HighlightedTextarea'
-import { SystemIcons } from '@/vx-ui/icons'
 
 export const InputLabel = ({ input, showTypeBadges = true }: { input: Foundations.Input, showTypeBadges?: boolean }) => {
   return (

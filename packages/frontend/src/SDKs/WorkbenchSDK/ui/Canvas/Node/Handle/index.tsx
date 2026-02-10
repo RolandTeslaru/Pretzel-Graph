@@ -74,6 +74,7 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, field, nodeId }) 
 
     return (
         <Tooltip.Root>
+            <Tooltip.Trigger asChild>
                 <Handle
                     type={type}
                     position={position}
@@ -99,7 +100,7 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, field, nodeId }) 
                         } as React.CSSProperties}
                     />
                 </Handle>
-            <Tooltip.Trigger asChild>
+
             </Tooltip.Trigger>
             <Tooltip.Content side={type === "target" ? "left" : "right"} sideOffset={3}>
                 <HandleTooltipContent
