@@ -20,10 +20,10 @@ export function _createShelfReducers_(sdk: ShelfSDKImpl) {
         }
     } satisfies DrawerReducers
 
-    const checkIfDefintionHasHandles = (s: State, definition: Foundations.NodeDefinition, dataTypes: Set<string>) => {
-        return Object.values(definition.outputs).some(output => {
+    const checkIfDefintionHasHandles = (s: State, blueprint: Foundations.Blueprint, dataTypes: Set<Foundations.HandleVariant>) => {
+        return blueprint.outputs.some(output => {
             return Array.from(dataTypes).some(
-                (type) => output.handleVariants.includes(type as Foundations.HandleVariant)
+                (type) => output.handleVariants.includes(type)
             )
         })
     }
@@ -42,20 +42,21 @@ export function _createShelfReducers_(sdk: ShelfSDKImpl) {
         const filteredDrawers: typeof s.filteredDrawers = {}
 
         Object.entries(s.drawers).forEach(([_drawerId, drawer]) => {
-            const definitionIds = drawer.definitionIds?.filter(definitionId => {
-                const definition = s.nodeDefinitions[definitionId]
-                if (!definition) return false
+            const blueprintIds = drawer.blueprintIds.filter(blueprintId => {
+                const blueprint = s.blueprints[blueprintId]
+                if (!blueprint) 
+                    return false
 
-                const hasDisplayNameCheck = searchQuery ? definition.displayName.toLowerCase().includes(searchQuery.toLowerCase()) : true
+                const hasDisplayNameCheck = searchQuery ? blueprint.displayName.toLowerCase().includes(searchQuery.toLowerCase()) : true
 
-                const hasLangChainDataType = dataTypes && dataTypes.size > 0 ? checkIfDefintionHasHandles(s, definition, dataTypes) : true
-                return hasDisplayNameCheck && hasLangChainDataType
+                const hasHandleVariant = dataTypes && dataTypes.size > 0 ? checkIfDefintionHasHandles(s, blueprint, dataTypes) : true
+                return hasDisplayNameCheck && hasHandleVariant
             })
 
-            if (definitionIds && definitionIds.length > 0) {
+            if (blueprintIds && blueprintIds.length > 0) {
                 filteredDrawers[_drawerId as Shelf.Drawer.Id] = {
                     ...drawer,
-                    definitionIds
+                    blueprintIds
                 }
                 s.openedDrawers.add(_drawerId as Shelf.Drawer.Id)
             }
@@ -106,7 +107,7 @@ export type _ShelfReducers = {
     setSection: (state: State, section: ShelfSDK.Section) => void,
     searchFilter: {
         setQuery: (state: State, query: string) => void;
-        setDataTypes: (state: State, dataTypes: Set<string> | null) => void
-        toggleDataType: (state: State, dataType: string) => void
+        setDataTypes: (state: State, dataTypes: Set<Foundations.HandleVariant> | null) => void
+        toggleDataType: (state: State, dataType: Foundations.HandleVariant) => void
     }
 }

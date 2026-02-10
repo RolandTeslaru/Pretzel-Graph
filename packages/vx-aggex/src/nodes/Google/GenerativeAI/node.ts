@@ -30,11 +30,11 @@ export class Node extends Runtime.Node<typeof Blueprint> {
             topK,
         });
 
-        const response = await llm.invoke([
+        const responseMessage = await llm.invoke([
             new HumanMessage(prompt)
         ]);
 
-        return { response: response }
+        return { response: responseMessage }
     }
 
 

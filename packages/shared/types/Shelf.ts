@@ -37,6 +37,9 @@ export namespace Shelf {
     }
     export type Index = z.infer<typeof Index.Schema>
 
+    export const Section = z.enum(["core", "mcp", "bundle"])
+    export type Section = z.infer<typeof Section>
+
     export namespace API {
 
         export namespace Blueprint {
@@ -66,7 +69,7 @@ export namespace Shelf {
 
             export namespace GetAllInSection{
                 export const Request = z.object({
-                    section: z.literal(["core", "bundle"])
+                    section: Section
                 })
                 export const Response = z.object({
                     blueprints: z.record(Foundations.Blueprint.Id, Foundations.Blueprint.Schema)

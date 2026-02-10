@@ -1,5 +1,5 @@
 import { Button, DropdownMenu, ScrollArea, Separator } from '@/vx-ui/foundations'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, memo } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
 import { Accordion } from '@/vx-ui/foundations/accordion';
@@ -22,6 +22,7 @@ import { _includes } from 'zod/v4/core';
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk';
 import { AnimatePresence, motion } from 'motion/react';
 import { SystemIcons } from '@/vx-ui/icons';
+import { LazyIcon } from '@/vx-ui/icons/LazyIcon';
 
 
 const InputSidebar = () => {
@@ -47,14 +48,26 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
 
 
     const inputArrs = useMemo(() => {
+        const connectedInputs: Foundations.Input[] = [];
+        const normalInputs: Foundations.Input[] = [];
+        const advancedInputs: Foundations.Input[] = [];
+
+        node.inputs.forEach(input => {
+            if (nodeInHandles[input.id]) {
+                connectedInputs.push(input);
+            } else if (input.advanced) {
+                advancedInputs.push(input);
+            } else {
+                normalInputs.push(input);
+            }
+        });
+
         return {
-            connectedInputsOrder: node.data.ui.normalInputsOrder
-                .filter(_inputId => !!nodeInHandles[_inputId]),
-            normalInputsOrder: node.data.ui.normalInputsOrder
-                .filter(_inputId => !!!nodeInHandles[_inputId]),
-            advancedInputsOrder: node.data.ui.advancedInputsOrder
-        }
-    }, [nodeInHandles, node.data.ui.normalInputsOrder, node.data.ui.advancedInputsOrder])
+            connectedInputs,
+            normalInputs,
+            advancedInputs
+        };
+    }, [nodeInHandles, node.inputs]);
 
     const [activeId, setActiveId] = useState<Foundations.Input.Id | null>(null);
 
@@ -93,13 +106,8 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
 
     const activeItem = useMemo(() => {
         if (!activeId) return null;
-        for (const arr of Object.values(inputArrs)) {
-            if (arr.indexOf(activeId) !== -1)
-                return node.data.inputs[activeId];
-        }
-
-        return null;
-    }, [activeId, inputArrs]);
+        return node.inputs.find(i => i.id === activeId) ?? null;
+    }, [activeId, node.inputs]);
 
 
 
@@ -117,23 +125,20 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className={`
                 overflow-hidden
-                fixed flex flex-col gap-2 z-20 right-5 top-24 bottom-24 w-87.5 bg-card/80 backdrop-blur-lg 
+                fixed flex flex-col z-20 right-5 top-24 bottom-24 w-87.5 bg-card/80 backdrop-blur-lg 
                 border border-border pt-2 rounded-2xl shadow-lg shadow-black/30
             `}>
-                <div className='flex flex-row gap-2 px-4 relative'>
-                    {/* <NodeIcon className='text-primary my-auto h-5 w-5' dataType={node.data.ui.icon as string} /> */}
+                <div className='flex flex-row gap-2 mb-2 px-4 relative'>
+                    <LazyIcon className='text-primary my-auto h-5 w-5' name={node.icon as string} />
                     <h4 className='text-primary font-mono font-semibold text-xl'>
-                        {node.display_name}
+                        {node.displayName}
                     </h4>
-                    <div className='absolute top-1/2 -translate-y-1/2 right-2'>
-                        <OptionsDropdownMenu nodeId={node.id} />
-                    </div>
                 </div>
-                <Separator />
-                <p className='px-4 text-muted-foreground text-xs'>
-                    {node.data.ui.description}
-                </p>
-                <Separator />
+                <div className='border-t border-b border-border py-2 px-4'>
+                    <p className='text-muted-foreground text-xs'>
+                        {node.description}
+                    </p>
+                </div>
                 <ScrollArea.Root>
                     <Accordion.Root
                         type="multiple"
@@ -144,20 +149,11 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                                 <h4 className='text-md font-medium'>Inputs</h4>
                             </Accordion.Trigger>
                             <Accordion.Content className='flex flex-col bg-background/50'>
-                                <SortableContext
+                                <NodeInputsList
                                     id="normal"
-                                    items={inputArrs.normalInputsOrder}
-                                    strategy={verticalListSortingStrategy}
-                                >
-                                    {inputArrs.normalInputsOrder.map(inputId =>
-                                        <NodeInputField
-                                            key={inputId}
-                                            nodeId={node.id}
-                                            input={node.data.inputs[inputId] as Foundations.Input}
-                                            isConnected={false}
-                                        />
-                                    )}
-                                </SortableContext>
+                                    inputs={inputArrs.normalInputs}
+                                    nodeId={node.id}
+                                />
                             </Accordion.Content>
                         </Accordion.Item>
                         <Accordion.Item value='advanced'>
@@ -165,21 +161,11 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                                 <h4 className='text-md font-medium'>Advanced</h4>
                             </Accordion.Trigger>
                             <Accordion.Content className='flex flex-col gap-4 bg-background/50'>
-                                <SortableContext
+                                <NodeInputsList
                                     id="advanced"
-                                    items={inputArrs.advancedInputsOrder}
-                                    strategy={verticalListSortingStrategy}
-
-                                >
-                                    {inputArrs.advancedInputsOrder.map(inputId => (
-                                        <NodeInputField
-                                            key={inputId}
-                                            nodeId={node.id}
-                                            input={node.data.inputs[inputId] as Foundations.Input}
-                                            isConnected={false}
-                                        />
-                                    ))}
-                                </SortableContext>
+                                    inputs={inputArrs.advancedInputs}
+                                    nodeId={node.id}
+                                />
                             </Accordion.Content>
                         </Accordion.Item>
                         <Accordion.Item value='connected'>
@@ -187,27 +173,19 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                                 <h4 className='text-md font-medium'>Connected</h4>
                             </Accordion.Trigger>
                             <Accordion.Content className='flex flex-col gap-4 bg-background/50'>
-                                <SortableContext
+                                <NodeInputsList
                                     id="connected"
-                                    items={inputArrs.connectedInputsOrder}
-                                    strategy={verticalListSortingStrategy}
-                                >
-                                    {inputArrs.connectedInputsOrder.map((inputId, index) => (
-                                        <NodeInputField
-                                            key={inputId}
-                                            nodeId={node.id}
-                                            input={node.data.inputs[inputId] as Foundations.Input}
-                                            isConnected={true}
-                                        />
-                                    ))}
-                                </SortableContext>
+                                    inputs={inputArrs.connectedInputs}
+                                    nodeId={node.id}
+                                    isConnected={true}
+                                />
                             </Accordion.Content>
                         </Accordion.Item>
                         <Accordion.Item value='json'>
                             <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
                                 <h4 className='text-md font-medium'>JSON</h4>
                             </Accordion.Trigger>
-                     
+
                         </Accordion.Item>
                     </Accordion.Root>
                 </ScrollArea.Root>
@@ -221,27 +199,33 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
     )
 }
 
-const OptionsDropdownMenu = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
-    return (
-        <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-                <Button variant="secondary" size={"icon-xs"} asChild>
-                    <SystemIcons.Menu />
-                </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-                <DropdownMenu.Item className='gap-3'
-                    onClick={() => {
-                        const blueprint = ShelfSDK.state.blueprints[nodeId];
-                        if (!blueprint) return;
+const NodeInputsList = memo(({
+    id,
+    inputs,
+    nodeId,
+    isConnected = false
+}: {
+    id: string,
+    inputs: Foundations.Input[],
+    nodeId: Workflow.Node.Id,
+    isConnected?: boolean
+}) => {
+    const items = useMemo(() => inputs.map(i => i.id), [inputs]);
 
-                        WorkbenchSDK.actions.input.resetOrder(nodeId, blueprint)
-                    }}
-                >
-                    <SystemIcons.RefreshCcw />
-                    Reset Order
-                </DropdownMenu.Item>
-            </DropdownMenu.Content>
-        </DropdownMenu.Root>
+    return (
+        <SortableContext
+            id={id}
+            items={items}
+            strategy={verticalListSortingStrategy}
+        >
+            {inputs.map(input => (
+                <NodeInputField
+                    key={input.id}
+                    nodeId={nodeId}
+                    input={input}
+                    isConnected={isConnected}
+                />
+            ))}
+        </SortableContext>
     )
-}
+})

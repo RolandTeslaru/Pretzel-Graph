@@ -33,8 +33,8 @@ export class AggexWorkerImpl {
         const { workflow, jobId } = queueItem;
 
         const eventBuilder = new EventBuilder(
-            jobId, 
-            workflow.id, 
+            jobId,
+            workflow.id,
             `job:${jobId}:events` as Realtime.Topic.Id
         )
 
@@ -48,7 +48,10 @@ export class AggexWorkerImpl {
 
 
         for await (const update of this.engine.stream(compiledGraph, {})) {
-            emit(builder => builder.update(update))
+            emit(builder => builder.update({
+                ...update,
+                messages: update.messages as any
+            }))
         }
 
         emit(builder => builder.completed(""))

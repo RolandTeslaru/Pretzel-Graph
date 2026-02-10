@@ -1,6 +1,4 @@
-import React from 'react'
-import { ConnectionLineComponentProps } from '@xyflow/react'
-import { WorkbenchSDK } from '../../../sdk';
+import { type ConnectionLineComponentProps } from '@xyflow/react'
 
 const NodeConnectionLine = ({
     fromX,

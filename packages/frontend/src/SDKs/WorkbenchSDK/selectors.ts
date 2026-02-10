@@ -1,4 +1,4 @@
-import { Workflow } from '@vx-agent-editor/shared/types';
+import { Workflow, Foundations } from '@vx-agent-editor/shared/types';
 import type { WorkbenchSDK } from './sdk';
 
 export function _createWorkbenchSelectors_() {
@@ -31,7 +31,7 @@ export function _createWorkbenchSelectors_() {
             const node = s.workflow.data.nodes[nodeId]
             if (!node) return null;
 
-            const input = node.data.inputs[inputId]
+            const input = node.inputs.find(i => i.id === inputId);
             if (!input) return null;
 
             return input;
@@ -40,7 +40,7 @@ export function _createWorkbenchSelectors_() {
             const node = s.workflow.data.nodes[nodeId]
             if (!node) return null;
 
-            const output = node.data.outputs[outputId]
+            const output = node.outputs.find(o => o.id === outputId);
             if (!output) return null;
 
             return output;
@@ -53,7 +53,7 @@ export function _createWorkbenchSelectors_() {
         },
         doesInputhaveEdge: (s, nodeId, inputId) => {
             const edge = s.cache.inputHandlesMap[nodeId][inputId];
-            if(edge)
+            if (edge)
                 return true
 
             return false;
@@ -75,12 +75,12 @@ export type _WorkBenchSDKSelectors = {
     ensureInNodesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<NodeId, EdgeId>
     ensureOutNodesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<NodeId, EdgeId>
 
-    getInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Workflow.Node.Input.Id) => Workflow.Node.Input | null
-    getOutput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Workflow.Node.Output.Id) => Workflow.Node.Output | null
+    getInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => Foundations.Input | null
+    getOutput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Output.Id) => Foundations.Output | null
 
-    ensureInHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Workflow.Node.Input.Id) => Workflow.Edge.Id
-    ensureOutHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Workflow.Node.Output.Id) => Workflow.Edge.Id
+    ensureInHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => Workflow.Edge.Id
+    ensureOutHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Output.Id) => Workflow.Edge.Id
 
-    doesInputhaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Workflow.Node.Input.Id) => boolean
-    doesOutputHaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Workflow.Node.Output.Id) => boolean
+    doesInputhaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => boolean
+    doesOutputHaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Output.Id) => boolean
 }

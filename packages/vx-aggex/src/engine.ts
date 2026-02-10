@@ -1,6 +1,8 @@
 import { WorkflowCompiler } from "./compiler";
 import { Workflow } from "@vx-agent-editor/shared/types/Workflow"; // Placeholder
 import { Runtime } from "./runtime";
+import { cloneDeep } from "lodash";
+import { Orchestrator } from "@vx-agent-editor/shared/types";
 
 export class AggexEngine {
     private compiler = new WorkflowCompiler();
@@ -13,11 +15,8 @@ export class AggexEngine {
     public async *stream(
         compiledGraph: Runtime.CompiledGraph,
         initialInputs: Record<string, any>
-    ): AsyncIterable<typeof Runtime.State.Update> {
-        const state = {
-            ...Runtime.State.INITIAL,
-            // Pre-seed inputs if necessary
-        };
+    ): AsyncIterable<Runtime.State.Update> {
+        const state = cloneDeep(Orchestrator.RuntimeState.INITIAL)
 
         for await (const update of await compiledGraph.stream(state)){
             yield update
@@ -26,9 +25,7 @@ export class AggexEngine {
 
 
     public async run(initialInputs: Record<string, any>) {
-        const state = {
-            ...Runtime.State.INITIAL,
-        };
+        const state = cloneDeep(Orchestrator.RuntimeState.INITIAL)
         // return await this.compiledGraph.invoke(state);
     }
 }

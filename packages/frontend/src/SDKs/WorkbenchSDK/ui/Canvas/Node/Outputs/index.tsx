@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react'
-import { Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
 import NodeHandle from '../Handle'
 
 interface NodeOutputProps {
   node: Workflow.Node
   isWorkflowLocked: boolean
-  output: Workflow.Node.Output
+  output: Foundations.Output
 }
 
 const NodeOutput: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output }) => {
@@ -32,8 +32,8 @@ interface Props {
 
 const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked }) => {
   const outputs = useMemo(() => {
-    return Object.values(node.data.outputs) as Workflow.Node.Output[]
-  }, [node.data.outputs])
+    return Object.values(node.outputs) as Foundations.Output[]
+  }, [node.outputs])
 
   const selectedOutput = outputs[0]
 

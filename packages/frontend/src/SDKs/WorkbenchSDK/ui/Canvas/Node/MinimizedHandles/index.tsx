@@ -11,31 +11,33 @@ interface Props {
 const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, children }) => {
 
     const inputs = useMemo(() => {
-        const inputs: Foundations.Input[] = [];
-        node.data.ui.normalInputsOrder.forEach(inputId => {
-            const input = node.data.inputs[inputId]
-            if (input.handleVariants.length === 0)
+        const result: Foundations.Input[] = [];
+        // Only include non-advanced inputs with handles
+        node.inputs.forEach(input => {
+            if (input.advanced || input.handleVariants.length === 0)
                 return;
-            inputs.push(input)
+            result.push(input)
             if (!input.runtimeSubInputsRegistry)
                 return;
             Object.entries(input.runtimeSubInputsRegistry).forEach(([_, { id: runtimeInputId }]) => {
-                const runtimeInput = node.data.inputs[runtimeInputId]
-                inputs.push(runtimeInput)
+                const runtimeInput = node.inputs.find(i => i.id === runtimeInputId)
+                if (runtimeInput) {
+                    result.push(runtimeInput)
+                }
             })
         })
-        return inputs
-    }, [node.data.inputs, node.data.ui.normalInputsOrder])
+        return result
+    }, [node.inputs])
 
     const outputs = useMemo(() => {
-        const outputs: Foundations.Output[] = [];
-        Object.entries(node.data.outputs).forEach(([_, output]) => {
+        const result: Foundations.Output[] = [];
+        node.outputs.forEach(output => {
             if (output.handleVariants.length === 0)
                 return
-            outputs.push(output)
+            result.push(output)
         })
-        return outputs
-    }, [node.data.outputs])
+        return result
+    }, [node.outputs])
 
     return (
         <div className='flex flex-row w-full'>

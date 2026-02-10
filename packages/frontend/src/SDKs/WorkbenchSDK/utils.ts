@@ -127,8 +127,8 @@ function areHandlesDataTypesCompatible(
   targetNode: Workflow.Node,
   targetHandleId: Foundations.Input.Id
 ) {
-  const sourceHandle = sourceNode.data.outputs[sourceHandleId];
-  const targetHandle = targetNode.data.inputs[targetHandleId];
+  const sourceHandle = sourceNode.outputs.find(o => o.id === sourceHandleId);
+  const targetHandle = targetNode.inputs.find(i => i.id === targetHandleId);
 
   if (!sourceHandle || !targetHandle)
     return false

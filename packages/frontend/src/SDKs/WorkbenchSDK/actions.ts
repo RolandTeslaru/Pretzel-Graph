@@ -2,7 +2,7 @@ import { WorkbenchSDKImpl, WorkbenchSDK } from './sdk';
 import type { DropFirstArg } from '../types';
 import { WorkflowAPI } from './api';
 import { debounce } from '../../decorators/debounce';
-import { NotificationSDK } from '@/vx-ui/SDKs/NotificationSDK';
+import { toast } from 'sonner';
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
@@ -18,7 +18,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         try {
             await WorkflowAPI.Commit.execute({ workflow })
         } catch (error) {
-            NotificationSDK.actions.error("Could not save to cloud")
+            toast.error("Could not save to cloud")
         }
         sdk.actions.setDirty(false);
     }, 1000)
@@ -39,7 +39,6 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         input: {
             setValue:   (...props) => { setState(s => { reducers.input.setValue(s, ...props) }); commit() },
             changeOrder:(...props) => { setState(s => { reducers.input.changeOrder(s, ...props) }); commit() },
-            resetOrder: (...props) => { setState(s => { reducers.input.resetOrder(s, ...props) }); commit() },
         },
         runtime: {
             input: {
@@ -107,7 +106,6 @@ export type _WorkbenchSDKActions = {
     input: {
         setValue: DropFirstArg<WorkbenchSDK.Reducers['input']['setValue']>;
         changeOrder: DropFirstArg<WorkbenchSDK.Reducers['input']['changeOrder']>;
-        resetOrder: DropFirstArg<WorkbenchSDK.Reducers["input"]["resetOrder"]>
     },
     edge: {
         add: DropFirstArg<WorkbenchSDK.Reducers['edge']['add']>;

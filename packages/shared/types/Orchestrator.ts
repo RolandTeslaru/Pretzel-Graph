@@ -2,47 +2,87 @@ import z from "zod"
 import { Workflow } from "./Workflow"
 import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
+import { AxiosInstance } from "axios"
 
 export namespace Orchestrator {
-
     export namespace Job {
-        export const Id = z.string().brand("JobId")
-        export type Id = z.infer<typeof Id>
+        export const Id     = z.string().brand("JobId")
+        export type Id      = z.infer<typeof Id>
 
         export const Status = z.enum(["pending", "running", "paused", "completed", "failed", "terminated"])
-        export type Status = z.infer<typeof Status>
+        export type Status  = z.infer<typeof Status>
 
         export const Schema = z.object({
-            id: Job.Id,
+            id:         Job.Id,
             workflowId: Workflow.Id,
-            userId: Auth.User.Id,
-            status: Job.Status,
-            createdAt: z.date(),
-            updatedAt: z.date(),
-            duration: z.number(),
+            userId:     Auth.User.Id,
+            status:     Job.Status,
+            createdAt:  z.date(),
+            updatedAt:  z.date(),
+            duration:   z.number(),
         })
     }
-    export type Job = z.infer<typeof Job.Schema>
-
-    export const GraphState = z.object({
-        node_outputs: z.record(Workflow.Node.Id, z.any()),
-        messages: z.array(z.any()),
-        artifacts: z.record(z.string(), z.any()),
-        metadata: z.record(z.string(), z.any()),
-    })
-    export type GraphState = z.infer<typeof GraphState>
-
 
     export namespace ExecutionQueue {
         export namespace Item {
             export const Schema = z.object({
-                jobId: Job.Id,
+                jobId:    Job.Id,
                 workflow: Workflow.Schema,
-                userId: Auth.User.Id
+                userId:   Auth.User.Id,
             })
         }
-        export type Item = z.infer<typeof ExecutionQueue.Item.Schema>
+        export type Item = z.infer<typeof Item.Schema>
     }
+
+
+
+    export namespace RuntimeState {
+
+        export namespace ToolCall {
+            export const Schema = z.object({
+                name: z.string(),
+                args: z.record(z.string(), z.any()),
+                id:   z.string().optional()
+            })
+        }
+        export type ToolCall = z.infer<typeof ToolCall.Schema>
+
+        export namespace Message {
+            export const Type = z.enum(["human", "ai", "system", "tool", "function", "developer"])
+            export type Type = z.infer<typeof Message.Type>
+            export const Schema = z.object({
+                type:              Message.Type,
+                content:           z.string(),
+                name:              z.string().optional(),
+                id:                z.string().optional(),
+                tool_calls:        z.array(ToolCall.Schema).optional(),
+                additional_kwargs: z.record(z.string(), z.any()).optional(),
+                response_metadata: z.record(z.string(), z.any()).optional(),
+            })
+        }
+        export type Message = z.infer<typeof Message.Schema>
+
+        export const Schema = z.object({
+            node_outputs: z.record(Workflow.Node.Id, z.any()).default(() => ({})),
+            messages:     z.array(Message.Schema).default(() => ([])),
+            artifacts:    z.record(z.string(), z.any()).default(() => ({})),
+            metadata:     z.record(z.string(), z.any()).default(() => ({})),
+        })
+
+        export const INITIAL = {
+            node_outputs: {},
+            messages:     [],
+            artifacts:    {},
+            metadata:     {}
+        } as z.infer<typeof Schema>
+
+        export const Update = Schema.partial()
+        export type Update = z.infer<typeof Update>
+    }
+
+    export type RuntimeState = z.infer<typeof RuntimeState.Schema>
+
+
 
     export namespace Event {
         // Create a base from the realtime event base
@@ -57,12 +97,7 @@ export namespace Orchestrator {
 
             export const Update = Base.extend({
                 type: z.literal('job:update'),
-                update: z.object({
-                    node_outputs: z.record(z.string(), z.any()).optional(),
-                    messages: z.any().optional(),
-                    artifacts: z.record(z.string(), z.any()).optional(),
-                    metadata: z.record(z.string(), z.any()).optional(),
-                })
+                update: RuntimeState.Update
             })
 
 
@@ -147,6 +182,7 @@ export namespace Orchestrator {
     }
     export type Event = z.infer<typeof Event.Schema>
 
+
     export namespace API {
         export namespace Execution {
             export namespace Run {
@@ -157,6 +193,16 @@ export namespace Orchestrator {
 
                 export type Request = z.infer<typeof Request>
                 export type Response = z.infer<typeof Response>
+            }
+            export async function run(
+                api: AxiosInstance,
+                req: Run.Request
+            ): Promise<Run.Response> {
+                const { data } = await api.post<Run.Response>(
+                    '/api/orchestrator/execution/run',
+                    req
+                );
+                return data;
             }
 
             export namespace Pause {
@@ -169,6 +215,17 @@ export namespace Orchestrator {
                 export type Response = z.infer<typeof Response>
             }
 
+            export async function pause(
+                api: AxiosInstance,
+                req: Pause.Request
+            ): Promise<Pause.Response> {
+                const { data } = await api.post<Pause.Response>(
+                    '/api/orchestrator/execution/pause',
+                    req
+                );
+                return data;
+            }
+
             export namespace Resume {
                 export const Request = z.object({
                     jobId: Job.Id
@@ -177,6 +234,16 @@ export namespace Orchestrator {
 
                 export type Request = z.infer<typeof Request>
                 export type Response = z.infer<typeof Response>
+            }
+            export async function resume(
+                api: AxiosInstance,
+                req: Resume.Request
+            ): Promise<Resume.Response> {
+                const { data } = await api.post<Resume.Response>(
+                    '/api/orchestrator/execution/resume',
+                    req
+                );
+                return data;
             }
 
             export namespace Terminate {
@@ -187,6 +254,16 @@ export namespace Orchestrator {
 
                 export type Request = z.infer<typeof Request>
                 export type Response = z.infer<typeof Response>
+            }
+            export async function terminate(
+                api: AxiosInstance,
+                req: Terminate.Request
+            ): Promise<Terminate.Response> {
+                const { data } = await api.post<Terminate.Response>(
+                    '/api/orchestrator/execution/terminate',
+                    req
+                );
+                return data;
             }
         }
 
