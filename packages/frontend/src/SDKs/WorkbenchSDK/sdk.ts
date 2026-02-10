@@ -12,7 +12,6 @@ import { isConnectionValid } from "./utils";
 import { BaseSDK } from "../Base";
 import { useShallow } from "zustand/react/shallow";
 import { SDK } from "../SDKManager";
-import { EMPTY_WORKFLOW } from "./defaults";
 import { WorkflowAPI } from "./api";
 import { toast } from "sonner";
 
@@ -21,7 +20,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     
     constructor() { super() }
 
-    private readonly TEMPORAL_STACK_SIZE = 4
+    private readonly TEMPORAL_STACK_SIZE = 1
 
     // Mutatable non reactive state
     public readonly runtime = {
@@ -32,7 +31,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public readonly useStore: BaseSDK.Store<WorkbenchSDK.State> = create(
         temporal(
             immer<WorkbenchSDK.State>(() => ({
-                workflow: cloneDeep(EMPTY_WORKFLOW),
+                workflow: cloneDeep(Workflow.INITIAL),
                 isDirty: false,
                 isDraggingNode: false,
                 lastSelection: null,
@@ -49,7 +48,6 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
             partialize: (s) => ({
                 isDirty: true,
                 workflow: s.workflow,
-                // cache: s.cache
             })
         }
         )

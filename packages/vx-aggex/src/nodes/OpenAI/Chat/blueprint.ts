@@ -10,6 +10,7 @@ export const Blueprint = defineBlueprint({
             id: "api_key",
             displayName: "API Key",
             initialValue: "",
+            advanced: false,
         }),
         InputBuilder.String({
             id: "prompt",
@@ -17,6 +18,7 @@ export const Blueprint = defineBlueprint({
             required: true,
             initialValue: "",
             hasHandle: true,
+            advanced: false,
         }),
         InputBuilder.MultiOption({
             id: "model",
@@ -32,6 +34,7 @@ export const Blueprint = defineBlueprint({
                 "gpt-3.5-turbo"
             ],
             initialValue: "gpt-4.1",
+            advanced: false,
         }),
         InputBuilder.Float({
             id: "temperature",
@@ -43,6 +46,7 @@ export const Blueprint = defineBlueprint({
             step: 0.1,
             tooltip: "Controls randomness in the output. Higher values (e.g., 0.8) make output more random, lower values (e.g., 0.2) make it more focused and deterministic.",
             hasHandle: false,
+            advanced: false,
         }),
         InputBuilder.Integer({
             id: "maxTokens",
@@ -53,6 +57,7 @@ export const Blueprint = defineBlueprint({
             step: 1,
             tooltip: "The maximum number of tokens to generate in the chat completion.",
             hasHandle: false,
+            advanced: false,
         }),
         InputBuilder.Float({
             id: "topP",
@@ -64,6 +69,7 @@ export const Blueprint = defineBlueprint({
             step: 0.01,
             tooltip: "Nucleus sampling: considers the tokens with top_p probability mass. 0.1 means only tokens comprising the top 10% probability mass are considered.",
             hasHandle: false,
+            advanced: false,
         }),
         InputBuilder.Float({
             id: "frequencyPenalty",
@@ -75,6 +81,7 @@ export const Blueprint = defineBlueprint({
             step: 0.1,
             tooltip: "Penalizes new tokens based on their existing frequency in the text so far. Positive values decrease the model's likelihood to repeat the same line verbatim.",
             hasHandle: false,
+            advanced: true,
         }),
         InputBuilder.Float({
             id: "presencePenalty",
@@ -86,6 +93,7 @@ export const Blueprint = defineBlueprint({
             step: 0.1,
             tooltip: "Penalizes new tokens based on whether they appear in the text so far. Positive values increase the model's likelihood to talk about new topics.",
             hasHandle: false,
+            advanced: true,
         }),
     ],
     outputs: [

@@ -16,20 +16,20 @@ export namespace Runtime {
     export namespace State {
         export const Schema = new StateSchema({
             node_outputs: new ReducedValue(
-                z.record(Workflow.Node.Id, z.any()).default(() => ({})),
+                Orchestrator.RuntimeState.Schema.shape.node_outputs,
                 {
                     reducer: (x, y) => ({ ...x, ...y }),
                 }
             ),
             messages: MessagesValue,
             artifacts: new ReducedValue(
-                z.record(z.string(), z.any()).default(() => ({})),
+                Orchestrator.RuntimeState.Schema.shape.artifacts,
                 {
                     reducer: (x, y) => ({ ...x, ...y }),
                 }
             ),
             metadata: new ReducedValue(
-                z.record(z.string(), z.any()).default(() => ({})),
+                Orchestrator.RuntimeState.Schema.shape.metadata,
                 {
                     reducer: (x, y) => ({ ...x, ...y }),
                 }
@@ -37,13 +37,6 @@ export namespace Runtime {
         });
         export const Update = State.Schema.Update
         export type Update = typeof Update
-
-        export const INITIAL = {
-            node_outputs: {},
-            messages: [],
-            artifacts: {},
-            metadata: {}
-        } as const as State
     }
     export type State = typeof State.Schema.State
 
@@ -104,6 +97,7 @@ export namespace Runtime {
     /**
      * Infer runtime OutputValues from a Definition.
      * Uses the __literalId phantom property if available, falls back to id.
+     * Uses the __valueType phantom property if available, falls back to any.
      * Usage: type Outputs = InferOutputs<typeof Definition>;
      */
     export type InferOutputs<D> = D extends { outputs: infer T }
@@ -111,7 +105,7 @@ export namespace Runtime {
         ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
             ? Id
             : K extends { id: infer Id extends string } ? Id : never
-            ]: any }
+            ]: K extends { __valueType?: infer V } ? V : any }
         : never
         : never;
 }

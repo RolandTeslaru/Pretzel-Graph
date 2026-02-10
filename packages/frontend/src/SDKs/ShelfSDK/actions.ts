@@ -10,21 +10,27 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
 
     return {
         loadSection: async (section) => {
-            try {
-                const { blueprints } = await Shelf.API.Blueprint.getAllInSection(api, { section })
-                console.log("Loaded Blueprints", blueprints)
-                setState(s => {
-                    s.blueprints = {
-                        ...s.blueprints,
-                        ...blueprints
+            // Simple retry mechanism
+            const MAX_RETRIES = 5;
+            for (let i = 0; i < MAX_RETRIES; i++) {
+                try {
+                    const { blueprints } = await Shelf.API.Blueprint.getAllInSection(api, { section });
+                    console.log("Loaded Blueprints", blueprints);
+                    setState(s => {
+                        s.blueprints = { ...s.blueprints, ...blueprints };
+                        s.loadedSections.add(section);
+                    });
+                    return true;
+                } catch (error) {
+                    console.warn(`Attempt ${i + 1} failed, retrying in 1s...`);
+                    if (i === MAX_RETRIES - 1) {
+                        toast.error(`Could not fetch shelf section ${section}. Server might be restarting.`);
+                        return false;
                     }
-                    s.loadedSections.add(section);
-                })
-                return true // Return value for TanStack Query (used for deduplication)
-            } catch (error) {
-                toast.error(`Could not fetch shelf section ${section}. ${JSON.stringify(error)}`)
-                return false
+                    await new Promise(res => setTimeout(res, 1000)); // Wait 1s
+                }
             }
+            return false;
         },
 
         drawer: {
@@ -48,7 +54,7 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
             },
         },
 
-        setSection: (section: ShelfSDK.Section) => setState(s => {
+        setSection: (section: Shelf.Section) => setState(s => {
             sdk.reducers.setSection(s, section)
         }),
 
@@ -64,13 +70,13 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
 }
 
 export type _ShelfActions = {
-    loadSection: (section: "core" | "bundle") => Promise<boolean>;
+    loadSection: (section: Shelf.Section) => Promise<boolean>;
     drawer: {
         open: (drawerId: Shelf.Drawer.Id) => void;
         close: (drawerId: Shelf.Drawer.Id) => void;
         toggle: (drawerId: Shelf.Drawer.Id) => Promise<void>;
     };
-    setSection: (section: ShelfSDK.Section) => void;
+    setSection: (section: Shelf.Section) => void;
     searchFilter: {
         setQuery: DropFirstArg<ShelfSDK.Reducers["searchFilter"]["setQuery"]>;
         setDataTypes: DropFirstArg<ShelfSDK.Reducers["searchFilter"]["setDataTypes"]>;

@@ -4,6 +4,7 @@ import SectionTabs from './SectionTabs'
 import Search from './Search'
 import { ShelfSDK } from '../sdk'
 import { nodeColorsName } from '@/utils/styleUtils'
+import type { Foundations } from '@vx-agent-editor/shared/types'
 
 const ShelfSidebar = () => {
     return (
@@ -35,14 +36,14 @@ const FilterDataTypesIndicator = () => {
     if (!dataTypes) return null;
     return (
         <div className='absolute left-1/2 -translate-x-1/2 top-[51px] flex flex-row gap-2'>
-            {Array.from(dataTypes).map(type => <TypeIndicator dataType={type} key={type} />)}
+            {Array.from(dataTypes).map(type => <TypeIndicator handleVariant={type} key={type} />)}
         </div>
     )
 }
 
-const TypeIndicator = ({ dataType }) => {
+const TypeIndicator = ({ handleVariant }: { handleVariant: Foundations.HandleVariant }) => {
     const left = true
-    const colorName = nodeColorsName[dataType] ?? "unknown";
+    const colorName = nodeColorsName[handleVariant] ?? "unknown";
 
     const style = {
         backgroundColor: left
@@ -56,7 +57,7 @@ const TypeIndicator = ({ dataType }) => {
     return (
         <div className='content-[" "] h-1 w-4 rounded-full animate-pulse' style={style}
             onClick={() => {
-                ShelfSDK.actions.searchFilter.toggleDataType(dataType)
+                ShelfSDK.actions.searchFilter.toggleDataType(handleVariant)
             }}
         />
     )

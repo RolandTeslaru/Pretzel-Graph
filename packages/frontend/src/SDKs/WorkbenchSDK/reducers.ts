@@ -2,8 +2,8 @@ import { WorkbenchSDK } from './sdk';
 import type { Connection } from '@xyflow/react';
 import { Workflow, Foundations } from "@vx-agent-editor/shared/types";
 import { cloneDeep } from 'lodash';
-import { type InputContainer, insertBeforeOrEndInPlace, moveInArray, removeInPlace, reorderSubsetInPlace } from './utils';
-import { EMPTY_WORKFLOW } from './defaults';
+import { type InputContainer } from './utils';
+import { toast } from 'sonner';
 
 const uid = {
     randomUUID: (length: number) => Math.random().toString(36).substring(2, 2 + length)
@@ -230,49 +230,45 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
         // TODO: Migrate from DB schema creation to runtime schema creation from backend
         create: (s, blueprint, position) => {
             s.isDirty = true;
-            // const nodeId = createNodeId(blueprint.id);
+            const nodeId = createNodeId(blueprint.id);
+            const newNode = {
+                id:          nodeId,
+                blueprintId: blueprint.id,
+                displayName: blueprint.displayName,
 
-            // const newNode: Workflow.Node = {
-            //     id: nodeId,
-            //     // TODO: FIX THIS ASAP
-            //     definitionId: blueprint.id,
-            //     display_name: blueprint.display_name,
+                inputs:      cloneDeep(blueprint.inputs) as Workflow.Node['inputs'],
+                outputs:     cloneDeep(blueprint.outputs) as Workflow.Node["outputs"],
+                icon:        blueprint.icon,
+                description: blueprint.description,
+                isMinimized: false,
+            } satisfies Workflow.Node
 
-            //     data: {
-            //         inputs: cloneDeep(blueprint.data.inputs),
-            //         outputs: cloneDeep(blueprint.data.outputs),
-            //         ui: {
-            //             ...blueprint.data.ui,
-            //             isMinimized: false
-            //         },
-            //     }
-            // }
+            const result = Workflow.Node.Schema.safeParse(newNode)
+            if (!result.success) {
+                console.error("WorkbenchSDK: Node schema validation failed:", result.error)
+                toast.error(`WorkbenchSDK: Node schema validation failed. Could not create node from blueprint id ${blueprint.id}`,)
+                return;
+            }
 
-            // const result = Workflow.Node.Schema.safeParse(newNode)
-            // if (!result.success) {
-            //     console.error("WorkbenchSDK: Node schema validation failed:", result.error)
-            //     return;
-            // }
+            s.workflow.data.nodes[nodeId] = newNode;
 
-            // s.workflow.data.nodes[nodeId] = newNode;
+            layoutReducers.node.add(s, nodeId, position);
 
-            // layoutReducers.node.add(s, nodeId, position);
+            s.workflow.data.fieldValues[nodeId] = {}
 
-            // s.workflow.data.fieldValues[nodeId] = {}
-
-            // cacheReducers.createNode(s, newNode);
+            cacheReducers.createNode(s, newNode);
         },
         setMinimized: (s, nodeId, isMinimized) => {
             s.isDirty = true;
-            s.workflow.data.nodes[nodeId].data.ui.isMinimized = isMinimized;
+            s.workflow.data.nodes[nodeId].isMinimized = isMinimized;
         },
         setDisplayName: (s, nodeId, newDisplayName) => {
             s.isDirty = true;
-            s.workflow.data.nodes[nodeId].display_name = newDisplayName;
+            s.workflow.data.nodes[nodeId].displayName = newDisplayName;
         },
         setDescription: (s, nodeId, newDescription) => {
             s.isDirty = true;
-            s.workflow.data.nodes[nodeId].data.ui.description = newDescription;
+            s.workflow.data.nodes[nodeId].description = newDescription;
         }
     } satisfies NodeReducers
 
@@ -280,16 +276,6 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
     // INPUT REDUCERS
     // ════════════════════════════════════════════════════════════════════════════
     const inputReducers = {
-        // resetOrder: (s, nodeId, blueprint) => {
-        //     const node = s.workflow.data.nodes[nodeId];
-        //     if (!node) return
-
-        //     s.isDirty = true;
-        //     node.data.inputs = cloneDeep(blueprint.data.inputs)
-        //     node.data.outputs = cloneDeep(blueprint.data.outputs);
-        //     node.data.ui.normalInputsOrder = cloneDeep(blueprint.data.ui.normalInputsOrder)
-        //     node.data.ui.advancedInputsOrder = cloneDeep(blueprint.data.ui.advancedInputsOrder)
-        // },
         setValue: (s, nodeId, inputId, value) => {
             s.isDirty = true;
             s.workflow.data.fieldValues[nodeId] ??= {}
@@ -297,12 +283,15 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
         },
         remove: (s, nodeId, inputId) => {
             s.isDirty = true;
-            const node = s.workflow.data.nodes[nodeId]
+            const node = s.workflow.data.nodes[nodeId];
             const fieldValues = s.workflow.data.fieldValues[nodeId];
 
             cacheReducers.deleteInput(s, nodeId, inputId);
 
-            delete node.data.inputs[inputId];
+            const inputIndex = node.inputs.findIndex(i => i.id === inputId);
+            if (inputIndex !== -1) {
+                node.inputs.splice(inputIndex, 1);
+            }
             delete fieldValues[inputId];
         },
         disconnectIfConnected: (s, nodeId, inputId) => {
@@ -320,80 +309,60 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             const node = s.workflow.data.nodes[nodeId];
             if (!node) return;
 
-            const from = active.containerId; // already known
+            const from = active.containerId;
             const to = over.containerId;
 
             const activeId = active.id;
             const overId = over?.id ?? null;
 
-            const normal = node.data.ui.normalInputsOrder;
-            const advanced = node.data.ui.advancedInputsOrder;
+            const inputs = node.inputs;
 
+            // Find the active input
+            const activeIndex = inputs.findIndex(i => i.id === activeId);
+            if (activeIndex === -1) return;
+
+            const activeInput = inputs[activeIndex];
+
+            // Same category reorder
+            if (from === to) {
+                if (!overId) return;
+                const overIndex = inputs.findIndex(i => i.id === overId);
+                if (overIndex === -1) return;
+
+                // Remove and reinsert at new position
+                inputs.splice(activeIndex, 1);
+                inputs.splice(overIndex > activeIndex ? overIndex : overIndex, 0, activeInput);
+                return;
+            }
+
+            // Cross-category moves: normal <-> advanced
+            if ((from === "normal" && to === "advanced") || (from === "advanced" && to === "normal")) {
+                // Update the advanced property
+                activeInput.advanced = to === "advanced";
+
+                // If overId exists, reposition relative to it
+                if (overId) {
+                    const overIndex = inputs.findIndex(i => i.id === overId);
+                    if (overIndex !== -1 && overIndex !== activeIndex) {
+                        inputs.splice(activeIndex, 1);
+                        inputs.splice(overIndex > activeIndex ? overIndex : overIndex, 0, activeInput);
+                    }
+                }
+                return;
+            }
+
+            // Connected category - just reorder within input array (connected is a virtual category)
             if (from === "connected" && to === "connected") {
-                reorderSubsetInPlace(
-                    normal,
-                    (id) => s.cache.inputHandlesMap[nodeId]?.[id] != null, // CONNECTED predicate
-                    activeId,
-                    overId
-                );
+                if (!overId) return;
+                const overIndex = inputs.findIndex(i => i.id === overId);
+                if (overIndex === -1) return;
+
+                inputs.splice(activeIndex, 1);
+                inputs.splice(overIndex > activeIndex ? overIndex : overIndex, 0, activeInput);
                 return;
             }
 
-            // domain rule: never allow drop into connected drawer
-            if (to === "connected") return;
-
-            // leaving connected => disconnect side effect
-            if (from === "connected")
-                inputReducers.disconnectIfConnected(s, nodeId, activeId);
-
-            if (from === "advanced" && to === "advanced") {
-                // simple reorder
-                if (!advanced.includes(activeId) || (overId && !advanced.includes(overId))) return;
-                node.data.ui.advancedInputsOrder = moveInArray(advanced, advanced.indexOf(activeId), advanced.indexOf(overId!));
-                return;
-            }
-
-            if (from === "normal" && to === "normal") {
-                // still need "disconnected subset only" rule because normalInputsOrder stores BOTH connected+disconnected
-                reorderSubsetInPlace(
-                    normal,
-                    (id) => s.cache.inputHandlesMap[nodeId][id] == null, // disconnected predicate
-                    activeId,
-                    overId
-                );
-                return;
-            }
-
-            // cross moves (all decided by from/to now)
-            if (from === "normal" && to === "advanced") {
-                removeInPlace(normal, activeId);
-                insertBeforeOrEndInPlace(advanced, activeId, overId);
-                return;
-            }
-
-            if (from === "advanced" && to === "normal") {
-                removeInPlace(advanced, activeId);
-                insertBeforeOrEndInPlace(normal, activeId, overId);
-                return;
-            }
-
-            if (from === "connected" && to === "normal") {
-                // after disconnect it “becomes” normal; place among disconnected subset
-                reorderSubsetInPlace(
-                    normal,
-                    (id) => s.cache.inputHandlesMap[nodeId][id] == null,
-                    activeId,
-                    overId
-                );
-                return;
-            }
-
-            if (from === "connected" && to === "advanced") {
-                // after disconnect: move from normal list into advanced
-                removeInPlace(normal, activeId);
-                insertBeforeOrEndInPlace(advanced, activeId, overId);
-                return;
-            }
+            // Don't allow moves into/out of connected category
         }
     } satisfies InputReducers
 
@@ -405,7 +374,10 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             clear: (s, nodeId, inputId) => {
                 s.isDirty = true;
                 const node = s.workflow.data.nodes[nodeId]
-                const input = node.data.inputs[inputId];
+                const input = node.inputs.find(i => i.id === inputId);
+
+                if (!input)
+                    return;
 
                 const registry = input.runtimeSubInputsRegistry;
                 if (!registry)
@@ -418,84 +390,87 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             },
             set: (s, nodeId, inputId, displayNames) => {
                 s.isDirty = true;
-                const node = s.workflow.data.nodes[nodeId]
-                const input = node.data.inputs[inputId];
+                // const node = s.workflow.data.nodes[nodeId]
+                // const input = node.inputs.find(i => i.id === inputId);
 
-                input.runtimeSubInputsRegistry ??= {}
-                const registry = input.runtimeSubInputsRegistry;
+                // if (!input)
+                //     return;
 
-                const toBeAdded: string[] = []
+                // input.runtimeSubInputsRegistry ??= {}
+                // const registry = input.runtimeSubInputsRegistry;
 
-                displayNames.forEach(name => {
-                    if ((name in registry) === false) {
-                        toBeAdded.push(name)
-                    }
-                })
+                // const toBeAdded: string[] = []
 
-                // Remove inputs that are no longer present
-                Object.entries(registry).forEach(([_, runtimeItem]) => {
-                    if (displayNames.includes(runtimeItem.display_name) === false) {
-                        inputReducers.remove(s, nodeId, runtimeItem.id);
-                        delete registry[runtimeItem.id]
-                    }
-                })
+                // displayNames.forEach(name => {
+                //     if ((name in registry) === false) {
+                //         toBeAdded.push(name)
+                //     }
+                // })
 
-                toBeAdded.forEach(displayName => {
-                    const runtimeInputId = createRuntimeInputId(inputId, displayName);
-                    const runtimeInputSchema = {
-                        id: runtimeInputId,
-                        parentInputId: inputId,
-                        display_name: displayName,
-                    }
-                    registry[runtimeInputId] = runtimeInputSchema;
+                // // Remove inputs that are no longer present
+                // Object.entries(registry).forEach(([_, runtimeItem]) => {
+                //     if (displayNames.includes(runtimeItem.display_name) === false) {
+                //         inputReducers.remove(s, nodeId, runtimeItem.id);
+                //         delete registry[runtimeItem.id]
+                //     }
+                // })
 
-                    const runtimeInput = {
-                        id: runtimeInputId,
-                        variant: "string",
-                        handleVariants: ["Message"],
-                        required: false,
-                        asTool: false,
-                        reconcile: false,
-                        isRuntime: true,
-                        initialValue: "",
-                        uiData: {
-                            displayName: runtimeInputSchema.display_name,
-                        },
-                        data: {
-                            multiline: false
-                        }
-                    } satisfies Foundations.Input.String
+                // toBeAdded.forEach(displayName => {
+                //     const runtimeInputId = createRuntimeInputId(inputId, displayName);
+                //     const runtimeInputSchema = {
+                //         id: runtimeInputId,
+                //         parentInputId: inputId,
+                //         display_name: displayName,
+                //     }
+                //     registry[runtimeInputId] = runtimeInputSchema;
 
-                    node.data.inputs[runtimeInputSchema.id] = runtimeInput;
-                })
+                //     const runtimeInput = {
+                //         id: runtimeInputId,
+                //         variant: "string",
+                //         handleVariants: ["Message"],
+                //         required: false,
+                //         asTool: false,
+                //         reconcile: false,
+                //         isRuntime: true,
+                //         initialValue: "",
+                //         uiData: {
+                //             displayName: runtimeInputSchema.display_name,
+                //         },
+                //         data: {
+                //             multiline: false
+                //         }
+                //     } satisfies Foundations.Input.String
+
+                //     node.inputs.push(runtimeInput);
+                // })
             },
             ensure: (s, nodeId, inputId) => {
-                const node = s.workflow.data.nodes[nodeId]
-                const input = node.data.inputs[inputId];
+                // const node = s.workflow.data.nodes[nodeId]
+                // const input = node.inputs.find(i => i.id === inputId);
 
-                if (!input.runtimeSubInputsRegistry) return;
+                // if (!input || !input.runtimeSubInputsRegistry) return;
 
-                Object.entries(input.runtimeSubInputsRegistry).forEach(([_, runtimeInputSchema]) => {
-                    const runtimeInputId = runtimeInputSchema.id;
-                    const runtimeInput = {
-                        id: runtimeInputId,
-                        variant: "string",
-                        handleVariants: ["Message"],
-                        required: false,
-                        asTool: false,
-                        reconcile: false,
-                        isRuntime: true,
-                        initialValue: "",
-                        uiData: {
-                            displayName: runtimeInputSchema.display_name,
-                        },
-                        data: {
-                            multiline: false
-                        }
-                    } satisfies Foundations.Input.String
+                // Object.entries(input.runtimeSubInputsRegistry).forEach(([_, runtimeInputSchema]) => {
+                //     const runtimeInputId = runtimeInputSchema.id;
+                //     const runtimeInput = {
+                //         id: runtimeInputId,
+                //         variant: "string",
+                //         handleVariants: ["Message"],
+                //         required: false,
+                //         asTool: false,
+                //         reconcile: false,
+                //         isRuntime: true,
+                //         initialValue: "",
+                //         uiData: {
+                //             displayName: runtimeInputSchema.display_name,
+                //         },
+                //         data: {
+                //             multiline: false
+                //         }
+                //     } satisfies Foundations.Input.String
 
-                    node.data.inputs[runtimeInputSchema.id] = runtimeInput;
-                })
+                //     node.inputs.push(runtimeInput);
+                // })
             }
         }
     } satisfies RuntimeReducers
@@ -513,7 +488,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
         },
         executeRuntime: (s) => {
             Object.entries(s.workflow.data.nodes).forEach(([_, node]) => {
-                Object.entries(node.data.inputs).forEach(([_, input]) => {
+                Object.entries(node.inputs).forEach(([_, input]) => {
                     runtimeReducers.input.ensure(s, node.id, input.id);
                 })
             })
@@ -523,8 +498,8 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             s.cache = cacheReducers.createAll(s, workflow);
         },
         close: (s) => {
-            s.workflow = cloneDeep(EMPTY_WORKFLOW);
-            s.cache = cacheReducers.createAll(s, cloneDeep(EMPTY_WORKFLOW));
+            s.workflow = cloneDeep(Workflow.INITIAL);
+            s.cache = cacheReducers.createAll(s, cloneDeep(Workflow.INITIAL));
         }
     } satisfies WorkflowReducers
 
@@ -546,26 +521,25 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
 // ════════════════════════════════════════════════════════════════════════════════
 // TYPE DEFINITIONS
 // ════════════════════════════════════════════════════════════════════════════════
-
 type INTERNAL_CacheReducers = {
-    deleteEdge: (state: WorkbenchSDK.State, edge: Workflow.Edge) => void
-    addEdge: (state: WorkbenchSDK.State, newEdge: Workflow.Edge) => void
-    deleteNode: (state: WorkbenchSDK.State, deletedNodeId: Workflow.Node.Id) => void
-    createNode: (state: WorkbenchSDK.State, newNode: Workflow.Node) => void
+    deleteEdge:  (state: WorkbenchSDK.State, edge: Workflow.Edge) => void
+    addEdge:     (state: WorkbenchSDK.State, newEdge: Workflow.Edge) => void
+    deleteNode:  (state: WorkbenchSDK.State, deletedNodeId: Workflow.Node.Id) => void
+    createNode:  (state: WorkbenchSDK.State, newNode: Workflow.Node) => void
     deleteInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => void
-    createAll: (state: WorkbenchSDK.State, workflow: Workflow) => WorkbenchSDK.State["cache"]
+    createAll:   (state: WorkbenchSDK.State, workflow: Workflow) => WorkbenchSDK.State["cache"]
 }
 
 type EdgeReducers = {
-    add: (state: WorkbenchSDK.State, edgeId: Workflow.Edge.Id, conn: Connection) => void
+    add:    (state: WorkbenchSDK.State, edgeId: Workflow.Edge.Id, conn: Connection) => void
     remove: (state: WorkbenchSDK.State, edgeId: Workflow.Edge.Id) => void
 }
 
 type NodeReducers = {
-    remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
-    createId: (definitionId: Foundations.NodeDefinition.Id) => Workflow.Node.Id
-    create: (state: WorkbenchSDK.State, definitionId: Foundations.NodeDefinition.Id, position: { x: number, y: number }) => void
-    setMinimized: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void
+    remove:         (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
+    createId:       (blueprintId: Foundations.Blueprint.Id) => Workflow.Node.Id
+    create:         (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }) => void
+    setMinimized:   (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void
     setDisplayName: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDisplayName: string) => void
     setDescription: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDescription: string) => void
 }
@@ -573,13 +547,13 @@ type NodeReducers = {
 type LayoutReducers = {
     node: {
         setPosition: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, position: { x: number, y: number } | undefined) => void
-        remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
-        add: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, position: { x: number, y: number }) => void
+        remove:      (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
+        add:         (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, position: { x: number, y: number }) => void
     },
     viewport: {
         setPosition: (state: WorkbenchSDK.State, newLayout: { x: number, y: number }) => void
-        setZoom: (state: WorkbenchSDK.State, zoom: number) => void
-        set: (state: WorkbenchSDK.State, viewport: { x: number, y: number, zoom: number }) => void
+        setZoom:     (state: WorkbenchSDK.State, zoom: number) => void
+        set:         (state: WorkbenchSDK.State, viewport: { x: number, y: number, zoom: number }) => void
     }
 }
 
@@ -595,11 +569,6 @@ type InputReducers = {
         nodeId: Workflow.Node.Id,
         inputId: Foundations.Input.Id
     ) => boolean
-    // resetOrder: (
-    //     state: WorkbenchSDK.State,
-    //     nodeId: Workflow.Node.Id,
-    //     definition: Foundations.NodeDefinition
-    // ) => void,
     changeOrder: (
         state: WorkbenchSDK.State,
         nodeId: Workflow.Node.Id,
@@ -640,7 +609,7 @@ export type _WorkbenchSDKReducers = {
     layout: LayoutReducers,
     runtime: RuntimeReducers,
     setClickedNodeId: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id | null) => void
-    createNodeId: (definitionId: Foundations.NodeDefinition.Id) => Workflow.Node.Id
+    createNodeId: (blueprintId: Foundations.Blueprint.Id) => Workflow.Node.Id
     createEdgeId: (
         sourceNodeId: Workflow.Node.Id,
         sourceHandleId: Foundations.Output.Id,

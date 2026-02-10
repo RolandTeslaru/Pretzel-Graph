@@ -19,22 +19,9 @@ export class Node extends Runtime.Node<typeof Blueprint> {
         incomingValues: Runtime.InferInputs<typeof Blueprint>
     ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
 
-        const { model, prompt, api_key, temperature, maxOutputTokens, topP, topK } = incomingValues;
+        const { text } = incomingValues;
 
-        const llm = new ChatGoogleGenerativeAI({
-            model,
-            apiKey: api_key,
-            maxOutputTokens,
-            temperature,
-            topP,
-            topK,
-        });
-
-        const response = await llm.invoke([
-            new HumanMessage(prompt)
-        ]);
-
-        return { response: response }
+        return { response: text }
     }
 
 

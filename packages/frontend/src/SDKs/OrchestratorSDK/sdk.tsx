@@ -3,10 +3,10 @@ import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
 import { Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/types";
-import { OrchestratorAPI } from "./api";
 import { useEffect } from "react";
 import { RealtimeSDK } from "../Realtime/sdk";
 import { toast } from "sonner";
+import { api } from "../ApiInterceptorSDK";
 
 @SDK("Orchestrator")
 export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
@@ -15,9 +15,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
     public readonly useStore: BaseSDK.Store<OrchestratorSDK.State> = create(
         immer<OrchestratorSDK.State>(() => ({
             currentJobId: undefined,
-            graphState: {
-
-            }
+            runtimeState: Orchestrator.RuntimeState.INITIAL
         }))
     )
 
@@ -26,12 +24,12 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
     public readonly actions: OrchestratorSDK.Actions = {
         execution: {
             run: async (workflow) => {
-                if(this.state.currentJobId){
+                if (this.state.currentJobId) {
                     toast.warning("Workflow is already running")
                     return this.state.currentJobId
                 }
 
-                const executionPromise = OrchestratorAPI.Execution.Run.execute(workflow);
+                const executionPromise = Orchestrator.API.Execution.run(api, workflow);
 
                 toast.promise(executionPromise, {
                     loading: "Executing workflow",
@@ -47,10 +45,10 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                 return data.jobId;
             },
             pause: async (jobId) => {
-                await OrchestratorAPI.Execution.Pause.execute({ jobId });
+                await Orchestrator.API.Execution.pause(api, { jobId });
             },
             terminate: async (jobId) => {
-                await OrchestratorAPI.Execution.Terminate.execute({ jobId });
+                await Orchestrator.API.Execution.terminate(api, { jobId });
 
                 this.setState(s => s.currentJobId = undefined)
             }
@@ -77,6 +75,7 @@ export namespace OrchestratorSDK {
 
     export type State = {
         currentJobId: Orchestrator.Job.Id | undefined
+        runtimeState: Orchestrator.RuntimeState
     }
 
     export type Reducers = {

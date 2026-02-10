@@ -5,6 +5,8 @@ import { Foundations, Shelf } from "@vx-agent-editor/shared/types";
 
 const NODES_ROOT = path.resolve(__dirname, "../src/nodes");
 const OUTPUT_PATH = path.resolve(__dirname, "../dist/node_index.json")
+const BACKEND_TARGET = path.resolve(__dirname, "../../backend/src/services/Shelf/node_index.json");
+const BACKEND_SERVICE_FILE = path.resolve(__dirname, "../../backend/src/services/Shelf/service.ts");
 
 
 async function traverseDir(dir: string, callback: (filePath: string) => Promise<void>) {
@@ -30,7 +32,7 @@ async function generateIndex() {
             return
 
         const module = await import(filePath);
-        const blueprint = module.Blueprint as Foundations.Blueprint
+        const blueprint = Foundations.Blueprint.Schema.parse(module.Blueprint);
 
         blueprints[blueprint.id] = blueprint
     })
@@ -44,6 +46,17 @@ async function generateIndex() {
 
     fs.writeFileSync(OUTPUT_PATH, JSON.stringify(index, null, 2))
     console.log(`Successfully indexed ${Object.keys(blueprints).length} nodes in ${Object.keys(drawers).length} drawers`)
+
+    if (fs.existsSync(path.dirname(BACKEND_TARGET))) {
+        fs.copyFileSync(OUTPUT_PATH, BACKEND_TARGET);
+        console.log(`Synced index to backend at ${BACKEND_TARGET}`);
+
+        if (fs.existsSync(BACKEND_SERVICE_FILE)) {
+            const time = new Date();
+            fs.utimesSync(BACKEND_SERVICE_FILE, time, time);
+            console.log(`Touched ${BACKEND_SERVICE_FILE} to trigger backend reload`);
+        }
+    }
 }
 
 generateIndex().catch(err => {

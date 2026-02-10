@@ -22,7 +22,7 @@ const VaultPanel = () => {
   return (
     <div className='flex flex-col h-full w-full p-4 gap-4'>
       <div className='flex flex-row w-full gap-3'>
-        <SystemIcons.LockClosed className=' size-7' />
+        <SystemIcons.Vault  className=' size-10' />
         <h1 className='text-lg font-bold my-auto'>VAULT</h1>
         <Button className='ml-auto' onClick={() => {
           DialogSDK.actions.push("add-credential", (props) => (

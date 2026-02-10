@@ -1,5 +1,5 @@
 import React, { Suspense, useMemo } from 'react'
-import { BaseIcon, type BaseIconProps } from './baseIcon'
+import { type BaseIconProps } from './baseIcon'
 import { lazyIconsMapping } from './lazyIconImports'
 import { SystemIcons } from '.'
 import { Skeleton } from '../foundations/skeleton'
@@ -10,14 +10,14 @@ interface Props extends BaseIconProps {
 
 export const LazyIcon: React.FC<Props> = ({ name, ...props }) => {
     if (name in SystemIcons) {
-        const Comp = SystemIcons[name];
+        const Comp = SystemIcons[name as keyof typeof SystemIcons];
         return <Comp {...props} />
     }
 
     const IconComponent = useMemo(() => {
-        const loader = lazyIconsMapping[name];
+        const loader = lazyIconsMapping[name as keyof typeof lazyIconsMapping];
         if (!loader) return null;
-        return React.lazy(loader);
+        return React.lazy(loader as any);
     }, [name]);
     if (!IconComponent) {
         // Icon name not found in map

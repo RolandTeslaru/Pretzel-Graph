@@ -4,7 +4,7 @@ export const Blueprint = defineBlueprint({
     id: "Core.Text.Input",
     displayName: "Text Input",
     description: "This node is a Text input",
-    icon: "type",
+    icon: "Type",
     inputs: [
         InputBuilder.String({
             id: "text",
@@ -12,6 +12,7 @@ export const Blueprint = defineBlueprint({
             required: true,
             initialValue: "",
             hasHandle: true,
+            advanced: false,
         }),
     ],
     outputs: [

@@ -22,7 +22,7 @@
     "jsx": "react-jsx",
     /* Linting */
     "strict": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "experimentalDecorators": true,
     "noImplicitOverride": true,
     "noUnusedLocals": true,
