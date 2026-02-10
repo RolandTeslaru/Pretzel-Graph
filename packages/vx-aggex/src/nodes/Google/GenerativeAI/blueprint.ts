@@ -3,7 +3,7 @@ import { defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders
 export const Blueprint = defineBlueprint({
     id: "Google.GenerativeAI",
     icon: "Google",
-    displayName: "Google Generative AI Node",
+    displayName: "Google Generative AI",
     description: "This node talks to google generative ai api",
     inputs: [
         InputBuilder.Secret({
@@ -24,11 +24,13 @@ export const Blueprint = defineBlueprint({
             id: "model",
             displayName: "Model",
             options: [
-                "gemini-1.5-flash",
-                "gemini-1.5-pro",
-                "gemini-1.0-pro"
+                "gemini-3-pro-preview",
+                "gemini-2.5-pro",
+                "gemini-3-flash-preview",
+                "gemini-2.5-flash",
+                "gemini-2.5-flash-lite",
             ],
-            initialValue: "gemini-1.5-flash",
+            initialValue: "gemini-3-pro-preview",
             advanced: false,
         }),
         InputBuilder.Float({

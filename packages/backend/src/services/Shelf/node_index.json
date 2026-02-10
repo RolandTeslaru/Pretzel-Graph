@@ -1,6 +1,6 @@
 {
-  "version": "1770724221575",
-  "generatedAt": "2026-02-10T11:50:21.575Z",
+  "version": "1770726732764",
+  "generatedAt": "2026-02-10T12:32:12.764Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.Input": {
@@ -83,7 +83,7 @@
     },
     "Google.GenerativeAI": {
       "id": "Google.GenerativeAI",
-      "displayName": "Google Generative AI Node",
+      "displayName": "Google Generative AI",
       "icon": "Google",
       "inputs": [
         {
@@ -131,12 +131,14 @@
             "displayName": "Model"
           },
           "variant": "multiOption",
-          "initialValue": "gemini-1.5-flash",
+          "initialValue": "gemini-3-pro-preview",
           "data": {
             "options": [
-              "gemini-1.5-flash",
-              "gemini-1.5-pro",
-              "gemini-1.0-pro"
+              "gemini-3-pro-preview",
+              "gemini-2.5-pro",
+              "gemini-3-flash-preview",
+              "gemini-2.5-flash",
+              "gemini-2.5-flash-lite"
             ],
             "variant": "select"
           }
@@ -284,17 +286,17 @@
             "displayName": "Model"
           },
           "variant": "multiOption",
-          "initialValue": "gpt-4.1",
+          "initialValue": "gpt-5.2",
           "data": {
             "options": [
-              "gpt-4.1",
-              "gpt-4.1-mini",
-              "gpt-4.1-nano",
-              "gpt-4o",
-              "gpt-4o-mini",
-              "gpt-4-turbo",
-              "gpt-4",
-              "gpt-3.5-turbo"
+              "gpt-5.2",
+              "gpt-5.2-pro",
+              "gpt-5",
+              "gpt-5-mini",
+              "gpt-5-nano",
+              "gpt-4.5",
+              "o3-mini",
+              "o3"
             ],
             "variant": "select"
           }
@@ -316,7 +318,8 @@
           "data": {
             "min": 0,
             "max": 2,
-            "step": 0.1
+            "step": 0.1,
+            "slider": true
           }
         },
         {
@@ -355,7 +358,8 @@
           "data": {
             "min": 0,
             "max": 1,
-            "step": 0.01
+            "step": 0.01,
+            "slider": true
           }
         },
         {
@@ -395,7 +399,8 @@
           "data": {
             "min": -2,
             "max": 2,
-            "step": 0.1
+            "step": 0.1,
+            "slider": true
           }
         }
       ],
