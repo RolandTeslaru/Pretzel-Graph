@@ -11,7 +11,6 @@ export const Blueprint = defineBlueprint({
             displayName: "Text",
             required: true,
             initialValue: "",
-            hasHandle: true,
             advanced: false,
         }),
     ],

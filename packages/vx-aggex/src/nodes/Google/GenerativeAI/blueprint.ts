@@ -12,12 +12,16 @@ export const Blueprint = defineBlueprint({
             initialValue: "",
             advanced: false,
         }),
-        InputBuilder.String({
-            id: "prompt",
-            displayName: "Prompt",
+        InputBuilder.Message({
+            id: "input",
+            displayName: "Input",
             required: true,
-            initialValue: "",
-            hasHandle: true,
+            advanced: false,
+        }),
+        InputBuilder.Message({
+            id: "systemMessage",
+            displayName: "System Message",
+            required: true,
             advanced: false,
         }),
         InputBuilder.MultiOption({
@@ -42,7 +46,6 @@ export const Blueprint = defineBlueprint({
             max: 2.0,
             step: 0.1,
             tooltip: "Controls randomness in the output. Higher values are more creative.",
-            hasHandle: false,
             advanced: false,
         }),
         InputBuilder.Integer({
@@ -53,7 +56,6 @@ export const Blueprint = defineBlueprint({
             min: 1,
             step: 1,
             tooltip: "Maximum number of tokens to generate.",
-            hasHandle: false,
             advanced: false,
         }),
         InputBuilder.Float({
@@ -65,7 +67,6 @@ export const Blueprint = defineBlueprint({
             max: 1,
             step: 0.01,
             tooltip: "Nucleus sampling probability.",
-            hasHandle: false,
             advanced: false,
         }),
         InputBuilder.Integer({
@@ -76,7 +77,6 @@ export const Blueprint = defineBlueprint({
             min: 1,
             step: 1,
             tooltip: "Top-K sampling parameter.",
-            hasHandle: false,
             advanced: false,
         }),
     ],
@@ -85,6 +85,11 @@ export const Blueprint = defineBlueprint({
             id: "response",
             displayName: "Response",
             tooltip: "The response from the model",
+        }),
+        OutputBuilder.LanguageModel({
+            id: "languageModel",
+            displayName: "Language Model",
+            tooltip: "The language model instance used for this response, useful for chaining calls with the same model and settings.",
         })
     ]
 })

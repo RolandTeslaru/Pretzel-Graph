@@ -12,12 +12,16 @@ export const Blueprint = defineBlueprint({
             initialValue: "",
             advanced: false,
         }),
-        InputBuilder.String({
-            id: "prompt",
-            displayName: "Prompt",
+        InputBuilder.Message({
+            id: "input",
+            displayName: "Input",
             required: true,
-            initialValue: "",
-            hasHandle: true,
+            advanced: false,
+        }),
+        InputBuilder.Message({
+            id: "systemMessage",
+            displayName: "System Message",
+            required: true,
             advanced: false,
         }),
         InputBuilder.MultiOption({
@@ -46,7 +50,6 @@ export const Blueprint = defineBlueprint({
             step: 0.1,
             slider: true,
             tooltip: "Controls randomness in the output. Higher values (e.g., 0.8) make output more random, lower values (e.g., 0.2) make it more focused and deterministic.",
-            hasHandle: false,
             advanced: false,
         }),
         InputBuilder.Integer({
@@ -57,7 +60,6 @@ export const Blueprint = defineBlueprint({
             min: 1,
             step: 1,
             tooltip: "The maximum number of tokens to generate in the chat completion.",
-            hasHandle: false,
             advanced: false,
         }),
         InputBuilder.Float({
@@ -70,7 +72,6 @@ export const Blueprint = defineBlueprint({
             step: 0.01,
             slider: true,
             tooltip: "Nucleus sampling: considers the tokens with top_p probability mass. 0.1 means only tokens comprising the top 10% probability mass are considered.",
-            hasHandle: false,
             advanced: false,
         }),
         InputBuilder.Float({
@@ -82,7 +83,6 @@ export const Blueprint = defineBlueprint({
             max: 2.0,
             step: 0.1,
             tooltip: "Penalizes new tokens based on their existing frequency in the text so far. Positive values decrease the model's likelihood to repeat the same line verbatim.",
-            hasHandle: false,
             advanced: true,
         }),
         InputBuilder.Float({
@@ -95,7 +95,6 @@ export const Blueprint = defineBlueprint({
             step: 0.1,
             slider: true,
             tooltip: "Penalizes new tokens based on whether they appear in the text so far. Positive values increase the model's likelihood to talk about new topics.",
-            hasHandle: false,
             advanced: true,
         }),
     ],
