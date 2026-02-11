@@ -2,7 +2,7 @@ import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/types";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { HumanMessage } from "@langchain/core/messages";
+import { Synthesizer } from "src/synthesizer";
 import { Runtime } from "src/runtime";
 
 @RegisterNode(Blueprint.id)
@@ -15,11 +15,11 @@ export class Node extends Runtime.Node<typeof Blueprint> {
     }
 
     public override async run(
-        state:          Runtime.State,
-        incomingValues: Runtime.InferInputs<typeof Blueprint>
+        state:  Runtime.State,
+        inputs: Runtime.InferInputs<typeof Blueprint>,
     ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
 
-        const { model, prompt, api_key, temperature, maxOutputTokens, topP, topK } = incomingValues;
+        const { systemMessage, input, model, api_key, temperature, maxOutputTokens, topP, topK } = inputs;
 
         const llm = new ChatGoogleGenerativeAI({
             model,
@@ -30,11 +30,15 @@ export class Node extends Runtime.Node<typeof Blueprint> {
             topK,
         });
 
-        const responseMessage = await llm.invoke([
-            new HumanMessage(prompt)
+        const response = await llm.invoke([
+            Synthesizer.ensureMessage("system", systemMessage),
+            Synthesizer.ensureMessage("human", input),
         ]);
 
-        return { response: responseMessage }
+        return { 
+            response,
+            languageModel: llm
+         };
     }
 
 

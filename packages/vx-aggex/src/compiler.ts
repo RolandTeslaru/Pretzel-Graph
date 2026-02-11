@@ -7,12 +7,23 @@ import { Runtime } from "src/runtime";
 export class WorkflowCompiler {
     constructor() {}
 
+    // public synthesizeChain(edge: Workflow.Edge){
+    //     const { source, target } = edge
+        
+    // }
+
+    // public resolveChains(workflow: Workflow){
+    //     Object.values(workflow.data.edges).forEach(edge => {
+    //         this.synthesizeChain(edge)
+    //     })
+    // }
+
     private async runNode(
-        state: Runtime.State,
+        state:      Runtime.State,
         activeNode: Workflow.Node,
-        Vertex: Runtime.Node<Foundations.Blueprint>,
-        edges: Workflow["data"]["edges"],
-        emit: Runtime.Emitter
+        Vertex:     Runtime.Node<Foundations.Blueprint>,
+        edges:      Workflow["data"]["edges"],
+        emit:       Runtime.Emitter
     ) {
         console.log(`Executing Node: ${activeNode.displayName} (${activeNode.id})`);
         

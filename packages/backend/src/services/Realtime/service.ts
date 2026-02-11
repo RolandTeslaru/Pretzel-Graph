@@ -1,5 +1,5 @@
 import { Service } from "../ServiceManager";
-import IORedis, { Redis } from 'ioredis';
+import IORedis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
 import { WebSocketServer, WebSocket } from 'ws';
 import { Realtime } from "@vx-agent-editor/shared/types/Realtime";
@@ -23,38 +23,35 @@ export class RealtimeServiceImpl {
             ws.on('message', (data) => {
                 const msg = JSON.parse(data.toString());
 
-                if (msg.action === "subscribe") {
+                if (msg.action === "subscribe")
                     this.subscribe(ws, msg.topic);  // e.g., "job:abc-123:events"
-                }
-                if (msg.action === "unsubscribe") {
+                if (msg.action === "unsubscribe")
                     this.unsubscribe(ws, msg.topic);
-                }
             });
 
             ws.on('close', () => this.removeClientFromAll(ws));
         })
 
         this.redisSub.psubscribe('*', (err) => {
-            if (err) console.error('Redis psubscribe error', err);
+            if (err)
+                console.error('Redis psubscribe error', err);
         });
 
         // Relay Redis → WebSocket
         this.redisSub.on('pmessage', (pattern, topicId, serializedEvent) => {
             const clients = this.subscriptions.get(topicId as Realtime.Topic.Id);
-            if (clients) {
+            if (clients)
                 clients.forEach(ws => {
-                    if (ws.readyState === WebSocket.OPEN) {
-                        ws.send(serializedEvent);  // Forward as-is
-                    }
+                    if (ws.readyState === WebSocket.OPEN)
+                        ws.send(serializedEvent);
                 });
-            }
         });
     }
 
     private subscribe(ws: WebSocket, topicId: Realtime.Topic.Id) {
-        if (!this.subscriptions.has(topicId)) {
+        if (!this.subscriptions.has(topicId))
             this.subscriptions.set(topicId, new Set());
-        }
+
         this.subscriptions.get(topicId)!.add(ws);
     }
 
@@ -65,7 +62,8 @@ export class RealtimeServiceImpl {
     private removeClientFromAll(ws: WebSocket) {
         this.subscriptions.forEach((clients, topicId) => {
             clients.delete(ws);
-            if (clients.size === 0) this.subscriptions.delete(topicId);
+            if (clients.size === 0) 
+                this.subscriptions.delete(topicId);
         });
     }
 

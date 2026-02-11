@@ -1,8 +1,6 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint"
 import { Foundations, Workflow } from "@vx-agent-editor/shared/types";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { HumanMessage } from "@langchain/core/messages";
 import { Runtime } from "src/runtime";
 
 @RegisterNode(Blueprint.id)
@@ -16,12 +14,13 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
     public override async run(
         state: Runtime.State,
-        incomingValues: Runtime.InferInputs<typeof Blueprint>
+        inputs: Runtime.InferInputs<typeof Blueprint>
     ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
 
-        const { text } = incomingValues;
+        const { input } = inputs;
 
-        return { response: text }
+        // input is already a BaseMessage (from upstream edge or synthesized from field value)
+        return { response: input };
     }
 
 
