@@ -6,12 +6,10 @@ export const Blueprint = defineBlueprint({
     description: "This node is a chat input",
     icon: "MessagesSquare",
     inputs: [
-        InputBuilder.String({
-            id: "text",
-            displayName: "Text",
-            initialValue: "",
-            hasHandle: true,
-            advanced: false,
+        InputBuilder.Message({
+            id: "input",
+            displayName: "Input",
+            advanced: true,
         })
     ],
     outputs: [

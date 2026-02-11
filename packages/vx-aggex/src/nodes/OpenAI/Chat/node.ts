@@ -2,7 +2,6 @@ import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/types";
 import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage } from "@langchain/core/messages";
 import { Runtime } from "src/runtime";
 
 @RegisterNode(Blueprint.id)
@@ -16,10 +15,10 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
     public override async run(
         state: Runtime.State,
-        incomingValues: Runtime.InferInputs<typeof Blueprint>
+        inputs: Runtime.InferInputs<typeof Blueprint>
     ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
 
-        const { model, prompt, api_key, temperature, maxTokens, topP, frequencyPenalty, presencePenalty } = incomingValues;
+        const { model, input, systemMessage, api_key, temperature, maxTokens, topP, frequencyPenalty, presencePenalty } = inputs;
 
         const llm = new ChatOpenAI({
             model,
@@ -32,10 +31,11 @@ export class Node extends Runtime.Node<typeof Blueprint> {
         });
 
         const response = await llm.invoke([
-            new HumanMessage(prompt)
+            systemMessage,  // already a BaseMessage
+            input           // already a BaseMessage
         ]);
 
-        return { response: response }
+        return { response };
     }
 
 

@@ -1,6 +1,6 @@
 {
-  "version": "1770726732764",
-  "generatedAt": "2026-02-10T12:32:12.764Z",
+  "version": "1770737238547",
+  "generatedAt": "2026-02-10T15:27:18.547Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.Input": {
@@ -9,17 +9,17 @@
       "icon": "MessagesSquare",
       "inputs": [
         {
-          "id": "text",
+          "id": "input",
           "required": true,
           "reconcile": false,
           "asTool": false,
-          "advanced": false,
+          "advanced": true,
           "isRuntime": false,
           "handleVariants": [
-            "Text"
+            "Message"
           ],
           "uiData": {
-            "displayName": "Text"
+            "displayName": "Input"
           },
           "variant": "string",
           "initialValue": "",
@@ -101,17 +101,36 @@
           "initialValue": ""
         },
         {
-          "id": "prompt",
+          "id": "input",
           "required": true,
           "reconcile": false,
           "asTool": false,
           "advanced": false,
           "isRuntime": false,
           "handleVariants": [
-            "Text"
+            "Message"
           ],
           "uiData": {
-            "displayName": "Prompt"
+            "displayName": "Input"
+          },
+          "variant": "string",
+          "initialValue": "",
+          "data": {
+            "multiline": false
+          }
+        },
+        {
+          "id": "systemMessage",
+          "required": true,
+          "reconcile": false,
+          "asTool": false,
+          "advanced": false,
+          "isRuntime": false,
+          "handleVariants": [
+            "Message"
+          ],
+          "uiData": {
+            "displayName": "System Message"
           },
           "variant": "string",
           "initialValue": "",
@@ -256,17 +275,36 @@
           "initialValue": ""
         },
         {
-          "id": "prompt",
+          "id": "input",
           "required": true,
           "reconcile": false,
           "asTool": false,
           "advanced": false,
           "isRuntime": false,
           "handleVariants": [
-            "Text"
+            "Message"
           ],
           "uiData": {
-            "displayName": "Prompt"
+            "displayName": "Input"
+          },
+          "variant": "string",
+          "initialValue": "",
+          "data": {
+            "multiline": false
+          }
+        },
+        {
+          "id": "systemMessage",
+          "required": true,
+          "reconcile": false,
+          "asTool": false,
+          "advanced": false,
+          "isRuntime": false,
+          "handleVariants": [
+            "Message"
+          ],
+          "uiData": {
+            "displayName": "System Message"
           },
           "variant": "string",
           "initialValue": "",

@@ -2,6 +2,7 @@ import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/types";
 import { Runtime } from "src/runtime";
+import { HumanMessage } from "@langchain/core/messages";
 
 @RegisterNode(Blueprint.id)
 export class Node extends Runtime.Node<typeof Blueprint> {
@@ -13,13 +14,15 @@ export class Node extends Runtime.Node<typeof Blueprint> {
     }
 
     public override async run(
-        state:          Runtime.State,
-        incomingValues: Runtime.InferInputs<typeof Blueprint>
+        state: Runtime.State,
+        inputs: Runtime.InferInputs<typeof Blueprint>
     ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
 
-        const { text } = incomingValues;
+        const { text } = inputs;
 
-        return { output: text }
+        return { 
+            output: new HumanMessage(text)
+         };
     }
 
 

@@ -2,7 +2,7 @@ import z from "zod"
 import { Workflow } from "./Workflow"
 import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
-import { AxiosInstance } from "axios"
+import { type AxiosInstance } from "axios"
 
 export namespace Orchestrator {
     export namespace Job {

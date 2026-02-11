@@ -1,11 +1,8 @@
 import { CompiledStateGraph, MessagesValue, ReducedValue, StateSchema } from "@langchain/langgraph";
 import { Foundations, Orchestrator } from "@vx-agent-editor/shared/types";
 import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
-import z from "zod";
 import { EventBuilder } from "./eventBuilder";
 
-
-// 1. Define the State Annotation (The Schema)
 
 export namespace Runtime {
 
@@ -40,7 +37,6 @@ export namespace Runtime {
     }
     export type State = typeof State.Schema.State
 
-    // I have no clue 
     export type CompiledGraph = CompiledStateGraph<
         State,
         typeof State.Schema.Update,
@@ -48,8 +44,6 @@ export namespace Runtime {
         typeof State.Schema,
         typeof State.Schema
     >
-
-
 
 
     export abstract class Node<TBlueprint extends Foundations.Blueprint> {
@@ -62,9 +56,18 @@ export namespace Runtime {
             this.workflowNode = workflowNode;
         }
 
+        /**
+         * Execute this node.
+         * 
+         * `inputs` is a single object containing ALL resolved values:
+         * - Field inputs (string, number, boolean, etc.) come from workflow fieldValues.
+         * - Port inputs (BaseMessage, BaseLanguageModel, etc.) come from upstream node outputs via edges.
+         * 
+         * The engine resolves and synthesizes these before calling run().
+         */
         public abstract run(
             globalState: Runtime.State,
-            incomingValues: InferInputs<TBlueprint>
+            inputs: InferInputs<TBlueprint>
         ): Promise<InferOutputs<TBlueprint>>;
 
         protected async onReconcile(
@@ -76,36 +79,46 @@ export namespace Runtime {
         }
     }
 
-    // Note i didnt write this.
-    // This was written by claude opus 4.5
-    // This is all sorts of crazy
 
     /**
-     * Infer runtime InputValues from a Definition.
-     * Uses the __literalId phantom property if available, falls back to id.
-     * Usage: type Inputs = InferInputs<typeof Definition>;
+     * Infer runtime input values from a Blueprint.
+     * 
+     * Resolution order per input:
+     * 1. __valueType phantom (set by port builders like InputBuilder.Message → BaseMessage)
+     * 2. initialValue type (set by field builders like InputBuilder.Float → number)
+     * 3. Fallback to `any`
      */
     export type InferInputs<D> = D extends { inputs: infer T }
-        ? T extends readonly { id: string; initialValue?: unknown }[]
-        ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
-            ? Id
-            : K extends { id: infer Id extends string } ? Id : never
-            ]: K extends { initialValue: infer V } ? V : any }
-        : never
+        ? T extends readonly { id: string }[]
+            ? { [K in T[number] as K extends { __literalId?: infer Id extends string }
+                ? Id
+                : K extends { id: infer Id extends string } ? Id : never
+                ]: K extends { __valueType?: infer V }
+                    ? [NonNullable<V>] extends [never]
+                        ? (K extends { initialValue: infer IV } ? IV : any)
+                        : NonNullable<V>
+                    : K extends { initialValue: infer IV } ? IV : any
+            }
+            : never
         : never;
 
     /**
-     * Infer runtime OutputValues from a Definition.
-     * Uses the __literalId phantom property if available, falls back to id.
-     * Uses the __valueType phantom property if available, falls back to any.
-     * Usage: type Outputs = InferOutputs<typeof Definition>;
+     * Infer runtime output values from a Blueprint.
+     * 
+     * Uses __valueType phantom if available (set by OutputBuilder.Message → BaseMessage, etc.)
+     * Falls back to `any`.
      */
     export type InferOutputs<D> = D extends { outputs: infer T }
         ? T extends readonly { id: string }[]
-        ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
-            ? Id
-            : K extends { id: infer Id extends string } ? Id : never
-            ]: K extends { __valueType?: infer V } ? V : any }
-        : never
+            ? { [K in T[number] as K extends { __literalId?: infer Id extends string }
+                ? Id
+                : K extends { id: infer Id extends string } ? Id : never
+                ]: K extends { __valueType?: infer V }
+                    ? [NonNullable<V>] extends [never]
+                        ? any
+                        : NonNullable<V>
+                    : any
+            }
+            : never
         : never;
 }
