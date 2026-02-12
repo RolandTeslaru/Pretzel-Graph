@@ -1,5 +1,5 @@
 import { WorkflowCompiler } from "./compiler";
-import { Workflow } from "@vx-agent-editor/shared/types/Workflow"; // Placeholder
+import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 import { Runtime } from "./runtime";
 import { cloneDeep } from "lodash";
 import { Foundations, Orchestrator } from "@vx-agent-editor/shared/types";
@@ -21,9 +21,10 @@ export class AggexEngine {
 
         emit(b => b.nodeStarted(activeNode.id))
 
-        const incomingValues = this.resolveIncomingValues(state, activeNode.id, workflow);
+        const config = this.resolveNodeConfiguration(activeNode.id, workflow);
+        const inputs = this.resolveIncomingValues(state, activeNode.id, workflow);
 
-        const result = await Vertex.run(state, incomingValues)
+        const result = await Vertex.run(state, config, inputs)
 
         emit(b => b.nodeCompleted(activeNode.id, result))
 
@@ -34,67 +35,91 @@ export class AggexEngine {
         };
     }
 
+
     /**
-     * Build the inputs bag for a node.
+     * Resolve static configuration values for a node.
      * 
+     * For each config field defined on the node:
+     * 1. Use the override from `staticValues` if present
+     * 2. Otherwise fall back to the config schema's `initialValue`
+     */
+    private resolveNodeConfiguration(
+        nodeId:   Workflow.Node.Id,
+        workflow: Workflow
+    ): Record<string, Foundations.NodeConfig.Value> {
+        const node         = workflow.data.nodes[nodeId];
+        const staticValues = workflow.data.staticValues[nodeId] ?? {};
+
+        const resolved: Record<string, Foundations.NodeConfig.Value> = {};
+
+        for (const [configId, configSchema] of Object.entries(node.config)) {
+            const brandedId = configId as Foundations.NodeConfig.Id;
+            if (brandedId in staticValues) {
+                resolved[configId] = staticValues[brandedId] as Foundations.NodeConfig.Value;
+            } else {
+                resolved[configId] = configSchema.initialValue as Foundations.NodeConfig.Value;
+            }
+        }
+
+        return resolved;
+    }
+
+
+    /**
+     * Resolve port input values for a node.
+     *
+     * Port inputs must be actual class instances (BaseMessage, BaseLanguageModel, etc.).
+     *
      * Resolution per input:
-     * 1. If an edge connects to this input → use the source node's output value
-     * 2. Otherwise → use the field value from workflow.data.fieldValues
+     * 1. If an edge connects to this input → extract the value from the source
+     *    node's outputs and ensure it's the correct LC class via Synthesizer
+     * 2. If no edge → synthesize from the static value (or initialValue fallback)
+     *    because the raw primitive must be coerced into a class instance
      */
     private resolveIncomingValues(
         state:    Runtime.State,
         nodeId:   Workflow.Node.Id,
         workflow: Workflow
-    ): Record<Foundations.Port.Input.Id, any> {
-        const edges = workflow.data.edges;
-        const fieldValues = workflow.data.staticValues[nodeId] ?? {};
-        const node = workflow.data.nodes[nodeId];
+    ): Record<string, any> {
+        const node         = workflow.data.nodes[nodeId];
+        const staticValues = workflow.data.staticValues[nodeId] ?? {};
 
-        const resolved: Record<Foundations.Port.Input.Id, any> = {};
+        const resolved: Record<string, any> = {};
 
-        // Collect edge-connected values (port inputs from upstream outputs)
-        const incomingEdges = Object.values(edges)
-            .filter(edge => edge.target.nodeId === nodeId);
-
-        const edgeConnectedInputs = new Set<string>();
-
-        for (const edge of incomingEdges) {
-            const source = edge.source;
-            const target = edge.target; // target node id is this node;
-
-            // Get the specific output value from the source node's outputs
-            const stateSourceOutput = state.node_outputs[source.nodeId];
-            const outputSchema = workflow.data.nodes[source.nodeId].outputs.find(output => output.id === source.handleId);
-            if(!outputSchema)
-                continue;
-
-            if(outputSchema.variant in Foundations.Input.Ports.Variant){
-                resolved[target.handleId] = Synthesizer.ensureClassComponent(stateSourceOutput, outputSchema.variant)
-            }
-
-            if (stateSourceOutput && outputSchema) {
-                resolved[target.handleId] = Synthesizer.ensureClassComponent(stateSourceOutput, outputSchema.variant)
-                if(outputSchema.variant === "message")
-
-
-                resolved[target.handleId] = sourceOutputs[source.handleId];
-                edgeConnectedInputs.add(target.handleId);
+        // Build a lookup: targetPortId → edge, for edges incoming to this node
+        const incomingEdgeByPort = new Map<string, Workflow.Edge>();
+        for (const edge of Object.values(workflow.data.edges)) {
+            if (edge.target.nodeId === nodeId) {
+                incomingEdgeByPort.set(edge.target.portId as string, edge);
             }
         }
 
-        // Fill remaining inputs from field values (user-configured primitives)
         for (const input of node.inputs) {
-            if (!edgeConnectedInputs.has(input.id)) {
-                if (input.id in fieldValues) {
-                    resolved[input.id] = fieldValues[input.id];
-                } else if ("initialValue" in input) {
-                    resolved[input.id] = input.initialValue;
+            const inputId = input.id as string;
+            const edge = incomingEdgeByPort.get(inputId);
+
+            if (edge) {
+                // ── Edge-connected: pull value from upstream node's outputs ──
+                const sourceOutputs = state.node_outputs[edge.source.nodeId];
+                if (sourceOutputs) {
+                    const rawValue = sourceOutputs[edge.source.portId as string];
+                    resolved[inputId] = Synthesizer.ensureReference(rawValue, input.variant);
+                }
+            } else {
+                // ── No edge: synthesize from static value or initialValue ──
+                const staticValue = staticValues[input.id];
+                const fallback    = "initialValue" in input ? input.initialValue : undefined;
+                const raw         = staticValue ?? fallback;
+
+                if (raw !== undefined) {
+                    resolved[inputId] = Synthesizer.synthesizeInput(input, raw as Foundations.NodeConfig.Value);
                 }
             }
         }
 
         return resolved;
     }
+
 
     public compile(workflow: Workflow, emit: Runtime.Emitter) {
         return this.compiler.compile(workflow, emit, this.runNode.bind(this))
