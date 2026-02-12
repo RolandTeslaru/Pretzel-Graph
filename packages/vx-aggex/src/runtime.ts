@@ -2,6 +2,7 @@ import { CompiledStateGraph, MessagesValue, ReducedValue, StateSchema } from "@l
 import { Foundations, Orchestrator } from "@vx-agent-editor/shared/types";
 import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 import { EventBuilder } from "./eventBuilder";
+import { LC } from "./langchain";
 
 
 export namespace Runtime {
@@ -45,6 +46,14 @@ export namespace Runtime {
         typeof State.Schema
     >
 
+    export type NodeRunner = (
+        state:      Runtime.State,
+        activeNode: Workflow.Node,
+        Vertex:     Runtime.Node<Foundations.Blueprint>,
+        workflow:   Workflow,
+        emit:       Runtime.Emitter
+    ) => Promise<State.Update>
+
 
     export abstract class Node<TBlueprint extends Foundations.Blueprint> {
 
@@ -59,41 +68,55 @@ export namespace Runtime {
         /**
          * Execute this node.
          * 
-         * `inputs` is a single object containing ALL resolved values:
-         * - Field inputs (string, number, boolean, etc.) come from workflow fieldValues.
-         * - Port inputs (BaseMessage, BaseLanguageModel, etc.) come from upstream node outputs via edges.
-         * 
-         * The engine resolves and synthesizes these before calling run().
+         * @param globalState - The full LangGraph runtime state
+         * @param config - Static configuration values (NodeConfig fields like temperature, model, etc.)
+         * @param inputs - Port inputs resolved from upstream edges or fallback values
          */
         public abstract run(
             globalState: Runtime.State,
+            config: InferConfig<TBlueprint>,
             inputs: InferInputs<TBlueprint>
         ): Promise<InferOutputs<TBlueprint>>;
 
         protected async onReconcile(
-            changedInputId: Foundations.Input.Id,
-            newValue: any,
+            changedConfigId: Foundations.NodeConfig.Id,
+            newValue: Foundations.NodeConfig.Value,
             currentBlueprint: TBlueprint
         ): Promise<TBlueprint> {
-            return Promise.resolve(currentBlueprint);
+            return currentBlueprint
+        }
+
+        protected async onConversion(
+            currentBlueprint: TBlueprint
+        ): Promise<TBlueprint> {
+            return currentBlueprint
         }
     }
 
+    
 
     /**
-     * Infer runtime input values from a Blueprint.
+     * Infer static config values from a Blueprint.
      * 
-     * Resolution order per input:
-     * 1. __valueType phantom (set by port builders like InputBuilder.Message → BaseMessage)
-     * 2. initialValue type (set by field builders like InputBuilder.Float → number)
-     * 3. Fallback to `any`
+     * Uses __literalId phantom for literal key names.
+     * Maps each config field to its initialValue type.
+     */
+    export type InferConfig<D> = D extends { config: infer C }
+        ? { [K in keyof C]: C[K] extends { __literalId?: infer _Id; initialValue: infer IV } ? IV : any }
+        : Record<string, never>;
+
+    /**
+     * Infer runtime port input values from a Blueprint.
+     * 
+     * Uses __reference phantom if present (set by InputBuilder.Message → BaseMessage, etc.)
+     * Falls back to initialValue type, then `any`.
      */
     export type InferInputs<D> = D extends { inputs: infer T }
         ? T extends readonly { id: string }[]
             ? { [K in T[number] as K extends { __literalId?: infer Id extends string }
                 ? Id
                 : K extends { id: infer Id extends string } ? Id : never
-                ]: K extends { __valueType?: infer V }
+                ]: K extends { __reference?: infer V }
                     ? [NonNullable<V>] extends [never]
                         ? (K extends { initialValue: infer IV } ? IV : any)
                         : NonNullable<V>
@@ -105,7 +128,7 @@ export namespace Runtime {
     /**
      * Infer runtime output values from a Blueprint.
      * 
-     * Uses __valueType phantom if available (set by OutputBuilder.Message → BaseMessage, etc.)
+     * Uses __reference phantom if present (set by OutputBuilder.Message → BaseMessage, etc.)
      * Falls back to `any`.
      */
     export type InferOutputs<D> = D extends { outputs: infer T }
@@ -113,7 +136,7 @@ export namespace Runtime {
             ? { [K in T[number] as K extends { __literalId?: infer Id extends string }
                 ? Id
                 : K extends { id: infer Id extends string } ? Id : never
-                ]: K extends { __valueType?: infer V }
+                ]: K extends { __reference?: infer V }
                     ? [NonNullable<V>] extends [never]
                         ? any
                         : NonNullable<V>

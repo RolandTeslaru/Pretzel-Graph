@@ -1,318 +1,294 @@
-import { z } from "zod"
+import { config, z } from "zod"
+import { Workflow } from "./Workflow"
 
 export namespace Foundations {
     export const ArtifactId = z.string().brand("ArtifactId")
     export type ArtifactId = z.infer<typeof ArtifactId>
 
-    export const HandleVariant = z.enum([
-        "Message",
-        "Document",
-        "Text",
-        "Data",
-        "LanguageModel",
-        "Embeddings",
-        "VectorStore",
-        "Retriever",
-        "Tool",
-        "DataFrame",
-        "Structure"
-    ])
-    export type HandleVariant = z.infer<typeof HandleVariant>
 
 
-
-    // ============================================
-    // INPUTS
-    // ============================================
-
-    export namespace Input {
-        export const Id = z.string().brand("InputId");
+    export namespace NodeConfig {
+        export const Id = z.string().brand("ConfigId");
         export type Id = z.infer<typeof Id>;
 
-        /**
-         * Base schema shared by ALL inputs (fields and ports alike).
-         */
+        export const Value = z.union([
+            z.string(),
+            z.number(),
+            z.boolean(),
+            z.array(z.string()),
+            z.array(z.number()),
+            z.array(z.boolean()),
+            z.record(z.string(), z.any()),
+        ]);
+        export type Value = z.infer<typeof Value>
+
         export const Base = z.object({
-            id: Input.Id,
+            id: NodeConfig.Id,
+            advanced: z.boolean(),
             required: z.boolean(),
             reconcile: z.boolean(),
-            asTool: z.boolean(),
-            advanced: z.boolean(),
 
-            handleVariants: z.array(HandleVariant),
-
-            uiData: z.object({
-                displayName: z.string(),
-                tooltip: z.string().optional(),
-                placeholder: z.string().optional(),
-            }),
+            displayName: z.string(),
+            description: z.string().optional(),
+            tooltip: z.string().optional(),
         })
-        export interface Base extends z.infer<typeof Base> { }
+        export type Base = z.infer<typeof Base>
 
+        export const Variant = z.enum([
+            "Integer",
+            "Float",
+            "String",
+            "Secret",
+            "Boolean",
+            "MultiOption",
+            "File",
+            "Script",
+            "Json",
+            "List"
+        ])
+        export type Variant = z.infer<typeof Variant>
 
-        // ---- Field inputs (user-configurable primitives) ----
-
-        export namespace DerivedSchemas {
-            export const Integer = Base.extend({
-                variant: z.literal("integer"),
-                initialValue: z.int(),
-                min: z.int().optional(),
-                max: z.int().optional(),
-                step: z.int().optional(),
-                slider: z.boolean().optional(),
-            })
-
-            export const Float = Base.extend({
-                variant: z.literal("float"),
-                initialValue: z.number(),
-                min: z.number().optional(),
-                max: z.number().optional(),
-                step: z.number().optional(),
-                slider: z.boolean().optional(),
-            })
-
-            export const String = Base.extend({
-                variant: z.literal("string"),
-                initialValue: z.string(),
-                multiline: z.boolean(),
-            })
-
-            export const Secret = Base.extend({
-                variant: z.literal("secret"),
-                initialValue: z.string(),
-            })
-
-            export const Boolean = Base.extend({
-                variant: z.literal("boolean"),
-                initialValue: z.boolean(),
-            })
-
-            export const MultiOption = Base.extend({
-                variant: z.literal("multiOption"),
-                initialValue: z.string(),
-                options: z.array(z.string()),
-                kind: z.enum(["select", "tab"]).default("select"),
-            })
-
-            export const File = Base.extend({
-                variant: z.literal("file"),
-                initialValue: z.string(),
-                fileTypes: z.array(z.string()).optional(),
-            })
-
-            export const Script = Base.extend({
-                variant: z.literal("script"),
-                initialValue: z.string(),
-            })
-
-            export const Json = Base.extend({
-                variant: z.literal("json"),
-                initialValue: z.json(),
-            })
-
-            export const List = Base.extend({
-                variant: z.literal("list"),
-                initialValue: z.array(z.string()),
-            })
-
-            export const Structure = Base.extend({
-                variant: z.literal("structure"),
-                initialValue: z.record(z.string(), z.any()),
-            })
-
-
-            // ---- Port inputs (runtime object references) ----
-            // These receive instances of LangChain classes at runtime.
-            // initialValue is a fallback for when no edge is connected.
-            // For types that can't be synthesized from a fallback (e.g. LanguageModel),
-            // they require an incoming edge — the engine enforces this.
-
-            export const Message = Base.extend({
-                variant: z.literal("message"),
-                initialValue: z.string(),  // fallback: synthesized into HumanMessage at runtime
-            })
-
-            export const LanguageModel = Base.extend({
-                variant: z.literal("languageModel"),
-                // No initialValue — requires an incoming edge
-            })
-
-            export const Document = Base.extend({
-                variant: z.literal("document"),
-                initialValue: z.string().optional(), // fallback: synthesized into Document at runtime
-            })
-
-            export const Retriever = Base.extend({
-                variant: z.literal("retriever"),
-                // No initialValue — requires an incoming edge
-            })
-
-            export const Embeddings = Base.extend({
-                variant: z.literal("embeddings"),
-                // No initialValue — requires an incoming edge
-            })
-
-            export const VectorStore = Base.extend({
-                variant: z.literal("vectorStore"),
-                // No initialValue — requires an incoming edge
-            })
-
-            export const Tool = Base.extend({
-                variant: z.literal("tool"),
-                // No initialValue — requires an incoming edge
-            })
-
-            export const DataFrame = Base.extend({
-                variant: z.literal("dataFrame"),
-                // No initialValue — requires an incoming edge
-            })
+        function configLiteral<T extends NodeConfig.Variant>(value: T) {
+            return z.literal(value);
         }
 
+        export const Integer = NodeConfig.Base.extend({
+            variant: configLiteral("Integer"),
+            initialValue: z.int(),
+            min: z.int().optional(),
+            max: z.int().optional(),
+            step: z.int().optional(),
+            slider: z.boolean().optional(),
+        })
+
+        export const Float = NodeConfig.Base.extend({
+            variant: configLiteral("Float"),
+            initialValue: z.number(),
+            min: z.number().optional(),
+            max: z.number().optional(),
+            step: z.number().optional(),
+            slider: z.boolean().optional(),
+        })
+
+        export const String = NodeConfig.Base.extend({
+            variant: configLiteral("String"),
+            initialValue: z.string(),
+            multiline: z.boolean(),
+        })
+
+        export const Secret = NodeConfig.Base.extend({
+            variant: configLiteral("Secret"),
+            initialValue: z.string(),
+        })
+
+        export const Boolean = NodeConfig.Base.extend({
+            variant: configLiteral("Boolean"),
+            initialValue: z.boolean(),
+        })
+
+        export const MultiOption = NodeConfig.Base.extend({
+            variant: configLiteral("MultiOption"),
+            initialValue: z.string(),
+            options: z.array(z.string()),
+            kind: z.enum(["select", "tab"]).default("select"),
+        })
+
+        export const File = NodeConfig.Base.extend({
+            variant: configLiteral("File"),
+            initialValue: z.string(),
+            fileTypes: z.array(z.string()).optional(),
+        })
+
+        export const Script = NodeConfig.Base.extend({
+            variant: configLiteral("Script"),
+            initialValue: z.string(),
+        })
+
+        export const Json = NodeConfig.Base.extend({
+            variant: configLiteral("Json"),
+            initialValue: z.json(),
+        })
+
+        export const List = NodeConfig.Base.extend({
+            variant: configLiteral("List"),
+            initialValue: z.array(z.string()),
+        })
+
+        export interface Integer extends z.infer<typeof Integer> { }
+        export interface Float extends z.infer<typeof Float> { }
+        export interface String extends z.infer<typeof String> { }
+        export interface Secret extends z.infer<typeof Secret> { }
+        export interface Boolean extends z.infer<typeof Boolean> { }
+        export interface MultiOption extends z.infer<typeof MultiOption> { }
+        export interface File extends z.infer<typeof File> { }
+        export interface Script extends z.infer<typeof Script> { }
+        export interface Json extends z.infer<typeof Json> { }
+        export interface List extends z.infer<typeof List> { }
+        
         export const Schema = z.discriminatedUnion("variant", [
-            // Field inputs
-            DerivedSchemas.String,
-            DerivedSchemas.Float,
-            DerivedSchemas.Secret,
-            DerivedSchemas.Boolean,
-            DerivedSchemas.MultiOption,
-            DerivedSchemas.File,
-            DerivedSchemas.List,
-            DerivedSchemas.Json,
-            DerivedSchemas.Integer,
-            DerivedSchemas.Script,
-            DerivedSchemas.Structure,
-            // Port inputs
-            DerivedSchemas.Message,
-            DerivedSchemas.LanguageModel,
-            DerivedSchemas.Document,
-            DerivedSchemas.Retriever,
-            DerivedSchemas.Embeddings,
-            DerivedSchemas.VectorStore,
-            DerivedSchemas.Tool,
-            DerivedSchemas.DataFrame,
+            Integer,
+            Float,
+            String,
+            Secret,
+            Boolean,
+            MultiOption,
+            File,
+            Script,
+            Json,
+            List,
         ]);
 
         export type Schema = z.infer<typeof Schema>;
-
-        // Field input interfaces
-        export interface Integer extends z.infer<typeof DerivedSchemas.Integer> { }
-        export interface Float extends z.infer<typeof DerivedSchemas.Float> { }
-        export interface Secret extends z.infer<typeof DerivedSchemas.Secret> { }
-        export interface Boolean extends z.infer<typeof DerivedSchemas.Boolean> { }
-        export interface MultiOption extends z.infer<typeof DerivedSchemas.MultiOption> { }
-        export interface File extends z.infer<typeof DerivedSchemas.File> { }
-        export interface List extends z.infer<typeof DerivedSchemas.List> { }
-        export interface Json extends z.infer<typeof DerivedSchemas.Json> { }
-        export interface String extends z.infer<typeof DerivedSchemas.String> { }
-        export interface Script extends z.infer<typeof DerivedSchemas.Script> { }
-        export interface Structure extends z.infer<typeof DerivedSchemas.Structure> { }
-
-        // Port input interfaces
-        export interface Message extends z.infer<typeof DerivedSchemas.Message> { }
-        export interface LanguageModel extends z.infer<typeof DerivedSchemas.LanguageModel> { }
-        export interface Document extends z.infer<typeof DerivedSchemas.Document> { }
-        export interface Retriever extends z.infer<typeof DerivedSchemas.Retriever> { }
-        export interface Embeddings extends z.infer<typeof DerivedSchemas.Embeddings> { }
-        export interface VectorStore extends z.infer<typeof DerivedSchemas.VectorStore> { }
-        export interface Tool extends z.infer<typeof DerivedSchemas.Tool> { }
-        export interface DataFrame extends z.infer<typeof DerivedSchemas.DataFrame> { }
     }
-    export type Input = z.infer<typeof Input.Schema>
+    export type NodeConfig = z.infer<typeof NodeConfig.Schema>;
 
 
 
-    // ============================================
-    // OUTPUTS
-    // ============================================
+    export namespace Port {
+        export const Variant = z.enum([
+            "Message",
+            "Document",
+            "Text",
+            "Data",
+            "LanguageModel",
+            "Embeddings",
+            "VectorStore",
+            "Retriever",
+            "Tool",
+            "DataFrame",
+        ])
+        export type Variant = z.infer<typeof Variant>
 
-    export namespace Output {
-        export const Id = z.string().brand("OutputId");
-        export type Id = z.infer<typeof Id>;
+        function portLiteral<T extends Port.Variant>(value: T) {
+            return z.literal(value);
+        }
 
-        /**
-         * Base schema shared by ALL outputs.
-         */
         export const Base = z.object({
-            id: Output.Id,
-            handleVariants: z.array(HandleVariant),
-            /** If true, this output is exposed as a Tool Handle (allowing the node to be used as a tool by an Agent) */
-            asTool: z.boolean().optional(),
-            uiData: z.object({
-                displayName: z.string().optional(),
-            }),
+            id: z.string(),
+
+            displayName: z.string().optional(),
+            tooltip: z.string().optional(),
         })
         export interface Base extends z.infer<typeof Base> { }
 
-        export namespace DerivedSchemas {
+        export namespace Variants {
             export const Message = Base.extend({
-                variant: z.literal("message"),
+                variant: portLiteral("Message"),
+                initialValue: z.string().optional(),
             })
 
             export const Text = Base.extend({
-                variant: z.literal("text"),
+                variant: portLiteral("Text"),
+                initialValue: z.string().optional(),
             })
 
             export const LanguageModel = Base.extend({
-                variant: z.literal("languageModel"),
+                variant: portLiteral("LanguageModel"),
             })
 
             export const Document = Base.extend({
-                variant: z.literal("document"),
+                variant: portLiteral("Document"),
             })
 
             export const Retriever = Base.extend({
-                variant: z.literal("retriever"),
+                variant: portLiteral("Retriever"),
             })
 
             export const Embeddings = Base.extend({
-                variant: z.literal("embeddings"),
+                variant: portLiteral("Embeddings"),
             })
 
             export const VectorStore = Base.extend({
-                variant: z.literal("vectorStore"),
+                variant: portLiteral("VectorStore"),
             })
 
             export const Tool = Base.extend({
-                variant: z.literal("tool"),
+                variant: portLiteral("Tool"),
             })
 
             export const DataFrame = Base.extend({
-                variant: z.literal("dataFrame"),
+                variant: portLiteral("DataFrame"),
             })
 
-            export const Data = Base.extend({
-                variant: z.literal("data"),
-            })
+            export const Schema = z.discriminatedUnion("variant", [
+                Message,
+                Text,
+                LanguageModel,
+                Document,
+                Retriever,
+                Embeddings,
+                VectorStore,
+                Tool,
+                DataFrame,
+            ])
+
+            export type Message = z.infer<typeof Message>
+            export type Text = z.infer<typeof Text>
+            export type LanguageModel = z.infer<typeof LanguageModel>
+            export type Document = z.infer<typeof Document>
+            export type Retriever = z.infer<typeof Retriever>
+            export type Embeddings = z.infer<typeof Embeddings>
+            export type VectorStore = z.infer<typeof VectorStore>
+            export type Tool = z.infer<typeof Tool>
+            export type DataFrame = z.infer<typeof DataFrame>
         }
 
-        export const Schema = z.discriminatedUnion("variant", [
-            DerivedSchemas.Message,
-            DerivedSchemas.Text,
-            DerivedSchemas.LanguageModel,
-            DerivedSchemas.Document,
-            DerivedSchemas.Retriever,
-            DerivedSchemas.Embeddings,
-            DerivedSchemas.VectorStore,
-            DerivedSchemas.Tool,
-            DerivedSchemas.DataFrame,
-            DerivedSchemas.Data,
-        ]);
+        export namespace Input {
+            export const Id = z.string().brand("InputId");
+            export type Id = z.infer<typeof Id>;
 
-        export type Schema = z.infer<typeof Schema>;
+            const inputFields = { 
+                id: Input.Id, 
+                required: z.boolean() 
+            };
 
-        export interface Message extends z.infer<typeof DerivedSchemas.Message> { }
-        export interface Text extends z.infer<typeof DerivedSchemas.Text> { }
-        export interface LanguageModel extends z.infer<typeof DerivedSchemas.LanguageModel> { }
-        export interface Document extends z.infer<typeof DerivedSchemas.Document> { }
-        export interface Retriever extends z.infer<typeof DerivedSchemas.Retriever> { }
-        export interface Embeddings extends z.infer<typeof DerivedSchemas.Embeddings> { }
-        export interface VectorStore extends z.infer<typeof DerivedSchemas.VectorStore> { }
-        export interface Tool extends z.infer<typeof DerivedSchemas.Tool> { }
-        export interface DataFrame extends z.infer<typeof DerivedSchemas.DataFrame> { }
-        export interface Data extends z.infer<typeof DerivedSchemas.Data> { }
+            export const Base = Port.Base.extend(inputFields)
+            export type Base = z.infer<typeof Base>
+
+            // Variant-specific input schemas (variant fields + InputId + required)
+            export const Message       = Port.Variants.Message.extend(inputFields);
+            export const Text          = Port.Variants.Text.extend(inputFields);
+            export const LanguageModel = Port.Variants.LanguageModel.extend(inputFields);
+            export const Document      = Port.Variants.Document.extend(inputFields);
+            export const Retriever     = Port.Variants.Retriever.extend(inputFields);
+            export const Embeddings    = Port.Variants.Embeddings.extend(inputFields);
+            export const VectorStore   = Port.Variants.VectorStore.extend(inputFields);
+            export const Tool          = Port.Variants.Tool.extend(inputFields);
+
+            export const Schema = z.discriminatedUnion("variant", [
+                Message, Text, LanguageModel, Document, Retriever, Embeddings, VectorStore, Tool,
+            ]);
+        }
+        export type Input = z.infer<typeof Input.Schema>
+
+        export namespace Output {
+            export const Id = z.string().brand("OutputId");
+            export type Id = z.infer<typeof Id>;
+
+            const outputFields = { 
+                id: Output.Id 
+            };
+
+            export const Base = Port.Base.extend(outputFields)
+            export type Base = z.infer<typeof Base>
+
+            // Variant-specific output schemas (variant fields + OutputId)
+            export const Message       = Port.Variants.Message.extend(outputFields);
+            export const Text          = Port.Variants.Text.extend(outputFields);
+            export const LanguageModel = Port.Variants.LanguageModel.extend(outputFields);
+            export const Document      = Port.Variants.Document.extend(outputFields);
+            export const Retriever     = Port.Variants.Retriever.extend(outputFields);
+            export const Embeddings    = Port.Variants.Embeddings.extend(outputFields);
+            export const VectorStore   = Port.Variants.VectorStore.extend(outputFields);
+            export const Tool          = Port.Variants.Tool.extend(outputFields);
+            export const DataFrame     = Port.Variants.DataFrame.extend(outputFields);
+
+            export const Schema = z.discriminatedUnion("variant", [
+                Message, Text, LanguageModel, Document, Retriever, Embeddings, VectorStore, Tool, DataFrame,
+            ]);
+        }
+        export type Output = z.infer<typeof Output.Schema>
     }
-    export type Output = z.infer<typeof Output.Schema>
-
 
 
     // ============================================
@@ -333,8 +309,9 @@ export namespace Foundations {
         export type Meta = z.infer<typeof Meta.Schema>
 
         export const Schema = Meta.Schema.extend({
-            inputs: z.array(Foundations.Input.Schema).readonly(),
-            outputs: z.array(Foundations.Output.Schema).readonly(),
+            inputs: z.array(Port.Input.Schema).readonly(),
+            outputs: z.array(Port.Output.Schema).readonly(),
+            config: z.record(Foundations.NodeConfig.Id, Foundations.NodeConfig.Base).readonly(),
             description: z.string(),
         }).readonly()
     }

@@ -1,30 +1,16 @@
-import { defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { ConfigBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
     id: "OpenAI.Chat",
     displayName: "OpenAI Chat",
     description: "This node talks to OpenAI's GPT chat models via the Chat Completions API",
     icon: "OpenAI",
-    inputs: [
-        InputBuilder.Secret({
+    config: {
+        api_key: ConfigBuilder.Secret({
             id: "api_key",
             displayName: "API Key",
-            initialValue: "",
-            advanced: false,
         }),
-        InputBuilder.Message({
-            id: "input",
-            displayName: "Input",
-            required: true,
-            advanced: false,
-        }),
-        InputBuilder.Message({
-            id: "systemMessage",
-            displayName: "System Message",
-            required: true,
-            advanced: false,
-        }),
-        InputBuilder.MultiOption({
+        model: ConfigBuilder.MultiOption({
             id: "model",
             displayName: "Model",
             options: [
@@ -38,9 +24,8 @@ export const Blueprint = defineBlueprint({
                 "o3",
             ],
             initialValue: "gpt-5.2",
-            advanced: false,
         }),
-        InputBuilder.Float({
+        temperature: ConfigBuilder.Float({
             id: "temperature",
             displayName: "Temperature",
             required: false,
@@ -50,9 +35,8 @@ export const Blueprint = defineBlueprint({
             step: 0.1,
             slider: true,
             tooltip: "Controls randomness in the output. Higher values (e.g., 0.8) make output more random, lower values (e.g., 0.2) make it more focused and deterministic.",
-            advanced: false,
         }),
-        InputBuilder.Integer({
+        maxTokens: ConfigBuilder.Integer({
             id: "maxTokens",
             displayName: "Max Tokens",
             required: false,
@@ -60,9 +44,8 @@ export const Blueprint = defineBlueprint({
             min: 1,
             step: 1,
             tooltip: "The maximum number of tokens to generate in the chat completion.",
-            advanced: false,
         }),
-        InputBuilder.Float({
+        topP: ConfigBuilder.Float({
             id: "topP",
             displayName: "Top P",
             required: false,
@@ -72,9 +55,8 @@ export const Blueprint = defineBlueprint({
             step: 0.01,
             slider: true,
             tooltip: "Nucleus sampling: considers the tokens with top_p probability mass. 0.1 means only tokens comprising the top 10% probability mass are considered.",
-            advanced: false,
         }),
-        InputBuilder.Float({
+        frequencyPenalty: ConfigBuilder.Float({
             id: "frequencyPenalty",
             displayName: "Frequency Penalty",
             required: false,
@@ -85,7 +67,7 @@ export const Blueprint = defineBlueprint({
             tooltip: "Penalizes new tokens based on their existing frequency in the text so far. Positive values decrease the model's likelihood to repeat the same line verbatim.",
             advanced: true,
         }),
-        InputBuilder.Float({
+        presencePenalty: ConfigBuilder.Float({
             id: "presencePenalty",
             displayName: "Presence Penalty",
             required: false,
@@ -93,9 +75,18 @@ export const Blueprint = defineBlueprint({
             min: -2.0,
             max: 2.0,
             step: 0.1,
-            slider: true,
             tooltip: "Penalizes new tokens based on whether they appear in the text so far. Positive values increase the model's likelihood to talk about new topics.",
             advanced: true,
+        }),
+    },
+    inputs: [
+        InputBuilder.Message({
+            id: "input",
+            displayName: "Input",
+        }),
+        InputBuilder.Message({
+            id: "systemMessage",
+            displayName: "System Message",
         }),
     ],
     outputs: [

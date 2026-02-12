@@ -1,30 +1,16 @@
-import { defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { ConfigBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
     id: "Google.GenerativeAI",
     icon: "Google",
     displayName: "Google Generative AI",
     description: "This node talks to google generative ai api",
-    inputs: [
-        InputBuilder.Secret({
+    config: {
+        api_key: ConfigBuilder.Secret({
             id: "api_key",
             displayName: "API Key",
-            initialValue: "",
-            advanced: false,
         }),
-        InputBuilder.Message({
-            id: "input",
-            displayName: "Input",
-            required: true,
-            advanced: false,
-        }),
-        InputBuilder.Message({
-            id: "systemMessage",
-            displayName: "System Message",
-            required: true,
-            advanced: false,
-        }),
-        InputBuilder.MultiOption({
+        model: ConfigBuilder.MultiOption({
             id: "model",
             displayName: "Model",
             options: [
@@ -35,9 +21,8 @@ export const Blueprint = defineBlueprint({
                 "gemini-2.5-flash-lite",
             ],
             initialValue: "gemini-3-pro-preview",
-            advanced: false,
         }),
-        InputBuilder.Float({
+        temperature: ConfigBuilder.Float({
             id: "temperature",
             displayName: "Temperature",
             required: false,
@@ -46,9 +31,8 @@ export const Blueprint = defineBlueprint({
             max: 2.0,
             step: 0.1,
             tooltip: "Controls randomness in the output. Higher values are more creative.",
-            advanced: false,
         }),
-        InputBuilder.Integer({
+        maxOutputTokens: ConfigBuilder.Integer({
             id: "maxOutputTokens",
             displayName: "Max Output Tokens",
             required: false,
@@ -56,9 +40,8 @@ export const Blueprint = defineBlueprint({
             min: 1,
             step: 1,
             tooltip: "Maximum number of tokens to generate.",
-            advanced: false,
         }),
-        InputBuilder.Float({
+        topP: ConfigBuilder.Float({
             id: "topP",
             displayName: "Top P",
             required: false,
@@ -67,9 +50,8 @@ export const Blueprint = defineBlueprint({
             max: 1,
             step: 0.01,
             tooltip: "Nucleus sampling probability.",
-            advanced: false,
         }),
-        InputBuilder.Integer({
+        topK: ConfigBuilder.Integer({
             id: "topK",
             displayName: "Top K",
             required: false,
@@ -77,7 +59,16 @@ export const Blueprint = defineBlueprint({
             min: 1,
             step: 1,
             tooltip: "Top-K sampling parameter.",
-            advanced: false,
+        }),
+    },
+    inputs: [
+        InputBuilder.Message({
+            id: "input",
+            displayName: "Input",
+        }),
+        InputBuilder.Message({
+            id: "systemMessage",
+            displayName: "System Message",
         }),
     ],
     outputs: [
