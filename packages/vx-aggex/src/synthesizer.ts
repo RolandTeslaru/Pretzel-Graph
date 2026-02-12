@@ -1,55 +1,112 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { LC } from "./langchain";
-import { Foundations, Workflow } from "@vx-agent-editor/shared/types";
-import { BaseLanguageModel } from "@langchain/core/language_models/base";
+import { Foundations } from "@vx-agent-editor/shared/types";
 
-
-const LANGCHAIN_COMPONENT_MAP:
-    Record<Workflow.Port., any>
-= {
-    "message": LC.HumanMessage,
-    "languageModel": LC.BaseLanguageModel,
-    "document": LC.Document,
-    "retriever": LC.BaseRetriever,
-    "embeddings": LC.Embeddings,
-    "vectorStore": LC.VectorStore,
-    "tool": LC.Tool,
-    "dataFrame": null, // No direct LangChain equivalent
-}
 
 export class Synthesizer {
 
+    /**
+     * Create an LC class instance from a static primitive value.
+     * Called when a port input has NO incoming edge — the raw primitives
+     * stored in `staticValues` / `initialValue` must be coerced into
+     * the class instance the node's `run()` expects.
+     */
+    public static synthesizeInput(
+        input:       Foundations.Port.Input, 
+        staticValue: Foundations.NodeConfig.Value
+    ): any {
+        switch (input.variant) {
+            case "Message":
+                return this.coerceMessage("human", staticValue as string);
 
-    public static ensureClassComponent(stateNodeOutput: any, variant: Foundations.Input.Ports.Schema["variant"]): any {
-        const ComponentClass = LANGCHAIN_COMPONENT_MAP[variant];
+            case "Text":
+                return String(staticValue);
 
-        if (!ComponentClass) {
-            throw new Error(`AGGEX Synthesizer: No class component mapping found for variant: ${variant}`);
-        }
+            case "Document":
+                return new LC.Document({ pageContent: String(staticValue) });
 
-        // If it's already an instance of the correct class, return it
-        if (stateNodeOutput instanceof ComponentClass) {
-            return stateNodeOutput;
-        }
+            case "LanguageModel":
+            case "Embeddings":
+            case "VectorStore":
+            case "Retriever":
+            case "Tool":
+                throw new Error(
+                    `AGGEX Synthesizer: Cannot synthesize variant "${input.variant}" ` +
+                    `from a static value — it requires an incoming edge connection.`
+                );
 
-        // Otherwise, attempt to create a new instance using the value
-        try {
-            return new ComponentClass(stateNodeOutput);
-        } catch (error) {
-            throw new Error(`AGGEX Synthesizer: Failed to coerce value into class component for variant: ${variant}. Error: ${error}`);
+            default:
+                throw new Error(
+                    `AGGEX Synthesizer: Unknown variant "${(input as any).variant}"`
+                );
         }
     }
 
-    public static createLC(schema: Foundations.Input | Foundations.Output, value: string){
-        switch(schema.variant){
-            case "message":
-                return new HumanMessage(value)
-            case "languageModel":
-                return new Base
+
+    /**
+     * Ensure a runtime value coming from an upstream edge conforms to the
+     * expected LC class for the given port variant. Passes through values
+     * that are already the correct type; coerces when possible.
+     */
+    public static ensureReference(
+        value:   any,
+        variant: Foundations.Port.Variant
+    ): any {
+        switch (variant) {
+            case "Message":
+                if (value instanceof LC.BaseMessage) return value;
+                if (typeof value === "string") return new HumanMessage(value);
+                throw this.coercionError(variant, value);
+
+            case "Text":
+                if (typeof value === "string") return value;
+                return String(value);
+
+            case "Document":
+                if (value instanceof LC.Document) return value;
+                if (typeof value === "string") return new LC.Document({ pageContent: value });
+                throw this.coercionError(variant, value);
+
+            case "LanguageModel":
+                if (value instanceof LC.BaseLanguageModel) return value;
+                throw this.coercionError(variant, value);
+
+            case "Embeddings":
+                if (value instanceof LC.Embeddings) return value;
+                throw this.coercionError(variant, value);
+
+            case "VectorStore":
+                if (value instanceof LC.VectorStore) return value;
+                throw this.coercionError(variant, value);
+
+            case "Retriever":
+                if (value instanceof LC.BaseRetriever) return value;
+                throw this.coercionError(variant, value);
+
+            case "Tool":
+                if (value instanceof LC.Tool) return value;
+                throw this.coercionError(variant, value);
+
+            case "Data":
+            case "DataFrame":
+                // Pass through — no canonical LC class
+                return value;
+
+            default:
+                throw new Error(
+                    `AGGEX Synthesizer: Unknown variant "${variant}"`
+                );
         }
     }
 
-    public static coerceMessage(kind: "human" | "system" | "ai", input: LC.BaseMessage | string): LC.BaseMessage {
+
+    /**
+     * Coerce a string (or BaseMessage) into the specific message subclass.
+     */
+    public static coerceMessage(
+        kind:  "human" | "system" | "ai",
+        input: LC.BaseMessage | string
+    ): LC.BaseMessage {
         const content = typeof input === "string" ? input : input.content;
 
         switch (kind) {
@@ -60,5 +117,13 @@ export class Synthesizer {
             case "ai":
                 return input instanceof AIMessage ? input : new AIMessage(content);
         }
+    }
+
+
+    private static coercionError(variant: string, value: any): Error {
+        return new Error(
+            `AGGEX Synthesizer: Cannot coerce value of type ` +
+            `"${typeof value}" into variant "${variant}".`
+        );
     }
 }
