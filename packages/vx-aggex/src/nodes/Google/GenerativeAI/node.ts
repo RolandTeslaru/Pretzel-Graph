@@ -16,10 +16,12 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
     public override async run(
         state:  Runtime.State,
+        config: Runtime.InferConfig<typeof Blueprint>,
         inputs: Runtime.InferInputs<typeof Blueprint>,
     ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
 
-        const { systemMessage, input, model, api_key, temperature, maxOutputTokens, topP, topK } = inputs;
+        const { model, api_key, temperature, maxOutputTokens, topP, topK } = config;
+        const { systemMessage, input } = inputs;
 
         const llm = new ChatGoogleGenerativeAI({
             model,
@@ -31,8 +33,8 @@ export class Node extends Runtime.Node<typeof Blueprint> {
         });
 
         const response = await llm.invoke([
-            Synthesizer.ensureMessage("system", systemMessage),
-            Synthesizer.ensureMessage("human", input),
+            Synthesizer.coerceMessage("system", systemMessage),
+            Synthesizer.coerceMessage("human", input),
         ]);
 
         return { 
@@ -43,8 +45,8 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
 
     public override async onReconcile(
-        changedInputId: Foundations.Input.Id,
-        newValue: any,
+        changedConfigId: Foundations.NodeConfig.Id,
+        newValue: Foundations.NodeConfig.Value,
         currentBlueprint: typeof Blueprint
     ): Promise<typeof Blueprint> {
         return Promise.resolve(currentBlueprint);

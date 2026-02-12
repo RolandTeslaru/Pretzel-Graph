@@ -6,29 +6,6 @@ export namespace Workflow {
     export type Id = z.infer<typeof Id>;
 
 
-    export namespace Node {
-        export const Id = z.string().brand("NodeId");
-        export type Id = z.infer<typeof Id>;
-
-
-        export const Schema = z.object({
-            id:           Node.Id,
-            blueprintId:  Foundations.Blueprint.Id,
-
-            displayName: z.string(),
-
-            inputs:  z.array(Foundations.Input.Schema),
-            outputs: z.array(Foundations.Output.Schema),
-
-            icon:        z.string().nullable().optional(),
-            description: z.string().optional(),
-            isMinimized: z.boolean().default(false),       
-        });
-    }
-    export interface Node extends z.infer<typeof Node.Schema> {}
-
-
-
     export namespace Edge {
         export const Id = z.string().brand("EdgeId");
         export type Id = z.infer<typeof Id>;
@@ -37,16 +14,40 @@ export namespace Workflow {
             id: Edge.Id,
             source: z.object({
                 nodeId: Node.Id,
-                handleId: Foundations.Output.Id
+                portId: Foundations.Port.Output.Id
             }),
             target: z.object({
                 nodeId: Node.Id,
-                handleId: Foundations.Input.Id,
+                portId: Foundations.Port.Input.Id,
             })
         })
     }
-    export interface Edge extends z.infer<typeof Edge.Schema> {}
+    export interface Edge extends z.infer<typeof Edge.Schema> { }
 
+
+
+
+    export namespace Node {
+        export const Id = z.string().brand("NodeId");
+        export type Id = z.infer<typeof Id>;
+
+
+        export const Schema = z.object({
+            id: Node.Id,
+            blueprintId: z.string().brand("BlueprintId"),
+
+            displayName: z.string(),
+
+            config: z.record(Foundations.NodeConfig.Id, Foundations.NodeConfig.Schema),
+            inputs: z.array(Foundations.Port.Input.Schema),
+            outputs: z.array(Foundations.Port.Output.Schema),
+
+            icon: z.string().nullable().optional(),
+            description: z.string().optional(),
+            isMinimized: z.boolean().default(false),
+        });
+    }
+    export interface Node extends z.infer<typeof Node.Schema> { }
 
 
 
@@ -87,7 +88,13 @@ export namespace Workflow {
         data: z.object({
             nodes: z.record(Node.Id, Node.Schema),
             edges: z.record(Edge.Id, Edge.Schema),
-            fieldValues: z.record(Node.Id, z.record(Foundations.Input.Id, z.any())),
+            staticValues: z.record(
+                                Node.Id, 
+                                z.record(
+                                    z.union([Foundations.NodeConfig.Id, Foundations.Port.Input.Id]), 
+                                    z.union([ z.string(), z.number(), z.boolean(), z.array(z.string()), z.json()])
+                                )
+                            ),
 
             ui: z.object({
                 layout: Layout.Schema,
@@ -109,7 +116,7 @@ export namespace Workflow {
         data: {
             nodes: {},
             edges: {},
-            fieldValues: {},
+            staticValues: {},
             ui: {
                 layout: {},
                 viewport: { x: 0, y: 0, zoom: 1 },
@@ -119,7 +126,7 @@ export namespace Workflow {
         }
     } as const satisfies z.infer<typeof Schema>
 }
-export interface Workflow extends z.infer<typeof Workflow.Schema> {}
+export interface Workflow extends z.infer<typeof Workflow.Schema> { }
 
 
 

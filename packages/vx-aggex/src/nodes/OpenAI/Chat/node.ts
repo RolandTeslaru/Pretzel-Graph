@@ -3,6 +3,7 @@ import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/types";
 import { ChatOpenAI } from "@langchain/openai";
 import { Runtime } from "src/runtime";
+import { Synthesizer } from "src/synthesizer";
 
 @RegisterNode(Blueprint.id)
 export class Node extends Runtime.Node<typeof Blueprint> {
@@ -15,10 +16,12 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
     public override async run(
         state: Runtime.State,
+        config: Runtime.InferConfig<typeof Blueprint>,
         inputs: Runtime.InferInputs<typeof Blueprint>
     ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
 
-        const { model, input, systemMessage, api_key, temperature, maxTokens, topP, frequencyPenalty, presencePenalty } = inputs;
+        const { model, api_key, temperature, maxTokens, topP, frequencyPenalty, presencePenalty } = config;
+        const { input, systemMessage } = inputs;
 
         const llm = new ChatOpenAI({
             model,
@@ -31,8 +34,8 @@ export class Node extends Runtime.Node<typeof Blueprint> {
         });
 
         const response = await llm.invoke([
-            systemMessage,  // already a BaseMessage
-            input           // already a BaseMessage
+            Synthesizer.coerceMessage("system", systemMessage),
+            Synthesizer.coerceMessage("human", input)
         ]);
 
         return { response };
@@ -40,10 +43,17 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
 
     public override async onReconcile(
-        changedInputId: Foundations.Input.Id,
-        newValue: any,
+        changedConfigId: Foundations.NodeConfig.Id,
+        newValue: Foundations.NodeConfig.Value,
         currentBlueprint: typeof Blueprint
     ): Promise<typeof Blueprint> {
         return Promise.resolve(currentBlueprint);
+    }
+
+
+    public override async onConversion(
+        currentBlueprint: typeof Blueprint
+    ): Promise<typeof Blueprint> {
+        return Blueprint
     }
 }

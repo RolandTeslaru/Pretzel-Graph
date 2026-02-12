@@ -1,19 +1,18 @@
-import { defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { ConfigBuilder, defineBlueprint, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Text.Input",
     displayName: "Text Input",
     description: "This node is a Text input",
     icon: "Type",
-    inputs: [
-        InputBuilder.String({
+    config: {
+        text: ConfigBuilder.String({
             id: "text",
             displayName: "Text",
-            required: true,
             initialValue: "",
-            advanced: false,
         }),
-    ],
+    },
+    inputs: [],
     outputs: [
         OutputBuilder.Message({
             id: "output",
