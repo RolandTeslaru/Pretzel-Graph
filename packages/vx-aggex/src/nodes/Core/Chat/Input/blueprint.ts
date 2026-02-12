@@ -5,11 +5,11 @@ export const Blueprint = defineBlueprint({
     displayName: "Chat Input",
     description: "This node is a chat input",
     icon: "MessagesSquare",
+    config: {},
     inputs: [
         InputBuilder.Message({
             id: "input",
             displayName: "Input",
-            advanced: true,
         })
     ],
     outputs: [

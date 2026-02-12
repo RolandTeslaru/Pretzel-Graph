@@ -7,43 +7,11 @@ import { Runtime } from "src/runtime";
 export class WorkflowCompiler {
     constructor() {}
 
-    // public synthesizeChain(edge: Workflow.Edge){
-    //     const { source, target } = edge
-        
-    // }
-
-    // public resolveChains(workflow: Workflow){
-    //     Object.values(workflow.data.edges).forEach(edge => {
-    //         this.synthesizeChain(edge)
-    //     })
-    // }
-
-    private async runNode(
-        state:      Runtime.State,
-        activeNode: Workflow.Node,
-        Vertex:     Runtime.Node<Foundations.Blueprint>,
-        edges:      Workflow["data"]["edges"],
-        emit:       Runtime.Emitter
+    public async compile(
+        workflow:   Workflow, 
+        emit:       Runtime.Emitter, 
+        nodeRunner: Runtime.NodeRunner
     ) {
-        console.log(`Executing Node: ${activeNode.displayName} (${activeNode.id})`);
-        
-        emit(b => b.nodeStarted(activeNode.id))
-
-        const inputs = this.resolveInputs(state, activeNode.id, edges);
-
-        const result = await Vertex.run(state, inputs)
-
-        emit(b => b.nodeCompleted(activeNode.id, result))
-
-        return {
-            node_outputs: {
-                [activeNode.id]: result
-            }
-        };
-    }
-
-
-    public async compile(workflow: Workflow, emit: Runtime.Emitter) {
         const graph = new StateGraph(Runtime.State.Schema);
         const nodes = workflow.data.nodes;
         const edges = workflow.data.edges;
@@ -58,7 +26,7 @@ export class WorkflowCompiler {
             const Vertex = new VerticeConstructor(node);
 
             graph.addNode(node.id, async (state) => {
-                return this.runNode(state, node, Vertex, edges, emit)
+                return nodeRunner(state, node, Vertex, workflow, emit);
             });
         }
 
@@ -73,7 +41,7 @@ export class WorkflowCompiler {
         // 5. Set Entry Points (Start Nodes)
         const startNodes = this.findStartNodes(nodes, edges);
         if (startNodes.length === 0)
-            throw new Error("No start nodes found! Graph might be disconnected.")
+            throw new Error("AGGEX Compiler: No start nodes found! Graph might be disconnected.")
 
         startNodes.forEach(nodeId => {
             graph.addEdge(START, nodeId as "__start__");
@@ -82,33 +50,6 @@ export class WorkflowCompiler {
         const compiledGraph = graph.compile();
 
         return compiledGraph;
-    }
-
-    private resolveInputs(
-        state: Runtime.State,
-        nodeId: Workflow.Node.Id, 
-        edges: Workflow["data"]["edges"]
-    ) {
-        // Find inputs connected to this node
-        const relevantEdges = Object.values(edges)
-            .filter(edge => edge.target.nodeId === nodeId);
-
-        const inputValues: Record<Foundations.Input.Id, any> = {};
-
-        for (const edge of relevantEdges) {
-            const sourceNodeId = edge.source.nodeId;
-            // Get data from the "Shared Memory" (node_outputs)
-            const sourceOutput = state.node_outputs[sourceNodeId];
-
-            // Map it to the target input handle (e.g. "prompt" or "context")
-            const targetHandle = edge.target.handleId;
-            inputValues[targetHandle] = sourceOutput;
-        }
-
-        // Also merge static parameter values (user config)
-        // const staticValues = this.workflow.data.nodes[nodeId].data.inputs...
-
-        return inputValues;
     }
 
     private findStartNodes(
