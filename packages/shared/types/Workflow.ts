@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { Foundations } from "./Foundations";
+import { type SupabaseClient } from "@supabase/supabase-js";
 
 export namespace Workflow {
     export const Id = z.string().brand("WorkflowId");
@@ -17,9 +18,9 @@ export namespace Workflow {
 
             displayName: z.string(),
 
-            fields:  z.array(Foundations.Field.Schema),
-            
-            inputs:  z.array(Foundations.Port.Input.Schema),
+            fields: z.array(Foundations.Field.Schema),
+
+            inputs: z.array(Foundations.Port.Input.Schema),
             outputs: z.array(Foundations.Port.Output.Schema),
 
             icon: z.string().nullable().optional(),
@@ -92,12 +93,12 @@ export namespace Workflow {
             nodes: z.record(Node.Id, Node.Schema),
             edges: z.record(Edge.Id, Edge.Schema),
             staticValues: z.record(
-                                Node.Id, 
-                                z.record(
-                                    z.union([Foundations.Field.Id, Foundations.Port.Input.Id]), 
-                                    z.union([ z.string(), z.number(), z.boolean(), z.array(z.string()), z.json()])
-                                )
-                            ),
+                Node.Id,
+                z.record(
+                    z.union([Foundations.Field.Id, Foundations.Port.Input.Id]),
+                    z.union([z.string(), z.number(), z.boolean(), z.array(z.string()), z.json()])
+                )
+            ),
 
             ui: z.object({
                 layout: Layout.Schema,
@@ -128,6 +129,63 @@ export namespace Workflow {
             }
         }
     } as const satisfies z.infer<typeof Schema>
+
+
+
+    export namespace API {
+        export namespace Get {
+            export const Request = z.object({
+                workflowId: Workflow.Id
+            })
+            export type Request = z.infer<typeof Request>
+
+            export const Response = z.object({
+                workflow: Workflow.Schema
+            })
+            export type Response = z.infer<typeof Response>
+
+        }
+        export async function get(supabase: SupabaseClient, request: Get.Request): Promise<Get.Response> {
+            const { data, error } = await supabase
+                .from("workflows")
+                .select("*")
+                .eq("id", request.workflowId)
+                .maybeSingle()
+
+            if (error) throw error
+            if (!data) throw new Error("Workflow not found")
+
+            return {
+                workflow: data
+            }
+        }
+
+
+        export namespace Commit {
+            export const Request = z.object({
+                workflow: Workflow.Schema
+            })
+            export type Request = z.infer<typeof Request>
+
+            export const Response = z.object({})
+            export type Response = z.infer<typeof Response>
+
+        }
+        export async function commit(supabase: SupabaseClient, request: Commit.Request): Promise<Commit.Response> {
+            const workflowId = request.workflow.id;
+            const { data, error } = await supabase
+                .from("workflows")
+                .update(request.workflow)
+                .eq("id", workflowId)
+                .select()
+                .maybeSingle()
+
+            if (error) throw error
+            if (!data) throw new Error("Workflow not found")
+
+            return {}
+        }
+    }
 }
 export interface Workflow extends z.infer<typeof Workflow.Schema> { }
 

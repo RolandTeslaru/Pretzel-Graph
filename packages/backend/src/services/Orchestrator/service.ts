@@ -53,7 +53,7 @@ export class OrchestratorServiceImpl {
                 const userId = await getUserId(supabase) as Auth.User.Id
                 console.log("Retrieved Authenticated client", userId)
 
-                const resolvedSecrets: Record<Vault.Credential.Id, Vault.Credential> = {};
+                const resolvedSecrets: Record<Vault.Credential.Id, Vault.Secret> = {};
 
                 console.log("Worlfloe, data, staticValues", workflow.data.staticValues)
 
@@ -71,8 +71,8 @@ export class OrchestratorServiceImpl {
                                     staticValues[field.id] = resolvedSecrets[credentialId];
                                     continue;
                                 }
-    
-                                const secret = await resolveCredential(supabase, credentialId);
+
+                                const { value: secret } = await Vault.API.Credential.reveal(supabase, {id: credentialId})
                                 
                                 console.log("Resovled secret for credentialId", credentialId, "secret", secret)
 
@@ -95,7 +95,7 @@ export class OrchestratorServiceImpl {
 
 
                 console.log("Resolved secrets", resolvedSecrets)
-                console.log("Workflow after secret resolution", workflow)
+                console.log("Workflow after secret resolution", JSON.stringify(workflow, null, 2))
                 console.log("Resolved secrets, adding job to queue")
 
 
