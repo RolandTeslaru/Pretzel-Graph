@@ -18,7 +18,7 @@ export const rootVars = cva(
 )
 
 export const trackVars = cva(
-  "relative shadow-sm shadow-black/20 bg-muted grow overflow-hidden rounded-full data-[orientation=horizontal]:h-2.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-2.5",
+  "relative shadow-sm shadow-black/20 bg-muted grow overflow-hidden rounded-full data-[orientation=horizontal]:h-3 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-2.5",
   {
     variants: {
       variant: {
@@ -30,7 +30,7 @@ export const trackVars = cva(
 )
 
 export const rangeVars = cva(
-  "absolute select-none bg-primary rounded-md  data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full",
+  "absolute select-none bg-primary data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full",
   {
     variants: {
       variant: {
@@ -42,7 +42,7 @@ export const rangeVars = cva(
 )
 
 export const thumbVars = cva(
-  "cursor-pointer relative block h-2.5 w-2.5 rounded-full bg-white border border-neutral-300 shrink-0 select-none ring-offset-background transition-[color,box-shadow] after:absolute after:-inset-2 hover:ring-[3px] hover:ring-ring/50 focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-ring/50 active:ring-[3px] active:ring-ring/50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+  "cursor-pointer relative block h-3 w-3 rounded-full bg-white border border-neutral-300 shrink-0 select-none ring-offset-background transition-[color,box-shadow] after:absolute after:-inset-2 hover:ring-[3px] hover:ring-ring/50 focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-ring/50 active:ring-[3px] active:ring-ring/50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
   {
     variants: {
       variant: {
@@ -55,6 +55,8 @@ export const thumbVars = cva(
 
 export type SliderVariants = "default" | "accent"
 
+const THUMB_SIZE = 12 // matches w-3 (12px)
+
 const Slider = ({
   className,
   defaultValue,
@@ -64,12 +66,15 @@ const Slider = ({
   onDragStart,
   onDragEnd,
   variant = "default",
+  onValueChange,
   ...props
 }: ComponentProps<typeof SliderPrimitive.Root> & {
   onDragStart?: (event: any) => void;
   onDragEnd?: (event: any) => void;
   variant?: SliderVariants;
 }) => {
+  const fillRef = React.useRef<HTMLDivElement>(null)
+
   const _values = React.useMemo(
     () =>
       Array.isArray(value)
@@ -79,6 +84,32 @@ const Slider = ({
           : [min, max],
     [value, defaultValue, min, max]
   )
+
+  const computeFillWidth = React.useCallback((val: number) => {
+    const pct = Math.min(100, Math.max(0, ((val - min) / (max - min)) * 100))
+    const offset = (THUMB_SIZE / 2) - pct * (THUMB_SIZE / 100)
+    return `calc(${pct}% + ${offset}px)`
+  }, [min, max])
+
+  const handleValueChange = (vals: number[]) => {
+    if (fillRef.current) {
+      fillRef.current.style.width = computeFillWidth(vals[0])
+    }
+    onValueChange?.(vals)
+  }
+
+  React.useEffect(() => {
+    if (fillRef.current && value !== undefined) {
+      const v = Array.isArray(value) ? value[0] : value
+      fillRef.current.style.width = computeFillWidth(v as number)
+    }
+  }, [value, computeFillWidth])
+
+  const initialValue = Array.isArray(value)
+    ? value[0]
+    : Array.isArray(defaultValue)
+      ? defaultValue[0]
+      : min
 
   const handlePointerDown = (event: any) => {
     onDragStart?.(event);
@@ -96,6 +127,7 @@ const Slider = ({
       min={min}
       max={max}
       className={cn(rootVars({ variant }), className)}
+      onValueChange={handleValueChange}
       {...props}
     >
       <SliderPrimitive.Track
@@ -104,7 +136,15 @@ const Slider = ({
       >
         <SliderPrimitive.Range
           data-slot="slider-range"
-          className={cn(rangeVars({ variant }))}
+          className="sr-only"
+        />
+        <div
+          ref={fillRef}
+          className={cn(
+            "absolute left-0 top-0 h-full pointer-events-none select-none bg-primary",
+            variant === "accent" && "border-l border-t border-b border-primary-accent",
+          )}
+          style={{ width: computeFillWidth(initialValue) }}
         />
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => (
