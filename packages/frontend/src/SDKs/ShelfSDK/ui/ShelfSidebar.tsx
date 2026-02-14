@@ -4,7 +4,7 @@ import SectionTabs from './SectionTabs'
 import Search from './Search'
 import { ShelfSDK } from '../sdk'
 import { nodeColorsName } from '@/utils/styleUtils'
-import type { Foundations } from '@vx-agent-editor/shared/types'
+import type { Foundations } from '@vx-agent-editor/shared/domain'
 
 const ShelfSidebar = () => {
     return (

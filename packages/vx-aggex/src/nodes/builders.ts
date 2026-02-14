@@ -1,4 +1,4 @@
-import { Foundations } from "@vx-agent-editor/shared/types";
+import { Foundations } from "@vx-agent-editor/shared/domain";
 import { LC } from "src/langchain";
 
 

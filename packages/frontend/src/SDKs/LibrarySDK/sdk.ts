@@ -4,7 +4,7 @@ import { _createLibraryActions_, type _LibrarySDKActions } from "./actions";
 import { _createLibraryReducers_, type _LibrarySDKReducers } from "./reducers";
 import { _createLibrarySelectors_, type _LibrarySDKSelectors } from "./selectors";
 import { BaseSDK } from "../Base";
-import { Workflow, Library } from "@vx-agent-editor/shared/types";
+import { Workflow, Library } from "@vx-agent-editor/shared/domain";
 import { SDK } from "../SDKManager";
 
 @SDK("Library")

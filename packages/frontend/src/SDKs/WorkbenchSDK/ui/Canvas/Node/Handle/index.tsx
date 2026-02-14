@@ -3,7 +3,7 @@ import { type Connection, Handle, Position, type Edge } from "@xyflow/react";
 import { cn, nodeColorsName } from '@/utils/styleUtils';
 import { Tooltip } from '@/vx-ui/foundations/Tooltip';
 import HandleTooltipContent from './tooltip';
-import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
 import { isConnectionValid } from '@/SDKs/WorkbenchSDK/utils';
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk';

@@ -1,4 +1,4 @@
-import { Workflow } from '@vx-agent-editor/shared/types'
+import { Workflow } from '@vx-agent-editor/shared/domain'
 import React from 'react'
 import NodeHandle from '../Handle'
 

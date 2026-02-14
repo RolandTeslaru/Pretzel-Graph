@@ -4,7 +4,7 @@ import { cn } from '@/vx-ui/utils/cn';
 import { Button, Dialog } from '@/vx-ui/foundations';
 import { SystemIcons } from '@/vx-ui/icons';
 import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK';
-import type { Foundations, Workflow } from '@vx-agent-editor/shared/types';
+import type { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { WorkbenchSDK } from '../../sdk';
 
 interface HighlightedTextareaProps extends React.ComponentProps<"textarea"> {

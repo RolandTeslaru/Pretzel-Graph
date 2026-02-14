@@ -1,7 +1,7 @@
 import { ScrollArea } from '@/vx-ui/foundations'
 import { useMemo, memo } from 'react'
 import { WorkbenchSDK } from '../../sdk'
-import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { Accordion } from '@/vx-ui/foundations/accordion';
 import { AnimatePresence, motion } from 'motion/react';
 import { LazyIcon } from '@/vx-ui/icons/LazyIcon';

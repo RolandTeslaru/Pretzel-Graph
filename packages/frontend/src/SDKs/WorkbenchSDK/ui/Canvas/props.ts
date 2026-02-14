@@ -6,7 +6,7 @@ import WorkbenchNode from './Node'
 import { nodeColorsName } from '@/utils/styleUtils'
 import { isConnectionValid } from '../../utils'
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
-import { Workflow, Shelf, Foundations } from "@vx-agent-editor/shared/types"
+import { Workflow, Shelf, Foundations } from "@vx-agent-editor/shared/domain"
 
 type NodeDriver = WorkbenchSDK.NodeDriver
 type EdgeDriver = WorkbenchSDK.EdgeDriver
@@ -72,7 +72,7 @@ export const createCanvasCallbacks = (
                 return;
 
             const blueprintId = event.dataTransfer.getData("blueprintId") as Foundations.Blueprint.Id
-            if (!blueprintId) 
+            if (!blueprintId)
                 return
 
             const grabbedElements = document.getElementsByClassName("cursor-grabbing");
@@ -80,7 +80,7 @@ export const createCanvasCallbacks = (
                 document.body.removeChild(grabbedElements[0]);
 
             const blueprint = ShelfSDK.state.blueprints[blueprintId];
-            if (!blueprint) 
+            if (!blueprint)
                 return;
 
             WorkbenchSDK.actions.node.create(

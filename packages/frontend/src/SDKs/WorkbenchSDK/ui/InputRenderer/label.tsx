@@ -1,5 +1,5 @@
 import { Label } from "@/vx-ui/foundations/label"
-import type { Foundations } from "@vx-agent-editor/shared/types"
+import type { Foundations } from "@vx-agent-editor/shared/domain"
 import TypeBadge from "../TypeBadge"
 
 export const InputLabel = ({ input, showTypeBadges = true }: { input: Foundations.Port.Input, showTypeBadges?: boolean }) => {

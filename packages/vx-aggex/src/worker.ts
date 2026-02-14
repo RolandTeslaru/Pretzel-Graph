@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { EXECUTION_QUEUE_ID, REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants"
-import { Orchestrator, Realtime } from '@vx-agent-editor/shared/types';
+import { Orchestrator, Realtime } from '@vx-agent-editor/shared/domain';
 import { AggexEngine } from 'src/engine';
 import { container, singleton } from 'tsyringe';
 import { EventBuilder } from './eventBuilder';

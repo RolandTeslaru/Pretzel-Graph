@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import NodeHandle from '../Handle'
 
 interface NodeOutputProps {
@@ -41,10 +41,10 @@ const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked }) => {
     <div className="relative flex flex-col gap-1 py-1">
       {outputs.map((output) => (
         <NodeOutput
-        key={output.id}
-        node={node}
-        isWorkflowLocked={isWorkflowLocked}
-        output={output}
+          key={output.id}
+          node={node}
+          isWorkflowLocked={isWorkflowLocked}
+          output={output}
         />
       ))}
       {/* <Select.Root>

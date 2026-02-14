@@ -1,7 +1,7 @@
 import { BaseSDK } from "../Base";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { Foundations, Shelf } from "@vx-agent-editor/shared/types";
+import { Foundations, Shelf } from "@vx-agent-editor/shared/domain";
 import { _createShelfActions_, type _ShelfActions } from "./actions";
 import { _createShelfSelectors_, type _ShelfSelectors } from "./selectors";
 import { _createShelfReducers_, type _ShelfReducers } from "./reducers";
@@ -12,7 +12,7 @@ enableMapSet();
 @SDK("Shelf")
 export class ShelfSDKImpl extends BaseSDK<ShelfSDK.State> {
 
-    constructor() { super()}
+    constructor() { super() }
 
     public readonly useStore: BaseSDK.Store<ShelfSDK.State> = create(
         immer<ShelfSDK.State>(() => ({

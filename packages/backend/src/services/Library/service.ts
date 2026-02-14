@@ -1,7 +1,7 @@
 import { Service } from "../ServiceManager";
 import { Request, Response, Router } from 'express';
 import { createAuthenticatedClient } from "@/utils/supabase";
-import { Library, Workflow } from "@vx-agent-editor/shared/types";
+import { Library, Workflow } from "@vx-agent-editor/shared/domain";
 import { withAuth } from "../../utils/withAuth";
 
 @Service("Library")

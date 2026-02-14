@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react'
 import { WorkbenchSDK } from '../../../../sdk'
-import { Workflow, Foundations } from '@vx-agent-editor/shared/types';
+import { Workflow, Foundations } from '@vx-agent-editor/shared/domain';
 import NodeHandle from '../Handle'
 import { InputRenderer } from '../../../InputRenderer';
 
@@ -22,7 +22,7 @@ const InputPort: React.FC<{
                 port={input}
                 nodeId={nodeId}
             />
-            <InputRenderer input={input} nodeId={nodeId} hideInnerComponent={hasEdge} showTypeBadge={false}/>
+            <InputRenderer input={input} nodeId={nodeId} hideInnerComponent={hasEdge} showTypeBadge={false} />
         </div>
     )
 })

@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { WorkbenchSDK } from '../../sdk'
 import { Textarea } from '@/vx-ui/foundations'
 import { HighlightedTextarea } from './HighlightedTextarea'
@@ -7,9 +7,9 @@ import { InputLabel } from './label';
 
 
 type RendererProps<K extends Foundations.Port.Input['variant']> = {
-  input: Extract<Foundations.Port.Input, { variant: K }>
-  nodeId: Workflow.Node.Id
-  className?: string
+    input: Extract<Foundations.Port.Input, { variant: K }>
+    nodeId: Workflow.Node.Id
+    className?: string
 }
 
 
@@ -55,7 +55,7 @@ TextInput.displayName = "TextInput"
 const EdgeOnlyInput = memo(({ input, className, showTypeBadge }: { input: Foundations.Port.Input, className?: string, showTypeBadge?: boolean }) => {
     return (
         <div className={className + " w-full flex flex-col gap-1"}>
-            <InputLabel input={input} showTypeBadges={showTypeBadge}/>
+            <InputLabel input={input} showTypeBadges={showTypeBadge} />
         </div>
     )
 })
@@ -92,14 +92,14 @@ export const InputRenderer = memo(({ input, nodeId, className, hideInnerComponen
         className?: string
     }> | undefined
 
-    if(hideInnerComponent === true)
-      return (
-        <InputLabel input={input} showTypeBadges={false}/>
-    )
+    if (hideInnerComponent === true)
+        return (
+            <InputLabel input={input} showTypeBadges={false} />
+        )
 
     if (Component)
-        return <Component input={input} nodeId={nodeId} className={className}/>
+        return <Component input={input} nodeId={nodeId} className={className} />
 
-    return <EdgeOnlyInput input={input} className={className} showTypeBadge={showTypeBadge}/>
+    return <EdgeOnlyInput input={input} className={className} showTypeBadge={showTypeBadge} />
 })
 

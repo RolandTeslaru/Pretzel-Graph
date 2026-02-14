@@ -1,6 +1,6 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { LC } from "./langchain";
-import { Foundations } from "@vx-agent-editor/shared/types";
+import { Foundations } from "@vx-agent-editor/shared/domain";
 
 
 export class Synthesizer {
@@ -12,7 +12,7 @@ export class Synthesizer {
      * the class instance the node's `run()` expects.
      */
     public static synthesizeInput(
-        input:       Foundations.Port.Input, 
+        input: Foundations.Port.Input,
         staticValue: any
     ): any {
         switch (input.variant) {
@@ -49,7 +49,7 @@ export class Synthesizer {
      * that are already the correct type; coerces when possible.
      */
     public static ensureReference(
-        value:   any,
+        value: any,
         variant: Foundations.Port.Variant
     ): any {
         switch (variant) {
@@ -104,7 +104,7 @@ export class Synthesizer {
      * Coerce a string (or BaseMessage) into the specific message subclass.
      */
     public static coerceMessage(
-        kind:  "human" | "system" | "ai",
+        kind: "human" | "system" | "ai",
         input: LC.BaseMessage | string
     ): LC.BaseMessage {
         const content = typeof input === "string" ? input : input.content;

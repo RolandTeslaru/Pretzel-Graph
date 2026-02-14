@@ -1,6 +1,6 @@
 import type { ShelfSDKImpl, ShelfSDK } from "./sdk";
 import type { DropFirstArg } from "../types";
-import { Shelf } from "@vx-agent-editor/shared/types";
+import { Shelf } from "@vx-agent-editor/shared/domain";
 import { toast } from "sonner";
 import { api } from "../ApiInterceptorSDK";
 

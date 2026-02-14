@@ -1,11 +1,11 @@
-import { Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/types";
+import { Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/domain";
 
 export class EventBuilder {
     constructor(
         private jobId: Orchestrator.Job.Id,
         private workflowId: Workflow.Id,
         private topicId: Realtime.Topic.Id
-    ) {}
+    ) { }
     private base() {
         return {
             jobId: this.jobId,
