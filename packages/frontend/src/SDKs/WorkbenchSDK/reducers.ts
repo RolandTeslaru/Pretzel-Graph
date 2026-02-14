@@ -1,6 +1,6 @@
 import { WorkbenchSDK } from './sdk';
 import type { Connection } from '@xyflow/react';
-import { Workflow, Foundations } from "@vx-agent-editor/shared/types";
+import { Workflow, Foundations } from "@vx-agent-editor/shared/domain";
 import { cloneDeep } from 'lodash';
 import { type InputContainer } from './utils';
 import { toast } from 'sonner';
@@ -232,14 +232,14 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             s.isDirty = true;
             const nodeId = createNodeId(blueprint.id);
             const newNode = {
-                id:          nodeId,
+                id: nodeId,
                 blueprintId: blueprint.id,
                 displayName: blueprint.displayName,
 
-                fields:      cloneDeep(blueprint.fields) as Workflow.Node['fields'],
-                inputs:      cloneDeep(blueprint.inputs) as Workflow.Node['inputs'],
-                outputs:     cloneDeep(blueprint.outputs) as Workflow.Node["outputs"],
-                icon:        blueprint.icon,
+                fields: cloneDeep(blueprint.fields) as Workflow.Node['fields'],
+                inputs: cloneDeep(blueprint.inputs) as Workflow.Node['inputs'],
+                outputs: cloneDeep(blueprint.outputs) as Workflow.Node["outputs"],
+                icon: blueprint.icon,
                 description: blueprint.description,
                 isMinimized: false,
             } satisfies Workflow.Node
@@ -417,24 +417,24 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
 // TYPE DEFINITIONS
 // ════════════════════════════════════════════════════════════════════════════════
 type INTERNAL_CacheReducers = {
-    deleteEdge:  (state: WorkbenchSDK.State, edge: Workflow.Edge) => void
-    addEdge:     (state: WorkbenchSDK.State, newEdge: Workflow.Edge) => void
-    deleteNode:  (state: WorkbenchSDK.State, deletedNodeId: Workflow.Node.Id) => void
-    createNode:  (state: WorkbenchSDK.State, newNode: Workflow.Node) => void
+    deleteEdge: (state: WorkbenchSDK.State, edge: Workflow.Edge) => void
+    addEdge: (state: WorkbenchSDK.State, newEdge: Workflow.Edge) => void
+    deleteNode: (state: WorkbenchSDK.State, deletedNodeId: Workflow.Node.Id) => void
+    createNode: (state: WorkbenchSDK.State, newNode: Workflow.Node) => void
     deleteInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => void
-    createAll:   (state: WorkbenchSDK.State, workflow: Workflow) => WorkbenchSDK.State["cache"]
+    createAll: (state: WorkbenchSDK.State, workflow: Workflow) => WorkbenchSDK.State["cache"]
 }
 
 type EdgeReducers = {
-    add:    (state: WorkbenchSDK.State, edgeId: Workflow.Edge.Id, conn: Connection) => void
+    add: (state: WorkbenchSDK.State, edgeId: Workflow.Edge.Id, conn: Connection) => void
     remove: (state: WorkbenchSDK.State, edgeId: Workflow.Edge.Id) => void
 }
 
 type NodeReducers = {
-    remove:         (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
-    createId:       (blueprintId: Foundations.Blueprint.Id) => Workflow.Node.Id
-    create:         (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }) => void
-    setMinimized:   (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void
+    remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
+    createId: (blueprintId: Foundations.Blueprint.Id) => Workflow.Node.Id
+    create: (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }) => void
+    setMinimized: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void
     setDisplayName: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDisplayName: string) => void
     setDescription: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDescription: string) => void
 }
@@ -442,13 +442,13 @@ type NodeReducers = {
 type LayoutReducers = {
     node: {
         setPosition: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, position: { x: number, y: number } | undefined) => void
-        remove:      (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
-        add:         (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, position: { x: number, y: number }) => void
+        remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
+        add: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, position: { x: number, y: number }) => void
     },
     viewport: {
         setPosition: (state: WorkbenchSDK.State, newLayout: { x: number, y: number }) => void
-        setZoom:     (state: WorkbenchSDK.State, zoom: number) => void
-        set:         (state: WorkbenchSDK.State, viewport: { x: number, y: number, zoom: number }) => void
+        setZoom: (state: WorkbenchSDK.State, zoom: number) => void
+        set: (state: WorkbenchSDK.State, viewport: { x: number, y: number, zoom: number }) => void
     }
 }
 

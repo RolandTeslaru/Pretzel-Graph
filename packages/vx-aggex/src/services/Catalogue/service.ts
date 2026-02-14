@@ -2,7 +2,7 @@ import path from "path";
 import { container, singleton } from "tsyringe";
 import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 import { Runtime } from "src/runtime";
-import { Foundations } from "@vx-agent-editor/shared/types";
+import { Foundations } from "@vx-agent-editor/shared/domain";
 
 export interface NodeConstructor {
     new(workflowNode: Workflow.Node): Runtime.Node<Foundations.Blueprint>;

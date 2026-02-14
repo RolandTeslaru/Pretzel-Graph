@@ -1,6 +1,6 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
-import { Foundations, Workflow } from "@vx-agent-editor/shared/types";
+import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { Synthesizer } from "src/synthesizer";
 import { Runtime } from "src/runtime";
@@ -15,7 +15,7 @@ export class Node extends Runtime.Node<typeof Blueprint> {
     }
 
     public override async run(
-        state:  Runtime.State,
+        state: Runtime.State,
         fields: Runtime.InferFields<typeof Blueprint>,
         inputs: Runtime.InferInputs<typeof Blueprint>,
     ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
@@ -37,10 +37,10 @@ export class Node extends Runtime.Node<typeof Blueprint> {
             Synthesizer.coerceMessage("human", input),
         ]);
 
-        return { 
+        return {
             response,
             languageModel: llm
-         };
+        };
     }
 
 

@@ -3,7 +3,7 @@ import { Switch } from '@/vx-ui/foundations/switch'
 import { Label } from '@/vx-ui/foundations/label'
 import { Input } from "@/vx-ui/foundations/input"
 import { Select } from "@/vx-ui/foundations/select"
-import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { WorkbenchSDK } from '../../sdk'
 import { Slider, Tabs, Badge, Textarea } from '@/vx-ui/foundations'
 import { VaultSDK } from '../../../VaultSDK/sdk'
@@ -83,7 +83,7 @@ const MultiOptionField = memo(({ field, nodeId, className }: RendererProps<'Mult
                         value={value}
                         onValueChange={val => { WorkbenchSDK.actions.field.setValue(nodeId, field.id, val); }}
                         className='ml-auto'
-                        
+
                     >
                         <Tabs.List
                             indicatorVariant="primary"

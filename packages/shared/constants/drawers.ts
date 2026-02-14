@@ -1,4 +1,4 @@
-import { Shelf } from "../types/Shelf"
+import { Shelf } from "../domain/Shelf"
 
 export const CORE_DRAWERS = {
   saved_components: {

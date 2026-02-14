@@ -2,7 +2,7 @@ import { Service } from "../ServiceManager";
 import { Router } from "express";
 import { withAuth } from "@/utils/withAuth";
 import { createAuthenticatedClient, getUserId } from "@/utils/supabase";
-import { Auth, Orchestrator, Vault, Workflow } from "@vx-agent-editor/shared/types";
+import { Auth, Orchestrator, Vault, Workflow } from "@vx-agent-editor/shared/domain";
 import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
 import { SupabaseClient } from "@supabase/supabase-js";
@@ -58,22 +58,22 @@ export class OrchestratorServiceImpl {
                 console.log("Worlfloe, data, staticValues", workflow.data.staticValues)
 
                 try {
-                    for ( const [_, node] of Object.entries(workflow.data.nodes) ) {
-                        for ( const [_, field] of Object.entries(node.fields) ) {
+                    for (const [_, node] of Object.entries(workflow.data.nodes)) {
+                        for (const [_, field] of Object.entries(node.fields)) {
                             if (field.variant === "Secret") {
 
-                                
+
                                 const staticValues = workflow.data.staticValues[node.id];
                                 const credentialId = staticValues[field.id] as Vault.Credential.Id;
                                 console.log("Resolving secret for node", node.id, "field", field.id, "credentialId", credentialId)
-                                
-                                if( credentialId in resolvedSecrets ){
+
+                                if (credentialId in resolvedSecrets) {
                                     staticValues[field.id] = resolvedSecrets[credentialId];
                                     continue;
                                 }
 
-                                const { value: secret } = await Vault.API.Credential.reveal(supabase, {id: credentialId})
-                                
+                                const { value: secret } = await Vault.API.Credential.reveal(supabase, { id: credentialId })
+
                                 console.log("Resovled secret for credentialId", credentialId, "secret", secret)
 
                                 resolvedSecrets[credentialId] = secret;

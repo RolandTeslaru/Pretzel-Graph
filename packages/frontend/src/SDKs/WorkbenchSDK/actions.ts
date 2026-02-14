@@ -2,7 +2,7 @@ import { WorkbenchSDKImpl, WorkbenchSDK } from './sdk';
 import type { DropFirstArg } from '../types';
 import { debounce } from '../../decorators/debounce';
 import { toast } from 'sonner';
-import { Workflow } from '@vx-agent-editor/shared/types';
+import { Workflow } from '@vx-agent-editor/shared/domain';
 import { supabase } from '@/libs/supabase';
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
@@ -11,7 +11,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
     const reducers = sdk.reducers;
 
     const commit: () => void = debounce(async () => {
-        if(sdk.state.isDirty === false)
+        if (sdk.state.isDirty === false)
             return
         const workflow = sdk.state.workflow;
 
@@ -27,22 +27,22 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
     return {
         commit: commit,
         node: {
-            remove:         (...props) => { setState(s => { reducers.node.remove(s, ...props) }); commit() },
-            create:         (...props) => { setState(s => { reducers.node.create(s, ...props) }); commit() },
-            setMinimized:   (...props) => { setState(s => { reducers.node.setMinimized(s, ...props) }); commit() },
+            remove: (...props) => { setState(s => { reducers.node.remove(s, ...props) }); commit() },
+            create: (...props) => { setState(s => { reducers.node.create(s, ...props) }); commit() },
+            setMinimized: (...props) => { setState(s => { reducers.node.setMinimized(s, ...props) }); commit() },
             setDisplayName: (...props) => { setState(s => { reducers.node.setDisplayName(s, ...props) }); commit() },
             setDescription: (...props) => { setState(s => { reducers.node.setDescription(s, ...props) }); commit() },
         },
         edge: {
-            add:    (...props) => { setState(s => { reducers.edge.add(s, ...props) }); commit() },
+            add: (...props) => { setState(s => { reducers.edge.add(s, ...props) }); commit() },
             remove: (...props) => { setState(s => { reducers.edge.remove(s, ...props) }); commit() }
         },
         field: {
             setValue: (...props) => { setState(s => { reducers.field.setValue(s, ...props) }); commit() },
         },
         input: {
-            setValue:   (...props) => { setState(s => { reducers.input.setValue(s, ...props) }); commit() },
-            changeOrder:(...props) => { setState(s => { reducers.input.changeOrder(s, ...props) }); commit() },
+            setValue: (...props) => { setState(s => { reducers.input.setValue(s, ...props) }); commit() },
+            changeOrder: (...props) => { setState(s => { reducers.input.changeOrder(s, ...props) }); commit() },
         },
         history: {
             undo: () => {
@@ -73,10 +73,10 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             open: (...props) => setState(s => { reducers.workflow.open(s, ...props) }),
         },
         setClickedNodeId: (nodeId) => setState(s => { reducers.setClickedNodeId(s, nodeId) }),
-        setDirty: (value) => setState(s => { 
-            if(s.isDirty !== value)
+        setDirty: (value) => setState(s => {
+            if (s.isDirty !== value)
                 s.isDirty = value;
-         }),
+        }),
         takeSnapshot: () => { },
         copy: () => { },
         paste: () => { },

@@ -5,7 +5,7 @@ import NodeInputs from './Inputs';
 import NodeOutputs from './Outputs';
 
 import type { NodeProps } from '@xyflow/react';
-import { Workflow } from '@vx-agent-editor/shared/types';
+import { Workflow } from '@vx-agent-editor/shared/domain';
 import { motion } from 'motion/react';
 
 const WorkbenchNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
@@ -33,14 +33,14 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
        flex flex-col bg-card relative rounded-3xl border
       ${isNodeClicked ? "shadow-amber-500/40 shadow-selected" : "border-foreground/15 shadow-xl shadow-black/40"}
       `}
-      // initial={{
-      //   scale: 0,
-      // }}
-      // animate={{
-      //   scale: 1
-      // }}
-      >
-      <NodeHeader node={node} isWorkflowLocked={isWorkflowLocked}/>
+    // initial={{
+    //   scale: 0,
+    // }}
+    // animate={{
+    //   scale: 1
+    // }}
+    >
+      <NodeHeader node={node} isWorkflowLocked={isWorkflowLocked} />
       {isMinimized === false &&
         <>
           <NodeInputs node={node} isWorkflowLocked={isWorkflowLocked} />

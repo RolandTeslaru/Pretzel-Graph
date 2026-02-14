@@ -1,4 +1,4 @@
-import { Workflow, Foundations } from '@vx-agent-editor/shared/types';
+import { Workflow, Foundations } from '@vx-agent-editor/shared/domain';
 import type { WorkbenchSDK } from './sdk';
 
 export function _createWorkbenchSelectors_() {
