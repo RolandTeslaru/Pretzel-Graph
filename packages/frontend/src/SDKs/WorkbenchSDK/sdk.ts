@@ -64,11 +64,12 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     }
 
 
-    public useInputValue(nodeId: Workflow.Node.Id, input: Foundations.Input) {
+    public useStaticValue(nodeId: Workflow.Node.Id, fieldOrInput: Foundations.Field | Foundations.Port.Input) {
         const value = this.useStore(useShallow(s => {
-            const val = s.workflow.data.fieldValues[nodeId]?.[input.id];
-            if (!val)
-                return input.initialValue;
+            const val = s.workflow.data.staticValues[nodeId]?.[fieldOrInput.id];
+            if (val == null)
+                // @ts-expect-error
+                return fieldOrInput.initialValue;
             return val
         }))
         return value;
@@ -113,9 +114,9 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 id: edge.id,
                 type: "workflowEdge",
                 source: edge.source.nodeId,
-                sourceHandle: edge.source.handleId,
+                sourceHandle: edge.source.portId,
                 target: edge.target.nodeId,
-                targetHandle: edge.target.handleId,
+                targetHandle: edge.target.portId,
             })
         })
 
@@ -143,16 +144,16 @@ export namespace WorkbenchSDK {
         clickedNodeId: Workflow.Node.Id | null;
         draggedHandle: Handle | null
         cache: {
-            ingoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
+            ingoersEdgesMap:  Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
             outgoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
-            inputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Input.Id, Workflow.Edge.Id>>
-            outputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Output.Id, Workflow.Edge.Id>>
+            inputHandlesMap:  Record<Workflow.Node.Id, Record<Foundations.Port.Input.Id, Workflow.Edge.Id>>
+            outputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Port.Output.Id, Workflow.Edge.Id>>
         }
     }
 
     export type Handle = {
         nodeId: Workflow.Node.Id,
-        field: Foundations.Input | Foundations.Output,
+        field: Foundations.Port.Input | Foundations.Port.Output,
         handleType: "source" | "target"
     }
     // Edges are ui view only
@@ -168,8 +169,8 @@ export namespace WorkbenchSDK {
 
     export type DriverConn = {
         source: Workflow.Node.Id
-        sourceHandle: Foundations.Output.Id
+        sourceHandle: Foundations.Port.Output.Id
         target: Workflow.Node.Id
-        targetHandle: Foundations.Input.Id
+        targetHandle: Foundations.Port.Input.Id
     }
 }
