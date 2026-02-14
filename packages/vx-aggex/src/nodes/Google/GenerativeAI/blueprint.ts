@@ -1,16 +1,16 @@
-import { ConfigBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { FieldBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
     id: "Google.GenerativeAI",
-    icon: "Google",
     displayName: "Google Generative AI",
     description: "This node talks to google generative ai api",
-    config: {
-        api_key: ConfigBuilder.Secret({
+    icon: "Google",
+    fields: [
+        FieldBuilder.Secret({
             id: "api_key",
             displayName: "API Key",
         }),
-        model: ConfigBuilder.MultiOption({
+        FieldBuilder.MultiOption({
             id: "model",
             displayName: "Model",
             options: [
@@ -22,7 +22,7 @@ export const Blueprint = defineBlueprint({
             ],
             initialValue: "gemini-3-pro-preview",
         }),
-        temperature: ConfigBuilder.Float({
+        FieldBuilder.Float({
             id: "temperature",
             displayName: "Temperature",
             required: false,
@@ -30,9 +30,10 @@ export const Blueprint = defineBlueprint({
             min: 0,
             max: 2.0,
             step: 0.1,
+            slider: true,
             tooltip: "Controls randomness in the output. Higher values are more creative.",
         }),
-        maxOutputTokens: ConfigBuilder.Integer({
+        FieldBuilder.Integer({
             id: "maxOutputTokens",
             displayName: "Max Output Tokens",
             required: false,
@@ -41,7 +42,7 @@ export const Blueprint = defineBlueprint({
             step: 1,
             tooltip: "Maximum number of tokens to generate.",
         }),
-        topP: ConfigBuilder.Float({
+        FieldBuilder.Float({
             id: "topP",
             displayName: "Top P",
             required: false,
@@ -49,18 +50,20 @@ export const Blueprint = defineBlueprint({
             min: 0,
             max: 1,
             step: 0.01,
+            slider: true,
             tooltip: "Nucleus sampling probability.",
         }),
-        topK: ConfigBuilder.Integer({
+        FieldBuilder.Integer({
             id: "topK",
             displayName: "Top K",
             required: false,
             initialValue: 64,
             min: 1,
             step: 1,
+            slider: true,
             tooltip: "Top-K sampling parameter.",
         }),
-    },
+    ],
     inputs: [
         InputBuilder.Message({
             id: "input",

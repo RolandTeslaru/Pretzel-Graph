@@ -7,7 +7,7 @@ export function convertTestName(name: string): string {
 }
 
 
-const LangchainTypeBadge = ({
+const TypeBadge = ({
   dataType,
   left,
   isInput
@@ -41,4 +41,4 @@ const LangchainTypeBadge = ({
   )
 }
 
-export default LangchainTypeBadge
+export default TypeBadge

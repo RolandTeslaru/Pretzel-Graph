@@ -36,16 +36,12 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             add:    (...props) => { setState(s => { reducers.edge.add(s, ...props) }); commit() },
             remove: (...props) => { setState(s => { reducers.edge.remove(s, ...props) }); commit() }
         },
+        field: {
+            setValue: (...props) => { setState(s => { reducers.field.setValue(s, ...props) }); commit() },
+        },
         input: {
             setValue:   (...props) => { setState(s => { reducers.input.setValue(s, ...props) }); commit() },
             changeOrder:(...props) => { setState(s => { reducers.input.changeOrder(s, ...props) }); commit() },
-        },
-        runtime: {
-            input: {
-                set: (...props) => { setState(s => { reducers.runtime.input.set(s, ...props) }); commit() },
-                clear: (...props) => { setState(s => { reducers.runtime.input.clear(s, ...props) }); commit() },
-                ensure: (...props) => { setState(s => { reducers.runtime.input.ensure(s, ...props) }); commit() }
-            }
         },
         history: {
             undo: () => {
@@ -103,6 +99,9 @@ export type _WorkbenchSDKActions = {
         setDisplayName: DropFirstArg<WorkbenchSDK.Reducers['node']['setDisplayName']>;
         setDescription: DropFirstArg<WorkbenchSDK.Reducers['node']['setDescription']>;
     },
+    field: {
+        setValue: DropFirstArg<WorkbenchSDK.Reducers['field']['setValue']>
+    }
     input: {
         setValue: DropFirstArg<WorkbenchSDK.Reducers['input']['setValue']>;
         changeOrder: DropFirstArg<WorkbenchSDK.Reducers['input']['changeOrder']>;
@@ -110,13 +109,6 @@ export type _WorkbenchSDKActions = {
     edge: {
         add: DropFirstArg<WorkbenchSDK.Reducers['edge']['add']>;
         remove: DropFirstArg<WorkbenchSDK.Reducers['edge']['remove']>;
-    },
-    runtime: {
-        input: {
-            set: DropFirstArg<WorkbenchSDK.Reducers["runtime"]["input"]["set"]>;
-            clear: DropFirstArg<WorkbenchSDK.Reducers["runtime"]["input"]["clear"]>;
-            ensure: DropFirstArg<WorkbenchSDK.Reducers["runtime"]["input"]["ensure"]>
-        }
     },
     layout: {
         flushUpdates: () => void,

@@ -1,0 +1,37 @@
+import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "src/nodes/builders";
+
+export const Blueprint = defineBlueprint({
+    id: "Core.Developer.ConsoleLog",
+    displayName: "Console Log",
+    description: "Logs input data to the console with a specified log level.",
+    icon: "SquareTerminal",
+    fields: [
+        FieldBuilder.MultiOption({
+            id: "level",
+            displayName: "Level",
+            options: ["log", "info", "warn", "error"],
+            initialValue: "log",
+            variant: "select"
+        }),
+        FieldBuilder.String({
+            id: "prefix",
+            displayName: "Prefix",
+            initialValue: "",
+            placeholder: "Optional prefix for the log message",
+            required: false,
+        })
+    ],
+    inputs: [
+        InputBuilder.Message({
+            id: "message",
+            displayName: "Message",
+        }),
+    ],
+    outputs: [
+        OutputBuilder.Message({
+            id: "output",
+            displayName: "Output",
+            tooltip: "Passes the input message through unchanged."
+        }),
+    ],
+});

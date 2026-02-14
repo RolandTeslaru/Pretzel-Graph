@@ -1,82 +1,536 @@
 {
-  "version": "1770737238547",
-  "generatedAt": "2026-02-10T15:27:18.547Z",
+  "version": "1771071314808",
+  "generatedAt": "2026-02-14T12:15:14.808Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.Input": {
       "id": "Core.Chat.Input",
       "displayName": "Chat Input",
       "icon": "MessagesSquare",
+      "fields": [],
       "inputs": [
         {
           "id": "input",
-          "required": true,
-          "reconcile": false,
-          "asTool": false,
-          "advanced": true,
-          "isRuntime": false,
-          "handleVariants": [
-            "Message"
-          ],
-          "uiData": {
-            "displayName": "Input"
-          },
-          "variant": "string",
+          "displayName": "Input",
+          "variant": "Message",
           "initialValue": "",
-          "data": {
-            "multiline": false
-          }
+          "required": true
         }
       ],
       "outputs": [
         {
           "id": "response",
-          "handleVariants": [
-            "Message"
-          ],
-          "asTool": false,
-          "uiData": {
-            "displayName": "Response"
-          }
+          "displayName": "Response",
+          "tooltip": "The response from the model",
+          "variant": "Message"
         }
       ],
       "description": "This node is a chat input"
     },
-    "Core.Text.Input": {
-      "id": "Core.Text.Input",
-      "displayName": "Text Input",
-      "icon": "Type",
-      "inputs": [
+    "Core.Developer.AllBuilders": {
+      "id": "Core.Developer.AllBuilders",
+      "displayName": "All Builders",
+      "icon": "Rocket",
+      "fields": [
         {
-          "id": "text",
+          "id": "stringField",
+          "advanced": false,
           "required": true,
           "reconcile": false,
-          "asTool": false,
+          "displayName": "String Field",
+          "variant": "String",
+          "initialValue": "Hello World",
+          "multiline": false,
+          "placeholder": "Enter text..."
+        },
+        {
+          "id": "multilineStringField",
           "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [
-            "Text"
+          "required": true,
+          "reconcile": false,
+          "displayName": "Multiline String Field",
+          "variant": "String",
+          "initialValue": "Line 1\nLine 2",
+          "multiline": true,
+          "placeholder": ""
+        },
+        {
+          "id": "integerField",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Integer Field",
+          "variant": "Integer",
+          "initialValue": 42,
+          "step": 1
+        },
+        {
+          "id": "integerSliderField",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Integer Slider Field",
+          "variant": "Integer",
+          "initialValue": 50,
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "slider": true
+        },
+        {
+          "id": "floatField",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Float Field",
+          "variant": "Float",
+          "initialValue": 3.14,
+          "step": 0.1
+        },
+        {
+          "id": "floatSliderField",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Float Slider Field",
+          "variant": "Float",
+          "initialValue": 0.5,
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "slider": true
+        },
+        {
+          "id": "booleanField",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Boolean Field",
+          "variant": "Boolean",
+          "initialValue": true
+        },
+        {
+          "id": "multiOptionSelectField",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "MultiOption Select",
+          "variant": "MultiOption",
+          "initialValue": "Option A",
+          "options": [
+            "Option A",
+            "Option B",
+            "Option C"
           ],
-          "uiData": {
-            "displayName": "Text"
-          },
-          "variant": "string",
+          "kind": "select"
+        },
+        {
+          "id": "multiOptionTabField",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "MultiOption Tab",
+          "variant": "MultiOption",
+          "initialValue": "Tab 1",
+          "options": [
+            "Tab 1",
+            "Tab 2"
+          ],
+          "kind": "tab"
+        },
+        {
+          "id": "fileField",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "File Field",
+          "variant": "File",
           "initialValue": "",
-          "data": {
-            "multiline": false
+          "fileTypes": [
+            ".txt",
+            ".json",
+            ".md"
+          ]
+        },
+        {
+          "id": "listField",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "List Field",
+          "variant": "List",
+          "initialValue": [
+            "Item 1",
+            "Item 2"
+          ]
+        },
+        {
+          "id": "jsonField",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "JSON Field",
+          "variant": "Json",
+          "initialValue": {
+            "key": "value"
           }
+        },
+        {
+          "id": "secretField",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Secret Field",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "scriptField",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Script Field",
+          "variant": "Script",
+          "initialValue": "console.log('Hello');"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "messageInput",
+          "displayName": "Message Input",
+          "variant": "Message",
+          "initialValue": "",
+          "required": true
+        },
+        {
+          "id": "languageModelInput",
+          "displayName": "Language Model Input",
+          "variant": "LanguageModel",
+          "required": true
+        },
+        {
+          "id": "documentInput",
+          "displayName": "Document Input",
+          "variant": "Document",
+          "required": true
+        },
+        {
+          "id": "retrieverInput",
+          "displayName": "Retriever Input",
+          "variant": "Retriever",
+          "required": true
+        },
+        {
+          "id": "embeddingsInput",
+          "displayName": "Embeddings Input",
+          "variant": "Embeddings",
+          "required": true
+        },
+        {
+          "id": "vectorStoreInput",
+          "displayName": "Vector Store Input",
+          "variant": "VectorStore",
+          "required": true
+        },
+        {
+          "id": "toolInput",
+          "displayName": "Tool Input",
+          "variant": "Tool",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "messageOutput",
+          "displayName": "Message Output",
+          "variant": "Message"
+        },
+        {
+          "id": "textOutput",
+          "displayName": "Text Output",
+          "variant": "Text"
+        },
+        {
+          "id": "languageModelOutput",
+          "displayName": "Language Model Output",
+          "variant": "LanguageModel"
+        },
+        {
+          "id": "documentOutput",
+          "displayName": "Document Output",
+          "variant": "Document"
+        },
+        {
+          "id": "retrieverOutput",
+          "displayName": "Retriever Output",
+          "variant": "Retriever"
+        },
+        {
+          "id": "embeddingsOutput",
+          "displayName": "Embeddings Output",
+          "variant": "Embeddings"
+        },
+        {
+          "id": "vectorStoreOutput",
+          "displayName": "Vector Store Output",
+          "variant": "VectorStore"
+        },
+        {
+          "id": "toolOutput",
+          "displayName": "Tool Output",
+          "variant": "Tool"
+        },
+        {
+          "id": "dataFrameOutput",
+          "displayName": "DataFrame Output",
+          "variant": "DataFrame"
+        }
+      ],
+      "description": "A developer node showcasing all available field, input, and output builders."
+    },
+    "Core.Developer.ConsoleLog": {
+      "id": "Core.Developer.ConsoleLog",
+      "displayName": "Console Log",
+      "icon": "SquareTerminal",
+      "fields": [
+        {
+          "id": "level",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Level",
+          "variant": "MultiOption",
+          "initialValue": "log",
+          "options": [
+            "log",
+            "info",
+            "warn",
+            "error"
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "prefix",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Prefix",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "Optional prefix for the log message"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "message",
+          "displayName": "Message",
+          "variant": "Message",
+          "initialValue": "",
+          "required": true
         }
       ],
       "outputs": [
         {
           "id": "output",
-          "handleVariants": [
-            "Message"
+          "displayName": "Output",
+          "tooltip": "Passes the input message through unchanged.",
+          "variant": "Message"
+        }
+      ],
+      "description": "Logs input data to the console with a specified log level."
+    },
+    "Core.Developer.Eval": {
+      "id": "Core.Developer.Eval",
+      "displayName": "Runtime Node Eval",
+      "icon": "SquareTerminal",
+      "fields": [
+        {
+          "id": "code",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Script",
+          "variant": "Script",
+          "initialValue": "return 'Hello ' + inputs.input;"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "variant": "Message",
+          "initialValue": "",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "output",
+          "displayName": "Output",
+          "variant": "Text"
+        }
+      ],
+      "description": "Dangerously executes a JavaScript script at node runtime."
+    },
+    "Core.Developer.HttpRequest": {
+      "id": "Core.Developer.HttpRequest",
+      "displayName": "HTTP Request",
+      "icon": "Globe",
+      "fields": [
+        {
+          "id": "method",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Method",
+          "variant": "MultiOption",
+          "initialValue": "GET",
+          "options": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "PATCH"
           ],
-          "asTool": false,
-          "uiData": {
-            "displayName": "Output"
-          }
+          "kind": "select"
+        },
+        {
+          "id": "url",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "URL",
+          "variant": "String",
+          "initialValue": "https://api.example.com",
+          "multiline": false,
+          "placeholder": "https://api.example.com"
+        },
+        {
+          "id": "headers",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Headers",
+          "variant": "Json",
+          "initialValue": {}
+        },
+        {
+          "id": "body",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Body",
+          "variant": "Json",
+          "initialValue": {}
+        }
+      ],
+      "inputs": [
+        {
+          "id": "trigger",
+          "displayName": "Trigger",
+          "variant": "Message",
+          "initialValue": "",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "response",
+          "displayName": "Response",
+          "variant": "Json"
+        },
+        {
+          "id": "status",
+          "displayName": "Status",
+          "variant": "Integer"
+        }
+      ],
+      "description": "Makes an HTTP request."
+    },
+    "Core.Developer.JsonInjector": {
+      "id": "Core.Developer.JsonInjector",
+      "displayName": "JSON Injector",
+      "icon": "Code",
+      "fields": [
+        {
+          "id": "data",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "JSON Data",
+          "variant": "Json",
+          "initialValue": {}
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "output",
+          "displayName": "Output",
+          "variant": "DataFrame"
+        }
+      ],
+      "description": "Injects JSON data into the flow."
+    },
+    "Core.Developer.Sleep": {
+      "id": "Core.Developer.Sleep",
+      "displayName": "Sleep",
+      "icon": "Clock",
+      "fields": [
+        {
+          "id": "duration",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Duration (ms)",
+          "tooltip": "Time to sleep in milliseconds.",
+          "variant": "Integer",
+          "initialValue": 1000,
+          "min": 0,
+          "step": 1
+        }
+      ],
+      "inputs": [
+        {
+          "id": "trigger",
+          "displayName": "Trigger",
+          "tooltip": "Optional trigger to start the sleep.",
+          "variant": "Message",
+          "initialValue": "",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "done",
+          "displayName": "Done",
+          "tooltip": "Outputs the trigger message after the sleep duration.",
+          "variant": "Message"
+        }
+      ],
+      "description": "Pauses execution for a specified duration."
+    },
+    "Core.Text.Input": {
+      "id": "Core.Text.Input",
+      "displayName": "Text Input",
+      "icon": "Type",
+      "fields": [],
+      "inputs": [
+        {
+          "id": "text",
+          "displayName": "Text",
+          "variant": "Text",
+          "initialValue": "",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "output",
+          "displayName": "Output",
+          "tooltip": "The output from the model",
+          "variant": "Message"
         }
       ],
       "description": "This node is a Text input"
@@ -85,172 +539,115 @@
       "id": "Google.GenerativeAI",
       "displayName": "Google Generative AI",
       "icon": "Google",
-      "inputs": [
+      "fields": [
         {
           "id": "api_key",
+          "advanced": false,
           "required": true,
           "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "API Key"
-          },
-          "variant": "secret",
+          "displayName": "API Key",
+          "variant": "Secret",
           "initialValue": ""
         },
         {
-          "id": "input",
-          "required": true,
-          "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [
-            "Message"
-          ],
-          "uiData": {
-            "displayName": "Input"
-          },
-          "variant": "string",
-          "initialValue": "",
-          "data": {
-            "multiline": false
-          }
-        },
-        {
-          "id": "systemMessage",
-          "required": true,
-          "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [
-            "Message"
-          ],
-          "uiData": {
-            "displayName": "System Message"
-          },
-          "variant": "string",
-          "initialValue": "",
-          "data": {
-            "multiline": false
-          }
-        },
-        {
           "id": "model",
+          "advanced": false,
           "required": true,
           "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Model"
-          },
-          "variant": "multiOption",
+          "displayName": "Model",
+          "variant": "MultiOption",
           "initialValue": "gemini-3-pro-preview",
-          "data": {
-            "options": [
-              "gemini-3-pro-preview",
-              "gemini-2.5-pro",
-              "gemini-3-flash-preview",
-              "gemini-2.5-flash",
-              "gemini-2.5-flash-lite"
-            ],
-            "variant": "select"
-          }
+          "options": [
+            "gemini-3-pro-preview",
+            "gemini-2.5-pro",
+            "gemini-3-flash-preview",
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite"
+          ],
+          "kind": "select"
         },
         {
           "id": "temperature",
+          "advanced": false,
           "required": false,
           "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Temperature",
-            "tooltip": "Controls randomness in the output. Higher values are more creative."
-          },
-          "variant": "float",
+          "displayName": "Temperature",
+          "tooltip": "Controls randomness in the output. Higher values are more creative.",
+          "variant": "Float",
           "initialValue": 0.7,
-          "data": {
-            "min": 0,
-            "max": 2,
-            "step": 0.1
-          }
+          "min": 0,
+          "max": 2,
+          "step": 0.1,
+          "slider": true
         },
         {
           "id": "maxOutputTokens",
+          "advanced": false,
           "required": false,
           "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Max Output Tokens",
-            "tooltip": "Maximum number of tokens to generate."
-          },
-          "variant": "integer",
+          "displayName": "Max Output Tokens",
+          "tooltip": "Maximum number of tokens to generate.",
+          "variant": "Integer",
           "initialValue": 2048,
-          "data": {
-            "min": 1,
-            "step": 1
-          }
+          "min": 1,
+          "step": 1
         },
         {
           "id": "topP",
+          "advanced": false,
           "required": false,
           "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Top P",
-            "tooltip": "Nucleus sampling probability."
-          },
-          "variant": "float",
+          "displayName": "Top P",
+          "tooltip": "Nucleus sampling probability.",
+          "variant": "Float",
           "initialValue": 0.95,
-          "data": {
-            "min": 0,
-            "max": 1,
-            "step": 0.01
-          }
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "slider": true
         },
         {
           "id": "topK",
+          "advanced": false,
           "required": false,
           "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Top K",
-            "tooltip": "Top-K sampling parameter."
-          },
-          "variant": "integer",
+          "displayName": "Top K",
+          "tooltip": "Top-K sampling parameter.",
+          "variant": "Integer",
           "initialValue": 64,
-          "data": {
-            "min": 1,
-            "step": 1
-          }
+          "min": 1,
+          "step": 1,
+          "slider": true
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "variant": "Message",
+          "initialValue": "",
+          "required": true
+        },
+        {
+          "id": "systemMessage",
+          "displayName": "System Message",
+          "variant": "Message",
+          "initialValue": "",
+          "required": true
         }
       ],
       "outputs": [
         {
           "id": "response",
-          "handleVariants": [
-            "Message"
-          ],
-          "asTool": false,
-          "uiData": {
-            "displayName": "Response"
-          }
+          "displayName": "Response",
+          "tooltip": "The response from the model",
+          "variant": "Message"
+        },
+        {
+          "id": "languageModel",
+          "displayName": "Language Model",
+          "tooltip": "The language model instance used for this response, useful for chaining calls with the same model and settings.",
+          "variant": "LanguageModel"
         }
       ],
       "description": "This node talks to google generative ai api"
@@ -259,199 +656,125 @@
       "id": "OpenAI.Chat",
       "displayName": "OpenAI Chat",
       "icon": "OpenAI",
-      "inputs": [
+      "fields": [
         {
           "id": "api_key",
+          "advanced": false,
           "required": true,
           "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "API Key"
-          },
-          "variant": "secret",
+          "displayName": "API Key",
+          "variant": "Secret",
           "initialValue": ""
         },
         {
-          "id": "input",
-          "required": true,
-          "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [
-            "Message"
-          ],
-          "uiData": {
-            "displayName": "Input"
-          },
-          "variant": "string",
-          "initialValue": "",
-          "data": {
-            "multiline": false
-          }
-        },
-        {
-          "id": "systemMessage",
-          "required": true,
-          "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [
-            "Message"
-          ],
-          "uiData": {
-            "displayName": "System Message"
-          },
-          "variant": "string",
-          "initialValue": "",
-          "data": {
-            "multiline": false
-          }
-        },
-        {
           "id": "model",
+          "advanced": false,
           "required": true,
           "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Model"
-          },
-          "variant": "multiOption",
+          "displayName": "Model",
+          "variant": "MultiOption",
           "initialValue": "gpt-5.2",
-          "data": {
-            "options": [
-              "gpt-5.2",
-              "gpt-5.2-pro",
-              "gpt-5",
-              "gpt-5-mini",
-              "gpt-5-nano",
-              "gpt-4.5",
-              "o3-mini",
-              "o3"
-            ],
-            "variant": "select"
-          }
+          "options": [
+            "gpt-5.2",
+            "gpt-5.2-pro",
+            "gpt-5",
+            "gpt-5-mini",
+            "gpt-5-nano",
+            "gpt-4.5",
+            "o3-mini",
+            "o3"
+          ],
+          "kind": "select"
         },
         {
           "id": "temperature",
+          "advanced": false,
           "required": false,
           "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Temperature",
-            "tooltip": "Controls randomness in the output. Higher values (e.g., 0.8) make output more random, lower values (e.g., 0.2) make it more focused and deterministic."
-          },
-          "variant": "float",
+          "displayName": "Temperature",
+          "tooltip": "Controls randomness in the output. Higher values (e.g., 0.8) make output more random, lower values (e.g., 0.2) make it more focused and deterministic.",
+          "variant": "Float",
           "initialValue": 0.7,
-          "data": {
-            "min": 0,
-            "max": 2,
-            "step": 0.1,
-            "slider": true
-          }
+          "min": 0,
+          "max": 2,
+          "step": 0.1,
+          "slider": true
         },
         {
           "id": "maxTokens",
+          "advanced": false,
           "required": false,
           "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Max Tokens",
-            "tooltip": "The maximum number of tokens to generate in the chat completion."
-          },
-          "variant": "integer",
+          "displayName": "Max Tokens",
+          "tooltip": "The maximum number of tokens to generate in the chat completion.",
+          "variant": "Integer",
           "initialValue": 2048,
-          "data": {
-            "min": 1,
-            "step": 1
-          }
+          "min": 1,
+          "step": 1
         },
         {
           "id": "topP",
+          "advanced": false,
           "required": false,
           "reconcile": false,
-          "asTool": false,
-          "advanced": false,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Top P",
-            "tooltip": "Nucleus sampling: considers the tokens with top_p probability mass. 0.1 means only tokens comprising the top 10% probability mass are considered."
-          },
-          "variant": "float",
+          "displayName": "Top P",
+          "tooltip": "Nucleus sampling: considers the tokens with top_p probability mass. 0.1 means only tokens comprising the top 10% probability mass are considered.",
+          "variant": "Float",
           "initialValue": 1,
-          "data": {
-            "min": 0,
-            "max": 1,
-            "step": 0.01,
-            "slider": true
-          }
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "slider": true
         },
         {
           "id": "frequencyPenalty",
+          "advanced": true,
           "required": false,
           "reconcile": false,
-          "asTool": false,
-          "advanced": true,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Frequency Penalty",
-            "tooltip": "Penalizes new tokens based on their existing frequency in the text so far. Positive values decrease the model's likelihood to repeat the same line verbatim."
-          },
-          "variant": "float",
+          "displayName": "Frequency Penalty",
+          "tooltip": "Penalizes new tokens based on their existing frequency in the text so far. Positive values decrease the model's likelihood to repeat the same line verbatim.",
+          "variant": "Float",
           "initialValue": 0,
-          "data": {
-            "min": -2,
-            "max": 2,
-            "step": 0.1
-          }
+          "min": -2,
+          "max": 2,
+          "step": 0.1
         },
         {
           "id": "presencePenalty",
+          "advanced": true,
           "required": false,
           "reconcile": false,
-          "asTool": false,
-          "advanced": true,
-          "isRuntime": false,
-          "handleVariants": [],
-          "uiData": {
-            "displayName": "Presence Penalty",
-            "tooltip": "Penalizes new tokens based on whether they appear in the text so far. Positive values increase the model's likelihood to talk about new topics."
-          },
-          "variant": "float",
+          "displayName": "Presence Penalty",
+          "tooltip": "Penalizes new tokens based on whether they appear in the text so far. Positive values increase the model's likelihood to talk about new topics.",
+          "variant": "Float",
           "initialValue": 0,
-          "data": {
-            "min": -2,
-            "max": 2,
-            "step": 0.1,
-            "slider": true
-          }
+          "min": -2,
+          "max": 2,
+          "step": 0.1
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "variant": "Message",
+          "initialValue": "",
+          "required": true
+        },
+        {
+          "id": "systemMessage",
+          "displayName": "System Message",
+          "variant": "Message",
+          "initialValue": "",
+          "required": true
         }
       ],
       "outputs": [
         {
           "id": "response",
-          "handleVariants": [
-            "Message"
-          ],
-          "asTool": false,
-          "uiData": {
-            "displayName": "Response"
-          }
+          "displayName": "Response",
+          "tooltip": "The response message from the model",
+          "variant": "Message"
         }
       ],
       "description": "This node talks to OpenAI's GPT chat models via the Chat Completions API"

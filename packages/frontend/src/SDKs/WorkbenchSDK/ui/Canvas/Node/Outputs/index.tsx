@@ -5,19 +5,19 @@ import NodeHandle from '../Handle'
 interface NodeOutputProps {
   node: Workflow.Node
   isWorkflowLocked: boolean
-  output: Foundations.Output
+  output: Foundations.Port.Output
 }
 
 const NodeOutput: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output }) => {
   return (
     <div className="relative w-full flex justify-end items-center h-8 pr-1">
       <div className="mr-4 text-sm font-medium text-foreground">
-        {output.uiData.displayName ?? output.id}
+        {output.displayName ?? output.id}
       </div>
       <NodeHandle
         type="source"
         isWorkflowLocked={isWorkflowLocked}
-        field={output}
+        port={output}
         nodeId={node.id}
       />
     </div>
@@ -32,7 +32,7 @@ interface Props {
 
 const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked }) => {
   const outputs = useMemo(() => {
-    return Object.values(node.outputs) as Foundations.Output[]
+    return Object.values(node.outputs) as Foundations.Port.Output[]
   }, [node.outputs])
 
   const selectedOutput = outputs[0]

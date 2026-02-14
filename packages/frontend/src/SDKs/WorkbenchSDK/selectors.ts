@@ -75,12 +75,12 @@ export type _WorkBenchSDKSelectors = {
     ensureInNodesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<NodeId, EdgeId>
     ensureOutNodesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<NodeId, EdgeId>
 
-    getInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => Foundations.Input | null
-    getOutput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Output.Id) => Foundations.Output | null
+    getInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Foundations.Port.Input | null
+    getOutput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => Foundations.Port.Output | null
 
-    ensureInHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => Workflow.Edge.Id
-    ensureOutHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Output.Id) => Workflow.Edge.Id
+    ensureInHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Workflow.Edge.Id
+    ensureOutHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => Workflow.Edge.Id
 
-    doesInputhaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => boolean
-    doesOutputHaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Output.Id) => boolean
+    doesInputhaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => boolean
+    doesOutputHaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => boolean
 }

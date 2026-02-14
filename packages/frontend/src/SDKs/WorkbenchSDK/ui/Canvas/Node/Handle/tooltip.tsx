@@ -1,11 +1,11 @@
 import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
 import React, { useMemo } from 'react'
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
-import LangchainTypeBadge from '../../../LangchainTypeBadge';
+import LangchainTypeBadge from '../../../TypeBadge';
 
 interface Props {
   handleType: 'target' | 'source'
-  field: Foundations.Input | Foundations.Output
+  port: Foundations.Port.Input | Foundations.Port.Output
   nodeId: Workflow.Node.Id
   isDraggedHandleCompatible: boolean
   draggedHandle: WorkbenchSDK.Handle | null
@@ -13,7 +13,7 @@ interface Props {
 
 const HandleTooltipContent: React.FC<Props> = ({
   handleType,
-  field,
+  port,
   nodeId,
   isDraggedHandleCompatible,
   draggedHandle
@@ -21,14 +21,10 @@ const HandleTooltipContent: React.FC<Props> = ({
   const hasMultipleTypes = handleType.length > 1
   const isDifferentNode = draggedHandle?.nodeId !== nodeId
 
-  const mappedTypes = useMemo(() => {
-    return Array.from(field.handleVariants)
-  }, [field.handleVariants])
-
   const isConnecting = !!draggedHandle && isDifferentNode;
   const isInput = handleType === 'target';
 
-  if (draggedHandle?.field === field) {
+  if (draggedHandle?.field === port) {
     return <div className="font-medium">Can't connect to the same node</div>;
   }
 
@@ -42,14 +38,11 @@ const HandleTooltipContent: React.FC<Props> = ({
           hasMultipleTypes={hasMultipleTypes}
         />
 
-        {mappedTypes.map((dataType, index) => (
           <LangchainTypeBadge
-            key={`${index}-${dataType}`}
-            dataType={dataType}
+            dataType={port.variant}
             left={handleType === 'target'}
             isInput={isInput}
           />
-        ))}
         {isConnecting && <span>{isInput ? "input" : "output"}</span>}
       </div>
       {!isConnecting && <HelperText isInput={isInput} />}

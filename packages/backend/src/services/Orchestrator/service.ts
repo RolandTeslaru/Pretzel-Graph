@@ -2,10 +2,11 @@ import { Service } from "../ServiceManager";
 import { Router } from "express";
 import { withAuth } from "@/utils/withAuth";
 import { createAuthenticatedClient, getUserId } from "@/utils/supabase";
-import { Auth, Orchestrator, Workflow } from "@vx-agent-editor/shared/types";
+import { Auth, Orchestrator, Vault, Workflow } from "@vx-agent-editor/shared/types";
 import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
 import { SupabaseClient } from "@supabase/supabase-js";
+import { resolveCredential } from "@/utils/resolveCredential";
 
 @Service("Orchestrator")
 export class OrchestratorServiceImpl {
@@ -52,9 +53,51 @@ export class OrchestratorServiceImpl {
                 const userId = await getUserId(supabase) as Auth.User.Id
                 console.log("Retrieved Authenticated client", userId)
 
+                const resolvedSecrets: Record<Vault.Credential.Id, Vault.Credential> = {};
+
+                console.log("Worlfloe, data, staticValues", workflow.data.staticValues)
+
+                try {
+                    for ( const [_, node] of Object.entries(workflow.data.nodes) ) {
+                        for ( const [_, field] of Object.entries(node.fields) ) {
+                            if (field.variant === "Secret") {
+
+                                
+                                const staticValues = workflow.data.staticValues[node.id];
+                                const credentialId = staticValues[field.id] as Vault.Credential.Id;
+                                console.log("Resolving secret for node", node.id, "field", field.id, "credentialId", credentialId)
+                                
+                                if( credentialId in resolvedSecrets ){
+                                    staticValues[field.id] = resolvedSecrets[credentialId];
+                                    continue;
+                                }
+    
+                                const secret = await resolveCredential(supabase, credentialId);
+                                
+                                console.log("Resovled secret for credentialId", credentialId, "secret", secret)
+
+                                resolvedSecrets[credentialId] = secret;
+                                staticValues[field.id] = secret;
+                            }
+                        }
+                    }
+
+                } catch (error) {
+                    console.error("Error resolving secrets:", error);
+                    throw new Error("Failed to resolve secrets. Please check your credentials and try again.");
+                }
+
                 const jobId = await this.dbOps.job.create(supabase, { workflowId: workflow.id, userId })
 
                 console.log("Created job", jobId)
+
+                // Resolve secrets
+
+
+                console.log("Resolved secrets", resolvedSecrets)
+                console.log("Workflow after secret resolution", workflow)
+                console.log("Resolved secrets, adding job to queue")
+
 
                 const queueItem: Orchestrator.ExecutionQueue.Item = {
                     jobId,

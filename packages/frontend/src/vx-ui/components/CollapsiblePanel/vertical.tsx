@@ -23,7 +23,7 @@ const VerticalCollapsiblePanel: React.FC<Props> = memo(
 
         return (
 
-            <WindowStyling.Cross className={
+            <WindowStyling.Standard className={
                 classNames(className,
                     { "max-h-[40px]!": open === false },
                     { "max-h-[700px]": open === true },
@@ -56,7 +56,7 @@ const VerticalCollapsiblePanel: React.FC<Props> = memo(
                 >
                     {children}
                 </div>
-            </WindowStyling.Cross>
+            </WindowStyling.Standard>
         )
     })
 

@@ -26,7 +26,7 @@ const AuthenticationPanel = () => {
         <div className="flex flex-col gap-2 p-2">
             {variant}
             <Tabs.Root 
-                defaultValue='signup'
+                defaultValue={variant}
                 onValueChange={(val) => {
                     setVariant(val as "login" | "signup");
                 }}
@@ -64,7 +64,7 @@ const SignUpPanel = () => {
 
     async function onSubmit(values: z.infer<typeof signUpSchema>) {
         setDisabled(true);
-        await AuthSDK.actions.signup(values)
+        const success = await AuthSDK.actions.signup(values)
         setDisabled(false);
     }
 
@@ -148,7 +148,7 @@ const LoginPanel = () => {
 
     async function onSubmit(values: z.infer<typeof loginSchema>) {
         setDisabled(true)
-        await AuthSDK.actions.login(values)
+        const success = await AuthSDK.actions.login(values)
         setDisabled(false)
     }
 

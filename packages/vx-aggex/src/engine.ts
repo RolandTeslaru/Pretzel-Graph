@@ -21,10 +21,10 @@ export class AggexEngine {
 
         emit(b => b.nodeStarted(activeNode.id))
 
-        const config = this.resolveNodeConfiguration(activeNode.id, workflow);
+        const fields = this.resolveNodeFields(activeNode.id, workflow);
         const inputs = this.resolveIncomingValues(state, activeNode.id, workflow);
 
-        const result = await Vertex.run(state, config, inputs)
+        const result = await Vertex.run(state, fields, inputs)
 
         emit(b => b.nodeCompleted(activeNode.id, result))
 
@@ -43,22 +43,23 @@ export class AggexEngine {
      * 1. Use the override from `staticValues` if present
      * 2. Otherwise fall back to the config schema's `initialValue`
      */
-    private resolveNodeConfiguration(
+    private resolveNodeFields(
         nodeId:   Workflow.Node.Id,
         workflow: Workflow
-    ): Record<string, Foundations.NodeConfig.Value> {
+    ): Record<Foundations.Field.Id, Foundations.Field.Value> {
         const node         = workflow.data.nodes[nodeId];
         const staticValues = workflow.data.staticValues[nodeId] ?? {};
 
-        const resolved: Record<string, Foundations.NodeConfig.Value> = {};
+        const resolved: Record<string, Foundations.Field.Value> = {};
 
-        for (const [configId, configSchema] of Object.entries(node.config)) {
-            const brandedId = configId as Foundations.NodeConfig.Id;
-            if (brandedId in staticValues) {
-                resolved[configId] = staticValues[brandedId] as Foundations.NodeConfig.Value;
-            } else {
-                resolved[configId] = configSchema.initialValue as Foundations.NodeConfig.Value;
-            }
+        for (const field of node.fields) {
+            const fieldId = field.id as string;
+            const brandedId = field.id as Foundations.Field.Id;
+
+            if (brandedId in staticValues)
+                resolved[fieldId] = staticValues[brandedId] as Foundations.Field.Value;
+            else
+                resolved[fieldId] = field.initialValue as Foundations.Field.Value;
         }
 
         return resolved;
@@ -80,30 +81,28 @@ export class AggexEngine {
         state:    Runtime.State,
         nodeId:   Workflow.Node.Id,
         workflow: Workflow
-    ): Record<string, any> {
+    ): Record<Foundations.Port.Input.Id, any> {
         const node         = workflow.data.nodes[nodeId];
         const staticValues = workflow.data.staticValues[nodeId] ?? {};
 
-        const resolved: Record<string, any> = {};
+        const resolved: Record<Foundations.Port.Input.Id, any> = {};
 
         // Build a lookup: targetPortId → edge, for edges incoming to this node
-        const incomingEdgeByPort = new Map<string, Workflow.Edge>();
-        for (const edge of Object.values(workflow.data.edges)) {
-            if (edge.target.nodeId === nodeId) {
-                incomingEdgeByPort.set(edge.target.portId as string, edge);
-            }
-        }
+        const incomingEdgeByPort = new Map<Foundations.Port.Input.Id, Workflow.Edge>();
+
+        for (const edge of Object.values(workflow.data.edges))
+            if (edge.target.nodeId === nodeId)
+                incomingEdgeByPort.set(edge.target.portId, edge);
 
         for (const input of node.inputs) {
-            const inputId = input.id as string;
-            const edge = incomingEdgeByPort.get(inputId);
+            const edge = incomingEdgeByPort.get(input.id);
 
             if (edge) {
                 // ── Edge-connected: pull value from upstream node's outputs ──
                 const sourceOutputs = state.node_outputs[edge.source.nodeId];
                 if (sourceOutputs) {
-                    const rawValue = sourceOutputs[edge.source.portId as string];
-                    resolved[inputId] = Synthesizer.ensureReference(rawValue, input.variant);
+                    const rawReference = sourceOutputs[edge.source.portId as string];
+                    resolved[input.id] = Synthesizer.ensureReference(rawReference, input.variant);
                 }
             } else {
                 // ── No edge: synthesize from static value or initialValue ──
@@ -112,7 +111,7 @@ export class AggexEngine {
                 const raw         = staticValue ?? fallback;
 
                 if (raw !== undefined) {
-                    resolved[inputId] = Synthesizer.synthesizeInput(input, raw as Foundations.NodeConfig.Value);
+                    resolved[input.id] = Synthesizer.synthesizeInput(input, raw as Foundations.Field.Value);
                 }
             }
         }

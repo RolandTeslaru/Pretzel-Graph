@@ -1,5 +1,4 @@
-import { config, z } from "zod"
-import { Workflow } from "./Workflow"
+import { z } from "zod"
 
 export namespace Foundations {
     export const ArtifactId = z.string().brand("ArtifactId")
@@ -7,8 +6,8 @@ export namespace Foundations {
 
 
 
-    export namespace NodeConfig {
-        export const Id = z.string().brand("ConfigId");
+    export namespace Field {
+        export const Id = z.string().brand("FieldId");
         export type Id = z.infer<typeof Id>;
 
         export const Value = z.union([
@@ -23,7 +22,7 @@ export namespace Foundations {
         export type Value = z.infer<typeof Value>
 
         export const Base = z.object({
-            id: NodeConfig.Id,
+            id: Field.Id,
             advanced: z.boolean(),
             required: z.boolean(),
             reconcile: z.boolean(),
@@ -48,11 +47,11 @@ export namespace Foundations {
         ])
         export type Variant = z.infer<typeof Variant>
 
-        function configLiteral<T extends NodeConfig.Variant>(value: T) {
+        function configLiteral<T extends Field.Variant>(value: T) {
             return z.literal(value);
         }
 
-        export const Integer = NodeConfig.Base.extend({
+        export const Integer = Field.Base.extend({
             variant: configLiteral("Integer"),
             initialValue: z.int(),
             min: z.int().optional(),
@@ -61,7 +60,7 @@ export namespace Foundations {
             slider: z.boolean().optional(),
         })
 
-        export const Float = NodeConfig.Base.extend({
+        export const Float = Field.Base.extend({
             variant: configLiteral("Float"),
             initialValue: z.number(),
             min: z.number().optional(),
@@ -70,46 +69,48 @@ export namespace Foundations {
             slider: z.boolean().optional(),
         })
 
-        export const String = NodeConfig.Base.extend({
+        export const String = Field.Base.extend({
             variant: configLiteral("String"),
             initialValue: z.string(),
             multiline: z.boolean(),
+            placeholder: z.string().optional(),
         })
 
-        export const Secret = NodeConfig.Base.extend({
+        export const Secret = Field.Base.extend({
             variant: configLiteral("Secret"),
             initialValue: z.string(),
         })
 
-        export const Boolean = NodeConfig.Base.extend({
+        export const Boolean = Field.Base.extend({
             variant: configLiteral("Boolean"),
             initialValue: z.boolean(),
         })
 
-        export const MultiOption = NodeConfig.Base.extend({
+        export const MultiOption = Field.Base.extend({
             variant: configLiteral("MultiOption"),
             initialValue: z.string(),
+            placeholder: z.string().optional(),
             options: z.array(z.string()),
             kind: z.enum(["select", "tab"]).default("select"),
         })
 
-        export const File = NodeConfig.Base.extend({
+        export const File = Field.Base.extend({
             variant: configLiteral("File"),
             initialValue: z.string(),
             fileTypes: z.array(z.string()).optional(),
         })
 
-        export const Script = NodeConfig.Base.extend({
+        export const Script = Field.Base.extend({
             variant: configLiteral("Script"),
             initialValue: z.string(),
         })
 
-        export const Json = NodeConfig.Base.extend({
+        export const Json = Field.Base.extend({
             variant: configLiteral("Json"),
             initialValue: z.json(),
         })
 
-        export const List = NodeConfig.Base.extend({
+        export const List = Field.Base.extend({
             variant: configLiteral("List"),
             initialValue: z.array(z.string()),
         })
@@ -124,7 +125,7 @@ export namespace Foundations {
         export interface Script extends z.infer<typeof Script> { }
         export interface Json extends z.infer<typeof Json> { }
         export interface List extends z.infer<typeof List> { }
-        
+
         export const Schema = z.discriminatedUnion("variant", [
             Integer,
             Float,
@@ -140,7 +141,7 @@ export namespace Foundations {
 
         export type Schema = z.infer<typeof Schema>;
     }
-    export type NodeConfig = z.infer<typeof NodeConfig.Schema>;
+    export type Field = z.infer<typeof Field.Schema>;
 
 
 
@@ -156,6 +157,8 @@ export namespace Foundations {
             "Retriever",
             "Tool",
             "DataFrame",
+            "Integer",
+            "Json",
         ])
         export type Variant = z.infer<typeof Variant>
 
@@ -175,6 +178,7 @@ export namespace Foundations {
             export const Message = Base.extend({
                 variant: portLiteral("Message"),
                 initialValue: z.string().optional(),
+                placeholder: z.string().optional(),
             })
 
             export const Text = Base.extend({
@@ -210,6 +214,14 @@ export namespace Foundations {
                 variant: portLiteral("DataFrame"),
             })
 
+            export const Integer = Base.extend({
+                variant: portLiteral("Integer"),
+            })
+
+            export const Json = Base.extend({
+                variant: portLiteral("Json"),
+            })
+
             export const Schema = z.discriminatedUnion("variant", [
                 Message,
                 Text,
@@ -220,6 +232,8 @@ export namespace Foundations {
                 VectorStore,
                 Tool,
                 DataFrame,
+                Integer,
+                Json,
             ])
 
             export type Message = z.infer<typeof Message>
@@ -231,32 +245,37 @@ export namespace Foundations {
             export type VectorStore = z.infer<typeof VectorStore>
             export type Tool = z.infer<typeof Tool>
             export type DataFrame = z.infer<typeof DataFrame>
+            export type Integer = z.infer<typeof Integer>
+            export type Json = z.infer<typeof Json>
         }
 
         export namespace Input {
             export const Id = z.string().brand("InputId");
             export type Id = z.infer<typeof Id>;
 
-            const inputFields = { 
-                id: Input.Id, 
-                required: z.boolean() 
+            const inputFields = {
+                id: Input.Id,
+                required: z.boolean()
             };
 
             export const Base = Port.Base.extend(inputFields)
             export type Base = z.infer<typeof Base>
 
             // Variant-specific input schemas (variant fields + InputId + required)
-            export const Message       = Port.Variants.Message.extend(inputFields);
-            export const Text          = Port.Variants.Text.extend(inputFields);
+            export const Message = Port.Variants.Message.extend(inputFields);
+            export const Text = Port.Variants.Text.extend(inputFields);
             export const LanguageModel = Port.Variants.LanguageModel.extend(inputFields);
-            export const Document      = Port.Variants.Document.extend(inputFields);
-            export const Retriever     = Port.Variants.Retriever.extend(inputFields);
-            export const Embeddings    = Port.Variants.Embeddings.extend(inputFields);
-            export const VectorStore   = Port.Variants.VectorStore.extend(inputFields);
-            export const Tool          = Port.Variants.Tool.extend(inputFields);
+            export const Document = Port.Variants.Document.extend(inputFields);
+            export const Retriever = Port.Variants.Retriever.extend(inputFields);
+            export const Embeddings = Port.Variants.Embeddings.extend(inputFields);
+            export const VectorStore = Port.Variants.VectorStore.extend(inputFields);
+            export const Tool = Port.Variants.Tool.extend(inputFields);
+            export const Integer = Port.Variants.Integer.extend(inputFields);
+
+            export const Json = Port.Variants.Json.extend(inputFields);
 
             export const Schema = z.discriminatedUnion("variant", [
-                Message, Text, LanguageModel, Document, Retriever, Embeddings, VectorStore, Tool,
+                Message, Text, LanguageModel, Document, Retriever, Embeddings, VectorStore, Tool, Integer, Json
             ]);
         }
         export type Input = z.infer<typeof Input.Schema>
@@ -265,26 +284,28 @@ export namespace Foundations {
             export const Id = z.string().brand("OutputId");
             export type Id = z.infer<typeof Id>;
 
-            const outputFields = { 
-                id: Output.Id 
+            const outputFields = {
+                id: Output.Id
             };
 
             export const Base = Port.Base.extend(outputFields)
             export type Base = z.infer<typeof Base>
 
             // Variant-specific output schemas (variant fields + OutputId)
-            export const Message       = Port.Variants.Message.extend(outputFields);
-            export const Text          = Port.Variants.Text.extend(outputFields);
+            export const Message = Port.Variants.Message.extend(outputFields);
+            export const Text = Port.Variants.Text.extend(outputFields);
             export const LanguageModel = Port.Variants.LanguageModel.extend(outputFields);
-            export const Document      = Port.Variants.Document.extend(outputFields);
-            export const Retriever     = Port.Variants.Retriever.extend(outputFields);
-            export const Embeddings    = Port.Variants.Embeddings.extend(outputFields);
-            export const VectorStore   = Port.Variants.VectorStore.extend(outputFields);
-            export const Tool          = Port.Variants.Tool.extend(outputFields);
-            export const DataFrame     = Port.Variants.DataFrame.extend(outputFields);
+            export const Document = Port.Variants.Document.extend(outputFields);
+            export const Retriever = Port.Variants.Retriever.extend(outputFields);
+            export const Embeddings = Port.Variants.Embeddings.extend(outputFields);
+            export const VectorStore = Port.Variants.VectorStore.extend(outputFields);
+            export const Tool = Port.Variants.Tool.extend(outputFields);
+            export const DataFrame = Port.Variants.DataFrame.extend(outputFields);
+            export const Integer = Port.Variants.Integer.extend(outputFields);
+            export const Json = Port.Variants.Json.extend(outputFields);
 
             export const Schema = z.discriminatedUnion("variant", [
-                Message, Text, LanguageModel, Document, Retriever, Embeddings, VectorStore, Tool, DataFrame,
+                Message, Text, LanguageModel, Document, Retriever, Embeddings, VectorStore, Tool, DataFrame, Integer, Json
             ]);
         }
         export type Output = z.infer<typeof Output.Schema>
@@ -309,9 +330,9 @@ export namespace Foundations {
         export type Meta = z.infer<typeof Meta.Schema>
 
         export const Schema = Meta.Schema.extend({
+            fields: z.array(Foundations.Field.Schema).readonly(),
             inputs: z.array(Port.Input.Schema).readonly(),
             outputs: z.array(Port.Output.Schema).readonly(),
-            config: z.record(Foundations.NodeConfig.Id, Foundations.NodeConfig.Base).readonly(),
             description: z.string(),
         }).readonly()
     }

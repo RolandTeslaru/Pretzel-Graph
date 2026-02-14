@@ -38,7 +38,7 @@ const Trigger: SelectComponents.Trigger = ({ className, children, size = "sm", .
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        `border-input/70 cursor-pointer 
+        `border-input/60 cursor-pointer 
         data-[placeholder]:text-muted-foreground 
         [&_svg:not([class*='text-'])]:text-muted-foreground 
         focus-visible:border-ring 
@@ -101,8 +101,8 @@ const Content: SelectComponents.Content = ({
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         className={cn(
-          `bg-popover/80 backdrop-blur-lg text-popover-foreground min-w-[8rem] 
-           overflow-x-hidden overflow-y-auto rounded-lg border border-input/80 shadow-md
+          `bg-popover/70 backdrop-blur-lg text-popover-foreground min-w-[8rem] 
+           overflow-x-hidden overflow-y-auto rounded-lg border border-input/60 shadow-md
           
           data-[state=open]:animate-in 
           data-[state=closed]:animate-out 
