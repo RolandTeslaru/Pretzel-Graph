@@ -13,8 +13,8 @@ const createNodeId: NodeReducers["createId"] = (blueprintId) => {
     return `${blueprintId}-${uid.randomUUID(5)}` as Workflow.Node.Id
 }
 
-const createRuntimeInputId = (parentInputId: Foundations.Input.Id, display_name: string) => {
-    return `__${parentInputId}|${display_name}__` as Foundations.Input.Id
+const createRuntimeInputId = (parentInputId: Foundations.Port.Input.Id, display_name: string) => {
+    return `__${parentInputId}|${display_name}__` as Foundations.Port.Input.Id
 }
 
 export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
@@ -30,17 +30,17 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             const outNodes = sel.ensureOutNodesCache(s, source.nodeId);
             delete outNodes[target.nodeId]
 
-            delete s.cache.inputHandlesMap[target.nodeId][target.handleId];
-            delete s.cache.outputHandlesMap[source.nodeId][source.handleId]
+            delete s.cache.inputHandlesMap[target.nodeId][target.portId];
+            delete s.cache.outputHandlesMap[source.nodeId][source.portId]
         },
         addEdge: (s, { source, target, id: edgeId }) => {
             sel.ensureInNodesCache(s, target.nodeId)[source.nodeId] = edgeId;
             sel.ensureOutNodesCache(s, source.nodeId)[target.nodeId] = edgeId
 
-            s.cache.inputHandlesMap[target.nodeId][target.handleId] = edgeId
-            s.cache.outputHandlesMap[source.nodeId][source.handleId] = edgeId
+            s.cache.inputHandlesMap[target.nodeId][target.portId] = edgeId
+            s.cache.outputHandlesMap[source.nodeId][source.portId] = edgeId
 
-            // Don't delete s.workflow.fieldValues[target.nodeId][target.handleId] here
+            // Don't delete s.workflow.fieldValues[target.nodeId][target.portId] here
         },
         deleteNode: (s, deletedNodeId) => {
             // Delete the edges coming into the node 
@@ -94,8 +94,8 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
                 const sourceNodeId = edge.source.nodeId;
                 const targetNodeId = edge.target.nodeId;
 
-                const sourceHandleId = edge.source.handleId;
-                const targetHandleId = edge.target.handleId
+                const sourceHandleId = edge.source.portId;
+                const targetHandleId = edge.target.portId
 
                 // Outgoers Edges Map
                 outgoersEdgesMap[sourceNodeId][targetNodeId] = edge.id
@@ -125,9 +125,9 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             s.isDirty = true;
             const { source: sourceNodeId, sourceHandle, target: targetNodeId, targetHandle } = conn as {
                 source: Workflow.Node.Id,
-                sourceHandle: Foundations.Output.Id,
+                sourceHandle: Foundations.Port.Output.Id,
                 target: Workflow.Node.Id,
-                targetHandle: Foundations.Input.Id
+                targetHandle: Foundations.Port.Input.Id
             }
             if (!sourceHandle || !targetHandle || !sourceNodeId || !targetNodeId) return;
 
@@ -140,11 +140,11 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
                 id: edgeId,
                 source: {
                     nodeId: sourceNodeId,
-                    handleId: sourceHandle
+                    portId: sourceHandle
                 },
                 target: {
                     nodeId: targetNodeId,
-                    handleId: targetHandle
+                    portId: targetHandle
                 }
             }
 
@@ -216,12 +216,12 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
         remove: (s, deletedNodeId) => {
             s.isDirty = true;
             const nodes = s.workflow.data.nodes
-            const fieldValues = s.workflow.data.fieldValues
+            const staticValues = s.workflow.data.staticValues
 
             if (nodes[deletedNodeId])
                 delete nodes[deletedNodeId];
 
-            delete fieldValues[deletedNodeId];
+            delete staticValues[deletedNodeId];
 
             cacheReducers.deleteNode(s, deletedNodeId);
             layoutReducers.node.remove(s, deletedNodeId);
@@ -236,6 +236,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
                 blueprintId: blueprint.id,
                 displayName: blueprint.displayName,
 
+                fields:      cloneDeep(blueprint.fields) as Workflow.Node['fields'],
                 inputs:      cloneDeep(blueprint.inputs) as Workflow.Node['inputs'],
                 outputs:     cloneDeep(blueprint.outputs) as Workflow.Node["outputs"],
                 icon:        blueprint.icon,
@@ -254,7 +255,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
 
             layoutReducers.node.add(s, nodeId, position);
 
-            s.workflow.data.fieldValues[nodeId] = {}
+            s.workflow.data.staticValues[nodeId] = {}
 
             cacheReducers.createNode(s, newNode);
         },
@@ -272,19 +273,29 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
         }
     } satisfies NodeReducers
 
+
+    const fieldReducers = {
+        setValue: (s, nodeId, fieldId, value) => {
+            s.isDirty = true;
+            s.workflow.data.staticValues[nodeId] ??= {}
+            s.workflow.data.staticValues[nodeId][fieldId] = value
+        }
+    } satisfies FieldReducers
+
+
     // ════════════════════════════════════════════════════════════════════════════
     // INPUT REDUCERS
     // ════════════════════════════════════════════════════════════════════════════
     const inputReducers = {
         setValue: (s, nodeId, inputId, value) => {
             s.isDirty = true;
-            s.workflow.data.fieldValues[nodeId] ??= {}
-            s.workflow.data.fieldValues[nodeId][inputId] = value
+            s.workflow.data.staticValues[nodeId] ??= {}
+            s.workflow.data.staticValues[nodeId][inputId] = value
         },
         remove: (s, nodeId, inputId) => {
             s.isDirty = true;
             const node = s.workflow.data.nodes[nodeId];
-            const fieldValues = s.workflow.data.fieldValues[nodeId];
+            const staticValues = s.workflow.data.staticValues[nodeId];
 
             cacheReducers.deleteInput(s, nodeId, inputId);
 
@@ -292,7 +303,7 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
             if (inputIndex !== -1) {
                 node.inputs.splice(inputIndex, 1);
             }
-            delete fieldValues[inputId];
+            delete staticValues[inputId];
         },
         disconnectIfConnected: (s, nodeId, inputId) => {
             s.isDirty = true;
@@ -335,21 +346,21 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
                 return;
             }
 
-            // Cross-category moves: normal <-> advanced
-            if ((from === "normal" && to === "advanced") || (from === "advanced" && to === "normal")) {
-                // Update the advanced property
-                activeInput.advanced = to === "advanced";
+            // // Cross-category moves: normal <-> advanced
+            // if ((from === "normal" && to === "advanced") || (from === "advanced" && to === "normal")) {
+            //     // Update the advanced property
+            //     activeInput.advanced = to === "advanced";
 
-                // If overId exists, reposition relative to it
-                if (overId) {
-                    const overIndex = inputs.findIndex(i => i.id === overId);
-                    if (overIndex !== -1 && overIndex !== activeIndex) {
-                        inputs.splice(activeIndex, 1);
-                        inputs.splice(overIndex > activeIndex ? overIndex : overIndex, 0, activeInput);
-                    }
-                }
-                return;
-            }
+            //     // If overId exists, reposition relative to it
+            //     if (overId) {
+            //         const overIndex = inputs.findIndex(i => i.id === overId);
+            //         if (overIndex !== -1 && overIndex !== activeIndex) {
+            //             inputs.splice(activeIndex, 1);
+            //             inputs.splice(overIndex > activeIndex ? overIndex : overIndex, 0, activeInput);
+            //         }
+            //     }
+            //     return;
+            // }
 
             // Connected category - just reorder within input array (connected is a virtual category)
             if (from === "connected" && to === "connected") {
@@ -366,115 +377,6 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
         }
     } satisfies InputReducers
 
-    // ════════════════════════════════════════════════════════════════════════════
-    // RUNTIME REDUCERS (Dynamic inputs created at runtime)
-    // ════════════════════════════════════════════════════════════════════════════
-    const runtimeReducers = {
-        input: {
-            clear: (s, nodeId, inputId) => {
-                s.isDirty = true;
-                const node = s.workflow.data.nodes[nodeId]
-                const input = node.inputs.find(i => i.id === inputId);
-
-                if (!input)
-                    return;
-
-                const registry = input.runtimeSubInputsRegistry;
-                if (!registry)
-                    return;
-
-                Object.entries(registry).forEach(([_, runtimeItem]) => {
-                    inputReducers.remove(s, nodeId, runtimeItem.id);
-                    delete registry[runtimeItem.id]
-                })
-            },
-            set: (s, nodeId, inputId, displayNames) => {
-                s.isDirty = true;
-                // const node = s.workflow.data.nodes[nodeId]
-                // const input = node.inputs.find(i => i.id === inputId);
-
-                // if (!input)
-                //     return;
-
-                // input.runtimeSubInputsRegistry ??= {}
-                // const registry = input.runtimeSubInputsRegistry;
-
-                // const toBeAdded: string[] = []
-
-                // displayNames.forEach(name => {
-                //     if ((name in registry) === false) {
-                //         toBeAdded.push(name)
-                //     }
-                // })
-
-                // // Remove inputs that are no longer present
-                // Object.entries(registry).forEach(([_, runtimeItem]) => {
-                //     if (displayNames.includes(runtimeItem.display_name) === false) {
-                //         inputReducers.remove(s, nodeId, runtimeItem.id);
-                //         delete registry[runtimeItem.id]
-                //     }
-                // })
-
-                // toBeAdded.forEach(displayName => {
-                //     const runtimeInputId = createRuntimeInputId(inputId, displayName);
-                //     const runtimeInputSchema = {
-                //         id: runtimeInputId,
-                //         parentInputId: inputId,
-                //         display_name: displayName,
-                //     }
-                //     registry[runtimeInputId] = runtimeInputSchema;
-
-                //     const runtimeInput = {
-                //         id: runtimeInputId,
-                //         variant: "string",
-                //         handleVariants: ["Message"],
-                //         required: false,
-                //         asTool: false,
-                //         reconcile: false,
-                //         isRuntime: true,
-                //         initialValue: "",
-                //         uiData: {
-                //             displayName: runtimeInputSchema.display_name,
-                //         },
-                //         data: {
-                //             multiline: false
-                //         }
-                //     } satisfies Foundations.Input.String
-
-                //     node.inputs.push(runtimeInput);
-                // })
-            },
-            ensure: (s, nodeId, inputId) => {
-                // const node = s.workflow.data.nodes[nodeId]
-                // const input = node.inputs.find(i => i.id === inputId);
-
-                // if (!input || !input.runtimeSubInputsRegistry) return;
-
-                // Object.entries(input.runtimeSubInputsRegistry).forEach(([_, runtimeInputSchema]) => {
-                //     const runtimeInputId = runtimeInputSchema.id;
-                //     const runtimeInput = {
-                //         id: runtimeInputId,
-                //         variant: "string",
-                //         handleVariants: ["Message"],
-                //         required: false,
-                //         asTool: false,
-                //         reconcile: false,
-                //         isRuntime: true,
-                //         initialValue: "",
-                //         uiData: {
-                //             displayName: runtimeInputSchema.display_name,
-                //         },
-                //         data: {
-                //             multiline: false
-                //         }
-                //     } satisfies Foundations.Input.String
-
-                //     node.inputs.push(runtimeInput);
-                // })
-            }
-        }
-    } satisfies RuntimeReducers
-
 
     // ════════════════════════════════════════════════════════════════════════════
     // WORKFLOW REDUCERS (Top-level workflow operations)
@@ -485,13 +387,6 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
                 return
             s.isDirty = true;
             s.workflow.locked = lock;
-        },
-        executeRuntime: (s) => {
-            Object.entries(s.workflow.data.nodes).forEach(([_, node]) => {
-                Object.entries(node.inputs).forEach(([_, input]) => {
-                    runtimeReducers.input.ensure(s, node.id, input.id);
-                })
-            })
         },
         open: (s, workflow) => {
             s.workflow = workflow;
@@ -504,16 +399,16 @@ export function _createWorkbenchReducers_(sel: WorkbenchSDK.Selectors) {
     } satisfies WorkflowReducers
 
     return {
+        field: fieldReducers,
         edge: edgeReducers,
         node: nodeReducers,
         input: inputReducers,
         workflow: workflowReducers,
-        runtime: runtimeReducers,
         layout: layoutReducers,
         createNodeId: createNodeId,
         setClickedNodeId: (s, nodeId) => { s.clickedNodeId = nodeId; },
-        createEdgeId: (_sourceNodeId, _sourceHandleId, _targetNodeId, _targetHandleId) => {
-            return `${_sourceNodeId}|${_sourceHandleId}|${_targetNodeId}|${_targetHandleId}` as Workflow.Edge.Id
+        createEdgeId: (_sourceNodeId, _sourcePortId, _targetNodeId, _targetPortId) => {
+            return `${_sourceNodeId}|${_sourcePortId}|${_targetNodeId}|${_targetPortId}` as Workflow.Edge.Id
         }
     } satisfies _WorkbenchSDKReducers
 }
@@ -526,7 +421,7 @@ type INTERNAL_CacheReducers = {
     addEdge:     (state: WorkbenchSDK.State, newEdge: Workflow.Edge) => void
     deleteNode:  (state: WorkbenchSDK.State, deletedNodeId: Workflow.Node.Id) => void
     createNode:  (state: WorkbenchSDK.State, newNode: Workflow.Node) => void
-    deleteInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => void
+    deleteInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => void
     createAll:   (state: WorkbenchSDK.State, workflow: Workflow) => WorkbenchSDK.State["cache"]
 }
 
@@ -561,59 +456,60 @@ type InputReducers = {
     setValue: (
         state: WorkbenchSDK.State,
         nodeId: Workflow.Node.Id,
-        inputId: Foundations.Input.Id,
+        inputId: Foundations.Port.Input.Id,
         value: any
     ) => void
     disconnectIfConnected: (
         state: WorkbenchSDK.State,
         nodeId: Workflow.Node.Id,
-        inputId: Foundations.Input.Id
+        inputId: Foundations.Port.Input.Id
     ) => boolean
     changeOrder: (
         state: WorkbenchSDK.State,
         nodeId: Workflow.Node.Id,
         active: {
-            id: Foundations.Input.Id,
-            items: Foundations.Input.Id[], // holds the current items where id is from
+            id: Foundations.Port.Input.Id,
+            items: Foundations.Port.Input.Id[], // holds the current items where id is from
             containerId: InputContainer      // holds the current container id where the id is from
         },
         over: {
-            id: Foundations.Input.Id,
-            items: Foundations.Input.Id[],
+            id: Foundations.Port.Input.Id,
+            items: Foundations.Port.Input.Id[],
             containerId: InputContainer
         }
     ) => void,
-    remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => void
+    remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => void
 }
 
-type RuntimeReducers = {
-    input: {
-        clear: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => void
-        set: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id, displayNames: string[]) => void
-        ensure: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Input.Id) => void
-    }
+
+type FieldReducers = {
+    setValue: (
+        state: WorkbenchSDK.State,
+        nodeId: Workflow.Node.Id,
+        fieldId: Foundations.Field.Id,
+        value: Foundations.Field.Value
+    ) => void
 }
 
 type WorkflowReducers = {
     setLock: (state: WorkbenchSDK.State, lock: boolean) => void
-    executeRuntime: (state: WorkbenchSDK.State) => void
     open: (state: WorkbenchSDK.State, workflow: Workflow) => void
     close: (state: WorkbenchSDK.State) => void
 }
 
 export type _WorkbenchSDKReducers = {
+    field: FieldReducers,
     edge: EdgeReducers
     node: NodeReducers,
     input: InputReducers,
     workflow: WorkflowReducers,
     layout: LayoutReducers,
-    runtime: RuntimeReducers,
     setClickedNodeId: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id | null) => void
     createNodeId: (blueprintId: Foundations.Blueprint.Id) => Workflow.Node.Id
     createEdgeId: (
         sourceNodeId: Workflow.Node.Id,
-        sourceHandleId: Foundations.Output.Id,
+        sourceHandleId: Foundations.Port.Output.Id,
         targetNodeId: Workflow.Node.Id,
-        targetHandleId: Foundations.Input.Id
+        targetHandleId: Foundations.Port.Input.Id
     ) => Workflow.Edge.Id
 }

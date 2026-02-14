@@ -6,6 +6,29 @@ export namespace Workflow {
     export type Id = z.infer<typeof Id>;
 
 
+    export namespace Node {
+        export const Id = z.string().brand("NodeId");
+        export type Id = z.infer<typeof Id>;
+
+
+        export const Schema = z.object({
+            id: Node.Id,
+            blueprintId: z.string().brand("BlueprintId"),
+
+            displayName: z.string(),
+
+            fields:  z.array(Foundations.Field.Schema),
+            
+            inputs:  z.array(Foundations.Port.Input.Schema),
+            outputs: z.array(Foundations.Port.Output.Schema),
+
+            icon: z.string().nullable().optional(),
+            description: z.string().nullable().optional(),
+            isMinimized: z.boolean().default(false),
+        });
+    }
+    export interface Node extends z.infer<typeof Node.Schema> { }
+
     export namespace Edge {
         export const Id = z.string().brand("EdgeId");
         export type Id = z.infer<typeof Id>;
@@ -27,27 +50,7 @@ export namespace Workflow {
 
 
 
-    export namespace Node {
-        export const Id = z.string().brand("NodeId");
-        export type Id = z.infer<typeof Id>;
 
-
-        export const Schema = z.object({
-            id: Node.Id,
-            blueprintId: z.string().brand("BlueprintId"),
-
-            displayName: z.string(),
-
-            config: z.record(Foundations.NodeConfig.Id, Foundations.NodeConfig.Schema),
-            inputs: z.array(Foundations.Port.Input.Schema),
-            outputs: z.array(Foundations.Port.Output.Schema),
-
-            icon: z.string().nullable().optional(),
-            description: z.string().optional(),
-            isMinimized: z.boolean().default(false),
-        });
-    }
-    export interface Node extends z.infer<typeof Node.Schema> { }
 
 
 
@@ -91,7 +94,7 @@ export namespace Workflow {
             staticValues: z.record(
                                 Node.Id, 
                                 z.record(
-                                    z.union([Foundations.NodeConfig.Id, Foundations.Port.Input.Id]), 
+                                    z.union([Foundations.Field.Id, Foundations.Port.Input.Id]), 
                                     z.union([ z.string(), z.number(), z.boolean(), z.array(z.string()), z.json()])
                                 )
                             ),

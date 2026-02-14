@@ -2,26 +2,26 @@ import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import type { ComponentProps, FC } from "react"
 
-import { ButtonDecorations, type ButtonProps, buttonVariants } from "./button"
+import { type ButtonProps, buttonVariants } from "./button"
 import { cn } from "../utils/cn"
 
 namespace AlertDialogComponents {
-  export type Root        = FC<ComponentProps<typeof AlertDialogPrimitive.Root>>
-  export type Trigger     = FC<ComponentProps<typeof AlertDialogPrimitive.Trigger>>
-  export type Portal      = FC<ComponentProps<typeof AlertDialogPrimitive.Portal>>
-  export type Overlay     = FC<ComponentProps<typeof AlertDialogPrimitive.Overlay>>
-  export type Content     = FC<ComponentProps<typeof AlertDialogPrimitive.Content> & {
+  export type Root = FC<ComponentProps<typeof AlertDialogPrimitive.Root>>
+  export type Trigger = FC<ComponentProps<typeof AlertDialogPrimitive.Trigger>>
+  export type Portal = FC<ComponentProps<typeof AlertDialogPrimitive.Portal>>
+  export type Overlay = FC<ComponentProps<typeof AlertDialogPrimitive.Overlay>>
+  export type Content = FC<ComponentProps<typeof AlertDialogPrimitive.Content> & {
     darkenBackground?: boolean
     blockTransparency?: boolean
     showTriangle?: boolean
     theme?: "dark" | "light"
   }>
-  export type Header      = FC<React.HTMLAttributes<HTMLDivElement>>
-  export type Footer      = FC<React.HTMLAttributes<HTMLDivElement>>
-  export type Title       = FC<ComponentProps<typeof AlertDialogPrimitive.Title>>
+  export type Header = FC<React.HTMLAttributes<HTMLDivElement>>
+  export type Footer = FC<React.HTMLAttributes<HTMLDivElement>>
+  export type Title = FC<ComponentProps<typeof AlertDialogPrimitive.Title>>
   export type Description = FC<ComponentProps<typeof AlertDialogPrimitive.Description>>
-  export type Action      = FC<ComponentProps<typeof AlertDialogPrimitive.Action> & ButtonProps>
-  export type Cancel      = FC<ComponentProps<typeof AlertDialogPrimitive.Cancel> & ButtonProps>
+  export type Action = FC<ComponentProps<typeof AlertDialogPrimitive.Action> & ButtonProps>
+  export type Cancel = FC<ComponentProps<typeof AlertDialogPrimitive.Cancel> & ButtonProps>
 }
 
 
@@ -47,6 +47,7 @@ const Content: AlertDialogComponents.Content = ({
   blockTransparency = false,
   theme = "dark",
   style,
+  className,
   children,
   ...rest
 }) => (
@@ -55,12 +56,17 @@ const Content: AlertDialogComponents.Content = ({
     <AlertDialogPrimitive.Content
       data-slot="alert-dialog-content"
       className={cn(
-        `${theme} fixed left-[50%] top-[50%] z-50 duration-200 bg-tertiary-regular backdrop-blur-md shadow-[0px_-10px_40px_rgba(0,0,0,0.5)]
-         data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 
-         data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 
-         data-[state=open]:slide-in-from-top-[48%]`
+        `${theme} fixed left-[50%] top-[50%] z-50 rounded-2xl border border-border transition-all duration-300 ease-in-out
+         data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-70 
+         data-[state=open]:zoom-in-70 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 
+         data-[state=open]:slide-in-from-top-[48%]`,
+        blockTransparency ? 'bg-card' : 'bg-card/70 backdrop-blur-sm',
+        className
       )}
-      style={style}
+      style={{
+        boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.5)",
+        ...style,
+      }}
       {...rest}
     >
       {children}
@@ -77,7 +83,7 @@ const Header: AlertDialogComponents.Header = ({ className, ...rest }) => (
 
 const Footer: AlertDialogComponents.Footer = ({ className, ...rest }) => (
   <div
-    className={cn( "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-4", className)}
+    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-4", className)}
     {...rest}
   />
 )
@@ -98,31 +104,27 @@ const Description: AlertDialogComponents.Description = ({ className, ...rest }) 
 
 const Action: AlertDialogComponents.Action = ({
   className, children, variant,
-  size = "md",
+  size = "default",
   ...rest
 }) => (
   <AlertDialogPrimitive.Action
-  // @ts-expect-error
-    className={cn(buttonVariants({ variant, size, className }))}
+    className={cn(buttonVariants({ variant: variant as any, size: size as any }), className)}
     {...rest}
   >
-    {variant && ButtonDecorations[variant](size)}
     {children}
   </AlertDialogPrimitive.Action>
 )
 
 const Cancel: AlertDialogComponents.Cancel = ({
-  className,children,
+  className, children,
   variant = "primary",
-  size = "md",
+  size = "default",
   ...rest
 }) => (
   <AlertDialogPrimitive.Cancel
-    // @ts-expect-error
-    className={cn(buttonVariants({ variant, className, size }))}
+    className={cn(buttonVariants({ variant: variant as any, size: size as any }), className)}
     {...rest}
   >
-    {variant && ButtonDecorations[variant](size)}
     {children}
   </AlertDialogPrimitive.Cancel>
 )

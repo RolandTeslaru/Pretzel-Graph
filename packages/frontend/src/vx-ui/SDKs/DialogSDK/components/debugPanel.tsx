@@ -1,4 +1,3 @@
-import React from 'react'
 import { CollapsiblePanel } from '../../../components/CollapsiblePanel'
 import { AlertDialog, Button, Dialog } from '../../../foundations'
 import { DialogSDK } from '../sdk'
@@ -6,7 +5,7 @@ import { DialogSDK } from '../sdk'
 export const DialogSDKDebugPanel = ({defaultOpen}: {defaultOpen?: boolean}) => {
     return (
         <CollapsiblePanel.Vertical defaultOpen={defaultOpen} title="Dialogs" contentClassName='!p-2'>
-            <Button variant="primary" size="lg"
+            <Button variant="accent" size="lg"
                 onClick={() => {
                     DialogSDK.actions.push("testDialog", (props) => <NormalDialog {...props} />)
                 }}
@@ -27,7 +26,7 @@ export const DialogSDKDebugPanel = ({defaultOpen}: {defaultOpen?: boolean}) => {
             >
                 Open Warning Dialogs
             </Button>
-            <Button variant="danger" size="lg"
+            <Button variant="destructive" size="lg"
                 onClick={() => {
                     DialogSDK.actions.push("testDialog", (props) => <DangerDialog {...props} />)
                 }}

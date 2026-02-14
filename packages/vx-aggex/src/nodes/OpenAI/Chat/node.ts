@@ -16,11 +16,11 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
     public override async run(
         state: Runtime.State,
-        config: Runtime.InferConfig<typeof Blueprint>,
+        fields: Runtime.InferFields<typeof Blueprint>,
         inputs: Runtime.InferInputs<typeof Blueprint>
     ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
 
-        const { model, api_key, temperature, maxTokens, topP, frequencyPenalty, presencePenalty } = config;
+        const { model, api_key, temperature, maxTokens, topP, frequencyPenalty, presencePenalty } = fields;
         const { input, systemMessage } = inputs;
 
         const llm = new ChatOpenAI({
@@ -43,8 +43,8 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
 
     public override async onReconcile(
-        changedConfigId: Foundations.NodeConfig.Id,
-        newValue: Foundations.NodeConfig.Value,
+        changedFieldId: Foundations.Field.Id,
+        newValue: Foundations.Field.Value,
         currentBlueprint: typeof Blueprint
     ): Promise<typeof Blueprint> {
         return Promise.resolve(currentBlueprint);

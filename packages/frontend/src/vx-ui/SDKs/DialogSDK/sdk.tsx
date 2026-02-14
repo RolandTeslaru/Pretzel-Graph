@@ -7,6 +7,7 @@ import { BaseSDK } from "../Base";
 import { AlertDialog, Dialog } from "../../foundations";
 import { SDK } from "@/SDKs/SDKManager";
 import { type _DialogSDKActions_, createDialogSDKActions } from "./actions";
+import { AlertTriangle } from "@/vx-ui/icons/system";
 
 enableMapSet()
 
@@ -77,22 +78,25 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     }}
                     darkenBackground={index === 0}
                     blockTransparency={dialogsSize - index > 1}
+                    className="flex flex-row"
                 >
-                        <div className="flex flex-row gap-4 p-4">
-                            <div className="flex flex-col gap-2">
-                                <div>
-                                    {children}
-                                </div>
-                                <AlertDialog.Footer>
-                                    <AlertDialog.Cancel onClick={(event) => onCancel?.(event, entry, dialogsSize, index)}>
-                                        Cancel
-                                    </AlertDialog.Cancel>
-                                    <AlertDialog.Action onClick={(event) => onApprove?.(event, entry, dialogsSize, index)} variant={type === "danger" ? "destructive" : type}>
-                                        Approve
-                                    </AlertDialog.Action>
-                                </AlertDialog.Footer>
-                            </div>
+                    <div className="p-9 relative">
+                        <AlertTriangle size={60} className="!text-yellow-400" />
+                        <AlertTriangle size={60} className="animate-ping absolute top-5 !text-yellow-400" />
+                    </div>
+                    <div className="flex flex-col gap-4 p-6">
+                        <div>
+                            {children}
                         </div>
+                        <AlertDialog.Footer>
+                            <AlertDialog.Cancel onClick={(event) => onCancel?.(event, entry, dialogsSize, index)}>
+                                Cancel
+                            </AlertDialog.Cancel>
+                            <AlertDialog.Action onClick={(event) => onApprove?.(event, entry, dialogsSize, index)} variant={type === "danger" ? "destructive" : type}>
+                                Approve
+                            </AlertDialog.Action>
+                        </AlertDialog.Footer>
+                    </div>
                 </AlertDialog.Content>
             </AlertDialog.Root>
         )

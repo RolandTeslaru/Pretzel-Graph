@@ -16,9 +16,10 @@ const listVars = cva(
         opaque: "dark:bg-input/30  border-input text-foreground"
       },
       size: {
+        xs: "p-px gap-px",
         sm: "p-0.5 gap-0.5",
-        default: "p-1 gap-1",
-        lg: "p-1.5 gap-1.5"
+        default: "p-0.5 gap-1",
+        lg: "p-0.5 gap-1.5"
       }
     },
     defaultVariants: {
@@ -28,13 +29,23 @@ const listVars = cva(
 )
 
 const indicatorVars = cva(
-  "rounded-lg absolute top-[1px] z-[0] !pointer-events-none border transition-all duration-300 ease-out",
+  "absolute z-[0] !pointer-events-none border transition-all duration-300 ease-out",
   {
     variants: {
       variant: {
         primary: "bg-primary/80 border-primary-accent shadow-primary-accent",
         accent: "bg-accent"
+      },
+      size: {
+        xs: "rounded-sm",
+        sm: "rounded-md",
+        default: "rounded-md",
+        lg: "rounded-md"
       }
+    },
+    defaultVariants: {
+      size: "default",
+      variant: "accent"
     }
   }
 )
@@ -54,7 +65,7 @@ function Root({
 
 
 const triggerVars = cva(
-  `inline-flex items-center z-10 justify-center whitespace-nowrap rounded-md
+  `inline-flex items-center z-10 justify-center whitespace-nowrap
    font-semibold !text-label-primary ring-offset-background transition-all 
    border border-transparent cursor-pointer
    focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 
@@ -62,9 +73,10 @@ const triggerVars = cva(
   {
     variants: {
       size: {
-        sm: "px-2 py-1 text-xs",
-        default: "px-3 py-1.5 text-sm",
-        lg: "px-4 py-2 text-base"
+        xs: "rounded-sm px-1.5 py-0.5 text-xs",
+        sm: "rounded-sm px-2 py-0.5 text-xs",
+        default: "rounded-md px-3 py-1.5 text-sm",
+        lg: "rounded-lg px-4 py-2 text-base"
       }
     },
     defaultVariants: {
@@ -73,7 +85,7 @@ const triggerVars = cva(
   }
 )
 
-type TabsSize = "sm" | "default" | "lg"
+type TabsSize = "xs" | "sm" | "default" | "lg"
 const TabsSizeContext = React.createContext<TabsSize>("default")
 
 const List = ({
@@ -97,9 +109,10 @@ const List = ({
     const activeTab = listRef.current.querySelector('[data-state="active"]') as HTMLElement;
     if (!activeTab) return;
 
-    indicatorRef.current.style.width = `${activeTab.clientWidth}px`
-    indicatorRef.current.style.height = `${activeTab.clientHeight}px`
+    indicatorRef.current.style.width = `${activeTab.offsetWidth}px`
+    indicatorRef.current.style.height = `${activeTab.offsetHeight}px`
     indicatorRef.current.style.left = `${activeTab.offsetLeft}px`
+    indicatorRef.current.style.top = `${activeTab.offsetTop}px`
   }, [])
 
   // Update indicator on mount and when tabs change
@@ -139,7 +152,7 @@ const List = ({
         {/* Animated indicator */}
         <div
           ref={indicatorRef}
-          className={cn(indicatorVars({ variant: indicatorVariant }))}
+          className={cn(indicatorVars({ variant: indicatorVariant, size }))}
         />
       </TabsPrimitive.List>
     </TabsSizeContext.Provider>

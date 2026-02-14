@@ -11,7 +11,7 @@ import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk';
 interface Props {
     type: "target" | "source";
     isWorkflowLocked: boolean
-    field: Foundations.Input | Foundations.Output
+    port: Foundations.Port.Input | Foundations.Port.Output
     nodeId: Workflow.Node.Id
 }
 
@@ -30,7 +30,7 @@ const isValidConnectionCallback = (conn: Connection | Edge) => {
     return isLocked ? false : isConnectionValid(WorkbenchSDK.state, conn as Connection);
 }
 
-const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, field, nodeId }) => {
+const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId }) => {
     const position = type === "target" ? Position.Left : Position.Right;
 
     const draggedHandle = WorkbenchSDK.useStore(s => s.draggedHandle)
@@ -46,12 +46,12 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, field, nodeId }) 
                 source: draggedHandle.nodeId,
                 sourceHandle: draggedHandle.field.id,
                 target: nodeId,
-                targetHandle: field.id
+                targetHandle: port.id
             }
         else
             conn = {
                 source: nodeId,
-                sourceHandle: field.id,
+                sourceHandle: port.id,
                 target: draggedHandle.nodeId,
                 targetHandle: draggedHandle.field.id
             }
@@ -61,10 +61,9 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, field, nodeId }) 
 
     // Resolve the color name from the data type
     const colorName = useMemo(() => {
-        const firstType = field.handleVariants[0] as string
         // Lookup the color name (e.g., "String" -> "blue")
-        return nodeColorsName[firstType] || "gray";
-    }, [field]);
+        return nodeColorsName[port.variant] || "gray";
+    }, [port]);
 
     // const accentColor÷ =
 
@@ -80,20 +79,16 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, field, nodeId }) 
                     position={position}
                     isConnectable={!isWorkflowLocked}
                     style={handleStyle}
-                    id={field.id}
+                    id={port.id}
                     isValidConnection={isValidConnectionCallback}
-                    className={cn(
-                        "group transition-all",
-                    )}
+                    className={"group transition-all"}
                     onClick={() => {
-                        ShelfSDK.actions.searchFilter.setDataTypes(new Set(field.handleVariants))
+                        ShelfSDK.actions.searchFilter.setDataTypes(new Set(port.variant))
                     }}
                 >
                     {/* Visual Representation of the Handle */}
                     <div
-                        className={cn(
-                            "h-full w-full rounded-full transition-all duration-300",
-                        )}
+                        className={"h-full w-full rounded-full transition-all duration-300"}
                         style={{
                             backgroundColor: colorVariable,
                             '--tw-ring-color': colorVariable
@@ -106,7 +101,7 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, field, nodeId }) 
                 <HandleTooltipContent
                     draggedHandle={draggedHandle}
                     handleType={type}
-                    field={field}
+                    port={port}
                     nodeId={nodeId}
                     isDraggedHandleCompatible={isDraggedHandleCompatible}
                 />

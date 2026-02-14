@@ -14,7 +14,7 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
     public override async run(
         state: Runtime.State,
-        config: Runtime.InferConfig<typeof Blueprint>,
+        fields: Runtime.InferFields<typeof Blueprint>,
         inputs: Runtime.InferInputs<typeof Blueprint>
     ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
 
@@ -26,8 +26,8 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
 
     public override async onReconcile(
-        changedConfigId: Foundations.NodeConfig.Id,
-        newValue: Foundations.NodeConfig.Value,
+        changedFieldId: Foundations.Field.Id,
+        newValue: Foundations.Field.Value,
         currentBlueprint: typeof Blueprint
     ): Promise<typeof Blueprint> {
         return Promise.resolve(currentBlueprint);

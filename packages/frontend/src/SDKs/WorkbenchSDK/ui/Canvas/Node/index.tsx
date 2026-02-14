@@ -1,4 +1,4 @@
-import React, { memo } from 'react'
+import { memo } from 'react'
 import { WorkbenchSDK } from '../../../sdk';
 import { NodeHeader } from './Header';
 import NodeInputs from './Inputs';
@@ -29,16 +29,16 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
   const isMinimized = node.isMinimized;
 
   return (
-    <motion.div className={` ${isMinimized ? "min-w-[100px]" : "w-[250px]"}
+    <div className={` ${isMinimized ? "min-w-[100px]" : "w-[250px]"}
        flex flex-col bg-card relative rounded-3xl border
-      ${isNodeClicked ? "border-primary" : "border-foreground/15 shadow-xl shadow-black/40"}
+      ${isNodeClicked ? "shadow-amber-500/40 shadow-selected" : "border-foreground/15 shadow-xl shadow-black/40"}
       `}
-      initial={{
-        scale: 0,
-      }}
-      animate={{
-        scale: 1
-      }}
+      // initial={{
+      //   scale: 0,
+      // }}
+      // animate={{
+      //   scale: 1
+      // }}
       >
       <NodeHeader node={node} isWorkflowLocked={isWorkflowLocked}/>
       {isMinimized === false &&
@@ -47,7 +47,7 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
           <NodeOutputs node={node} isWorkflowLocked={isWorkflowLocked} />
         </>
       }
-    </motion.div>
+    </div>
   )
 }, (prev, next) => {
   return prev.node.id === next.node.id

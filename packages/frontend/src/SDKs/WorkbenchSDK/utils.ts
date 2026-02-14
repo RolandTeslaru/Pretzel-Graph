@@ -102,9 +102,9 @@ function detectCycle(
 function doesEdgeAlreadyExist(
   workflow: Workflow,
   sourceNodeId: Workflow.Node.Id,
-  sourceHandleId: Foundations.Output.Id,
+  sourceHandleId: Foundations.Port.Output.Id,
   targetNodeId: Workflow.Node.Id,
-  targetHandleId: Foundations.Input.Id
+  targetHandleId: Foundations.Port.Input.Id
 ) {
   const edgeId = WorkbenchSDK.reducers.createEdgeId(sourceNodeId, sourceHandleId, targetNodeId, targetHandleId);
   return !!workflow.data.edges[edgeId]
@@ -113,7 +113,7 @@ function doesEdgeAlreadyExist(
 function isTargetAlreadyConnected(
   s: WorkbenchSDK.State,
   targetNodeId: Workflow.Node.Id,
-  targetHandleId: Foundations.Input.Id
+  targetHandleId: Foundations.Port.Input.Id
 ) {
   const edgeId = s.cache.inputHandlesMap[targetNodeId][targetHandleId]
   if (edgeId)
@@ -123,20 +123,18 @@ function isTargetAlreadyConnected(
 
 function areHandlesDataTypesCompatible(
   sourceNode: Workflow.Node,
-  sourceHandleId: Foundations.Output.Id,
+  sourcePortId: Foundations.Port.Output.Id,
   targetNode: Workflow.Node,
-  targetHandleId: Foundations.Input.Id
+  targetPortId: Foundations.Port.Input.Id
 ) {
-  const sourceHandle = sourceNode.outputs.find(o => o.id === sourceHandleId);
-  const targetHandle = targetNode.inputs.find(i => i.id === targetHandleId);
+  const sourcePort = sourceNode.outputs.find(o => o.id === sourcePortId);
+  const targetPort = targetNode.inputs.find(i => i.id === targetPortId);
 
-  if (!sourceHandle || !targetHandle)
+  if (!sourcePort || !targetPort)
     return false
 
-  // Check if any of the source data types are accepted by the target handle
-  for (const sourceDataType of Array.from(sourceHandle.handleVariants))
-    if (targetHandle.handleVariants.includes(sourceDataType))
-      return true
+  if(sourcePort.variant === targetPort.variant)
+    return true
 
   return false
 }
@@ -147,8 +145,8 @@ export function isConnectionValid(s: WorkbenchSDK.State, conn: Connection) {
   const sourceNode = workflow.data.nodes[conn.source as Workflow.Node.Id];
   const targetNode = workflow.data.nodes[conn.target as Workflow.Node.Id];
 
-  const sourceHandleId = conn.sourceHandle as Foundations.Output.Id;
-  const targetHandleId = conn.targetHandle as Foundations.Input.Id;
+  const sourceHandleId = conn.sourceHandle as Foundations.Port.Output.Id;
+  const targetHandleId = conn.targetHandle as Foundations.Port.Input.Id;
 
   if (!sourceNode || !targetNode || !sourceHandleId || !targetHandleId)
     return false;

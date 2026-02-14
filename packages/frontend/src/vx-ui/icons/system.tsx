@@ -260,6 +260,15 @@ export const Filter: React.FC<BaseIconProps> = (props) => (
 )
 Filter.displayName = "Filter"
 
+
+export const Terminal: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M12 19h8"/><path d="m4 17 6-6-6-6"/>
+    </BaseIcon>
+)
+Terminal.displayName = "Terminal"
+
+
 export const Tag: React.FC<BaseIconProps> = (props) => (
     <BaseIcon strokeWidth={2} {...props}>
         <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>
