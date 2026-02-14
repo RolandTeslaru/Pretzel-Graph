@@ -5,7 +5,6 @@ import { useCallback } from 'react'
 import { OrchestratorSDK } from '../sdk'
 import type { Orchestrator } from '@vx-agent-editor/shared/types'
 
-const execution = OrchestratorSDK.actions.execution
 
 const RunnerPanel = () => {
 
@@ -13,25 +12,25 @@ const RunnerPanel = () => {
 
   const handleRun = useCallback(() => {
     const workflow = WorkbenchSDK.state.workflow;
-    execution.run(workflow);
+    OrchestratorSDK.actions.execution.run(workflow);
   }, [])
 
   const handlePause = useCallback(() => {
     if (!currentJobId) return;
-    execution.pause(currentJobId);
+    OrchestratorSDK.actions.execution.pause(currentJobId);
   }, [currentJobId])
 
   const handleTerminate = useCallback(() => {
     if (!currentJobId) return;
-    execution.terminate(currentJobId);
+    OrchestratorSDK.actions.execution.terminate(currentJobId);
   }, [currentJobId])
 
   OrchestratorSDK.useJobEvents(currentJobId || "" as Orchestrator.Job.Id, (event) => {
     if (event.type === "job:started") {
-      OrchestratorSDK.setState(s => s.currentJobId = event.payload.jobId)
+      OrchestratorSDK.setState(s => s.currentJobId = event.jobId)
     }
     if (event.type === "job:update") {
-      OrchestratorSDK.setState(s => s.graphState = event.payload.update)
+      OrchestratorSDK.setState(s => s.graphState = event.update)
     }
     if (event.type === "job:completed") {
       OrchestratorSDK.setState(s => s.currentJobId = undefined)

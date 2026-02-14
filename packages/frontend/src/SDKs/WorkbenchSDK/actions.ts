@@ -1,8 +1,9 @@
 import { WorkbenchSDKImpl, WorkbenchSDK } from './sdk';
 import type { DropFirstArg } from '../types';
-import { WorkflowAPI } from './api';
 import { debounce } from '../../decorators/debounce';
 import { toast } from 'sonner';
+import { Workflow } from '@vx-agent-editor/shared/types';
+import { supabase } from '@/libs/supabase';
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
@@ -16,7 +17,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
 
         try {
-            await WorkflowAPI.Commit.execute({ workflow })
+            await Workflow.API.commit(supabase, { workflow })
         } catch (error) {
             toast.error("Could not save to cloud")
         }

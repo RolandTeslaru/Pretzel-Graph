@@ -12,8 +12,8 @@ import { isConnectionValid } from "./utils";
 import { BaseSDK } from "../Base";
 import { useShallow } from "zustand/react/shallow";
 import { SDK } from "../SDKManager";
-import { WorkflowAPI } from "./api";
 import { toast } from "sonner";
+import { supabase } from "@/libs/supabase";
 
 @SDK("Workbench")
 export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
@@ -81,7 +81,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
     public async loadWorkflow(workflowId: Workflow.Id) {
         try{
-            const { workflow } = await WorkflowAPI.Get.fetch({ workflowId })
+            const { workflow } = await Workflow.API.get(supabase, { workflowId })
             if (!workflow) {
                 throw new Error("Workflow not found")
             }

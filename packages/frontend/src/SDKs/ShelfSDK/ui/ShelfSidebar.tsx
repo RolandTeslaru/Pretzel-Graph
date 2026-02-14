@@ -5,7 +5,6 @@ import Search from './Search'
 import { ShelfSDK } from '../sdk'
 import { nodeColorsName } from '@/utils/styleUtils'
 import type { Foundations } from '@vx-agent-editor/shared/types'
-import { DialogSDKDebugPanel } from '@/vx-ui/SDKs/DialogSDK'
 
 const ShelfSidebar = () => {
     return (
@@ -17,9 +16,7 @@ const ShelfSidebar = () => {
 
             <Separator />
 
-
             <FilterDataTypesIndicator />
-            <DialogSDKDebugPanel/>
 
             <ScrollArea.Root className='mb-auto'>
                 <Drawers />
