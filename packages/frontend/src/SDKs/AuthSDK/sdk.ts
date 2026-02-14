@@ -3,8 +3,8 @@ import { BaseSDK } from "../Base";
 import { immer } from "zustand/middleware/immer";
 import { supabase } from "@/libs/supabase";
 import { SDK } from "../SDKManager";
-import { Auth } from "@vx-agent-editor/shared/types";
-import type {PostgrestError, Session} from "@supabase/supabase-js"
+import { Auth } from "@vx-agent-editor/shared/domain";
+import type { PostgrestError, Session } from "@supabase/supabase-js"
 import { toast } from "sonner";
 
 @SDK("Auth")
@@ -20,26 +20,26 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
   )
 
   private readonly db: AuthSDK.Db = {
-      getUser: async (userId: Auth.User.Id) => {
-        const { data, error } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", userId)
-          .single();
+    getUser: async (userId: Auth.User.Id) => {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
-        if (error)
-          return { user: null, error }
+      if (error)
+        return { user: null, error }
 
-        console.log("Fetched User", data)
+      console.log("Fetched User", data)
 
-        const parsedUser = Auth.User.Schema.parse(data)
+      const parsedUser = Auth.User.Schema.parse(data)
 
-        return { user: parsedUser, error: null }
-      },
-      getSession: async () => {
-          const { data: { session } } = await supabase.auth.getSession();
-          return session;
-      }
+      return { user: parsedUser, error: null }
+    },
+    getSession: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    }
   }
 
   /**
@@ -59,7 +59,7 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
     supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await this.actions.syncUser(session.user.id as Auth.User.Id);
-      } 
+      }
       else if (event === 'SIGNED_OUT') {
         this.setState(s => {
           s.user = null;
@@ -76,7 +76,7 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
         email: props.email,
         password: props.password,
       })
-      if (error || !data.user){
+      if (error || !data.user) {
         toast.error(`AuthSDK: Could not login: ${error?.message}`)
         return false;
       }
@@ -176,8 +176,8 @@ export namespace AuthSDK {
   }
 
   export type Db = {
-      getUser: (userId: Auth.User.Id) => Promise<{ user: Auth.User | null, error: PostgrestError | null }>
-      getSession: () => Promise<Session | null>
+    getUser: (userId: Auth.User.Id) => Promise<{ user: Auth.User | null, error: PostgrestError | null }>
+    getSession: () => Promise<Session | null>
   }
 
   export type Actions = {

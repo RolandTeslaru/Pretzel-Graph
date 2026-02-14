@@ -1,4 +1,4 @@
-import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import React, { useMemo } from 'react'
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
 import LangchainTypeBadge from '../../../TypeBadge';
@@ -38,11 +38,11 @@ const HandleTooltipContent: React.FC<Props> = ({
           hasMultipleTypes={hasMultipleTypes}
         />
 
-          <LangchainTypeBadge
-            dataType={port.variant}
-            left={handleType === 'target'}
-            isInput={isInput}
-          />
+        <LangchainTypeBadge
+          dataType={port.variant}
+          left={handleType === 'target'}
+          isInput={isInput}
+        />
         {isConnecting && <span>{isInput ? "input" : "output"}</span>}
       </div>
       {!isConnecting && <HelperText isInput={isInput} />}

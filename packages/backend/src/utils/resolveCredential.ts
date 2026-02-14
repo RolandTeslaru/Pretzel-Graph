@@ -1,5 +1,5 @@
 import { type SupabaseClient } from "@supabase/supabase-js";
-import { Vault } from "@vx-agent-editor/shared/types";
+import { Vault } from "@vx-agent-editor/shared/domain";
 
 export async function resolveCredential(supabase: SupabaseClient, credentialId: Vault.Credential.Id) {
     const { data, error } = await supabase

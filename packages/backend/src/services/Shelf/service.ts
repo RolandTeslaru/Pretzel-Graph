@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Foundations, Shelf } from "@vx-agent-editor/shared/types";
+import { Foundations, Shelf } from "@vx-agent-editor/shared/domain";
 import { Service } from "../ServiceManager";
 
 // Import the pre-generated node index
@@ -46,7 +46,7 @@ export class ShelfServiceImpl {
 
                 drawerIds.forEach(drawerId => {
                     const drawer = ALL_DRAWERS[drawerId];
-                    if(!drawer)
+                    if (!drawer)
                         return
                     drawer.blueprintIds.forEach(blueprintId => {
                         const blueprint = INDEX.blueprints[blueprintId as Foundations.Blueprint.Id];

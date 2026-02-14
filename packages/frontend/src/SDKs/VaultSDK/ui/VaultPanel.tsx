@@ -9,7 +9,7 @@ import {
   Spinner,
   AlertDialog, // Still needed for Header/Title etc if they are not exposed by standard dialog
 } from '@/vx-ui/foundations'
-import { Vault } from '@vx-agent-editor/shared/types'
+import { Vault } from '@vx-agent-editor/shared/domain'
 import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK'
 import { SystemIcons } from '@/vx-ui/icons'
 import { toast } from 'sonner'
@@ -24,7 +24,7 @@ const VaultPanel = () => {
   return (
     <div className='flex flex-col h-full w-full p-4 gap-4 min-w-[600px]'>
       <div className='flex flex-row w-full gap-3'>
-        <SystemIcons.Vault  className=' size-10' />
+        <SystemIcons.Vault className=' size-10' />
         <h1 className='text-lg font-bold my-auto'>VAULT</h1>
         <Button className='ml-auto' onClick={() => {
           DialogSDK.actions.push("add-credential", (props) => (
@@ -189,10 +189,10 @@ const CredentialItem = ({ credential }: { credential: Vault.Credential }) => {
         {isDirty ? (
           <>
             <Button variant='ghost' size='icon' onClick={handleUndo} disabled={isLoading}>
-              <SystemIcons.X className='text-red-500'/>
+              <SystemIcons.X className='text-red-500' />
             </Button>
             <Button variant='ghost' size='icon' onClick={handleSave} disabled={isLoading}>
-              <SystemIcons.Check className='text-green-500'/>
+              <SystemIcons.Check className='text-green-500' />
             </Button>
           </>
         ) :

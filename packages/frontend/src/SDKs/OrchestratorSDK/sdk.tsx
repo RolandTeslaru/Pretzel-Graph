@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/types";
+import { Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/domain";
 import { useEffect } from "react";
 import { RealtimeSDK } from "../Realtime/sdk";
 import { toast } from "sonner";

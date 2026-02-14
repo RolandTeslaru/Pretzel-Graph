@@ -3,7 +3,7 @@ import { Button } from '@/vx-ui/foundations'
 import { SystemIcons } from '@/vx-ui/icons'
 import { useCallback } from 'react'
 import { OrchestratorSDK } from '../sdk'
-import type { Orchestrator } from '@vx-agent-editor/shared/types'
+import type { Orchestrator } from '@vx-agent-editor/shared/domain'
 
 
 const RunnerPanel = () => {

@@ -1,15 +1,15 @@
 import { StateGraph, START, END } from "@langchain/langgraph";
 import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 import { CatalogueService } from "src/services/Catalogue/service";
-import { Foundations, Orchestrator } from "@vx-agent-editor/shared/types";
+import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { Runtime } from "src/runtime";
 
 export class WorkflowCompiler {
-    constructor() {}
+    constructor() { }
 
     public async compile(
-        workflow:   Workflow, 
-        emit:       Runtime.Emitter, 
+        workflow: Workflow,
+        emit: Runtime.Emitter,
         nodeRunner: Runtime.NodeRunner
     ) {
         const graph = new StateGraph(Runtime.State.Schema);
@@ -22,7 +22,7 @@ export class WorkflowCompiler {
 
             if (!VerticeConstructor)
                 throw new Error(`Could not find vertice with blueprintId ${node.blueprintId}`)
-            
+
             const Vertex = new VerticeConstructor(node);
 
             graph.addNode(node.id, async (state) => {

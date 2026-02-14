@@ -1,4 +1,4 @@
-import { Foundations, Shelf, Workflow } from "@vx-agent-editor/shared/types";
+import { Foundations, Shelf, Workflow } from "@vx-agent-editor/shared/domain";
 import type { ShelfSDKImpl, ShelfSDK } from "./sdk";
 
 export type State = ShelfSDK.State
@@ -44,7 +44,7 @@ export function _createShelfReducers_(sdk: ShelfSDKImpl) {
         Object.entries(s.drawers).forEach(([_drawerId, drawer]) => {
             const blueprintIds = drawer.blueprintIds.filter(blueprintId => {
                 const blueprint = s.blueprints[blueprintId]
-                if (!blueprint) 
+                if (!blueprint)
                     return false
 
                 const hasDisplayNameCheck = searchQuery ? blueprint.displayName.toLowerCase().includes(searchQuery.toLowerCase()) : true

@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useState } from 'react'
 import { ShelfSDK } from '../sdk'
-import { Shelf } from "@vx-agent-editor/shared/types";
+import { Shelf } from "@vx-agent-editor/shared/domain";
 import { Spinner } from '@/vx-ui/foundations';
 import { useShallow } from 'zustand/react/shallow';
 import { SystemIcons } from '@/vx-ui/icons';
@@ -14,14 +14,14 @@ export const Drawers = () => {
     const selectedSection = ShelfSDK.useStore(s => s.selectedSection);
 
     QuerySDK.useQuery(
-        [`${selectedSection}-blueprints`], 
+        [`${selectedSection}-blueprints`],
         () => ShelfSDK.actions.loadSection(selectedSection)
     )
 
     const filteredDrawers = ShelfSDK.useStore(useShallow(s => {
         if (s.loadedSections.has(s.selectedSection) === false)
             return undefined;
-        
+
         const drawerIds = s.sections[s.selectedSection]
 
         if (s.searchFilter.query === "" || !s.searchFilter.query)
@@ -34,7 +34,7 @@ export const Drawers = () => {
         <div className='flex flex-col gap-1 w-full h-full px-2'>
             {filteredDrawers === undefined ?
                 <div className='flex flex-row gap-2 text-foreground m-auto mt-1'>
-                    <Spinner className='h-5'/>
+                    <Spinner className='h-5' />
                 </div>
                 :
                 <>

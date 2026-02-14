@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Vault } from "@vx-agent-editor/shared/types";
+import { Vault } from "@vx-agent-editor/shared/domain";
 import { supabase } from "@/libs/supabase";
 
 @SDK("Vault")
@@ -11,7 +11,7 @@ export class VaultSDKImpl extends BaseSDK<VaultSDK.State> {
 
     public readonly useStore: BaseSDK.Store<VaultSDK.State> = create(
         immer<VaultSDK.State>(() => ({
-            credentials: [], 
+            credentials: [],
         }))
     )
 

@@ -1,7 +1,7 @@
 import { Tabs } from '@/vx-ui/foundations'
 import { memo } from 'react'
 import { ShelfSDK } from '../sdk'
-import type { Shelf } from '@vx-agent-editor/shared/types';
+import type { Shelf } from '@vx-agent-editor/shared/domain';
 
 const SectionTabs = memo(() => {
     const selectedSection = ShelfSDK.useStore(s => s.selectedSection);
@@ -9,7 +9,7 @@ const SectionTabs = memo(() => {
         <Tabs.Root className='w-full px-2' value={selectedSection} onValueChange={(val) => {
             ShelfSDK.actions.setSection(val as Shelf.Section)
         }}
-            
+
         >
             <Tabs.List className='w-full' indicatorVariant="primary" size='sm'>
                 <Tabs.Trigger className='w-full font-semibold' value="core">Core</Tabs.Trigger>

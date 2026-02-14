@@ -1,5 +1,5 @@
 import { CompiledStateGraph, MessagesValue, ReducedValue, StateSchema } from "@langchain/langgraph";
-import { Foundations, Orchestrator } from "@vx-agent-editor/shared/types";
+import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 import { EventBuilder } from "./eventBuilder";
 import { LC } from "./langchain";
@@ -47,11 +47,11 @@ export namespace Runtime {
     >
 
     export type NodeRunner = (
-        state:      Runtime.State,
+        state: Runtime.State,
         activeNode: Workflow.Node,
-        Vertex:     Runtime.Node<Foundations.Blueprint>,
-        workflow:   Workflow,
-        emit:       Runtime.Emitter
+        Vertex: Runtime.Node<Foundations.Blueprint>,
+        workflow: Workflow,
+        emit: Runtime.Emitter
     ) => Promise<State.Update>
 
 
@@ -74,13 +74,13 @@ export namespace Runtime {
          */
         public abstract run(
             globalState: Runtime.State,
-            fields:      InferFields<T_Blueprint>,
-            inputs:      InferInputs<T_Blueprint>
+            fields: InferFields<T_Blueprint>,
+            inputs: InferInputs<T_Blueprint>
         ): Promise<InferOutputs<T_Blueprint>>;
 
         protected async onReconcile(
-            changedFieldId:   Foundations.Field.Id,
-            newValue:         Foundations.Field.Value,
+            changedFieldId: Foundations.Field.Id,
+            newValue: Foundations.Field.Value,
             currentBlueprint: T_Blueprint
         ): Promise<T_Blueprint> {
             return currentBlueprint
@@ -93,7 +93,7 @@ export namespace Runtime {
         }
     }
 
-    
+
 
     /**
      * Infer static config values from a Blueprint.
@@ -103,12 +103,12 @@ export namespace Runtime {
      */
     export type InferFields<D> = D extends { fields: infer T }
         ? T extends readonly { id: string }[]
-            ? { [K in T[number] as K extends { __literalId?: infer Id extends string }
-                ? Id
-                : K extends { id: infer Id extends string } ? Id : never
-                ]: K extends { initialValue: infer IV } ? IV : any
-            }
-            : never
+        ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
+            ? Id
+            : K extends { id: infer Id extends string } ? Id : never
+            ]: K extends { initialValue: infer IV } ? IV : any
+        }
+        : never
         : Record<string, never>;
 
     /**
@@ -119,16 +119,16 @@ export namespace Runtime {
      */
     export type InferInputs<D> = D extends { inputs: infer T }
         ? T extends readonly { id: string }[]
-            ? { [K in T[number] as K extends { __literalId?: infer Id extends string }
-                ? Id
-                : K extends { id: infer Id extends string } ? Id : never
-                ]: K extends { __reference?: infer V }
-                    ? [NonNullable<V>] extends [never]
-                        ? (K extends { initialValue: infer IV } ? IV : any)
-                        : NonNullable<V>
-                    : K extends { initialValue: infer IV } ? IV : any
-            }
-            : never
+        ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
+            ? Id
+            : K extends { id: infer Id extends string } ? Id : never
+            ]: K extends { __reference?: infer V }
+            ? [NonNullable<V>] extends [never]
+            ? (K extends { initialValue: infer IV } ? IV : any)
+            : NonNullable<V>
+            : K extends { initialValue: infer IV } ? IV : any
+        }
+        : never
         : never;
 
     /**
@@ -139,15 +139,15 @@ export namespace Runtime {
      */
     export type InferOutputs<D> = D extends { outputs: infer T }
         ? T extends readonly { id: string }[]
-            ? { [K in T[number] as K extends { __literalId?: infer Id extends string }
-                ? Id
-                : K extends { id: infer Id extends string } ? Id : never
-                ]: K extends { __reference?: infer V }
-                    ? [NonNullable<V>] extends [never]
-                        ? any
-                        : NonNullable<V>
-                    : any
-            }
-            : never
+        ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
+            ? Id
+            : K extends { id: infer Id extends string } ? Id : never
+            ]: K extends { __reference?: infer V }
+            ? [NonNullable<V>] extends [never]
+            ? any
+            : NonNullable<V>
+            : any
+        }
+        : never
         : never;
 }

@@ -4,7 +4,7 @@ import { Button, Dialog, Input, Spinner } from '@/vx-ui/foundations';
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
 import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK';
 import { SystemIcons } from '@/vx-ui/icons';
-import type { Foundations, Workflow } from '@vx-agent-editor/shared/types';
+import type { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
 
@@ -54,11 +54,11 @@ const ScriptDialogcontent = ({ field, nodeId, onChange }: { field: Foundations.F
             <Dialog.Description>Warning this script runs at the nodes runtime using javascripts eval function.</Dialog.Description>
             <div className="flex-1 min-h-0 border rounded-md overflow-hidden relative">
                 {mounted ? (
-                    <Suspense 
+                    <Suspense
                         fallback={
-                        <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-500">
-                            Loading Editor <Spinner/>
-                        </div>
+                            <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-500">
+                                Loading Editor <Spinner />
+                            </div>
                         }>
                         <MonacoEditor
                             height="500px"

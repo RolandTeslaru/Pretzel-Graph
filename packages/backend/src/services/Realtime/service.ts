@@ -2,7 +2,7 @@ import { Service } from "../ServiceManager";
 import IORedis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
 import { WebSocketServer, WebSocket } from 'ws';
-import { Realtime } from "@vx-agent-editor/shared/types/Realtime";
+import { Realtime } from "@vx-agent-editor/shared/domain/Realtime";
 
 @Service("Realtime")
 export class RealtimeServiceImpl {
@@ -62,7 +62,7 @@ export class RealtimeServiceImpl {
     private removeClientFromAll(ws: WebSocket) {
         this.subscriptions.forEach((clients, topicId) => {
             clients.delete(ws);
-            if (clients.size === 0) 
+            if (clients.size === 0)
                 this.subscriptions.delete(topicId);
         });
     }

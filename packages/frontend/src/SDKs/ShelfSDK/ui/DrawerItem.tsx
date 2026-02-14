@@ -1,7 +1,7 @@
 import React, { memo } from 'react'
 import { ShelfSDK } from '../sdk';
 import { Tooltip } from '@/vx-ui/foundations';
-import type { Foundations } from '@vx-agent-editor/shared/types';
+import type { Foundations } from '@vx-agent-editor/shared/domain';
 import { SystemIcons } from '@/vx-ui/icons';
 import { LazyIcon } from '@/vx-ui/icons/LazyIcon';
 

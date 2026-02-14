@@ -1,5 +1,5 @@
 import React from 'react'
-import { Workflow } from '@vx-agent-editor/shared/types';
+import { Workflow } from '@vx-agent-editor/shared/domain';
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
 import MinimizedHandles from './MinimizedHandles';
 import { SystemIcons } from '@/vx-ui/icons';

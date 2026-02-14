@@ -1,4 +1,4 @@
-import { Foundations, Workflow } from '@vx-agent-editor/shared/types';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { WorkbenchSDK } from "./sdk"
 import {
   type Connection,
@@ -133,7 +133,7 @@ function areHandlesDataTypesCompatible(
   if (!sourcePort || !targetPort)
     return false
 
-  if(sourcePort.variant === targetPort.variant)
+  if (sourcePort.variant === targetPort.variant)
     return true
 
   return false

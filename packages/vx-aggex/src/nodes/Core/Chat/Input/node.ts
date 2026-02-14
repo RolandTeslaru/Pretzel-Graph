@@ -1,6 +1,6 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint"
-import { Foundations, Workflow } from "@vx-agent-editor/shared/types";
+import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import { Runtime } from "src/runtime";
 
 @RegisterNode(Blueprint.id)

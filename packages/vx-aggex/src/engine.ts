@@ -2,7 +2,7 @@ import { WorkflowCompiler } from "./compiler";
 import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 import { Runtime } from "./runtime";
 import { cloneDeep } from "lodash";
-import { Foundations, Orchestrator } from "@vx-agent-editor/shared/types";
+import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { Synthesizer } from "./synthesizer";
 
 export class AggexEngine {
@@ -11,11 +11,11 @@ export class AggexEngine {
 
 
     private async runNode(
-        state:      Runtime.State,
+        state: Runtime.State,
         activeNode: Workflow.Node,
-        Vertex:     Runtime.Node<Foundations.Blueprint>,
-        workflow:   Workflow,
-        emit:       Runtime.Emitter
+        Vertex: Runtime.Node<Foundations.Blueprint>,
+        workflow: Workflow,
+        emit: Runtime.Emitter
     ) {
         console.log(`Executing Node: ${activeNode.displayName} (${activeNode.id})`);
 
@@ -44,10 +44,10 @@ export class AggexEngine {
      * 2. Otherwise fall back to the config schema's `initialValue`
      */
     private resolveNodeFields(
-        nodeId:   Workflow.Node.Id,
+        nodeId: Workflow.Node.Id,
         workflow: Workflow
     ): Record<Foundations.Field.Id, Foundations.Field.Value> {
-        const node         = workflow.data.nodes[nodeId];
+        const node = workflow.data.nodes[nodeId];
         const staticValues = workflow.data.staticValues[nodeId] ?? {};
 
         const resolved: Record<string, Foundations.Field.Value> = {};
@@ -78,11 +78,11 @@ export class AggexEngine {
      *    because the raw primitive must be coerced into a class instance
      */
     private resolveIncomingValues(
-        state:    Runtime.State,
-        nodeId:   Workflow.Node.Id,
+        state: Runtime.State,
+        nodeId: Workflow.Node.Id,
         workflow: Workflow
     ): Record<Foundations.Port.Input.Id, any> {
-        const node         = workflow.data.nodes[nodeId];
+        const node = workflow.data.nodes[nodeId];
         const staticValues = workflow.data.staticValues[nodeId] ?? {};
 
         const resolved: Record<Foundations.Port.Input.Id, any> = {};
@@ -107,8 +107,8 @@ export class AggexEngine {
             } else {
                 // ── No edge: synthesize from static value or initialValue ──
                 const staticValue = staticValues[input.id];
-                const fallback    = "initialValue" in input ? input.initialValue : undefined;
-                const raw         = staticValue ?? fallback;
+                const fallback = "initialValue" in input ? input.initialValue : undefined;
+                const raw = staticValue ?? fallback;
 
                 if (raw !== undefined) {
                     resolved[input.id] = Synthesizer.synthesizeInput(input, raw as Foundations.Field.Value);
