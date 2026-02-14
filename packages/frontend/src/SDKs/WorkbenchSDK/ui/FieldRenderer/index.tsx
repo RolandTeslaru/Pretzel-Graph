@@ -312,7 +312,7 @@ const SecretField = memo(({ field, nodeId, className }: RendererProps<'Secret'>)
                 </Select.Trigger>
                 <Select.Content>
                     {credentials.map(c => (
-                        <Select.Item key={c.id} value={`credential:${c.id}`}>
+                        <Select.Item key={c.id} value={c.id}>
                             <div className="flex items-center justify-between w-full gap-2 min-w-[200px]">
                                 <span>{c.name}</span>
                                 <Badge variant="secondary" className="text-[10px] h-4 py-0 px-1">{c.provider}</Badge>

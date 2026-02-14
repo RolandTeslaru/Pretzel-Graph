@@ -6,11 +6,13 @@ import {
   Label,
   Text,
   Dialog,
-  Spinner, // Still needed for Header/Title etc if they are not exposed by standard dialog
+  Spinner,
+  AlertDialog, // Still needed for Header/Title etc if they are not exposed by standard dialog
 } from '@/vx-ui/foundations'
 import { Vault } from '@vx-agent-editor/shared/types'
 import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK'
 import { SystemIcons } from '@/vx-ui/icons'
+import { toast } from 'sonner'
 
 const VaultPanel = () => {
   const credentials = VaultSDK.useStore(s => s.credentials)
@@ -20,7 +22,7 @@ const VaultPanel = () => {
   }, [])
 
   return (
-    <div className='flex flex-col h-full w-full p-4 gap-4'>
+    <div className='flex flex-col h-full w-full p-4 gap-4 min-w-[600px]'>
       <div className='flex flex-row w-full gap-3'>
         <SystemIcons.Vault  className=' size-10' />
         <h1 className='text-lg font-bold my-auto'>VAULT</h1>
@@ -106,14 +108,18 @@ const CredentialItem = ({ credential }: { credential: Vault.Credential }) => {
           {...props}
           type="danger"
           onApprove={async () => {
-            await VaultSDK.actions.delete(credential.id)
+            await VaultSDK.actions.remove(credential.id)
             await VaultSDK.actions.refreshAll()
             DialogSDK.actions.pop(`delete-credential-${credential.id}`)
           }}
           onCancel={() => DialogSDK.actions.pop(`delete-credential-${credential.id}`)}
         >
-          Are you absolutely sure you want to delete <span className="font-semibold text-foreground">{credential.name}</span>?
-          This action cannot be undone.
+          <AlertDialog.Title>
+            Are you absolutely sure?
+          </AlertDialog.Title>
+          <AlertDialog.Description>
+            Deleting <span className="font-semibold text-destructive">{credential.name}</span> cannot be undone.
+          </AlertDialog.Description>
         </DialogSDK.AlertTemplate>
       ))
     } catch (error) {
@@ -233,7 +239,12 @@ const AddCredentialContent = () => {
       setProvider('')
       setValue('')
     } catch (error) {
+      toast.error("Failed to create credential")
       console.error("Failed to create credential", error)
+      setName('')
+      setProvider('')
+      setValue('')
+      setIsLoading(false);
     } finally {
       setIsLoading(false)
     }

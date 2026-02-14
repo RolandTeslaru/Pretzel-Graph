@@ -3,7 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
 import { Vault } from "@vx-agent-editor/shared/types";
-import { VaultAPI } from "./api";
+import { supabase } from "@/libs/supabase";
 
 @SDK("Vault")
 export class VaultSDKImpl extends BaseSDK<VaultSDK.State> {
@@ -19,33 +19,33 @@ export class VaultSDKImpl extends BaseSDK<VaultSDK.State> {
 
     public readonly actions: VaultSDK.Actions = {
         create: async (config) => {
-            await VaultAPI.Credential.Create.execute(config);
+            await Vault.API.Credential.create(supabase, config);
         },
-        delete: async (id) => {
-            await VaultAPI.Credential.Delete.execute({ id });
+        remove: async (id) => {
+            await Vault.API.Credential.remove(supabase, { id });
         },
         reveal: async (id) => {
-            const { value } = await VaultAPI.Credential.Reveal.fetch({ id });
+            const { value } = await Vault.API.Credential.reveal(supabase, { id });
             return value;
         },
         refreshAll: async () => {
-            const credentials = await VaultAPI.Credential.GetAll.fetch();
+            const credentials = await Vault.API.Credential.getAll(supabase);
             this.setState(s => {
                 s.credentials = credentials;
             })
         },
         getAll: async () => {
-            const credentials = await VaultAPI.Credential.GetAll.fetch();
+            const credentials = await Vault.API.Credential.getAll(supabase);
             this.setState(s => {
                 s.credentials = credentials;
             })
         },
         update: {
             secret: async (config) => {
-                await VaultAPI.Credential.Update.Secret.execute(config);
+                await Vault.API.Credential.updateSecret(supabase, config);
             },
             meta: async (config) => {
-                await VaultAPI.Credential.Update.Meta.execute(config);
+                await Vault.API.Credential.updateMeta(supabase, config);
             }
         }
     }
@@ -68,7 +68,7 @@ export namespace VaultSDK {
     }
     export type Actions = {
         create: (config: { name: string, provider: string, value: string }) => Promise<void>,
-        delete: (id: Vault.Credential.Id) => Promise<void>,
+        remove: (id: Vault.Credential.Id) => Promise<void>,
         reveal: (id: Vault.Credential.Id) => Promise<Vault.Secret>,
         refreshAll: () => Promise<void>,
         getAll: () => Promise<void>,

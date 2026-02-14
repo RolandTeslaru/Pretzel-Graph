@@ -20,8 +20,8 @@ namespace AlertDialogComponents {
   export type Footer = FC<React.HTMLAttributes<HTMLDivElement>>
   export type Title = FC<ComponentProps<typeof AlertDialogPrimitive.Title>>
   export type Description = FC<ComponentProps<typeof AlertDialogPrimitive.Description>>
-  export type Action = FC<ComponentProps<typeof AlertDialogPrimitive.Action> & ButtonProps>
-  export type Cancel = FC<ComponentProps<typeof AlertDialogPrimitive.Cancel> & ButtonProps>
+  export type Action      = FC<ComponentProps<typeof AlertDialogPrimitive.Action> & ButtonProps>
+  export type Cancel      = FC<ComponentProps<typeof AlertDialogPrimitive.Cancel> & ButtonProps>
 }
 
 

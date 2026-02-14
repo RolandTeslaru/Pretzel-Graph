@@ -78,14 +78,16 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     }}
                     darkenBackground={index === 0}
                     blockTransparency={dialogsSize - index > 1}
-                    className="flex flex-row"
+                    className={`flex flex-row max-w-[600px] ${className || ""}`}
                 >
-                    <div className="p-9 relative">
-                        <AlertTriangle size={60} className="!text-yellow-400" />
-                        <AlertTriangle size={60} className="animate-ping absolute top-5 !text-yellow-400" />
+                    <div className="relative pl-9 pr-5 pt-9 mb-auto">
+                        <div className="relative">
+                            <AlertTriangle size={60} className={type === "danger" ? "!text-destructive" : "!text-yellow-400"} />
+                            <AlertTriangle size={60} className={`animate-ping absolute top-0 left-0 ${type === "danger" ? "!text-destructive" : "!text-yellow-400"}`} />
+                        </div>
                     </div>
-                    <div className="flex flex-col gap-4 p-6">
-                        <div>
+                    <div className="flex flex-col h-full gap-4 p-3 w-full  min-h-[150px]">
+                        <div className="h-full pt-3 mb-auto">
                             {children}
                         </div>
                         <AlertDialog.Footer>
