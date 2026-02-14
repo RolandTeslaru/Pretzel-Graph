@@ -1,593 +1,605 @@
-import { Foundations } from "../types"
 import { Shelf } from "../types/Shelf"
 
 export const CORE_DRAWERS = {
-  saved_components:    { 
-    displayName: "Saved",              
-    id: "saved_components",    
-    icon: "GradientSave", 
+  saved_components: {
+    displayName: "Saved",
+    id: "saved_components",
+    icon: "GradientSave",
     blueprintIds: []
   },
-  input_output:        { 
-    displayName: "Input & Output",     
-    id: "input_output",        
+  input_output: {
+    displayName: "Input & Output",
+    id: "input_output",
     icon: "Cable",
     blueprintIds: ["Core.Chat.Input", "Core.Chat.Output", "Core.Text.Input", "Core.Text.Output"]
-   },
-  data_source:         { 
-    displayName: "Data Sources",       
-    id: "data_source",         
+  },
+  developer: {
+    displayName: "DEVELOPER",
+    id: "developer",
+    icon: "Terminal",
+    blueprintIds: [
+      "Core.Developer.AllBuilders",
+      "Core.Developer.Eval",
+      "Core.Developer.ConsoleLog",
+      "Core.Developer.Sleep",
+      "Core.Developer.JsonInjector",
+      "Core.Developer.HttpRequest"
+    ]
+  },
+  data_source: {
+    displayName: "Data Sources",
+    id: "data_source",
     icon: "Database",
     blueprintIds: []
   },
-  models_and_agents:   { 
-    displayName: "Models & Agents",    
-    id: "models_and_agents",   
+  models_and_agents: {
+    displayName: "Models & Agents",
+    id: "models_and_agents",
     icon: "Bot",
     blueprintIds: []
   },
-  llm_operations:      { 
-    displayName: "LLM Operations",     
-    id: "llm_operations",      
+  llm_operations: {
+    displayName: "LLM Operations",
+    id: "llm_operations",
     icon: "BrainCircuit",
     blueprintIds: []
   },
-  files_and_knowledge: { 
-    displayName: "Files & Knowledge",  
-    id: "files_and_knowledge", 
+  files_and_knowledge: {
+    displayName: "Files & Knowledge",
+    id: "files_and_knowledge",
     icon: "Layers",
     blueprintIds: []
   },
-  processing:          { 
-    displayName: "Processing",         
-    id: "processing",          
+  processing: {
+    displayName: "Processing",
+    id: "processing",
     icon: "ListFilter",
     blueprintIds: []
   },
-  flow_controls:       { 
-    displayName: "Flow Controls",      
-    id: "flow_controls",       
+  flow_controls: {
+    displayName: "Flow Controls",
+    id: "flow_controls",
     icon: "ArrowRightLeft",
     blueprintIds: []
   },
-  utilities:           { 
-    displayName: "Utilities",          
-    id: "utilities",           
+  utilities: {
+    displayName: "Utilities",
+    id: "utilities",
     icon: "Wand2",
     blueprintIds: []
   },
-  prototypes:          { 
-    displayName: "Prototypes",         
-    id: "prototypes",          
+  prototypes: {
+    displayName: "Prototypes",
+    id: "prototypes",
     icon: "FlaskConical",
     blueprintIds: []
   },
-  tools:               { 
-    displayName: "Tools",              
-    id: "tools",               
+  tools: {
+    displayName: "Tools",
+    id: "tools",
     icon: "Hammer",
     blueprintIds: []
   },
 } as const as Record<Shelf.Drawer.Id, Shelf.Drawer>
 
 export const BUNDLE_DRAWERS = {
-  aiml:             {
+  aiml: {
     displayName: "AI/ML API",
     id: "aiml",
     icon: "AIML",
     blueprintIds: []
   },
-  agentql:          {
+  agentql: {
     displayName: "AgentQL",
     id: "agentql",
     icon: "AgentQL",
     blueprintIds: []
   },
-  altk:             {
+  altk: {
     displayName: "ALTK",
     id: "altk",
     icon: "Zap",
     blueprintIds: []
   },
-  languagemodels:   {
+  languagemodels: {
     displayName: "Language Models",
     id: "languagemodels",
     icon: "BrainCircuit",
     blueprintIds: []
   },
-  embeddings:       {
+  embeddings: {
     displayName: "Embeddings",
     id: "embeddings",
     icon: "Binary",
     blueprintIds: []
   },
-  amazon:           {
+  amazon: {
     displayName: "Amazon",
     id: "amazon",
     icon: "Amazon",
     blueprintIds: []
   },
-  anthropic:        {
+  anthropic: {
     displayName: "Anthropic",
     id: "anthropic",
     icon: "Anthropic",
     blueprintIds: []
   },
-  apify:           {
+  apify: {
     displayName: "Apify",
     id: "apify",
     icon: "Apify",
     blueprintIds: []
   },
-  arxiv:            {
+  arxiv: {
     displayName: "arXiv",
     id: "arxiv",
     icon: "arXiv",
     blueprintIds: []
   },
-  assemblyai:       {
+  assemblyai: {
     displayName: "AssemblyAI",
     id: "assemblyai",
     icon: "AssemblyAI",
     blueprintIds: []
   },
-  azure:            {
+  azure: {
     displayName: "Azure",
     id: "azure",
     icon: "Azure",
     blueprintIds: []
   },
-  baidu:            {
+  baidu: {
     displayName: "Baidu",
     id: "baidu",
     icon: "BaiduQianfan",
     blueprintIds: []
   },
-  bing:             {
+  bing: {
     displayName: "Bing",
     id: "bing",
     icon: "Bing",
     blueprintIds: []
   },
-  cassandra:        {
+  cassandra: {
     displayName: "Cassandra",
     id: "cassandra",
     icon: "Cassandra",
     blueprintIds: []
   },
-  chroma:           {
+  chroma: {
     displayName: "Chroma",
     id: "chroma",
     icon: "Chroma",
     blueprintIds: []
   },
-  clickhouse:       {
+  clickhouse: {
     displayName: "ClickHouse",
     id: "clickhouse",
     icon: "Clickhouse",
     blueprintIds: []
   },
-  cleanlab:         {
+  cleanlab: {
     displayName: "Cleanlab",
     id: "cleanlab",
     icon: "Cleanlab",
     blueprintIds: []
   },
-  cloudflare:       {
+  cloudflare: {
     displayName: "Cloudflare",
     id: "cloudflare",
     icon: "Cloudflare",
     blueprintIds: []
   },
-  cohere:           {
+  cohere: {
     displayName: "Cohere",
     id: "cohere",
     icon: "Cohere",
     blueprintIds: []
   },
-  cometapi:         {
+  cometapi: {
     displayName: "CometAPI",
     id: "cometapi",
     icon: "CometAPI",
     blueprintIds: []
   },
-  composio:         {
+  composio: {
     displayName: "Composio",
     id: "composio",
     icon: "Composio",
     blueprintIds: []
   },
-  confluence:       {
+  confluence: {
     displayName: "Confluence",
     id: "confluence",
     icon: "Confluence",
     blueprintIds: []
   },
-  couchbase:        {
+  couchbase: {
     displayName: "Couchbase",
     id: "couchbase",
     icon: "Couchbase",
     blueprintIds: []
   },
-  crewai:           {
+  crewai: {
     displayName: "CrewAI",
     id: "crewai",
     icon: "CrewAI",
     blueprintIds: []
   },
-  cuga:             {
+  cuga: {
     displayName: "CUGA",
     id: "cuga",
     icon: "Bot",
     blueprintIds: []
   },
-  datastax:         {
+  datastax: {
     displayName: "DataStax",
     id: "datastax",
     icon: "AstraDB",
     blueprintIds: []
   },
-  deepseek:         {
+  deepseek: {
     displayName: "DeepSeek",
     id: "deepseek",
     icon: "DeepSeek",
     blueprintIds: []
   },
-  docling:          {
+  docling: {
     displayName: "Docling",
     id: "docling",
     icon: "Docling",
     blueprintIds: []
   },
-  duckduckgo:       {
+  duckduckgo: {
     displayName: "DuckDuckGo",
     id: "duckduckgo",
     icon: "DuckDuckGo",
     blueprintIds: []
   },
-  elastic:          {
+  elastic: {
     displayName: "Elastic",
     id: "elastic",
     icon: "ElasticsearchStore",
     blueprintIds: []
   },
-  exa:              {
+  exa: {
     displayName: "Exa",
     id: "exa",
     icon: "Exa",
     blueprintIds: []
   },
-  FAISS:            {
+  FAISS: {
     displayName: "FAISS",
     id: "FAISS",
     icon: "FAISS",
     blueprintIds: []
   },
-  firecrawl:        {
+  firecrawl: {
     displayName: "Firecrawl",
     id: "firecrawl",
     icon: "FirecrawlCrawlApi",
     blueprintIds: []
   },
-  git:              {
+  git: {
     displayName: "Git",
     id: "git",
     icon: "GitLoader",
     blueprintIds: []
   },
-  glean:            {
+  glean: {
     displayName: "Glean",
     id: "glean",
     icon: "Glean",
     blueprintIds: []
   },
-  gmail:            {
+  gmail: {
     displayName: "Gmail",
     id: "gmail",
     icon: "Gmail",
     blueprintIds: []
   },
-  google:           {
+  google: {
     displayName: "Google",
     id: "google",
     icon: "Google",
     blueprintIds: ["Google.GenerativeAI"]
   },
-  groq:             {
+  groq: {
     displayName: "Groq",
     id: "groq",
     icon: "Groq",
     blueprintIds: []
   },
-  homeassistant:    {
+  homeassistant: {
     displayName: "Home Assistant",
     id: "homeassistant",
     icon: "HomeAssistant",
     blueprintIds: []
   },
-  huggingface:      {
+  huggingface: {
     displayName: "Hugging Face",
     id: "huggingface",
     icon: "HuggingFace",
     blueprintIds: []
   },
-  ibm:              {
+  ibm: {
     displayName: "IBM",
     id: "ibm",
     icon: "WatsonxAI",
     blueprintIds: []
   },
-  icosacomputing:   {
+  icosacomputing: {
     displayName: "Icosa Computing",
     id: "icosacomputing",
     icon: "Icosa",
     blueprintIds: []
   },
-  jigsawstack:      {
+  jigsawstack: {
     displayName: "JigsawStack",
     id: "jigsawstack",
     icon: "JigsawStack",
     blueprintIds: []
   },
-  langchain_utils:  {
+  langchain_utils: {
     displayName: "LangChain",
     id: "langchain_utils",
     icon: "LangChain",
     blueprintIds: []
   },
-  langwatch:        {
+  langwatch: {
     displayName: "LangWatch",
     id: "langwatch",
     icon: "Langwatch",
     blueprintIds: []
   },
-  lmstudio:         {
+  lmstudio: {
     displayName: "LMStudio",
     id: "lmstudio",
     icon: "LMStudio",
     blueprintIds: []
   },
-  maritalk:         {
+  maritalk: {
     displayName: "MariTalk",
     id: "maritalk",
     icon: "Maritalk",
     blueprintIds: []
   },
-  mem0:             {
+  mem0: {
     displayName: "Mem0",
     id: "mem0",
     icon: "Mem0",
     blueprintIds: []
   },
-  memories:         {
+  memories: {
     displayName: "Memories",
     id: "memories",
     icon: "Cpu",
     blueprintIds: []
   },
-  milvus:           {
+  milvus: {
     displayName: "Milvus",
     id: "milvus",
     icon: "Milvus",
     blueprintIds: []
   },
-  mistral:          {
+  mistral: {
     displayName: "MistralAI",
     id: "mistral",
     icon: "MistralAI",
     blueprintIds: []
   },
-  mongodb:          {
+  mongodb: {
     displayName: "MongoDB",
     id: "mongodb",
     icon: "MongoDB",
     blueprintIds: []
   },
-  needle:           {
+  needle: {
     displayName: "Needle",
     id: "needle",
     icon: "Needle",
     blueprintIds: []
   },
-  notdiamond:       {
+  notdiamond: {
     displayName: "Not Diamond",
     id: "notdiamond",
     icon: "NotDiamond",
     blueprintIds: []
   },
-  notion:           {
+  notion: {
     displayName: "Notion",
     id: "Notion",
     icon: "Notion",
     blueprintIds: []
   },
-  novita:           {
+  novita: {
     displayName: "Novita",
     id: "novita",
     icon: "Novita",
     blueprintIds: []
   },
-  nvidia:           {
+  nvidia: {
     displayName: "NVIDIA",
     id: "nvidia",
     icon: "NVIDIA",
     blueprintIds: []
   },
-  olivya:           {
+  olivya: {
     displayName: "Olivya",
     id: "olivya",
     icon: "Olivya",
     blueprintIds: []
   },
-  ollama:           {
+  ollama: {
     displayName: "Ollama",
     id: "ollama",
     icon: "Ollama",
     blueprintIds: []
   },
-  openai:           {
+  openai: {
     displayName: "OpenAI",
     id: "openai",
     icon: "OpenAI",
     blueprintIds: ["OpenAI.Chat"]
   },
-  openrouter:       {
+  openrouter: {
     displayName: "OpenRouter",
     id: "openrouter",
     icon: "OpenRouter",
     blueprintIds: []
   },
-  perplexity:       {
+  perplexity: {
     displayName: "Perplexity",
     id: "perplexity",
     icon: "Perplexity",
     blueprintIds: []
   },
-  pgvector:         {
+  pgvector: {
     displayName: "pgvector",
     id: "pgvector",
     icon: "cpu",
     blueprintIds: []
   },
-  pinecone:         {
+  pinecone: {
     displayName: "Pinecone",
     id: "pinecone",
     icon: "Pinecone",
     blueprintIds: []
   },
-  qdrant:           {
+  qdrant: {
     displayName: "Qdrant",
     id: "qdrant",
     icon: "Qdrant",
     blueprintIds: []
   },
-  redis:            {
+  redis: {
     displayName: "Redis",
     id: "redis",
     icon: "Redis",
     blueprintIds: []
   },
-  sambanova:        {
+  sambanova: {
     displayName: "SambaNova",
     id: "sambanova",
     icon: "SambaNova",
     blueprintIds: []
   },
-  scrapegraph:      {
+  scrapegraph: {
     displayName: "ScrapeGraph AI",
     id: "scrapegraph",
     icon: "ScrapeGraph",
     blueprintIds: []
   },
-  searchapi:        {
+  searchapi: {
     displayName: "SearchApi",
     id: "searchapi",
     icon: "SearchAPI",
     blueprintIds: []
   },
-  serpapi:          {
+  serpapi: {
     displayName: "SerpApi",
     id: "serpapi",
     icon: "SerpSearch",
     blueprintIds: []
   },
-  serper:           {
+  serper: {
     displayName: "Serper",
     id: "serper",
     icon: "Serper",
     blueprintIds: []
   },
-  supabase:         {
+  supabase: {
     displayName: "Supabase",
     id: "supabase",
     icon: "Supabase",
     blueprintIds: []
   },
-  tavily:           {
+  tavily: {
     displayName: "Tavily",
     id: "tavily",
     icon: "TavilyIcon",
     blueprintIds: []
   },
-  twelvelabs:       {
+  twelvelabs: {
     displayName: "TwelveLabs",
     id: "twelvelabs",
     icon: "TwelveLabs",
     blueprintIds: []
   },
-  unstructured:     {
+  unstructured: {
     displayName: "Unstructured",
     id: "unstructured",
     icon: "Unstructured",
     blueprintIds: []
   },
-  upstash:          {
+  upstash: {
     displayName: "Upstash",
     id: "upstash",
     icon: "Upstash",
     blueprintIds: []
   },
-  vlmrun:           {
+  vlmrun: {
     displayName: "VLM Run",
     id: "vlmrun",
     icon: "VLMRun",
     blueprintIds: []
   },
-  vectara:          {
+  vectara: {
     displayName: "Vectara",
     id: "vectara",
     icon: "Vectara",
     blueprintIds: []
   },
-  vectorstores:     {
+  vectorstores: {
     displayName: "Vector Stores",
     id: "vectorstores",
     icon: "Layers",
     blueprintIds: []
   },
-  weaviate:         {
+  weaviate: {
     displayName: "Weaviate",
     id: "weaviate",
     icon: "Weaviate",
     blueprintIds: []
   },
-  vertexai:         {
+  vertexai: {
     displayName: "Vertex AI",
     id: "vertexai",
     icon: "VertexAI",
     blueprintIds: []
   },
-  wikipedia:        {
+  wikipedia: {
     displayName: "Wikipedia",
     id: "wikipedia",
     icon: "Wikipedia",
     blueprintIds: []
   },
-  wolframalpha:     {
+  wolframalpha: {
     displayName: "WolframAlpha",
     id: "wolframalpha",
     icon: "WolframAlphaAPI",
     blueprintIds: []
   },
-  xai:              {
+  xai: {
     displayName: "xAI",
     id: "xai",
     icon: "xAI",
     blueprintIds: []
   },
-  yahoosearch:      {
+  yahoosearch: {
     displayName: "Yahoo! Finance",
     id: "yahoosearch",
     icon: "trending-up",
     blueprintIds: []
   },
-  youtube:          {
+  youtube: {
     displayName: "YouTube",
     id: "youtube",
     icon: "YouTube",
     blueprintIds: []
   },
-  zep:              {
+  zep: {
     displayName: "Zep",
     id: "zep",
     icon: "ZepMemory",

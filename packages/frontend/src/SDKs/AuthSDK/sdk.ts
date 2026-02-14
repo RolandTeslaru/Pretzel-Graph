@@ -5,7 +5,7 @@ import { supabase } from "@/libs/supabase";
 import { SDK } from "../SDKManager";
 import { Auth } from "@vx-agent-editor/shared/types";
 import type {PostgrestError, Session} from "@supabase/supabase-js"
-import { NotificationSDK } from "@/vx-ui/SDKs/NotificationSDK";
+import { toast } from "sonner";
 
 @SDK("Auth")
 export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
@@ -27,10 +27,8 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
           .eq("id", userId)
           .single();
 
-        if (error) {
-          NotificationSDK.actions.error(error.message)
+        if (error)
           return { user: null, error }
-        }
 
         console.log("Fetched User", data)
 
@@ -78,36 +76,40 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
         email: props.email,
         password: props.password,
       })
-      if (error || !data.user)
-        NotificationSDK.actions.error(error?.message || "Could not login")
+      if (error || !data.user){
+        toast.error(`AuthSDK: Could not login: ${error?.message}`)
+        return false;
+      }
 
       const userId = data.user!.id as Auth.User.Id
 
       const { user, error: userError } = await this.db.getUser(userId)
 
       if (userError) {
-        NotificationSDK.actions.error(userError.message)
-        return
+        toast.error(`AuthSDK: Could not fetch user: ${userError.message}`)
+        return false
       }
 
       this.setState(s => {
         s.user = user;
         s.isAuthenticated = true;
       })
-      NotificationSDK.actions.info("Logged In! Token is ready.")
+      toast.info("Logged In!")
+      return true;
     },
     logout: async () => {
       const { error } = await supabase.auth.signOut();
 
       if (error) {
-        NotificationSDK.actions.error(error.message)
-        return;
+        toast.error(`AuthSDK: Could not logout: ${error.message}`)
+        return false;
       }
 
       this.setState(s => {
         s.user = null,
           s.isAuthenticated = false
       })
+      return true
     },
     signup: async (props) => {
       const { email, password, username, displayName } = props
@@ -122,8 +124,8 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
       });
 
       if (error || !data.user) {
-        NotificationSDK.actions.error(error?.message ?? "Signup failed");
-        return;
+        toast.error(`AuthSDK: Could not signup: ${error?.message}`)
+        return false;
       }
 
       const userId = data.user!.id as Auth.User.Id
@@ -131,15 +133,16 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
       const { user, error: userError } = await this.db.getUser(userId)
 
       if (userError) {
-        NotificationSDK.actions.error(userError.message)
-        return
+        toast.error(userError.message)
+        return false
       }
 
       this.setState(s => {
         s.user = user;
         s.isAuthenticated = true;
       })
-      NotificationSDK.actions.info("Logged In! Token is ready.")
+      toast.info("Logged In!")
+      return true;
     },
     syncUser: async (userId) => {
       const { user, error } = await this.db.getUser(userId)
@@ -178,9 +181,9 @@ export namespace AuthSDK {
   }
 
   export type Actions = {
-    login: (props: { email: string, password: string }) => Promise<void>
-    logout: () => Promise<void>
-    signup: (props: { email: string, password: string, username: string, displayName: string }) => Promise<void>
+    login: (props: { email: string, password: string }) => Promise<boolean>
+    logout: () => Promise<boolean>
+    signup: (props: { email: string, password: string, username: string, displayName: string }) => Promise<boolean>
     syncUser: (userId: Auth.User.Id) => Promise<void>
   }
 }

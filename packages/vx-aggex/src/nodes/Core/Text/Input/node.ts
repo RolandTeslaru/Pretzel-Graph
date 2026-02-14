@@ -14,12 +14,12 @@ export class Node extends Runtime.Node<typeof Blueprint> {
     }
 
     public override async run(
-        state: Runtime.State,
-        config: Runtime.InferConfig<typeof Blueprint>,
+        state:  Runtime.State,
+        fields: Runtime.InferFields<typeof Blueprint>,
         inputs: Runtime.InferInputs<typeof Blueprint>
     ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
 
-        const { text } = config;
+        const { text } = inputs;
 
         return { 
             output: new HumanMessage(text)
@@ -28,8 +28,8 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
 
     public override async onReconcile(
-        changedConfigId: Foundations.NodeConfig.Id,
-        newValue: Foundations.NodeConfig.Value,
+        changedFieldId: Foundations.Field.Id,
+        newValue: Foundations.Field.Value,
         currentBlueprint: typeof Blueprint
     ): Promise<typeof Blueprint> {
         return Promise.resolve(currentBlueprint);

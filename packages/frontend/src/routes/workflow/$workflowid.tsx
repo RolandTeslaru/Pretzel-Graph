@@ -3,7 +3,7 @@ import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
 import ShelfSidebar from '@/SDKs/ShelfSDK/ui/ShelfSidebar'
 import WorkflowCanvas from '@/SDKs/WorkbenchSDK/ui/Canvas'
-import InputSidebar from '@/SDKs/WorkbenchSDK/ui/InputSidebar'
+import InputSidebar from '@/SDKs/WorkbenchSDK/ui/NodeSidebar'
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 
 

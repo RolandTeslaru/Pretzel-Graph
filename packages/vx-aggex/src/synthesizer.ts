@@ -13,7 +13,7 @@ export class Synthesizer {
      */
     public static synthesizeInput(
         input:       Foundations.Port.Input, 
-        staticValue: Foundations.NodeConfig.Value
+        staticValue: any
     ): any {
         switch (input.variant) {
             case "Message":

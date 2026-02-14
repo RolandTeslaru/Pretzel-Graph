@@ -55,11 +55,11 @@ export namespace Runtime {
     ) => Promise<State.Update>
 
 
-    export abstract class Node<TBlueprint extends Foundations.Blueprint> {
+    export abstract class Node<T_Blueprint extends Foundations.Blueprint> {
 
         public workflowNode: Workflow.Node;
 
-        public abstract Blueprint: TBlueprint;
+        public abstract Blueprint: T_Blueprint;
 
         constructor(workflowNode: Workflow.Node) {
             this.workflowNode = workflowNode;
@@ -74,21 +74,21 @@ export namespace Runtime {
          */
         public abstract run(
             globalState: Runtime.State,
-            config: InferConfig<TBlueprint>,
-            inputs: InferInputs<TBlueprint>
-        ): Promise<InferOutputs<TBlueprint>>;
+            fields:      InferFields<T_Blueprint>,
+            inputs:      InferInputs<T_Blueprint>
+        ): Promise<InferOutputs<T_Blueprint>>;
 
         protected async onReconcile(
-            changedConfigId: Foundations.NodeConfig.Id,
-            newValue: Foundations.NodeConfig.Value,
-            currentBlueprint: TBlueprint
-        ): Promise<TBlueprint> {
+            changedFieldId:   Foundations.Field.Id,
+            newValue:         Foundations.Field.Value,
+            currentBlueprint: T_Blueprint
+        ): Promise<T_Blueprint> {
             return currentBlueprint
         }
 
         protected async onConversion(
-            currentBlueprint: TBlueprint
-        ): Promise<TBlueprint> {
+            currentBlueprint: T_Blueprint
+        ): Promise<T_Blueprint> {
             return currentBlueprint
         }
     }
@@ -101,8 +101,14 @@ export namespace Runtime {
      * Uses __literalId phantom for literal key names.
      * Maps each config field to its initialValue type.
      */
-    export type InferConfig<D> = D extends { config: infer C }
-        ? { [K in keyof C]: C[K] extends { __literalId?: infer _Id; initialValue: infer IV } ? IV : any }
+    export type InferFields<D> = D extends { fields: infer T }
+        ? T extends readonly { id: string }[]
+            ? { [K in T[number] as K extends { __literalId?: infer Id extends string }
+                ? Id
+                : K extends { id: infer Id extends string } ? Id : never
+                ]: K extends { initialValue: infer IV } ? IV : any
+            }
+            : never
         : Record<string, never>;
 
     /**
