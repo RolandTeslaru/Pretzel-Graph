@@ -9,6 +9,7 @@
     },
     "dependencies": {
         "@supabase/supabase-js": "^2.93.3",
+        "@vx-agent-builder/vx-aggex": "file:../vx-aggex",
         "@vx-agent-editor/shared": "*",
         "bullmq": "^5.67.2",
         "cors": "^2.8.6",

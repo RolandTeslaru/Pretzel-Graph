@@ -1,6 +1,6 @@
 import { CompiledStateGraph, MessagesValue, ReducedValue, StateSchema } from "@langchain/langgraph";
 import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
-import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
+import { Workflow } from "@vx-agent-editor/shared/domain";
 import { EventBuilder } from "./eventBuilder";
 import { LC } from "./langchain";
 
@@ -78,11 +78,11 @@ export namespace Runtime {
             inputs: InferInputs<T_Blueprint>
         ): Promise<InferOutputs<T_Blueprint>>;
 
-        protected async onReconcile(
+        public static async onReconcile(
             changedFieldId: Foundations.Field.Id,
             newValue: Foundations.Field.Value,
-            currentBlueprint: T_Blueprint
-        ): Promise<T_Blueprint> {
+            currentBlueprint: Foundations.Blueprint
+        ): Promise<Foundations.Blueprint> {
             return currentBlueprint
         }
 
