@@ -12,7 +12,7 @@ export const ScriptTriggerField = memo(({ field, nodeId, className }: RendererPr
     const value = WorkbenchSDK.useStaticValue(nodeId, field)
 
     const onChange = (val: string) => {
-        WorkbenchSDK.actions.field.setValue(nodeId, field.id, val)
+        WorkbenchSDK.actions.field.setValue(nodeId, field, val)
     }
 
     return (

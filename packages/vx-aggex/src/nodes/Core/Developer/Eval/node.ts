@@ -41,11 +41,5 @@ export class Node extends Runtime.Node<typeof Blueprint> {
         }
     }
 
-    public override async onReconcile(
-        changedFieldId: Foundations.Field.Id,
-        newValue: Foundations.Field.Value,
-        currentBlueprint: typeof Blueprint
-    ): Promise<typeof Blueprint> {
-        return Promise.resolve(currentBlueprint);
-    }
+
 }

@@ -60,7 +60,7 @@ const BooleanField = memo(({ field, nodeId, className }: RendererProps<'Boolean'
                 checked={value}
                 size={"lg"}
                 onCheckedChange={(checked) => {
-                    WorkbenchSDK.actions.field.setValue(nodeId, field.id, checked)
+                    WorkbenchSDK.actions.field.setValue(nodeId, field, checked)
                 }}
             />
         </div>
@@ -81,7 +81,7 @@ const MultiOptionField = memo(({ field, nodeId, className }: RendererProps<'Mult
                     <FieldLabel field={field} />
                     <Tabs.Root
                         value={value}
-                        onValueChange={val => { WorkbenchSDK.actions.field.setValue(nodeId, field.id, val); }}
+                        onValueChange={val => { WorkbenchSDK.actions.field.setValue(nodeId, field, val); }}
                         className='ml-auto'
 
                     >
@@ -100,7 +100,7 @@ const MultiOptionField = memo(({ field, nodeId, className }: RendererProps<'Mult
                     <FieldLabel field={field} />
                     <Select.Root
                         value={value}
-                        onValueChange={(value) => { WorkbenchSDK.actions.field.setValue(nodeId, field.id, value) }}
+                        onValueChange={(value) => { WorkbenchSDK.actions.field.setValue(nodeId, field, value) }}
                     >
                         <Select.Trigger className="w-full">
                             <Select.Value placeholder={field.placeholder} />
@@ -140,7 +140,7 @@ const IntegerField = memo(({ field, nodeId, className }: RendererProps<'Integer'
                             max={field.max}
                             onChange={(e) => {
                                 const val = e.currentTarget.value;
-                                WorkbenchSDK.actions.field.setValue(nodeId, field.id, val)
+                                WorkbenchSDK.actions.field.setValue(nodeId, field, val)
                             }}
                         />
 
@@ -152,7 +152,7 @@ const IntegerField = memo(({ field, nodeId, className }: RendererProps<'Integer'
                         step={field.step ?? 1}
                         value={[value]}
                         onValueChange={val => {
-                            WorkbenchSDK.actions.field.setValue(nodeId, field.id, val[0])
+                            WorkbenchSDK.actions.field.setValue(nodeId, field, val[0])
                         }}
                     />
                 </>
@@ -167,7 +167,7 @@ const IntegerField = memo(({ field, nodeId, className }: RendererProps<'Integer'
                         value={value}
                         onChange={(e) => {
                             const val = e.currentTarget.value;
-                            WorkbenchSDK.actions.field.setValue(nodeId, field.id, val)
+                            WorkbenchSDK.actions.field.setValue(nodeId, field, val)
                         }} />
                 </>
             }
@@ -199,7 +199,7 @@ const FloatField = memo(({ field, nodeId, className }: RendererProps<'Float'>) =
                             max={field.max}
                             onChange={(e) => {
                                 const val = e.currentTarget.value;
-                                WorkbenchSDK.actions.field.setValue(nodeId, field.id, val)
+                                WorkbenchSDK.actions.field.setValue(nodeId, field, val)
                             }}
                         />
 
@@ -211,7 +211,7 @@ const FloatField = memo(({ field, nodeId, className }: RendererProps<'Float'>) =
                         step={field.step && field.step}
                         value={[value]}
                         onValueChange={values => {
-                            WorkbenchSDK.actions.field.setValue(nodeId, field.id, values[0])
+                            WorkbenchSDK.actions.field.setValue(nodeId, field, values[0])
                         }}
                     />
                 </>
@@ -226,7 +226,7 @@ const FloatField = memo(({ field, nodeId, className }: RendererProps<'Float'>) =
                         max={field.max}
                         onChange={(e) => {
                             const val = e.currentTarget.value;
-                            WorkbenchSDK.actions.field.setValue(nodeId, field.id, val)
+                            WorkbenchSDK.actions.field.setValue(nodeId, field, val)
                         }}
                     />
                 </>
@@ -254,7 +254,7 @@ const FileField = memo(({ field, nodeId, className }: RendererProps<'File'>) => 
                     className="opacity-50"
                     onChange={(e) => {
                         const val = e.currentTarget.value;
-                        WorkbenchSDK.actions.field.setValue(nodeId, field.id, val)
+                        WorkbenchSDK.actions.field.setValue(nodeId, field, val)
                     }}
                 />
             </div>
@@ -304,7 +304,7 @@ const SecretField = memo(({ field, nodeId, className }: RendererProps<'Secret'>)
                 value={value}
                 onValueChange={(val) => {
                     console.log("Setting secret field value to", val)
-                    WorkbenchSDK.actions.field.setValue(nodeId, field.id, val)
+                    WorkbenchSDK.actions.field.setValue(nodeId, field, val)
                 }}
             >
                 <Select.Trigger className="w-full">

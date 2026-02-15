@@ -8,7 +8,7 @@ export type NodeConstructor = {
     onReconcile(
         changedFieldId: Foundations.Field.Id,
         newValue: Foundations.Field.Value,
-    ): Promise<Foundations.Blueprint>;
+    ): Foundations.Blueprint;
 }
 
 @singleton()
@@ -51,6 +51,36 @@ class CatalogueServiceImpl {
 
         } catch (error) {
             console.error(`[CatalogueService] Failed to load node '${blueprintId}':`, error);
+            return null;
+        }
+    }
+
+    public async getReconciler(blueprintId: Foundations.Blueprint.Id) {
+        // 1. Convention over Configuration: Resolve Path
+        // "Google.Chat.v1" -> "Google/Chat/v1"
+        const relativePath = blueprintId.replace(/\./g, "/");
+        const fullPath = path.join(this.nodesRoot, relativePath + "/reconcile");
+        const blueprintPath = path.join(this.nodesRoot, relativePath + "/blueprint");
+
+        try {
+            // Try importing reconcile.ts
+            const module = await import(fullPath);
+            return module.reconcile || module.default;
+
+        } catch (error: any) {
+            // If reconcile.ts doesn't exist, try to load blueprint and return default Identity reconcile
+            if (error.code === 'MODULE_NOT_FOUND') {
+                try {
+                    const bpModule = await import(blueprintPath);
+                    const Blueprint = bpModule.Blueprint;
+                    return () => Blueprint;
+                } catch (bpError) {
+                    console.error(`[CatalogueService] Failed to load blueprint for '${blueprintId}':`, bpError);
+                    return null;
+                }
+            }
+
+            console.error(`[CatalogueService] Failed to load reconcile for '${blueprintId}':`, error);
             return null;
         }
     }
