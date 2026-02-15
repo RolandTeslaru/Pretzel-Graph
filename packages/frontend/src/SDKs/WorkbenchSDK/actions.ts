@@ -27,21 +27,21 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
     return {
         commit: commit,
         node: {
-            remove: (...props) => { setState(s => { reducers.node.remove(s, ...props) }); commit() },
-            create: (...props) => { setState(s => { reducers.node.create(s, ...props) }); commit() },
-            setMinimized: (...props) => { setState(s => { reducers.node.setMinimized(s, ...props) }); commit() },
+            remove:         (...props) => { setState(s => { reducers.node.remove(s, ...props) }); commit() },
+            create:         (...props) => { setState(s => { reducers.node.create(s, ...props) }); commit() },
+            setMinimized:   (...props) => { setState(s => { reducers.node.setMinimized(s, ...props) }); commit() },
             setDisplayName: (...props) => { setState(s => { reducers.node.setDisplayName(s, ...props) }); commit() },
             setDescription: (...props) => { setState(s => { reducers.node.setDescription(s, ...props) }); commit() },
         },
         edge: {
-            add: (...props) => { setState(s => { reducers.edge.add(s, ...props) }); commit() },
+            add:    (...props) => { setState(s => { reducers.edge.add(s, ...props) }); commit() },
             remove: (...props) => { setState(s => { reducers.edge.remove(s, ...props) }); commit() }
         },
         field: {
             setValue: (...props) => { setState(s => { reducers.field.setValue(s, ...props) }); commit() },
         },
         input: {
-            setValue: (...props) => { setState(s => { reducers.input.setValue(s, ...props) }); commit() },
+            setValue:    (...props) => { setState(s => { reducers.input.setValue(s, ...props) }); commit() },
             changeOrder: (...props) => { setState(s => { reducers.input.changeOrder(s, ...props) }); commit() },
         },
         history: {
@@ -54,14 +54,14 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         },
         layout: {
             node: {
-                add: (...props) => { setState(s => { reducers.layout.node.add(s, ...props) }); commit() },
-                remove: (...props) => { setState(s => { reducers.layout.node.remove(s, ...props) }); commit() },
+                add:         (...props) => { setState(s => { reducers.layout.node.add(s, ...props) }); commit() },
+                remove:      (...props) => { setState(s => { reducers.layout.node.remove(s, ...props) }); commit() },
                 setPosition: (...props) => { setState(s => { reducers.layout.node.setPosition(s, ...props) }); commit() },
             },
             viewport: {
-                setZoom: (...props) => { setState(s => { reducers.layout.viewport.setZoom(s, ...props) }); commit() },
+                set:         (...props) => { setState(s => { reducers.layout.viewport.set(s, ...props) }); commit() },
+                setZoom:     (...props) => { setState(s => { reducers.layout.viewport.setZoom(s, ...props) }); commit() },
                 setPosition: (...props) => { setState(s => { reducers.layout.viewport.setPosition(s, ...props) }); commit() },
-                set: (...props) => { setState(s => { reducers.layout.viewport.set(s, ...props) }); commit() }
             },
             flushUpdates: () => {
 
@@ -69,8 +69,8 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         },
         workflow: {
             setLock: (...props) => { setState(s => { reducers.workflow.setLock(s, ...props) }); commit() },
-            close: (...props) => { setState(s => { reducers.workflow.close(s, ...props) }); commit() },
-            open: (...props) => setState(s => { reducers.workflow.open(s, ...props) }),
+            close:   (...props) => { setState(s => { reducers.workflow.close(s, ...props) }); commit() },
+            open:    (...props) => setState(s => { reducers.workflow.open(s, ...props) }),
         },
         setClickedNodeId: (nodeId) => setState(s => { reducers.setClickedNodeId(s, nodeId) }),
         setDirty: (value) => setState(s => {

@@ -1,5 +1,5 @@
 import { WorkflowCompiler } from "./compiler";
-import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
+import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { Runtime } from "./runtime";
 import { cloneDeep } from "lodash";
 import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";

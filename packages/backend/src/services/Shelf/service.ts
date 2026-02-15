@@ -23,9 +23,8 @@ export class ShelfServiceImpl {
             get: ({ blueprintId }) => {
                 const blueprint = INDEX.blueprints[blueprintId];
 
-                if (!blueprint) {
+                if (!blueprint)
                     throw new Error(`Blueprint not found: ${blueprintId}`);
-                }
 
                 return { blueprint }
             },
@@ -41,7 +40,9 @@ export class ShelfServiceImpl {
                 return { blueprints };
             },
             getAllInSection: ({ section }) => {
-                const drawerIds = SECTIONS[section];
+                // TODO: FIX THIS
+                // @ts-expect-error
+                const drawerIds = SECTIONS[section] as Shelf.Drawer.Id[];
                 const blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint> = {}
 
                 drawerIds.forEach(drawerId => {
@@ -65,7 +66,7 @@ export class ShelfServiceImpl {
      */
     public readonly controller = {
         blueprint: {
-            get: (_req: any, res: any) => {
+            get: (_req: Request, res: any) => {
                 try {
                     const { blueprintId } = Shelf.API.Blueprint.Get.Request.parse(_req.body);
                     const result = this.ops.blueprint.get({ blueprintId });
@@ -74,7 +75,7 @@ export class ShelfServiceImpl {
                     res.status(500).json({ error: error.message });
                 }
             },
-            getBatch: (_req: any, res: any) => {
+            getBatch: (_req: Request, res: any) => {
                 try {
                     const { blueprintIds } = Shelf.API.Blueprint.GetBatch.Request.parse(_req.body);
                     const result = this.ops.blueprint.getBatch({ blueprintIds });
@@ -83,7 +84,7 @@ export class ShelfServiceImpl {
                     res.status(500).json({ error: error.message });
                 }
             },
-            getAllInSection: (_req: any, res: any) => {
+            getAllInSection: (_req: Request, res: any) => {
                 try {
                     const { section } = Shelf.API.Blueprint.GetAllInSection.Request.parse(_req.body);
                     const result = this.ops.blueprint.getAllInSection({ section });

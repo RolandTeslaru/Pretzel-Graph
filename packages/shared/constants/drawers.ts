@@ -36,7 +36,10 @@ export const CORE_DRAWERS = {
     displayName: "Models & Agents",
     id: "models_and_agents",
     icon: "Bot",
-    blueprintIds: []
+    blueprintIds: [
+      "Core.Agent",
+      "Core.LanguageModel"
+    ]
   },
   llm_operations: {
     displayName: "LLM Operations",

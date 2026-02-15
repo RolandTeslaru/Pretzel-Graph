@@ -1,5 +1,5 @@
 import { StateGraph, START, END } from "@langchain/langgraph";
-import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
+import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { CatalogueService } from "src/services/Catalogue/service";
 import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { Runtime } from "src/runtime";

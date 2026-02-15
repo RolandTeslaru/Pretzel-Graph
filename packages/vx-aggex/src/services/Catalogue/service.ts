@@ -1,12 +1,14 @@
 import path from "path";
 import { container, singleton } from "tsyringe";
-import { Workflow } from "@vx-agent-editor/shared/types/Workflow";
 import { Runtime } from "src/runtime";
-import { Foundations } from "@vx-agent-editor/shared/domain";
+import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 
-export interface NodeConstructor {
+export type NodeConstructor = {
     new(workflowNode: Workflow.Node): Runtime.Node<Foundations.Blueprint>;
-    // Definition: Foundations.NodeDefinition
+    onReconcile(
+        changedFieldId: Foundations.Field.Id,
+        newValue: Foundations.Field.Value,
+    ): Promise<Foundations.Blueprint>;
 }
 
 @singleton()
