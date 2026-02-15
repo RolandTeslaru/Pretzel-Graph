@@ -6,18 +6,19 @@ import { CatalogueService as AGGEXCatalogueService } from "@vx-agent-builder/vx-
 
 @Service("Workbench")
 export class WorkbenchServiceImpl {
-    constructor() {}
+    constructor() { }
 
     public readonly ops = {
         field: {
             reconcile: async ({ fieldId, blueprintId, newValue }) => {
-                const RuntimeNode = await AGGEXCatalogueService.getNode(blueprintId);
-                if(!RuntimeNode)
-                    throw new Error(`Node ${blueprintId} not found`);
+                const reconcileFn = await AGGEXCatalogueService.getReconciler(blueprintId);
 
-                const reconciledBlueprint = await RuntimeNode.onReconcile(fieldId, newValue);
+                if (!reconcileFn)
+                    throw new Error(`Reconciler for node ${blueprintId} not found`);
 
-                return reconciledBlueprint;
+                const reconciledBlueprint = reconcileFn(fieldId, newValue);
+
+                return { reconciledBlueprint };
             }
         }
     } satisfies WorkbenchService.Ops
@@ -34,10 +35,10 @@ export class WorkbenchServiceImpl {
                 }
             }
         }
-    }   
+    }
 
     public readonly routes = Router()
-        .get("/field/reconcile", this.controller.field.reconcile)
+        .post("/field/reconcile", this.controller.field.reconcile)
 }
 
 export const WorkbenchService = Service.get<WorkbenchServiceImpl>("Workbench");
@@ -45,7 +46,7 @@ export const WorkbenchService = Service.get<WorkbenchServiceImpl>("Workbench");
 export namespace WorkbenchService {
     export type Ops = {
         field: {
-            reconcile: (payload: Workbench.API.Field.Reconcile.Request) => Workbench.API.Field.Reconcile.Response
+            reconcile: (payload: Workbench.API.Field.Reconcile.Request) => Promise<Workbench.API.Field.Reconcile.Response>
         }
     }
 }

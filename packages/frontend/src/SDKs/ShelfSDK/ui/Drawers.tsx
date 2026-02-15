@@ -101,7 +101,7 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
                 </p>
                 {
                     isFetchingNodeDefinitions === false ?
-                        <SystemIcons.ChevronRight className={`h-8 w-8 stroke-3! stroke-label-white scale-[60%] m-auto transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`} />
+                        <SystemIcons.ChevronRight className={`h-4 w-4 stroke-3! stroke-label-white m-auto transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`} />
                         :
                         <Spinner className='my-auto mr-1' />
                 }

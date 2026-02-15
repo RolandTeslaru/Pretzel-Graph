@@ -2,8 +2,9 @@ import { WorkbenchSDKImpl, WorkbenchSDK } from './sdk';
 import type { DropFirstArg } from '../types';
 import { debounce } from '../../decorators/debounce';
 import { toast } from 'sonner';
-import { Workflow } from '@vx-agent-editor/shared/domain';
+import { Foundations, Workbench, Workflow } from '@vx-agent-editor/shared/domain';
 import { supabase } from '@/libs/supabase';
+import { api } from '../ApiInterceptorSDK';
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
@@ -38,7 +39,29 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             remove: (...props) => { setState(s => { reducers.edge.remove(s, ...props) }); commit() }
         },
         field: {
-            setValue: (...props) => { setState(s => { reducers.field.setValue(s, ...props) }); commit() },
+            setValue: async (nodeId, field, value) => { 
+                if(field.reconcile){
+                    console.log(`Field ${field.id} requires reconciliation`)
+                    
+                    try {
+                        const node = sdk.state.workflow.data.nodes[nodeId];
+                        if (!node)
+                            throw new Error(`Node ${nodeId} not found`);
+
+                        const { reconciledBlueprint } = await Workbench.API.Field.reconcile(api, {
+                            blueprintId: node.blueprintId,
+                            fieldId: field.id,
+                            newValue: value
+                         })
+                        
+                         setState(s => { reducers.node.reconcile(s, nodeId, reconciledBlueprint) });
+                    } catch (error) {
+                        toast.error(`Could not reconcile node ${nodeId} via field ${field.id}`)
+                    }
+                }
+                setState(s => { reducers.field.setValue(s, nodeId, field.id, value) }); 
+                commit() 
+            },
         },
         input: {
             setValue:    (...props) => { setState(s => { reducers.input.setValue(s, ...props) }); commit() },
@@ -101,7 +124,7 @@ export type _WorkbenchSDKActions = {
         setDescription: DropFirstArg<WorkbenchSDK.Reducers['node']['setDescription']>;
     },
     field: {
-        setValue: DropFirstArg<WorkbenchSDK.Reducers['field']['setValue']>
+        setValue: (nodeId: Workflow.Node.Id, field: Foundations.Field, value: Foundations.Field.Value) => void
     }
     input: {
         setValue: DropFirstArg<WorkbenchSDK.Reducers['input']['setValue']>;

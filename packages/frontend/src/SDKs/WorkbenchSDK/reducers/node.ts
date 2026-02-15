@@ -81,6 +81,19 @@ export const nodeReducers = {
 
         cacheReducers.createNode(s, newNode);
     },
+    reconcile: (s, nodeId, blueprint) => {
+        s.isDirty = true;
+        const node = s.workflow.data.nodes[nodeId];
+        if (!node)
+            throw new Error(`Node ${blueprint.id} not found`);
+
+        if(node.blueprintId !== blueprint.id)
+            throw new Error(`Node ${nodeId} is not of type ${blueprint.id}`);
+
+        node.fields = blueprint.fields as Workflow.Node['fields']
+        node.inputs = blueprint.inputs as Workflow.Node['inputs']
+        node.outputs = blueprint.outputs as Workflow.Node['outputs']
+    },
     setMinimized: (s, nodeId, isMinimized) => {
         s.isDirty = true;
         s.workflow.data.nodes[nodeId].isMinimized = isMinimized;
@@ -99,6 +112,7 @@ type NodeReducers = {
     remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
     createId: (blueprintId: Foundations.Blueprint.Id) => Workflow.Node.Id
     create: (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }) => void
+    reconcile: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
     setMinimized: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void
     setDisplayName: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDisplayName: string) => void
     setDescription: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDescription: string) => void
