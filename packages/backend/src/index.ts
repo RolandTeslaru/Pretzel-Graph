@@ -18,18 +18,20 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 import { ShelfRoutes } from './routes/shelf.routes';
 import { LibraryService } from './services/Library/service';
 import { OrchestratorService } from './services/Orchestrator/service';
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
+import { RealtimeService } from './services/Realtime/service';
+import { WorkbenchService } from './services/Workbench/service';
 
 app.use('/api/library', LibraryService.routes);
 app.use('/api/shelf', ShelfRoutes);
 app.use('/api/orchestrator', OrchestratorService.routes);
+app.use('/api/workbench', WorkbenchService.routes)
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-import { createServer } from 'http';
-import { WebSocketServer } from 'ws';
-import { RealtimeService } from './services/Realtime/service';
 
 const server = createServer(app);
 const wss = new WebSocketServer({ server });

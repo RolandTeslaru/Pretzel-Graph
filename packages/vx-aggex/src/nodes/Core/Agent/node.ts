@@ -1,20 +1,16 @@
-import { RegisterNode } from "src/services/Catalogue/service";
+import { RegisterNode } from "../../../services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
-import { Runtime } from "src/runtime";
-import { Synthesizer } from "src/synthesizer";
+import { Runtime } from "../../../runtime";
+import { Synthesizer } from "../../../synthesizer";
 import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { HumanMessage, AIMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { DynamicStructuredTool } from "@langchain/core/tools";
-import { z } from "zod";
 
 @RegisterNode(Blueprint.id)
 export class Node extends Runtime.Node<typeof Blueprint> {
-
-    public readonly Blueprint = Blueprint;
 
     constructor(workflowNode: Workflow.Node) {
         super(workflowNode);
@@ -113,13 +109,7 @@ export class Node extends Runtime.Node<typeof Blueprint> {
         };
     }
 
-    public static override async onReconcile(
-        changedFieldId: Foundations.Field.Id,
-        newValue: Foundations.Field.Value,
-        currentBlueprint: Foundations.Blueprint
-    ): Promise<typeof Blueprint> {
-        return Promise.resolve(currentBlueprint as typeof Blueprint);
-    }
+
 }
 
 

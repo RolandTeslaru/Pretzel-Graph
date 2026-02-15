@@ -1,6 +1,6 @@
 {
-  "version": "1771160935652",
-  "generatedAt": "2026-02-15T13:08:55.652Z",
+  "version": "1771192457485",
+  "generatedAt": "2026-02-15T21:54:17.485Z",
   "drawers": {},
   "blueprints": {
     "Core.Agent": {
@@ -12,13 +12,15 @@
           "id": "agentLlm",
           "advanced": false,
           "required": true,
-          "reconcile": false,
+          "reconcile": true,
           "displayName": "Model Provider",
           "tooltip": "The provider of the language model that the agent will use to generate responses.",
           "variant": "MultiOption",
           "initialValue": "Connect other models",
           "options": [
             "Google",
+            "OpenAI",
+            "Anthropic",
             "Connect other models"
           ],
           "kind": "select"

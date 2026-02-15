@@ -1,4 +1,4 @@
-import { defineBlueprint, InputBuilder, OutputBuilder, FieldBuilder } from "src/nodes/builders";
+import { defineBlueprint, InputBuilder, OutputBuilder, FieldBuilder } from "../../builders";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Agent",
@@ -9,7 +9,8 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.MultiOption({
             id: "agentLlm",
             displayName: "Model Provider",
-            options: ["Google", "Connect other models"],
+            reconcile: true,
+            options: ["Google", "OpenAI", "Anthropic", "Connect other models"],
             initialValue: "Connect other models",
             tooltip: "The provider of the language model that the agent will use to generate responses."
         }),

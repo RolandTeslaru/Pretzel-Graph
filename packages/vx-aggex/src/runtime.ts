@@ -59,8 +59,6 @@ export namespace Runtime {
 
         public workflowNode: Workflow.Node;
 
-        public abstract Blueprint: T_Blueprint;
-
         constructor(workflowNode: Workflow.Node) {
             this.workflowNode = workflowNode;
         }
@@ -78,12 +76,11 @@ export namespace Runtime {
             inputs: InferInputs<T_Blueprint>
         ): Promise<InferOutputs<T_Blueprint>>;
 
-        public static async onReconcile(
+        public static onReconcile(
             changedFieldId: Foundations.Field.Id,
             newValue: Foundations.Field.Value,
-            currentBlueprint: Foundations.Blueprint
-        ): Promise<Foundations.Blueprint> {
-            return currentBlueprint
+        ): Foundations.Blueprint {
+            throw new Error("Method 'onReconcile' must be implemented.");
         }
 
         protected async onConversion(
