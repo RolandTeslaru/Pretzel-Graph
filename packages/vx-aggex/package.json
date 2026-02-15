@@ -6,8 +6,8 @@
     "types": "dist/index.d.ts",
     "scripts": {
         "build": "tsc",
-        "dev": "concurrently \"npm:watch:indexes\" \"tsx watch src/index.ts\" --names \"INDEX,SERVER\" --prefix-colors \"blue,green\"",
-        "start": "node dist/index.js",
+        "dev": "concurrently \"npm:watch:indexes\" \"tsx watch src/server.ts\" --names \"INDEX,SERVER\" --prefix-colors \"blue,green\"",
+        "start": "node dist/server.js",
         "generate-indexes": "tsx scripts/generateIndexes.ts",
         "watch:indexes": "tsx scripts/watchIndexes.ts",
         "test": "jest"

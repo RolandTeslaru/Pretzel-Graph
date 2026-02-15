@@ -1,8 +1,176 @@
 {
-  "version": "1771071314808",
-  "generatedAt": "2026-02-14T12:15:14.808Z",
+  "version": "1771160935652",
+  "generatedAt": "2026-02-15T13:08:55.652Z",
   "drawers": {},
   "blueprints": {
+    "Core.Agent": {
+      "id": "Core.Agent",
+      "displayName": "Agent",
+      "icon": "Bot",
+      "fields": [
+        {
+          "id": "agentLlm",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Model Provider",
+          "tooltip": "The provider of the language model that the agent will use to generate responses.",
+          "variant": "MultiOption",
+          "initialValue": "Connect other models",
+          "options": [
+            "Google",
+            "Connect other models"
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "apiKey",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "API Key",
+          "tooltip": "The API key to use for the model (if using a built-in provider).",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "baseUrl",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Base URL",
+          "tooltip": "The base URL of the API.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": ""
+        },
+        {
+          "id": "projectId",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Project ID",
+          "tooltip": "The project ID of the model.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": ""
+        },
+        {
+          "id": "maxOutputTokens",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Max Output Tokens",
+          "tooltip": "The maximum number of tokens to generate.",
+          "variant": "Integer",
+          "initialValue": 0,
+          "step": 1
+        },
+        {
+          "id": "systemPrompt",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Agent Instructions",
+          "tooltip": "System Prompt: Initial instructions and context provided to guide the agent's behavior.",
+          "variant": "String",
+          "initialValue": "You are a helpful assistant that can use tools to answer questions and perform tasks.",
+          "multiline": true,
+          "placeholder": ""
+        },
+        {
+          "id": "contextId",
+          "advanced": true,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Context ID",
+          "tooltip": "The context ID of the chat. Adds an extra layer to the local memory.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": ""
+        },
+        {
+          "id": "nMessages",
+          "advanced": true,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Number of Chat History Messages",
+          "tooltip": "Number of chat history messages to retrieve.",
+          "variant": "Integer",
+          "initialValue": 100,
+          "step": 1
+        },
+        {
+          "id": "formatInstructions",
+          "advanced": true,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Output Format Instructions",
+          "tooltip": "Generic Template for structured output formatting. Valid only with Structured response.",
+          "variant": "String",
+          "initialValue": "You are an AI that extracts structured JSON objects from unstructured text. Use a predefined schema with expected types (str, int, float, bool, dict). Extract ALL relevant instances that match the schema - if multiple patterns exist, capture them all. Fill missing or ambiguous values with defaults: null for missing values. Remove exact duplicates but keep variations that have different field values. Always return valid JSON in the expected format, never throw errors. If multiple objects can be extracted, return them all in the structured format.",
+          "multiline": true,
+          "placeholder": ""
+        },
+        {
+          "id": "outputSchema",
+          "advanced": true,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Output Schema",
+          "tooltip": "Schema Validation: Define the structure and data types for structured output. No validation if no output schema.",
+          "variant": "Json",
+          "initialValue": []
+        },
+        {
+          "id": "addCurrentDateTool",
+          "advanced": true,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Current Date",
+          "tooltip": "If true, will add a tool to the agent that returns the current date.",
+          "variant": "Boolean",
+          "initialValue": true
+        }
+      ],
+      "inputs": [
+        {
+          "id": "tools",
+          "displayName": "Tools",
+          "tooltip": "Tools the agent can use.",
+          "variant": "Tool",
+          "required": false
+        },
+        {
+          "id": "input",
+          "displayName": "Input",
+          "tooltip": "The user input message.",
+          "variant": "Message",
+          "initialValue": "",
+          "required": true
+        },
+        {
+          "id": "chatHistory",
+          "displayName": "Chat History",
+          "tooltip": "Previous conversation history.",
+          "variant": "Message",
+          "initialValue": "",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "response",
+          "displayName": "Response",
+          "tooltip": "The agent's final response.",
+          "variant": "Message"
+        }
+      ],
+      "description": "Define the agent's instructions, then enter a task to complete using tools."
+    },
     "Core.Chat.Input": {
       "id": "Core.Chat.Input",
       "displayName": "Chat Input",
@@ -510,6 +678,123 @@
         }
       ],
       "description": "Pauses execution for a specified duration."
+    },
+    "Core.LanguageModel": {
+      "id": "Core.LanguageModel",
+      "displayName": "Language Model",
+      "icon": "BrainCircuit",
+      "fields": [
+        {
+          "id": "provider",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Model Provider",
+          "tooltip": "Select the model provider",
+          "variant": "MultiOption",
+          "initialValue": "OpenAI",
+          "options": [
+            "OpenAI",
+            "Anthropic",
+            "Google",
+            "IBM watsonx.ai",
+            "Ollama"
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "modelName",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Model Name",
+          "tooltip": "Select the model to use",
+          "variant": "MultiOption",
+          "initialValue": "gpt-4o",
+          "options": [
+            "gpt-4.5-preview",
+            "gpt-4o",
+            "gpt-4o-mini",
+            "o1",
+            "o1-mini",
+            "o3-mini",
+            "gpt-4-turbo",
+            "gpt-3.5-turbo"
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "apiKey",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "OpenAI API Key",
+          "tooltip": "Model Provider API key",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "systemMessage",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "System Message",
+          "tooltip": "A system message that helps set the behavior of the assistant",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": true,
+          "placeholder": ""
+        },
+        {
+          "id": "stream",
+          "advanced": true,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Stream",
+          "tooltip": "Whether to stream the response",
+          "variant": "Boolean",
+          "initialValue": false
+        },
+        {
+          "id": "temperature",
+          "advanced": true,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Temperature",
+          "tooltip": "Controls randomness in responses",
+          "variant": "Float",
+          "initialValue": 0.1,
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "slider": true
+        }
+      ],
+      "inputs": [
+        {
+          "id": "inputValue",
+          "displayName": "Input",
+          "tooltip": "The input text to send to the model",
+          "variant": "Message",
+          "initialValue": "",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "languageModel",
+          "displayName": "Language Model",
+          "tooltip": "The configured language model instance",
+          "variant": "LanguageModel"
+        },
+        {
+          "id": "response",
+          "displayName": "Response",
+          "tooltip": "The response from the model",
+          "variant": "Message"
+        }
+      ],
+      "description": "Runs a language model given a specified provider."
     },
     "Core.Text.Input": {
       "id": "Core.Text.Input",

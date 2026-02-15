@@ -2,8 +2,7 @@ import { create } from "zustand"
 import { immer } from "zustand/middleware/immer";
 import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance } from "@xyflow/react";
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
-import { _createWorkbenchReducers_, type _WorkbenchSDKReducers } from "./reducers";
-import { _createWorkbenchSelectors_, type _WorkBenchSDKSelectors } from "./selectors";
+import { workbenchSelectors, type _WorkBenchSDKSelectors } from "./selectors";
 import React from "react";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain"
 import { temporal } from 'zundo';
@@ -14,6 +13,7 @@ import { useShallow } from "zustand/react/shallow";
 import { SDK } from "../SDKManager";
 import { toast } from "sonner";
 import { supabase } from "@/libs/supabase";
+import { workbenchReducers } from "./reducers";
 
 @SDK("Workbench")
 export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
@@ -53,8 +53,8 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         )
     )
 
-    public readonly selectors: WorkbenchSDK.Selectors = _createWorkbenchSelectors_()
-    public readonly reducers: WorkbenchSDK.Reducers = _createWorkbenchReducers_(this.selectors)
+    public readonly selectors: WorkbenchSDK.Selectors = workbenchSelectors;
+    public readonly reducers: WorkbenchSDK.Reducers = workbenchReducers;
     public readonly actions: WorkbenchSDK.Actions = _createWorkbenchActions_(this)
 
 
@@ -162,7 +162,7 @@ export namespace WorkbenchSDK {
     }
     export type Selectors = _WorkBenchSDKSelectors
     export type Actions = _WorkbenchSDKActions
-    export type Reducers = _WorkbenchSDKReducers
+    export type Reducers = typeof workbenchReducers
 
     export type NodeDriver = RF_Node<{}, "workflowNode">;
     export type EdgeDriver = RF_Edge<{}, "workflowEdge">;
