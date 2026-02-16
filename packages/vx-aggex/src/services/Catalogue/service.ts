@@ -5,10 +5,6 @@ import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 
 export type NodeConstructor = {
     new(workflowNode: Workflow.Node): Runtime.Node<Foundations.Blueprint>;
-    onReconcile(
-        changedFieldId: Foundations.Field.Id,
-        newValue: Foundations.Field.Value,
-    ): Foundations.Blueprint;
 }
 
 @singleton()
@@ -65,6 +61,7 @@ class CatalogueServiceImpl {
         try {
             // Try importing reconcile.ts
             const module = await import(fullPath);
+            // The imported module should export a function that accepts (fieldId, newValue)
             return module.reconcile || module.default;
 
         } catch (error: any) {
@@ -73,7 +70,10 @@ class CatalogueServiceImpl {
                 try {
                     const bpModule = await import(blueprintPath);
                     const Blueprint = bpModule.Blueprint;
-                    return () => Blueprint;
+                    return (
+                        _changedFieldId: Foundations.Field.Id,
+                        _newValue: Foundations.Field.Value
+                    ) => Blueprint; // Default identity: return static Blueprint
                 } catch (bpError) {
                     console.error(`[CatalogueService] Failed to load blueprint for '${blueprintId}':`, bpError);
                     return null;

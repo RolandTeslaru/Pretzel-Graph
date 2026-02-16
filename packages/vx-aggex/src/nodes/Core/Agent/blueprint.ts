@@ -7,32 +7,30 @@ export const Blueprint = defineBlueprint({
     icon: "Bot",
     fields: [
         FieldBuilder.MultiOption({
-            id: "agentLlm",
+            id: "provider",
             displayName: "Model Provider",
             reconcile: true,
             options: ["Google", "OpenAI", "Anthropic", "Connect other models"],
-            initialValue: "Connect other models",
+            initialValue: "Google",
             tooltip: "The provider of the language model that the agent will use to generate responses."
+        }),
+        FieldBuilder.MultiOption({
+            id: "model",
+            displayName: "Model",
+            options: [
+                "gemini-3-pro-preview",
+                "gemini-2.5-pro",
+                "gemini-3-flash-preview",
+                "gemini-2.5-flash",
+                "gemini-2.5-flash-lite",
+            ],
+            initialValue: "gemini-3-pro-preview",
         }),
         FieldBuilder.Secret({
             id: "apiKey",
-            displayName: "API Key",
+            displayName: "Google Generative API Key",
             initialValue: "",
             tooltip: "The API key to use for the model (if using a built-in provider)."
-        }),
-        FieldBuilder.String({
-            id: "baseUrl",
-            displayName: "Base URL",
-            initialValue: "",
-            tooltip: "The base URL of the API.",
-            required: false // Python code says required=True but show=False usually implies optional override
-        }),
-        FieldBuilder.String({
-            id: "projectId",
-            displayName: "Project ID",
-            initialValue: "",
-            tooltip: "The project ID of the model.",
-            required: false
         }),
         FieldBuilder.Integer({
             id: "maxOutputTokens",
@@ -41,56 +39,13 @@ export const Blueprint = defineBlueprint({
             tooltip: "The maximum number of tokens to generate.",
             required: false
         }),
-        FieldBuilder.String({
-            id: "systemPrompt",
-            displayName: "Agent Instructions",
-            multiline: true,
-            initialValue: "You are a helpful assistant that can use tools to answer questions and perform tasks.",
-            tooltip: "System Prompt: Initial instructions and context provided to guide the agent's behavior."
-        }),
-        FieldBuilder.String({
-            id: "contextId",
-            displayName: "Context ID",
-            initialValue: "",
-            tooltip: "The context ID of the chat. Adds an extra layer to the local memory.",
-            advanced: true
-        }),
-        FieldBuilder.Integer({
-            id: "nMessages",
-            displayName: "Number of Chat History Messages",
-            initialValue: 100,
-            tooltip: "Number of chat history messages to retrieve.",
-            advanced: true,
-        }),
-        FieldBuilder.String({
-            id: "formatInstructions",
-            displayName: "Output Format Instructions",
-            multiline: true,
-            initialValue: "You are an AI that extracts structured JSON objects from unstructured text. Use a predefined schema with expected types (str, int, float, bool, dict). Extract ALL relevant instances that match the schema - if multiple patterns exist, capture them all. Fill missing or ambiguous values with defaults: null for missing values. Remove exact duplicates but keep variations that have different field values. Always return valid JSON in the expected format, never throw errors. If multiple objects can be extracted, return them all in the structured format.",
-            tooltip: "Generic Template for structured output formatting. Valid only with Structured response.",
-            advanced: true
-        }),
-        FieldBuilder.Json({
-            id: "outputSchema",
-            displayName: "Output Schema",
-            initialValue: [],
-            tooltip: "Schema Validation: Define the structure and data types for structured output. No validation if no output schema.",
-            advanced: true
-        }),
-        FieldBuilder.Boolean({
-            id: "addCurrentDateTool",
-            displayName: "Current Date",
-            initialValue: true,
-            tooltip: "If true, will add a tool to the agent that returns the current date.",
-            advanced: true
-        })
     ],
     inputs: [
-        InputBuilder.Tool({
-            id: "tools",
-            displayName: "Tools",
-            required: false,
-            tooltip: "Tools the agent can use."
+        InputBuilder.Message({
+            id: "systemPrompt",
+            displayName: "Agent Instructions",
+            initialValue: "You are a helpful assistant that can use tools to answer questions and perform tasks.",
+            tooltip: "System Prompt: Initial instructions and context provided to guide the agent's behavior."
         }),
         InputBuilder.Message({
             id: "input",
@@ -98,12 +53,12 @@ export const Blueprint = defineBlueprint({
             required: true,
             tooltip: "The user input message."
         }),
-        InputBuilder.Message({
-            id: "chatHistory",
-            displayName: "Chat History",
+        InputBuilder.Tool({
+            id: "tools",
+            displayName: "Tools",
             required: false,
-            tooltip: "Previous conversation history."
-        })
+            tooltip: "Tools the agent can use."
+        }),
     ],
     outputs: [
         OutputBuilder.Message({

@@ -93,6 +93,8 @@ export const nodeReducers = {
         node.fields = blueprint.fields as Workflow.Node['fields']
         node.inputs = blueprint.inputs as Workflow.Node['inputs']
         node.outputs = blueprint.outputs as Workflow.Node['outputs']
+
+        s.workflow.data.staticValues[nodeId] = {}
     },
     setMinimized: (s, nodeId, isMinimized) => {
         s.isDirty = true;

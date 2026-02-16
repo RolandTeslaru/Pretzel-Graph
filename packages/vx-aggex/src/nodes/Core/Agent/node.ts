@@ -8,6 +8,7 @@ import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { HumanMessage, AIMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { InferFields, InferInputs, InferOutputs } from "src/types";
 
 @RegisterNode(Blueprint.id)
 export class Node extends Runtime.Node<typeof Blueprint> {
@@ -18,25 +19,22 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
     public override async run(
         state: Runtime.State,
-        fields: Runtime.InferFields<typeof Blueprint>,
-        inputs: Runtime.InferInputs<typeof Blueprint>
-    ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
+        fields: InferFields<typeof Blueprint>,
+        inputs: InferInputs<typeof Blueprint>
+    ): Promise<InferOutputs<typeof Blueprint>> {
 
         const {
-            systemPrompt,
-            agentLlm,
+            provider,
             apiKey,
-            addCurrentDateTool,
             maxOutputTokens, // Potentially used for internal model creation
-            outputSchema
         } = fields;
 
-        const { tools, input, chatHistory } = inputs;
+        const { systemPrompt, tools, input } = inputs;
 
         // 1. Resolve Language Model
         let llm: BaseChatModel;
 
-        if (agentLlm === "Google") {
+        if (provider === "Google") {
             // Instantiate Google Model internally (mimicking Python provider creation)
             if (!apiKey) {
                 throw new Error("API Key is required for Google provider.");
@@ -63,15 +61,13 @@ export class Node extends Runtime.Node<typeof Blueprint> {
         // 3. Prepare Prompt
         // If outputSchema is present, we might need to append instructions to systemPrompt
         // (Python code does this for structured output)
-        let finalSystemPrompt = systemPrompt;
-        if (outputSchema && Array.isArray(outputSchema) && outputSchema.length > 0) {
-            // Simple appending of schema instructions if present
-            // In a real implementation, we'd use a structured output parser or tool
-            finalSystemPrompt += `\n\nOutput must follow this schema: ${JSON.stringify(outputSchema)}`;
-        }
+        const sysPromptContent = Synthesizer.coerceMessage("system", systemPrompt).content;
+
+        // OutputSchema logic removed as field is missing in blueprint
+
 
         const prompt = ChatPromptTemplate.fromMessages([
-            ["system", finalSystemPrompt],
+            ["system", sysPromptContent],
             new MessagesPlaceholder("chat_history"),
             ["human", "{input}"],
             new MessagesPlaceholder("agent_scratchpad"),
@@ -90,18 +86,13 @@ export class Node extends Runtime.Node<typeof Blueprint> {
         });
 
         // 5. Prepare Inputs
-        let historyMessages: any[] = [];
-        if (Array.isArray(chatHistory)) {
-            historyMessages = chatHistory;
-        } else if (chatHistory) {
-            historyMessages = [chatHistory];
-        }
+        // Chat History removed from inputs
 
         // 6. Execution
         const inputContent = Synthesizer.coerceMessage("human", input).content;
         const result = await executor.invoke({
             input: inputContent,
-            chat_history: historyMessages,
+            chat_history: [],
         });
 
         return {
