@@ -38,7 +38,7 @@ const Search = () => {
             <Input
                 value={localValue}
                 onChange={handleChange}
-                className='w-full'
+                className='w-full rounded-xl'
                 placeholder='Search for nodes'
             />
             <SystemIcons.Search  className='absolute right-4 top-[15px] h-[18px] w-[18px] text-muted-foreground'/>

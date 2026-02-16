@@ -270,22 +270,22 @@ export namespace InputBuilder {
     // visible to InferInputs for key extraction and value type resolution.
 
     export function Message<TId extends string>(
-        config: BaseProps<TId>
+        config: { initialValue?: string } & BaseProps<TId>
     ): LiteralInput<TId, "Message", Foundations.Port.Variants.Message, LC.BaseMessage> {
         return {
             ...buildBase(config),
             variant: "Message" as const,
-            initialValue: "",
+            initialValue: config.initialValue ?? "",
         };
     }
 
     export function Text<TId extends string>(
-        config: BaseProps<TId>
+        config: { initialValue?: string } & BaseProps<TId>
     ): LiteralInput<TId, "Text", Foundations.Port.Variants.Text, string> {
         return {
             ...buildBase(config),
             variant: "Text" as const,
-            initialValue: "",
+            initialValue: config.initialValue ?? ""
         };
     }
 

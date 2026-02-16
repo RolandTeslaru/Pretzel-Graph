@@ -49,7 +49,7 @@ const Trigger: SelectComponents.Trigger = ({ className, children, size = "sm", .
         bg-input/30 hover:bg-input/50 
         flex w-full items-center 
         justify-between gap-2 
-        rounded-lg border 
+        rounded-md border 
         pr-2 pl-2.5 py-2 text-sm whitespace-nowrap shadow-xs 
         transition-[color,box-shadow] 
         outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed 
@@ -102,7 +102,7 @@ const Content: SelectComponents.Content = ({
       <SelectPrimitive.Content
         className={cn(
           `bg-popover/70 backdrop-blur-lg text-popover-foreground min-w-[8rem] 
-           overflow-x-hidden overflow-y-auto rounded-lg border border-input/60 shadow-md
+           overflow-x-hidden overflow-y-auto rounded-md border border-input/60 shadow-md
           
           data-[state=open]:animate-in 
           data-[state=closed]:animate-out 
@@ -153,7 +153,7 @@ const Item: SelectComponents.Item = ({ className, children, ...props }) => (
        border border-transparent focus:border-primary-accent/60
 
        relative flex w-full cursor-default items-center gap-2 
-       rounded-md py-1.5 pr-8 pl-2 text-sm outline-hidden select-none 
+       rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none 
        data-[disabled]:pointer-events-none 
        data-[disabled]:opacity-50 
        
