@@ -51,7 +51,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                         const { reconciledBlueprint } = await Workbench.API.Field.reconcile(api, {
                             blueprintId: node.blueprintId,
                             fieldId: field.id,
-                            newValue: value
+                            newValue: value,
                          })
                         
                          setState(s => { reducers.node.reconcile(s, nodeId, reconciledBlueprint) });

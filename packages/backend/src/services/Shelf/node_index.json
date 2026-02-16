@@ -1,6 +1,6 @@
 {
-  "version": "1771192457485",
-  "generatedAt": "2026-02-15T21:54:17.485Z",
+  "version": "1771202280540",
+  "generatedAt": "2026-02-16T00:38:00.540Z",
   "drawers": {},
   "blueprints": {
     "Core.Agent": {
@@ -9,14 +9,14 @@
       "icon": "Bot",
       "fields": [
         {
-          "id": "agentLlm",
+          "id": "provider",
           "advanced": false,
           "required": true,
           "reconcile": true,
           "displayName": "Model Provider",
           "tooltip": "The provider of the language model that the agent will use to generate responses.",
           "variant": "MultiOption",
-          "initialValue": "Connect other models",
+          "initialValue": "Google",
           "options": [
             "Google",
             "OpenAI",
@@ -26,38 +26,31 @@
           "kind": "select"
         },
         {
+          "id": "model",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Model",
+          "variant": "MultiOption",
+          "initialValue": "gemini-3-pro-preview",
+          "options": [
+            "gemini-3-pro-preview",
+            "gemini-2.5-pro",
+            "gemini-3-flash-preview",
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite"
+          ],
+          "kind": "select"
+        },
+        {
           "id": "apiKey",
           "advanced": false,
           "required": true,
           "reconcile": false,
-          "displayName": "API Key",
+          "displayName": "Google Generative API Key",
           "tooltip": "The API key to use for the model (if using a built-in provider).",
           "variant": "Secret",
           "initialValue": ""
-        },
-        {
-          "id": "baseUrl",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Base URL",
-          "tooltip": "The base URL of the API.",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": ""
-        },
-        {
-          "id": "projectId",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Project ID",
-          "tooltip": "The project ID of the model.",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": ""
         },
         {
           "id": "maxOutputTokens",
@@ -69,82 +62,16 @@
           "variant": "Integer",
           "initialValue": 0,
           "step": 1
-        },
-        {
-          "id": "systemPrompt",
-          "advanced": false,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Agent Instructions",
-          "tooltip": "System Prompt: Initial instructions and context provided to guide the agent's behavior.",
-          "variant": "String",
-          "initialValue": "You are a helpful assistant that can use tools to answer questions and perform tasks.",
-          "multiline": true,
-          "placeholder": ""
-        },
-        {
-          "id": "contextId",
-          "advanced": true,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Context ID",
-          "tooltip": "The context ID of the chat. Adds an extra layer to the local memory.",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": ""
-        },
-        {
-          "id": "nMessages",
-          "advanced": true,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Number of Chat History Messages",
-          "tooltip": "Number of chat history messages to retrieve.",
-          "variant": "Integer",
-          "initialValue": 100,
-          "step": 1
-        },
-        {
-          "id": "formatInstructions",
-          "advanced": true,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Output Format Instructions",
-          "tooltip": "Generic Template for structured output formatting. Valid only with Structured response.",
-          "variant": "String",
-          "initialValue": "You are an AI that extracts structured JSON objects from unstructured text. Use a predefined schema with expected types (str, int, float, bool, dict). Extract ALL relevant instances that match the schema - if multiple patterns exist, capture them all. Fill missing or ambiguous values with defaults: null for missing values. Remove exact duplicates but keep variations that have different field values. Always return valid JSON in the expected format, never throw errors. If multiple objects can be extracted, return them all in the structured format.",
-          "multiline": true,
-          "placeholder": ""
-        },
-        {
-          "id": "outputSchema",
-          "advanced": true,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Output Schema",
-          "tooltip": "Schema Validation: Define the structure and data types for structured output. No validation if no output schema.",
-          "variant": "Json",
-          "initialValue": []
-        },
-        {
-          "id": "addCurrentDateTool",
-          "advanced": true,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Current Date",
-          "tooltip": "If true, will add a tool to the agent that returns the current date.",
-          "variant": "Boolean",
-          "initialValue": true
         }
       ],
       "inputs": [
         {
-          "id": "tools",
-          "displayName": "Tools",
-          "tooltip": "Tools the agent can use.",
-          "variant": "Tool",
-          "required": false
+          "id": "systemPrompt",
+          "displayName": "Agent Instructions",
+          "tooltip": "System Prompt: Initial instructions and context provided to guide the agent's behavior.",
+          "variant": "Message",
+          "initialValue": "You are a helpful assistant that can use tools to answer questions and perform tasks.",
+          "required": true
         },
         {
           "id": "input",
@@ -155,11 +82,10 @@
           "required": true
         },
         {
-          "id": "chatHistory",
-          "displayName": "Chat History",
-          "tooltip": "Previous conversation history.",
-          "variant": "Message",
-          "initialValue": "",
+          "id": "tools",
+          "displayName": "Tools",
+          "tooltip": "Tools the agent can use.",
+          "variant": "Tool",
           "required": false
         }
       ],
