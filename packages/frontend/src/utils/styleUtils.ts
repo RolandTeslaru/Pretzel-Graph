@@ -132,6 +132,10 @@ export const nodeColors: { [char: string]: string } = {
   Tool: "#00fbfc",
 };
 
+export const portColorName = {
+  
+}
+
 export const nodeColorsName: { [char: string]: string } = {
   // custom_components: "#ab11ab",
   inputs: "emerald",

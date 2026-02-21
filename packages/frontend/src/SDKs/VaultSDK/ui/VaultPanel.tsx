@@ -259,7 +259,7 @@ const AddCredentialContent = () => {
         </Dialog.Description>
       </Dialog.Header>
 
-      <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
+      <form onSubmit={handleSubmit} className='flex flex-col gap-4' autoComplete='off'>
         <div className='flex flex-col gap-2'>
           <Label htmlFor='provider'>Provider</Label>
           <Input
@@ -268,6 +268,7 @@ const AddCredentialContent = () => {
             value={provider}
             onChange={(e) => setProvider(e.target.value)}
             required
+            autoComplete='off'
           />
         </div>
         <div className='flex flex-col gap-2'>
@@ -277,6 +278,8 @@ const AddCredentialContent = () => {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            type="text"
+            autoComplete='off'
           />
         </div>
         <div className='flex flex-col gap-2'>
@@ -288,6 +291,7 @@ const AddCredentialContent = () => {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             required
+            autoComplete='new-password'
           />
         </div>
 

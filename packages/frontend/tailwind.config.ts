@@ -5,6 +5,37 @@ import defaultTheme from "tailwindcss/defaultTheme";
 import plugin from "tailwindcss/plugin";
 import tailwindcssAnimate from "tailwindcss-animate";
 
+const PORT_TYPES = [
+    "Message",
+    "LanguageModel",
+    "str",
+    "Text",
+    "number",
+    "Integer",
+    "Prompt",
+    "Document",
+    "Data",
+    "Agent",
+    "Tool",
+    "unknown",
+    "VectorStore",
+    "Retriever",
+    "Embeddings",
+    "DataFrame",
+    "Memory",
+    "File",
+    "Json"
+];
+
+const portColors = PORT_TYPES.reduce((acc, portType) => {
+    acc[portType] = {
+        DEFAULT: `var(--port-${portType})`,
+        foreground: `var(--port-${portType}-foreground)`,
+        accent: `var(--port-${portType}-accent)`,
+    };
+    return acc;
+}, {} as Record<string, any>);
+
 const config: Config = {
 
     darkMode: "class",
@@ -118,6 +149,7 @@ const config: Config = {
                 "border-beam": "border-beam calc(var(--duration)*1s) infinite linear",
             },
             colors: {
+                port: portColors,
                 "frozen-blue": "rgba(128, 190, 219, 0.86)", // Custom blue color for the frozen effect
                 "frosted-glass": "rgba(255, 255, 255, 0.8)", // Custom frosted glass effect
                 "component-icon": "var(--component-icon)",

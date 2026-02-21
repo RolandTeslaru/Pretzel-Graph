@@ -1,7 +1,7 @@
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import React, { useMemo } from 'react'
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
-import LangchainTypeBadge from '../../../TypeBadge';
+import { PortBadge } from '../../../PortBadge';
 
 interface Props {
   handleType: 'target' | 'source'
@@ -37,12 +37,8 @@ const HandleTooltipContent: React.FC<Props> = ({
           isDraggedHandleCompatible={isDraggedHandleCompatible}
           hasMultipleTypes={hasMultipleTypes}
         />
-
-        <LangchainTypeBadge
-          dataType={port.variant}
-          left={handleType === 'target'}
-          isInput={isInput}
-        />
+          <PortBadge portVariant={port.variant}/>
+        
         {isConnecting && <span>{isInput ? "input" : "output"}</span>}
       </div>
       {!isConnecting && <HelperText isInput={isInput} />}

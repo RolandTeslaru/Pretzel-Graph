@@ -38,7 +38,7 @@ const RunnerPanel = () => {
   })
 
   return (
-    <div className='flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 -translate-x-1/2 z-10'>
+    <div className='flex flex-row p-1 gap-2 rounded-2xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 -translate-x-1/2 z-10'>
 
       {currentJobId === undefined ? (
         <>

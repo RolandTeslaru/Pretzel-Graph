@@ -1,8 +1,12 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { BaseEdge, type EdgeProps, getBezierPath } from '@xyflow/react';
+import { WorkbenchSDK } from '../../../sdk';
+import { nodeColorsName } from '@/utils/styleUtils';
+import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 
 const WorkflowEdge = memo(({
-    id,
+    source,
+    sourceHandleId,
     sourceX,
     sourceY,
     targetX,
@@ -21,9 +25,25 @@ const WorkflowEdge = memo(({
         targetPosition,
     });
 
+    const sourceNode = WorkbenchSDK.useStore(s => s.workflow.data.nodes[source as Workflow.Node.Id]);
+    if (!sourceNode) {
+        return null;
+    }
+    const output = sourceNode.outputs.find(o => o.id === sourceHandleId as Foundations.Port.Output.Id);
+    if (!output) {
+        return null;
+    }
+
+    const edgeStyle = {
+        ...style,
+        stroke: `var(--port-${output.variant})`,
+        strokeWidth: 1.5
+    };
+
     return (
-        <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+        <BaseEdge path={edgePath} markerEnd={markerEnd} style={edgeStyle} />
     );
 });
 
 export default WorkflowEdge;
+

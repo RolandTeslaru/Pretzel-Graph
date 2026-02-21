@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { immer } from "zustand/middleware/immer";
 import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance } from "@xyflow/react";
+import { MarkerType } from "@xyflow/react";
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
 import { workbenchSelectors, type _WorkBenchSDKSelectors } from "./selectors";
 import React from "react";
@@ -26,6 +27,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public readonly runtime = {
         isReconnectionSuccessful: true,
         canvasDriver: null as ReactFlowInstance<WorkbenchSDK.NodeDriver, WorkbenchSDK.EdgeDriver> | null,
+        nodeDriversHtmlRef: new Map<Workflow.Node.Id, HTMLDivElement>()
     }
 
     public readonly useStore: BaseSDK.Store<WorkbenchSDK.State> = create(
@@ -42,7 +44,8 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                     outgoersEdgesMap: {},
                     inputHandlesMap: {},
                     outputHandlesMap: {},
-                }
+                },
+                clipboard: null
             })), {
             limit: this.TEMPORAL_STACK_SIZE,
             partialize: (s) => ({
@@ -110,6 +113,16 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         })
 
         Object.values(wf.data.edges).forEach(edge => {
+            const node = wf.data.nodes[edge.source.nodeId]
+            
+            const output = node.outputs.find((o: Foundations.Port.Output) => o.id === edge.source.portId);
+
+            if(!output)
+                return
+
+            console.log("Generating edges, with output", output)
+
+  
             edgeDrivers.push({
                 id: edge.id,
                 type: "workflowEdge",
@@ -117,6 +130,12 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 sourceHandle: edge.source.portId,
                 target: edge.target.nodeId,
                 targetHandle: edge.target.portId,
+                markerEnd: {
+                    type: MarkerType.ArrowClosed,
+                    color: `var(--port-${output.variant})`,
+                    width: 15,
+                    height: 15
+                }
             })
         })
 
@@ -143,6 +162,7 @@ export namespace WorkbenchSDK {
         lastSelection: OnSelectionChangeParams | null;
         clickedNodeId: Workflow.Node.Id | null;
         draggedHandle: Handle | null
+        clipboard: Workflow.Node | null
         cache: {
             ingoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
             outgoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,

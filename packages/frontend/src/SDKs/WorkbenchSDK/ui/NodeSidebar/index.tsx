@@ -1,4 +1,4 @@
-import { ScrollArea } from '@/vx-ui/foundations'
+import { ScrollArea, Spinner } from '@/vx-ui/foundations'
 import { useMemo, memo } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { LazyIcon } from '@/vx-ui/icons/LazyIcon';
 import { FieldRenderer } from '../FieldRenderer';
 import { InputRenderer } from '../InputRenderer';
-import LangchainTypeBadge from '../TypeBadge';
+import { PortBadge } from '../PortBadge';
 
 
 const NodeSidebar = () => {
@@ -65,10 +65,10 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
             className={`
                 overflow-hidden
                 fixed flex flex-col z-20 right-5 top-24 bottom-24 w-87.5 bg-card/80 backdrop-blur-lg 
-                border border-border pt-2 rounded-2xl shadow-lg shadow-black/30
+                border border-border  rounded-2xl shadow-lg shadow-black/30
             `}>
             {/* Header */}
-            <div className='flex flex-row gap-2 mb-2 px-4 relative'>
+            <div className='flex flex-row pt-2 gap-2 mb-2 px-4 relative'>
                 <LazyIcon className='text-primary my-auto h-5 w-5' name={node.icon as string} />
                 <h4 className='text-primary font-mono font-semibold text-xl'>
                     {node.displayName}
@@ -127,7 +127,7 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                             <Accordion.Content className='flex flex-col gap-1 bg-background/50'>
                                 {connectedInputs.map(input => (
                                     <div key={input.id} className='px-4 py-2 flex items-center gap-2 opacity-60'>
-                                        <LangchainTypeBadge dataType={input.variant} left isInput />
+                                        <PortBadge portVariant={input.variant} />
                                         <span className='text-sm font-medium'>{input.displayName}</span>
                                         {input.required && <span className="text-red-500 text-xs">*</span>}
                                         <span className='ml-auto text-xs text-muted-foreground'>connected</span>
