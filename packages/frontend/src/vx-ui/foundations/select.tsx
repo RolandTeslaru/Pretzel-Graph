@@ -102,8 +102,8 @@ const Content: SelectComponents.Content = ({
       <SelectPrimitive.Content
         className={cn(
           `bg-popover/70 backdrop-blur-lg text-popover-foreground min-w-[8rem] 
-           overflow-x-hidden overflow-y-auto rounded-md border border-input/60 shadow-md
-          
+           overflow-x-hidden overflow-y-auto rounded-lg border border-input/60 shadow-xl
+          shadow-black/30
           data-[state=open]:animate-in 
           data-[state=closed]:animate-out 
           data-[state=closed]:fade-out-0 
@@ -149,9 +149,8 @@ const Label: SelectComponents.Label = ({ className, ...props }) => <SelectPrimit
 const Item: SelectComponents.Item = ({ className, children, ...props }) => (
   <SelectPrimitive.Item
     className={cn(
-      `focus:bg-primary/80 focus:text-accent-foreground 
-       border border-transparent focus:border-primary-accent/60
-
+      `focus:bg-primary/30 focus:text-accent-foreground 
+       border border-transparent focus:border-primary-accent/20
        relative flex w-full cursor-default items-center gap-2 
        rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none 
        data-[disabled]:pointer-events-none 

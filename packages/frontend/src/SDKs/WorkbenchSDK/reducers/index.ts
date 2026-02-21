@@ -16,5 +16,5 @@ export const workbenchReducers = {
     layout: layoutReducers,
     createNodeId: nodeReducers.createId,
     createEdgeId: edgeReducers.createId,
-    setClickedNodeId: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => { state.clickedNodeId = nodeId; },
+    setClickedNodeId: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id | null) => { state.clickedNodeId = nodeId; },
 }

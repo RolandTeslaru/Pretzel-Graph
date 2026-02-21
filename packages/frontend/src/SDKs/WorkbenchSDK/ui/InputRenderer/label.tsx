@@ -1,6 +1,6 @@
 import { Label } from "@/vx-ui/foundations/label"
 import type { Foundations } from "@vx-agent-editor/shared/domain"
-import TypeBadge from "../TypeBadge"
+import { PortBadge } from "../PortBadge"
 
 export const InputLabel = ({ input, showTypeBadges = true }: { input: Foundations.Port.Input, showTypeBadges?: boolean }) => {
   return (
@@ -9,7 +9,7 @@ export const InputLabel = ({ input, showTypeBadges = true }: { input: Foundation
       {input.required && <span className="text-red-500 ml-1">*</span>}
       {showTypeBadges && (
         <div className='ml-auto flex flex-row gap-1 my-auto'>
-          <TypeBadge dataType={input.variant} left={true} isInput={true} />
+          <PortBadge portVariant={input.variant} />
         </div>
       )}
     </Label>

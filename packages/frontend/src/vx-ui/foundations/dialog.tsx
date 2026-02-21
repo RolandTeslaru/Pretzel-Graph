@@ -56,9 +56,16 @@ const Content: DialogComponents.Content = ({
     {darkenBackground && <Overlay />}
     <DialogPrimitive.Content
       className={classNames(
-        `${theme} fixed top-[50%] left-[50%] z-50 rounded-2xl border border-border transition-all duration-300 ease-in-out
-         data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-70 
-         data-[state=open]:zoom-in-70 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 
+        `${theme} fixed top-[50%] left-[50%] z-50 rounded-2xl border border-border transition-all duration-400 ease-in-out
+         data-[state=open]:animate-in 
+         data-[state=closed]:animate-out 
+         data-[state=closed]:fade-out-0 
+         data-[state=open]:fade-in-0 d
+         ata-[state=closed]:zoom-out-70 
+         data-[state=open]:zoom-in-70 
+         data-[state=closed]:slide-out-to-left-1/2 
+         data-[state=closed]:slide-out-to-top-[48%] 
+         data-[state=open]:slide-in-from-left-1/2 
          data-[state=open]:slide-in-from-top-[48%]`,
         blockTransparency ? 'bg-card' : 'bg-card/70 backdrop-blur-sm',
         className,

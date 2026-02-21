@@ -73,7 +73,7 @@ import {
     SheetTrigger,
 } from '@/vx-ui/foundations/sheet'
 import { Slider } from '@/vx-ui/foundations/slider'
-import { Dialog, Spinner } from '@/vx-ui/foundations'
+import { Dialog, Spinner, Tabs } from '@/vx-ui/foundations'
 import { Switch } from '@/vx-ui/foundations/switch'
 import { Textarea } from '@/vx-ui/foundations/textarea'
 import {
@@ -83,10 +83,12 @@ import { SystemIcons } from "@/vx-ui/icons"
 import { Field } from "@/vx-ui/foundations/fieldLayout"
 import { ButtonGroup } from "@/vx-ui/foundations/button-group"
 import { DialogSDK } from "@/vx-ui/SDKs/DialogSDK"
+import { SystemSDK } from "@/SDKs/SystemSDK"
 
 export default function CoverExample() {
     return (
         <div className="max-h-full overflow-y-auto">
+            <ThemeCtrl/>
             <ExampleWrapper>
                 <ObservabilityCard />
                 <SmallFormExample />
@@ -98,13 +100,39 @@ export default function CoverExample() {
                 <InputGroupExamples />
                 <SheetExample />
                 <BadgeExamples />
+                <CustomExample/>
+                <DialogExamples/>
             </ExampleWrapper>
         </div>
     )
 }
 
 
+function ThemeCtrl() {
 
+    const theme = SystemSDK.useStore(s => s.theme)
+
+    return (
+        <div className="absolute top-3 left-3">
+            <Tabs.Root defaultValue="light" value={theme}
+                onValueChange={(value) => {
+                    SystemSDK.actions.setTheme(value as "light" | "dark")
+                }}
+            >
+                <Tabs.List size="sm" indicatorVariant="primary">
+                    <Tabs.Trigger value="light" className="gap-2">
+                        <SystemIcons.Sun size={15}/>
+                        Light
+                    </Tabs.Trigger>
+                    <Tabs.Trigger value="dark" className="gap-2">
+                        <SystemIcons.Moon size={15}/>
+                        Dark
+                    </Tabs.Trigger>
+                </Tabs.List>
+            </Tabs.Root>
+        </div>
+    )
+}
 
 function FieldExamples() {
     const [gpuCount, setGpuCount] = React.useState(8)
@@ -1275,31 +1303,7 @@ function BadgeExamples() {
     )
 }
 
-function EmptyWithSpinner() {
-    return (
-        <Example title="Empty with Spinner">
-            <Empty className="w-full border">
-                <EmptyHeader>
-                    <EmptyMedia variant="icon">
-                        <Spinner />
-                    </EmptyMedia>
-                    <EmptyTitle>Processing your request</EmptyTitle>
-                    <EmptyDescription>
-                        Please wait while we process your request. Do not refresh the page.
-                    </EmptyDescription>
-                </EmptyHeader>
-                <EmptyContent>
-                    <div className="flex gap-2">
-                        <Button size="sm">Submit</Button>
-                        <Button variant="default" size="sm">
-                            Cancel
-                        </Button>
-                    </div>
-                </EmptyContent>
-            </Empty>
-        </Example>
-    )
-}
+
 
 const SHEET_SIDES = ["top", "right", "bottom", "left"] as const
 
@@ -1352,6 +1356,138 @@ function SheetExample() {
                     </Sheet>
                 ))}
             </div>
+        </Example>
+    )
+}
+
+
+
+
+
+
+
+function CustomExample() {
+
+    return (
+        <Example title="Form" className="flex flex-row">
+            <Card.Root className="w-full p-2 max-w-md">
+                <Switch/>
+                <Button className="mr-auto" variant="default">
+                    Click Me!
+                </Button>
+                <Button className="mr-auto" variant="outline">
+                    Click Me!
+                </Button>
+                <Button className="mr-auto" variant="secondary">
+                    Click Me!
+                </Button>
+                <Button className="mr-auto" variant="ghost">
+                    Click Me!
+                </Button>
+                <Button className="mr-auto" variant="destructive" >
+                    Click Me!
+                </Button>
+                <Button className="mr-auto" variant="success">
+                    Click Me!
+                </Button>
+                <Button className="mr-auto" variant="warning">
+                    Click Me!
+                </Button>
+                <Button className="mr-auto" variant="accent">
+                    Click Me!
+                </Button>
+                <Button className="mr-auto" variant="link">
+                    Click Me!
+                </Button>
+                <Button className="mr-auto" variant="input">
+                    Click Me!
+                </Button>
+            </Card.Root>
+            <Card.Root className="w-full p-2 max-w-md">
+                <p>Size Default</p>
+                <Button className="mr-auto" variant="default" size="default">
+                    Click Me!
+                </Button>
+                <p>Xs Small</p>
+                <Button className="mr-auto" variant="default" size="xs">
+                    Click Me!
+                </Button>
+                <p>Size Small</p>
+                <Button className="mr-auto" variant="default" size="sm">
+                    Click Me!
+                </Button>
+                <p>Size Large</p>
+                <Button className="mr-auto" variant="default" size="lg">
+                    Click Me!
+                </Button>
+                <p>Size Icon</p>
+                <Button className="mr-auto" variant="default" size="icon">
+                    <SystemIcons.ArrowDown/>
+                </Button>
+                <p>Size Icon xs</p>
+                <Button className="mr-auto" variant="default" size="icon-xs">
+                    <SystemIcons.ArrowDown/>
+                </Button>
+                <p>Size Icon sm</p>
+                <Button className="mr-auto" variant="default" size="icon-sm">
+                    <SystemIcons.ArrowDown/>
+                </Button>
+                <p>Size Icon lg</p>
+                <Button className="mr-auto" variant="default" size="icon-lg">
+                    <SystemIcons.ArrowDown/>
+                </Button>
+                
+
+            </Card.Root>
+        </Example>
+    )
+}
+
+function DialogExamples() {
+    return (
+        <Example title="Dialogs">
+            <Button variant="default"
+                onClick={() => {
+                    DialogSDK.actions.push('normalDialog', (props) => 
+                        <DialogSDK.Template {...props} className="p-4">
+                            <Dialog.Title>Dialog Title</Dialog.Title>
+                            <Dialog.Description>Dialog Description</Dialog.Description>
+                            
+                        </DialogSDK.Template>
+                    )
+                }}
+            >Open Dialog</Button>
+            <Button variant="destructive"
+                onClick={() => {
+                    DialogSDK.actions.push('destructiveDialog', (props) => 
+                        <DialogSDK.AlertTemplate type="danger" {...props}>
+                            <AlertDialog.Title>Dialog Title</AlertDialog.Title>
+                            <AlertDialog.Description>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</AlertDialog.Description>
+                        </DialogSDK.AlertTemplate>
+                    )
+                }}
+            >Open Alert Dialog</Button>
+            <Button variant="warning"
+                onClick={() => {
+                    DialogSDK.actions.push('warningdialog', (props) => 
+                        <DialogSDK.AlertTemplate type="warning" {...props}>
+                            <AlertDialog.Title>Dialog Title</AlertDialog.Title>
+                            <AlertDialog.Description>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</AlertDialog.Description>
+                        </DialogSDK.AlertTemplate>
+                    )
+                }}
+            
+            >Open Alert Dialog</Button>
+            <Button variant="default"
+                onClick={() => {
+                    DialogSDK.actions.push('successdialog', (props) => 
+                        <DialogSDK.AlertTemplate type="default" {...props}>
+                            <AlertDialog.Title>Dialog Title</AlertDialog.Title>
+                            <AlertDialog.Description>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</AlertDialog.Description>
+                        </DialogSDK.AlertTemplate>
+                    )
+                }}
+            >Open Alert Dialog</Button>
         </Example>
     )
 }

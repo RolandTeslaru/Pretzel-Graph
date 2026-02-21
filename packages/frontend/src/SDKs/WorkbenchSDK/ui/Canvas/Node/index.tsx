@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { WorkbenchSDK } from '../../../sdk';
 import { NodeHeader } from './Header';
 import NodeInputs from './Inputs';
@@ -6,7 +6,8 @@ import NodeOutputs from './Outputs';
 
 import type { NodeProps } from '@xyflow/react';
 import { Workflow } from '@vx-agent-editor/shared/domain';
-import { motion } from 'motion/react';
+import { NodeToolbar, Position } from '@xyflow/react';
+import { NodeCustomToolbar } from './CustomToolbar';
 
 const WorkbenchNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const node = WorkbenchSDK.useStore(s => s.workflow.data.nodes[props.id as Workflow.Node.Id])
@@ -15,8 +16,6 @@ const WorkbenchNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
     return null;
 
   return <WorkbenchNodeContent node={node} />
-}, (prevProps, nextProps) => {
-  return prevProps.id === nextProps.id
 })
 
 export default WorkbenchNode
@@ -29,26 +28,25 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
   const isMinimized = node.isMinimized;
 
   return (
-    <div className={` ${isMinimized ? "min-w-[100px]" : "w-[250px]"}
-       flex flex-col bg-card relative rounded-3xl border
-      ${isNodeClicked ? "shadow-amber-500/40 shadow-selected" : "border-foreground/15 shadow-xl shadow-black/40"}
-      `}
-    // initial={{
-    //   scale: 0,
-    // }}
-    // animate={{
-    //   scale: 1
-    // }}
-    >
-      <NodeHeader node={node} isWorkflowLocked={isWorkflowLocked} />
-      {isMinimized === false &&
-        <>
-          <NodeInputs node={node} isWorkflowLocked={isWorkflowLocked} />
-          <NodeOutputs node={node} isWorkflowLocked={isWorkflowLocked} />
-        </>
-      }
-    </div>
+    <>
+      <NodeToolbar isVisible={isNodeClicked} position={Position.Top}>
+        <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-200 ease-out origin-bottom">
+          <NodeCustomToolbar node={node} />
+        </div>
+      </NodeToolbar>
+      <div className={` ${isMinimized ? "min-w-[100px]" : "w-[250px]"}
+        flex flex-col bg-card relative rounded-3xl border 
+        ${isNodeClicked ? "ring-3 ring-primary/30 ring-offset-4 ring-offset-background" : "border-foreground/15 shadow-xl shadow-black/40"}
+        `}
+      >
+        <NodeHeader node={node} isWorkflowLocked={isWorkflowLocked} />
+        {isMinimized === false &&
+          <>
+            <NodeInputs node={node} isWorkflowLocked={isWorkflowLocked} />
+            <NodeOutputs node={node} isWorkflowLocked={isWorkflowLocked} />
+          </>
+        }
+      </div>
+    </>
   )
-}, (prev, next) => {
-  return prev.node.id === next.node.id
 })
