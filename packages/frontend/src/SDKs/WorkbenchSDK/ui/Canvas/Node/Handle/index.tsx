@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { type Connection, Handle, Position, type Edge } from "@xyflow/react";
-import { cn, nodeColorsName } from '@/utils/styleUtils';
+import { cn } from '@/utils/styleUtils';
 import { Tooltip } from '@/vx-ui/foundations/Tooltip';
 import HandleTooltipContent from './tooltip';
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
@@ -59,17 +59,12 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId }) =
         return isConnectionValid(WorkbenchSDK.state, conn)
     }, [draggedHandle])
 
-    // Resolve the color name from the data type
-    const colorName = useMemo(() => {
-        // Lookup the color name (e.g., "String" -> "blue")
-        return nodeColorsName[port.variant] || "gray";
-    }, [port]);
 
-    // const accentColor÷ =
+    const isNullHandle = !isDraggedHandleCompatible && !!draggedHandle
 
-    const isNullHandle = !isDraggedHandleCompatible && draggedHandle
-
-    const colorVariable = isNullHandle ? "var(--border)" : `var(--datatype-${colorName})`;
+    const centerColor = isNullHandle ? "transparent" : `var(--port-${port.variant}-accent)`;
+    const borderColor = isNullHandle ? "var(--border)" : `var(--port-${port.variant})`;
+    const glowColor = `var(--port-${port.variant})`;
 
     return (
         <Tooltip.Root>
@@ -78,20 +73,36 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId }) =
                     type={type}
                     position={position}
                     isConnectable={!isWorkflowLocked}
-                    style={handleStyle}
+                    style={handleStyle} // this stays 10px invisible hit zone, React Flow grabs anywhere slightly outside it too
                     id={port.id}
                     isValidConnection={isValidConnectionCallback}
-                    className={"group transition-all"}
+                    className="group transition-all outline-none"
                     onClick={() => {
                         ShelfSDK.actions.searchFilter.setDataTypes(new Set(port.variant))
                     }}
                 >
                     {/* Visual Representation of the Handle */}
                     <div
-                        className={"h-full w-full rounded-full transition-all duration-300"}
+                        className={cn(
+                            "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 pointer-events-none",
+                            // Incompatible handle is smaller and transparent. Compatible/normal is fixed size with thick border.
+                            isNullHandle ? "w-3 h-3 border-3" : "w-3 h-3 border-3",
+                            // Glow only if hovered OR if actively dragging a compatible connection
+                            !isNullHandle && (isDraggedHandleCompatible
+                                ? `w-4 h-4 border-white!
+                                
+                                
+                                    shadow-[0_0_8px_2px_var(--tw-ring-color),0_0_20px_4px_var(--tw-ring-color),0_0_40px_8px_var(--tw-ring-color),0_0_60px_10px_var(--tw-ring-color)] 
+                                    `
+                                : `
+                                group-hover:w-4 group-hover:h-4 hover:border-white!
+                                    group-hover:shadow-[0_0_8px_2px_var(--tw-ring-color),0_0_20px_4px_var(--tw-ring-color),0_0_40px_8px_var(--tw-ring-color),0_0_60px_10px_var(--tw-ring-color)]`
+                            )
+                        )}
                         style={{
-                            backgroundColor: colorVariable,
-                            '--tw-ring-color': colorVariable
+                            backgroundColor: centerColor, // Light inside
+                            borderColor: borderColor,    // Dark/Accent thick border
+                            '--tw-ring-color': glowColor // Glow matches border
                         } as React.CSSProperties}
                     />
                 </Handle>

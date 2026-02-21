@@ -17,7 +17,7 @@ const listVars = cva(
       },
       size: {
         xs: "p-px gap-px",
-        sm: "p-0.5 gap-0.5",
+        sm: "py-0.5 px-[3px] gap-0.5",
         default: "p-0.5 gap-1",
         lg: "p-0.5 gap-1.5"
       }

@@ -44,7 +44,6 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked }) => {
               {node.displayName}
             </div>
 
-            <WindowSizeButton node={node} />
           </div>
         </MinimizedHandles>
         :
@@ -57,7 +56,6 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked }) => {
             {node.displayName}
           </div>
 
-          <WindowSizeButton node={node} />
         </div>
       }
 

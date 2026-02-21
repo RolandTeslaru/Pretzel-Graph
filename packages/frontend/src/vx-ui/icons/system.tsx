@@ -132,12 +132,7 @@ export const Lambda: React.FC<BaseIconProps> = (props) => (
     <BaseIcon {...props}><path d="M6.998 3.5c-.216 0-.364.142-.364.314 0 .171.146.315.337.315l.228.002c.902.016 1.41.135 1.833.437.416.298.784.798 1.277 1.724l.227.44 1.591 3.543-.137.225-6.445 10.528a.299.299 0 00-.005.306c.057.1.167.164.288.166a.338.338 0 00.295-.158l6.334-10.347.392.852 3.042 6.627.496 1.126.11.236c.2.424.373.714.575.944.429.49.98.692 1.88.717l.182.004.08-.004a.321.321 0 00.286-.312c0-.17-.147-.314-.34-.314l-.193-.003c-.728-.02-1.094-.16-1.392-.501l-.06-.073a3.994 3.994 0 01-.41-.715c-.048-.1-.098-.208-.155-.336l-.447-1.017-3.696-8.052-1.662-3.698-.158-.31c-.574-1.103-1.016-1.714-1.553-2.098-.551-.396-1.19-.548-2.208-.566L6.998 3.5z"></path></BaseIcon>
 )
 Lambda.displayName = "Lambda"
-export const Ellipsis: React.FC<BaseIconProps> = (props) => (
-    <BaseIcon stroke="currentColor" fill="none" viewBox="0 0 576 512" {...props}>
-        <circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />
-    </BaseIcon>
-)
-Ellipsis.displayName = "Ellipsis"
+
 
 
 export const Circle: React.FC<BaseIconProps> = (props) => (
@@ -296,13 +291,6 @@ UserRoundX.displayName = "UserRoundX"
 
 
 
-// Copy
-export const Copy: React.FC<BaseIconProps> = (props) => (
-    <BaseIcon strokeWidth={2} {...props}>
-        <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-    </BaseIcon>
-)
-Copy.displayName = "Copy"
 
 // Trash
 export const Trash: React.FC<BaseIconProps> = (props) => (
@@ -551,3 +539,26 @@ export const Brain: React.FC<BaseIconProps> = (props) => (
     </BaseIcon>
 )
 Brain.displayName = "Brain"
+
+
+export const Clipboard: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+    </BaseIcon>
+)
+Clipboard.displayName = "Clipboard"
+
+export const Ellipsis: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+    </BaseIcon>
+)
+Ellipsis.displayName = "Ellipsis"
+
+
+export const Copy: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+    </BaseIcon>
+)
+Copy.displayName = "Copy"

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 import { cn } from "../utils/cn"
+import { cx } from "class-variance-authority"
 
 namespace DrawerComponents {
   export type Root        = React.ComponentProps<typeof DrawerPrimitive.Root>

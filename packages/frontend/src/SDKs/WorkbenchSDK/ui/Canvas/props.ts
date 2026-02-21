@@ -1,4 +1,4 @@
-import { addEdge, applyEdgeChanges, applyNodeChanges, reconnectEdge } from '@xyflow/react'
+import { addEdge, applyEdgeChanges, applyNodeChanges, reconnectEdge, MarkerType, SelectionMode } from '@xyflow/react'
 import type { ReactFlowProps } from "@xyflow/react"
 import { WorkbenchSDK } from "../../sdk"
 import WorkflowEdge from './Edge'
@@ -22,6 +22,7 @@ const fitViewOptions = {
 
 
 export const canvasProps = Object.freeze({
+    selectionMode: SelectionMode.Partial,
     connectionRadius: 30,
     elevateEdgesOnSelect: false,
     fitViewOptions,
@@ -185,7 +186,7 @@ export const createCanvasCallbacks = (
             WorkbenchSDK.actions
                 .setClickedNodeId(nodeDriver.id as Workflow.Node.Id)
         },
-        onMoveEnd: (event, viewport) => {
+        onMoveEnd: (_, viewport) => {
             WorkbenchSDK.actions.layout.viewport.set(viewport)
         },
         onConnect: (conn) => {
@@ -197,6 +198,11 @@ export const createCanvasCallbacks = (
             WorkbenchSDK.actions.edge.add(edgeId, conn);
 
             setEdgeDrivers(prev => {
+                const sourceNode = WorkbenchSDK.state.workflow.data.nodes[source as Workflow.Node.Id];
+                const output = sourceNode?.outputs.find(o => o.id === sourceHandle as Foundations.Port.Output.Id);
+                const colorName = output ? (nodeColorsName[output.variant] ?? "cyan") : "cyan";
+                const colorVarName = `var(--datatype-${colorName})`;
+
                 const newEdgeDriver: EdgeDriver = {
                     id: edgeId,
                     source: source,
@@ -204,12 +210,16 @@ export const createCanvasCallbacks = (
                     sourceHandle,
                     targetHandle,
                     type: 'workflowEdge',
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        color: colorVarName,
+                    }
                 }
 
                 return addEdge(newEdgeDriver, prev)
             })
         },
-        onConnectStart: (event, params) => {
+        onConnectStart: (_, params) => {
             const { nodeId, handleId, handleType } = params;
 
             if (nodeId === null || handleId === null || handleType === null)
