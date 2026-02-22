@@ -5,6 +5,7 @@ export const Blueprint = defineBlueprint({
     displayName: "JSON Injector",
     description: "Injects JSON data into the flow.",
     icon: "Code",
+    accent: "port-null",
     fields: [
         FieldBuilder.Json({
             id: "data",

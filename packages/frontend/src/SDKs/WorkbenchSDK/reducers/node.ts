@@ -49,7 +49,6 @@ export const nodeReducers = {
         layoutReducers.node.remove(s, deletedNodeId);
     },
     createId: createNodeId,
-    // TODO: Migrate from DB schema creation to runtime schema creation from backend
     create: (s, blueprint, position) => {
         s.isDirty = true;
         const nodeId = createNodeId(blueprint.id);
@@ -64,6 +63,7 @@ export const nodeReducers = {
             icon: blueprint.icon,
             description: blueprint.description,
             isMinimized: false,
+            accent: blueprint.accent ? `var(--${blueprint.accent})` : undefined,
         } satisfies Workflow.Node
 
         const result = Workflow.Node.Schema.safeParse(newNode)
@@ -87,7 +87,7 @@ export const nodeReducers = {
         if (!node)
             throw new Error(`Node ${blueprint.id} not found`);
 
-        if(node.blueprintId !== blueprint.id)
+        if (node.blueprintId !== blueprint.id)
             throw new Error(`Node ${nodeId} is not of type ${blueprint.id}`);
 
         node.fields = blueprint.fields as Workflow.Node['fields']

@@ -10,7 +10,7 @@ const ShelfSidebar = () => {
     return (
         <div className={`
             flex flex-col gap-2 fixed z-20 left-5 top-24 bottom-24 w-[230px] bg-card/80 backdrop-blur-lg 
-            border border-border py-2 rounded-2xl shadow-lg shadow-black/30`}
+            border border-border py-2 rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10`}
         >
             <Search />
 

@@ -5,6 +5,7 @@ export const Blueprint = defineBlueprint({
     displayName: "Language Model",
     description: "Runs a language model given a specified provider.",
     icon: "BrainCircuit",
+    accent: "port-LanguageModel",
     fields: [
         FieldBuilder.MultiOption({
             id: "provider",

@@ -35,7 +35,7 @@ const Portal: AlertDialogComponents.Portal = (props) => <AlertDialogPrimitive.Po
 const Overlay: AlertDialogComponents.Overlay = ({ className, ...props }) => (
   <AlertDialogPrimitive.Overlay
     className={cn(
-      "fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-black/30 dark:bg-black/70  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props}
@@ -45,7 +45,7 @@ const Overlay: AlertDialogComponents.Overlay = ({ className, ...props }) => (
 const Content: AlertDialogComponents.Content = ({
   darkenBackground = true,
   blockTransparency = false,
-  theme = "dark",
+  theme,
   style,
   className,
   children,
@@ -56,15 +56,18 @@ const Content: AlertDialogComponents.Content = ({
     <AlertDialogPrimitive.Content
       data-slot="alert-dialog-content"
       className={cn(
-        `${theme} fixed left-[50%] top-[50%] z-50 rounded-2xl border border-border transition-all duration-400 ease-in-out
+        `${theme || ""} fixed left-[50%] top-[50%] z-50 rounded-2xl 
+         border border-border transition-all duration-400 ease-in-out
          data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-70 
          data-[state=open]:zoom-in-70 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 
-         data-[state=open]:slide-in-from-top-[48%]`,
-        blockTransparency ? 'bg-card' : 'bg-card/70 backdrop-blur-sm',
+         data-[state=open]:slide-in-from-top-[48%]
+         shadow-2xl shadow-neutral-500/60 dark:shadow-black/60
+         `,
+        blockTransparency ? 'bg-card' : ' bg-card/80 dark:bg-card/70 backdrop-blur-sm',
         className
       )}
       style={{
-        boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.5)",
+        // boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.5)",
         ...style,
       }}
       {...rest}
@@ -90,14 +93,14 @@ const Footer: AlertDialogComponents.Footer = ({ className, ...rest }) => (
 
 const Title: AlertDialogComponents.Title = ({ className, ...rest }) => (
   <AlertDialogPrimitive.Title
-    className={cn("text-lg  text-neutral-200 antialiased font-semibold font-roboto-mono", className)}
+    className={cn("text-lg  text-foreground antialiased font-semibold font-roboto-mono", className)}
     {...rest}
   />
 )
 
 const Description: AlertDialogComponents.Description = ({ className, ...rest }) => (
   <AlertDialogPrimitive.Description
-    className={cn("text-sm text-neutral-400 max-w-[500px] font-inter", className)}
+    className={cn("text-sm text-muted-foreground max-w-[500px] font-inter", className)}
     {...rest}
   />
 )
@@ -117,7 +120,7 @@ const Action: AlertDialogComponents.Action = ({
 
 const Cancel: AlertDialogComponents.Cancel = ({
   className, children,
-  variant = "primary",
+  variant = "outline",
   size = "default",
   ...rest
 }) => (

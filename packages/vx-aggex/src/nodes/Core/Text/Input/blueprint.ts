@@ -5,6 +5,7 @@ export const Blueprint = defineBlueprint({
     displayName: "Text Input",
     description: "This node is a Text input",
     icon: "Type",
+    accent: "port-Text",
     fields: [],
     inputs: [
         InputBuilder.Text({

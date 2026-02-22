@@ -376,7 +376,7 @@ const config: Config = {
                 chivo: ["var(--font-chivo)", ...defaultTheme.fontFamily.sans],
             },
             boxShadow: {
-                "selected": "0px 0px 8px 1px var(--tw-shadow-color)",
+                "selected": "0px 0px 8px 2px var(--tw-shadow-color)",
                 "frozen-ring": "0 0 10px 2px rgba(128, 190, 230, 0.5)",
                 node: "0 0px 15px -3px rgb(0 0 0 / 0.1), 0 0px 6px -4px rgb(0 0 0 / 0.1)",
                 "frosted-ring": "0 0 10px 2px rgba(128, 190, 230, 0.7)",

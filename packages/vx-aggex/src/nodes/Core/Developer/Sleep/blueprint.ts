@@ -5,6 +5,7 @@ export const Blueprint = defineBlueprint({
     displayName: "Sleep",
     description: "Pauses execution for a specified duration.",
     icon: "Clock",
+    accent: "port-null",
     fields: [
         FieldBuilder.Integer({
             id: "duration",

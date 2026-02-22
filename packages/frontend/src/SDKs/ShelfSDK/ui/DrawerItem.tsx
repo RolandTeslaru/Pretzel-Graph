@@ -20,7 +20,7 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
     <Tooltip.Root>
       <Tooltip.Trigger>
         <div
-          className='cursor-grab h-8 px-2 bg-input/50 text-left rounded-lg flex flex-row gap-2 max-w-[210px]'
+          className='cursor-grab h-8 px-2 bg-secondary text-left rounded-lg flex flex-row gap-2 max-w-[210px]'
           draggable={true}
           data-blueprint-id={blueprintId}
           onDragStart={onDragStart}

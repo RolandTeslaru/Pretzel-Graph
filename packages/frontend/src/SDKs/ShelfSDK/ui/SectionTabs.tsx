@@ -11,7 +11,7 @@ const SectionTabs = memo(() => {
         }}
 
         >
-            <Tabs.List className='w-full' indicatorVariant="primary" size='sm'>
+            <Tabs.List className='w-full' variant='primary' size='sm'>
                 <Tabs.Trigger className='w-full font-semibold' value="core">Core</Tabs.Trigger>
                 {/* <Tabs.Trigger className='w-full font-semibold' value="mcp">MCP</Tabs.Trigger> */}
                 <Tabs.Trigger className='w-full font-semibold' value="bundle">Bundles</Tabs.Trigger>

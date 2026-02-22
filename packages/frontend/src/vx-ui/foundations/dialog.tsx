@@ -7,19 +7,19 @@ import { cn } from "../utils/cn"
 import classNames from "classnames"
 
 namespace DialogComponents {
-    export type Root        = FC<ComponentProps<typeof DialogPrimitive.Root>>
-    export type Trigger     = FC<ComponentProps<typeof DialogPrimitive.Trigger>>
-    export type Portal      = FC<ComponentProps<typeof DialogPrimitive.Portal>>
-    export type Close       = FC<ComponentProps<typeof DialogPrimitive.Close>>
-    export type Overlay     = FC<ComponentProps<typeof DialogPrimitive.Overlay>>
-    export type Content     = FC<ComponentProps<typeof DialogPrimitive.Content> & {
+  export type Root = FC<ComponentProps<typeof DialogPrimitive.Root>>
+  export type Trigger = FC<ComponentProps<typeof DialogPrimitive.Trigger>>
+  export type Portal = FC<ComponentProps<typeof DialogPrimitive.Portal>>
+  export type Close = FC<ComponentProps<typeof DialogPrimitive.Close>>
+  export type Overlay = FC<ComponentProps<typeof DialogPrimitive.Overlay>>
+  export type Content = FC<ComponentProps<typeof DialogPrimitive.Content> & {
     darkenBackground?: boolean
     blockTransparency?: boolean
     theme?: "dark" | "light"
   }>
-    export type Header      = FC<React.HTMLAttributes<HTMLDivElement>>
-    export type Footer      = FC<React.HTMLAttributes<HTMLDivElement>>
-    export type Title       = FC<ComponentProps<typeof DialogPrimitive.Title>>
+  export type Header = FC<React.HTMLAttributes<HTMLDivElement>>
+  export type Footer = FC<React.HTMLAttributes<HTMLDivElement>>
+  export type Title = FC<ComponentProps<typeof DialogPrimitive.Title>>
   export type Description = FC<ComponentProps<typeof DialogPrimitive.Description>>
 }
 
@@ -37,7 +37,11 @@ const Close: DialogComponents.Close = (props) => <DialogPrimitive.Close {...prop
 const Overlay: DialogComponents.Overlay = ({ className, ...rest }) => (
   <DialogPrimitive.Overlay
     className={cn(
-      "fixed inset-0 z-50 bg-black/70 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0", className
+      `fixed inset-0 z-50 bg-black/30 dark:bg-black/70 
+      data-[state=open]:animate-in 
+      data-[state=closed]:animate-out 
+      data-[state=closed]:fade-out-0 
+      data-[state=open]:fade-in-0`, className
     )}
     {...rest}
   />
@@ -49,14 +53,15 @@ const Content: DialogComponents.Content = ({
   className,
   blockTransparency = false,
   darkenBackground = true,
-  theme = "dark",
+  theme,
   ...rest
 }) => (
   <Portal>
     {darkenBackground && <Overlay />}
     <DialogPrimitive.Content
       className={classNames(
-        `${theme} fixed top-[50%] left-[50%] z-50 rounded-2xl border border-border transition-all duration-400 ease-in-out
+        `${theme || ""} fixed top-[50%] left-[50%] z-50 rounded-2xl 
+         border border-border transition-all duration-400 ease-in-out
          data-[state=open]:animate-in 
          data-[state=closed]:animate-out 
          data-[state=closed]:fade-out-0 
@@ -66,12 +71,14 @@ const Content: DialogComponents.Content = ({
          data-[state=closed]:slide-out-to-left-1/2 
          data-[state=closed]:slide-out-to-top-[48%] 
          data-[state=open]:slide-in-from-left-1/2 
-         data-[state=open]:slide-in-from-top-[48%]`,
-        blockTransparency ? 'bg-card' : 'bg-card/70 backdrop-blur-sm',
+         data-[state=open]:slide-in-from-top-[48%]
+         shadow-2xl shadow-neutral-500/60 dark:shadow-black/60
+         `,
+        blockTransparency ? 'bg-card' : ' bg-card/70 backdrop-blur-sm',
         className,
       )}
       style={{
-        boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.5)",
+        // boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.5)",
         ...style,
       }}
       {...rest}
