@@ -1,3 +1,4 @@
+import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
 import { Button, DropdownMenu } from '@/vx-ui/foundations'
 import { SystemIcons } from '@/vx-ui/icons'
@@ -33,20 +34,36 @@ const MoreOptionsDropdown: React.FC<Props> = ({ node }) => {
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger className='p-0! max-h-[24px]'>
-                <Button variant="ghost" size="icon-xs" className='p-0! mt-0! max-h-[24px]!'  >
+                <Button variant="ghost" size="icon-xs" className='p-0! mt-0! max-h-[24px]!' asChild >
                     <SystemIcons.Ellipsis />
                 </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="start">
-                <DropdownMenu.Item>
+                <DropdownMenu.Item
+                    onClick={() => WorkbenchSDK.actions.clipboard.copyNode(node.id) }
+                >
                     <SystemIcons.Clipboard />
                     Copy
                 </DropdownMenu.Item>
-                <DropdownMenu.Item>
+                <DropdownMenu.Item
+                    onClick={() => WorkbenchSDK.actions.node.duplicate(node, undefined)}
+                >
                     <SystemIcons.Copy />
                     Duplicate
                 </DropdownMenu.Item>
-                <DropdownMenu.Item variant="destructive">
+                <DropdownMenu.Item
+                    onClick={() => {
+                        const blueprint = ShelfSDK.state.blueprints[node.blueprintId];
+                        if (!blueprint) return;
+                        WorkbenchSDK.actions.node.recreate(node.id, blueprint)
+                    }}
+                >
+                    <SystemIcons.FileCode />
+                    Recreate
+                </DropdownMenu.Item>
+                <DropdownMenu.Item variant="destructive"
+                    onClick={() => WorkbenchSDK.actions.node.remove(node.id)}
+                >
                     <SystemIcons.Trash2 />
                     Delete
                 </DropdownMenu.Item>

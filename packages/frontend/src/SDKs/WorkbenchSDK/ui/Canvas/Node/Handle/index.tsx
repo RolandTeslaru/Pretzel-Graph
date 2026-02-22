@@ -73,7 +73,10 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId }) =
                     type={type}
                     position={position}
                     isConnectable={!isWorkflowLocked}
-                    style={handleStyle} // this stays 10px invisible hit zone, React Flow grabs anywhere slightly outside it too
+                    style={{
+                        ...handleStyle,
+                        [type === "target" ? "left" : "right"]: "-6px" // push further out (default is -4/-5px)
+                    }}
                     id={port.id}
                     isValidConnection={isValidConnectionCallback}
                     className="group transition-all outline-none"

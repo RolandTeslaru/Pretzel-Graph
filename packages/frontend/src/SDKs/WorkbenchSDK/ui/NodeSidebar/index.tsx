@@ -137,16 +137,7 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                             </Accordion.Content>
                         </Accordion.Item>
                     )}
-                    <Accordion.Item value='inputs'>
-                        <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
-                            <h4 className='text-md font-medium'>JSON</h4>
-                        </Accordion.Trigger>
-                        <Accordion.Content className='flex flex-col gap-1 bg-background/50'>
-                            <p>
-                                {`node accent ${node.accent}`}
-                            </p>
-                        </Accordion.Content>
-                    </Accordion.Item>
+                   
                 </Accordion.Root>
             </ScrollArea.Root>
         </motion.div>

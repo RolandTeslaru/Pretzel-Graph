@@ -11,7 +11,7 @@ interface Props {
 const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, children }) => {
     return (
         <div className='flex flex-row w-full'>
-            <div className='flex flex-col h-auto my-auto gap-2'>
+            <div className='flex flex-col h-auto my-auto gap-4'>
                 {node.inputs.map(input =>
                     <div className='h-2 relative' key={input.id}>
                         <NodeHandle
@@ -24,7 +24,7 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, children })
                 )}
             </div>
             {children}
-            <div className='flex flex-col h-auto my-auto gap-2 relative ml-auto'>
+            <div className='flex flex-col h-auto my-auto gap-4 relative ml-auto'>
                 {node.outputs.map(output =>
                     <div className='h-2 relative' key={output.id}>
                         <NodeHandle

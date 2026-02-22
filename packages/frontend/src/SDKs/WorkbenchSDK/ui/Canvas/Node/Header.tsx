@@ -35,7 +35,7 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked }) => {
 
       {isMinimized ?
         <MinimizedHandles node={node} isWorkflowLocked={isWorkflowLocked}>
-          <div className='flex w-full flex-col! items-center gap-1 px-4 py-1.5'
+          <div className='flex w-full flex-col! items-center gap-1 px-4 py-1'
           
           >
             <LazyIcon
@@ -51,8 +51,7 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked }) => {
         </MinimizedHandles>
         :
         <div
-          className="flex w-full items-center gap-3 px-4 py-1.5 rounded-t-xl border-b border-border/50"
-          style={{ backgroundColor: node.accent ? `color-mix(in srgb, ${node.accent} 20%, transparent)` : 'var(--secondary)' }}
+          className="flex w-full items-center gap-3 px-4 py-1 rounded-t-xl "
         >
           <LazyIcon
             className={`${isMinimized ? "w-8 h-8" : "w-5.5 h-5.5"}`}

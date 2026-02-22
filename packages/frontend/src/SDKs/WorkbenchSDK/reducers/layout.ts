@@ -6,10 +6,19 @@ export const layoutReducers = {
         setPosition: (s, nodeId, newLayout) => {
             if (!newLayout)
                 return
+
+            // Ensure layout
+            if(!s.workflow.data.ui.layout[nodeId]){
+                s.workflow.data.ui.layout[nodeId] = { x: 0, y: 0 }
+            }
+
             const oldNodeLayout = s.workflow.data.ui.layout[nodeId];
+
+            // If same dont change
             if (newLayout.x === oldNodeLayout.x && newLayout.y === oldNodeLayout.y) {
                 return
             }
+            
             s.isDirty = true
             s.workflow.data.ui.layout[nodeId] = newLayout;
         },

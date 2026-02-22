@@ -58,7 +58,7 @@ export namespace ShelfSDK {
         searchFilter: {
             query: string | null,
             selectionFilters: Set<Shelf.Section>
-            dataTypes: Set<Foundations.HandleVariant> | null
+            dataTypes: Set<Foundations.Port.Variant> | null
         }
     }
 
