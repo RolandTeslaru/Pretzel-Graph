@@ -6,6 +6,7 @@ import { layoutReducers } from "./layout";
 import { nodeReducers } from "./node";
 import { workflowReducers } from "./workflow";
 import type { WorkbenchSDK } from "../sdk";
+import { clipboardReducers } from "./clipboard";
 
 export const workbenchReducers = {
     field: fieldReducers,
@@ -14,6 +15,7 @@ export const workbenchReducers = {
     input: inputReducers,
     workflow: workflowReducers,
     layout: layoutReducers,
+    clipboard: clipboardReducers,
     createNodeId: nodeReducers.createId,
     createEdgeId: edgeReducers.createId,
     setClickedNodeId: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id | null) => { state.clickedNodeId = nodeId; },

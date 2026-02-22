@@ -20,11 +20,16 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
     <Tooltip.Root>
       <Tooltip.Trigger>
         <div
-          className='cursor-grab h-8 px-2 bg-secondary text-left rounded-lg flex flex-row gap-2 max-w-[210px]'
+          className='cursor-grab h-8 pl-2 pr-1 bg-secondary text-left rounded-lg flex flex-row gap-2 max-w-[210px] border-r-5'
           draggable={true}
           data-blueprint-id={blueprintId}
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
+          style={{
+            borderColor: blueprint.accent
+              ? `color-mix(in srgb, var(--${blueprint.accent}) 30%, var(--secondary))`
+              : 'var(--secondary)'
+          }}
           {...props}
         >
           <LazyIcon name={blueprint.icon} className='w-4 size-4 h-4 my-auto ' />

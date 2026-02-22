@@ -149,12 +149,11 @@ export const createCanvasCallbacks = (
             WorkbenchSDK.runtime.isReconnectionSuccessful = false
         },
         onReconnectEnd: (e, edgeDriver, handleType) => {
+            const edgeId = edgeDriver.id as Workflow.Edge.Id;
             // If the reconnection was not successful, remove the edge
             if (WorkbenchSDK.runtime.isReconnectionSuccessful === false) {
-                setState(s => {
-                    WorkbenchSDK.reducers.edge.remove(s, edgeDriver.id as Workflow.Edge.Id)
-                })
-                setEdgeDrivers(prev => prev.filter(ed => ed.id !== edgeDriver.id))
+                WorkbenchSDK.actions.edge.remove(edgeId)
+                setEdgeDrivers(prev => prev.filter(ed => ed.id !== edgeId))
             }
             WorkbenchSDK.runtime.isReconnectionSuccessful = true
         },
@@ -190,34 +189,10 @@ export const createCanvasCallbacks = (
             WorkbenchSDK.actions.layout.viewport.set(viewport)
         },
         onConnect: (conn) => {
-            const { source, sourceHandle, target, targetHandle } = conn as WorkbenchSDK.DriverConn
+            const { source, sourceHandle, target, targetHandle } = conn
             if (!sourceHandle || !targetHandle || !source || !target) return;
 
-            const edgeId = WorkbenchSDK.reducers.createEdgeId(source, sourceHandle, target, targetHandle)
-
-            WorkbenchSDK.actions.edge.add(edgeId, conn);
-
-            setEdgeDrivers(prev => {
-                const sourceNode = WorkbenchSDK.state.workflow.data.nodes[source as Workflow.Node.Id];
-                const output = sourceNode?.outputs.find(o => o.id === sourceHandle as Foundations.Port.Output.Id);
-                const colorName = output ? (nodeColorsName[output.variant] ?? "cyan") : "cyan";
-                const colorVarName = `var(--datatype-${colorName})`;
-
-                const newEdgeDriver: EdgeDriver = {
-                    id: edgeId,
-                    source: source,
-                    target: target,
-                    sourceHandle,
-                    targetHandle,
-                    type: 'workflowEdge',
-                    markerEnd: {
-                        type: MarkerType.ArrowClosed,
-                        color: colorVarName,
-                    }
-                }
-
-                return addEdge(newEdgeDriver, prev)
-            })
+            WorkbenchSDK.actions.edge.create(conn as WorkbenchSDK.DriverConnection)
         },
         onConnectStart: (_, params) => {
             const { nodeId, handleId, handleType } = params;
@@ -304,6 +279,25 @@ export const createCanvasCallbacks = (
                 //         .setClickedNodeId(s, null)
                 // }
             })
+        },
+
+
+
+        // Copy key tracking
+        onKeyDown: (e) => {
+            if (e.key === "c" && (e.ctrlKey || e.metaKey)) {
+                console.log("Attempting to copy selection ", WorkbenchSDK.state.lastSelection)
+
+                WorkbenchSDK.actions.clipboard.copy();
+            }
+            if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
+                console.log("Attempting to paste selection ", e)
+
+                const { x, y } = WorkbenchSDK.runtime.lastMousePosition;
+                const canvasPosition = convertMousePositionToCanvas(x, y);
+
+                WorkbenchSDK.actions.clipboard.paste(canvasPosition);
+            }
         },
 
         isValidConnection: (conn) => {

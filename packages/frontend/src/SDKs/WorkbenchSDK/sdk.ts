@@ -27,7 +27,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public readonly runtime = {
         isReconnectionSuccessful: true,
         canvasDriver: null as ReactFlowInstance<WorkbenchSDK.NodeDriver, WorkbenchSDK.EdgeDriver> | null,
-        nodeDriversHtmlRef: new Map<Workflow.Node.Id, HTMLDivElement>()
+        lastMousePosition: { x: 0, y: 0 }
     }
 
     public readonly useStore: BaseSDK.Store<WorkbenchSDK.State> = create(
@@ -45,7 +45,11 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                     inputHandlesMap: {},
                     outputHandlesMap: {},
                 },
-                clipboard: null
+                clipboard: {
+                    nodes: new Set(),
+                    edges: new Set(),
+                    layout: {},
+                }
             })), {
             limit: this.TEMPORAL_STACK_SIZE,
             partialize: (s) => ({
@@ -114,15 +118,12 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
         Object.values(wf.data.edges).forEach(edge => {
             const node = wf.data.nodes[edge.source.nodeId]
-            
+
             const output = node.outputs.find((o: Foundations.Port.Output) => o.id === edge.source.portId);
 
-            if(!output)
+            if (!output)
                 return
 
-            console.log("Generating edges, with output", output)
-
-  
             edgeDrivers.push({
                 id: edge.id,
                 type: "workflowEdge",
@@ -159,10 +160,14 @@ export namespace WorkbenchSDK {
         workflow: Workflow;
         isDirty: boolean;
         isDraggingNode: boolean;
-        lastSelection: OnSelectionChangeParams | null;
+        lastSelection: OnSelectionChangeParams<NodeDriver, EdgeDriver> | null;
         clickedNodeId: Workflow.Node.Id | null;
         draggedHandle: Handle | null
-        clipboard: Workflow.Node | null
+        clipboard: {
+            nodes: Set<Workflow.Node>
+            edges: Set<Workflow.Edge>,
+            layout: Record<Workflow.Node.Id, { x: number, y: number }>
+        }
         cache: {
             ingoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
             outgoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
@@ -187,7 +192,7 @@ export namespace WorkbenchSDK {
     export type NodeDriver = RF_Node<{}, "workflowNode">;
     export type EdgeDriver = RF_Edge<{}, "workflowEdge">;
 
-    export type DriverConn = {
+    export type DriverConnection = {
         source: Workflow.Node.Id
         sourceHandle: Foundations.Port.Output.Id
         target: Workflow.Node.Id

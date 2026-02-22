@@ -10,17 +10,18 @@ type RendererProps<K extends Foundations.Port.Input['variant']> = {
     input: Extract<Foundations.Port.Input, { variant: K }>
     nodeId: Workflow.Node.Id
     className?: string
+    showTypeBadge?: boolean
 }
 
 
 // ── Variant Renderers ────────────────────────────────────────
 
-const MessageInput = memo(({ input, nodeId, className }: RendererProps<'Message'>) => {
+const MessageInput = memo(({ input, nodeId, className, showTypeBadge }: RendererProps<'Message'>) => {
     const value = WorkbenchSDK.useStaticValue(nodeId, input);
 
     return (
         <div className={className + " w-full flex flex-col gap-1"}>
-            <InputLabel input={input} />
+            <InputLabel input={input} showTypeBadges={showTypeBadge} />
             <HighlightedTextarea
                 input={input}
                 nodeId={nodeId}
@@ -34,12 +35,12 @@ const MessageInput = memo(({ input, nodeId, className }: RendererProps<'Message'
 MessageInput.displayName = "MessageInput"
 
 
-const TextInput = memo(({ input, nodeId, className }: RendererProps<'Text'>) => {
+const TextInput = memo(({ input, nodeId, className, showTypeBadge }: RendererProps<'Text'>) => {
     const value = WorkbenchSDK.useStaticValue(nodeId, input);
 
     return (
         <div className={className + " w-full flex flex-col gap-1"}>
-            <InputLabel input={input} />
+            <InputLabel input={input} showTypeBadges={showTypeBadge}/>
             <Textarea
                 value={value}
                 onChange={(e) => WorkbenchSDK.actions.input.setValue(nodeId, input.id, e.target.value)}
@@ -70,6 +71,7 @@ type InputRendererMapType = {
         input: Extract<Foundations.Port.Input, { variant: K }>
         nodeId: Workflow.Node.Id
         className?: string
+        showTypeBadge?: boolean
     }>
 }
 
@@ -90,6 +92,7 @@ export const InputRenderer = memo(({ input, nodeId, className, hideInnerComponen
         input: Foundations.Port.Input
         nodeId: Workflow.Node.Id
         className?: string
+        showTypeBadge?: boolean
     }> | undefined
 
     if (hideInnerComponent === true)
@@ -98,7 +101,7 @@ export const InputRenderer = memo(({ input, nodeId, className, hideInnerComponen
         )
 
     if (Component)
-        return <Component input={input} nodeId={nodeId} className={className} />
+        return <Component input={input} nodeId={nodeId} className={className} showTypeBadge={showTypeBadge} />
 
     return <EdgeOnlyInput input={input} className={className} showTypeBadge={showTypeBadge} />
 })
