@@ -124,12 +124,12 @@ export const nodeReducers = {
         cacheReducers.createNode(s, newNode);
     },
     duplicate: (s, originalNode, position) => {
+        s.isDirty = true
         if (!position) {
             position = cloneDeep(s.workflow.data.ui.layout[originalNode.id])
             position.x += 40
             position.y += 40
         }
-        s.isDirty = true
         const newNodeId = createNodeId(originalNode.blueprintId)
         const newNode = {
             id           : newNodeId,
