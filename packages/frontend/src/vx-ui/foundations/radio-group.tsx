@@ -27,7 +27,7 @@ function RadioGroupItem({
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
       className={cn(
-        `border-input text-primary dark:bg-input/30 
+        `border-border text-primary dark:bg-input/30 
          cursor-pointer
          focus-visible:border-ring 
          focus-visible:ring-ring/50 

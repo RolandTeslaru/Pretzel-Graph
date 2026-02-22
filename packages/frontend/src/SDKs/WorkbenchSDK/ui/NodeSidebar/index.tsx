@@ -65,7 +65,7 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
             className={`
                 overflow-hidden
                 fixed flex flex-col z-20 right-5 top-24 bottom-24 w-87.5 bg-card/80 backdrop-blur-lg 
-                border border-border  rounded-2xl shadow-lg shadow-black/30
+                border border-border rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10
             `}>
             {/* Header */}
             <div className='flex flex-row pt-2 gap-2 mb-2 px-4 relative'>
@@ -88,23 +88,6 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                     type="multiple"
                     defaultValue={defaultOpen}
                 >
-                    {/* Fields */}
-                    {fields.length > 0 && (
-                        <Accordion.Item value='fields'>
-                            <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
-                                <h4 className='text-md font-medium'>Fields</h4>
-                            </Accordion.Trigger>
-                            <Accordion.Content className='flex flex-col gap-1 bg-background/50'>
-                                {fields.map(field => (
-                                    <div key={field.id} className='px-4 py-2'>
-                                        <FieldRenderer field={field} nodeId={node.id} />
-                                    </div>
-                                ))}
-                            </Accordion.Content>
-                        </Accordion.Item>
-                    )}
-
-                    {/* Inputs (unconnected) */}
                     {inputs.length > 0 && (
                         <Accordion.Item value='inputs'>
                             <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
@@ -117,6 +100,24 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                             </Accordion.Content>
                         </Accordion.Item>
                     )}
+                    {/* Fields */}
+                    {fields.length > 0 && (
+                        <Accordion.Item value='fields'>
+                            <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
+                                <h4 className='text-md font-medium'>Fields</h4>
+                            </Accordion.Trigger>
+                            <Accordion.Content className='flex flex-col gap-1 bg-background/60'>
+                                {fields.map(field => (
+                                    <div key={field.id} className='px-4 py-2'>
+                                        <FieldRenderer field={field} nodeId={node.id} />
+                                    </div>
+                                ))}
+                            </Accordion.Content>
+                        </Accordion.Item>
+                    )}
+
+                    {/* Inputs (unconnected) */}
+                    
 
                     {/* Connected Inputs */}
                     {connectedInputs.length > 0 && (
@@ -136,6 +137,16 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                             </Accordion.Content>
                         </Accordion.Item>
                     )}
+                    <Accordion.Item value='inputs'>
+                        <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
+                            <h4 className='text-md font-medium'>JSON</h4>
+                        </Accordion.Trigger>
+                        <Accordion.Content className='flex flex-col gap-1 bg-background/50'>
+                            <p>
+                                {`node accent ${node.accent}`}
+                            </p>
+                        </Accordion.Content>
+                    </Accordion.Item>
                 </Accordion.Root>
             </ScrollArea.Root>
         </motion.div>

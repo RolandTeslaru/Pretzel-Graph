@@ -35,24 +35,31 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked }) => {
 
       {isMinimized ?
         <MinimizedHandles node={node} isWorkflowLocked={isWorkflowLocked}>
-          <div className='flex w-full items-center gap-3 px-4 py-1.5'>
+          <div className='flex w-full flex-col! items-center gap-1 px-4 py-1.5'
+          
+          >
             <LazyIcon
-              className={`${isMinimized ? "w-8 h-8" : "w-5.5 h-5.5"}`}
+              className={`w-10 h-10`}
               name={node.icon as string}
+              style={{ color: node.accent }}
             />
-            <div className="flex-1 truncate font-medium text-foreground">
+            <div className="truncate font-semibold text-foreground/80">
               {node.displayName}
             </div>
 
           </div>
         </MinimizedHandles>
         :
-        <div className="flex w-full items-center gap-3 px-4 py-1.5 bg-input/30 rounded-t-xl">
+        <div
+          className="flex w-full items-center gap-3 px-4 py-1.5 rounded-t-xl border-b border-border/50"
+          style={{ backgroundColor: node.accent ? `color-mix(in srgb, ${node.accent} 20%, transparent)` : 'var(--secondary)' }}
+        >
           <LazyIcon
             className={`${isMinimized ? "w-8 h-8" : "w-5.5 h-5.5"}`}
             name={node.icon as string}
+            style={{ color: node.accent }}
           />
-          <div className="flex-1 truncate font-medium text-foreground">
+          <div className="flex-1 truncate font-semibold text-foreground/80">
             {node.displayName}
           </div>
 

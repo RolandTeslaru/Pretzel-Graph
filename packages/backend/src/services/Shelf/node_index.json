@@ -1,12 +1,13 @@
 {
-  "version": "1771202280540",
-  "generatedAt": "2026-02-16T00:38:00.540Z",
+  "version": "1771766438836",
+  "generatedAt": "2026-02-22T13:20:38.836Z",
   "drawers": {},
   "blueprints": {
     "Core.Agent": {
       "id": "Core.Agent",
       "displayName": "Agent",
       "icon": "Bot",
+      "accent": "port-LanguageModel",
       "fields": [
         {
           "id": "provider",
@@ -103,6 +104,7 @@
       "id": "Core.Chat.Input",
       "displayName": "Chat Input",
       "icon": "MessagesSquare",
+      "accent": "port-Message",
       "fields": [],
       "inputs": [
         {
@@ -127,6 +129,7 @@
       "id": "Core.Developer.AllBuilders",
       "displayName": "All Builders",
       "icon": "Rocket",
+      "accent": "port-null",
       "fields": [
         {
           "id": "stringField",
@@ -440,6 +443,7 @@
       "id": "Core.Developer.Eval",
       "displayName": "Runtime Node Eval",
       "icon": "SquareTerminal",
+      "accent": "port-null",
       "fields": [
         {
           "id": "code",
@@ -473,6 +477,7 @@
       "id": "Core.Developer.HttpRequest",
       "displayName": "HTTP Request",
       "icon": "Globe",
+      "accent": "port-null",
       "fields": [
         {
           "id": "method",
@@ -548,6 +553,7 @@
       "id": "Core.Developer.JsonInjector",
       "displayName": "JSON Injector",
       "icon": "Code",
+      "accent": "port-null",
       "fields": [
         {
           "id": "data",
@@ -573,6 +579,7 @@
       "id": "Core.Developer.Sleep",
       "displayName": "Sleep",
       "icon": "Clock",
+      "accent": "port-null",
       "fields": [
         {
           "id": "duration",
@@ -611,6 +618,7 @@
       "id": "Core.LanguageModel",
       "displayName": "Language Model",
       "icon": "BrainCircuit",
+      "accent": "port-LanguageModel",
       "fields": [
         {
           "id": "provider",
@@ -728,6 +736,7 @@
       "id": "Core.Text.Input",
       "displayName": "Text Input",
       "icon": "Type",
+      "accent": "port-Text",
       "fields": [],
       "inputs": [
         {
@@ -752,6 +761,7 @@
       "id": "Google.GenerativeAI",
       "displayName": "Google Generative AI",
       "icon": "Google",
+      "accent": "port-LanguageModel",
       "fields": [
         {
           "id": "api_key",
@@ -869,6 +879,7 @@
       "id": "OpenAI.Chat",
       "displayName": "OpenAI Chat",
       "icon": "OpenAI",
+      "accent": "port-LanguageModel",
       "fields": [
         {
           "id": "api_key",

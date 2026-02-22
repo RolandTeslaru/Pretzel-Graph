@@ -5,6 +5,7 @@ export const Blueprint = defineBlueprint({
     displayName: "All Builders",
     description: "A developer node showcasing all available field, input, and output builders.",
     icon: "Rocket",
+    accent: "port-null",
     fields: [
         FieldBuilder.String({
             id: "stringField",

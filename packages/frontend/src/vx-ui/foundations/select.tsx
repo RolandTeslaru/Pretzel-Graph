@@ -38,7 +38,7 @@ const Trigger: SelectComponents.Trigger = ({ className, children, size = "sm", .
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        `border-input/60 cursor-pointer 
+        `border-border cursor-pointer 
         data-[placeholder]:text-muted-foreground 
         [&_svg:not([class*='text-'])]:text-muted-foreground 
         focus-visible:border-ring 
@@ -46,11 +46,11 @@ const Trigger: SelectComponents.Trigger = ({ className, children, size = "sm", .
         aria-invalid:ring-destructive/20 
         dark:aria-invalid:ring-destructive/40 
         aria-invalid:border-destructive 
-        bg-input/30 hover:bg-input/50 
+        bg-input/50 hover:bg-input/50 
         flex w-full items-center 
         justify-between gap-2 
         rounded-md border 
-        pr-2 pl-2.5 py-2 text-sm whitespace-nowrap shadow-xs 
+        pr-2 pl-2.5 py-2 text-sm whitespace-nowrap shadow-sm shadow-black/10
         transition-[color,box-shadow] 
         outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed 
         disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4`,
@@ -101,9 +101,12 @@ const Content: SelectComponents.Content = ({
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         className={cn(
-          `bg-popover/70 backdrop-blur-lg text-popover-foreground min-w-[8rem] 
-           overflow-x-hidden overflow-y-auto rounded-lg border border-input/60 shadow-xl
-          shadow-black/30
+          `bg-popover/60 backdrop-blur-sm text-popover-foreground min-w-[8rem] 
+           overflow-x-hidden overflow-y-auto rounded-lg border border-border
+           shadow-xl
+           dark:shadow-black/30
+           light:shadow-neutral-950/30
+
           data-[state=open]:animate-in 
           data-[state=closed]:animate-out 
           data-[state=closed]:fade-out-0 
@@ -168,7 +171,7 @@ const Item: SelectComponents.Item = ({ className, children, ...props }) => (
     )}
     {...props}
   >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center text-label-primary">
+    <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center text-label-primary">
       <SelectPrimitive.ItemIndicator>
         <SystemIcons.Check className="size-4" />
       </SelectPrimitive.ItemIndicator>

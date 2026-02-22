@@ -325,6 +325,7 @@ export namespace Foundations {
                 id: Blueprint.Id,
                 displayName: z.string(),
                 icon: z.string(),
+                accent: z.string().optional()
             })
         }
         export type Meta = z.infer<typeof Meta.Schema>

@@ -76,6 +76,8 @@ import { Slider } from '@/vx-ui/foundations/slider'
 import { Dialog, Spinner, Tabs } from '@/vx-ui/foundations'
 import { Switch } from '@/vx-ui/foundations/switch'
 import { Textarea } from '@/vx-ui/foundations/textarea'
+import { DateInput } from '@/vx-ui/foundations/DateInput'
+import { DualRangeSlider } from '@/vx-ui/foundations/dualRangeSlider'
 import {
     Tooltip,
 } from '@/vx-ui/foundations/Tooltip'
@@ -84,11 +86,11 @@ import { Field } from "@/vx-ui/foundations/fieldLayout"
 import { ButtonGroup } from "@/vx-ui/foundations/button-group"
 import { DialogSDK } from "@/vx-ui/SDKs/DialogSDK"
 import { SystemSDK } from "@/SDKs/SystemSDK"
+import ThemeSelector from "@/SDKs/SystemSDK/ui/ThemeSelector"
 
 export default function CoverExample() {
     return (
         <div className="max-h-full overflow-y-auto">
-            <ThemeCtrl/>
             <ExampleWrapper>
                 <ObservabilityCard />
                 <SmallFormExample />
@@ -100,8 +102,10 @@ export default function CoverExample() {
                 <InputGroupExamples />
                 <SheetExample />
                 <BadgeExamples />
-                <CustomExample/>
-                <DialogExamples/>
+                <CustomExample />
+                <DialogExamples />
+                <InputsNoCard />
+                <InputsWithCard />
             </ExampleWrapper>
         </div>
     )
@@ -113,23 +117,8 @@ function ThemeCtrl() {
     const theme = SystemSDK.useStore(s => s.theme)
 
     return (
-        <div className="absolute top-3 left-3">
-            <Tabs.Root defaultValue="light" value={theme}
-                onValueChange={(value) => {
-                    SystemSDK.actions.setTheme(value as "light" | "dark")
-                }}
-            >
-                <Tabs.List size="sm" indicatorVariant="primary">
-                    <Tabs.Trigger value="light" className="gap-2">
-                        <SystemIcons.Sun size={15}/>
-                        Light
-                    </Tabs.Trigger>
-                    <Tabs.Trigger value="dark" className="gap-2">
-                        <SystemIcons.Moon size={15}/>
-                        Dark
-                    </Tabs.Trigger>
-                </Tabs.List>
-            </Tabs.Root>
+        <div className="fixed top-3 left-3">
+            <ThemeSelector />
         </div>
     )
 }
@@ -587,7 +576,7 @@ function InputGroupExamples() {
                 </Field.Root>
                 <ButtonGroup className="w-full">
                     <ButtonGroup>
-                        <Button className="rounded-full" variant="outline" size="icon" aria-label="Add">
+                        <Button className="rounded-full" variant="input" size="icon" aria-label="Add">
                             <SystemIcons.Plus
                             />
                         </Button>
@@ -729,8 +718,8 @@ function EmptyAvatarGroup() {
                         >
                             Show Dialog
                         </Button>
-           
-                        <Button 
+
+                        <Button
                             variant="outline"
                             onClick={() => {
                                 DialogSDK.actions.push("contectMouse", (props) => (
@@ -752,7 +741,7 @@ function EmptyAvatarGroup() {
                         >
                             Connect Mouse
                         </Button>
-                     
+
                     </div>
                 </EmptyContent>
             </Empty>
@@ -1371,7 +1360,7 @@ function CustomExample() {
     return (
         <Example title="Form" className="flex flex-row">
             <Card.Root className="w-full p-2 max-w-md">
-                <Switch/>
+                <Switch />
                 <Button className="mr-auto" variant="default">
                     Click Me!
                 </Button>
@@ -1422,21 +1411,21 @@ function CustomExample() {
                 </Button>
                 <p>Size Icon</p>
                 <Button className="mr-auto" variant="default" size="icon">
-                    <SystemIcons.ArrowDown/>
+                    <SystemIcons.ArrowDown />
                 </Button>
                 <p>Size Icon xs</p>
                 <Button className="mr-auto" variant="default" size="icon-xs">
-                    <SystemIcons.ArrowDown/>
+                    <SystemIcons.ArrowDown />
                 </Button>
                 <p>Size Icon sm</p>
                 <Button className="mr-auto" variant="default" size="icon-sm">
-                    <SystemIcons.ArrowDown/>
+                    <SystemIcons.ArrowDown />
                 </Button>
                 <p>Size Icon lg</p>
                 <Button className="mr-auto" variant="default" size="icon-lg">
-                    <SystemIcons.ArrowDown/>
+                    <SystemIcons.ArrowDown />
                 </Button>
-                
+
 
             </Card.Root>
         </Example>
@@ -1448,18 +1437,18 @@ function DialogExamples() {
         <Example title="Dialogs">
             <Button variant="default"
                 onClick={() => {
-                    DialogSDK.actions.push('normalDialog', (props) => 
+                    DialogSDK.actions.push('normalDialog', (props) =>
                         <DialogSDK.Template {...props} className="p-4">
                             <Dialog.Title>Dialog Title</Dialog.Title>
                             <Dialog.Description>Dialog Description</Dialog.Description>
-                            
+
                         </DialogSDK.Template>
                     )
                 }}
             >Open Dialog</Button>
             <Button variant="destructive"
                 onClick={() => {
-                    DialogSDK.actions.push('destructiveDialog', (props) => 
+                    DialogSDK.actions.push('destructiveDialog', (props) =>
                         <DialogSDK.AlertTemplate type="danger" {...props}>
                             <AlertDialog.Title>Dialog Title</AlertDialog.Title>
                             <AlertDialog.Description>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</AlertDialog.Description>
@@ -1469,18 +1458,18 @@ function DialogExamples() {
             >Open Alert Dialog</Button>
             <Button variant="warning"
                 onClick={() => {
-                    DialogSDK.actions.push('warningdialog', (props) => 
+                    DialogSDK.actions.push('warningdialog', (props) =>
                         <DialogSDK.AlertTemplate type="warning" {...props}>
                             <AlertDialog.Title>Dialog Title</AlertDialog.Title>
                             <AlertDialog.Description>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</AlertDialog.Description>
                         </DialogSDK.AlertTemplate>
                     )
                 }}
-            
+
             >Open Alert Dialog</Button>
             <Button variant="default"
                 onClick={() => {
-                    DialogSDK.actions.push('successdialog', (props) => 
+                    DialogSDK.actions.push('successdialog', (props) =>
                         <DialogSDK.AlertTemplate type="default" {...props}>
                             <AlertDialog.Title>Dialog Title</AlertDialog.Title>
                             <AlertDialog.Description>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</AlertDialog.Description>
@@ -1488,6 +1477,248 @@ function DialogExamples() {
                     )
                 }}
             >Open Alert Dialog</Button>
+        </Example>
+    )
+}
+
+function InputsNoCard() {
+    return (
+        <Example title="Inputs With No Card Behind" className="w-full max-w-md">
+            <div className="space-y-4 w-full pt-4">
+                <div className="space-y-2">
+                    <Label>Input Text</Label>
+                    <Input type="text" />
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Textarea</Label>
+                    <Textarea placeholder="Type something here..." />
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Switch</Label>
+                    <div><Switch /></div>
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Checkbox</Label>
+                    <div className="flex items-center gap-2">
+                        <Checkbox id="checkbox-1" />
+                        <Label htmlFor="checkbox-1" className="font-normal text-sm">Accept terms and conditions</Label>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Radio Group</Label>
+                    <RadioGroup defaultValue="option-1">
+                        <div className="flex items-center gap-2">
+                            <RadioGroupItem value="option-1" id="no-card-option-1" />
+                            <Label htmlFor="no-card-option-1" className="font-normal">Option 1</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <RadioGroupItem value="option-2" id="no-card-option-2" />
+                            <Label htmlFor="no-card-option-2" className="font-normal">Option 2</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Select</Label>
+                    <Select.Root>
+                        <Select.Trigger>
+                            <Select.Value placeholder="Select a value" />
+                        </Select.Trigger>
+                        <Select.Content>
+                            <Select.Item value="value1">Value 1</Select.Item>
+                            <Select.Item value="value2">Value 2</Select.Item>
+                            <Select.Item value="value3">Value 3</Select.Item>
+                        </Select.Content>
+                    </Select.Root>
+                </div>
+
+                <div className="space-y-4 pt-4">
+                    <Label>Slider</Label>
+                    <Slider defaultValue={[50]} max={100} step={1} />
+                </div>
+
+                <div className="space-y-4 pt-4">
+                    <Label>Dual Range Slider</Label>
+                    <DualRangeSlider defaultValue={[20, 80]} max={100} step={1} />
+                </div>
+
+                <div className="space-y-2 pt-2">
+                    <Label>Date Input</Label>
+                    <DateInput />
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Input Group</Label>
+                    <InputGroup>
+                        <InputGroupText>https://</InputGroupText>
+                        <InputGroupInput placeholder="example.com" />
+                    </InputGroup>
+                </div>
+
+                <div className="space-y-4 pt-4">
+                    <Label>Tabs</Label>
+                    <Tabs.Root defaultValue="tab1">
+                        <Tabs.List>
+                            <Tabs.Trigger value="tab1">Tab 1</Tabs.Trigger>
+                            <Tabs.Trigger value="tab2">Tab 2</Tabs.Trigger>
+                            <Tabs.Trigger value="tab3">Tab 3</Tabs.Trigger>
+                        </Tabs.List>
+                    </Tabs.Root>
+
+                    <Label>Tabs (Primary Variant)</Label>
+                    <Tabs.Root defaultValue="tab1">
+                        <Tabs.List variant="primary">
+                            <Tabs.Trigger value="tab1">Tab 1</Tabs.Trigger>
+                            <Tabs.Trigger value="tab2">Tab 2</Tabs.Trigger>
+                            <Tabs.Trigger value="tab3">Tab 3</Tabs.Trigger>
+                        </Tabs.List>
+                    </Tabs.Root>
+
+                    <Label>Tabs (Small Size)</Label>
+                    <Tabs.Root defaultValue="tab1">
+                        <Tabs.List size="sm">
+                            <Tabs.Trigger value="tab1">Tab 1</Tabs.Trigger>
+                            <Tabs.Trigger value="tab2">Tab 2</Tabs.Trigger>
+                            <Tabs.Trigger value="tab3">Tab 3</Tabs.Trigger>
+                        </Tabs.List>
+                    </Tabs.Root>
+
+                    <Label>Tabs (Large Size + Primary)</Label>
+                    <Tabs.Root defaultValue="tab1">
+                        <Tabs.List size="lg" variant="primary">
+                            <Tabs.Trigger value="tab1">Tab 1</Tabs.Trigger>
+                            <Tabs.Trigger value="tab2">Tab 2</Tabs.Trigger>
+                            <Tabs.Trigger value="tab3">Tab 3</Tabs.Trigger>
+                        </Tabs.List>
+                    </Tabs.Root>
+                </div>
+            </div>
+        </Example>
+    )
+}
+
+function InputsWithCard() {
+    return (
+        <Example title="Inputs with Card Behind" className="w-full max-w-md">
+            <Card.Root className="w-full">
+                <Card.Content className="space-y-4 pt-6">
+                    <div className="space-y-2">
+                        <Label>Input Text</Label>
+                        <Input type="text" />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Textarea</Label>
+                        <Textarea placeholder="Type something here..." />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Switch</Label>
+                        <div><Switch /></div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Checkbox</Label>
+                        <div className="flex items-center gap-2">
+                            <Checkbox id="checkbox-2" />
+                            <Label htmlFor="checkbox-2" className="font-normal text-sm">Accept terms and conditions</Label>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Radio Group</Label>
+                        <RadioGroup defaultValue="option-1">
+                            <div className="flex items-center gap-2">
+                                <RadioGroupItem value="option-1" id="card-option-1" />
+                                <Label htmlFor="card-option-1" className="font-normal">Option 1</Label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <RadioGroupItem value="option-2" id="card-option-2" />
+                                <Label htmlFor="card-option-2" className="font-normal">Option 2</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Select</Label>
+                        <Select.Root>
+                            <Select.Trigger>
+                                <Select.Value placeholder="Select a value" />
+                            </Select.Trigger>
+                            <Select.Content>
+                                <Select.Item value="value1">Value 1</Select.Item>
+                                <Select.Item value="value2">Value 2</Select.Item>
+                                <Select.Item value="value3">Value 3</Select.Item>
+                            </Select.Content>
+                        </Select.Root>
+                    </div>
+
+                    <div className="space-y-4 pt-4">
+                        <Label>Slider</Label>
+                        <Slider defaultValue={[50]} max={100} step={1} />
+                    </div>
+
+                    <div className="space-y-4 pt-4">
+                        <Label>Dual Range Slider</Label>
+                        <DualRangeSlider defaultValue={[20, 80]} max={100} step={1} />
+                    </div>
+
+                    <div className="space-y-2 pt-2">
+                        <Label>Date Input</Label>
+                        <DateInput />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Input Group</Label>
+                        <InputGroup>
+                            <InputGroupText>https://</InputGroupText>
+                            <InputGroupInput placeholder="example.com" />
+                        </InputGroup>
+                    </div>
+
+                    <div className="space-y-4 pt-4">
+                        <Label>Tabs</Label>
+                        <Tabs.Root defaultValue="tab1">
+                            <Tabs.List variant="primary">
+                                <Tabs.Trigger value="tab1">Tab 1</Tabs.Trigger>
+                                <Tabs.Trigger value="tab2">Tab 2</Tabs.Trigger>
+                                <Tabs.Trigger value="tab3">Tab 3</Tabs.Trigger>
+                            </Tabs.List>
+                        </Tabs.Root>
+
+                        <Label>Tabs (Accent Variant)</Label>
+                        <Tabs.Root defaultValue="tab1">
+                            <Tabs.List variant="accent">
+                                <Tabs.Trigger value="tab1">Tab 1</Tabs.Trigger>
+                                <Tabs.Trigger value="tab2">Tab 2</Tabs.Trigger>
+                                <Tabs.Trigger value="tab3">Tab 3</Tabs.Trigger>
+                            </Tabs.List>
+                        </Tabs.Root>
+
+                        <Label>Tabs (Small Size)</Label>
+                        <Tabs.Root defaultValue="tab1">
+                            <Tabs.List size="sm">
+                                <Tabs.Trigger value="tab1">Tab 1</Tabs.Trigger>
+                                <Tabs.Trigger value="tab2">Tab 2</Tabs.Trigger>
+                                <Tabs.Trigger value="tab3">Tab 3</Tabs.Trigger>
+                            </Tabs.List>
+                        </Tabs.Root>
+
+                        <Label>Tabs (Xs Size + Primary)</Label>
+                        <Tabs.Root defaultValue="tab1">
+                            <Tabs.List size="xs" variant="primary">
+                                <Tabs.Trigger value="tab1">Tab 1</Tabs.Trigger>
+                                <Tabs.Trigger value="tab2">Tab 2</Tabs.Trigger>
+                                <Tabs.Trigger value="tab3">Tab 3</Tabs.Trigger>
+                            </Tabs.List>
+                        </Tabs.Root>
+                    </div>
+                </Card.Content>
+            </Card.Root>
         </Example>
     )
 }

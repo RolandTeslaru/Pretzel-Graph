@@ -35,8 +35,8 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
         </div>
       </NodeToolbar>
       <div className={` ${isMinimized ? "min-w-[100px]" : "w-[250px]"}
-        flex flex-col bg-card relative rounded-3xl border 
-        ${isNodeClicked ? "ring-3 ring-primary/30 ring-offset-4 ring-offset-background" : "border-foreground/15 shadow-xl shadow-black/40"}
+        flex flex-col bg-card/80 relative rounded-3xl border-2 border-border shadow-lg shadow-black/0 dark:shadow-black/30
+        ${isNodeClicked ? "ring-3 ring-primary/30 ring-offset-4 ring-offset-background" : ""}
         `}
       >
         <NodeHeader node={node} isWorkflowLocked={isWorkflowLocked} />

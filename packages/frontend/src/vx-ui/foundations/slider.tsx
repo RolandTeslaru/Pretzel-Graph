@@ -18,7 +18,11 @@ export const rootVars = cva(
 )
 
 export const trackVars = cva(
-  "relative shadow-sm shadow-black/20 bg-muted grow overflow-hidden rounded-full data-[orientation=horizontal]:h-3 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-2.5",
+  `relative shadow-sm shadow-black/10 bg-input/50 grow overflow-hidden rounded-full ring-1 ring-inset ring-border
+   data-[orientation=horizontal]:h-3 
+   data-[orientation=horizontal]:w-full 
+   data-[orientation=vertical]:h-full 
+   data-[orientation=vertical]:w-2.5`,
   {
     variants: {
       variant: {
@@ -30,12 +34,13 @@ export const trackVars = cva(
 )
 
 export const rangeVars = cva(
-  "absolute select-none bg-primary data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full",
+  `absolute select-none bg-primary
+   data-[orientation=horizontal]:h-full 
+   data-[orientation=vertical]:w-full`,
   {
     variants: {
       variant: {
         default: "",
-        accent: " bg-primary border-l border-t border-b  border-primary-accent",
       }
     }
   }
