@@ -29,7 +29,6 @@ export const nodeReducers = {
 
         delete staticValues[deletedNodeId];
 
-
         // Delete the edges coming into the node 
         const inNodes = sel.ensureInNodesCache(s, deletedNodeId)
 
@@ -44,7 +43,6 @@ export const nodeReducers = {
             edgeReducers.remove(s, _edgeId);
         })
 
-
         cacheReducers.deleteNode(s, deletedNodeId);
         layoutReducers.node.remove(s, deletedNodeId);
     },
@@ -53,17 +51,17 @@ export const nodeReducers = {
         s.isDirty = true;
         const nodeId = createNodeId(blueprint.id);
         const newNode = {
-            id: nodeId,
-            blueprintId: blueprint.id,
-            displayName: blueprint.displayName,
+            id          : nodeId,
+            blueprintId : blueprint.id,
+            displayName : blueprint.displayName,
 
-            fields: cloneDeep(blueprint.fields) as Workflow.Node['fields'],
-            inputs: cloneDeep(blueprint.inputs) as Workflow.Node['inputs'],
-            outputs: cloneDeep(blueprint.outputs) as Workflow.Node["outputs"],
-            icon: blueprint.icon,
-            description: blueprint.description,
-            isMinimized: false,
-            accent: blueprint.accent ? `var(--${blueprint.accent})` : undefined,
+            fields      : cloneDeep(blueprint.fields)   as Workflow.Node['fields'],
+            inputs      : cloneDeep(blueprint.inputs)   as Workflow.Node['inputs'],
+            outputs     : cloneDeep(blueprint.outputs)  as Workflow.Node["outputs"],
+            icon        : blueprint.icon,
+            description : blueprint.description,
+            isMinimized : false,
+            accent      : blueprint.accent ? `var(--${blueprint.accent})` : undefined,
         } satisfies Workflow.Node
 
         const result = Workflow.Node.Schema.safeParse(newNode)
@@ -74,12 +72,86 @@ export const nodeReducers = {
         }
 
         s.workflow.data.nodes[nodeId] = newNode;
-
-        layoutReducers.node.add(s, nodeId, position);
-
         s.workflow.data.staticValues[nodeId] = {}
 
+        layoutReducers.node.add(s, nodeId, position);
         cacheReducers.createNode(s, newNode);
+    },
+    recreate: (s, nodeId, blueprint) => {
+        const node = s.workflow.data.nodes[nodeId];
+        if (!node)
+            throw new Error(`Node ${nodeId} not found`);
+
+        const isMinimized = node.isMinimized;
+        s.isDirty = true;
+
+        // Delete the edges coming into the node 
+        const inNodes = sel.ensureInNodesCache(s, nodeId)
+        Object.entries(inNodes).forEach(([_inNodeId, _edgeId]) => {
+            edgeReducers.remove(s, _edgeId);
+        })
+
+        // Delete the edges going out of the node
+        const outNodes = sel.ensureOutNodesCache(s, nodeId)
+        Object.entries(outNodes).forEach(([_outNodeId, _edgeId]) => {
+            edgeReducers.remove(s, _edgeId);
+        })
+
+        cacheReducers.deleteNode(s, nodeId);
+
+        const newNode = {
+            id          : nodeId,
+            blueprintId : blueprint.id,
+            displayName : blueprint.displayName,
+
+            fields      : cloneDeep(blueprint.fields)   as Workflow.Node['fields'],
+            inputs      : cloneDeep(blueprint.inputs)   as Workflow.Node['inputs'],
+            outputs     : cloneDeep(blueprint.outputs)  as Workflow.Node["outputs"],
+            icon        : blueprint.icon,
+            description : blueprint.description,
+            isMinimized : isMinimized,
+            accent      : blueprint.accent ? `var(--${blueprint.accent})` : undefined,
+        } satisfies Workflow.Node
+
+        const result = Workflow.Node.Schema.safeParse(newNode)
+        if (!result.success) {
+            console.error("WorkbenchSDK: Node schema validation failed:", result.error)
+            toast.error(`WorkbenchSDK: Node schema validation failed. Could not recreate node from blueprint id ${blueprint.id}`)
+            return;
+        }
+
+        s.workflow.data.nodes[nodeId] = newNode;
+        cacheReducers.createNode(s, newNode);
+    },
+    duplicate: (s, originalNode, position) => {
+        if (!position) {
+            position = cloneDeep(s.workflow.data.ui.layout[originalNode.id])
+            position.x += 40
+            position.y += 40
+        }
+        s.isDirty = true
+        const newNodeId = createNodeId(originalNode.blueprintId)
+        const newNode = {
+            id           : newNodeId,
+            blueprintId  : originalNode.blueprintId,
+            displayName  : originalNode.displayName,
+
+            fields       : cloneDeep(originalNode.fields)   as Workflow.Node['fields'],
+            inputs       : cloneDeep(originalNode.inputs)   as Workflow.Node['inputs'],
+            outputs      : cloneDeep(originalNode.outputs)  as Workflow.Node["outputs"],
+            icon         : originalNode.icon,
+            description  : originalNode.description,
+            isMinimized  : originalNode.isMinimized,
+            accent       : originalNode.accent,
+        } satisfies Workflow.Node
+
+        s.workflow.data.nodes[newNodeId] = newNode;
+        s.workflow.data.staticValues[newNodeId] = cloneDeep(s.workflow.data.staticValues[originalNode.id]);
+        
+        layoutReducers.node.add(s, newNodeId, position);
+        cacheReducers.createNode(s, newNode);
+
+        return newNode;
     },
     reconcile: (s, nodeId, blueprint) => {
         s.isDirty = true;
@@ -110,12 +182,14 @@ export const nodeReducers = {
     }
 } satisfies NodeReducers
 
-type NodeReducers = {
-    remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
-    createId: (blueprintId: Foundations.Blueprint.Id) => Workflow.Node.Id
-    create: (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }) => void
-    reconcile: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
-    setMinimized: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void
-    setDisplayName: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDisplayName: string) => void
-    setDescription: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDescription: string) => void
+interface NodeReducers {
+    remove        : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
+    createId      : (blueprintId: Foundations.Blueprint.Id) => Workflow.Node.Id;
+    create        : (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }) => void;
+    recreate      : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
+    duplicate     : (state: WorkbenchSDK.State, originalNode: Workflow.Node, position?: { x: number, y: number }) => Workflow.Node;
+    reconcile     : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
+    setMinimized  : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void;
+    setDisplayName: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDisplayName: string) => void;
+    setDescription: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDescription: string) => void;
 }
