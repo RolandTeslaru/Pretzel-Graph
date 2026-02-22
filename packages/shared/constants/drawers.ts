@@ -5,13 +5,13 @@ export const CORE_DRAWERS = {
     displayName: "Saved",
     id: "saved_components",
     icon: "GradientSave",
-    blueprintIds: []
+    blueprintIds: [],
   },
   input_output: {
     displayName: "Input & Output",
     id: "input_output",
     icon: "Cable",
-    blueprintIds: ["Core.Chat.Input", "Core.Chat.Output", "Core.Text.Input", "Core.Text.Output"]
+    blueprintIds: ["Core.Chat.Input", "Core.Chat.Output", "Core.Text.Input", "Core.Text.Output"],
   },
   developer: {
     displayName: "DEVELOPER",
@@ -24,13 +24,13 @@ export const CORE_DRAWERS = {
       "Core.Developer.Sleep",
       "Core.Developer.JsonInjector",
       "Core.Developer.HttpRequest"
-    ]
+    ],
   },
   data_source: {
     displayName: "Data Sources",
     id: "data_source",
     icon: "Database",
-    blueprintIds: []
+    blueprintIds: [],
   },
   models_and_agents: {
     displayName: "Models & Agents",
@@ -39,49 +39,49 @@ export const CORE_DRAWERS = {
     blueprintIds: [
       "Core.Agent",
       "Core.LanguageModel"
-    ]
+    ],
   },
   llm_operations: {
     displayName: "LLM Operations",
     id: "llm_operations",
     icon: "BrainCircuit",
-    blueprintIds: []
+    blueprintIds: [],
   },
   files_and_knowledge: {
     displayName: "Files & Knowledge",
     id: "files_and_knowledge",
     icon: "Layers",
-    blueprintIds: []
+    blueprintIds: [],
   },
   processing: {
     displayName: "Processing",
     id: "processing",
     icon: "ListFilter",
-    blueprintIds: []
+    blueprintIds: [],
   },
   flow_controls: {
     displayName: "Flow Controls",
     id: "flow_controls",
     icon: "ArrowRightLeft",
-    blueprintIds: []
+    blueprintIds: [],
   },
   utilities: {
     displayName: "Utilities",
     id: "utilities",
     icon: "Wand2",
-    blueprintIds: []
+    blueprintIds: [],
   },
   prototypes: {
     displayName: "Prototypes",
     id: "prototypes",
     icon: "FlaskConical",
-    blueprintIds: []
+    blueprintIds: [],
   },
   tools: {
     displayName: "Tools",
     id: "tools",
     icon: "Hammer",
-    blueprintIds: []
+    blueprintIds: [],
   },
 } as const as Record<Shelf.Drawer.Id, Shelf.Drawer>
 

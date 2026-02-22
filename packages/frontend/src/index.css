@@ -24,7 +24,7 @@ code {
 
 .react-flow__selection {
   background-color: color-mix(in srgb, var(--primary) 8%, transparent) !important;
-  border: 1px solid  color-mix(in srgb, var(--primary) 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
   border-radius: 32px;
 
 }
@@ -44,7 +44,7 @@ code {
   right: -8px;
   bottom: -8px;
   background-color: color-mix(in srgb, var(--primary) 8%, transparent);
-  border: 1px solid  color-mix(in srgb, var(--primary) 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
   border-radius: 32px;
   pointer-events: none;
 }
@@ -71,55 +71,45 @@ code {
 }
 
 :root {
-  --background: #EEECEA;
+  --background: theme(--color-gray-200);
   --foreground: #2C1810;
-  --card: #FAF8F6;
-  --card-foreground: #2C1810;
-  --popover: #2C1810;
-  --popover-foreground: #FAF5F0;
+  --card: #ffffff; 
+  --card-foreground: theme(--color-stone-600);
+
+  --popover: theme(--color-stone-50);
+  --popover-foreground: theme(--color-black);
+
   --primary: theme(--color-orange-500);
   --primary-foreground: theme(--color-white);
-  --primary-accent: theme(--color-orange-400);
+  --primary-accent: theme(--color-orange-300);
+  --ring: theme(--color-orange-500);
 
-  --secondary: #EFE5DA;
+  --secondary: #ededed;
   --secondary-foreground: #3D2117;
-  --muted: #EBE3DC;
-  --muted-foreground: #8B7263;
-  --accent: #D6C4B4;
-  --accent-foreground: #2C1810;
+  
+  --accent: theme(--color-neutral-300);
+  --accent-foreground: theme(--color-neutral-700);
+  
   --destructive: theme(--color-red-600);
   --destructive-foreground: theme(--color-white);
-  --border: #D4BFAE;
-
-  --input: theme(--color-neutral-300);
-  --ring: theme(--color-orange-500);
+  --border: theme(--color-stone-300);
+  
+  --muted: theme(--color-neutral-200);
+  --muted-foreground: theme(--color-neutral-500);
+  --input: theme(--color-neutral-50);
+  
+  
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.875rem;
-  --sidebar: #F2EEEB;
-  --sidebar-foreground: #2C1810;
-  --sidebar-primary: #3D2117;
-  --sidebar-primary-foreground: #FAF5F0;
-  --sidebar-accent: #EFE5DA;
-  --sidebar-accent-foreground: #2C1810;
-  --sidebar-border: #D4BFAE;
-  --sidebar-ring: theme(--color-orange-500);
 
-  /* Custom variables from existing theme */
-  --component-icon: oklch(0.55 0.15 50);
-  --flow-icon: oklch(0.50 0.18 50);
-  --low-indigo: oklch(0.70 0.12 50);
-  --chat-send: oklch(0.55 0.20 50);
-  --connection: oklch(0.60 0.15 50);
+
+
   --canvas: #F2EEEB;
-  --canvas-dot: #D9D0C8;
-  --selected: oklch(0.55 0.20 50);
-  --hover: #EDE8E3;
-  --node-ring: oklch(0.55 0.20 50);
-  --node-selected: oklch(0.55 0.25 50);
+  --canvas-dot: #8f867f;
 
   /* Status colors */
   --status-green: oklch(0.55 0.18 145);
@@ -148,18 +138,6 @@ code {
   --info-background: #E5F0FA;
   --info-foreground: oklch(0.35 0.18 240);
 
-  /* Accent colors */
-  --accent-pink: oklch(0.65 0.2 350);
-  --accent-pink-foreground: oklch(0.98 0.02 350);
-  --accent-purple-foreground: oklch(0.98 0.02 300);
-  --accent-red-foreground: oklch(0.98 0.02 27);
-  --accent-amber: oklch(0.70 0.15 70);
-  --accent-amber-foreground: oklch(0.25 0.12 70);
-  --accent-emerald: oklch(0.60 0.18 160);
-  --accent-emerald-foreground: oklch(0.98 0.02 160);
-  --accent-emerald-hover: oklch(0.55 0.2 160);
-  --accent-indigo: oklch(0.50 0.2 264);
-  --accent-indigo-foreground: oklch(0.98 0.02 264);
 
   --port-Message: theme(--color-blue-400);
   --port-Message-foreground: theme(--color-blue-500);
@@ -217,35 +195,11 @@ code {
   --port-Integer-foreground: theme(--color-purple-100);
   --port-Integer-accent: theme(--color-purple-400);
 
-  --port-null: theme(--color-neutral-500);
+  --port-null: var(--secondary);
   --port-null-foreground: theme(--color-neutral-100);
 
 
 
-  /* Datatype colors */
-  --datatype-yellow: oklch(0.75 0.15 85);
-  --datatype-yellow-foreground: oklch(0.25 0.12 85);
-  --datatype-blue: oklch(0.60 0.18 240);
-  --datatype-blue-foreground: oklch(0.98 0.02 240);
-  --datatype-gray: oklch(0.55 0.01 50);
-  --datatype-gray-foreground: oklch(0.98 0.005 50);
-  --datatype-lime: oklch(0.70 0.18 130);
-  --datatype-lime-foreground: oklch(0.98 0.02 130);
-  --datatype-red: oklch(0.55 0.22 27);
-  --datatype-red-foreground: oklch(0.98 0.02 27);
-  --datatype-violet: oklch(0.55 0.2 300);
-  --datatype-violet-foreground: oklch(0.98 0.02 300);
-  --datatype-emerald: oklch(0.60 0.18 160);
-  --datatype-emerald-foreground: oklch(0.98 0.02 160);
-  --datatype-fuchsia: oklch(0.60 0.22 320);
-  --datatype-pink: theme(--color-pink-400);
-  --datatype-fuchsia-foreground: oklch(0.98 0.02 320);
-  --datatype-purple: oklch(0.55 0.2 290);
-  --datatype-purple-foreground: oklch(0.98 0.02 290);
-  --datatype-cyan: oklch(0.65 0.15 200);
-  --datatype-cyan-foreground: oklch(0.98 0.02 200);
-  --datatype-indigo: oklch(0.50 0.2 264);
-  --datatype-indigo-foreground: oklch(0.98 0.02 264);
 
   /* Note colors */
   --note-amber: oklch(0.88 0.10 70);
@@ -315,17 +269,18 @@ code {
 }
 
 .dark {
-  --background: #040202;
+  --background: theme(--color-stone-950);
   --foreground: theme(--color-white);
-  --card: #1d1714;
+  --card: theme(--color-stone-800);
   --card-foreground: theme(--color-white);
   --popover: theme(--color-stone-800);
-  --popover-foreground: theme(--color-white);
+  --popover-foreground: theme(--color-stone-100);
+
   --primary: theme(--color-orange-500);
   --primary-foreground: theme(--color-white);
   --primary-accent: theme(--color-orange-400);
 
-  --secondary: #362A24;
+  --secondary: #2e2e2d;
   --secondary-foreground: theme(--color-white);
   --muted: theme(--color-stone-800);
   --muted-foreground: theme(--color-neutral-400);
@@ -333,24 +288,12 @@ code {
   --accent-foreground: theme(--color-white);
   --destructive: theme(--color-red-600);
   --destructive-foreground: theme(--color-white);
-  --border: #362A24;
+  --border: theme(--color-stone-700);
 
   /* --border: theme(--color-stone-800); */
-  --input: theme(--color-neutral-700);
+  --input: theme(--color-stone-700);
   --ring: theme(--color-orange-500);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0.015 264);
-  --sidebar-foreground: oklch(0.985 0.002 264);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0.002 264);
-  --sidebar-accent: oklch(0.25 0.015 264);
-  --sidebar-accent-foreground: oklch(0.985 0.002 264);
-  --sidebar-border: oklch(0.3 0.015 264);
-  --sidebar-ring: oklch(0.5 0.02 264);
+
 
   /* Dark mode custom variables */
   --canvas: oklch(0.18 0.01 264);

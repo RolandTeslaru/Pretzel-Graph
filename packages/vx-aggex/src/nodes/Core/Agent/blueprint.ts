@@ -5,6 +5,7 @@ export const Blueprint = defineBlueprint({
     displayName: "Agent",
     description: "Define the agent's instructions, then enter a task to complete using tools.",
     icon: "Bot",
+    accent: "port-LanguageModel",
     fields: [
         FieldBuilder.MultiOption({
             id: "provider",

@@ -481,6 +481,7 @@ type DefineBlueprintReturn<
     readonly displayName: string;
     readonly description: string;
     readonly icon: string;
+    readonly accent?: string;
     readonly fields: TFields;
     readonly inputs: TInputs;
     readonly outputs: TOutputs;
@@ -496,6 +497,7 @@ export function defineBlueprint<
     displayName: string;
     description: string;
     icon: string;
+    accent?: string;
     fields: TFields;
     inputs: TInputs;
     outputs: TOutputs;
@@ -505,6 +507,7 @@ export function defineBlueprint<
         displayName: config.displayName,
         description: config.description,
         icon: config.icon,
+        accent: config.accent,
         fields: config.fields,
         inputs: config.inputs,
         outputs: config.outputs,

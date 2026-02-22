@@ -39,8 +39,8 @@ export const HighlightedTextarea: React.FC<HighlightedTextareaProps> = ({ classN
         <div
             className={cn(
                 // Outer wrapper for border/focus styles
-                "relative w-full rounded-md border border-input/70 shadow-xs transition-[color,box-shadow]",
-                "bg-input/30",
+                "relative w-full rounded-md border border-border shadow-md shadow-black/10 transition-[color,box-shadow]",
+                "bg-input/50",
                 "focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] overflow-hidden",
                 className
             )}
@@ -77,10 +77,10 @@ export const HighlightedTextarea: React.FC<HighlightedTextareaProps> = ({ classN
                 </div>
             </div>
             {showExpansionButton &&
-                <Button variant="input" size="icon" className="right-0.5 rounded-md top-0.5 absolute backdrop-blur-lg"
+                <Button variant="input" size="icon-xs" className="right-0.5 rounded-md top-0.5 absolute"
                     onClick={() => {
                         DialogSDK.actions.push("highlighAreaTextInputDialog", (dialogProps) => (
-                            <DialogSDK.Template {...dialogProps} className='min-w-[60vw] max-h-[85vh] min-h-[50vh]'>
+                            <DialogSDK.Template {...dialogProps} className='min-w-[60vw] max-h-[85vh]'>
                                 <ExpandedDialogContent onChange={props.onChange} nodeId={nodeId} input={input} />
                             </DialogSDK.Template>
                         ))
@@ -99,7 +99,7 @@ const ExpandedDialogContent = ({ input, nodeId, onChange }: { input: Foundations
     return (
         <div className='flex flex-col gap-2 p-3 pt-3'>
             <Dialog.Title>Text Area</Dialog.Title>
-            <HighlightedTextarea value={value} input={input} nodeId={nodeId} onChange={onChange} showExpansionButton={false} className='h-full' />
+            <HighlightedTextarea value={value} input={input} nodeId={nodeId} onChange={onChange} showExpansionButton={false} className='min-h-[45vh]' />
         </div>
     )
 }

@@ -5,6 +5,7 @@ export const Blueprint = defineBlueprint({
     displayName: "Chat Input",
     description: "This node is a chat input",
     icon: "MessagesSquare",
+    accent: "port-Message",
     fields: [],
     inputs: [
         InputBuilder.Message({

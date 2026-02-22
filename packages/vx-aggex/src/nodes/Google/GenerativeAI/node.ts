@@ -4,6 +4,7 @@ import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { Synthesizer } from "src/synthesizer";
 import { Runtime } from "src/runtime";
+import { InferFields, InferInputs, InferOutputs } from "src/types";
 
 @RegisterNode(Blueprint.id)
 export class Node extends Runtime.Node<typeof Blueprint> {
@@ -16,9 +17,9 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
     public override async run(
         state: Runtime.State,
-        fields: Runtime.InferFields<typeof Blueprint>,
-        inputs: Runtime.InferInputs<typeof Blueprint>,
-    ): Promise<Runtime.InferOutputs<typeof Blueprint>> {
+        fields: InferFields<typeof Blueprint>,
+        inputs: InferInputs<typeof Blueprint>,
+    ): Promise<InferOutputs<typeof Blueprint>> {
 
         const { model, api_key, temperature, maxOutputTokens, topP, topK } = fields;
         const { systemMessage, input } = inputs;

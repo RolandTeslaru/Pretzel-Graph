@@ -5,6 +5,7 @@ export const Blueprint = defineBlueprint({
     displayName: "Google Generative AI",
     description: "This node talks to google generative ai api",
     icon: "Google",
+    accent: "port-LanguageModel",
     fields: [
         FieldBuilder.Secret({
             id: "api_key",

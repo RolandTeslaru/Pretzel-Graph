@@ -42,7 +42,7 @@ const VaultPanel = () => {
       <Text className='text-sm text-muted-foreground my-auto'>Manage your API keys and secrets securely.</Text>
 
 
-      <div className='flex flex-col gap-2 bg-background rounded-md border border-border'>
+      <div className='flex flex-col gap-2 bg-input/50 rounded-md border border-border shadow-md shadow-black/10'>
         {credentials.length === 0 && (
           <div className='flex flex-col bg-background items-center justify-center p-8 border border-dashed rounded-md gap-2'>
             <SystemIcons.KeyRound className='h-8 w-8 text-muted-foreground' />

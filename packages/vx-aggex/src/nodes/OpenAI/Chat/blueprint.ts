@@ -5,6 +5,7 @@ export const Blueprint = defineBlueprint({
     displayName: "OpenAI Chat",
     description: "This node talks to OpenAI's GPT chat models via the Chat Completions API",
     icon: "OpenAI",
+    accent: "port-LanguageModel",
     fields: [
         FieldBuilder.Secret({
             id: "api_key",

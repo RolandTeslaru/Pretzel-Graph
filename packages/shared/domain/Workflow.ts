@@ -18,14 +18,14 @@ export namespace Workflow {
 
             displayName: z.string(),
 
-            fields: z.array(Foundations.Field.Schema),
-
-            inputs: z.array(Foundations.Port.Input.Schema),
+            fields:  z.array(Foundations.Field.Schema),
+            inputs:  z.array(Foundations.Port.Input.Schema),
             outputs: z.array(Foundations.Port.Output.Schema),
 
             icon: z.string().nullable().optional(),
             description: z.string().nullable().optional(),
             isMinimized: z.boolean().default(false),
+            accent: z.string().optional(),
         });
     }
     export interface Node extends z.infer<typeof Node.Schema> { }

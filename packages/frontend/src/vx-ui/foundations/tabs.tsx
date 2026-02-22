@@ -2,18 +2,21 @@
 
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
-import { type ComponentProps, useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef } from "react"
 
 import { cn } from "../utils/cn"
+
 import { cva } from "class-variance-authority"
 
-
 const listVars = cva(
-  "rounded-lg inline-flex h-auto items-center justify-center border text-muted-foreground relative",
+  `group/list rounded-lg inline-flex h-auto items-center justify-center border text-muted-foreground relative
+    shadow-sm shadow-black/10
+  `,
   {
     variants: {
       variant: {
-        opaque: "dark:bg-input/30  border-input text-foreground"
+        primary: "bg-input/30 border-border text-foreground",
+        accent: "bg-input/30 border-border text-foreground",
       },
       size: {
         xs: "p-px gap-px",
@@ -23,18 +26,36 @@ const listVars = cva(
       }
     },
     defaultVariants: {
+      size: "default",
+      variant: "primary"
+    }
+  }
+)
+
+const triggerVars = cva(
+  "inline-flex items-center z-10 justify-center whitespace-nowrap font-semibold text-label-primary! ring-offset-background transition-all border border-transparent cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-white!",
+  {
+    variants: {
+      size: {
+        xs: "rounded-sm px-1.5 py-0.5 text-xs",
+        sm: "rounded-sm px-2 py-0.5 text-xs",
+        default: "rounded-md px-3 py-1.5 text-sm",
+        lg: "rounded-lg px-4 py-2 text-base"
+      }
+    },
+    defaultVariants: {
       size: "default"
     }
   }
 )
 
 const indicatorVars = cva(
-  "absolute z-[0] !pointer-events-none border transition-all duration-300 ease-out",
+  "absolute z-0 pointer-events-none! border transition-all duration-300 ease-out",
   {
     variants: {
       variant: {
-        primary: "bg-primary/80 border-primary-accent shadow-primary-accent",
-        accent: "bg-accent"
+        primary: "bg-primary border-primary-accent shadow-primary-accent",
+        accent: "bg-accent border-secondary"
       },
       size: {
         xs: "rounded-sm",
@@ -45,7 +66,7 @@ const indicatorVars = cva(
     },
     defaultVariants: {
       size: "default",
-      variant: "accent"
+      variant: "primary"
     }
   }
 )
@@ -63,41 +84,17 @@ function Root({
   )
 }
 
-
-const triggerVars = cva(
-  `inline-flex items-center z-10 justify-center whitespace-nowrap
-   font-semibold !text-label-primary ring-offset-background transition-all 
-   border border-transparent cursor-pointer
-   focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 
-   disabled:pointer-events-none disabled:opacity-50`,
-  {
-    variants: {
-      size: {
-        xs: "rounded-sm px-1.5 py-0.5 text-xs",
-        sm: "rounded-sm px-2 py-0.5 text-xs",
-        default: "rounded-md px-3 py-1.5 text-sm",
-        lg: "rounded-lg px-4 py-2 text-base"
-      }
-    },
-    defaultVariants: {
-      size: "default"
-    }
-  }
-)
-
 type TabsSize = "xs" | "sm" | "default" | "lg"
 const TabsSizeContext = React.createContext<TabsSize>("default")
 
 const List = ({
   className,
   children,
-  indicatorVariant = "accent",
-  variant = "opaque",
+  variant = "accent",
   size = "default",
   ...props
-}: ComponentProps<typeof TabsPrimitive.List> & {
-  indicatorVariant?: "accent" | "primary"
-  variant?: "opaque"
+}: React.ComponentProps<typeof TabsPrimitive.List> & {
+  variant?: "accent" | "primary"
   size?: TabsSize
 }) => {
   const indicatorRef = useRef<null | HTMLDivElement>(null);
@@ -145,6 +142,7 @@ const List = ({
       <TabsPrimitive.List
         ref={listRef}
         data-slot="tabs-list"
+        data-variant={variant}
         className={cn(listVars({ variant, size }), className)}
         {...props}
       >
@@ -152,7 +150,7 @@ const List = ({
         {/* Animated indicator */}
         <div
           ref={indicatorRef}
-          className={cn(indicatorVars({ variant: indicatorVariant, size }))}
+          className={cn(indicatorVars({ variant, size }))}
         />
       </TabsPrimitive.List>
     </TabsSizeContext.Provider>

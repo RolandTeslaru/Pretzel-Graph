@@ -17,6 +17,7 @@ export namespace Shelf {
             displayName: z.string(),
             icon: z.string(),
             blueprintIds: z.array(Foundations.Blueprint.Id),
+            color: z.string().optional()
         })
 
         export const SECTIONS = _SECTIONS
@@ -54,7 +55,7 @@ export namespace Shelf {
                 export type Request = z.infer<typeof Request>
                 export type Response = z.infer<typeof Response>
             }
-            
+
             export namespace GetBatch {
                 export const Request = z.object({
                     blueprintIds: z.array(Foundations.Blueprint.Id)
@@ -67,7 +68,7 @@ export namespace Shelf {
                 export type Response = z.infer<typeof Response>
             }
 
-            export namespace GetAllInSection{
+            export namespace GetAllInSection {
                 export const Request = z.object({
                     section: Section
                 })
@@ -84,7 +85,7 @@ export namespace Shelf {
                 req: Get.Request
             ): Promise<Get.Response> {
                 const { data } = await api.post<Get.Response>(
-                    '/api/shelf/blueprint/get', req 
+                    '/api/shelf/blueprint/get', req
                 );
                 return data;
             }
