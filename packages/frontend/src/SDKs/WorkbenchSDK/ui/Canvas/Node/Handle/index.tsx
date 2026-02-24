@@ -3,7 +3,7 @@ import { type Connection, Handle, Position, type Edge } from "@xyflow/react";
 import { cn } from '@/utils/styleUtils';
 import { Tooltip } from '@/vx-ui/foundations/Tooltip';
 import HandleTooltipContent from './tooltip';
-import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
+import { Foundations, Validation, Workflow } from '@vx-agent-editor/shared/domain';
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk';
 
@@ -26,7 +26,13 @@ const handleStyle: React.CSSProperties = {
 const isValidConnectionCallback = (conn: Connection | Edge) => {
     const isLocked = WorkbenchSDK.isLocked;
 
-    return isLocked ? false : WorkbenchSDK.isConnectionValid(WorkbenchSDK.state, conn as Connection);
+    const state = WorkbenchSDK.state
+
+    return isLocked ? false : Validation.Connection.isValid(
+        conn as WorkbenchSDK.DriverConnection,
+        state.workflow,
+        state.cache
+    );
 }
 
 const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId }) => {
@@ -55,7 +61,13 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId }) =
                 targetHandle: draggedHandle.field.id
             }
 
-        return WorkbenchSDK.isConnectionValid(WorkbenchSDK.state, conn)
+        const state = WorkbenchSDK.state
+
+        return Validation.Connection.isValid(
+            conn as WorkbenchSDK.DriverConnection,
+            state.workflow,
+            state.cache
+        )
     }, [draggedHandle])
 
 

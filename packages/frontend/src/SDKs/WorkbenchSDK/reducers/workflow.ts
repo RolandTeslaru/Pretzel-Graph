@@ -1,8 +1,6 @@
-import { Workflow } from "@vx-agent-editor/shared/domain";
+import { Validation, Workflow } from "@vx-agent-editor/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
-import { cacheReducers } from "./cache";
 import { cloneDeep } from 'lodash';
-import { nodeReducers } from "./node";
 
 export const workflowReducers = {
     setLock: (s, lock) => {
@@ -13,19 +11,16 @@ export const workflowReducers = {
     },
     open: (s, workflow) => {
         s.workflow = workflow;
-        s.cache = cacheReducers.createAll(s, workflow);
+        s.cache = Workflow.createCache(workflow);
         workflowReducers.validate(s);
     },
     close: (s) => {
         s.workflow = cloneDeep(Workflow.INITIAL);
-        s.cache = cacheReducers.createAll(s, cloneDeep(Workflow.INITIAL));
+        s.cache = Workflow.createCache(cloneDeep(Workflow.INITIAL));
     },
     validate: (s) => {
-        const workflow = s.workflow;
-
-        Object.values(workflow.data.nodes).forEach(node => {
-            nodeReducers.validate(s, node.id);
-        })
+        const issues = Validation.Issue.checkWorkflow(s.workflow, s.cache);
+        s.issues = issues;
     } 
 } satisfies WorkflowReducers
 

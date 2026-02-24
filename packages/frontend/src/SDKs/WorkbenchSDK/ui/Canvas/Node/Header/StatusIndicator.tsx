@@ -1,7 +1,7 @@
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
 import { Popover } from '@/vx-ui/foundations'
 import { SystemIcons } from '@/vx-ui/icons'
-import type { Workflow } from '@vx-agent-editor/shared/domain'
+import type { Validation, Workflow } from '@vx-agent-editor/shared/domain'
 
 
 const StatusIndicator = ({
@@ -58,14 +58,14 @@ const IssuesPopupContent = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
 }
 
 
-const renderFieldIssueMessage = (issue: Workflow.Issue.Field) => {
+const renderFieldIssueMessage = (issue: Validation.Issue.Field) => {
   switch (issue.type) {
     case "missing_value":
       return <p>Field <span className='text-destructive font-semibold'>{issue.field.id}</span> is required</p>;
   }
 }
 
-const renderInputIssueMessage = (issue: Workflow.Issue.Input) => {
+const renderInputIssueMessage = (issue: Validation.Issue.Input) => {
   switch (issue.type) {
     case "missing_connection":
       return <p>Input <span className='text-destructive font-semibold'>{issue.input.id}</span> is required. Ensure it has a connection</p>;

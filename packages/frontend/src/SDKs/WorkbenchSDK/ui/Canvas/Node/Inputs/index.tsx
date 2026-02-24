@@ -34,9 +34,11 @@ interface Props {
 
 const NodeInputs: React.FC<Props> = memo(({ node, isWorkflowLocked }) => {
 
+    const inputs = useMemo(() => node.inputs.filter(i => !i.internal), [node.inputs])
+
     return (
         <div className="flex flex-col relative py-1 gap-2">
-            {node.inputs.map(input => (
+            {inputs.map(input => (
                 <InputPort
                     key={input.id}
                     input={input}

@@ -1,4 +1,4 @@
-import type { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import { Validation, type Foundations, type Workflow } from "@vx-agent-editor/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { edgeReducers } from "./edge";
 
@@ -34,12 +34,14 @@ export const inputReducers = {
         return false;
     },
     validate: (s, nodeId, input) => {
-        const issue = checkForIssue(s, nodeId, input);
+        const issue = Validation.Issue.Input.check(input, nodeId, s.workflow, s.cache);
+
         if (issue){
+            s.issues[nodeId] ??= { fields: {}, inputs: {} };
             s.issues[nodeId].inputs[input.id] = issue;
             return true;
         }
-        delete s.issues[nodeId].inputs[input.id];
+        delete s.issues[nodeId]?.inputs[input.id];
 
         return false;
     }
@@ -64,34 +66,4 @@ type InputReducers = {
         nodeId: Workflow.Node.Id,
         input: Foundations.Port.Input
     ) => boolean
-}
-
-
-const checkForIssue = (
-    s: WorkbenchSDK.State,
-    nodeId: Workflow.Node.Id,
-    input: Foundations.Port.Input
-): Workflow.Issue.Input | null => {
-    if (!input.required)
-        return null;
-
-    const hasEdge = !!s.cache.inputHandlesMap[nodeId]?.[input.id];
-    if (hasEdge)
-        return null;
-
-    if (input.variant === "Message" || input.variant === "Text") {
-        const value = s.workflow.data.staticValues[nodeId]?.[input.id];
-        if (value !== undefined && value !== null && value !== "")
-            return null;
-
-        return {
-            input,
-            type: 'missing_value_or_connection',
-        }
-    }
-
-    return {
-        input,
-        type: 'missing_connection',
-    }
 }

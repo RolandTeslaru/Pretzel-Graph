@@ -27,6 +27,10 @@ export namespace Workflow {
             isMinimized: z.boolean().default(false),
             accent: z.string().optional(),
         });
+
+        export function createId(blueprintId: Foundations.Blueprint.Id) {
+            return `${blueprintId}-${uid.randomUUID(5)}` as Workflow.Node.Id
+        }
     }
     export interface Node extends z.infer<typeof Node.Schema> { }
 
@@ -45,6 +49,15 @@ export namespace Workflow {
                 portId: Foundations.Port.Input.Id,
             })
         })
+
+        export function createId(
+            _sourceNodeId: Node.Id,
+            _sourcePortId: Foundations.Port.Output.Id,
+            _targetNodeId: Node.Id,
+            _targetPortId: Foundations.Port.Input.Id
+        ) {
+            return `${_sourceNodeId}|${_sourcePortId}|${_targetNodeId}|${_targetPortId}` as Workflow.Edge.Id
+        }
     }
     export interface Edge extends z.infer<typeof Edge.Schema> { }
 
@@ -187,26 +200,51 @@ export namespace Workflow {
         }
     }
 
-    export namespace Issue {
-        export interface Field {
-            field: Foundations.Field
-            type: 'missing_value'
-        }
-        export interface Input {
-            input: Foundations.Port.Input
-            type: "missing_connection" | "missing_value_or_connection"
-        }
-    }
-
     export interface Cache {
         ingoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
         outgoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
         inputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Port.Input.Id, Workflow.Edge.Id>>
         outputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Port.Output.Id, Workflow.Edge.Id>>
     }
+    export function createCache(wf: Workflow): Cache {
+        const cache = {
+            ingoersEdgesMap: {},
+            outgoersEdgesMap: {},
+            inputHandlesMap: {},
+            outputHandlesMap: {},
+        } as Cache;
+
+        Object.values(wf.data.nodes).forEach(node => {
+            cache.outgoersEdgesMap[node.id] = {};
+            cache.ingoersEdgesMap[node.id] = {};
+            cache.inputHandlesMap[node.id] = {};
+            cache.outputHandlesMap[node.id] = {};
+        })
+
+        Object.values(wf.data.edges).forEach(edge => {
+            const sourceNodeId = edge.source.nodeId;
+            const targetNodeId = edge.target.nodeId;
+
+            const sourceHandleId = edge.source.portId;
+            const targetHandleId = edge.target.portId
+
+            // Outgoers Edges Map
+            cache.outgoersEdgesMap[sourceNodeId][targetNodeId] = edge.id
+
+            // Ingoers Edges Map
+            cache.ingoersEdgesMap[targetNodeId][sourceNodeId] = edge.id
+
+            cache.inputHandlesMap[targetNodeId][targetHandleId] = edge.id
+
+            cache.outputHandlesMap[sourceNodeId][sourceHandleId] = edge.id
+        })
+
+        return cache
+    }
 }
 export interface Workflow extends z.infer<typeof Workflow.Schema> { }
 
 
-
-
+const uid = {
+    randomUUID: (length: number) => Math.random().toString(36).substring(2, 2 + length)
+}
