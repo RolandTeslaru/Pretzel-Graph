@@ -16,6 +16,7 @@ export const fieldReducers = {
         }
 
         delete s.issues[nodeId].fields[field.id];
+
         return false;
     }
 } satisfies FieldReducers

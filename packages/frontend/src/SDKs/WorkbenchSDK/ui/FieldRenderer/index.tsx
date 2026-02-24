@@ -34,6 +34,10 @@ export type RendererProps<K extends Foundations.Field['variant']> = {
 const StringField = memo(({ field, nodeId, className }: RendererProps<'String'>) => {
     const [value, issue] = WorkbenchSDK.useField(nodeId, field.id)
 
+    let innerClassName = ""
+    if (issue)
+        innerClassName = "border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50"
+
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
             <FieldLabel field={field} />
@@ -41,7 +45,7 @@ const StringField = memo(({ field, nodeId, className }: RendererProps<'String'>)
                 placeholder={field.placeholder}
                 value={value as string}
                 onChange={(e) => WorkbenchSDK.actions.field.setValue(nodeId, field, e.target.value)}
-                className={issue ? "border-destructive/60 focus-visible:ring-destructive/30" : ""}
+                className={innerClassName}
             />
         </div>
     )
@@ -85,7 +89,7 @@ const MultiOptionField = memo(({ field, nodeId, className }: RendererProps<'Mult
                     <Tabs.Root
                         value={value as string}
                         onValueChange={val => { WorkbenchSDK.actions.field.setValue(nodeId, field, val); }}
-                        className={`ml-auto ${issue ? "border border-destructive/60 rounded-md ring-1 ring-destructive/30" : ""}`}
+                        className={`ml-auto ${issue ? "border-2 border-destructive rounded-md animate-border-ping ring-1 ring-destructive/50" : ""}`}
 
                     >
                         <Tabs.List size="sm">
@@ -102,7 +106,7 @@ const MultiOptionField = memo(({ field, nodeId, className }: RendererProps<'Mult
                         value={value as string}
                         onValueChange={(value) => { WorkbenchSDK.actions.field.setValue(nodeId, field, value) }}
                     >
-                        <Select.Trigger className={`w-full ${issue ? "border-destructive/60 ring-1 ring-destructive/30" : ""}`}>
+                        <Select.Trigger className={`w-full ${issue ? "border-2 border-destructive animate-border-ping ring-1 ring-destructive/50" : ""}`}>
                             <Select.Value placeholder={field.placeholder} />
                         </Select.Trigger>
                         <Select.Content>
@@ -125,7 +129,9 @@ const IntegerField = memo(({ field, nodeId, className }: RendererProps<'Integer'
     const [value, issue] = WorkbenchSDK.useField(nodeId, field.id);
     const hasSlider = field.slider;
 
-    const errorClass = issue ? "border-destructive/60 focus-visible:ring-destructive/30" : ""
+    let errorClass = ""
+    if (issue)
+        errorClass = "border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50"
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
@@ -186,7 +192,10 @@ const FloatField = memo(({ field, nodeId, className }: RendererProps<'Float'>) =
     const [value, issue] = WorkbenchSDK.useField(nodeId, field.id);
 
     const hasSlider = field.slider;
-    const errorClass = issue ? "border-destructive/60 focus-visible:ring-destructive/30" : ""
+
+    let errorClass = ""
+    if (issue)
+        errorClass = "border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50"
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
@@ -256,7 +265,7 @@ const FileField = memo(({ field, nodeId, className }: RendererProps<'File'>) => 
                 <Input
                     value={value as string}
                     readOnly
-                    className={`opacity-50 ${issue ? "border-destructive/60" : ""}`}
+                    className={`opacity-50 ${issue ? "border-2 border-destructive animate-border-ping" : ""}`}
                     onChange={(e) => {
                         const val = e.currentTarget.value;
                         WorkbenchSDK.actions.field.setValue(nodeId, field, val)
@@ -280,7 +289,7 @@ const OtherField = memo(({ field, nodeId }: { field: Foundations.Field, nodeId: 
             <Input
                 value={String(value)}
                 disabled
-                className={issue ? "border-destructive/60" : ""}
+                className={issue ? "border-2 border-destructive animate-border-ping" : ""}
             />
             <div className="text-[10px] text-muted-foreground mt-1">Unknown variant: {field.variant}</div>
         </>
@@ -313,7 +322,7 @@ const SecretField = memo(({ field, nodeId, className }: RendererProps<'Secret'>)
                     WorkbenchSDK.actions.field.setValue(nodeId, field, val)
                 }}
             >
-                <Select.Trigger className={`w-full ${issue ? "border-destructive/60 ring-1 border-2 ring-destructive/30" : ""}`}>
+                <Select.Trigger className={`w-full ${issue ? "border-2 border-destructive animate-border-ping ring-1 ring-destructive/50" : ""}`}>
                     <Select.Value placeholder={"Select a credential..."} />
                 </Select.Trigger>
                 <Select.Content>

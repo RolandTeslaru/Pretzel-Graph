@@ -5,7 +5,6 @@ import { Tooltip } from '@/vx-ui/foundations/Tooltip';
 import HandleTooltipContent from './tooltip';
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
-import { isConnectionValid } from '@/SDKs/WorkbenchSDK/utils';
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk';
 
 interface Props {
@@ -27,7 +26,7 @@ const handleStyle: React.CSSProperties = {
 const isValidConnectionCallback = (conn: Connection | Edge) => {
     const isLocked = WorkbenchSDK.isLocked;
 
-    return isLocked ? false : isConnectionValid(WorkbenchSDK.state, conn as Connection);
+    return isLocked ? false : WorkbenchSDK.isConnectionValid(WorkbenchSDK.state, conn as Connection);
 }
 
 const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId }) => {
@@ -56,7 +55,7 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId }) =
                 targetHandle: draggedHandle.field.id
             }
 
-        return isConnectionValid(WorkbenchSDK.state, conn)
+        return WorkbenchSDK.isConnectionValid(WorkbenchSDK.state, conn)
     }, [draggedHandle])
 
 
