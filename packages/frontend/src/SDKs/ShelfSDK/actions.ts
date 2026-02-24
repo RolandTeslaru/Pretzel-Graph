@@ -1,6 +1,6 @@
 import type { ShelfSDKImpl, ShelfSDK } from "./sdk";
 import type { DropFirstArg } from "../types";
-import { Shelf } from "@vx-agent-editor/shared/domain";
+import { Foundations, Shelf } from "@vx-agent-editor/shared/domain";
 import { toast } from "sonner";
 import { api } from "../ApiInterceptorSDK";
 
@@ -31,6 +31,18 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
                 }
             }
             return false;
+        },
+        hydrateBlueprint: async (blueprintId) => {
+            try {
+                const { blueprint } = await Shelf.API.Blueprint.get(api, { blueprintId });
+                setState(s => {
+                    s.blueprints[blueprintId] = blueprint;
+                });
+                return true;
+            } catch (error) {
+                console.error(`Could not hydrate blueprint ${blueprintId}`, error);
+                return false;
+            }
         },
 
         drawer: {
@@ -71,6 +83,7 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
 
 export type _ShelfActions = {
     loadSection: (section: Shelf.Section) => Promise<boolean>;
+    hydrateBlueprint: (blueprintId: Foundations.Blueprint.Id) => Promise<boolean>;
     drawer: {
         open: (drawerId: Shelf.Drawer.Id) => void;
         close: (drawerId: Shelf.Drawer.Id) => void;

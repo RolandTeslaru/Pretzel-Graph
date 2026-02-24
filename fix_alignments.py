@@ -1,42 +1,4 @@
-import { WorkbenchSDKImpl, WorkbenchSDK } from './sdk';
-import type { DropFirstArg } from '../types';
-import { debounce } from '../../decorators/debounce';
-import { toast } from 'sonner';
-import { Foundations, Workbench, Workflow } from '@vx-agent-editor/shared/domain';
-import { supabase } from '@/libs/supabase';
-import { api } from '../ApiInterceptorSDK';
-
-export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
-
-    const setState = sdk.useStore.setState;
-    const reducers = sdk.reducers;
-
-    const commitImmediately = async () => {
-        if (sdk.state.isDirty === false) return;
-        try {
-            console.log("Committing")
-            await Workflow.API.commit(supabase, { workflow: sdk.state.workflow })
-        } catch (error) {
-            toast.error("Could not save to cloud")
-        }
-        sdk.actions.setDirty(false);
-    };
-
-    const commit: () => void = debounce(async () => {
-        commitImmediately();
-    }, 1000)
-
-
-
-    const debouncedValidateField = debounce((nodeId: Workflow.Node.Id, field: Foundations.Field) => {
-        setState(s => { reducers.field.validate(s, nodeId, field) });
-    }, 300);
-
-    const debouncedValidateInput = debounce((nodeId: Workflow.Node.Id, input: Foundations.Port.Input) => {
-        setState(s => { reducers.input.validate(s, nodeId, input) });
-    }, 300);
-
-    return {
+content = """    return {
         commit:                   commit,
         commitImmediately:        commitImmediately,
         node: {
@@ -51,11 +13,24 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             clearIssues:       (...props) => { setState(s => { reducers.node.clearIssues(s,    ...props) }) },
         },
         edge: {
-            create:            (conn)     => { setState(s => { reducers.edge.create(s, conn); }); commit() },
-            remove:            (edgeId)   => { setState(s => { reducers.edge.remove(s, edgeId) }); commit() }
+            create:            (conn)     => { 
+                setState(s => { 
+                    const edge = reducers.edge.create(s, conn); 
+                    if (edge) reducers.node.validate(s, edge.target.nodeId);
+                }); 
+                commit() 
+            },
+            remove:            (edgeId)   => { 
+                setState(s => { 
+                    const edge = s.workflow.data.edges[edgeId];
+                    reducers.edge.remove(s, edgeId); 
+                    if (edge) reducers.node.validate(s, edge.target.nodeId);
+                }); 
+                commit() 
+            }
         },
         field: {
-            setValue: async (nodeId, field, value) => {
+            setValue:          async (nodeId, field, value) => {
                 if (field.reconcile) {
                     console.log(`Field ${field.id} requires reconciliation`)
 
@@ -66,8 +41,8 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
                         const { reconciledBlueprint } = await Workbench.API.Field.reconcile(api, {
                             blueprintId: node.blueprintId,
-                            fieldId:     field.id,
-                            newValue:    value,
+                            fieldId: field.id,
+                            newValue: value,
                         })
 
                         setState(s => {
@@ -85,11 +60,8 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             validate:          (...props) => { setState(s => { reducers.field.validate(s,      ...props) }) },
         },
         input: {
-            setValue: (nodeId, input, value) => { 
-                setState(s => { reducers.input.setValue(s, nodeId, input.id, value) }); 
-                debouncedValidateInput(nodeId, input);
-                commit() 
-            },
+            setValue:          (...props) => { setState(s => { reducers.input.setValue(s,      ...props) }); commit() },
+            changeOrder:       (...props) => { setState(s => { reducers.input.changeOrder(s,   ...props) }); commit() },
             validate:          (...props) => { setState(s => { reducers.input.validate(s,      ...props) }) },
         },
         history: {
@@ -109,25 +81,24 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             }
         },
         workflow: {
-            setLock:           (...props) => { setState(s => { reducers.workflow.setLock(s,   ...props) }); commit() },
-            close:             (...props) => { setState(s => { reducers.workflow.close(s,     ...props) }); commit() },
-            open:              (...props) => setState(s => { reducers.workflow.open(s,        ...props) }),
-            validate:          (...props) => setState(s => { reducers.workflow.validate(s,    ...props) }),
+            setLock:           (...props) => { setState(s => { reducers.workflow.setLock(s,    ...props) }); commit() },
+            close:             (...props) => { setState(s => { reducers.workflow.close(s,      ...props) }); commit() },
+            open:              (...props) =>   setState(s => { reducers.workflow.open(s,       ...props) }),
         },
-        setClickedNodeId:     (nodeId) => setState(s => { reducers.setClickedNodeId(s, nodeId) }),
-        setDirty:             (value) => setState(s => {
+        setClickedNodeId:         (nodeId) =>  setState(s => { reducers.setClickedNodeId(s, nodeId) }),
+        setDirty:                 (value)  =>  setState(s => {
             if (s.isDirty !== value)
                 s.isDirty = value;
         }),
-        takeSnapshot:         () => { },
-        setCurrentDraggedHandle: (handle) => setState({
+        takeSnapshot:             ()       => { },
+        setCurrentDraggedHandle:  (handle) =>  setState({
             draggedHandle: handle
         }),
         clipboard: {
-            copy:           (...props) => { setState(s => { reducers.clipboard.copy(s,         ...props) }) },
-            copyNode:       (...props) => { setState(s => { reducers.clipboard.copyNode(s,     ...props) }) },
-            paste:          (...props) => { setState(s => { reducers.clipboard.paste(s,        ...props) }); commit() },
-            clear:          () => { setState(s => { reducers.clipboard.clear(s) }) },
+            copy:              (...props) => { setState(s => { reducers.clipboard.copy(s,      ...props) }) },
+            copyNode:          (...props) => { setState(s => { reducers.clipboard.copyNode(s,  ...props) }) },
+            paste:             (...props) => { setState(s => { reducers.clipboard.paste(s,     ...props) }); commit() },
+            clear:             ()         => { setState(s => { reducers.clipboard.clear(s) }) },
         }
     } satisfies _WorkbenchSDKActions
 }
@@ -139,7 +110,6 @@ export interface _WorkbenchSDKActions {
         setLock             : DropFirstArg<WorkbenchSDK.Reducers['workflow']['setLock']>;
         close               : DropFirstArg<WorkbenchSDK.Reducers['workflow']['close']>;
         open                : DropFirstArg<WorkbenchSDK.Reducers['workflow']['open']>;
-        validate            : DropFirstArg<WorkbenchSDK.Reducers['workflow']['validate']>;
     };
     node                    : {
         remove              : DropFirstArg<WorkbenchSDK.Reducers['node']['remove']>;
@@ -153,11 +123,12 @@ export interface _WorkbenchSDKActions {
         clearIssues         : DropFirstArg<WorkbenchSDK.Reducers['node']['clearIssues']>;
     };
     field                   : {
-        setValue            : (nodeId: Workflow.Node.Id, field: Foundations.Field, value: any) => void;
+        setValue            : (nodeId: Workflow.Node.Id, field: Foundations.Field, value: Foundations.Field.Value) => void;
         validate            : DropFirstArg<WorkbenchSDK.Reducers['field']['validate']>;
     };
     input                   : {
-        setValue            : (nodeId: Workflow.Node.Id, input: Foundations.Port.Input, value: any) => void;
+        setValue            : DropFirstArg<WorkbenchSDK.Reducers['input']['setValue']>;
+        changeOrder         : DropFirstArg<WorkbenchSDK.Reducers['input']['changeOrder']>;
         validate            : DropFirstArg<WorkbenchSDK.Reducers['input']['validate']>;
     };
     edge                    : {
@@ -181,13 +152,22 @@ export interface _WorkbenchSDKActions {
     setDirty                : (dirty: boolean) => void;
     takeSnapshot            : (p: { force?: boolean }) => void;
     clipboard               : {
-        copy               : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['copy']>;
-        copyNode           : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['copyNode']>;
-        paste              : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['paste']>;
-        clear              : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['clear']>;
+        copy                : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['copy']>;
+        copyNode            : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['copyNode']>;
+        paste               : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['paste']>;
+        clear               : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['clear']>;
     };
     history                 : {
         undo                : () => void;
         redo                : () => void;
     };
 }
+"""
+
+with open('packages/frontend/src/SDKs/WorkbenchSDK/actions.ts', 'r') as f:
+    lines = f.readlines()
+    
+new_lines = lines[:39] + [content]
+
+with open('packages/frontend/src/SDKs/WorkbenchSDK/actions.ts', 'w') as f:
+    f.writelines(new_lines)

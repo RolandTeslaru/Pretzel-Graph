@@ -18,8 +18,8 @@ export namespace Workflow {
 
             displayName: z.string(),
 
-            fields:  z.array(Foundations.Field.Schema),
-            inputs:  z.array(Foundations.Port.Input.Schema),
+            fields: z.array(Foundations.Field.Schema),
+            inputs: z.array(Foundations.Port.Input.Schema),
             outputs: z.array(Foundations.Port.Output.Schema),
 
             icon: z.string().nullable().optional(),
@@ -185,8 +185,24 @@ export namespace Workflow {
 
             return {}
         }
+    }
 
+    export namespace Issue {
+        export interface Field {
+            field: Foundations.Field
+            type: 'missing_value'
+        }
+        export interface Input {
+            input: Foundations.Port.Input
+            type: "missing_connection" | "missing_value_or_connection"
+        }
+    }
 
+    export interface Cache {
+        ingoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
+        outgoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
+        inputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Port.Input.Id, Workflow.Edge.Id>>
+        outputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Port.Output.Id, Workflow.Edge.Id>>
     }
 }
 export interface Workflow extends z.infer<typeof Workflow.Schema> { }

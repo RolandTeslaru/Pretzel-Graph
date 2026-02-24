@@ -53,6 +53,8 @@ const MoreOptionsDropdown: React.FC<Props> = ({ node }) => {
                 </DropdownMenu.Item>
                 <DropdownMenu.Item
                     onClick={() => {
+                        ShelfSDK.actions.hydrateBlueprint(node.blueprintId);
+                        
                         const blueprint = ShelfSDK.state.blueprints[node.blueprintId];
                         if (!blueprint) return;
                         WorkbenchSDK.actions.node.recreate(node.id, blueprint)

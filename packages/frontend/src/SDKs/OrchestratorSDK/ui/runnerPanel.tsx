@@ -5,35 +5,39 @@ import { useCallback } from 'react'
 import { OrchestratorSDK } from '../sdk'
 import type { Orchestrator } from '@vx-agent-editor/shared/domain'
 
+const handlePause = () => {
+  const currentJobId = OrchestratorSDK.state.currentJobId;
+  if (!currentJobId) return;
+  OrchestratorSDK.actions.execution.pause(currentJobId);
+}
+
+const handleTerminate = () => {
+  const currentJobId = OrchestratorSDK.state.currentJobId;
+  if (!currentJobId) return;
+  OrchestratorSDK.actions.execution.terminate(currentJobId);
+}
+
+const handleRun = () => {
+  const workflow = WorkbenchSDK.state.workflow;
+  OrchestratorSDK.actions.execution.run(workflow);
+}
 
 const RunnerPanel = () => {
 
   const currentJobId = OrchestratorSDK.useStore(s => s.currentJobId);
 
-  const handleRun = useCallback(() => {
-    const workflow = WorkbenchSDK.state.workflow;
-    OrchestratorSDK.actions.execution.run(workflow);
-  }, [])
-
-  const handlePause = useCallback(() => {
-    if (!currentJobId) return;
-    OrchestratorSDK.actions.execution.pause(currentJobId);
-  }, [currentJobId])
-
-  const handleTerminate = useCallback(() => {
-    if (!currentJobId) return;
-    OrchestratorSDK.actions.execution.terminate(currentJobId);
-  }, [currentJobId])
-
   OrchestratorSDK.useJobEvents(currentJobId || "" as Orchestrator.Job.Id, (event) => {
-    if (event.type === "job:started") {
-      OrchestratorSDK.setState(s => s.currentJobId = event.jobId)
-    }
-    if (event.type === "job:update") {
-      OrchestratorSDK.setState(s => s.graphState = event.update)
-    }
-    if (event.type === "job:completed") {
-      OrchestratorSDK.setState(s => s.currentJobId = undefined)
+    switch (event.type) {
+      case "job:started":
+        OrchestratorSDK.setState(s => s.currentJobId = event.jobId)
+        break;
+      case "job:update":
+        // @ts-expect-error
+        OrchestratorSDK.setState(s => s.graphState = event.update)
+        break;
+      case "job:completed":
+        OrchestratorSDK.setState(s => s.currentJobId = undefined)
+        break;
     }
   })
 

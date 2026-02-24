@@ -37,7 +37,8 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                         return `Workflow ${data.jobId} executed successfully`
                     },
                     error: (error) => {
-                        return `Workflow execution failed: ${error.message}`
+                        const message = error?.response?.data?.error || error.message;
+                        return `Workflow execution failed: ${message}`
                     }
                 })
 
