@@ -132,6 +132,10 @@ const config: Config = {
                     "0%, 100%": { backgroundColor: "var(--accent-pink)" },
                     "50%": { backgroundColor: "color-mix(in srgb, var(--accent-pink) 40%, transparent)" },
                 },
+                "border-ping": {
+                    "0%, 100%": { borderColor: "var(--destructive)", boxShadow: "0 0 6px 1px color-mix(in srgb, var(--destructive) 60%, transparent)" },
+                    "50%": { borderColor: "color-mix(in srgb, var(--destructive) 20%, transparent)", boxShadow: "none" },
+                },
             },
             animation: {
                 neonPulse: 'neonPulse 1.1s ease-in-out infinite',
@@ -145,6 +149,7 @@ const config: Config = {
                 contentHide: "contentHide 500ms cubic-bezier(0.16, 1, 0.3, 1)",
                 wiggle: "wiggle 150ms ease-in-out 1",
                 "pulse-pink": "pulse-pink 2s linear infinite",
+                "border-ping": "border-ping 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
                 "slow-wiggle": "wiggle 500ms ease-in-out 1",
                 "border-beam": "border-beam calc(var(--duration)*1s) infinite linear",
             },

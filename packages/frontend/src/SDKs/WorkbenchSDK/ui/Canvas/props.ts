@@ -4,7 +4,6 @@ import { WorkbenchSDK } from "../../sdk"
 import WorkflowEdge from './Edge'
 import WorkbenchNode from './Node'
 import { nodeColorsName } from '@/utils/styleUtils'
-import { isConnectionValid } from '../../utils'
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
 import { Workflow, Shelf, Foundations } from "@vx-agent-editor/shared/domain"
 
@@ -140,7 +139,9 @@ export const createCanvasCallbacks = (
         onReconnect: (edgeDriver, newConn) => {
             if (WorkbenchSDK.isLocked) return;
 
-            if (isConnectionValid(WorkbenchSDK.state, newConn) === false)
+            if (
+                WorkbenchSDK.isConnectionValid(WorkbenchSDK.state, newConn) === false
+            )
                 return;
 
             setEdgeDrivers(prev => reconnectEdge(edgeDriver, newConn, prev))

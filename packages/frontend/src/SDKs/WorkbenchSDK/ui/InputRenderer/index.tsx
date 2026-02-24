@@ -26,9 +26,9 @@ const MessageInput = memo(({ input, nodeId, className, showTypeBadge }: Renderer
                 input={input}
                 nodeId={nodeId}
                 value={value as string}
-                onChange={(e) => WorkbenchSDK.actions.input.setValue(nodeId, input, e.target.value)}
+                onChange={e => WorkbenchSDK.actions.input.setValue(nodeId, input, e.target.value)}
                 placeholder={input.placeholder}
-                className={issue ? "border-red-500/50 focus:border-red-500" : ""}
+                className={issue ? "border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50" : ""}
             />
         </div>
     )
@@ -39,6 +39,10 @@ MessageInput.displayName = "MessageInput"
 const TextInput = memo(({ input, nodeId, className, showTypeBadge }: RendererProps<'Text'>) => {
     const [value, issue] = WorkbenchSDK.useInput(nodeId, input.id);
 
+    let innerClassName = ""
+    if(issue)
+        innerClassName = "border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50"
+
     return (
         <div className={className + " w-full flex flex-col gap-1"}>
             <InputLabel input={input} showTypeBadges={showTypeBadge} />
@@ -46,7 +50,7 @@ const TextInput = memo(({ input, nodeId, className, showTypeBadge }: RendererPro
                 value={value as string}
                 onChange={(e) => WorkbenchSDK.actions.input.setValue(nodeId, input, e.target.value)}
                 placeholder="Enter text..."
-                className={issue ? "border-destructive/60 border-2 focus-visible:ring-destructive/30" : ""}
+                className={innerClassName}
             />
         </div>
     )
@@ -56,12 +60,16 @@ TextInput.displayName = "TextInput"
 
 /** Fallback for variants that can only receive via edge (LanguageModel, Document, etc.) */
 const EdgeOnlyInput = memo(({ input, nodeId, className, showTypeBadge }: { input: Foundations.Port.Input, nodeId: Workflow.Node.Id, className?: string, showTypeBadge?: boolean }) => {
-    const issue = WorkbenchSDK.useStore(s => 
+    const issue = WorkbenchSDK.useStore(s =>
         s.issues[nodeId]?.inputs[input.id] ?? null
     )
-    
+
+    let innerClassName = ""
+    if(issue)
+        innerClassName = "border-2 border-destructive border-dashed animate-border-ping rounded"
+
     return (
-        <div className={className + " w-full flex flex-col gap-1 " + (issue ? "border border-red-500/50 rounded" : "")}>
+        <div className={className + " w-full flex flex-col gap-1 " + innerClassName}>
             <InputLabel input={input} showTypeBadges={showTypeBadge} />
         </div>
     )
