@@ -35,6 +35,15 @@ export const workbenchSelectors = {
 
         return input;
     },
+    getField: (s, nodeId, fieldId) => {
+        const node = s.workflow.data.nodes[nodeId]
+        if (!node) return null;
+
+        const field = node.fields.find(f => f.id === fieldId);
+        if (!field) return null;
+
+        return field;
+    },
     getOutput: (s, nodeId, outputId) => {
         const node = s.workflow.data.nodes[nodeId]
         if (!node) return null;
@@ -74,6 +83,7 @@ export type _WorkBenchSDKSelectors = {
     ensureOutNodesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<NodeId, EdgeId>
 
     getInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Foundations.Port.Input | null
+    getField: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => Foundations.Field | null
     getOutput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => Foundations.Port.Output | null
 
     ensureInHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Workflow.Edge.Id

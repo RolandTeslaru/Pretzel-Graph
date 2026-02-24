@@ -1,4 +1,5 @@
-import { create } from "zustand"
+import { createWithEqualityFn } from "zustand/traditional"
+import { shallow } from "zustand/shallow"
 import { immer } from "zustand/middleware/immer";
 import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance } from "@xyflow/react";
 import { MarkerType } from "@xyflow/react";
@@ -10,11 +11,11 @@ import { temporal } from 'zundo';
 import { cloneDeep } from "lodash";
 import { isConnectionValid } from "./utils";
 import { BaseSDK } from "../Base";
-import { useShallow } from "zustand/react/shallow";
 import { SDK } from "../SDKManager";
 import { toast } from "sonner";
 import { supabase } from "@/libs/supabase";
 import { workbenchReducers } from "./reducers";
+
 
 @SDK("Workbench")
 export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
@@ -30,7 +31,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         lastMousePosition: { x: 0, y: 0 }
     }
 
-    public readonly useStore: BaseSDK.Store<WorkbenchSDK.State> = create(
+    public readonly useStore: BaseSDK.Store<WorkbenchSDK.State> = createWithEqualityFn(
         temporal(
             immer<WorkbenchSDK.State>(() => ({
                 workflow: cloneDeep(Workflow.INITIAL),
@@ -45,6 +46,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                     inputHandlesMap: {},
                     outputHandlesMap: {},
                 },
+                issues: {},
                 clipboard: {
                     nodes: new Set(),
                     edges: new Set(),
@@ -57,7 +59,8 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 workflow: s.workflow,
             })
         }
-        )
+        ),
+        shallow
     )
 
     public readonly selectors: WorkbenchSDK.Selectors = workbenchSelectors;
@@ -70,16 +73,38 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         return workflow.locked;
     }
 
+    public useField(nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) {
+        return this.useStore(s => {
+            const staticVals = s.workflow.data.staticValues[nodeId]
+            if(!staticVals)
+                return [null, null] as const
+            const value = staticVals[fieldId] as any
+            return [
+                value,
+                s.issues[nodeId]?.fields[fieldId] ?? null
+            ] as const
+        });
+    }
 
-    public useStaticValue(nodeId: Workflow.Node.Id, fieldOrInput: Foundations.Field | Foundations.Port.Input) {
-        const value = this.useStore(useShallow(s => {
-            const val = s.workflow.data.staticValues[nodeId]?.[fieldOrInput.id];
-            if (val == null)
-                // @ts-expect-error
-                return fieldOrInput.initialValue;
-            return val
-        }))
-        return value;
+    public useInput(nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) {
+        return this.useStore(s => {
+            const staticVals = s.workflow.data.staticValues[nodeId]
+            if(!staticVals)
+                return [null, null] as const
+            const value = staticVals[inputId] as any
+            return [
+                value,
+                s.issues[nodeId]?.inputs[inputId] ?? null
+            ] as const
+        });
+    }
+
+    public useNodeHasIssues(nodeId: Workflow.Node.Id) {
+        return this.useStore(s => {
+            const hasFieldIssues = Object.keys(s.issues[nodeId]?.fields ?? {}).length > 0;
+            const hasInputIssues = Object.keys(s.issues[nodeId]?.inputs ?? {}).length > 0;
+            return hasFieldIssues || hasInputIssues;
+        });
     }
 
 
@@ -89,9 +114,9 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public async loadWorkflow(workflowId: Workflow.Id) {
         try {
             const { workflow } = await Workflow.API.get(supabase, { workflowId })
-            if (!workflow) {
+            if (!workflow)
                 throw new Error("Workflow not found")
-            }
+
             Workflow.Schema.parse(workflow);
             this.actions.workflow.open(workflow)
         } catch (error) {
@@ -155,8 +180,7 @@ export const WorkbenchSDK = SDK.get<WorkbenchSDKImpl>("Workbench")
 
 
 export namespace WorkbenchSDK {
-
-    export type State = {
+    export interface State {
         workflow: Workflow;
         isDirty: boolean;
         isDraggingNode: boolean;
@@ -168,15 +192,14 @@ export namespace WorkbenchSDK {
             edges: Set<Workflow.Edge>,
             layout: Record<Workflow.Node.Id, { x: number, y: number }>
         }
-        cache: {
-            ingoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
-            outgoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
-            inputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Port.Input.Id, Workflow.Edge.Id>>
-            outputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Port.Output.Id, Workflow.Edge.Id>>
-        }
+        cache: Workflow.Cache
+        issues: Record<Workflow.Node.Id, {
+            fields: Record<Foundations.Field.Id, Workflow.Issue.Field>;
+            inputs: Record<Foundations.Port.Input.Id, Workflow.Issue.Input>;
+        }>
     }
 
-    export type Handle = {
+    export interface Handle {
         nodeId: Workflow.Node.Id,
         field: Foundations.Port.Input | Foundations.Port.Output,
         handleType: "source" | "target"
@@ -192,10 +215,12 @@ export namespace WorkbenchSDK {
     export type NodeDriver = RF_Node<{}, "workflowNode">;
     export type EdgeDriver = RF_Edge<{}, "workflowEdge">;
 
-    export type DriverConnection = {
+    export interface DriverConnection {
         source: Workflow.Node.Id
         sourceHandle: Foundations.Port.Output.Id
         target: Workflow.Node.Id
         targetHandle: Foundations.Port.Input.Id
     }
+
+
 }

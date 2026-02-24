@@ -1,20 +1,29 @@
 import type { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
-import type { Connection } from "@xyflow/react";
 import { cacheReducers } from "./cache";
+import { inputReducers } from "./input";
+import { workbenchSelectors } from "../selectors"
+
+const sel = workbenchSelectors
 
 export const edgeReducers = {
     create: (s, conn) => {
         s.isDirty = true;
+        
         const { 
             source: sourceNodeId, 
             sourceHandle, 
             target: targetNodeId, 
             targetHandle 
         } = conn
-
-        if (!sourceHandle || !targetHandle || !sourceNodeId || !targetNodeId) return;
-
+        
+        if (!sourceHandle || !targetHandle || !sourceNodeId || !targetNodeId) 
+            return;
+       
+        const targetInput = sel.getInput(s, targetNodeId, targetHandle);
+        if (!targetInput) 
+            return;
+        
         const edgeId = edgeReducers.createId(sourceNodeId, sourceHandle, targetNodeId, targetHandle)
 
         const edges = s.workflow.data.edges
@@ -38,6 +47,8 @@ export const edgeReducers = {
 
         cacheReducers.addEdge(s, newEdge)
 
+        inputReducers.validate(s, targetNodeId, targetInput);
+
         return newEdge
     },
     remove: (s, edgeId) => {
@@ -50,6 +61,11 @@ export const edgeReducers = {
         delete edges[edgeId];
 
         cacheReducers.deleteEdge(s, edge);
+
+        const input = sel.getInput(s, edge.target.nodeId, edge.target.portId)
+        if (!input) return;
+
+        inputReducers.validate(s, edge.target.nodeId, input);
     },
     createId: (_sourceNodeId, _sourcePortId, _targetNodeId, _targetPortId) => {
         return `${_sourceNodeId}|${_sourcePortId}|${_targetNodeId}|${_targetPortId}` as Workflow.Edge.Id
@@ -66,3 +82,5 @@ type EdgeReducers = {
         targetPortId: Foundations.Port.Input.Id
     ) => Workflow.Edge.Id
 }
+
+

@@ -42,8 +42,8 @@ export const cacheReducers = {
     },
     createAll: (_, wf) => {
         const outgoersEdgesMap: WorkbenchSDK.State["cache"]["outgoersEdgesMap"] = {};
-        const ingoersEdgesMap: WorkbenchSDK.State["cache"]["ingoersEdgesMap"] = {};
-        const inputHandlesMap: WorkbenchSDK.State["cache"]["inputHandlesMap"] = {};
+        const ingoersEdgesMap:  WorkbenchSDK.State["cache"]["ingoersEdgesMap"] = {};
+        const inputHandlesMap:  WorkbenchSDK.State["cache"]["inputHandlesMap"] = {};
         const outputHandlesMap: WorkbenchSDK.State["cache"]["outputHandlesMap"] = {};
 
         Object.values(wf.data.nodes).forEach(node => {

@@ -32,14 +32,16 @@ export type RendererProps<K extends Foundations.Field['variant']> = {
 
 
 const StringField = memo(({ field, nodeId, className }: RendererProps<'String'>) => {
-    const value = WorkbenchSDK.useStaticValue(nodeId, field)
+    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id)
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
             <FieldLabel field={field} />
             <Textarea
                 placeholder={field.placeholder}
-                value={value}
+                value={value as string}
+                onChange={(e) => WorkbenchSDK.actions.field.setValue(nodeId, field, e.target.value)}
+                className={issue ? "border-destructive/60 focus-visible:ring-destructive/30" : ""}
             />
         </div>
     )
@@ -51,13 +53,14 @@ StringField.displayName = "StringField"
 
 
 const BooleanField = memo(({ field, nodeId, className }: RendererProps<'Boolean'>) => {
-    const value = WorkbenchSDK.useStaticValue(nodeId, field)
+    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id)
+
 
     return (
         <div className={className + " flex items-center justify-between py-2 nodrag cursor-auto"}>
             <FieldLabel field={field} />
             <Switch
-                checked={value}
+                checked={!!value}
                 size={"lg"}
                 onCheckedChange={(checked) => {
                     WorkbenchSDK.actions.field.setValue(nodeId, field, checked)
@@ -72,7 +75,7 @@ BooleanField.displayName = "BooleanField"
 
 
 const MultiOptionField = memo(({ field, nodeId, className }: RendererProps<'MultiOption'>) => {
-    const value = WorkbenchSDK.useStaticValue(nodeId, field)
+    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id);
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
@@ -80,15 +83,12 @@ const MultiOptionField = memo(({ field, nodeId, className }: RendererProps<'Mult
                 <div className=' flex flex-row'>
                     <FieldLabel field={field} />
                     <Tabs.Root
-                        value={value}
+                        value={value as string}
                         onValueChange={val => { WorkbenchSDK.actions.field.setValue(nodeId, field, val); }}
-                        className='ml-auto'
+                        className={`ml-auto ${issue ? "border border-destructive/60 rounded-md ring-1 ring-destructive/30" : ""}`}
 
                     >
-                        <Tabs.List
-                            indicatorVariant="primary"
-                            size="sm"
-                        >
+                        <Tabs.List size="sm">
                             {field.options.map((opt) => (
                                 <Tabs.Trigger key={opt} value={opt}>{opt}</Tabs.Trigger>
                             ))}
@@ -99,10 +99,10 @@ const MultiOptionField = memo(({ field, nodeId, className }: RendererProps<'Mult
                 <>
                     <FieldLabel field={field} />
                     <Select.Root
-                        value={value}
+                        value={value as string}
                         onValueChange={(value) => { WorkbenchSDK.actions.field.setValue(nodeId, field, value) }}
                     >
-                        <Select.Trigger className="w-full">
+                        <Select.Trigger className={`w-full ${issue ? "border-destructive/60 ring-1 ring-destructive/30" : ""}`}>
                             <Select.Value placeholder={field.placeholder} />
                         </Select.Trigger>
                         <Select.Content>
@@ -122,8 +122,10 @@ MultiOptionField.displayName = "MultiOptionField"
 
 
 const IntegerField = memo(({ field, nodeId, className }: RendererProps<'Integer'>) => {
-    const value = WorkbenchSDK.useStaticValue(nodeId, field)
+    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id);
     const hasSlider = field.slider;
+
+    const errorClass = issue ? "border-destructive/60 focus-visible:ring-destructive/30" : ""
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
@@ -133,24 +135,24 @@ const IntegerField = memo(({ field, nodeId, className }: RendererProps<'Integer'
                         <FieldLabel field={field} />
                         <Input
                             type="number"
-                            className='ml-auto w-20 h-6'
-                            value={value}
+                            className={`ml-auto w-20 h-6 ${errorClass}`}
+                            value={value as string}
                             step={field.step ?? 1}
                             min={field.min}
                             max={field.max}
                             onChange={(e) => {
                                 const val = e.currentTarget.value;
-                                WorkbenchSDK.actions.field.setValue(nodeId, field, val)
+                                WorkbenchSDK.actions.field.setValue(nodeId, field, Number(val))
                             }}
                         />
 
                     </div>
                     <Slider
-                        className='pt-1'
+                        className={`pt-1 ${issue ? "opacity-50" : ""}`}
                         min={field.min}
                         max={field.max}
                         step={field.step ?? 1}
-                        value={[value]}
+                        value={[Number(value) || 0]}
                         onValueChange={val => {
                             WorkbenchSDK.actions.field.setValue(nodeId, field, val[0])
                         }}
@@ -161,13 +163,14 @@ const IntegerField = memo(({ field, nodeId, className }: RendererProps<'Integer'
                     <FieldLabel field={field} />
                     <Input
                         type="number"
+                        className={errorClass}
                         step={field.step ?? 1}
                         min={field.min}
                         max={field.max}
-                        value={value}
+                        value={value as string}
                         onChange={(e) => {
                             const val = e.currentTarget.value;
-                            WorkbenchSDK.actions.field.setValue(nodeId, field, val)
+                            WorkbenchSDK.actions.field.setValue(nodeId, field, Number(val))
                         }} />
                 </>
             }
@@ -180,9 +183,10 @@ IntegerField.displayName = "IntegerField"
 
 
 const FloatField = memo(({ field, nodeId, className }: RendererProps<'Float'>) => {
-    const value = WorkbenchSDK.useStaticValue(nodeId, field)
+    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id);
 
     const hasSlider = field.slider;
+    const errorClass = issue ? "border-destructive/60 focus-visible:ring-destructive/30" : ""
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
@@ -192,24 +196,24 @@ const FloatField = memo(({ field, nodeId, className }: RendererProps<'Float'>) =
                         <FieldLabel field={field} />
                         <Input
                             type="number"
-                            className='ml-auto w-20 h-6'
-                            value={value}
+                            className={`ml-auto w-20 h-6 ${errorClass}`}
+                            value={value as string}
                             step={field.step && field.step}
                             min={field.min}
                             max={field.max}
                             onChange={(e) => {
                                 const val = e.currentTarget.value;
-                                WorkbenchSDK.actions.field.setValue(nodeId, field, val)
+                                WorkbenchSDK.actions.field.setValue(nodeId, field, Number(val))
                             }}
                         />
 
                     </div>
                     <Slider
-                        className='pt-1'
+                        className={`pt-1 ${issue ? "opacity-50" : ""}`}
                         min={field.min}
                         max={field.max}
                         step={field.step && field.step}
-                        value={[value]}
+                        value={[Number(value) || 0]}
                         onValueChange={values => {
                             WorkbenchSDK.actions.field.setValue(nodeId, field, values[0])
                         }}
@@ -220,13 +224,14 @@ const FloatField = memo(({ field, nodeId, className }: RendererProps<'Float'>) =
                     <FieldLabel field={field} />
                     <Input
                         type="number"
-                        value={value}
+                        className={errorClass}
+                        value={value as string}
                         step={field.step && field.step}
                         min={field.min}
                         max={field.max}
                         onChange={(e) => {
                             const val = e.currentTarget.value;
-                            WorkbenchSDK.actions.field.setValue(nodeId, field, val)
+                            WorkbenchSDK.actions.field.setValue(nodeId, field, Number(val))
                         }}
                     />
                 </>
@@ -242,16 +247,16 @@ FloatField.displayName = "FloatField"
 
 
 const FileField = memo(({ field, nodeId, className }: RendererProps<'File'>) => {
-    const value = WorkbenchSDK.useStaticValue(nodeId, field)
+    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id);
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
             <FieldLabel field={field} />
             <div className="flex items-center gap-2">
                 <Input
-                    value={value}
+                    value={value as string}
                     readOnly
-                    className="opacity-50"
+                    className={`opacity-50 ${issue ? "border-destructive/60" : ""}`}
                     onChange={(e) => {
                         const val = e.currentTarget.value;
                         WorkbenchSDK.actions.field.setValue(nodeId, field, val)
@@ -267,7 +272,7 @@ FileField.displayName = "FileField"
 
 
 const OtherField = memo(({ field, nodeId }: { field: Foundations.Field, nodeId: Workflow.Node.Id }) => {
-    const value = WorkbenchSDK.useStaticValue(nodeId, field)
+    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id);
 
     return (
         <>
@@ -275,6 +280,7 @@ const OtherField = memo(({ field, nodeId }: { field: Foundations.Field, nodeId: 
             <Input
                 value={String(value)}
                 disabled
+                className={issue ? "border-destructive/60" : ""}
             />
             <div className="text-[10px] text-muted-foreground mt-1">Unknown variant: {field.variant}</div>
         </>
@@ -286,7 +292,7 @@ OtherField.displayName = "OtherField"
 
 
 const SecretField = memo(({ field, nodeId, className }: RendererProps<'Secret'>) => {
-    const value = WorkbenchSDK.useStaticValue(nodeId, field)
+    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id);
     const credentials = VaultSDK.useStore(s => s.credentials)
 
     // ensure credentials are loaded
@@ -301,13 +307,13 @@ const SecretField = memo(({ field, nodeId, className }: RendererProps<'Secret'>)
             <FieldLabel field={field} />
 
             <Select.Root
-                value={value}
+                value={value as string}
                 onValueChange={(val) => {
                     console.log("Setting secret field value to", val)
                     WorkbenchSDK.actions.field.setValue(nodeId, field, val)
                 }}
             >
-                <Select.Trigger className="w-full">
+                <Select.Trigger className={`w-full ${issue ? "border-destructive/60 ring-1 border-2 ring-destructive/30" : ""}`}>
                     <Select.Value placeholder={"Select a credential..."} />
                 </Select.Trigger>
                 <Select.Content>

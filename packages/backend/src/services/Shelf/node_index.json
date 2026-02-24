@@ -1,6 +1,6 @@
 {
-  "version": "1771766438836",
-  "generatedAt": "2026-02-22T13:20:38.836Z",
+  "version": "1771866669466",
+  "generatedAt": "2026-02-23T17:11:09.466Z",
   "drawers": {},
   "blueprints": {
     "Core.Agent": {
@@ -12,7 +12,7 @@
         {
           "id": "provider",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": true,
           "displayName": "Model Provider",
           "tooltip": "The provider of the language model that the agent will use to generate responses.",
@@ -29,7 +29,7 @@
         {
           "id": "model",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Model",
           "variant": "MultiOption",
@@ -134,7 +134,7 @@
         {
           "id": "stringField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "String Field",
           "variant": "String",
@@ -145,7 +145,7 @@
         {
           "id": "multilineStringField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Multiline String Field",
           "variant": "String",
@@ -156,7 +156,7 @@
         {
           "id": "integerField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Integer Field",
           "variant": "Integer",
@@ -166,7 +166,7 @@
         {
           "id": "integerSliderField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Integer Slider Field",
           "variant": "Integer",
@@ -179,7 +179,7 @@
         {
           "id": "floatField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Float Field",
           "variant": "Float",
@@ -189,7 +189,7 @@
         {
           "id": "floatSliderField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Float Slider Field",
           "variant": "Float",
@@ -202,7 +202,7 @@
         {
           "id": "booleanField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Boolean Field",
           "variant": "Boolean",
@@ -211,7 +211,7 @@
         {
           "id": "multiOptionSelectField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "MultiOption Select",
           "variant": "MultiOption",
@@ -226,7 +226,7 @@
         {
           "id": "multiOptionTabField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "MultiOption Tab",
           "variant": "MultiOption",
@@ -240,7 +240,7 @@
         {
           "id": "fileField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "File Field",
           "variant": "File",
@@ -254,7 +254,7 @@
         {
           "id": "listField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "List Field",
           "variant": "List",
@@ -266,7 +266,7 @@
         {
           "id": "jsonField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "JSON Field",
           "variant": "Json",
@@ -277,7 +277,7 @@
         {
           "id": "secretField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Secret Field",
           "variant": "Secret",
@@ -286,7 +286,7 @@
         {
           "id": "scriptField",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Script Field",
           "variant": "Script",
@@ -395,7 +395,7 @@
         {
           "id": "level",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Level",
           "variant": "MultiOption",
@@ -448,7 +448,7 @@
         {
           "id": "code",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Script",
           "variant": "Script",
@@ -482,7 +482,7 @@
         {
           "id": "method",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Method",
           "variant": "MultiOption",
@@ -499,7 +499,7 @@
         {
           "id": "url",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "URL",
           "variant": "String",
@@ -510,7 +510,7 @@
         {
           "id": "headers",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Headers",
           "variant": "Json",
@@ -519,7 +519,7 @@
         {
           "id": "body",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Body",
           "variant": "Json",
@@ -558,7 +558,7 @@
         {
           "id": "data",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "JSON Data",
           "variant": "Json",
@@ -584,7 +584,7 @@
         {
           "id": "duration",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Duration (ms)",
           "tooltip": "Time to sleep in milliseconds.",
@@ -623,7 +623,7 @@
         {
           "id": "provider",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Model Provider",
           "tooltip": "Select the model provider",
@@ -641,7 +641,7 @@
         {
           "id": "modelName",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Model Name",
           "tooltip": "Select the model to use",
@@ -662,7 +662,7 @@
         {
           "id": "apiKey",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "OpenAI API Key",
           "tooltip": "Model Provider API key",
@@ -672,7 +672,7 @@
         {
           "id": "systemMessage",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "System Message",
           "tooltip": "A system message that helps set the behavior of the assistant",
@@ -684,7 +684,7 @@
         {
           "id": "stream",
           "advanced": true,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Stream",
           "tooltip": "Whether to stream the response",
@@ -694,7 +694,7 @@
         {
           "id": "temperature",
           "advanced": true,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Temperature",
           "tooltip": "Controls randomness in responses",
@@ -766,7 +766,7 @@
         {
           "id": "api_key",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "API Key",
           "variant": "Secret",
@@ -775,7 +775,7 @@
         {
           "id": "model",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Model",
           "variant": "MultiOption",
@@ -884,7 +884,7 @@
         {
           "id": "api_key",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "API Key",
           "variant": "Secret",
@@ -893,7 +893,7 @@
         {
           "id": "model",
           "advanced": false,
-          "required": true,
+          "required": false,
           "reconcile": false,
           "displayName": "Model",
           "variant": "MultiOption",
