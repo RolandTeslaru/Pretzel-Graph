@@ -7,6 +7,7 @@ import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
 import { SupabaseClient } from "@supabase/supabase-js";
 import { resolveCredential } from "@/utils/resolveCredential";
+import { SecretsHandler } from "./utils";
 
 @Service("Orchestrator")
 export class OrchestratorServiceImpl {
@@ -33,9 +34,10 @@ export class OrchestratorServiceImpl {
                 });
                 return jobId
             },
-            update: async (supabase, { jobId, status }) => {
+            update: async (supabase, { jobId, status, error }) => {
                 await supabase.from('jobs').update({
                     status,
+                    error,
                     updated_at: new Date()
                 }).eq('id', jobId);
             },
@@ -48,64 +50,33 @@ export class OrchestratorServiceImpl {
     public readonly ops: OrchestratorService.Ops = {
         execution: {
             run: async (token, workflow) => {
-                console.log("Preparing to run Workflow", workflow.id)
                 const supabase = createAuthenticatedClient(token);
                 const userId = await getUserId(supabase) as Auth.User.Id
-                console.log("Retrieved Authenticated client", userId)
 
-                const resolvedSecrets: Record<Vault.Credential.Id, Vault.Secret> = {};
-
-                console.log("Worlfloe, data, staticValues", workflow.data.staticValues)
-
-                try {
-                    for (const [_, node] of Object.entries(workflow.data.nodes)) {
-                        for (const [_, field] of Object.entries(node.fields)) {
-                            if (field.variant === "Secret") {
-
-
-                                const staticValues = workflow.data.staticValues[node.id];
-                                const credentialId = staticValues[field.id] as Vault.Credential.Id;
-                                console.log("Resolving secret for node", node.id, "field", field.id, "credentialId", credentialId)
-
-                                if (credentialId in resolvedSecrets) {
-                                    staticValues[field.id] = resolvedSecrets[credentialId];
-                                    continue;
-                                }
-
-                                const { value: secret } = await Vault.API.Credential.reveal(supabase, { id: credentialId })
-
-                                console.log("Resovled secret for credentialId", credentialId, "secret", secret)
-
-                                resolvedSecrets[credentialId] = secret;
-                                staticValues[field.id] = secret;
-                            }
-                        }
-                    }
-
-                } catch (error) {
-                    console.error("Error resolving secrets:", error);
-                    throw new Error("Failed to resolve secrets. Please check your credentials and try again.");
+                if (!userId) {
+                    throw new Error("User not found")
                 }
 
                 const jobId = await this.dbOps.job.create(supabase, { workflowId: workflow.id, userId })
 
-                console.log("Created job", jobId)
-
-                // Resolve secrets
-
-
-                console.log("Resolved secrets", resolvedSecrets)
-                console.log("Workflow after secret resolution", JSON.stringify(workflow, null, 2))
-                console.log("Resolved secrets, adding job to queue")
+                try {
+                    await SecretsHandler.resolveWorkflow(supabase, workflow)
 
 
-                const queueItem: Orchestrator.ExecutionQueue.Item = {
-                    jobId,
-                    workflow,
-                    userId
+                    const queueItem: Orchestrator.ExecutionQueue.Item = {
+                        jobId,
+                        workflow,
+                        userId
+                    }
+
+                    await this.executionQueue.add('run', queueItem);
+
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    await this.dbOps.job.update(supabase, { jobId, status: "failed", error: errorMessage })
+                    throw error;
                 }
-                await this.executionQueue.add('run', queueItem);
-                console.log("Added job to queue")
+
                 return { jobId }
             },
             pause: async (token, payload) => {
@@ -162,7 +133,7 @@ export namespace OrchestratorService {
     export type DbOps = {
         job: {
             create: (supabase: SupabaseClient, { workflowId, userId }: { workflowId: Workflow.Id, userId: Auth.User.Id }) => Promise<Orchestrator.Job.Id>
-            update: (supabase: SupabaseClient, { jobId, status }: { jobId: Orchestrator.Job.Id, status: Orchestrator.Job.Status }) => Promise<void>
+            update: (supabase: SupabaseClient, { jobId, status, error }: { jobId: Orchestrator.Job.Id, status: Orchestrator.Job.Status, error?: string }) => Promise<void>
             delete: (supabase: SupabaseClient, jobId: Orchestrator.Job.Id) => Promise<void>
         }
     }

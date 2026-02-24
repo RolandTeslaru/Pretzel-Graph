@@ -17,7 +17,7 @@ type RendererProps<K extends Foundations.Port.Input['variant']> = {
 // ── Variant Renderers ────────────────────────────────────────
 
 const MessageInput = memo(({ input, nodeId, className, showTypeBadge }: RendererProps<'Message'>) => {
-    const value = WorkbenchSDK.useStaticValue(nodeId, input);
+    const [value, issue] = WorkbenchSDK.useInput(nodeId, input.id);
 
     return (
         <div className={className + " w-full flex flex-col gap-1"}>
@@ -25,9 +25,10 @@ const MessageInput = memo(({ input, nodeId, className, showTypeBadge }: Renderer
             <HighlightedTextarea
                 input={input}
                 nodeId={nodeId}
-                value={value}
-                onChange={(e) => WorkbenchSDK.actions.input.setValue(nodeId, input.id, e.target.value)}
+                value={value as string}
+                onChange={(e) => WorkbenchSDK.actions.input.setValue(nodeId, input, e.target.value)}
                 placeholder={input.placeholder}
+                className={issue ? "border-red-500/50 focus:border-red-500" : ""}
             />
         </div>
     )
@@ -36,15 +37,16 @@ MessageInput.displayName = "MessageInput"
 
 
 const TextInput = memo(({ input, nodeId, className, showTypeBadge }: RendererProps<'Text'>) => {
-    const value = WorkbenchSDK.useStaticValue(nodeId, input);
+    const [value, issue] = WorkbenchSDK.useInput(nodeId, input.id);
 
     return (
         <div className={className + " w-full flex flex-col gap-1"}>
-            <InputLabel input={input} showTypeBadges={showTypeBadge}/>
+            <InputLabel input={input} showTypeBadges={showTypeBadge} />
             <Textarea
-                value={value}
-                onChange={(e) => WorkbenchSDK.actions.input.setValue(nodeId, input.id, e.target.value)}
+                value={value as string}
+                onChange={(e) => WorkbenchSDK.actions.input.setValue(nodeId, input, e.target.value)}
                 placeholder="Enter text..."
+                className={issue ? "border-destructive/60 border-2 focus-visible:ring-destructive/30" : ""}
             />
         </div>
     )
@@ -53,9 +55,13 @@ TextInput.displayName = "TextInput"
 
 
 /** Fallback for variants that can only receive via edge (LanguageModel, Document, etc.) */
-const EdgeOnlyInput = memo(({ input, className, showTypeBadge }: { input: Foundations.Port.Input, className?: string, showTypeBadge?: boolean }) => {
+const EdgeOnlyInput = memo(({ input, nodeId, className, showTypeBadge }: { input: Foundations.Port.Input, nodeId: Workflow.Node.Id, className?: string, showTypeBadge?: boolean }) => {
+    const issue = WorkbenchSDK.useStore(s => 
+        s.issues[nodeId]?.inputs[input.id] ?? null
+    )
+    
     return (
-        <div className={className + " w-full flex flex-col gap-1"}>
+        <div className={className + " w-full flex flex-col gap-1 " + (issue ? "border border-red-500/50 rounded" : "")}>
             <InputLabel input={input} showTypeBadges={showTypeBadge} />
         </div>
     )
@@ -103,6 +109,6 @@ export const InputRenderer = memo(({ input, nodeId, className, hideInnerComponen
     if (Component)
         return <Component input={input} nodeId={nodeId} className={className} showTypeBadge={showTypeBadge} />
 
-    return <EdgeOnlyInput input={input} className={className} showTypeBadge={showTypeBadge} />
+    return <EdgeOnlyInput input={input} nodeId={nodeId} className={className} showTypeBadge={showTypeBadge} />
 })
 

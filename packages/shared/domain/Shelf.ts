@@ -49,11 +49,20 @@ export namespace Shelf {
                     blueprintId: Foundations.Blueprint.Id
                 })
                 export const Response = z.object({
-                    blueprint: Foundations.Blueprint
+                    blueprint: Foundations.Blueprint.Schema
                 })
 
                 export type Request = z.infer<typeof Request>
                 export type Response = z.infer<typeof Response>
+            }
+            export async function get(
+                api: AxiosInstance,
+                req: Get.Request
+            ): Promise<Get.Response> {
+                const { data } = await api.post<Get.Response>(
+                    '/api/shelf/blueprint/get', req
+                );
+                return data;
             }
 
             export namespace GetBatch {
@@ -67,6 +76,15 @@ export namespace Shelf {
                 export type Request = z.infer<typeof Request>
                 export type Response = z.infer<typeof Response>
             }
+            export async function getBatch(
+                api: AxiosInstance,
+                req: GetBatch.Request
+            ): Promise<GetBatch.Response> {
+                const { data } = await api.post<GetBatch.Response>(
+                    '/api/shelf/blueprint/getBatch', req
+                )
+                return data;
+            }
 
             export namespace GetAllInSection {
                 export const Request = z.object({
@@ -79,27 +97,6 @@ export namespace Shelf {
                 export type Request = z.infer<typeof Request>
                 export type Response = z.infer<typeof Response>
             }
-
-            export async function get(
-                api: AxiosInstance,
-                req: Get.Request
-            ): Promise<Get.Response> {
-                const { data } = await api.post<Get.Response>(
-                    '/api/shelf/blueprint/get', req
-                );
-                return data;
-            }
-
-            export async function getBatch(
-                api: AxiosInstance,
-                req: GetBatch.Request
-            ): Promise<GetBatch.Response> {
-                const { data } = await api.post<GetBatch.Response>(
-                    '/api/shelf/blueprint/getBatch', req
-                )
-                return data;
-            }
-
             export async function getAllInSection(
                 api: AxiosInstance,
                 req: GetAllInSection.Request

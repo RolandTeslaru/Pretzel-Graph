@@ -74,7 +74,7 @@ export namespace FieldBuilder {
             id: props.id as TId & Foundations.Field.Id,
             displayName: props.displayName,
             tooltip: props.tooltip,
-            required: props.required ?? true,
+            required: props.required ?? false,
             advanced: props.advanced ?? false,
             reconcile: props.reconcile ?? false,
         } satisfies { id: TId & Foundations.Field.Id } & OmitId<Foundations.Field.Base>

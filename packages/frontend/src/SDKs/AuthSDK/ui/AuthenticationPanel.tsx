@@ -31,9 +31,7 @@ const AuthenticationPanel = () => {
                     setVariant(val as "login" | "signup");
                 }}
             >
-                <Tabs.List
-                    indicatorVariant="primary"
-                >
+                <Tabs.List>
                     <Tabs.Trigger className='w-full' value='signup'>Sign Up</Tabs.Trigger>
                     <Tabs.Trigger className='w-full' value='login'>Login</Tabs.Trigger>
                 </Tabs.List>

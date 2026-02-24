@@ -95,7 +95,7 @@ export const HighlightedTextarea: React.FC<HighlightedTextareaProps> = ({ classN
 
 
 const ExpandedDialogContent = ({ input, nodeId, onChange }: { input: Foundations.Port.Input, nodeId: Workflow.Node.Id, onChange: HighlightedTextareaProps["onChange"] }) => {
-    const value = WorkbenchSDK.useStaticValue(nodeId, input)
+    const [value, error] = WorkbenchSDK.useInput(nodeId, input.id)
     return (
         <div className='flex flex-col gap-2 p-3 pt-3'>
             <Dialog.Title>Text Area</Dialog.Title>

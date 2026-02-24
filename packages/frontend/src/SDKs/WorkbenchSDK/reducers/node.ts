@@ -6,6 +6,8 @@ import { cacheReducers } from "./cache";
 import { layoutReducers } from "./layout";
 import { toast } from "sonner";
 import { workbenchSelectors } from "../selectors";
+import { inputReducers } from "./input";
+import { fieldReducers } from "./field";
 
 const uid = {
     randomUUID: (length: number) => Math.random().toString(36).substring(2, 2 + length)
@@ -72,10 +74,28 @@ export const nodeReducers = {
         }
 
         s.workflow.data.nodes[nodeId] = newNode;
-        s.workflow.data.staticValues[nodeId] = {}
+
+        const initialStaticValues: Record<Foundations.Field.Id | Foundations.Port.Input.Id, any> = {};
+
+        // Populate default values from fields
+        for (const field of blueprint.fields) {
+            if ('initialValue' in field && field.initialValue !== undefined) {
+                initialStaticValues[field.id] = field.initialValue;
+            }
+        }
+
+        // Populate default values from inputs
+        for (const input of blueprint.inputs) {
+            if ('initialValue' in input && input.initialValue !== undefined) {
+                initialStaticValues[input.id] = input.initialValue;
+            }
+        }
+
+        s.workflow.data.staticValues[nodeId] = initialStaticValues;
 
         layoutReducers.node.add(s, nodeId, position);
         cacheReducers.createNode(s, newNode);
+        nodeReducers.validate(s, nodeId);
     },
     recreate: (s, nodeId, blueprint) => {
         const node = s.workflow.data.nodes[nodeId];
@@ -122,6 +142,7 @@ export const nodeReducers = {
 
         s.workflow.data.nodes[nodeId] = newNode;
         cacheReducers.createNode(s, newNode);
+        nodeReducers.validate(s, nodeId);
     },
     duplicate: (s, originalNode, position) => {
         s.isDirty = true
@@ -147,9 +168,10 @@ export const nodeReducers = {
 
         s.workflow.data.nodes[newNodeId] = newNode;
         s.workflow.data.staticValues[newNodeId] = cloneDeep(s.workflow.data.staticValues[originalNode.id]);
-        
+
         layoutReducers.node.add(s, newNodeId, position);
         cacheReducers.createNode(s, newNode);
+        nodeReducers.validate(s, newNodeId);
 
         return newNode;
     },
@@ -166,7 +188,23 @@ export const nodeReducers = {
         node.inputs = blueprint.inputs as Workflow.Node['inputs']
         node.outputs = blueprint.outputs as Workflow.Node['outputs']
 
-        s.workflow.data.staticValues[nodeId] = {}
+        const initialStaticValues: Record<Foundations.Field.Id | Foundations.Port.Input.Id, any> = {};
+
+        // Populate default values from fields
+        for (const field of blueprint.fields) {
+            if ('initialValue' in field && field.initialValue !== undefined) {
+                initialStaticValues[field.id] = field.initialValue;
+            }
+        }
+
+        // Populate default values from inputs
+        for (const input of blueprint.inputs) {
+            if ('initialValue' in input && input.initialValue !== undefined) {
+                initialStaticValues[input.id] = input.initialValue;
+            }
+        }
+
+        s.workflow.data.staticValues[nodeId] = initialStaticValues;
     },
     setMinimized: (s, nodeId, isMinimized) => {
         s.isDirty = true;
@@ -179,6 +217,33 @@ export const nodeReducers = {
     setDescription: (s, nodeId, newDescription) => {
         s.isDirty = true;
         s.workflow.data.nodes[nodeId].description = newDescription;
+    },
+    validate: (s, nodeId) => {
+        const node = s.workflow.data.nodes[nodeId];
+        if (!node) return;
+
+        if (!s.issues[nodeId])
+            s.issues[nodeId] = { fields: {}, inputs: {} };
+
+        // Clear existing issues for this node to rebuild them cleanly
+        s.issues[nodeId] = { fields: {}, inputs: {} };
+
+        let numFieldIssues = 0;
+        let numInputIssues = 0;
+
+        for (const field of node.fields)
+            if(fieldReducers.validate(s, nodeId, field))
+                numFieldIssues ++;
+
+        for (const input of node.inputs)
+            if(inputReducers.validate(s, nodeId, input))
+                numInputIssues ++;
+
+        if(numFieldIssues === 0 && numInputIssues === 0)
+            delete s.issues[nodeId];
+    },
+    clearIssues: (s, nodeId) => {
+        delete s.issues[nodeId];
     }
 } satisfies NodeReducers
 
@@ -192,4 +257,6 @@ interface NodeReducers {
     setMinimized  : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void;
     setDisplayName: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDisplayName: string) => void;
     setDescription: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDescription: string) => void;
+    validate: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
+    clearIssues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
 }

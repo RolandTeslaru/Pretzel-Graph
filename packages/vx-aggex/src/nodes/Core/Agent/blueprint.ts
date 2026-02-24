@@ -31,6 +31,7 @@ export const Blueprint = defineBlueprint({
             id: "apiKey",
             displayName: "Google Generative API Key",
             initialValue: "",
+            required: true,
             tooltip: "The API key to use for the model (if using a built-in provider)."
         }),
         FieldBuilder.Integer({

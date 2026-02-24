@@ -6,7 +6,7 @@ import NodeOutputs from './Outputs';
 
 import type { NodeProps } from '@xyflow/react';
 import { Workflow } from '@vx-agent-editor/shared/domain';
-import { NodeToolbar, Position, useUpdateNodeInternals } from '@xyflow/react';
+import { NodeToolbar, Position } from '@xyflow/react';
 import { NodeCustomToolbar } from './CustomToolbar';
 import { cn } from '@/utils/styleUtils';
 
@@ -23,10 +23,14 @@ export default WorkbenchNode
 
 
 const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
-  const isNodeClicked = WorkbenchSDK.useStore(s => s.clickedNodeId === node.id);
-  const isWorkflowLocked = WorkbenchSDK.useStore(s => s.workflow.locked);
 
-  const isMinimized = node.isMinimized;
+  const [isNodeClicked, isWorkflowLocked, isMinimized] = WorkbenchSDK.useStore(
+    s => [
+      s.clickedNodeId === node.id,
+      s.workflow.locked,
+      s.workflow.data.nodes[node.id].isMinimized
+    ]
+  );
 
   return (
     <>
@@ -37,25 +41,25 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
       </NodeToolbar>
 
       <div className={cn(
-        "animate-in fade-in-0 duration-200 ease-out p-1 border-2",
+        "animate-in fade-in-0 duration-200 ease-out p-1 border-2 transition-colors",
         "flex flex-col relative rounded-3xl shadow-lg shadow-black/20 dark:shadow-black/30",
-        isNodeClicked ? "ring-3 ring-primary/30 ring-offset-4 ring-offset-background/0" : "",
+        isNodeClicked ? "ring-4 ring-primary/20 ring-offset-8 ring-offset-background" : "",
         isMinimized ? "min-w-[100px]" : "w-[250px]",
       )}
         style={{
           backgroundColor:
             node.accent
-              ? `color-mix(in srgb, ${node.accent} 18%, var(--card))`
+              ? `color-mix(in srgb, ${node.accent} 22%, var(--card))`
               : 'var(--secondary)',
           borderColor:
             node.accent
-              ? `color-mix(in srgb, ${node.accent} 30%, var(--border))`
+              ? `color-mix(in srgb, ${node.accent} 22%, var(--border))`
               : 'var(--border)'
         }}
       >
         <NodeHeader node={node} isWorkflowLocked={isWorkflowLocked} />
         {isMinimized === false &&
-          <div className='p-1 bg-card/80 border border-border/50 rounded-b-[22px] rounded-t-lg shadow-sm shadow-black/10'>
+          <div className='pt-1 bg-card/80 border border-border/50 rounded-b-[22px] rounded-t-lg shadow-sm shadow-black/10'>
             <NodeInputs node={node} isWorkflowLocked={isWorkflowLocked} />
             <NodeOutputs node={node} isWorkflowLocked={isWorkflowLocked} />
           </div>

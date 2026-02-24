@@ -1,7 +1,6 @@
 import type { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { edgeReducers } from "./edge";
-import type { InputContainer } from "../utils";
 
 export const inputReducers = {
     setValue: (s, nodeId, inputId, value) => {
@@ -34,65 +33,14 @@ export const inputReducers = {
         }
         return false;
     },
-    changeOrder: (s, nodeId, active, over) => {
-        s.isDirty = true;
-        const node = s.workflow.data.nodes[nodeId];
-        if (!node) return;
-
-        const from = active.containerId;
-        const to = over.containerId;
-
-        const activeId = active.id;
-        const overId = over?.id ?? null;
-
-        const inputs = node.inputs;
-
-        // Find the active input
-        const activeIndex = inputs.findIndex(i => i.id === activeId);
-        if (activeIndex === -1) return;
-
-        const activeInput = inputs[activeIndex];
-
-        // Same category reorder
-        if (from === to) {
-            if (!overId) return;
-            const overIndex = inputs.findIndex(i => i.id === overId);
-            if (overIndex === -1) return;
-
-            // Remove and reinsert at new position
-            inputs.splice(activeIndex, 1);
-            inputs.splice(overIndex > activeIndex ? overIndex : overIndex, 0, activeInput);
-            return;
+    validate: (s, nodeId, input) => {
+        const issue = checkForIssue(s, nodeId, input);
+        if (issue){
+            s.issues[nodeId].inputs[input.id] = issue;
+            return true;
         }
-
-        // // Cross-category moves: normal <-> advanced
-        // if ((from === "normal" && to === "advanced") || (from === "advanced" && to === "normal")) {
-        //     // Update the advanced property
-        //     activeInput.advanced = to === "advanced";
-
-        //     // If overId exists, reposition relative to it
-        //     if (overId) {
-        //         const overIndex = inputs.findIndex(i => i.id === overId);
-        //         if (overIndex !== -1 && overIndex !== activeIndex) {
-        //             inputs.splice(activeIndex, 1);
-        //             inputs.splice(overIndex > activeIndex ? overIndex : overIndex, 0, activeInput);
-        //         }
-        //     }
-        //     return;
-        // }
-
-        // Connected category - just reorder within input array (connected is a virtual category)
-        if (from === "connected" && to === "connected") {
-            if (!overId) return;
-            const overIndex = inputs.findIndex(i => i.id === overId);
-            if (overIndex === -1) return;
-
-            inputs.splice(activeIndex, 1);
-            inputs.splice(overIndex > activeIndex ? overIndex : overIndex, 0, activeInput);
-            return;
-        }
-
-        // Don't allow moves into/out of connected category
+        delete s.issues[nodeId].inputs[input.id];
+        return false;
     }
 } satisfies InputReducers
 
@@ -109,19 +57,40 @@ type InputReducers = {
         nodeId: Workflow.Node.Id,
         inputId: Foundations.Port.Input.Id
     ) => boolean
-    changeOrder: (
+    remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => void
+    validate: (
         state: WorkbenchSDK.State,
         nodeId: Workflow.Node.Id,
-        active: {
-            id: Foundations.Port.Input.Id,
-            items: Foundations.Port.Input.Id[], // holds the current items where id is from
-            containerId: InputContainer      // holds the current container id where the id is from
-        },
-        over: {
-            id: Foundations.Port.Input.Id,
-            items: Foundations.Port.Input.Id[],
-            containerId: InputContainer
+        input: Foundations.Port.Input
+    ) => boolean
+}
+
+
+const checkForIssue = (
+    s: WorkbenchSDK.State,
+    nodeId: Workflow.Node.Id,
+    input: Foundations.Port.Input
+): Workflow.Issue.Input | null => {
+    if (!input.required)
+        return null;
+
+    const hasEdge = !!s.cache.inputHandlesMap[nodeId]?.[input.id];
+    if (hasEdge)
+        return null;
+
+    if (input.variant === "Message" || input.variant === "Text") {
+        const value = s.workflow.data.staticValues[nodeId]?.[input.id];
+        if (value !== undefined && value !== null && value !== "")
+            return null;
+
+        return {
+            input,
+            type: 'missing_value_or_connection',
         }
-    ) => void,
-    remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => void
+    }
+
+    return {
+        input,
+        type: 'missing_connection',
+    }
 }
