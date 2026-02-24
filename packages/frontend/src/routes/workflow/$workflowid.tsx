@@ -1,16 +1,18 @@
-import RunnerPanel from '@/SDKs/OrchestratorSDK/ui/runnerPanel'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
 import ShelfSidebar from '@/SDKs/ShelfSDK/ui/ShelfSidebar'
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
 import WorkflowCanvas from '@/SDKs/WorkbenchSDK/ui/Canvas'
-import InputSidebar from '@/SDKs/WorkbenchSDK/ui/NodeSidebar'
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import JsonView from 'react18-json-view'
 import 'react18-json-view/src/style.css'
 import 'react18-json-view/src/dark.css'
 import { Button } from '@/vx-ui/foundations'
+import NodeSidebar from '@/SDKs/WorkbenchSDK/ui/NodeSidebar'
+import ChatSidebar from '@/SDKs/ChatSDK/ui/ChatSidebar'
+import WorkflowControls from '@/SDKs/OrchestratorSDK/ui/WorkflowControls'
+import ChatButton from '@/SDKs/ChatSDK/ui/ChatButton'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -78,10 +80,22 @@ function WorkflowLayoutComponent() {
         <div className='w-full h-screen overflow-hidden'>
             <ShelfSidebar />
             <WorkflowCanvas />
-            <InputSidebar />
-            <RunnerPanel />
+            <ChatSidebar/>
+            <NodeSidebar />
+            <BottomPanel/>
+            {/* <StackDebugPanel/> */}
             {/* <WorkflowStateViewer /> */}
             <Outlet />
+        </div>
+    )
+}
+
+
+const BottomPanel = () => {
+    return (
+        <div className='flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 -translate-x-1/2 z-10'>
+            <ChatButton/>
+            <WorkflowControls/>
         </div>
     )
 }

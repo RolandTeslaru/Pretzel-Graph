@@ -10,7 +10,7 @@ const PromptInput = () => {
                 <ArtifactAddButton/>
 
                 {/* <Separator orientation="vertical" className="h-4!" /> */}
-                <SendButton />
+                <SendButton/>
             </InputGroupAddon>
         </InputGroup>
     )
@@ -29,11 +29,10 @@ const SendButton = () => {
     return (
         <InputGroupButton
             variant="default"
-            className="style-lyra:rounded-none rounded-full"
-            size="icon-xs"
+            className=" ml-auto"
         >
+            <span>Send</span>
             <SystemIcons.ArrowUp />
-            <span className="sr-only">Send</span>
         </InputGroupButton>
     )
 }

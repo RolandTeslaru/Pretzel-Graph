@@ -1,4 +1,5 @@
 import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK'
+import { StackSDK } from '@/SDKs/StackSDK'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
@@ -15,10 +16,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         <>
             <QuerySDK.Provider>
                 <div className='fixed top-5 left-5 z-50'>
-                    <ThemeSelector/>
+                    <ThemeSelector />
                 </div>
-                <NotificationSDK.UIOverlay/>
+                <NotificationSDK.UIOverlay />
                 <DialogSDK.UIOverlay />
+                <StackSDK.UIOverlay />
                 <Outlet />
                 {/* <TanStackRouterDevtools /> */}
             </QuerySDK.Provider>

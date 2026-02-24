@@ -1,9 +1,7 @@
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
 import { Button } from '@/vx-ui/foundations'
 import { SystemIcons } from '@/vx-ui/icons'
-import { useCallback } from 'react'
 import { OrchestratorSDK } from '../sdk'
-import type { Orchestrator } from '@vx-agent-editor/shared/domain'
 
 const handlePause = () => {
   const currentJobId = OrchestratorSDK.state.currentJobId;
@@ -25,27 +23,12 @@ const handleRun = () => {
   );
 }
 
-const RunnerPanel = () => {
+const WorkflowControls = () => {
 
   const currentJobId = OrchestratorSDK.useStore(s => s.currentJobId);
 
-  OrchestratorSDK.useJobEvents(currentJobId || "" as Orchestrator.Job.Id, (event) => {
-    switch (event.type) {
-      case "job:started":
-        OrchestratorSDK.setState(s => s.currentJobId = event.jobId)
-        break;
-      case "job:update":
-        // @ts-expect-error
-        OrchestratorSDK.setState(s => s.graphState = event.update)
-        break;
-      case "job:completed":
-        OrchestratorSDK.setState(s => s.currentJobId = undefined)
-        break;
-    }
-  })
-
   return (
-    <div className='flex flex-row p-1 gap-2 rounded-2xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 -translate-x-1/2 z-10'>
+    <>
 
       {currentJobId === undefined ? (
         <>
@@ -68,8 +51,8 @@ const RunnerPanel = () => {
           </>
         )
       }
-    </div>
+    </>
   )
 }
 
-export default RunnerPanel
+export default WorkflowControls
