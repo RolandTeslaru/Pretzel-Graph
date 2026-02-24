@@ -1,9 +1,9 @@
 import { ScrollArea, Spinner } from '@/vx-ui/foundations'
 import { useMemo, memo, useEffect } from 'react'
 import { WorkbenchSDK } from '../../sdk'
+import { StackSDK } from '@/SDKs/StackSDK'
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { Accordion } from '@/vx-ui/foundations/accordion';
-import { AnimatePresence, motion } from 'motion/react';
 import { LazyIcon } from '@/vx-ui/icons/LazyIcon';
 import { FieldRenderer } from '../FieldRenderer';
 import { InputRenderer } from '../InputRenderer';
@@ -13,21 +13,18 @@ import { PortBadge } from '../PortBadge';
 const NodeSidebar = () => {
     const clickedNode = WorkbenchSDK.useStore(s => s.clickedNodeId ? s.workflow.data.nodes[s.clickedNodeId] : null);
 
-    if(!clickedNode)
-        console.log("Imperative: Clicked Node is null or undefined")
-
     useEffect(() => {
-        if(!clickedNode)
-            console.log("UseEffect: Clicked Node is null or undefined")
+        if (clickedNode)
+            StackSDK.actions.push("nodeSidebar", (props) => (
+                <StackSDK.Template {...props}>
+                    <Content clickedNode={clickedNode} />
+                </StackSDK.Template>
+            ))
+        else
+            StackSDK.actions.pop("nodeSidebar")
     }, [clickedNode])
 
-    return (
-        <AnimatePresence>
-            {clickedNode && (
-                <Content key="sidebar-content" clickedNode={clickedNode} />
-            )}
-        </AnimatePresence>
-    )
+    return null
 }
 
 export default NodeSidebar
@@ -58,27 +55,17 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
 
     const defaultOpen = useMemo(() => {
         const sections: string[] = [];
-        if (fields.length > 0) 
+        if (fields.length > 0)
             sections.push("fields");
-        if (inputs.length > 0) 
+        if (inputs.length > 0)
             sections.push("inputs");
-        if (connectedInputs.length > 0) 
+        if (connectedInputs.length > 0)
             sections.push("connected");
         return sections;
     }, []);
 
     return (
-        <motion.div
-            initial={{ x: "100%", opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "100%", opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`
-                overflow-hidden
-                fixed flex flex-col z-20 right-5 top-24 bottom-24 w-87.5 bg-card/80 backdrop-blur-lg 
-                border border-border rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10
-            `}
-        >
+        <>
             {/* Header */}
             <div className='flex flex-row pt-2 gap-2 mb-2 px-4 relative'>
                 <LazyIcon className='text-primary my-auto h-5 w-5' name={node.icon as string} />
@@ -128,9 +115,6 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                         </Accordion.Item>
                     )}
 
-                    {/* Inputs (unconnected) */}
-                    
-
                     {/* Connected Inputs */}
                     {connectedInputs.length > 0 && (
                         <Accordion.Item value='connected'>
@@ -149,10 +133,10 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
                             </Accordion.Content>
                         </Accordion.Item>
                     )}
-                   
+
                 </Accordion.Root>
             </ScrollArea.Root>
-        </motion.div>
+        </>
     )
 }
 

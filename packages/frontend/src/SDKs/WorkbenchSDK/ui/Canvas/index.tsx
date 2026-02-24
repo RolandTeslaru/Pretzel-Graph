@@ -64,27 +64,3 @@ const CanvasRenderer = memo(() => {
         </ReactFlow>
     )
 })
-
-
-
-const MousePositionViewer = () => {
-
-    const [dummyState, setDummyState] = useState<any>();
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setDummyState(Date.now());
-        }, 100);
-        return () => clearInterval(interval);
-    }, []);
-
-
-    const lastMousePosition = WorkbenchSDK.runtime.lastMousePosition
-
-    return (
-        <div className='fixed top-0 z-100 p-2 left-0 bg-card border-border rounded-lg shadow-md shadow-black/10'>
-            <p className='font-mono font-semibold'>{`Global Mouse position: x: ${lastMousePosition.x}, y: ${lastMousePosition.y}`}</p>
-            <p className='font-mono font-semibold'>{`Converted Canvas position: x: ${convertMousePositionToCanvas(lastMousePosition.x, lastMousePosition.y).x}, y: ${convertMousePositionToCanvas(lastMousePosition.x, lastMousePosition.y).y}`}</p>
-        </div>
-    )
-}

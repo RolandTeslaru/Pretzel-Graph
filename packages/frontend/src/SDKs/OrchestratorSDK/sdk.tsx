@@ -21,6 +21,10 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
 
     public readonly reducers: OrchestratorSDK.Reducers = {}
 
+    public readonly runtime = {
+        unsubscribeFromTopic: null as (() => void) | null
+    }
+
     public readonly actions: OrchestratorSDK.Actions = {
         execution: {
             run: async (workflow, wfCache) => {
@@ -39,7 +43,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                 const executionPromise = Orchestrator.API.Execution.run(api, workflow);
 
                 toast.promise(executionPromise, {
-                    loading: "Executing workflow",
+                    loading: "Preparing workflow execution",
                     success: (data) => {
                         return `Workflow execution started`
                     },
@@ -78,6 +82,34 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
 }
 
 export const OrchestratorSDK = SDK.get<OrchestratorSDKImpl>("Orchestrator")
+
+
+OrchestratorSDK.useStore.subscribe((state, prevState) => {
+    if (state.currentJobId === prevState.currentJobId)
+        return;
+
+    if (state.currentJobId) {
+        const topic = `job:${state.currentJobId}:events` as Realtime.Topic.Id;
+        OrchestratorSDK.runtime.unsubscribeFromTopic = RealtimeSDK.subscribeToTopic(
+            topic, (event: Orchestrator.Event.Job) => {
+                switch (event.type) {
+                    case "job:started":
+                        OrchestratorSDK.setState(s => s.currentJobId = event.jobId)
+                        break;
+                    case "job:update":
+                        // @ts-expect-error
+                        OrchestratorSDK.setState(s => s.graphState = event.update)
+                        break;
+                    case "job:completed":
+                        OrchestratorSDK.setState(s => s.currentJobId = undefined)
+                        break;
+                }
+            });
+    } else {
+        OrchestratorSDK.runtime.unsubscribeFromTopic?.();
+    }
+})
+
 
 export namespace OrchestratorSDK {
 

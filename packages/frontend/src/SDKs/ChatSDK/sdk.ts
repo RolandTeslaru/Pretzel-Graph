@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { supabase } from "@/libs/supabase";
 
 @SDK("Chat")
 export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
