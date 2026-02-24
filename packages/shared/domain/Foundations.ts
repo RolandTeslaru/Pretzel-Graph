@@ -255,7 +255,8 @@ export namespace Foundations {
 
             const inputFields = {
                 id: Input.Id,
-                required: z.boolean()
+                required: z.boolean(),
+                internal: z.boolean().optional()
             };
 
             export const Base = Port.Base.extend(inputFields)

@@ -1,6 +1,5 @@
-import type { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import { Validation, type Foundations, type Workflow } from "@vx-agent-editor/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
-import { Validator } from "@vx-agent-editor/shared/validators"
 
 export const fieldReducers = {
     setValue: (s, nodeId, fieldId, value) => {
@@ -8,7 +7,7 @@ export const fieldReducers = {
         s.workflow.data.staticValues[nodeId][fieldId] = value
     },
     validate: (s, nodeId, field) => {
-        const issue = Validator.validateField(s.workflow, nodeId, field);
+        const issue = Validation.Issue.Field.check(field, nodeId, s.workflow)
 
         if (issue){
             s.issues[nodeId].fields[field.id] = issue;

@@ -1,4 +1,4 @@
-import type { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import { Workflow, type Foundations } from "@vx-agent-editor/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { cacheReducers } from "./cache";
 import { inputReducers } from "./input";
@@ -67,20 +67,13 @@ export const edgeReducers = {
 
         inputReducers.validate(s, edge.target.nodeId, input);
     },
-    createId: (_sourceNodeId, _sourcePortId, _targetNodeId, _targetPortId) => {
-        return `${_sourceNodeId}|${_sourcePortId}|${_targetNodeId}|${_targetPortId}` as Workflow.Edge.Id
-    }
+    createId: Workflow.Edge.createId
 } satisfies EdgeReducers;
 
 type EdgeReducers = {
     create: (state: WorkbenchSDK.State, conn: WorkbenchSDK.DriverConnection) => Workflow.Edge | undefined
     remove: (state: WorkbenchSDK.State, edgeId: Workflow.Edge.Id) => void
-    createId: (
-        sourceNodeId: Workflow.Node.Id, 
-        sourcePortId: Foundations.Port.Output.Id, 
-        targetNodeId: Workflow.Node.Id, 
-        targetPortId: Foundations.Port.Input.Id
-    ) => Workflow.Edge.Id
+    createId: typeof Workflow.Edge.createId
 }
 
 

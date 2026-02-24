@@ -1,4 +1,4 @@
-import { Workflow, type Foundations } from "@vx-agent-editor/shared/domain";
+import { Validation, Workflow, type Foundations } from "@vx-agent-editor/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { cloneDeep } from 'lodash';
 import { edgeReducers } from "./edge";
@@ -14,11 +14,6 @@ const uid = {
 }
 
 const sel = workbenchSelectors;
-
-const createNodeId: NodeReducers["createId"] = (blueprintId) => {
-    return `${blueprintId}-${uid.randomUUID(5)}` as Workflow.Node.Id
-}
-
 
 export const nodeReducers = {
     remove: (s, deletedNodeId) => {
@@ -48,10 +43,10 @@ export const nodeReducers = {
         cacheReducers.deleteNode(s, deletedNodeId);
         layoutReducers.node.remove(s, deletedNodeId);
     },
-    createId: createNodeId,
+    createId: Workflow.Node.createId,
     create: (s, blueprint, position) => {
         s.isDirty = true;
-        const nodeId = createNodeId(blueprint.id);
+        const nodeId = Workflow.Node.createId(blueprint.id);
         const newNode = {
             id          : nodeId,
             blueprintId : blueprint.id,
@@ -151,7 +146,7 @@ export const nodeReducers = {
             position.x += 40
             position.y += 40
         }
-        const newNodeId = createNodeId(originalNode.blueprintId)
+        const newNodeId = Workflow.Node.createId(originalNode.blueprintId)
         const newNode = {
             id           : newNodeId,
             blueprintId  : originalNode.blueprintId,
@@ -222,25 +217,12 @@ export const nodeReducers = {
         const node = s.workflow.data.nodes[nodeId];
         if (!node) return;
 
-        if (!s.issues[nodeId])
-            s.issues[nodeId] = { fields: {}, inputs: {} };
+        const nodeIssues = Validation.Issue.Node.check(node, s.workflow, s.cache);
 
-        // Clear existing issues for this node to rebuild them cleanly
-        s.issues[nodeId] = { fields: {}, inputs: {} };
-
-        let numFieldIssues = 0;
-        let numInputIssues = 0;
-
-        for (const field of node.fields)
-            if(fieldReducers.validate(s, nodeId, field))
-                numFieldIssues ++;
-
-        for (const input of node.inputs)
-            if(inputReducers.validate(s, nodeId, input))
-                numInputIssues ++;
-
-        if(numFieldIssues === 0 && numInputIssues === 0)
+        if(!nodeIssues)
             delete s.issues[nodeId];
+        else
+            s.issues[nodeId] = nodeIssues;
     },
     clearIssues: (s, nodeId) => {
         delete s.issues[nodeId];
@@ -249,7 +231,7 @@ export const nodeReducers = {
 
 interface NodeReducers {
     remove        : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
-    createId      : (blueprintId: Foundations.Blueprint.Id) => Workflow.Node.Id;
+    createId      : typeof Workflow.Node.createId
     create        : (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }) => void;
     recreate      : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
     duplicate     : (state: WorkbenchSDK.State, originalNode: Workflow.Node, position?: { x: number, y: number }) => Workflow.Node;

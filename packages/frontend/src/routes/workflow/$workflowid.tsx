@@ -80,7 +80,7 @@ function WorkflowLayoutComponent() {
             <WorkflowCanvas />
             <InputSidebar />
             <RunnerPanel />
-            <WorkflowStateViewer />
+            {/* <WorkflowStateViewer /> */}
             <Outlet />
         </div>
     )
