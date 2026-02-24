@@ -24,13 +24,22 @@ export default WorkbenchNode
 
 const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
 
-  const [isNodeClicked, isWorkflowLocked, isMinimized] = WorkbenchSDK.useStore(
+  const [isNodeClicked, isWorkflowLocked] = WorkbenchSDK.useStore(
     s => [
       s.clickedNodeId === node.id,
       s.workflow.locked,
-      s.workflow.data.nodes[node.id].isMinimized
     ]
   );
+
+  let backgroundColor = 'var(--secondary)';
+  let borderColor = "var(--border)";
+
+  if(node.accent){
+    backgroundColor = `color-mix(in srgb, ${node.accent} 22%, var(--card))`;
+    borderColor = `color-mix(in srgb, ${node.accent} 22%, var(--border))`;
+  }
+
+
 
   return (
     <>
@@ -44,21 +53,12 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
         "animate-in fade-in-0 duration-200 ease-out p-1 border-2 transition-colors",
         "flex flex-col relative rounded-3xl shadow-lg shadow-black/20 dark:shadow-black/30",
         isNodeClicked ? "ring-4 ring-primary/20 ring-offset-8 ring-offset-background" : "",
-        isMinimized ? "min-w-[100px]" : "w-[250px]",
+        node.isMinimized ? "min-w-[100px]" : "w-[250px]",
       )}
-        style={{
-          backgroundColor:
-            node.accent
-              ? `color-mix(in srgb, ${node.accent} 22%, var(--card))`
-              : 'var(--secondary)',
-          borderColor:
-            node.accent
-              ? `color-mix(in srgb, ${node.accent} 22%, var(--border))`
-              : 'var(--border)'
-        }}
+        style={{ backgroundColor, borderColor }}
       >
         <NodeHeader node={node} isWorkflowLocked={isWorkflowLocked} />
-        {isMinimized === false &&
+        {node.isMinimized === false &&
           <div className='pt-1 bg-card/80 border border-border/50 rounded-b-[22px] rounded-t-lg shadow-sm shadow-black/10'>
             <NodeInputs node={node} isWorkflowLocked={isWorkflowLocked} />
             <NodeOutputs node={node} isWorkflowLocked={isWorkflowLocked} />

@@ -40,6 +40,7 @@ export const inputReducers = {
             return true;
         }
         delete s.issues[nodeId].inputs[input.id];
+
         return false;
     }
 } satisfies InputReducers

@@ -2,20 +2,19 @@ import { createWithEqualityFn } from "zustand/traditional"
 import { shallow } from "zustand/shallow"
 import { immer } from "zustand/middleware/immer";
 import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance } from "@xyflow/react";
-import { MarkerType } from "@xyflow/react";
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
 import { workbenchSelectors, type _WorkBenchSDKSelectors } from "./selectors";
 import React from "react";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain"
 import { temporal } from 'zundo';
 import { cloneDeep } from "lodash";
-import { isConnectionValid } from "./utils";
+import { isConnectionValid } from "./utils/connectionValidation";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
 import { toast } from "sonner";
 import { supabase } from "@/libs/supabase";
 import { workbenchReducers } from "./reducers";
-
+import { createDrivers } from "./utils/createDrivers";
 
 @SDK("Workbench")
 export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
@@ -99,14 +98,6 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         });
     }
 
-    public useNodeHasIssues(nodeId: Workflow.Node.Id) {
-        return this.useStore(s => {
-            const hasFieldIssues = Object.keys(s.issues[nodeId]?.fields ?? {}).length > 0;
-            const hasInputIssues = Object.keys(s.issues[nodeId]?.inputs ?? {}).length > 0;
-            return hasFieldIssues || hasInputIssues;
-        });
-    }
-
 
     public readonly canvasWrapper = React.createRef<HTMLDivElement>();
 
@@ -128,45 +119,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
     public isConnectionValid = isConnectionValid;
 
-    public createDrivers(wf: Workflow) {
-        const nodeDrivers = [] as WorkbenchSDK.NodeDriver[]
-        const edgeDrivers = [] as WorkbenchSDK.EdgeDriver[]
-
-        Object.values(wf.data.nodes).forEach(node => {
-            nodeDrivers.push({
-                id: node.id,
-                type: "workflowNode",
-                position: wf.data.ui.layout[node.id] ?? { x: 0, y: 0 },
-                data: {},
-            })
-        })
-
-        Object.values(wf.data.edges).forEach(edge => {
-            const node = wf.data.nodes[edge.source.nodeId]
-
-            const output = node.outputs.find((o: Foundations.Port.Output) => o.id === edge.source.portId);
-
-            if (!output)
-                return
-
-            edgeDrivers.push({
-                id: edge.id,
-                type: "workflowEdge",
-                source: edge.source.nodeId,
-                sourceHandle: edge.source.portId,
-                target: edge.target.nodeId,
-                targetHandle: edge.target.portId,
-                markerEnd: {
-                    type: MarkerType.ArrowClosed,
-                    color: `var(--port-${output.variant})`,
-                    width: 15,
-                    height: 15
-                }
-            })
-        })
-
-        return { nodeDrivers, edgeDrivers }
-    }
+    public readonly createDrivers = createDrivers
 }
 
 
@@ -204,10 +157,7 @@ export namespace WorkbenchSDK {
         field: Foundations.Port.Input | Foundations.Port.Output,
         handleType: "source" | "target"
     }
-    // Edges are ui view only
-    export namespace Edge {
-        export type Id = string;
-    }
+
     export type Selectors = _WorkBenchSDKSelectors
     export type Actions = _WorkbenchSDKActions
     export type Reducers = typeof workbenchReducers
@@ -221,6 +171,4 @@ export namespace WorkbenchSDK {
         target: Workflow.Node.Id
         targetHandle: Foundations.Port.Input.Id
     }
-
-
 }

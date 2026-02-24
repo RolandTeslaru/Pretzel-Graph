@@ -69,6 +69,25 @@ export const workbenchSelectors = {
     doesOutputHaveEdge: (s, nodeId, outputId) => {
         const hasEdge = s.cache.outputHandlesMap[nodeId][outputId];
         return !!hasEdge;
+    },
+    doesWorkflowHaveIssues: (s) => {
+        if(Object.entries(s.issues).length > 0)
+            return true;
+
+        else return false;
+    },
+    doesNodeHaveIssues: (s, nodeId) => {
+        const nodeIssues = s.issues[nodeId];
+        if(!nodeIssues)
+            return false;
+        
+        if(
+            Object.entries(nodeIssues.fields).length > 0 ||
+            Object.entries(nodeIssues.inputs).length > 0
+        )
+            return true;
+
+        return false;
     }
 } satisfies _WorkBenchSDKSelectors
 
@@ -91,4 +110,7 @@ export type _WorkBenchSDKSelectors = {
 
     doesInputhaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => boolean
     doesOutputHaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => boolean
+
+    doesWorkflowHaveIssues: (state: WorkbenchSDK.State) => boolean
+    doesNodeHaveIssues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
 }
