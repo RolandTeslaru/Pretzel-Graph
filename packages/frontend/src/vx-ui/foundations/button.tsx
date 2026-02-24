@@ -35,7 +35,8 @@ export const buttonVariants = cva(
         success: "bg-green-500/10 border-green-500/50 hover:bg-green-500/20 focus-visible:ring-green-500/20 dark:focus-visible:ring-green-500/40 dark:bg-green-500/20 text-green-600 dark:text-green-400 focus-visible:border-green-500/40 dark:hover:bg-green-500/30",
         accent: "bg-accent/10 border-accent/50 hover:bg-accent/20 focus-visible:ring-accent/20 dark:focus-visible:ring-accent/40 dark:bg-accent/20 text-accent-foreground focus-visible:border-accent/40 dark:hover:bg-accent/30",
         link: "text-primary shadow-none underline-offset-4 hover:underline",
-        input: "bg-input/60 border-border"
+        input: "bg-input/60 border-border",
+        active: "bg-sky-500/30 border-sky-300/60 text-white"
       },
       size: {
         default: "h-7 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
