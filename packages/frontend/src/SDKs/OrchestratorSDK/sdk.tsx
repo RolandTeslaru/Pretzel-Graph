@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/domain";
+import { Orchestrator, Realtime, Validation, Workflow } from "@vx-agent-editor/shared/domain";
 import { useEffect } from "react";
 import { RealtimeSDK } from "../Realtime/sdk";
 import { toast } from "sonner";
@@ -23,10 +23,17 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
 
     public readonly actions: OrchestratorSDK.Actions = {
         execution: {
-            run: async (workflow) => {
+            run: async (workflow, wfCache) => {
                 if (this.state.currentJobId) {
                     toast.warning("Workflow is already running")
                     return this.state.currentJobId
+                }
+
+                // Check if the workflow has issues
+                const workflowIssues = Validation.Issue.checkWorkflow(workflow, wfCache);
+                if (Object.entries(workflowIssues).length > 0) {
+                    toast.error("Workflow has nodes with missing fields or inputs. Please fix them before running.")
+                    return null
                 }
 
                 const executionPromise = Orchestrator.API.Execution.run(api, workflow);
@@ -34,11 +41,11 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                 toast.promise(executionPromise, {
                     loading: "Executing workflow",
                     success: (data) => {
-                        return `Workflow ${data.jobId} executed successfully`
+                        return `Workflow execution started`
                     },
                     error: (error) => {
                         const message = error?.response?.data?.error || error.message;
-                        return `Workflow execution failed: ${message}`
+                        return `Workflow execution faile to start: ${message}`
                     }
                 })
 
@@ -83,7 +90,7 @@ export namespace OrchestratorSDK {
     }
     export type Actions = {
         execution: {
-            run: (workflow: Workflow) => Promise<Orchestrator.Job.Id>,
+            run: (workflow: Workflow, cache: Workflow.Cache) => Promise<Orchestrator.Job.Id | null>,
             pause: (jobId: Orchestrator.Job.Id) => Promise<void>,
             terminate: (jobId: Orchestrator.Job.Id) => Promise<void>
         }

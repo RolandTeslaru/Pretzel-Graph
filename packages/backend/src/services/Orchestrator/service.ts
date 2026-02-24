@@ -1,13 +1,14 @@
 import { Service } from "../ServiceManager";
-import { Router } from "express";
-import { withAuth } from "@/utils/withAuth";
+import { Router, Request, Response } from "express";
+import { WithAuth, withAuth } from "@/handlers/controller";
 import { createAuthenticatedClient, getUserId } from "@/utils/supabase";
-import { Auth, Orchestrator, Vault, Workflow } from "@vx-agent-editor/shared/domain";
+import { Auth, Orchestrator, Validation, Workflow } from "@vx-agent-editor/shared/domain";
 import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
 import { SupabaseClient } from "@supabase/supabase-js";
 import { resolveCredential } from "@/utils/resolveCredential";
-import { SecretsHandler } from "./utils";
+import { SecretsResolver } from "./utils";
+import { WithSupabase } from "@/handlers/database";
 
 @Service("Orchestrator")
 export class OrchestratorServiceImpl {
@@ -50,17 +51,23 @@ export class OrchestratorServiceImpl {
     public readonly ops: OrchestratorService.Ops = {
         execution: {
             run: async (token, workflow) => {
+                const wfCache = Workflow.createCache(workflow);
+
+                const workflowIssues = Validation.Issue.checkWorkflow(workflow, wfCache);
+
+                if (Object.entries(workflowIssues).length > 0)
+                    throw new Error("Workflow has issues")
+
                 const supabase = createAuthenticatedClient(token);
                 const userId = await getUserId(supabase) as Auth.User.Id
 
-                if (!userId) {
+                if (!userId)
                     throw new Error("User not found")
-                }
 
                 const jobId = await this.dbOps.job.create(supabase, { workflowId: workflow.id, userId })
 
                 try {
-                    await SecretsHandler.resolveWorkflow(supabase, workflow)
+                    await SecretsResolver.resolveWorkflow(supabase, workflow)
 
 
                     const queueItem: Orchestrator.ExecutionQueue.Item = {
@@ -129,29 +136,28 @@ export const OrchestratorService = Service.get<OrchestratorServiceImpl>("Orchest
 
 
 export namespace OrchestratorService {
-
     export type DbOps = {
         job: {
-            create: (supabase: SupabaseClient, { workflowId, userId }: { workflowId: Workflow.Id, userId: Auth.User.Id }) => Promise<Orchestrator.Job.Id>
-            update: (supabase: SupabaseClient, { jobId, status, error }: { jobId: Orchestrator.Job.Id, status: Orchestrator.Job.Status, error?: string }) => Promise<void>
-            delete: (supabase: SupabaseClient, jobId: Orchestrator.Job.Id) => Promise<void>
+            create: WithSupabase<({ workflowId, userId }: { workflowId: Workflow.Id, userId: Auth.User.Id }) => Promise<Orchestrator.Job.Id>>
+            update: WithSupabase<({ jobId, status, error }: { jobId: Orchestrator.Job.Id, status: Orchestrator.Job.Status, error?: string }) => Promise<void>>
+            delete: WithSupabase<(jobId: Orchestrator.Job.Id) => Promise<void>>
         }
     }
 
     export type Ops = {
         execution: {
-            run: (token: string, payload: Orchestrator.API.Execution.Run.Request) => Promise<Orchestrator.API.Execution.Run.Response>
-            pause: (token: string, payload: Orchestrator.API.Execution.Pause.Request) => Promise<void>
-            resume: (token: string, payload: Orchestrator.API.Execution.Resume.Request) => Promise<void>
-            terminate: (token: string, payload: Orchestrator.API.Execution.Terminate.Request) => Promise<void>
+            run:       WithAuth<(payload: Orchestrator.API.Execution.Run.Request) => Promise<Orchestrator.API.Execution.Run.Response>>
+            pause:     WithAuth<(payload: Orchestrator.API.Execution.Pause.Request) => Promise<void>>
+            resume:    WithAuth<(payload: Orchestrator.API.Execution.Resume.Request) => Promise<void>>
+            terminate: WithAuth<(payload: Orchestrator.API.Execution.Terminate.Request) => Promise<void>>
         }
     }
 
     export type Controller = {
         execution: {
-            run: (req: any, res: any) => void
-            pause: (req: any, res: any) => void
-            terminate: (req: any, res: any) => void
+            run:       (req: Request, res: Response) => void
+            pause:     (req: Request, res: Response) => void
+            terminate: (req: Request, res: Response) => void
         }
     }
 }

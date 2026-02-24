@@ -1,23 +1,21 @@
 import { Service } from "../ServiceManager";
 import { Request, Response, Router } from 'express';
 import { createAuthenticatedClient } from "@/utils/supabase";
-import { Library, Workflow } from "@vx-agent-editor/shared/domain";
-import { withAuth } from "../../utils/withAuth";
+import { Library } from "@vx-agent-editor/shared/domain";
+import { WithAuth, withAuth } from "@/handlers/controller";
 
 @Service("Library")
 export class LibraryServiceImpl {
     constructor() { }
 
-    public readonly ops = {
+    public readonly ops: LibraryService.Ops = {
         workflow: {
-            create: async function (token: string, payload: Library.API.Workflow.Create.Request) {
+            create: async (token, payload) => {
                 const supabase = createAuthenticatedClient(token);
-
-                const workflow = payload;
 
                 const { data: result, error } = await supabase
                     .from('workflows')
-                    .upsert(workflow)
+                    .upsert(payload)
                     .select()
                     .single();
 
@@ -28,7 +26,7 @@ export class LibraryServiceImpl {
 
                 return result
             },
-            get: async function (token: string, workflowId: string) {
+            get: async (token, workflowId) => {
                 const supabase = createAuthenticatedClient(token);
 
                 const { data, error } = await supabase
@@ -40,7 +38,7 @@ export class LibraryServiceImpl {
                 if (error) throw new Error(error.message);
                 return data;
             },
-            list: async function (token: string, folderId?: string) {
+            list: async (token, folderId) => {
                 const supabase = createAuthenticatedClient(token);
 
                 let query = supabase
@@ -56,12 +54,10 @@ export class LibraryServiceImpl {
 
                 return data;
             }
-
         }
-
     }
 
-    public readonly controller = {
+    public readonly controller: LibraryService.Controller = {
         workflow: {
             create: withAuth(async (token, req) => {
                 const payload = Library.API.Workflow.Create.Request.parse(req.body);
@@ -69,8 +65,8 @@ export class LibraryServiceImpl {
             }),
 
             get: withAuth(async (token, req) => {
-                const { id } = req.params;
-                return await this.ops.workflow.get(token, id as string);
+                const id = req.params.id as string;
+                return await this.ops.workflow.get(token, id);
             }),
 
             list: withAuth(async (token, req) => {
@@ -84,8 +80,25 @@ export class LibraryServiceImpl {
         .post("/workflows", this.controller.workflow.create)
         .get('/workflows/:id', this.controller.workflow.get)
         .get('/workflows', this.controller.workflow.list)
-
-
 }
 
 export const LibraryService = Service.get<LibraryServiceImpl>("Library");
+
+export namespace LibraryService {
+
+    export type Ops = {
+        workflow: {
+            create: WithAuth<(payload: Library.API.Workflow.Create.Request) => Promise<Library.API.Workflow.Create.Response>>
+            get:    WithAuth<(workflowId: string) => Promise<Library.API.Workflow.Get.Response>>
+            list:   WithAuth<(folderId?: string) => Promise<Library.API.Workflow.List.Response>>
+        }
+    }
+
+    export type Controller = {
+        workflow: {
+            create: (req: Request, res: Response) => void
+            get: (req: Request, res: Response) => void
+            list: (req: Request, res: Response) => void
+        }
+    }
+}

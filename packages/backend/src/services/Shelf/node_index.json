@@ -1,6 +1,6 @@
 {
-  "version": "1771866669466",
-  "generatedAt": "2026-02-23T17:11:09.466Z",
+  "version": "1771952117577",
+  "generatedAt": "2026-02-24T16:55:17.577Z",
   "drawers": {},
   "blueprints": {
     "Core.Agent": {
@@ -72,7 +72,8 @@
           "tooltip": "System Prompt: Initial instructions and context provided to guide the agent's behavior.",
           "variant": "Message",
           "initialValue": "You are a helpful assistant that can use tools to answer questions and perform tasks.",
-          "required": true
+          "required": false,
+          "internal": false
         },
         {
           "id": "input",
@@ -80,14 +81,16 @@
           "tooltip": "The user input message.",
           "variant": "Message",
           "initialValue": "",
-          "required": true
+          "required": true,
+          "internal": false
         },
         {
           "id": "tools",
           "displayName": "Tools",
           "tooltip": "Tools the agent can use.",
           "variant": "Tool",
-          "required": false
+          "required": false,
+          "internal": false
         }
       ],
       "outputs": [
@@ -112,7 +115,8 @@
           "displayName": "Input",
           "variant": "Message",
           "initialValue": "",
-          "required": true
+          "required": false,
+          "internal": true
         }
       ],
       "outputs": [
@@ -299,43 +303,50 @@
           "displayName": "Message Input",
           "variant": "Message",
           "initialValue": "",
-          "required": true
+          "required": false,
+          "internal": false
         },
         {
           "id": "languageModelInput",
           "displayName": "Language Model Input",
           "variant": "LanguageModel",
-          "required": true
+          "required": false,
+          "internal": false
         },
         {
           "id": "documentInput",
           "displayName": "Document Input",
           "variant": "Document",
-          "required": true
+          "required": false,
+          "internal": false
         },
         {
           "id": "retrieverInput",
           "displayName": "Retriever Input",
           "variant": "Retriever",
-          "required": true
+          "required": false,
+          "internal": false
         },
         {
           "id": "embeddingsInput",
           "displayName": "Embeddings Input",
           "variant": "Embeddings",
-          "required": true
+          "required": false,
+          "internal": false
         },
         {
           "id": "vectorStoreInput",
           "displayName": "Vector Store Input",
           "variant": "VectorStore",
-          "required": true
+          "required": false,
+          "internal": false
         },
         {
           "id": "toolInput",
           "displayName": "Tool Input",
           "variant": "Tool",
-          "required": true
+          "required": false,
+          "internal": false
         }
       ],
       "outputs": [
@@ -426,7 +437,8 @@
           "displayName": "Message",
           "variant": "Message",
           "initialValue": "",
-          "required": true
+          "required": false,
+          "internal": false
         }
       ],
       "outputs": [
@@ -461,7 +473,8 @@
           "displayName": "Input",
           "variant": "Message",
           "initialValue": "",
-          "required": true
+          "required": false,
+          "internal": false
         }
       ],
       "outputs": [
@@ -532,7 +545,8 @@
           "displayName": "Trigger",
           "variant": "Message",
           "initialValue": "",
-          "required": false
+          "required": false,
+          "internal": false
         }
       ],
       "outputs": [
@@ -601,7 +615,8 @@
           "tooltip": "Optional trigger to start the sleep.",
           "variant": "Message",
           "initialValue": "",
-          "required": false
+          "required": false,
+          "internal": false
         }
       ],
       "outputs": [
@@ -713,7 +728,8 @@
           "tooltip": "The input text to send to the model",
           "variant": "Message",
           "initialValue": "",
-          "required": true
+          "required": true,
+          "internal": false
         }
       ],
       "outputs": [
@@ -744,7 +760,8 @@
           "displayName": "Text",
           "variant": "Text",
           "initialValue": "",
-          "required": true
+          "required": true,
+          "internal": false
         }
       ],
       "outputs": [
@@ -849,14 +866,16 @@
           "displayName": "Input",
           "variant": "Message",
           "initialValue": "",
-          "required": true
+          "required": false,
+          "internal": false
         },
         {
           "id": "systemMessage",
           "displayName": "System Message",
           "variant": "Message",
           "initialValue": "",
-          "required": true
+          "required": false,
+          "internal": false
         }
       ],
       "outputs": [
@@ -983,14 +1002,16 @@
           "displayName": "Input",
           "variant": "Message",
           "initialValue": "",
-          "required": true
+          "required": false,
+          "internal": false
         },
         {
           "id": "systemMessage",
           "displayName": "System Message",
           "variant": "Message",
           "initialValue": "",
-          "required": true
+          "required": false,
+          "internal": false
         }
       ],
       "outputs": [

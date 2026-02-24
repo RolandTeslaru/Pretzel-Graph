@@ -2,6 +2,7 @@ import { Router } from "express";
 import { Service } from "../ServiceManager";
 import { Workbench } from "@vx-agent-editor/shared/domain";
 import { CatalogueService as AGGEXCatalogueService } from "@vx-agent-builder/vx-aggex"
+import { withAuth } from "@/handlers/controller";
 
 
 @Service("Workbench")
@@ -10,7 +11,9 @@ export class WorkbenchServiceImpl {
 
     public readonly ops = {
         field: {
-            reconcile: async ({ fieldId, blueprintId, newValue }) => {
+            reconcile: async (payload) => {
+                const { fieldId, blueprintId, newValue } = payload;
+                
                 const reconcileFn = await AGGEXCatalogueService.getReconciler(blueprintId);
 
                 if (!reconcileFn)
@@ -25,15 +28,10 @@ export class WorkbenchServiceImpl {
 
     public readonly controller = {
         field: {
-            reconcile: async (_req: Request, res: any) => {
-                try {
-                    const payload = Workbench.API.Field.Reconcile.Request.parse(_req.body)
-                    const result = await this.ops.field.reconcile(payload)
-                    res.json(result);
-                } catch (error: any) {
-                    res.status(500).json({ error: error.message })
-                }
-            }
+            reconcile: withAuth(async (_, req) => {
+                const payload = Workbench.API.Field.Reconcile.Request.parse(req.body);
+                return await this.ops.field.reconcile(payload);
+            })
         }
     }
 

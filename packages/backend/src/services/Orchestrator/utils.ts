@@ -2,7 +2,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { Vault, Workflow } from "@vx-agent-editor/shared/domain";
 
 
-export class SecretsHandler {
+export class SecretsResolver {
     public static async resolveWorkflow(supabase: SupabaseClient, workflow: Workflow) {
         const resolvedSecrets: Record<Vault.Credential.Id, Vault.Secret> = {};
 

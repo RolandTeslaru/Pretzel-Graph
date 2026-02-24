@@ -18,8 +18,11 @@ const handleTerminate = () => {
 }
 
 const handleRun = () => {
-  const workflow = WorkbenchSDK.state.workflow;
-  OrchestratorSDK.actions.execution.run(workflow);
+  const state = WorkbenchSDK.state;
+  OrchestratorSDK.actions.execution.run(
+    state.workflow,
+    state.cache
+  );
 }
 
 const RunnerPanel = () => {

@@ -11,6 +11,7 @@ export const Blueprint = defineBlueprint({
         InputBuilder.Message({
             id: "input",
             displayName: "Input",
+            internal: true
         })
     ],
     outputs: [

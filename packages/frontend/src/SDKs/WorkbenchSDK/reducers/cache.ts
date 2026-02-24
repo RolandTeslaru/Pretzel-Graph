@@ -1,4 +1,4 @@
-import type { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import type { Workflow } from "@vx-agent-editor/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { workbenchSelectors } from "../selectors";
 
@@ -39,44 +39,6 @@ export const cacheReducers = {
 
         s.cache.inputHandlesMap[newNode.id] = {}
         s.cache.outputHandlesMap[newNode.id] = {}
-    },
-    createAll: (_, wf) => {
-        const outgoersEdgesMap: WorkbenchSDK.State["cache"]["outgoersEdgesMap"] = {};
-        const ingoersEdgesMap:  WorkbenchSDK.State["cache"]["ingoersEdgesMap"] = {};
-        const inputHandlesMap:  WorkbenchSDK.State["cache"]["inputHandlesMap"] = {};
-        const outputHandlesMap: WorkbenchSDK.State["cache"]["outputHandlesMap"] = {};
-
-        Object.values(wf.data.nodes).forEach(node => {
-            outgoersEdgesMap[node.id] = {};
-            ingoersEdgesMap[node.id] = {};
-            inputHandlesMap[node.id] = {};
-            outputHandlesMap[node.id] = {};
-        })
-
-        Object.values(wf.data.edges).forEach(edge => {
-            const sourceNodeId = edge.source.nodeId;
-            const targetNodeId = edge.target.nodeId;
-
-            const sourceHandleId = edge.source.portId;
-            const targetHandleId = edge.target.portId
-
-            // Outgoers Edges Map
-            outgoersEdgesMap[sourceNodeId][targetNodeId] = edge.id
-
-            // Ingoers Edges Map
-            ingoersEdgesMap[targetNodeId][sourceNodeId] = edge.id
-
-            inputHandlesMap[targetNodeId][targetHandleId] = edge.id
-
-            outputHandlesMap[sourceNodeId][sourceHandleId] = edge.id
-        })
-
-        return {
-            outgoersEdgesMap,
-            ingoersEdgesMap,
-            inputHandlesMap,
-            outputHandlesMap,
-        }
     }
 } satisfies INTERNAL_CacheReducers
 
@@ -85,6 +47,4 @@ type INTERNAL_CacheReducers = {
     addEdge: (state: WorkbenchSDK.State, newEdge: Workflow.Edge) => void
     deleteNode: (state: WorkbenchSDK.State, deletedNodeId: Workflow.Node.Id) => void
     createNode: (state: WorkbenchSDK.State, newNode: Workflow.Node) => void
-
-    createAll: (state: WorkbenchSDK.State, workflow: Workflow) => WorkbenchSDK.State["cache"]
 }

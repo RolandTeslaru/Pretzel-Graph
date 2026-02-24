@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { Foundations, Shelf } from "@vx-agent-editor/shared/domain";
 import { Service } from "../ServiceManager";
+import { withAuth, withHandler } from "@/handlers/controller";
 
 // Import the pre-generated node index
 // Note: Backend tsconfig needs "resolveJsonModule": true
@@ -66,33 +67,18 @@ export class ShelfServiceImpl {
      */
     public readonly controller = {
         blueprint: {
-            get: (_req: Request, res: any) => {
-                try {
-                    const { blueprintId } = Shelf.API.Blueprint.Get.Request.parse(_req.body);
-                    const result = this.ops.blueprint.get({ blueprintId });
-                    res.json(result);
-                } catch (error: any) {
-                    res.status(500).json({ error: error.message });
-                }
-            },
-            getBatch: (_req: Request, res: any) => {
-                try {
-                    const { blueprintIds } = Shelf.API.Blueprint.GetBatch.Request.parse(_req.body);
-                    const result = this.ops.blueprint.getBatch({ blueprintIds });
-                    res.json(result);
-                } catch (error: any) {
-                    res.status(500).json({ error: error.message });
-                }
-            },
-            getAllInSection: (_req: Request, res: any) => {
-                try {
-                    const { section } = Shelf.API.Blueprint.GetAllInSection.Request.parse(_req.body);
-                    const result = this.ops.blueprint.getAllInSection({ section });
-                    res.json(result);
-                } catch (error: any) {
-                    res.status(500).json({ error: error.message });
-                }
-            }
+            get: withAuth(async (_, req) => {
+                const payload = Shelf.API.Blueprint.Get.Request.parse(req.body);
+                return this.ops.blueprint.get(payload);
+            }),
+            getBatch: withAuth(async (_, req) => {
+                const payload = Shelf.API.Blueprint.GetBatch.Request.parse(req.body);
+                return this.ops.blueprint.getBatch(payload);
+            }),
+            getAllInSection: withAuth(async (_, req) => {
+                const payload = Shelf.API.Blueprint.GetAllInSection.Request.parse(req.body);
+                return this.ops.blueprint.getAllInSection(payload);
+            })
         },
     };
 
@@ -110,10 +96,9 @@ export const ShelfService = Service.get<ShelfServiceImpl>("Shelf");
 export namespace ShelfService {
     export type Ops = {
         blueprint: {
-            get: (req: Shelf.API.Blueprint.Get.Request) => Shelf.API.Blueprint.Get.Response
-            getBatch: (req: Shelf.API.Blueprint.GetBatch.Request) => Shelf.API.Blueprint.GetBatch.Response
+            get:             (req: Shelf.API.Blueprint.Get.Request) => Shelf.API.Blueprint.Get.Response
+            getBatch:        (req: Shelf.API.Blueprint.GetBatch.Request) => Shelf.API.Blueprint.GetBatch.Response
             getAllInSection: (req: Shelf.API.Blueprint.GetAllInSection.Request) => Shelf.API.Blueprint.GetAllInSection.Response
         }
     };
-
 }
