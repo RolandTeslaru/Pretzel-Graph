@@ -3,28 +3,28 @@ import type { WorkbenchSDK } from './sdk';
 
 export const workbenchSelectors = {
     ensureIngoerEdgesCache: (s, nodeId, sourceId) => {
-        if (!s.cache.ingoersEdgesMap[nodeId])
-            s.cache.ingoersEdgesMap[nodeId] = {};
+        if (!s.cache.incomingEdgesMap[nodeId])
+            s.cache.incomingEdgesMap[nodeId] = {};
 
-        return s.cache.ingoersEdgesMap[nodeId][sourceId];
+        return s.cache.incomingEdgesMap[nodeId][sourceId];
     },
     ensureOutgoerEdgesCache: (s, nodeId, targetId) => {
-        if (!s.cache.outgoersEdgesMap[nodeId])
-            s.cache.outgoersEdgesMap[nodeId] = {};
+        if (!s.cache.outgoingEdgesMap[nodeId])
+            s.cache.outgoingEdgesMap[nodeId] = {};
 
-        return s.cache.outgoersEdgesMap[nodeId][targetId];
+        return s.cache.outgoingEdgesMap[nodeId][targetId];
     },
     ensureInNodesCache: (s, nodeId) => {
-        if (!s.cache.ingoersEdgesMap[nodeId])
-            s.cache.ingoersEdgesMap[nodeId] = {};
+        if (!s.cache.incomingEdgesMap[nodeId])
+            s.cache.incomingEdgesMap[nodeId] = {};
 
-        return s.cache.ingoersEdgesMap[nodeId];
+        return s.cache.incomingEdgesMap[nodeId];
     },
     ensureOutNodesCache: (s, nodeId) => {
-        if (!s.cache.outgoersEdgesMap[nodeId])
-            s.cache.outgoersEdgesMap[nodeId] = {}
+        if (!s.cache.outgoingEdgesMap[nodeId])
+            s.cache.outgoingEdgesMap[nodeId] = {}
 
-        return s.cache.outgoersEdgesMap[nodeId];
+        return s.cache.outgoingEdgesMap[nodeId];
     },
     getInput: (s, nodeId, inputId) => {
         const node = s.workflow.data.nodes[nodeId]
@@ -71,17 +71,17 @@ export const workbenchSelectors = {
         return !!hasEdge;
     },
     doesWorkflowHaveIssues: (s) => {
-        if(Object.entries(s.issues).length > 0)
+        if (Object.entries(s.issues).length > 0)
             return true;
 
         else return false;
     },
     doesNodeHaveIssues: (s, nodeId) => {
         const nodeIssues = s.issues[nodeId];
-        if(!nodeIssues)
+        if (!nodeIssues)
             return false;
-        
-        if(
+
+        if (
             Object.entries(nodeIssues.fields).length > 0 ||
             Object.entries(nodeIssues.inputs).length > 0
         )

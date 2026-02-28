@@ -1,6 +1,8 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { LC } from "./langchain";
-import { Foundations } from "@vx-agent-editor/shared/domain";
+import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
+import { StreamController } from "./StreamController";
+import { Runtime } from "./runtime";
 
 
 export class Synthesizer {
@@ -125,5 +127,14 @@ export class Synthesizer {
             `AGGEX Synthesizer: Cannot coerce value of type ` +
             `"${typeof value}" into variant "${variant}".`
         );
+    }
+
+    public static synthesizeState(initialState: Orchestrator.SerializableState) {
+        const syntheticState = {
+            ...initialState,
+            streamController: new StreamController()
+        } as unknown as Runtime.State
+
+        return syntheticState;
     }
 }

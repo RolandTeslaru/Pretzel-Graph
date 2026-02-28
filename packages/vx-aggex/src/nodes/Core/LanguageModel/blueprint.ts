@@ -10,7 +10,8 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.MultiOption({
             id: "provider",
             displayName: "Model Provider",
-            options: ["OpenAI", "Anthropic", "Google", "IBM watsonx.ai", "Ollama"],
+            reconcile: true,
+            options: ["OpenAI", "Anthropic", "Google"],
             initialValue: "OpenAI",
             tooltip: "Select the model provider",
             variant: "select"
@@ -38,13 +39,6 @@ export const Blueprint = defineBlueprint({
             initialValue: "",
             tooltip: "Model Provider API key"
         }),
-        FieldBuilder.String({
-            id: "systemMessage",
-            displayName: "System Message",
-            multiline: true,
-            initialValue: "",
-            tooltip: "A system message that helps set the behavior of the assistant"
-        }),
         FieldBuilder.Boolean({
             id: "stream",
             displayName: "Stream",
@@ -62,14 +56,52 @@ export const Blueprint = defineBlueprint({
             slider: true,
             tooltip: "Controls randomness in responses",
             advanced: true
+        }),
+        FieldBuilder.Integer({
+            id: "maxOutputTokens",
+            displayName: "Max Output Tokens",
+            required: false,
+            initialValue: 2048,
+            min: 1,
+            step: 1,
+            tooltip: "Maximum number of tokens to generate.",
+            advanced: true
+        }),
+        FieldBuilder.Float({
+            id: "topP",
+            displayName: "Top P",
+            required: false,
+            initialValue: 0.95,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            slider: true,
+            tooltip: "Nucleus sampling probability.",
+            advanced: true
+        }),
+        FieldBuilder.Integer({
+            id: "topK",
+            displayName: "Top K",
+            required: false,
+            initialValue: 64,
+            min: 1,
+            step: 1,
+            slider: true,
+            tooltip: "Top-K sampling parameter.",
+            advanced: true
         })
     ],
     inputs: [
         InputBuilder.Message({
-            id: "inputValue",
+            id: "input",
             displayName: "Input",
             required: true,
             tooltip: "The input text to send to the model"
+        }),
+        InputBuilder.Message({
+            id: "systemMessage",
+            displayName: "System Message",
+            tooltip: "A system message that helps set the behavior of the assistant"
         })
     ],
     outputs: [

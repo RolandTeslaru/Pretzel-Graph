@@ -15,7 +15,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
     public readonly useStore: BaseSDK.Store<OrchestratorSDK.State> = create(
         immer<OrchestratorSDK.State>(() => ({
             currentJobId: undefined,
-            runtimeState: Orchestrator.RuntimeState.INITIAL
+            runtimeState: Orchestrator.SerializableState.INITIAL
         }))
     )
 
@@ -115,7 +115,7 @@ export namespace OrchestratorSDK {
 
     export type State = {
         currentJobId: Orchestrator.Job.Id | undefined
-        runtimeState: Orchestrator.RuntimeState
+        runtimeState: Orchestrator.SerializableState
     }
 
     export type Reducers = {

@@ -39,8 +39,8 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 clickedNodeId: null,
                 draggedHandle: null,
                 cache: {
-                    ingoersEdgesMap: {},
-                    outgoersEdgesMap: {},
+                    incomingEdgesMap: {},
+                    outgoingEdgesMap: {},
                     inputHandlesMap: {},
                     outputHandlesMap: {},
                 },
@@ -74,7 +74,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public useField(nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) {
         return this.useStore(s => {
             const staticVals = s.workflow.data.staticValues[nodeId]
-            if(!staticVals)
+            if (!staticVals)
                 return [null, null] as const
             const value = staticVals[fieldId] as any
             return [
@@ -87,7 +87,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public useInput(nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) {
         return this.useStore(s => {
             const staticVals = s.workflow.data.staticValues[nodeId]
-            if(!staticVals)
+            if (!staticVals)
                 return [null, null] as const
             const value = staticVals[inputId] as any
             return [

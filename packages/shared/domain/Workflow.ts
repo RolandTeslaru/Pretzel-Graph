@@ -201,22 +201,47 @@ export namespace Workflow {
     }
 
     export interface Cache {
-        ingoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
-        outgoersEdgesMap: Record<Workflow.Node.Id, Record<Workflow.Node.Id, Workflow.Edge.Id>>,
-        inputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Port.Input.Id, Workflow.Edge.Id>>
-        outputHandlesMap: Record<Workflow.Node.Id, Record<Foundations.Port.Output.Id, Workflow.Edge.Id>>
+        // nodes coming
+        incomingEdgesMap: Record<
+            Workflow.Node.Id,     // the node where the edges are coming in
+            Record<
+                Workflow.Node.Id,     // the source node id
+                Workflow.Edge.Id      // the edge id
+            >
+        >,
+        outgoingEdgesMap: Record<
+            Workflow.Node.Id,     // the node where the edges are going out from
+            Record<
+                Workflow.Node.Id,
+                Workflow.Edge.Id
+            >
+        >,
+        inputHandlesMap: Record<
+            Workflow.Node.Id,
+            Record<
+                Foundations.Port.Input.Id,
+                Workflow.Edge.Id
+            >
+        >,
+        outputHandlesMap: Record<
+            Workflow.Node.Id,
+            Record<
+                Foundations.Port.Output.Id,
+                Workflow.Edge.Id
+            >
+        >
     }
     export function createCache(wf: Workflow): Cache {
         const cache = {
-            ingoersEdgesMap: {},
-            outgoersEdgesMap: {},
+            incomingEdgesMap: {},
+            outgoingEdgesMap: {},
             inputHandlesMap: {},
             outputHandlesMap: {},
         } as Cache;
 
         Object.values(wf.data.nodes).forEach(node => {
-            cache.outgoersEdgesMap[node.id] = {};
-            cache.ingoersEdgesMap[node.id] = {};
+            cache.outgoingEdgesMap[node.id] = {};
+            cache.incomingEdgesMap[node.id] = {};
             cache.inputHandlesMap[node.id] = {};
             cache.outputHandlesMap[node.id] = {};
         })
@@ -229,10 +254,10 @@ export namespace Workflow {
             const targetHandleId = edge.target.portId
 
             // Outgoers Edges Map
-            cache.outgoersEdgesMap[sourceNodeId][targetNodeId] = edge.id
+            cache.outgoingEdgesMap[sourceNodeId][targetNodeId] = edge.id
 
             // Ingoers Edges Map
-            cache.ingoersEdgesMap[targetNodeId][sourceNodeId] = edge.id
+            cache.incomingEdgesMap[targetNodeId][sourceNodeId] = edge.id
 
             cache.inputHandlesMap[targetNodeId][targetHandleId] = edge.id
 

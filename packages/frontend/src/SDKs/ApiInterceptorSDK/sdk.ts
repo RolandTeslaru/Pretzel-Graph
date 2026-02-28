@@ -18,7 +18,8 @@ export class _ApiInterceptorSDK_ {
             const isNewBackend = config.url?.startsWith('/api/library')
                 || config.url?.startsWith('/api/shelf')
                 || config.url?.startsWith('/api/vault')
-                || config.url?.startsWith('/api/orchestrator');
+                || config.url?.startsWith('/api/orchestrator')
+                || config.url?.startsWith('/api/workbench');
 
             if (isNewBackend) {
                 // Use Supabase Token
