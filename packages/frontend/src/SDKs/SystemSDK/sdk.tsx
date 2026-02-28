@@ -2,16 +2,15 @@ import { immer } from "zustand/middleware/immer";
 import { create } from "zustand";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
+import { getInitialPreferedTheme } from "./utils";
 
 @SDK("System")
 class SystemSDKImpl extends BaseSDK<SystemSDK.State> {
     constructor() {super()}
 
-    public NOTIFICATION_DURATION = 400
-
     public readonly useStore: BaseSDK.Store<SystemSDK.State> = create(
         immer<SystemSDK.State>(() => ({
-            theme: "dark"
+            theme: getInitialPreferedTheme()
         }))
     )
 
@@ -22,12 +21,14 @@ class SystemSDKImpl extends BaseSDK<SystemSDK.State> {
                 const root = document.documentElement;
                 root.classList.remove("dark", "light")
                 root.classList.add(newTheme)
+
+                localStorage.setItem("theme", newTheme)
             })
         }
     }
 
     public init(){
-        this.actions.setTheme(this.useStore.getState().theme)
+        this.actions.setTheme(this.state.theme)
     }
 }
 

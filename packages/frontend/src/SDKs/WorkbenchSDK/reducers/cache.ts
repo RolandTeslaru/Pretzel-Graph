@@ -25,8 +25,8 @@ export const cacheReducers = {
         // Don't delete s.workflow.fieldValues[target.nodeId][target.portId] here
     },
     deleteNode: (s, deletedNodeId) => {
-        delete s.cache.ingoersEdgesMap[deletedNodeId];
-        delete s.cache.outgoersEdgesMap[deletedNodeId];
+        delete s.cache.incomingEdgesMap[deletedNodeId];
+        delete s.cache.outgoingEdgesMap[deletedNodeId];
 
         delete s.cache.inputHandlesMap[deletedNodeId];
         delete s.cache.outputHandlesMap[deletedNodeId];
@@ -34,8 +34,8 @@ export const cacheReducers = {
     createNode: (s, newNode) => {
         const ingoerEdges = {}
         const outgoerEdges = {}
-        s.cache.ingoersEdgesMap[newNode.id] = ingoerEdges
-        s.cache.outgoersEdgesMap[newNode.id] = outgoerEdges
+        s.cache.incomingEdgesMap[newNode.id] = ingoerEdges
+        s.cache.outgoingEdgesMap[newNode.id] = outgoerEdges
 
         s.cache.inputHandlesMap[newNode.id] = {}
         s.cache.outputHandlesMap[newNode.id] = {}

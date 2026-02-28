@@ -13,6 +13,9 @@
             ],
             "@vx-agent-builder/vx-aggex/*": [
                 "../vx-aggex/src/*"
+            ],
+            "src/*": [
+                "../vx-aggex/src/*"
             ]
         },
         "outDir": "./dist",

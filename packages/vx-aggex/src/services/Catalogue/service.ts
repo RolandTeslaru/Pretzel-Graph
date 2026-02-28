@@ -4,7 +4,9 @@ import { Runtime } from "src/runtime";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 
 export type NodeConstructor = {
-    new(workflowNode: Workflow.Node): Runtime.Node<Foundations.Blueprint>;
+    new(
+        props: Runtime.Node.ConstructorProps
+    ): Runtime.Node<Foundations.Blueprint>;
 }
 
 @singleton()
@@ -59,7 +61,6 @@ class CatalogueServiceImpl {
         const blueprintPath = path.join(this.nodesRoot, relativePath + "/blueprint");
 
         try {
-            // Try importing reconcile.ts
             const module = await import(fullPath);
             // The imported module should export a function that accepts (fieldId, newValue)
             return module.reconcile || module.default;
@@ -89,8 +90,14 @@ class CatalogueServiceImpl {
 
 export const CatalogueService = container.resolve(CatalogueServiceImpl);
 
-export function RegisterNode(blueprintId: Foundations.Blueprint.Id) {
+
+
+export function RegisterNode(
+    blueprintId: Foundations.Blueprint.Id
+) {
+
     return function (constructor: NodeConstructor) {
         CatalogueServiceImpl.register(blueprintId, constructor);
     };
+
 }

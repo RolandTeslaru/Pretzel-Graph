@@ -1,10 +1,10 @@
 import { FieldBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
-    id: "Google.GenerativeAI",
-    displayName: "Google Generative AI",
-    description: "This node talks to google generative ai api",
-    icon: "Google",
+    id: "Anthropic.Chat",
+    displayName: "Anthropic Chat",
+    description: "This node talks to Anthropic Claude models",
+    icon: "Anthropic",
     accent: "port-LanguageModel",
     fields: [
         FieldBuilder.Secret({
@@ -15,13 +15,14 @@ export const Blueprint = defineBlueprint({
             id: "model",
             displayName: "Model",
             options: [
-                "gemini-3-pro-preview",
-                "gemini-2.5-pro",
-                "gemini-3-flash-preview",
-                "gemini-2.5-flash",
-                "gemini-2.5-flash-lite",
+                "claude-3-5-sonnet-20240620",
+                "claude-3-opus-20240229",
+                "claude-3-haiku-20240307",
+                "claude-2.1",
+                "claude-2.0",
+                "claude-instant-1.2"
             ],
-            initialValue: "gemini-3-pro-preview",
+            initialValue: "claude-3-5-sonnet-20240620",
         }),
         FieldBuilder.Float({
             id: "temperature",
@@ -29,14 +30,14 @@ export const Blueprint = defineBlueprint({
             required: false,
             initialValue: 0.7,
             min: 0,
-            max: 2.0,
+            max: 1.0,
             step: 0.1,
             slider: true,
             tooltip: "Controls randomness in the output. Higher values are more creative.",
         }),
         FieldBuilder.Integer({
-            id: "maxOutputTokens",
-            displayName: "Max Output Tokens",
+            id: "maxTokens",
+            displayName: "Max Tokens",
             required: false,
             initialValue: 2048,
             min: 1,

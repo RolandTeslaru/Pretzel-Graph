@@ -20,9 +20,19 @@ export class EventBuilder {
     update(update: Orchestrator.Event.Job.Update["update"]): Orchestrator.Event.Job.Update {
         return { ...this.base(), type: "job:update", update };
     }
-    completed(result: string): Orchestrator.Event.Job.Completed {
+    completed(result: string): Orchestrator.Event.Job.Completed 
+    {
         return { ...this.base(), type: "job:completed", result };
     }
+    messageChunk(nodeId: Workflow.Node.Id, chunk: string): Orchestrator.Event.Job.MessageChunk 
+    {
+        return { ...this.base(), type: "job:node_messages:chunk", nodeId, chunk };
+    }
+    conversationChunk(nodeId: Workflow.Node.Id, chunk: string): Orchestrator.Event.Job.ConversationChunk
+    {
+        return { ...this.base(), type: "job:node_messages:conversation_chunk", nodeId, chunk };
+    }
+
     failed(error: string): Orchestrator.Event.Job.Failed {
         return { ...this.base(), type: "job:failed", error };
     }

@@ -16,6 +16,24 @@ export type InferFields<D> = D extends { fields: infer T }
     : Record<string, never>;
 
 /**
+ * Like InferFields, but only includes fields where initialValue was
+ * explicitly provided at the builder call site (__hasInitialValue is true).
+ */
+export type InferFieldsWithInitial<D> = D extends { fields: infer T }
+    ? T extends readonly { id: string }[]
+    ? { [K in T[number]as (
+        K extends { __hasInitialValue?: true }
+        ? (K extends { __literalId?: infer Id extends string }
+            ? Id
+            : K extends { id: infer Id extends string } ? Id : never)
+        : never
+    )]: K extends { initialValue: infer IV } ? IV : any
+    }
+    : never
+    : Record<string, never>;
+
+
+/**
  * Infer runtime port input values from a Blueprint.
  * 
  * Uses __reference phantom if present (set by InputBuilder.Message → BaseMessage, etc.)

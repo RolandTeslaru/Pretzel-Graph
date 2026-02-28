@@ -32,7 +32,7 @@ export default NodeSidebar
 
 const EMPTY_OBJECT = {}
 
-const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
+const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
     const connectedPorts = WorkbenchSDK.useStore(s => s.cache.inputHandlesMap[node.id] || EMPTY_OBJECT)
 
     const { fields, inputs, connectedInputs } = useMemo(() => {
@@ -138,7 +138,7 @@ const Content = ({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
             </ScrollArea.Root>
         </>
     )
-}
+})
 
 
 const InputItem = memo(({ input, nodeId }: { input: Foundations.Port.Input, nodeId: Workflow.Node.Id }) => {

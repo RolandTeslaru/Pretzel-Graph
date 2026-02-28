@@ -1,8 +1,10 @@
-import { StateGraph, START, END } from "@langchain/langgraph";
+import { StateGraph, START, END, LangGraphRunnableConfig } from "@langchain/langgraph";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { CatalogueService } from "src/services/Catalogue/service";
 import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { Runtime } from "src/runtime";
+import { cloneDeep } from "lodash";
+import { Synthesizer } from "./synthesizer";
 
 export class WorkflowCompiler {
     constructor() { }
@@ -10,27 +12,38 @@ export class WorkflowCompiler {
     public async compile(
         workflow: Workflow,
         emit: Runtime.Emitter,
-        nodeRunner: Runtime.NodeRunner
+        nodeRunnerFn: Runtime.NodeRunner
     ) {
+        const workflowCache = Workflow.createCache(workflow);
+
+        const initialState = cloneDeep(Orchestrator.SerializableState.INITIAL);
+        const state = Synthesizer.synthesizeState(initialState);
+
+        // Create the state graph
         const graph = new StateGraph(Runtime.State.Schema);
         const nodes = workflow.data.nodes;
         const edges = workflow.data.edges;
 
+        // Add nodes to the graph along with their run function
         for (const node of Object.values(nodes)) {
 
             const VerticeConstructor = await CatalogueService.getNode(node.blueprintId);
 
             if (!VerticeConstructor)
                 throw new Error(`Could not find vertice with blueprintId ${node.blueprintId}`)
-
-            const Vertex = new VerticeConstructor(node);
-
+            
+            const vertex = new VerticeConstructor({
+                workflow,
+                workflowCache,
+                workflowNode: node,
+                state
+            });
             graph.addNode(node.id, async (state) => {
-                return nodeRunner(state, node, Vertex, workflow, emit);
+                return nodeRunnerFn(state, node, vertex, workflow, workflowCache, emit);
             });
         }
 
-        // 4. Add Edges
+        // Add Edges
         for (const edge of Object.values(edges)) {
             graph.addEdge(
                 edge.source.nodeId as any,
@@ -38,7 +51,7 @@ export class WorkflowCompiler {
             );
         }
 
-        // 5. Set Entry Points (Start Nodes)
+        // Set Entry Points (Start Nodes)
         const startNodes = this.findStartNodes(nodes, edges);
         if (startNodes.length === 0)
             throw new Error("AGGEX Compiler: No start nodes found! Graph might be disconnected.")
@@ -49,7 +62,9 @@ export class WorkflowCompiler {
 
         const compiledGraph = graph.compile();
 
-        return compiledGraph;
+
+
+        return { compiledGraph, state };
     }
 
     private findStartNodes(

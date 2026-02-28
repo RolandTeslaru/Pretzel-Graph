@@ -1,12 +1,12 @@
 import { Service } from "../ServiceManager";
-import IORedis from 'ioredis';
+import Redis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
 import { WebSocketServer, WebSocket } from 'ws';
 import { Realtime } from "@vx-agent-editor/shared/domain/Realtime";
 
 @Service("Realtime")
 export class RealtimeServiceImpl {
-    private redisSub = new IORedis({ host: REDIS_HOST, port: REDIS_PORT })
+    private redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT })
 
 
     constructor() { }

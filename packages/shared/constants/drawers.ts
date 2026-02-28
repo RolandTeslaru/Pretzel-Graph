@@ -126,7 +126,7 @@ export const BUNDLE_DRAWERS = {
     displayName: "Anthropic",
     id: "anthropic",
     icon: "Anthropic",
-    blueprintIds: []
+    blueprintIds: ["Anthropic.Chat"]
   },
   apify: {
     displayName: "Apify",
