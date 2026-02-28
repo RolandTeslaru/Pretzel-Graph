@@ -8,7 +8,7 @@ export const Blueprint = defineBlueprint({
     accent: "port-LanguageModel",
     fields: [
         FieldBuilder.Secret({
-            id: "api_key",
+            id: "apiKey",
             displayName: "API Key",
         }),
         FieldBuilder.MultiOption({
@@ -29,7 +29,6 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.Float({
             id: "temperature",
             displayName: "Temperature",
-            required: false,
             initialValue: 0.7,
             min: 0,
             max: 2.0,
@@ -40,7 +39,6 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.Integer({
             id: "maxTokens",
             displayName: "Max Tokens",
-            required: false,
             initialValue: 2048,
             min: 1,
             step: 1,
@@ -49,7 +47,6 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.Float({
             id: "topP",
             displayName: "Top P",
-            required: false,
             initialValue: 1.0,
             min: 0,
             max: 1,
@@ -60,7 +57,6 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.Float({
             id: "frequencyPenalty",
             displayName: "Frequency Penalty",
-            required: false,
             initialValue: 0,
             min: -2.0,
             max: 2.0,
@@ -71,7 +67,6 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.Float({
             id: "presencePenalty",
             displayName: "Presence Penalty",
-            required: false,
             initialValue: 0,
             min: -2.0,
             max: 2.0,
@@ -84,6 +79,7 @@ export const Blueprint = defineBlueprint({
         InputBuilder.Message({
             id: "input",
             displayName: "Input",
+            required: true
         }),
         InputBuilder.Message({
             id: "systemMessage",
@@ -95,6 +91,11 @@ export const Blueprint = defineBlueprint({
             id: "response",
             displayName: "Response",
             tooltip: "The response message from the model",
+        }),
+        OutputBuilder.LanguageModel({
+            id: "languageModel",
+            displayName: "Language Model",
+            tooltip: "The language model instance used for this response, useful for chaining calls with the same model and settings.",
         })
     ]
 })

@@ -34,9 +34,9 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
   let backgroundColor = 'var(--secondary)';
   let borderColor = "var(--border)";
 
-  if(node.accent){
+  if (node.accent) {
     backgroundColor = `color-mix(in srgb, ${node.accent} 22%, var(--card))`;
-    borderColor = `color-mix(in srgb, ${node.accent} 22%, var(--border))`;
+    borderColor = `color-mix(in srgb, ${node.accent} 50%, var(--border))`;
   }
 
 
@@ -52,7 +52,6 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
       <div className={cn(
         "animate-in fade-in-0 duration-200 ease-out p-1 border-2 transition-colors",
         "flex flex-col relative rounded-3xl shadow-lg shadow-black/20 dark:shadow-black/30",
-        isNodeClicked ? "ring-4 ring-primary/20 ring-offset-8 ring-offset-background" : "",
         node.isMinimized ? "min-w-[100px]" : "w-[250px]",
       )}
         style={{ backgroundColor, borderColor }}

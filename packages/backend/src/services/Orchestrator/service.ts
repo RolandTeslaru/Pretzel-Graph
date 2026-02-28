@@ -4,16 +4,15 @@ import { WithAuth, withAuth } from "@/handlers/controller";
 import { createAuthenticatedClient, getUserId } from "@/utils/supabase";
 import { Auth, Orchestrator, Validation, Workflow } from "@vx-agent-editor/shared/domain";
 import { Queue } from 'bullmq';
-import IORedis from 'ioredis';
-import { SupabaseClient } from "@supabase/supabase-js";
-import { resolveCredential } from "@/utils/resolveCredential";
+import Redis from 'ioredis';
 import { SecretsResolver } from "./utils";
 import { WithSupabase } from "@/handlers/database";
+import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
 
 @Service("Orchestrator")
 export class OrchestratorServiceImpl {
 
-    private redis = new IORedis({ host: 'localhost', port: 6379 })
+    private redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT })
     private executionQueue = new Queue('workflow-execution', {
         connection: this.redis
     });
@@ -50,7 +49,7 @@ export class OrchestratorServiceImpl {
 
     public readonly ops: OrchestratorService.Ops = {
         execution: {
-            run: async (token, workflow) => {
+            run: async (token, { workflow, state }) => {
                 const wfCache = Workflow.createCache(workflow);
 
                 const workflowIssues = Validation.Issue.checkWorkflow(workflow, wfCache);
@@ -69,11 +68,11 @@ export class OrchestratorServiceImpl {
                 try {
                     await SecretsResolver.resolveWorkflow(supabase, workflow)
 
-
                     const queueItem: Orchestrator.ExecutionQueue.Item = {
                         jobId,
                         workflow,
-                        userId
+                        userId,
+                        state
                     }
 
                     await this.executionQueue.add('run', queueItem);

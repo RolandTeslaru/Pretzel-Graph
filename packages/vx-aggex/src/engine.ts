@@ -5,6 +5,13 @@ import { cloneDeep } from "lodash";
 import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { Synthesizer } from "./synthesizer";
 
+
+export type StreamEvent =
+    | { mode: "values"; state: Runtime.State }
+    | { mode: "messages"; nodeId: Workflow.Node.Id; content: string }
+    | { mode: "conversation"; nodeId: Workflow.Node.Id; content: string }
+    | { mode: "updates"; update: Runtime.State.Update }
+
 export class AggexEngine {
     private compiler = new WorkflowCompiler();
     constructor() { }
@@ -15,16 +22,18 @@ export class AggexEngine {
         activeNode: Workflow.Node,
         Vertex: Runtime.Node<Foundations.Blueprint>,
         workflow: Workflow,
+        workflowCache: Workflow.Cache,
         emit: Runtime.Emitter
     ) {
         console.log(`Executing Node: ${activeNode.displayName} (${activeNode.id})`);
 
         emit(b => b.nodeStarted(activeNode.id))
 
-        const fields = this.resolveNodeFields(activeNode.id, workflow);
-        const inputs = this.resolveIncomingValues(state, activeNode.id, workflow);
+        const inputs = this.resolveInputs(state, activeNode.id, workflow, workflowCache);
 
-        const result = await Vertex.run(state, fields, inputs)
+        console.log("Inputs ", inputs);
+
+        const result = await Vertex.run(state, inputs)
 
         emit(b => b.nodeCompleted(activeNode.id, result))
 
@@ -33,36 +42,6 @@ export class AggexEngine {
                 [activeNode.id]: result
             }
         };
-    }
-
-
-    /**
-     * Resolve static configuration values for a node.
-     * 
-     * For each config field defined on the node:
-     * 1. Use the override from `staticValues` if present
-     * 2. Otherwise fall back to the config schema's `initialValue`
-     */
-    private resolveNodeFields(
-        nodeId: Workflow.Node.Id,
-        workflow: Workflow
-    ): Record<Foundations.Field.Id, Foundations.Field.Value> {
-        const node = workflow.data.nodes[nodeId];
-        const staticValues = workflow.data.staticValues[nodeId] ?? {};
-
-        const resolved: Record<string, Foundations.Field.Value> = {};
-
-        for (const field of node.fields) {
-            const fieldId = field.id as string;
-            const brandedId = field.id as Foundations.Field.Id;
-
-            if (brandedId in staticValues)
-                resolved[fieldId] = staticValues[brandedId] as Foundations.Field.Value;
-            else
-                resolved[fieldId] = field.initialValue as Foundations.Field.Value;
-        }
-
-        return resolved;
     }
 
 
@@ -77,25 +56,22 @@ export class AggexEngine {
      * 2. If no edge → synthesize from the static value (or initialValue fallback)
      *    because the raw primitive must be coerced into a class instance
      */
-    private resolveIncomingValues(
+    private resolveInputs(
         state: Runtime.State,
         nodeId: Workflow.Node.Id,
-        workflow: Workflow
+        workflow: Workflow,
+        workflowCache: Workflow.Cache
     ): Record<Foundations.Port.Input.Id, any> {
         const node = workflow.data.nodes[nodeId];
         const staticValues = workflow.data.staticValues[nodeId] ?? {};
 
         const resolved: Record<Foundations.Port.Input.Id, any> = {};
 
-        // Build a lookup: targetPortId → edge, for edges incoming to this node
-        const incomingEdgeByPort = new Map<Foundations.Port.Input.Id, Workflow.Edge>();
-
-        for (const edge of Object.values(workflow.data.edges))
-            if (edge.target.nodeId === nodeId)
-                incomingEdgeByPort.set(edge.target.portId, edge);
+        const incomingEdgeByPort = workflowCache.inputHandlesMap[nodeId]
 
         for (const input of node.inputs) {
-            const edge = incomingEdgeByPort.get(input.id);
+            const edgeId = incomingEdgeByPort[input.id]
+            const edge = workflow.data.edges[edgeId];
 
             if (edge) {
                 // ── Edge-connected: pull value from upstream node's outputs ──
@@ -126,18 +102,53 @@ export class AggexEngine {
 
     public async *stream(
         compiledGraph: Runtime.CompiledGraph,
-        initialInputs: Record<string, any>
-    ): AsyncIterable<Runtime.State.Update> {
-        const state = cloneDeep(Orchestrator.RuntimeState.INITIAL)
+        engineState: Runtime.State,
+    ): AsyncIterable<StreamEvent> {
+        const stream = await compiledGraph.stream(engineState, {
+            streamMode: ["values", "messages", "updates"]
+        })
 
-        for await (const update of await compiledGraph.stream(state)) {
-            yield update
+        const conversationSourceNodeId = engineState.streamController.conversationSourceNodeId;
+
+        for await (const [mode, payload] of stream) {
+            switch (mode) {
+                case "messages":
+                    const [msgChunk, metadata] = payload
+                    const nodeId = metadata.langgraph_node as Workflow.Node.Id
+                    const rawContent = msgChunk.content;
+                    const content = typeof rawContent === "string"
+                        ? rawContent
+                        : rawContent
+                            .map(b => typeof b === "string" ? b : ("text" in b ? b.text : ""))
+                            .join("");
+
+                    const isConversation = conversationSourceNodeId === nodeId;
+
+                    yield {
+                        mode: isConversation ? "conversation" : "messages",
+                        nodeId,
+                        content
+                    }
+                    break;
+                case "values":
+                    yield {
+                        mode,
+                        state: payload
+                    }
+                    break;
+                case "updates":
+                    yield {
+                        mode,
+                        update: payload
+                    }
+                    break;
+            }
         }
     }
 
 
     public async run(initialInputs: Record<string, any>) {
-        const state = cloneDeep(Orchestrator.RuntimeState.INITIAL)
+        const state = cloneDeep(Orchestrator.SerializableState.INITIAL)
         // return await this.compiledGraph.invoke(state);
     }
 }

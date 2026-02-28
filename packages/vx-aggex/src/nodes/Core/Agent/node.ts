@@ -31,15 +31,12 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
         const { systemPrompt, tools, input } = inputs;
 
-        // 1. Resolve Language Model
-        let llm: BaseChatModel;
-
         if (provider === "Google") {
             // Instantiate Google Model internally (mimicking Python provider creation)
             if (!apiKey) {
                 throw new Error("API Key is required for Google provider.");
             }
-            llm = new ChatGoogleGenerativeAI({
+            const llm = new ChatGoogleGenerativeAI({
                 model: '',
                 apiKey: apiKey,
                 maxOutputTokens: maxOutputTokens > 0 ? maxOutputTokens : undefined,

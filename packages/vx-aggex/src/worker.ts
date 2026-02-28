@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { EXECUTION_QUEUE_ID, REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants"
-import { Orchestrator, Realtime } from '@vx-agent-editor/shared/domain';
+import { Orchestrator, Realtime, Workflow } from '@vx-agent-editor/shared/domain';
 import { AggexEngine } from 'src/engine';
 import { container, singleton } from 'tsyringe';
 import { EventBuilder } from './eventBuilder';
@@ -30,7 +30,7 @@ export class AggexWorkerImpl {
         { data: queueItem }: { data: Orchestrator.ExecutionQueue.Item }
     ) => {
         console.log("Processing Queue Item ", queueItem.jobId, " worlflow id ", queueItem.workflow.id)
-        const { workflow, jobId } = queueItem;
+        const { workflow, jobId, state: initialState } = queueItem;
 
         const eventBuilder = new EventBuilder(
             jobId,
@@ -42,16 +42,24 @@ export class AggexWorkerImpl {
             this.publishToRedis(builderFn(eventBuilder))
         }
 
-        emit(builder => builder.started());
+        emit(b => b.started());
 
-        const compiledGraph = await this.engine.compile(workflow, emit)
+        const { compiledGraph, state } = await this.engine.compile(workflow, emit)
 
-
-        for await (const update of this.engine.stream(compiledGraph, {})) {
-            emit(builder => builder.update({
-                ...update,
-                messages: update.messages as any
-            }))
+        for await (const payload of this.engine.stream(compiledGraph, state)) {
+            switch (payload.mode) {
+                case "messages":
+                    emit(b => b.messageChunk(payload.nodeId, payload.content));
+                    break
+                case "conversation":
+                    emit(b => b.conversationChunk(payload.nodeId, payload.content));
+                    break
+                case "updates":
+                    emit(b => b.update(payload.update as any))
+                    break
+                case "values":
+                    break;
+            }
         }
 
         emit(builder => builder.completed(""))

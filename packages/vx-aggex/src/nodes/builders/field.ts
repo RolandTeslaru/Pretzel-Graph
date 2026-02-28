@@ -4,27 +4,36 @@ export type LiteralField<
     T_Id extends string,
     T_Variant extends Foundations.Field.Variant,
     T_Field extends Foundations.Field,
+    T_Required extends boolean = false,
+    T_HasInitial extends boolean = false,
 > = {
     id: T_Id & Foundations.Field.Id;
     readonly __literalId?: T_Id;
     readonly __variant?: T_Variant;
+    readonly __required?: T_Required;
+    readonly __hasInitialValue?: T_HasInitial;
 } & Omit<T_Field, "id">
 
 export type OmitId<T> = Omit<T, "id">
 
+
 export namespace FieldBuilder {
 
-    export type BaseProps<T_Id extends string> = {
-        id: T_Id;
+    export type BaseProps<TId extends string, TReq extends boolean = false> = {
+        id: TId;
+        required?: TReq;
         advanced?: boolean;
         displayName: string;
         tooltip?: string;
         reconcile?: boolean;
-        required?: boolean;
     }
 
+    /** Shorthand: return type for every builder */
+    type Ret<TId extends string, V extends Foundations.Field.Variant, F extends Foundations.Field, TReq extends boolean, THasInit extends boolean = false> =
+        LiteralField<TId, V, F, TReq, THasInit>
+
     export const buildBase = <TId extends string>(
-        props: BaseProps<TId>
+        props: BaseProps<TId, boolean>
     ) => {
         return {
             id: props.id as TId & Foundations.Field.Id,
@@ -40,13 +49,19 @@ export namespace FieldBuilder {
 
 
 
-    export function String<T_Id extends string>(
+    export function String<TId extends string, TReq extends boolean = false>(
+        config: { initialValue: string; multiline?: boolean; placeholder?: string; } & BaseProps<TId, TReq>
+    ): Ret<TId, "String", Foundations.Field.String, TReq, true>;
+    export function String<TId extends string, TReq extends boolean = false>(
+        config: { multiline?: boolean; placeholder?: string; } & BaseProps<TId, TReq>
+    ): Ret<TId, "String", Foundations.Field.String, TReq, false>;
+    export function String<TId extends string, TReq extends boolean = false>(
         config: {
             initialValue?: string;
             multiline?: boolean;
             placeholder?: string;
-        } & BaseProps<T_Id>
-    ): LiteralField<T_Id, "String", Foundations.Field.String> {
+        } & BaseProps<TId, TReq>
+    ): Ret<TId, "String", Foundations.Field.String, TReq, boolean> {
         return {
             ...buildBase(config),
             variant: "String",
@@ -59,14 +74,20 @@ export namespace FieldBuilder {
 
 
 
-    export function Integer<T_Id extends string>(config: {
+    export function Integer<TId extends string, TReq extends boolean = false>(config: {
+        initialValue: number; min?: number; max?: number; step?: number; slider?: boolean;
+    } & BaseProps<TId, TReq>): Ret<TId, "Integer", Foundations.Field.Integer, TReq, true>;
+    export function Integer<TId extends string, TReq extends boolean = false>(config: {
+        min?: number; max?: number; step?: number; slider?: boolean;
+    } & BaseProps<TId, TReq>): Ret<TId, "Integer", Foundations.Field.Integer, TReq, false>;
+    export function Integer<TId extends string, TReq extends boolean = false>(config: {
         initialValue?: number;
         min?: number;
         max?: number;
         step?: number;
         slider?: boolean;
-    } & BaseProps<T_Id>
-    ): LiteralField<T_Id, "Integer", Foundations.Field.Integer> {
+    } & BaseProps<TId, TReq>
+    ): Ret<TId, "Integer", Foundations.Field.Integer, TReq, boolean> {
         return {
             ...buildBase(config),
             variant: "Integer",
@@ -81,13 +102,20 @@ export namespace FieldBuilder {
 
 
 
-    export function Float<TId extends string>(config: {
+    export function Float<TId extends string, TReq extends boolean = false>(config: {
+        initialValue: number; min?: number; max?: number; step?: number; slider?: boolean;
+    } & BaseProps<TId, TReq>): Ret<TId, "Float", Foundations.Field.Float, TReq, true>;
+    export function Float<TId extends string, TReq extends boolean = false>(config: {
+        min?: number; max?: number; step?: number; slider?: boolean;
+    } & BaseProps<TId, TReq>): Ret<TId, "Float", Foundations.Field.Float, TReq, false>;
+    export function Float<TId extends string, TReq extends boolean = false>(config: {
         initialValue?: number;
         min?: number;
         max?: number;
         step?: number;
         slider?: boolean;
-    } & BaseProps<TId>): LiteralField<TId, "Float", Foundations.Field.Float> {
+    } & BaseProps<TId, TReq>
+    ): Ret<TId, "Float", Foundations.Field.Float, TReq, boolean> {
         return {
             ...buildBase(config),
             variant: "Float",
@@ -101,10 +129,16 @@ export namespace FieldBuilder {
 
 
 
-    export function Boolean<TId extends string>(config: {
+    export function Boolean<TId extends string, TReq extends boolean = false>(config: {
+        initialValue: boolean;
+    } & BaseProps<TId, TReq>): Ret<TId, "Boolean", Foundations.Field.Boolean, TReq, true>;
+    export function Boolean<TId extends string, TReq extends boolean = false>(
+        config: BaseProps<TId, TReq>
+    ): Ret<TId, "Boolean", Foundations.Field.Boolean, TReq, false>;
+    export function Boolean<TId extends string, TReq extends boolean = false>(config: {
         initialValue?: boolean;
-    } & BaseProps<TId>
-    ): LiteralField<TId, "Boolean", Foundations.Field.Boolean> {
+    } & BaseProps<TId, TReq>
+    ): Ret<TId, "Boolean", Foundations.Field.Boolean, TReq, boolean> {
         return {
             ...buildBase(config),
             variant: "Boolean",
@@ -114,26 +148,40 @@ export namespace FieldBuilder {
 
 
 
-    export function MultiOption<TId extends string>(config: {
-        initialValue: string;
-        options: string[];
+    export function MultiOption<
+        TId extends string,
+        TReq extends boolean = false,
+        const TOptions extends readonly string[] = readonly string[]
+    >(config: {
+        initialValue: TOptions[number];
+        options: TOptions;
         variant?: "select" | "tab";
-    } & BaseProps<TId>): LiteralField<TId, "MultiOption", Foundations.Field.MultiOption> {
+    } & BaseProps<TId, TReq>
+    ): Ret<TId, "MultiOption", Foundations.Field.MultiOption, TReq, true> & {
+        initialValue: TOptions[number];
+    } {
         return {
             ...buildBase(config),
             variant: "MultiOption",
             initialValue: config.initialValue,
-            options: config.options,
+            options: config.options as unknown as string[],
             kind: config.variant ?? "select",
         };
     }
 
 
 
-    export function File<TId extends string>(config: {
+    export function File<TId extends string, TReq extends boolean = false>(config: {
+        initialValue: string; fileTypes?: string[];
+    } & BaseProps<TId, TReq>): Ret<TId, "File", Foundations.Field.File, TReq, true>;
+    export function File<TId extends string, TReq extends boolean = false>(config: {
+        fileTypes?: string[];
+    } & BaseProps<TId, TReq>): Ret<TId, "File", Foundations.Field.File, TReq, false>;
+    export function File<TId extends string, TReq extends boolean = false>(config: {
         initialValue?: string;
         fileTypes?: string[];
-    } & BaseProps<TId>): LiteralField<TId, "File", Foundations.Field.File> {
+    } & BaseProps<TId, TReq>
+    ): Ret<TId, "File", Foundations.Field.File, TReq, boolean> {
         return {
             ...buildBase(config),
             variant: "File",
@@ -144,9 +192,16 @@ export namespace FieldBuilder {
 
 
 
-    export function List<TId extends string>(config: {
+    export function List<TId extends string, TReq extends boolean = false>(config: {
+        initialValue: string[];
+    } & BaseProps<TId, TReq>): Ret<TId, "List", Foundations.Field.List, TReq, true>;
+    export function List<TId extends string, TReq extends boolean = false>(
+        config: BaseProps<TId, TReq>
+    ): Ret<TId, "List", Foundations.Field.List, TReq, false>;
+    export function List<TId extends string, TReq extends boolean = false>(config: {
         initialValue?: string[];
-    } & BaseProps<TId>): LiteralField<TId, "List", Foundations.Field.List> {
+    } & BaseProps<TId, TReq>
+    ): Ret<TId, "List", Foundations.Field.List, TReq, boolean> {
         return {
             ...buildBase(config),
             variant: "List",
@@ -156,9 +211,16 @@ export namespace FieldBuilder {
 
 
 
-    export function Json<TId extends string>(config: {
+    export function Json<TId extends string, TReq extends boolean = false>(config: {
+        initialValue: any;
+    } & BaseProps<TId, TReq>): Ret<TId, "Json", Foundations.Field.Json, TReq, true>;
+    export function Json<TId extends string, TReq extends boolean = false>(
+        config: BaseProps<TId, TReq>
+    ): Ret<TId, "Json", Foundations.Field.Json, TReq, false>;
+    export function Json<TId extends string, TReq extends boolean = false>(config: {
         initialValue?: any;
-    } & BaseProps<TId>): LiteralField<TId, "Json", Foundations.Field.Json> {
+    } & BaseProps<TId, TReq>
+    ): Ret<TId, "Json", Foundations.Field.Json, TReq, boolean> {
         return {
             ...buildBase(config),
             variant: "Json",
@@ -168,9 +230,16 @@ export namespace FieldBuilder {
 
 
 
-    export function Secret<TId extends string>(config: {
+    export function Secret<TId extends string, TReq extends boolean = false>(config: {
+        initialValue: string;
+    } & BaseProps<TId, TReq>): Ret<TId, "Secret", Foundations.Field.Secret, TReq, true>;
+    export function Secret<TId extends string, TReq extends boolean = false>(
+        config: BaseProps<TId, TReq>
+    ): Ret<TId, "Secret", Foundations.Field.Secret, TReq, false>;
+    export function Secret<TId extends string, TReq extends boolean = false>(config: {
         initialValue?: string;
-    } & BaseProps<TId>): LiteralField<TId, "Secret", Foundations.Field.Secret> {
+    } & BaseProps<TId, TReq>
+    ): Ret<TId, "Secret", Foundations.Field.Secret, TReq, boolean> {
         return {
             ...buildBase(config),
             variant: "Secret",
@@ -180,9 +249,16 @@ export namespace FieldBuilder {
 
 
 
-    export function Script<TId extends string>(config: {
+    export function Script<TId extends string, TReq extends boolean = false>(config: {
+        initialValue: string;
+    } & BaseProps<TId, TReq>): Ret<TId, "Script", Foundations.Field.Script, TReq, true>;
+    export function Script<TId extends string, TReq extends boolean = false>(
+        config: BaseProps<TId, TReq>
+    ): Ret<TId, "Script", Foundations.Field.Script, TReq, false>;
+    export function Script<TId extends string, TReq extends boolean = false>(config: {
         initialValue?: string;
-    } & BaseProps<TId>): LiteralField<TId, "Script", Foundations.Field.Script> {
+    } & BaseProps<TId, TReq>
+    ): Ret<TId, "Script", Foundations.Field.Script, TReq, boolean> {
         return {
             ...buildBase(config),
             variant: "Script",

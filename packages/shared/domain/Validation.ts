@@ -14,7 +14,7 @@ export namespace Validation {
         export interface Field {
             field: Foundations.Field
             type: 'missing_value'
-        } 
+        }
         export namespace Field {
             export function check(
                 field: Foundations.Field,
@@ -22,7 +22,7 @@ export namespace Validation {
                 workflow: Workflow
             ) {
                 const value = workflow.data.staticValues[nodeId]?.[field.id];
-    
+
                 if (value === undefined || value === null || value === "")
                     return {
                         field,
@@ -31,7 +31,7 @@ export namespace Validation {
                 return null;
             }
         }
-    
+
 
         export interface Input {
             input: Foundations.Port.Input
@@ -40,28 +40,28 @@ export namespace Validation {
         export namespace Input {
             export function check(
                 input: Foundations.Port.Input,
-                nodeId: Workflow.Node.Id, 
-                workflow: Workflow, 
-                cache: Workflow.Cache, 
+                nodeId: Workflow.Node.Id,
+                workflow: Workflow,
+                cache: Workflow.Cache,
             ) {
                 if (!input.required)
                     return null;
-    
+
                 const hasEdge = !!cache.inputHandlesMap[nodeId]?.[input.id];
                 if (hasEdge)
                     return null;
-    
+
                 if (input.variant === "Message" || input.variant === "Text") {
                     const value = workflow.data.staticValues[nodeId]?.[input.id];
                     if (value !== undefined && value !== null && value !== "")
                         return null;
-    
+
                     return {
                         input,
                         type: 'missing_value_or_connection' as const,
                     }
                 }
-    
+
                 return {
                     input,
                     type: 'missing_connection' as const,
@@ -72,9 +72,9 @@ export namespace Validation {
         export interface Node {
             fields: Record<Foundations.Field.Id, Issue.Field>;
             inputs: Record<Foundations.Port.Input.Id, Issue.Input>;
-        } 
+        }
         export namespace Node {
-            export function check(node: Workflow.Node, workflow: Workflow, cache: Workflow.Cache){
+            export function check(node: Workflow.Node, workflow: Workflow, cache: Workflow.Cache) {
                 const nodeIssues: Issue.Node = { fields: {}, inputs: {} }
 
                 let numFieldIssues = 0;
@@ -83,21 +83,21 @@ export namespace Validation {
 
                 for (const field of node.fields) {
                     const fieldIssue = Issue.Field.check(field, node.id, workflow)
-                    if (fieldIssue){
+                    if (fieldIssue) {
                         nodeIssues.fields[field.id] = fieldIssue
-                        numFieldIssues ++;
+                        numFieldIssues++;
                     }
                 }
 
                 for (const input of node.inputs) {
                     const inputIssue = Issue.Input.check(input, node.id, workflow, cache)
-                    if (inputIssue){
+                    if (inputIssue) {
                         nodeIssues.inputs[input.id] = inputIssue
-                        numInputIssues ++;
+                        numInputIssues++;
                     }
                 }
 
-                if(numFieldIssues === 0 && numInputIssues === 0)
+                if (numFieldIssues === 0 && numInputIssues === 0)
                     return null;
 
                 return nodeIssues;
@@ -167,7 +167,7 @@ export namespace Validation {
 
                 if (currentId === sourceId) return true;
 
-                const outgoers = cache.outgoersEdgesMap[currentId];
+                const outgoers = cache.outgoingEdgesMap[currentId];
                 if (!outgoers) continue;
 
                 for (const outgoerId in outgoers) {

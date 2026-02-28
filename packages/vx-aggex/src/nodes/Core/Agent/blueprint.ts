@@ -1,4 +1,4 @@
-import { defineBlueprint, InputBuilder, OutputBuilder, FieldBuilder } from "../../builders";
+import { defineBlueprint, InputBuilder, OutputBuilder, FieldBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Agent",
@@ -37,7 +37,7 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.Integer({
             id: "maxOutputTokens",
             displayName: "Max Output Tokens",
-            initialValue: 0, // Python code doesn't set default but type is Int
+            initialValue: 2048, // Python code doesn't set default but type is Int
             tooltip: "The maximum number of tokens to generate.",
             required: false
         }),

@@ -1,9 +1,9 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
-import { ChatOpenAI } from "@langchain/openai";
-import { Runtime } from "src/runtime";
+import { ChatAnthropic } from "@langchain/anthropic";
 import { Synthesizer } from "src/synthesizer";
+import { Runtime } from "src/runtime";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
 
 @RegisterNode(Blueprint.id)
@@ -11,38 +11,29 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;
 
-    private readonly llm: ChatOpenAI;
+    private readonly llm: ChatAnthropic;
 
     constructor(props: Runtime.Node.ConstructorProps) {
         super(props);
-        this.llm = new ChatOpenAI(this.fields);
+        this.llm = new ChatAnthropic(this.fields);
     }
 
     public override async run(
         state: Runtime.State,
-        inputs: InferInputs<typeof Blueprint>
+        inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { input, systemMessage } = inputs;
+        const { systemMessage, input } = inputs;
 
         const response = await this.llm.invoke([
             Synthesizer.coerceMessage("system", systemMessage),
-            Synthesizer.coerceMessage("human", input)
+            Synthesizer.coerceMessage("human", input),
         ]);
 
-        return { 
-            response, 
-            languageModel: this.llm 
+        return {
+            response,
+            languageModel: this.llm
         };
     }
 
-
-
-
-
-    public override async onConversion(
-        currentBlueprint: typeof Blueprint
-    ): Promise<typeof Blueprint> {
-        return Blueprint
-    }
 }

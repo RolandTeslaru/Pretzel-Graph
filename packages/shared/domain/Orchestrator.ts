@@ -3,32 +3,34 @@ import { Workflow } from "./Workflow"
 import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
 import { type AxiosInstance } from "axios"
+import { Chat } from "./Chat"
 
 export namespace Orchestrator {
     export namespace Job {
-        export const Id     = z.string().brand("JobId")
-        export type Id      = z.infer<typeof Id>
+        export const Id = z.string().brand("JobId")
+        export type Id = z.infer<typeof Id>
 
         export const Status = z.enum(["pending", "running", "paused", "completed", "failed", "terminated"])
-        export type Status  = z.infer<typeof Status>
+        export type Status = z.infer<typeof Status>
 
         export const Schema = z.object({
-            id:         Job.Id,
+            id: Job.Id,
             workflowId: Workflow.Id,
-            userId:     Auth.User.Id,
-            status:     Job.Status,
-            createdAt:  z.date(),
-            updatedAt:  z.date(),
-            duration:   z.number(),
+            userId: Auth.User.Id,
+            status: Job.Status,
+            createdAt: z.date(),
+            updatedAt: z.date(),
+            duration: z.number(),
         })
     }
 
     export namespace ExecutionQueue {
         export namespace Item {
             export const Schema = z.object({
-                jobId:    Job.Id,
+                jobId: Job.Id,
                 workflow: Workflow.Schema,
-                userId:   Auth.User.Id,
+                userId: Auth.User.Id,
+                state: SerializableState
             })
         }
         export type Item = z.infer<typeof Item.Schema>
@@ -36,51 +38,29 @@ export namespace Orchestrator {
 
 
 
-    export namespace RuntimeState {
-
-        export namespace ToolCall {
-            export const Schema = z.object({
-                name: z.string(),
-                args: z.record(z.string(), z.any()),
-                id:   z.string().optional()
-            })
-        }
-        export type ToolCall = z.infer<typeof ToolCall.Schema>
-
-        export namespace Message {
-            export const Type = z.enum(["human", "ai", "system", "tool", "function", "developer"])
-            export type Type = z.infer<typeof Message.Type>
-            export const Schema = z.object({
-                type:              Message.Type,
-                content:           z.string(),
-                name:              z.string().optional(),
-                id:                z.string().optional(),
-                tool_calls:        z.array(ToolCall.Schema).optional(),
-                additional_kwargs: z.record(z.string(), z.any()).optional(),
-                response_metadata: z.record(z.string(), z.any()).optional(),
-            })
-        }
-        export type Message = z.infer<typeof Message.Schema>
+    export namespace SerializableState {
 
         export const Schema = z.object({
-            node_outputs: z.record(Workflow.Node.Id, z.any()).default(() => ({})),
-            messages:     z.array(Message.Schema).default(() => ([])),
-            artifacts:    z.record(z.string(), z.any()).default(() => ({})),
-            metadata:     z.record(z.string(), z.any()).default(() => ({})),
+            node_outputs:  z.record(Workflow.Node.Id, z.any()).default(() => ({})),
+            node_messages: z.record(Workflow.Node.Id, z.string()).default(() => ({})),
+            messages:      z.array(Chat.Message.Schema).default(() => ([])),
+            attachments:   z.record(z.string(), Chat.Attachment.Schema).default(() => ({})),
+            metadata:      z.record(z.string(), z.any()).default(() => ({})),
         })
 
         export const INITIAL = {
             node_outputs: {},
-            messages:     [],
-            artifacts:    {},
-            metadata:     {}
+            node_messages: {},
+            messages: [],
+            attachments: {},
+            metadata: {}
         } as z.infer<typeof Schema>
 
         export const Update = Schema.partial()
         export type Update = z.infer<typeof Update>
     }
 
-    export type RuntimeState = z.infer<typeof RuntimeState.Schema>
+    export type SerializableState = z.infer<typeof SerializableState.Schema>
 
 
 
@@ -97,7 +77,7 @@ export namespace Orchestrator {
 
             export const Update = Base.extend({
                 type: z.literal('job:update'),
-                update: RuntimeState.Update
+                update: SerializableState.Update
             })
 
 
@@ -121,12 +101,27 @@ export namespace Orchestrator {
                 result: z.string()
             })
 
+            export const MessageChunk = Base.extend({
+                type: z.literal('job:node_messages:chunk'),
+                nodeId: Workflow.Node.Id,
+                chunk: z.string()
+            })
+
+            export const ConversationChunk = Base.extend({
+                type: z.literal('job:node_messages:conversation_chunk'),
+                nodeId: Workflow.Node.Id,
+                chunk: z.string()
+            })
+
             export type Started = z.infer<typeof Started>
             export type Update = z.infer<typeof Update>
             export type Terminated = z.infer<typeof Terminated>
             export type Paused = z.infer<typeof Paused>
             export type Failed = z.infer<typeof Failed>
             export type Completed = z.infer<typeof Completed>
+            export type MessageChunk = z.infer<typeof MessageChunk>
+            export type ConversationChunk = z.infer<typeof ConversationChunk>
+
 
             export const Schema = z.discriminatedUnion("type", [
                 Job.Started,
@@ -135,6 +130,8 @@ export namespace Orchestrator {
                 Job.Paused,
                 Job.Failed,
                 Job.Completed,
+                Job.MessageChunk,
+                Job.ConversationChunk
             ])
 
             export namespace Node {
@@ -175,6 +172,8 @@ export namespace Orchestrator {
             Job.Paused,
             Job.Failed,
             Job.Completed,
+            Job.MessageChunk,
+            Job.ConversationChunk,
             Job.Node.Started,
             Job.Node.Completed,
             Job.Node.Error
@@ -186,7 +185,10 @@ export namespace Orchestrator {
     export namespace API {
         export namespace Execution {
             export namespace Run {
-                export const Request = Workflow.Schema
+                export const Request = z.object({
+                    workflow: Workflow.Schema,
+                    state: Orchestrator.SerializableState.Schema,
+                })
                 export const Response = z.object({
                     jobId: Job.Id
                 })

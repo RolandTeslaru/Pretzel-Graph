@@ -1,8 +1,9 @@
 import { RegisterNode } from "../../../../services/Catalogue/service";
 import { Blueprint } from "./blueprint"
-import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import { Workflow } from "@vx-agent-editor/shared/domain";
 import { Runtime } from "src/runtime";
-import { InferFields, InferInputs, InferOutputs } from "src/types";
+import { Synthesizer } from "src/synthesizer";
+import { InferInputs, InferOutputs } from "src/types";
 
 
 @RegisterNode(Blueprint.id)
@@ -12,6 +13,13 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
     constructor(props: Runtime.Node.ConstructorProps) {
         super(props);
+
+        const incomingEdges = props.workflowCache.incomingEdgesMap[props.workflowNode.id];
+        const upstreamNodeId = Object.keys(incomingEdges)[0] as Workflow.Node.Id | undefined;
+
+        if (upstreamNodeId) {
+            props.state.streamController.conversationSourceNodeId = upstreamNodeId;
+        }
     }
 
     public override async run(
@@ -21,7 +29,7 @@ export class Node extends Runtime.Node<typeof Blueprint> {
 
         const { input } = inputs;
 
-        // input is already a BaseMessage (from upstream edge or synthesized from field value)
-        return { response: input };
+        state.messages.push(Synthesizer.coerceMessage("ai", input));
+        return {};
     }
 }

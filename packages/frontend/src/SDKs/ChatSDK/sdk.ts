@@ -19,7 +19,7 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 
     public readonly actions: ChatSDK.Actions = {
         sendMessage: async (config) => {
-
+            
         },
         clearMessages: async () => {
             this.setState(s => {
