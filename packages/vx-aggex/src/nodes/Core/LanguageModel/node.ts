@@ -39,6 +39,9 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         state: RuntimeState,
         inputs: Inputs
     ): Promise<Outputs> {
+
+        console.log("LANGUAGE MODEL RUN PROPS ", inputs)
+
         return await this.llmVertex.run(state, inputs) as Outputs
     }
 }

@@ -1,6 +1,6 @@
 {
-  "version": "1772207983072",
-  "generatedAt": "2026-02-27T15:59:43.072Z",
+  "version": "1772383219338",
+  "generatedAt": "2026-03-01T16:40:19.338Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -792,7 +792,7 @@
           "kind": "select"
         },
         {
-          "id": "modelName",
+          "id": "model",
           "advanced": false,
           "required": false,
           "reconcile": false,

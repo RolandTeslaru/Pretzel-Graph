@@ -14,12 +14,12 @@ export class WorkflowCompiler {
     public async compile(
         workflow: Workflow,
         emit: Emitter,
-        nodeRunnerFn: AggexEngine["runNode"]
+        nodeRunnerFn: AggexEngine["runNode"],
+        snapshot: RuntimeSnapshot
     ) {
         const workflowCache = Workflow.createCache(workflow);
 
-        const initialSnapshot = cloneDeep(RuntimeSnapshot.INITIAL);
-        const state = Synthesizer.synthesizeState(initialSnapshot);
+        const state = Synthesizer.synthesizeState(snapshot);
 
         // Create the state graph
         const graph = new StateGraph(RuntimeState.Schema);

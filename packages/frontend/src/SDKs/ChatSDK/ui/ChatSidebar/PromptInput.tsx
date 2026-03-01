@@ -4,6 +4,8 @@ import { useForm, Controller } from 'react-hook-form'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@/vx-ui/foundations/input-group'
 import { SystemIcons } from '@/vx-ui/icons'
 import { ChatSDK } from '../../sdk'
+import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
+import { OrchestratorSDK } from '@/SDKs/OrchestratorSDK/sdk'
 
 type PromptFormValues = {
     prompt: string
@@ -21,7 +23,15 @@ const PromptInput = () => {
 
     const onSubmit = (data: PromptFormValues) => {
         if (!data.prompt.trim()) return;
-        ChatSDK.actions.sendMessage({ content: data.prompt.trim() })
+
+        const workflow = WorkbenchSDK.state.workflow;
+        const snapshot = OrchestratorSDK.state.runtimeSnapshot;
+
+        ChatSDK.actions.message.send({ 
+            content: data.prompt.trim(),
+            workflow,
+            snapshot
+         })
         reset({ prompt: "" })
     }
 

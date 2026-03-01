@@ -21,7 +21,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const { input } = inputs;
 
+        const messages = state.messages;
+
+
         // input is already a BaseMessage (from upstream edge or synthesized from field value)
-        return { response: input };
+        return { response: messages[messages.length - 1] };
     }
 }
