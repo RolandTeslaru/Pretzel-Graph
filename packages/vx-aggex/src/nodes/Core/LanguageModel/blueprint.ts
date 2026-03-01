@@ -17,7 +17,7 @@ export const Blueprint = defineBlueprint({
             variant: "select"
         }),
         FieldBuilder.MultiOption({
-            id: "modelName",
+            id: "model",
             displayName: "Model Name",
             options: [
                 "gpt-4.5-preview",

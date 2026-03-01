@@ -4,6 +4,7 @@ import { StackSDK } from '@/SDKs/StackSDK'
 import PromptInput from './PromptInput'
 import MessagesArea from './MessagesArea'
 import { SystemIcons } from '@/vx-ui/icons'
+import { Button } from '@/vx-ui/foundations'
 
 const ChatSidebar = () => {
     const isSidebarVisible = ChatSDK.useStore(s => s.isSidebarVisible);
@@ -34,6 +35,10 @@ const ChatSidebarContent = () => {
                 <h4 className='text-primary font-mono font-semibold text-xl'>
                     Conversation
                 </h4>
+
+                <Button size="icon-sm" variant="ghost" className='absolute right-2 top-2'>
+                    <SystemIcons.Maximize2 className='text-secondary-foreground'/>
+                </Button>
             </div>
             <MessagesArea />
             <div className='mt-auto p-2'>

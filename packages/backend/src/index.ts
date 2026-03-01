@@ -22,11 +22,13 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { RealtimeService } from './services/Realtime/service';
 import { WorkbenchService } from './services/Workbench/service';
+import { ChatService } from './services/Chat/service';
 
 app.use('/api/library', LibraryService.routes);
 app.use('/api/shelf', ShelfRoutes);
 app.use('/api/orchestrator', OrchestratorService.routes);
 app.use('/api/workbench', WorkbenchService.routes)
+app.use('/api/chat', ChatService.routes)
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -36,7 +38,7 @@ app.get('/health', (req, res) => {
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
-RealtimeService.initWebSocket(wss);
+RealtimeService.initializeWebSocketServer(wss);
 
 server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

@@ -1,6 +1,6 @@
 import { WorkflowCompiler } from "./compiler";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
-import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
+import { Foundations, Orchestrator, RuntimeSnapshot } from "@vx-agent-editor/shared/domain";
 import { Synthesizer } from "./synthesizer";
 import { RuntimeNode, RuntimeState, RuntimeCompiledGraph } from "./runtime"
 import { Emitter } from "./event/emitter";
@@ -29,8 +29,6 @@ export class AggexEngine {
         emit(b => b.nodeStarted(activeNode.id))
 
         const inputs = this.resolveInputs(state, activeNode.id, workflow, workflowCache);
-
-        console.log("Inputs ", inputs);
 
         const result = await nodeInstance.run(state, inputs)
 
@@ -95,8 +93,8 @@ export class AggexEngine {
     }
 
 
-    public compile(workflow: Workflow, emit: Emitter) {
-        return this.compiler.compile(workflow, emit, this.runNode.bind(this))
+    public compile(workflow: Workflow, emit: Emitter, snapshot: RuntimeSnapshot) {
+        return this.compiler.compile(workflow, emit, this.runNode.bind(this), snapshot)
     }
 
     public async *stream(

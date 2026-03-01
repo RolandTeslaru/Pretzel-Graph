@@ -12,7 +12,7 @@ export const reconcile = (
     const fields = new Map(newBlueprint.fields.map(f => [f.id, f]));
 
     if (changedFieldId === "provider") {
-        const modelField = fields.get("modelName" as any) as Foundations.Field.MultiOption;
+        const modelField = fields.get("model" as any) as Foundations.Field.MultiOption;
         const apiKeyField = fields.get("apiKey" as any) as Foundations.Field.Secret;
 
         if (!modelField || !apiKeyField) return newBlueprint;

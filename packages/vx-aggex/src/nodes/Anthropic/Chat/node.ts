@@ -26,8 +26,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const { systemMessage, input } = inputs;
 
         const response = await this.llm.invoke([
-            Synthesizer.coerceMessage("system", systemMessage),
-            Synthesizer.coerceMessage("human", input),
+            systemMessage,
+            input
         ]);
 
         return {
