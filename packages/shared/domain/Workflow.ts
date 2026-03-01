@@ -266,7 +266,7 @@ export namespace Workflow {
         return cache
     }
 }
-export interface Workflow extends z.infer<typeof Workflow.Schema> { }
+export type Workflow = z.infer<typeof Workflow.Schema> 
 
 
 const uid = {

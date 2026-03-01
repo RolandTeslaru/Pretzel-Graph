@@ -1,23 +1,26 @@
 import { Chat } from '@vx-agent-editor/shared/domain'
-import { Avatar, AvatarFallback } from '@/vx-ui/foundations/avatar'
 import { SystemIcons } from '@/vx-ui/icons'
 import { motion } from 'motion/react'
+import { Spinner } from '@/vx-ui/foundations'
 
 const AIMessageBubble = ({ message }: { message: Chat.Message.Assistant }) => {
+  
+  const showSpinner = message.content === "" && message.isProcessing 
+  
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      className="flex flex-col items-start w-full gap-1 mb-4"
+      className="flex flex-col items-start w-full gap-1 mb-2"
     >
       <div className="flex flex-row gap-3 items-end max-w-[85%]">
-        <Avatar size="sm" className="mb-1 shrink-0 ring-2 ring-background shadow-sm">
-          <AvatarFallback className="bg-primary/10 border border-primary/20 text-primary">
-            <SystemIcons.Bot className="w-4 h-4" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="bg-muted/40 border border-border text-foreground px-4 py-3 rounded-2xl rounded-bl-sm text-sm shadow-sm">
+        <div className="bg-muted/40 border border-border text-foreground px-2 py-0.5 rounded-2xl rounded-bl-sm text-sm shadow-sm">
+        {showSpinner
+          ? 
+          <Spinner elementClassName='fill-black!'/>
+          :
           <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+        }
         </div>
       </div>
       {message.tool_calls && message.tool_calls.length > 0 && (

@@ -4,8 +4,8 @@ import { EXECUTION_QUEUE_ID, REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/sha
 import { Orchestrator, Realtime, Workflow } from '@vx-agent-editor/shared/domain';
 import { AggexEngine } from 'src/engine';
 import { container, singleton } from 'tsyringe';
-import { EventBuilder } from './eventBuilder';
-import { Runtime } from './runtime';
+import { EventBuilder } from './event/builder';
+import { Emitter } from './event/emitter';
 
 
 @singleton()
@@ -29,8 +29,8 @@ export class AggexWorkerImpl {
     private processQueueItem = async (
         { data: queueItem }: { data: Orchestrator.ExecutionQueue.Item }
     ) => {
-        console.log("Processing Queue Item ", queueItem.jobId, " worlflow id ", queueItem.workflow.id)
-        const { workflow, jobId, state: initialState } = queueItem;
+        const { workflow, jobId, snapshot } = queueItem;
+        console.log("Processing Queue Item ", queueItem.jobId, " worlflow id ", queueItem.workflow.id, " SNAPSHOT ", JSON.stringify(snapshot, null, 2))
 
         const eventBuilder = new EventBuilder(
             jobId,
@@ -38,31 +38,38 @@ export class AggexWorkerImpl {
             `job:${jobId}:events` as Realtime.Topic.Id
         )
 
-        const emit: Runtime.Emitter = (builderFn) => {
+        const emit: Emitter = (builderFn) => {
             this.publishToRedis(builderFn(eventBuilder))
         }
 
         emit(b => b.started());
 
-        const { compiledGraph, state } = await this.engine.compile(workflow, emit)
+        const { compiledGraph, state } = await this.engine.compile(workflow, emit, snapshot)
 
-        for await (const payload of this.engine.stream(compiledGraph, state)) {
-            switch (payload.mode) {
-                case "messages":
-                    emit(b => b.messageChunk(payload.nodeId, payload.content));
-                    break
-                case "conversation":
-                    emit(b => b.conversationChunk(payload.nodeId, payload.content));
-                    break
-                case "updates":
-                    emit(b => b.update(payload.update as any))
-                    break
-                case "values":
-                    break;
+        try {
+            for await (const payload of this.engine.stream(compiledGraph, state)) {
+                switch (payload.mode) {
+                    case "messages":
+                        emit(eb => eb.messageChunk(payload.nodeId, payload.content));
+                        break
+                    case "conversation":
+                        emit(eb => eb.conversationChunk(payload.nodeId, payload.content));
+                        break
+                    case "updates":
+                        emit(eb => eb.update(payload.update as any))
+                        break
+                    case "values":
+                        break;
+                }
             }
+
+        } catch (err) {
+            console.error("Error during execution of job ", jobId, err)
+            emit(eb => eb.failed((err as Error).message))
+            return { status: 'failed', error: (err as Error).message }
         }
 
-        emit(builder => builder.completed(""))
+        emit(eb => eb.completed(""))
 
         return { status: 'completed' };
     }

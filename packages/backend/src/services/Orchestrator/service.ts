@@ -12,9 +12,8 @@ import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
 @Service("Orchestrator")
 export class OrchestratorServiceImpl {
 
-    private redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT })
     private executionQueue = new Queue('workflow-execution', {
-        connection: this.redis
+        connection: new Redis({ host: REDIS_HOST, port: REDIS_PORT })
     });
 
     constructor() { }
@@ -102,6 +101,13 @@ export class OrchestratorServiceImpl {
                 const { jobId } = payload
 
                 await this.dbOps.job.delete(supabase, jobId)
+            },
+            finalise: async (token, { jobId, status }) => {
+                const supabase = createAuthenticatedClient(token);
+
+
+
+                await this.dbOps.job.update(supabase, { jobId, status: status })
             }
         }
     }
@@ -119,6 +125,10 @@ export class OrchestratorServiceImpl {
             terminate: withAuth(async (token, req) => {
                 const payload = Orchestrator.API.Execution.Terminate.Request.parse(req.body);
                 return await this.ops.execution.terminate(token, payload);
+            }),
+            finalise: withAuth(async (token, req) => {
+                const payload = Orchestrator.API.Execution.Finalise.Request.parse(req.body);
+                return await this.ops.execution.finalise(token, payload);
             })
         }
     }
@@ -127,7 +137,8 @@ export class OrchestratorServiceImpl {
         .post("/execution/run", this.controller.execution.run)
         .post("/execution/pause", this.controller.execution.pause)
         .post("/execution/terminate", this.controller.execution.terminate)
-}
+        .post("/execution/finalise", this.controller.execution.finalise) // alias for terminate
+    }
 
 export const OrchestratorService = Service.get<OrchestratorServiceImpl>("Orchestrator");
 
@@ -149,6 +160,7 @@ export namespace OrchestratorService {
             pause:     WithAuth<(payload: Orchestrator.API.Execution.Pause.Request) => Promise<void>>
             resume:    WithAuth<(payload: Orchestrator.API.Execution.Resume.Request) => Promise<void>>
             terminate: WithAuth<(payload: Orchestrator.API.Execution.Terminate.Request) => Promise<void>>
+            finalise:  WithAuth<(payload: Orchestrator.API.Execution.Finalise.Request) => Promise<void>> // alias for terminate
         }
     }
 
@@ -157,6 +169,7 @@ export namespace OrchestratorService {
             run:       (req: Request, res: Response) => void
             pause:     (req: Request, res: Response) => void
             terminate: (req: Request, res: Response) => void
+            finalise:    (req: Request, res: Response) => void // alias for terminate
         }
     }
 }

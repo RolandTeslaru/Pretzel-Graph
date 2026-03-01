@@ -56,11 +56,8 @@ export const nodeReducers = {
         } satisfies Workflow.Node
 
         const result = Workflow.Node.Schema.safeParse(newNode)
-        if (!result.success) {
-            console.error("WorkbenchSDK: Node schema validation failed:", result.error)
-            toast.error(`WorkbenchSDK: Node schema validation failed. Could not create node from blueprint id ${blueprint.id}`,)
-            return;
-        }
+        if (!result.success)
+            throw new Error(`WorkbenchSDK: Node schema validation failed. Could not create node from blueprint id ${blueprint.id}`)
 
         s.workflow.data.nodes[nodeId] = newNode;
 

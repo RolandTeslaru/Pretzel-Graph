@@ -46,43 +46,37 @@ export namespace Orchestrator {
         })
         export namespace Job {
             export const Started = Base.extend({
-                type: z.literal('job:started'),
+                type: z.literal('started'),
             })
 
             export const Update = Base.extend({
-                type: z.literal('job:update'),
+                type: z.literal('update'),
                 update: RuntimeSnapshot.Update
             })
 
 
             export const Terminated = Base.extend({
-                type: z.literal('job:terminated'),
+                type: z.literal('terminated'),
             })
 
 
             export const Paused = Base.extend({
-                type: z.literal('job:paused'),
+                type: z.literal('paused'),
             })
 
 
             export const Failed = Base.extend({
-                type: z.literal('job:failed'),
+                type: z.literal('failed'),
                 error: z.string()
             })
 
             export const Completed = Base.extend({
-                type: z.literal('job:completed'),
+                type: z.literal('completed'),
                 result: z.string()
             })
 
             export const MessageChunk = Base.extend({
-                type: z.literal('job:node_messages:chunk'),
-                nodeId: Workflow.Node.Id,
-                chunk: z.string()
-            })
-
-            export const ConversationChunk = Base.extend({
-                type: z.literal('job:node_messages:conversation_chunk'),
+                type: z.literal('node_messages:chunk'),
                 nodeId: Workflow.Node.Id,
                 chunk: z.string()
             })
@@ -94,7 +88,6 @@ export namespace Orchestrator {
             export type Failed = z.infer<typeof Failed>
             export type Completed = z.infer<typeof Completed>
             export type MessageChunk = z.infer<typeof MessageChunk>
-            export type ConversationChunk = z.infer<typeof ConversationChunk>
 
 
             export const Schema = z.discriminatedUnion("type", [
@@ -105,23 +98,22 @@ export namespace Orchestrator {
                 Job.Failed,
                 Job.Completed,
                 Job.MessageChunk,
-                Job.ConversationChunk
             ])
 
             export namespace Node {
                 export const Started = Base.extend({
-                    type: z.literal('job:node:started'),
+                    type: z.literal('node:started'),
                     nodeId: Workflow.Node.Id
                 })
 
                 export const Completed = Base.extend({
-                    type: z.literal('job:node:completed'),
+                    type: z.literal('node:completed'),
                     nodeId: Workflow.Node.Id,
                     output: z.unknown()
                 })
 
                 export const Error = Base.extend({
-                    type: z.literal('job:node:error'),
+                    type: z.literal('node:error'),
                     nodeId: Workflow.Node.Id
                 })
 
@@ -147,7 +139,6 @@ export namespace Orchestrator {
             Job.Failed,
             Job.Completed,
             Job.MessageChunk,
-            Job.ConversationChunk,
             Job.Node.Started,
             Job.Node.Completed,
             Job.Node.Error
@@ -237,6 +228,27 @@ export namespace Orchestrator {
             ): Promise<Terminate.Response> {
                 const { data } = await api.post<Terminate.Response>(
                     '/api/orchestrator/execution/terminate',
+                    req
+                );
+                return data;
+            }
+
+            export namespace Finalise {
+                export const Request = z.object({
+                    jobId: Job.Id,
+                    status: Job.Status,
+                })
+                export const Response = z.object({})
+
+                export type Request = z.infer<typeof Request>
+                export type Response = z.infer<typeof Response>
+            }
+            export async function finalise(
+                api: AxiosInstance,
+                req: Finalise.Request
+            ): Promise<Finalise.Response> {
+                const { data } = await api.post<Finalise.Response>(
+                    '/api/orchestrator/execution/finalise',
                     req
                 );
                 return data;

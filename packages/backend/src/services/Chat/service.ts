@@ -11,7 +11,10 @@ import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
 @Service("Chat")
 export class ChatServiceImpl {
 
-    constructor() { }
+    constructor() { 
+
+
+    }
 
     private readonly dbOps: ChatService.DbOps = {
         chat: {
@@ -131,16 +134,16 @@ export class ChatServiceImpl {
                     tool_calls: []
                 }
 
-                const responseCreatedEvent: Chat.Event.ResponseMessageCreated = {
+                const responseCreatedEvent: Chat.Event.ResponseCreated = {
                     type: "response:created",
                     responseMessageId: responseMessageId,
                 }
                     
-                res.write(`data: ${JSON.stringify(responseCreatedEvent)}\n\n`);
+                res.write(`${JSON.stringify(responseCreatedEvent)}\n\n`);
 
                 const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT })
                 
-                const topic = `job:${jobId}:chat:streamOutput`
+                const topic = `job:${jobId}:chat:${chatId}:streamOutput`
             
                 redis.on("message", (channel, message) => {
                     if(channel != topic) 
@@ -148,13 +151,13 @@ export class ChatServiceImpl {
 
                     const event = JSON.parse(message)
 
-                    if(event.type === "job:node_messages:conversation_chunk") {
-                        res.write(`data: ${JSON.stringify(event.chunk)}\n\n`);
+                    if(event.type === "message:chunk") {
+                        res.write(`${JSON.stringify(event.chunk)}\n\n`);
                     }
                     else if (
-                        event.type === "job:completed" || 
-                        event.type === "job:failed" || 
-                        event.type === "job:terminated"
+                        event.type === "completed" || 
+                        event.type === "failed" || 
+                        event.type === "terminated"
                     ) {
                         redis.quit()
                         res.end();

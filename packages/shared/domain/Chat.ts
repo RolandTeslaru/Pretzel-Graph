@@ -61,6 +61,7 @@ export namespace Chat {
             created_at: z.iso.datetime(),
             updated_at: z.iso.datetime(),
             attachments: z.record(Attachment.Id, Attachment.Schema).optional(),
+            job_id: z.string().brand("JobId").optional(),
         })
 
         function configLiteral<T extends Role>(value: T) {
@@ -107,6 +108,7 @@ export namespace Chat {
     export const Meta = z.object({
         id: Chat.Id,
         name: z.string(),
+        workflow_id: Workflow.Id,
         created_at: z.iso.datetime(),
         updated_at: z.iso.datetime(),
     })
@@ -120,18 +122,19 @@ export namespace Chat {
 
 
     export namespace Event {
-        export namespace ResponseMessageCreated {
+        export namespace ResponseCreated {
             export const Schema = z.object({
                 type: z.literal("response:created"),
                 responseMessageId: Message.Id,
             })
         }
-        export type ResponseMessageCreated = z.infer<typeof ResponseMessageCreated.Schema>
+        export type ResponseCreated = z.infer<typeof ResponseCreated.Schema>
         
         export namespace MessageChunk {
             export const Schema = z.object({
                 type: z.literal("message:chunk"),
                 chunk: z.string(),
+                targetMessageId: Message.Id,
             })
             export type Schema = z.infer<typeof Schema>
         }
@@ -184,13 +187,13 @@ export namespace Chat {
                 })
                 export type Request = z.infer<typeof Request>
             }
-            export async function streamOutput(supabase: SupabaseClient, req: StreamOutput.Request): Promise<Response> {
+            export async function streamOutput(supabase: SupabaseClient, api_base_url: string, req: StreamOutput.Request): Promise<Response> {
                 const { data } = await supabase.auth.getSession();
                 const token = data.session?.access_token;
                 if (!token)
                     throw new Error("No token found");
                 
-                const response = await fetch(`${process.env.VITE_API_URL}/api/chat/message/streamOutput`, {
+                const response = await fetch(`${api_base_url}/api/chat/message/streamOutput`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

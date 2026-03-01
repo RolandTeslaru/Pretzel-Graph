@@ -1,6 +1,5 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
-import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { Synthesizer } from "src/synthesizer";
 import { RuntimeNode, RuntimeState } from "src/runtime";
@@ -12,7 +11,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;
 
-    private llm: ChatGoogleGenerativeAI
+    private readonly llm: ChatGoogleGenerativeAI
 
     constructor(props: RuntimeNode.ConstructorProps) {
         super(props);
@@ -26,28 +25,15 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const { systemMessage, input } = inputs;
 
-        const stream = await this.llm.stream([
-            Synthesizer.coerceMessage("system", systemMessage),
-            Synthesizer.coerceMessage("human", input),
+        const response = await this.llm.invoke([
+            systemMessage,
+            input
         ]);
 
-        state.streamController.registerStream(this.workflowNode.id, stream)
-
-        let finalResponse: BaseMessageChunk | null = null;
-
-        // for await (const chunk of stream) {
-        //     if (!finalResponse) {
-        //         finalResponse = chunk;
-        //     } else {
-        //         finalResponse = finalResponse.concat(chunk);
-        //     }
-        // }
-
-        console.log("Gemini response ", JSON.stringify(finalResponse, null, 2));
+        console.log("Gemini response ", JSON.stringify(response, null, 2));
 
         return {
-            response: finalResponse as any,
-            stream,
+            response,
             languageModel: this.llm
         };
     }

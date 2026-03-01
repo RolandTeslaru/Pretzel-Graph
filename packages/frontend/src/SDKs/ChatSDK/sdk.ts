@@ -5,6 +5,7 @@ import { SDK } from "../SDKManager";
 import { Chat, RuntimeSnapshot, Workflow } from "@vx-agent-editor/shared/domain";
 import { api } from "../ApiInterceptorSDK";
 import { supabase } from "@/libs/supabase";
+import { OrchestratorSDK } from "../OrchestratorSDK/sdk";
 
 @SDK("Chat")
 export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
@@ -13,6 +14,7 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
     public readonly useStore: BaseSDK.Store<ChatSDK.State> = create(
         immer<ChatSDK.State>(() => ({
             messages: [],
+            chatId: null,
             messagesRecord: {},
             isLoading: false,
             isSidebarVisible: false,
@@ -26,7 +28,19 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 
     public readonly actions: ChatSDK.Actions = {
         message: {
-            send: async ({ content, chatId, attachments, workflow, snapshot }) => {
+            send: async ({ content, chatId, attachments, workflow }) => {
+
+                if(!chatId){
+                    const data = await Chat.API.create(api, {})
+                    chatId = data.chatId;
+                    if(!chatId)
+                        throw new Error("No chat id returned");
+                    
+                    this.useStore.setState(s => {
+                        s.chatId = chatId as Chat.Id;
+                    })
+                }
+
                 const message: Chat.Message.User = {
                     content: content,
                     id: Chat.Message.createId(chatId, "user"),
@@ -42,13 +56,27 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
                     s.messagesRecord[message.id] = message;
                 })
 
+                OrchestratorSDK.useStore.setState(s => {
+                    s.runtimeSnapshot.messages.push(message);
+                })
+
+                const snapshot = OrchestratorSDK.state.runtimeSnapshot;
+
                 const { jobId } = await Chat.API.Message.send(api, {
                     message,
                     workflow,
                     snapshot
                 })
 
-                const response = await Chat.API.Message.streamOutput(supabase, {
+                this.useStore.setState(s => {
+                    const msg = s.messagesRecord[message.id];
+                    msg.job_id = jobId;
+                })
+
+                const response = await Chat.API.Message.streamOutput(
+                    supabase, 
+                    import.meta.env.VITE_API_BASE_URL!,
+                    {
                     chatId,
                     jobId
                 })
@@ -72,11 +100,14 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
                     const lines = textChunk.split('\n').filter(Boolean);
 
                     for (const line of lines) {
-                        const event = JSON.parse(line);
+                        console.log("LINE ", line)
+                        const data = JSON.parse(line);
 
-                        if (event.type === "response:created") {
+                        console.log("DATA ", data)
+
+                        if (data.type === "chat:response:created") {
                             try {
-                                const parsedEvent = Chat.Event.ResponseMessageCreated.Schema.parse(event);
+                                const parsedEvent = Chat.Event.ResponseCreated.Schema.parse(data);
                                 responseMessageId = parsedEvent.responseMessageId;
 
                                 this.useStore.setState(s => {
@@ -99,9 +130,9 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
                                 console.error("Failed to parse response created event:", err)
                             }
                         }
-                        else if (event.type === "message:chunk") {
+                        else if (data.type === "chat:message:chunk") {
                             try {
-                                const parsedEvent = Chat.Event.MessageChunk.Schema.parse(event);
+                                const parsedEvent = Chat.Event.MessageChunk.Schema.parse(data);
                                 if (!responseMessageId)
                                     throw new Error("Response message id not found");
 
@@ -143,6 +174,7 @@ export const ChatSDK = SDK.get<ChatSDKImpl>("Chat")
 export namespace ChatSDK {
     export type State = {
         messages: Chat.Message.Id[],
+        chatId: Chat.Id | null,
         messagesRecord: Record<Chat.Message.Id, Chat.Message>,
         isLoading: boolean,
         isSidebarVisible: boolean
@@ -158,10 +190,10 @@ export namespace ChatSDK {
         message: {
             send: (props: {
                 content: string,
-                chatId: Chat.Id,
+                chatId?: Chat.Id,
                 workflow: Workflow,
-                snapshot: RuntimeSnapshot,
-                attachments?: Chat.Message["attachments"]
+                attachments?: Chat.Attachment,
+                snapshot: RuntimeSnapshot
             }) => Promise<void>
         },
         clearMessages: () => Promise<void>,

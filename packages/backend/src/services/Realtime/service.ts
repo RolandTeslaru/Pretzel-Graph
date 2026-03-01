@@ -9,14 +9,18 @@ export class RealtimeServiceImpl {
     private redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT })
 
 
-    constructor() { }
+    constructor() { 
+        this.redisSub.on('pmessage', (pattern, topicId, message) => {
+            console.log(`Received message on topic ${topicId}:`, message);
+        });
+    }
 
     private subscriptions = new Map<Realtime.Topic.Id, Set<WebSocket>>()
     // {
     //   [topic]: Set<client WebSocket>
     // }
 
-    public initWebSocket(wss: WebSocketServer) {
+    public initializeWebSocketServer(wss: WebSocketServer) {
         wss.on('connection', (ws, req) => {
             console.log('WebSocket client connected');
 
