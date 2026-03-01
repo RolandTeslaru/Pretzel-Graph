@@ -2,8 +2,11 @@ import { Service } from "../ServiceManager";
 import { Router, Request, Response } from "express";
 import { WithAuth, withAuth } from "@/handlers/controller";
 import { createAuthenticatedClient, getUserId } from "@/utils/supabase";
-import { Auth, Chat } from "@vx-agent-editor/shared/domain";
+import { Auth, Chat, Orchestrator, Workbench } from "@vx-agent-editor/shared/domain";
 import { WithSupabase } from "@/handlers/database";
+import { OrchestratorService } from "../Orchestrator/service";
+import Redis from "ioredis";
+import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
 
 @Service("Chat")
 export class ChatServiceImpl {
@@ -43,25 +46,23 @@ export class ChatServiceImpl {
                 if (error) throw error;
                 return data
             },
-            delete: async (supabase, chatId) => {
+            erase: async (supabase, chatId) => {
                 await supabase.from('chats').delete().eq('id', chatId);
             },
         },
         message: {
-            send: async (supabase, { chatId, content, attachments }) => {
-                const messageId = crypto.randomUUID() as Chat.Message.Id
+            send: async (supabase, message) => {
                 await supabase.from('chat_messages').insert({
-                    id: messageId,
-                    chat_id: chatId,
-                    role: "user",
-                    content,
+                    id: message.id,
+                    chat_id: message.chat_id,
+                    role: message.role,
+                    content: message.content,
                     metadata: null,
-                    attachments: attachments ?? null,
+                    attachments: message.attachments ?? null,
                     created_at: new Date(),
                 });
-                return messageId
             },
-            delete: async (supabase, messageId) => {
+            erase: async (supabase, messageId) => {
                 await supabase.from('chat_messages').delete().eq('id', messageId);
             },
         }
@@ -86,25 +87,89 @@ export class ChatServiceImpl {
             const userId = await getUserId(supabase) as Auth.User.Id;
             if (!userId) throw new Error("User not found");
 
-            const chats = await this.dbOps.chat.list(supabase, userId);
-            return { chats }
+            const chatMetas = await this.dbOps.chat.list(supabase, userId);
+            return { chatMetas }
         },
-        delete: async (token, payload) => {
+        erase: async (token, payload) => {
             const supabase = createAuthenticatedClient(token);
-            await this.dbOps.chat.delete(supabase, payload.chatId);
+            await this.dbOps.chat.erase(supabase, payload.chatId);
         },
         message: {
-            send: async (token, payload) => {
+            send: async (token, { message, workflow, snapshot }) => {
                 const supabase = createAuthenticatedClient(token);
+                
+                await this.dbOps.message.send(supabase, message)
 
-                const messageId = await this.dbOps.message.send(supabase, payload)
-                
-                
+                const { jobId } = await OrchestratorService.ops.execution.run(token, {
+                    workflow,
+                    snapshot
+                })
+
+                return { jobId }
             },
-            delete: async (token, payload) => {
+            erase: async (token, payload) => {
                 const supabase = createAuthenticatedClient(token);
                 // TODO: Delete the message
             },
+            streamOutput: async (token, { chatId, jobId }, req, res) => {
+                res.setHeader('Content-Type', 'text/event-stream');
+                res.setHeader('Cache-Control', 'no-cache');
+                res.setHeader('Connection', 'keep-alive');
+
+                const responseMessageId = Chat.Message.createId(chatId, "assistant");
+
+                // Send initial response message
+                const responseMessage: Chat.Message.Assistant = {
+                    id: responseMessageId,
+                    chat_id: chatId,
+                    role: "assistant",
+                    content: "",
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    attachments: {},
+                    isProcessing: true,
+                    tool_calls: []
+                }
+
+                const responseCreatedEvent: Chat.Event.ResponseMessageCreated = {
+                    type: "response:created",
+                    responseMessageId: responseMessageId,
+                }
+                    
+                res.write(`data: ${JSON.stringify(responseCreatedEvent)}\n\n`);
+
+                const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT })
+                
+                const topic = `job:${jobId}:chat:streamOutput`
+            
+                redis.on("message", (channel, message) => {
+                    if(channel != topic) 
+                        return
+
+                    const event = JSON.parse(message)
+
+                    if(event.type === "job:node_messages:conversation_chunk") {
+                        res.write(`data: ${JSON.stringify(event.chunk)}\n\n`);
+                    }
+                    else if (
+                        event.type === "job:completed" || 
+                        event.type === "job:failed" || 
+                        event.type === "job:terminated"
+                    ) {
+                        redis.quit()
+                        res.end();
+                    }
+                })
+
+                await redis.subscribe(topic);
+
+                req.on('close', () => {
+                    console.log("Client disconnected")
+                    redis.unsubscribe();
+                    redis.quit();
+                    res.end();
+                })
+            }
         }
     }
 
@@ -119,29 +184,34 @@ export class ChatServiceImpl {
         list: withAuth(async (token, req) => {
             return await this.ops.list(token);
         }),
-        delete: withAuth(async (token, req) => {
-            const payload = Chat.API.Delete.Request.parse(req.body);
-            return await this.ops.delete(token, payload);
+        erase: withAuth(async (token, req) => {
+            const payload = Chat.API.Erase.Request.parse(req.body);
+            return await this.ops.erase(token, payload);
         }),
         message: {
             send: withAuth(async (token, req) => {
                 const payload = Chat.API.Message.Send.Request.parse(req.body);
                 return await this.ops.message.send(token, payload);
             }),
-            delete: withAuth(async (token, req) => {
-                const payload = Chat.API.Message.Delete.Request.parse(req.body);
-                return await this.ops.message.delete(token, payload);
+            erase: withAuth(async (token, req) => {
+                const payload = Chat.API.Message.Erase.Request.parse(req.body);
+                return await this.ops.message.erase(token, payload);
             }),
-        }
+            streamOutput: withAuth( async (token, req, res) => {
+                const payload = Chat.API.Message.StreamOutput.Request.parse(req.body);
+                return await this.ops.message.streamOutput(token, payload, req, res);
+            }),
+        },
     }
 
     public readonly routes = Router()
         .post("/create", this.controller.create)
         .post("/get", this.controller.get)
         .get("/list", this.controller.list)
-        .post("/delete", this.controller.delete)
+        .post("/erase", this.controller.erase)
         .post("/message/send", this.controller.message.send)
-        .post("/message/delete", this.controller.message.delete)
+        .post("/message/erase", this.controller.message.erase)
+        .post("/message/streamOutput", this.controller.message.streamOutput)
 }
 
 export const ChatService = Service.get<ChatServiceImpl>("Chat");
@@ -154,11 +224,11 @@ export namespace ChatService {
             create: WithSupabase<(userId: Auth.User.Id) => Promise<Chat.Id>>
             get: WithSupabase<(chatId: Chat.Id) => Promise<any>>
             list: WithSupabase<(userId: Auth.User.Id) => Promise<any[]>>
-            delete: WithSupabase<(chatId: Chat.Id) => Promise<void>>
+            erase: WithSupabase<(chatId: Chat.Id) => Promise<void>>
         }
         message: {
-            send: WithSupabase<({ chatId, content, attachments }: { chatId: Chat.Id, content: string, attachments?: Chat.Attachment[] }) => Promise<Chat.Message.Id>>
-            delete: WithSupabase<(messageId: Chat.Message.Id) => Promise<void>>
+            send: WithSupabase<(message: Chat.Message) => Promise<void>>
+            erase: WithSupabase<(messageId: Chat.Message.Id) => Promise<void>>
         }
     }
 
@@ -166,10 +236,11 @@ export namespace ChatService {
         create: WithAuth<() => Promise<Chat.API.Create.Response>>
         get: WithAuth<(payload: Chat.API.Get.Request) => Promise<Chat.API.Get.Response>>
         list: WithAuth<() => Promise<Chat.API.List.Response>>
-        delete: WithAuth<(payload: Chat.API.Delete.Request) => Promise<void>>
+        erase: WithAuth<(payload: Chat.API.Erase.Request) => Promise<void>>
         message: {
-            send: WithAuth<(payload: Chat.API.Message.Send.Request) => Promise<void>>
-            delete: WithAuth<(payload: Chat.API.Message.Delete.Request) => Promise<void>>
+            send: WithAuth<(payload: Chat.API.Message.Send.Request) => Promise<Chat.API.Message.Send.Response>>
+            erase: WithAuth<(payload: Chat.API.Message.Erase.Request) => Promise<void>>,
+            streamOutput: WithAuth<(payload: Chat.API.Message.StreamOutput.Request, req: Request, res: Response) => Promise<void>>
         }
     }
 
@@ -177,10 +248,11 @@ export namespace ChatService {
         create: (req: Request, res: Response) => void
         get: (req: Request, res: Response) => void
         list: (req: Request, res: Response) => void
-        delete: (req: Request, res: Response) => void
+        erase: (req: Request, res: Response) => void
         message: {
             send: (req: Request, res: Response) => void
-            delete: (req: Request, res: Response) => void
+            erase: (req: Request, res: Response) => void
+            streamOutput: (req: Request, res: Response) => void
         }
     }
 }

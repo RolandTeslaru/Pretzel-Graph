@@ -3,7 +3,7 @@ import { Workflow } from "./Workflow"
 import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
 import { type AxiosInstance } from "axios"
-import { Chat } from "./Chat"
+import { RuntimeSnapshot } from "./RuntimeSnapshot"
 
 export namespace Orchestrator {
     export namespace Job {
@@ -24,44 +24,18 @@ export namespace Orchestrator {
         })
     }
 
+
     export namespace ExecutionQueue {
         export namespace Item {
             export const Schema = z.object({
                 jobId: Job.Id,
                 workflow: Workflow.Schema,
                 userId: Auth.User.Id,
-                state: SerializableState
+                snapshot: RuntimeSnapshot.Schema
             })
         }
         export type Item = z.infer<typeof Item.Schema>
     }
-
-
-
-    export namespace SerializableState {
-
-        export const Schema = z.object({
-            node_outputs:  z.record(Workflow.Node.Id, z.any()).default(() => ({})),
-            node_messages: z.record(Workflow.Node.Id, z.string()).default(() => ({})),
-            messages:      z.array(Chat.Message.Schema).default(() => ([])),
-            attachments:   z.record(z.string(), Chat.Attachment.Schema).default(() => ({})),
-            metadata:      z.record(z.string(), z.any()).default(() => ({})),
-        })
-
-        export const INITIAL = {
-            node_outputs: {},
-            node_messages: {},
-            messages: [],
-            attachments: {},
-            metadata: {}
-        } as z.infer<typeof Schema>
-
-        export const Update = Schema.partial()
-        export type Update = z.infer<typeof Update>
-    }
-
-    export type SerializableState = z.infer<typeof SerializableState.Schema>
-
 
 
     export namespace Event {
@@ -77,7 +51,7 @@ export namespace Orchestrator {
 
             export const Update = Base.extend({
                 type: z.literal('job:update'),
-                update: SerializableState.Update
+                update: RuntimeSnapshot.Update
             })
 
 
@@ -187,7 +161,7 @@ export namespace Orchestrator {
             export namespace Run {
                 export const Request = z.object({
                     workflow: Workflow.Schema,
-                    state: Orchestrator.SerializableState.Schema,
+                    snapshot: RuntimeSnapshot.Schema,
                 })
                 export const Response = z.object({
                     jobId: Job.Id

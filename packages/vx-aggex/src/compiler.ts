@@ -1,26 +1,28 @@
 import { StateGraph, START, END, LangGraphRunnableConfig } from "@langchain/langgraph";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { CatalogueService } from "src/services/Catalogue/service";
-import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
-import { Runtime } from "src/runtime";
+import { Foundations, Orchestrator, RuntimeSnapshot } from "@vx-agent-editor/shared/domain";
 import { cloneDeep } from "lodash";
 import { Synthesizer } from "./synthesizer";
+import { Emitter } from "./event/emitter";
+import type { AggexEngine } from "./engine";
+import { RuntimeState } from "./runtime";
 
 export class WorkflowCompiler {
     constructor() { }
 
     public async compile(
         workflow: Workflow,
-        emit: Runtime.Emitter,
-        nodeRunnerFn: Runtime.NodeRunner
+        emit: Emitter,
+        nodeRunnerFn: AggexEngine["runNode"]
     ) {
         const workflowCache = Workflow.createCache(workflow);
 
-        const initialState = cloneDeep(Orchestrator.SerializableState.INITIAL);
-        const state = Synthesizer.synthesizeState(initialState);
+        const initialSnapshot = cloneDeep(RuntimeSnapshot.INITIAL);
+        const state = Synthesizer.synthesizeState(initialSnapshot);
 
         // Create the state graph
-        const graph = new StateGraph(Runtime.State.Schema);
+        const graph = new StateGraph(RuntimeState.Schema);
         const nodes = workflow.data.nodes;
         const edges = workflow.data.edges;
 
@@ -31,7 +33,7 @@ export class WorkflowCompiler {
 
             if (!VerticeConstructor)
                 throw new Error(`Could not find vertice with blueprintId ${node.blueprintId}`)
-            
+
             const vertex = new VerticeConstructor({
                 workflow,
                 workflowCache,
