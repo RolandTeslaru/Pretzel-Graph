@@ -1,24 +1,24 @@
 import { RegisterNode } from "../../../services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
-import { Runtime } from "../../../runtime";
+import { RuntimeNode, RuntimeState } from "../../../runtime";
+import { InferFields, InferInputs, InferOutputs } from "src/types";
 import { Synthesizer } from "../../../synthesizer";
 import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { HumanMessage, AIMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { InferFields, InferInputs, InferOutputs } from "src/types";
 
 @RegisterNode(Blueprint.id)
-export class Node extends Runtime.Node<typeof Blueprint> {
+export class Node extends RuntimeNode<typeof Blueprint> {
 
-    constructor(workflowNode: Workflow.Node) {
-        super(workflowNode);
+    constructor(props: RuntimeNode.ConstructorProps) {
+        super(props);
     }
 
     public override async run(
-        state: Runtime.State,
+        state: RuntimeState,
         fields: InferFields<typeof Blueprint>,
         inputs: InferInputs<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {

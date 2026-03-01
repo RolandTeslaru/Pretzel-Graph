@@ -20,7 +20,7 @@ export namespace Validation {
                 field: Foundations.Field,
                 nodeId: Workflow.Node.Id,
                 workflow: Workflow
-            ) {
+            ): Issue.Field | null {
                 const value = workflow.data.staticValues[nodeId]?.[field.id];
 
                 if (value === undefined || value === null || value === "")

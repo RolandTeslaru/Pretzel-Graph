@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Orchestrator, Realtime, Validation, Workflow } from "@vx-agent-editor/shared/domain";
+import { Orchestrator, Realtime, RuntimeSnapshot, Validation, Workflow } from "@vx-agent-editor/shared/domain";
 import { useEffect } from "react";
 import { RealtimeSDK } from "../Realtime/sdk";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
     public readonly useStore: BaseSDK.Store<OrchestratorSDK.State> = create(
         immer<OrchestratorSDK.State>(() => ({
             currentJobId: undefined,
-            runtimeState: Orchestrator.SerializableState.INITIAL
+            runtimeSnapshot: RuntimeSnapshot.INITIAL
         }))
     )
 
@@ -27,7 +27,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
 
     public readonly actions: OrchestratorSDK.Actions = {
         execution: {
-            run: async (workflow, wfCache) => {
+            run: async (workflow, wfCache, snapshot) => {
                 if (this.state.currentJobId) {
                     toast.warning("Workflow is already running")
                     return this.state.currentJobId
@@ -40,7 +40,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                     return null
                 }
 
-                const executionPromise = Orchestrator.API.Execution.run(api, workflow);
+                const executionPromise = Orchestrator.API.Execution.run(api, { workflow, snapshot });
 
                 toast.promise(executionPromise, {
                     loading: "Preparing workflow execution",
@@ -114,15 +114,15 @@ OrchestratorSDK.useStore.subscribe((state, prevState) => {
 export namespace OrchestratorSDK {
 
     export type State = {
-        currentJobId: Orchestrator.Job.Id | undefined
-        runtimeState: Orchestrator.SerializableState
+        currentJobId:       Orchestrator.Job.Id | undefined
+        runtimeSnapshot:    RuntimeSnapshot
     }
 
     export type Reducers = {
     }
     export type Actions = {
         execution: {
-            run: (workflow: Workflow, cache: Workflow.Cache) => Promise<Orchestrator.Job.Id | null>,
+            run: (workflow: Workflow, cache: Workflow.Cache, snapshot: RuntimeSnapshot) => Promise<Orchestrator.Job.Id | null>,
             pause: (jobId: Orchestrator.Job.Id) => Promise<void>,
             terminate: (jobId: Orchestrator.Job.Id) => Promise<void>
         }

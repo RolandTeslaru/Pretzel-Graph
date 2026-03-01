@@ -3,24 +3,24 @@ import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { Synthesizer } from "src/synthesizer";
-import { Runtime } from "src/runtime";
+import { RuntimeNode, RuntimeState } from "src/runtime";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
 import { BaseMessageChunk } from "@langchain/core/messages";
 
 @RegisterNode(Blueprint.id)
-export class Node extends Runtime.Node<typeof Blueprint> {
+export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;
 
     private llm: ChatGoogleGenerativeAI
 
-    constructor(props: Runtime.Node.ConstructorProps) {
+    constructor(props: RuntimeNode.ConstructorProps) {
         super(props);
         this.llm = new ChatGoogleGenerativeAI(this.fields);
     }
 
     public override async run(
-        state: Runtime.State,
+        state: RuntimeState,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 

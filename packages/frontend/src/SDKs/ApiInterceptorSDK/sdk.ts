@@ -19,7 +19,8 @@ export class _ApiInterceptorSDK_ {
                 || config.url?.startsWith('/api/shelf')
                 || config.url?.startsWith('/api/vault')
                 || config.url?.startsWith('/api/orchestrator')
-                || config.url?.startsWith('/api/workbench');
+                || config.url?.startsWith('/api/workbench')
+                || config.url?.startsWith('/api/chat');
 
             if (isNewBackend) {
                 // Use Supabase Token

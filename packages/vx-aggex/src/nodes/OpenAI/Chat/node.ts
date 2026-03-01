@@ -2,24 +2,24 @@ import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import { ChatOpenAI } from "@langchain/openai";
-import { Runtime } from "src/runtime";
-import { Synthesizer } from "src/synthesizer";
+import { RuntimeNode, RuntimeState } from "src/runtime";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
+import { Synthesizer } from "src/synthesizer";
 
 @RegisterNode(Blueprint.id)
-export class Node extends Runtime.Node<typeof Blueprint> {
+export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;
 
     private readonly llm: ChatOpenAI;
 
-    constructor(props: Runtime.Node.ConstructorProps) {
+    constructor(props: RuntimeNode.ConstructorProps) {
         super(props);
         this.llm = new ChatOpenAI(this.fields);
     }
 
     public override async run(
-        state: Runtime.State,
+        state: RuntimeState,
         inputs: InferInputs<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {
 

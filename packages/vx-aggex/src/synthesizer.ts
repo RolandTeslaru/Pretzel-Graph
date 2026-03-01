@@ -1,9 +1,8 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { LC } from "./langchain";
-import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
+import { Foundations, Orchestrator, RuntimeSnapshot } from "@vx-agent-editor/shared/domain";
 import { StreamController } from "./StreamController";
-import { Runtime } from "./runtime";
-
+import { RuntimeState } from "./runtime";
 
 export class Synthesizer {
 
@@ -129,11 +128,11 @@ export class Synthesizer {
         );
     }
 
-    public static synthesizeState(initialState: Orchestrator.SerializableState) {
+    public static synthesizeState(snapshot: RuntimeSnapshot) {
         const syntheticState = {
-            ...initialState,
+            ...snapshot,
             streamController: new StreamController()
-        } as unknown as Runtime.State
+        } as unknown as RuntimeState
 
         return syntheticState;
     }

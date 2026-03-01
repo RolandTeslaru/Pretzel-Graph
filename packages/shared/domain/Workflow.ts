@@ -11,7 +11,6 @@ export namespace Workflow {
         export const Id = z.string().brand("NodeId");
         export type Id = z.infer<typeof Id>;
 
-
         export const Schema = z.object({
             id: Node.Id,
             blueprintId: z.string().brand("BlueprintId"),
