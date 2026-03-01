@@ -1,5 +1,5 @@
 import { CompiledStateGraph, LangGraphRunnableConfig, MessagesValue, ReducedValue, StateSchema, UntrackedValue } from "@langchain/langgraph";
-import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
+import { Foundations, Orchestrator, RuntimeSnapshot } from "@vx-agent-editor/shared/domain";
 import { Workflow } from "@vx-agent-editor/shared/domain";
 import { EventBuilder } from "./eventBuilder";
 import { LC } from "./langchain";
@@ -19,26 +19,26 @@ export namespace Runtime {
     export namespace State {
         export const Schema = new StateSchema({
             node_outputs: new ReducedValue(
-                Orchestrator.SerializableState.Schema.shape.node_outputs,
+                RuntimeSnapshot.Schema.shape.node_outputs,
                 {
                     reducer: (x, y) => ({ ...x, ...y }),
                 }
             ),
             messages: MessagesValue,
-            artifacts: new ReducedValue(
-                Orchestrator.SerializableState.Schema.shape.artifacts,
+            attachments: new ReducedValue(
+                RuntimeSnapshot.Schema.shape.attachments,
                 {
                     reducer: (x, y) => ({ ...x, ...y }),
                 }
             ),
             metadata: new ReducedValue(
-                Orchestrator.SerializableState.Schema.shape.metadata,
+                RuntimeSnapshot.Schema.shape.metadata,
                 {
                     reducer: (x, y) => ({ ...x, ...y }),
                 }
             ),
             node_messages: new ReducedValue(
-                Orchestrator.SerializableState.Schema.shape.node_messages,
+                RuntimeSnapshot.Schema.shape.node_messages,
                 {
                     reducer: (x, y) => ({ ...x, ...y }),
                 }
@@ -59,16 +59,7 @@ export namespace Runtime {
         typeof State.Schema,
         typeof State.Schema
     >
-
-    export type NodeRunner = (
-        state: Runtime.State,
-        activeNode: Workflow.Node,
-        Vertex: Runtime.Node<Foundations.Blueprint>,
-        workflow: Workflow,
-        workflowCache: Workflow.Cache,
-        emit: Runtime.Emitter
-    ) => Promise<State.Update>
-
+    
     export namespace Node {
         export interface ConstructorProps {
             state: Runtime.State;

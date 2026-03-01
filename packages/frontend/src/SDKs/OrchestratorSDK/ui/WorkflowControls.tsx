@@ -17,9 +17,12 @@ const handleTerminate = () => {
 
 const handleRun = () => {
   const state = WorkbenchSDK.state;
+  const orchestrationState = OrchestratorSDK.state.orchestrationState
+  
   OrchestratorSDK.actions.execution.run(
     state.workflow,
-    state.cache
+    state.cache,
+    orchestrationState
   );
 }
 

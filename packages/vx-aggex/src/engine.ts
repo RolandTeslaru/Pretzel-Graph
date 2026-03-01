@@ -1,29 +1,28 @@
 import { WorkflowCompiler } from "./compiler";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
-import { Runtime } from "./runtime";
-import { cloneDeep } from "lodash";
 import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { Synthesizer } from "./synthesizer";
-
+import { RuntimeNode, RuntimeState, RuntimeCompiledGraph } from "./runtime"
+import { Emitter } from "./event/emitter";
 
 export type StreamEvent =
-    | { mode: "values"; state: Runtime.State }
+    | { mode: "values"; state: RuntimeState }
     | { mode: "messages"; nodeId: Workflow.Node.Id; content: string }
     | { mode: "conversation"; nodeId: Workflow.Node.Id; content: string }
-    | { mode: "updates"; update: Runtime.State.Update }
+    | { mode: "updates"; update: RuntimeState.Update }
 
 export class AggexEngine {
     private compiler = new WorkflowCompiler();
+
     constructor() { }
 
-
     private async runNode(
-        state: Runtime.State,
+        state: RuntimeState,
         activeNode: Workflow.Node,
-        Vertex: Runtime.Node<Foundations.Blueprint>,
+        nodeInstance: RuntimeNode<Foundations.Blueprint>,
         workflow: Workflow,
         workflowCache: Workflow.Cache,
-        emit: Runtime.Emitter
+        emit: Emitter
     ) {
         console.log(`Executing Node: ${activeNode.displayName} (${activeNode.id})`);
 
@@ -33,7 +32,7 @@ export class AggexEngine {
 
         console.log("Inputs ", inputs);
 
-        const result = await Vertex.run(state, inputs)
+        const result = await nodeInstance.run(state, inputs)
 
         emit(b => b.nodeCompleted(activeNode.id, result))
 
@@ -57,7 +56,7 @@ export class AggexEngine {
      *    because the raw primitive must be coerced into a class instance
      */
     private resolveInputs(
-        state: Runtime.State,
+        state: RuntimeState,
         nodeId: Workflow.Node.Id,
         workflow: Workflow,
         workflowCache: Workflow.Cache
@@ -96,13 +95,13 @@ export class AggexEngine {
     }
 
 
-    public compile(workflow: Workflow, emit: Runtime.Emitter) {
+    public compile(workflow: Workflow, emit: Emitter) {
         return this.compiler.compile(workflow, emit, this.runNode.bind(this))
     }
 
     public async *stream(
-        compiledGraph: Runtime.CompiledGraph,
-        engineState: Runtime.State,
+        compiledGraph: RuntimeCompiledGraph,
+        engineState: RuntimeState,
     ): AsyncIterable<StreamEvent> {
         const stream = await compiledGraph.stream(engineState, {
             streamMode: ["values", "messages", "updates"]
@@ -148,7 +147,6 @@ export class AggexEngine {
 
 
     public async run(initialInputs: Record<string, any>) {
-        const state = cloneDeep(Orchestrator.SerializableState.INITIAL)
         // return await this.compiledGraph.invoke(state);
     }
 }

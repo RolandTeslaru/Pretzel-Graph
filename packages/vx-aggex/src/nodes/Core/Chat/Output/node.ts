@@ -1,17 +1,17 @@
 import { RegisterNode } from "../../../../services/Catalogue/service";
 import { Blueprint } from "./blueprint"
 import { Workflow } from "@vx-agent-editor/shared/domain";
-import { Runtime } from "src/runtime";
+import { RuntimeNode, RuntimeState } from "src/runtime";
+import { InferFields, InferInputs, InferOutputs } from "src/types";
 import { Synthesizer } from "src/synthesizer";
-import { InferInputs, InferOutputs } from "src/types";
 
 
 @RegisterNode(Blueprint.id)
-export class Node extends Runtime.Node<typeof Blueprint> {
+export class Node extends RuntimeNode<typeof Blueprint> {
 
     public readonly Blueprint = Blueprint;
 
-    constructor(props: Runtime.Node.ConstructorProps) {
+    constructor(props: RuntimeNode.ConstructorProps) {
         super(props);
 
         const incomingEdges = props.workflowCache.incomingEdgesMap[props.workflowNode.id];
@@ -23,7 +23,7 @@ export class Node extends Runtime.Node<typeof Blueprint> {
     }
 
     public override async run(
-        state: Runtime.State,
+        state: RuntimeState,
         inputs: InferInputs<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {
 
