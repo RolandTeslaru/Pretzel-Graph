@@ -1,12 +1,11 @@
 import { StateGraph, START, END, LangGraphRunnableConfig } from "@langchain/langgraph";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { CatalogueService } from "src/services/Catalogue/service";
-import { Foundations, Orchestrator, RuntimeSnapshot } from "@vx-agent-editor/shared/domain";
-import { cloneDeep } from "lodash";
 import { Synthesizer } from "./synthesizer";
 import { Emitter } from "./event/emitter";
 import type { AggexEngine } from "./engine";
 import { RuntimeState } from "./runtime";
+import { Runtime } from "@vx-agent-editor/shared/domain";
 
 export class WorkflowCompiler {
     constructor() { }
@@ -15,7 +14,7 @@ export class WorkflowCompiler {
         workflow: Workflow,
         emit: Emitter,
         nodeRunnerFn: AggexEngine["runNode"],
-        snapshot: RuntimeSnapshot
+        snapshot: Runtime.Snapshot
     ) {
         const workflowCache = Workflow.createCache(workflow);
 

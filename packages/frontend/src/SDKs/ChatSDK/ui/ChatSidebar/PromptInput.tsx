@@ -25,7 +25,7 @@ const PromptInput = () => {
         if (!data.prompt.trim()) return;
 
         const workflow = WorkbenchSDK.state.workflow;
-        const snapshot = OrchestratorSDK.state.runtimeSnapshot;
+        const snapshot = OrchestratorSDK.state.snapshot;
 
         ChatSDK.actions.message.send({ 
             content: data.prompt.trim(),

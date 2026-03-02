@@ -136,6 +136,28 @@ const config: Config = {
                     "0%, 100%": { borderColor: "var(--destructive)", boxShadow: "0 0 6px 1px color-mix(in srgb, var(--destructive) 60%, transparent)" },
                     "50%": { borderColor: "color-mix(in srgb, var(--destructive) 20%, transparent)", boxShadow: "none" },
                 },
+                "ping-fixed-50": {
+                    "0%": {
+                        width: "100%",
+                        height: "100%",
+                        opacity: "0.95",
+                    },
+                    "70%": {
+                        width: "calc(100% + 70px)",
+                        height: "calc(100% + 70px)",
+                        opacity: "0.5",
+                    },
+                    "92%": {
+                        width: "calc(100% + 70px)",
+                        height: "calc(100% + 70px)",
+                        opacity: "0.2",
+                    },
+                    "100%": {
+                        width: "calc(100% + 70px)",
+                        height: "calc(100% + 70px)",
+                        opacity: "0"
+                    }
+                },
             },
             animation: {
                 neonPulse: 'neonPulse 1.1s ease-in-out infinite',
@@ -150,6 +172,7 @@ const config: Config = {
                 wiggle: "wiggle 150ms ease-in-out 1",
                 "pulse-pink": "pulse-pink 2s linear infinite",
                 "border-ping": "border-ping 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                "ping-fixed-50": "ping-fixed-50 700ms linear infinite",
                 "slow-wiggle": "wiggle 500ms ease-in-out 1",
                 "border-beam": "border-beam calc(var(--duration)*1s) infinite linear",
             },

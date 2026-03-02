@@ -2,82 +2,108 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Orchestrator, Realtime, RuntimeSnapshot, Validation, Workflow } from "@vx-agent-editor/shared/domain";
+import { Orchestrator, Realtime, Runtime, Workflow } from "@vx-agent-editor/shared/domain";
 import { useEffect } from "react";
 import { RealtimeSDK } from "../Realtime/sdk";
-import { toast } from "sonner";
-import { api } from "../ApiInterceptorSDK";
+import { createOrchestratorSDKActions, type OrchestratorSDKActions } from "./actions";
 
 @SDK("Orchestrator")
 export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
+    
+    
     constructor() { super() }
+
 
     public readonly useStore: BaseSDK.Store<OrchestratorSDK.State> = create(
         immer<OrchestratorSDK.State>(() => ({
-            currentJobId: undefined,
-            runtimeSnapshot: RuntimeSnapshot.INITIAL
+            jobId: undefined,
+            snapshot: Runtime.Snapshot.INITIAL,
+            nodeStatuses: {}
         }))
     )
 
     public readonly reducers: OrchestratorSDK.Reducers = {}
 
+
     public readonly runtime = {
-        unsubscribeFromTopic: null as (() => void) | null
+        unsubscribeFromJobTopic: null as (() => void) | null
     }
 
-    public readonly actions: OrchestratorSDK.Actions = {
-        execution: {
-            run: async (workflow, wfCache, snapshot) => {
-                if (this.state.currentJobId) {
-                    toast.warning("Workflow is already running")
-                    return this.state.currentJobId
-                }
 
-                // Check if the workflow has issues
-                const workflowIssues = Validation.Issue.checkWorkflow(workflow, wfCache);
-                if (Object.entries(workflowIssues).length > 0) {
-                    toast.error("Workflow has nodes with missing fields or inputs. Please fix them before running.")
-                    return null
-                }
+    public readonly actions: OrchestratorSDK.Actions = createOrchestratorSDKActions(this);
 
-                const executionPromise = Orchestrator.API.Execution.run(api, { workflow, snapshot });
-
-                toast.promise(executionPromise, {
-                    loading: "Preparing workflow execution",
-                    success: (data) => {
-                        return `Workflow execution started`
-                    },
-                    error: (error) => {
-                        const message = error?.response?.data?.error || error.message;
-                        return `Workflow execution faile to start: ${message}`
-                    }
-                })
-
-                const data = await executionPromise;
-                return data.jobId;
-            },
-            pause: async (jobId) => {
-                await Orchestrator.API.Execution.pause(api, { jobId });
-            },
-            terminate: async (jobId) => {
-                await Orchestrator.API.Execution.terminate(api, { jobId });
-
-                this.setState(s => s.currentJobId = undefined)
-            }
-        }
-    }
 
     public readonly selectors: OrchestratorSDK.Selectors = {}
+
 
     public useJobEvents = (
         jobId: Orchestrator.Job.Id,
         callback: (event: Orchestrator.Event.Job) => void
     ) => {
         useEffect(() => {
-            const topic = `job:${jobId}:events` as Realtime.Topic.Id;
+            const topic = `job:${jobId}:events` as Realtime.Topic;
             const unsubscribe = RealtimeSDK.subscribeToTopic(topic, callback);
             return () => unsubscribe();
         }, [jobId, callback])
+    }
+
+
+    public handleOnJobChange = (prevJobId: Orchestrator.Job.Id | undefined, newJobId: Orchestrator.Job.Id | undefined) => {
+        if (prevJobId === newJobId)
+            return;
+
+        if (!newJobId){
+            this.runtime.unsubscribeFromJobTopic?.();
+            return;
+        }
+
+        const topic = Orchestrator.Event.getTopic(newJobId);
+
+        this.runtime.unsubscribeFromJobTopic = RealtimeSDK.subscribeToTopic(
+            topic,
+            (event: Orchestrator.Event) => {
+                switch (event.type) {
+                    case "started":
+                        OrchestratorSDK.setState(s => s.jobId = event.jobId)
+                        break;
+                    case "update":
+                        // @ts-expect-error
+                        OrchestratorSDK.setState(s => s.snapshot = event.update)
+                        break;
+                    case "completed":
+                        OrchestratorSDK.setState(s => {
+                            s.jobId = undefined
+                        })
+                        break;
+                    case "node:started":
+                        OrchestratorSDK.setState(s => {
+                            s.nodeStatuses[event.nodeId] = {
+                                status: "running",
+                                started_at: new Date().toISOString()
+                            }
+                        })
+                        break;
+                    case "node:completed":
+                        OrchestratorSDK.setState(s => {
+                            s.nodeStatuses[event.nodeId] = {
+                                status: "completed",
+                                started_at: s.nodeStatuses[event.nodeId]?.started_at,
+                                completed_at: new Date().toISOString()
+                            }
+                        })
+                        break;
+                    case "node:error":
+                        OrchestratorSDK.setState(s => {
+                            s.nodeStatuses[event.nodeId] = {
+                                status: "failed",
+                                error: event.error,
+                                started_at: s.nodeStatuses[event.nodeId]?.started_at,
+                                completed_at: new Date().toISOString()
+                            }
+                        })
+                        break;
+                }
+            });
     }
 }
 
@@ -85,47 +111,23 @@ export const OrchestratorSDK = SDK.get<OrchestratorSDKImpl>("Orchestrator")
 
 
 OrchestratorSDK.useStore.subscribe((state, prevState) => {
-    if (state.currentJobId === prevState.currentJobId)
+    if (state.jobId === prevState.jobId)
         return;
 
-    if (state.currentJobId) {
-        const topic = `job:${state.currentJobId}:events` as Realtime.Topic.Id;
-        OrchestratorSDK.runtime.unsubscribeFromTopic = RealtimeSDK.subscribeToTopic(
-            topic, (event: Orchestrator.Event.Job) => {
-                switch (event.type) {
-                    case "job:started":
-                        OrchestratorSDK.setState(s => s.currentJobId = event.jobId)
-                        break;
-                    case "job:update":
-                        // @ts-expect-error
-                        OrchestratorSDK.setState(s => s.graphState = event.update)
-                        break;
-                    case "job:completed":
-                        OrchestratorSDK.setState(s => s.currentJobId = undefined)
-                        break;
-                }
-            });
-    } else {
-        OrchestratorSDK.runtime.unsubscribeFromTopic?.();
-    }
+    OrchestratorSDK.handleOnJobChange(prevState.jobId, state.jobId)
 })
 
 
 export namespace OrchestratorSDK {
 
     export type State = {
-        currentJobId:       Orchestrator.Job.Id | undefined
-        runtimeSnapshot:    RuntimeSnapshot
+        jobId: Orchestrator.Job.Id | undefined
+        snapshot: Runtime.Snapshot
+        nodeStatuses: Record<Workflow.Node.Id, Runtime.NodeStatus>
     }
 
     export type Reducers = {
     }
-    export type Actions = {
-        execution: {
-            run: (workflow: Workflow, cache: Workflow.Cache, snapshot: RuntimeSnapshot) => Promise<Orchestrator.Job.Id | null>,
-            pause: (jobId: Orchestrator.Job.Id) => Promise<void>,
-            terminate: (jobId: Orchestrator.Job.Id) => Promise<void>
-        }
-    }
+    export type Actions = OrchestratorSDKActions;
     export type Selectors = {}
 }
