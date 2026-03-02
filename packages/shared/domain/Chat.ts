@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { Workflow } from "./Workflow"
 import { Orchestrator } from "./Orchestrator"
-import { RuntimeSnapshot } from "./RuntimeSnapshot"
+import { Runtime } from "./Runtime"
 import { AxiosInstance } from "axios"
 import { type SupabaseClient } from "@supabase/supabase-js";
 
@@ -43,17 +43,17 @@ export namespace Chat {
         export const Id = z.string().brand("MessageId")
         export type Id = z.infer<typeof Message.Id>
 
-        
+
         export const Role = z.enum(["user", "assistant", "tool", "system"])
         export type Role = z.infer<typeof Role>
-       
+
         export function createId(
             chatId: Chat.Id,
             role: Role
         ) {
             return `${chatId}|${role}|${crypto.randomUUID()}` as Message.Id
         }
-        
+
         export const Base = z.object({
             id: Message.Id,
             content: z.string(),
@@ -129,7 +129,7 @@ export namespace Chat {
             })
         }
         export type ResponseCreated = z.infer<typeof ResponseCreated.Schema>
-        
+
         export namespace MessageChunk {
             export const Schema = z.object({
                 type: z.literal("message:chunk"),
@@ -147,7 +147,7 @@ export namespace Chat {
                 export const Request = z.lazy(() => z.object({
                     message: Chat.Message.Schema,
                     workflow: Workflow.Schema,
-                    snapshot: RuntimeSnapshot.Schema
+                    snapshot: Runtime.Snapshot.Schema
                 }))
                 export type Request = z.infer<typeof Request>
 
@@ -193,7 +193,7 @@ export namespace Chat {
                 const token = data.session?.access_token;
                 if (!token)
                     throw new Error("No token found");
-                
+
                 const response = await fetch(`${api_base_url}/api/chat/message/streamOutput`, {
                     method: "POST",
                     headers: {
@@ -217,7 +217,7 @@ export namespace Chat {
                 const token = data.session?.access_token;
                 if (!token)
                     throw new Error("No token found");
-                
+
                 const response = await fetch(`${api_base_url}/api/chat/message/streamResponse`, {
                     method: "POST",
                     headers: {

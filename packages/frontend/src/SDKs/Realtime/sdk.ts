@@ -15,11 +15,11 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
     )
 
     private socket: WebSocket | null = null;
-    private listeners = new Map<Realtime.Topic, Set<(data: any) => void>>();
+    private listeners = new Map<Realtime.Topic, Set<(data: any, websocketMessage: MessageEvent<any>) => void>>();
 
     public subscribeToTopic<T>(
         topic: Realtime.Topic,
-        callback: (data: T) => void
+        callback: (data: T, websocketMessage: MessageEvent<T>) => void
     ) {
         if (!this.listeners.has(topic)) {
             this.listeners.set(topic, new Set());
@@ -62,9 +62,9 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
         this.currentUrl = url;
         this.isIntentionalClose = false;
 
-        if (this.socket) {
+        if (this.socket)
             this.socket.close();
-        }
+
         if (this.reconnectTimeout) {
             clearTimeout(this.reconnectTimeout);
             this.reconnectTimeout = null;
@@ -74,7 +74,9 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
 
         this.socket.onopen = () => {
             console.log("RealtimeSDK: Connected");
-            this.useStore.setState((state) => { state.isConnected = true; });
+            this.useStore.setState(s => { 
+                s.isConnected = true; 
+            });
             this.reconnectAttempts = 0;
 
             // Resubscribe to existing topics if any (reconnection logic)
@@ -85,7 +87,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
 
         this.socket.onclose = () => {
             console.log("RealtimeSDK: Disconnected");
-            this.useStore.setState((state) => { state.isConnected = false; });
+            this.useStore.setState(s => { s.isConnected = false; });
 
             if (!this.isIntentionalClose) {
                 this.scheduleReconnect();
@@ -99,7 +101,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
                 const topic = event.topic as Realtime.Topic;
 
                 if (topic && this.listeners.has(topic)) {
-                    this.listeners.get(topic)!.forEach(callback => callback(message));
+                    this.listeners.get(topic)!.forEach(callback => callback(event, message));
                 }
             } catch (err) {
                 console.error("RealtimeSDK: Failed to parse message", err);

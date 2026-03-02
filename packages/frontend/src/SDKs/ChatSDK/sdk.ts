@@ -2,9 +2,8 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Chat, Orchestrator, RuntimeSnapshot, Workflow } from "@vx-agent-editor/shared/domain";
+import { Chat, Orchestrator, Runtime, Workflow } from "@vx-agent-editor/shared/domain";
 import { api } from "../ApiInterceptorSDK";
-import { supabase } from "@/libs/supabase";
 import { OrchestratorSDK } from "../OrchestratorSDK/sdk";
 import { RealtimeSDK } from "../Realtime/sdk";
 
@@ -58,10 +57,10 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
                 })
 
                 OrchestratorSDK.useStore.setState(s => {
-                    s.runtimeSnapshot.messages.push(message);
+                    s.snapshot.messages.push(message);
                 })
 
-                const snapshot = OrchestratorSDK.state.runtimeSnapshot;
+                const snapshot = OrchestratorSDK.state.snapshot;
 
                 const { jobId, responseMessage } = await Chat.API.Message.send(api, {
                     message,
@@ -80,10 +79,9 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 
                 const topic = Orchestrator.Event.getTopic(jobId);
 
-                const unsubscribe = RealtimeSDK.subscribeToTopic(
+                const unsubscribe = RealtimeSDK.subscribeToTopic<Orchestrator.Event>(
                     topic, 
-                    (payload) => {
-                        const event = JSON.parse(payload.data) as Orchestrator.Event;
+                    (event) => {
                         console.log("Received event for topic ", topic, event);
                         if (
                             event.type === "node_messages:chunk" && 
@@ -148,7 +146,7 @@ export namespace ChatSDK {
                 chatId?: Chat.Id,
                 workflow: Workflow,
                 attachments?: Chat.Attachment,
-                snapshot: RuntimeSnapshot
+                snapshot: Runtime.Snapshot
             }) => Promise<void>
         },
         clearMessages: () => Promise<void>,
