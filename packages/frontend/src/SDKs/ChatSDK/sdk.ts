@@ -2,10 +2,11 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Chat, RuntimeSnapshot, Workflow } from "@vx-agent-editor/shared/domain";
+import { Chat, Orchestrator, RuntimeSnapshot, Workflow } from "@vx-agent-editor/shared/domain";
 import { api } from "../ApiInterceptorSDK";
 import { supabase } from "@/libs/supabase";
 import { OrchestratorSDK } from "../OrchestratorSDK/sdk";
+import { RealtimeSDK } from "../Realtime/sdk";
 
 @SDK("Chat")
 export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
@@ -62,7 +63,7 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 
                 const snapshot = OrchestratorSDK.state.runtimeSnapshot;
 
-                const { jobId } = await Chat.API.Message.send(api, {
+                const { jobId, responseMessage } = await Chat.API.Message.send(api, {
                     message,
                     workflow,
                     snapshot
@@ -71,83 +72,37 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
                 this.useStore.setState(s => {
                     const msg = s.messagesRecord[message.id];
                     msg.job_id = jobId;
+
+                    s.messagesRecord[responseMessage.id] = responseMessage;
+                    s.messages.push(responseMessage.id);
                 })
 
-                const response = await Chat.API.Message.streamOutput(
-                    supabase, 
-                    import.meta.env.VITE_API_BASE_URL!,
-                    {
-                    chatId,
-                    jobId
-                })
-                
-                if (!response.body) 
-                    throw new Error("No response body returned");
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder("utf-8");
+                const topic = Orchestrator.Event.getTopic(jobId);
 
-                let responseMessageId: Chat.Message.Id | undefined = undefined;
-
-                while (true) {
-                    const { done, value } = await reader.read();
-
-                    if (done)
-                        break;
-
-                    const textChunk = decoder.decode(value, { stream: true });
-
-                    const lines = textChunk.split('\n').filter(Boolean);
-
-                    for (const line of lines) {
-                        console.log("LINE ", line)
-                        const data = JSON.parse(line);
-
-                        console.log("DATA ", data)
-
-                        if (data.type === "chat:response:created") {
-                            try {
-                                const parsedEvent = Chat.Event.ResponseCreated.Schema.parse(data);
-                                responseMessageId = parsedEvent.responseMessageId;
-
-                                this.useStore.setState(s => {
-                                    if (!s.messages.includes(responseMessageId!))
-                                        s.messages.push(responseMessageId!);
-
-                                    s.messagesRecord[responseMessageId!] = {
-                                        id: responseMessageId!,
-                                        chat_id: chatId,
-                                        role: "assistant",
-                                        content: "",
-                                        created_at: new Date().toISOString(),
-                                        updated_at: new Date().toISOString(),
-                                        attachments: {},
-                                        isProcessing: true,
-                                        tool_calls: []
-                                    }
-                                })
-                            } catch (err) {
-                                console.error("Failed to parse response created event:", err)
-                            }
+                const unsubscribe = RealtimeSDK.subscribeToTopic(
+                    topic, 
+                    (payload) => {
+                        const event = JSON.parse(payload.data) as Orchestrator.Event;
+                        console.log("Received event for topic ", topic, event);
+                        if (
+                            event.type === "node_messages:chunk" && 
+                            event.isChatOutput &&
+                            event.nodeId
+                        ) {
+                            this.useStore.setState(s => {
+                                s.messagesRecord[responseMessage.id].content += event.chunk;
+                            });
                         }
-                        else if (data.type === "chat:message:chunk") {
-                            try {
-                                const parsedEvent = Chat.Event.MessageChunk.Schema.parse(data);
-                                if (!responseMessageId)
-                                    throw new Error("Response message id not found");
-
-                                this.useStore.setState(s => {
-                                    const message = s.messagesRecord[responseMessageId!];
-
-                                    message.content += parsedEvent.chunk;
-                                })
-                            } catch (err) {
-                                console.error("Failed to parse message chunk event:", err)
-                            }
+                        else if (event.type === "completed" || event.type === "failed") {
+                            this.useStore.setState(s => {
+                                const msg = s.messagesRecord[responseMessage.id] as Chat.Message.Assistant;
+                                msg.isProcessing = false;
+                            });
+                            unsubscribe();
                         }
-
                     }
-                }
+                )
             }
         },
         clearMessages: async () => {

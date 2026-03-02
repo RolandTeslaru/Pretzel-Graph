@@ -1,45 +1,93 @@
-import { Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/domain";
+import { Chat, Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/domain";
+import { RuntimeState } from "..";
 
 export class EventBuilder {
     constructor(
-        private jobId: Orchestrator.Job.Id,
-        private workflowId: Workflow.Id,
-        private topicId: Realtime.Topic.Id
+        public readonly jobId: Orchestrator.Job.Id,
+        public readonly workflowId: Workflow.Id,
     ) { }
+
     private base() {
         return {
             jobId: this.jobId,
             workflowId: this.workflowId,
-            topicId: this.topicId,
             timestamp: Date.now()
         };
     }
-    started(): Orchestrator.Event.Job.Started {
-        return { ...this.base(), type: "job:started" };
-    }
-    update(update: Orchestrator.Event.Job.Update["update"]): Orchestrator.Event.Job.Update {
-        return { ...this.base(), type: "job:update", update };
-    }
-    completed(result: string): Orchestrator.Event.Job.Completed 
-    {
-        return { ...this.base(), type: "job:completed", result };
-    }
-    messageChunk(nodeId: Workflow.Node.Id, chunk: string): Orchestrator.Event.Job.MessageChunk 
-    {
-        return { ...this.base(), type: "job:node_messages:chunk", nodeId, chunk };
-    }
-    conversationChunk(nodeId: Workflow.Node.Id, chunk: string): Orchestrator.Event.Job.ConversationChunk
-    {
-        return { ...this.base(), type: "job:node_messages:conversation_chunk", nodeId, chunk };
+    // Topi: job:${jobId}:workflow
+
+
+    public readonly workflow = {
+        started: () => (
+            { 
+                ...this.base(),
+                type: "started", 
+                topic: Orchestrator.Event.getTopic(this.jobId)
+            } satisfies Orchestrator.Event.Job.Started
+        ),
+        update: (update: Orchestrator.Event.Job.Update["update"]) => (
+            { 
+                ...this.base(), 
+                type: "update", 
+                update, 
+                topic: Orchestrator.Event.getTopic(this.jobId)
+            } satisfies Orchestrator.Event.Job.Update
+        ),
+        completed: (result: string) => (
+            { 
+                ...this.base(), 
+                type: "completed", 
+                result, 
+                topic: Orchestrator.Event.getTopic(this.jobId)
+            } satisfies Orchestrator.Event.Job.Completed
+        ),
+        failed: (error: string) => (
+            { 
+                ...this.base(), 
+                type: "failed", 
+                error, 
+                topic: Orchestrator.Event.getTopic(this.jobId)
+            } satisfies Orchestrator.Event.Job.Failed
+        ),
+        node: {
+            started: (nodeId: Workflow.Node.Id) => (
+                { 
+                    ...this.base(), 
+                    type: "node:started", 
+                    nodeId, 
+                    topic: Orchestrator.Event.getTopic(this.jobId)
+                } satisfies Orchestrator.Event.Job.Node.Started
+            ),
+            completed: (nodeId: Workflow.Node.Id, output: unknown) => (
+                { 
+                    ...this.base(), 
+                    type: "node:completed", 
+                    nodeId, output, 
+                    topic: Orchestrator.Event.getTopic(this.jobId)
+                } satisfies Orchestrator.Event.Job.Node.Completed
+            ),
+            stream: (nodeId: Workflow.Node.Id, content: string, isChatOutput?: boolean) => (
+                { 
+                    ...this.base(), 
+                    type: "node_messages:chunk", 
+                    nodeId, 
+                    chunk: content, 
+                    isChatOutput, 
+                    topic: Orchestrator.Event.getTopic(this.jobId)
+                } satisfies Orchestrator.Event.Job.MessageChunk
+            )
+        }
     }
 
-    failed(error: string): Orchestrator.Event.Job.Failed {
-        return { ...this.base(), type: "job:failed", error };
-    }
-    nodeStarted(nodeId: Workflow.Node.Id): Orchestrator.Event.Job.Node.Started {
-        return { ...this.base(), type: "job:node:started", nodeId };
-    }
-    nodeCompleted(nodeId: Workflow.Node.Id, output: unknown): Orchestrator.Event.Job.Node.Completed {
-        return { ...this.base(), type: "job:node:completed", nodeId, output };
-    }
+    // Topic job:${jobId}:stream:${nodeId}
+
+    public readonly stream = (nodeId: Workflow.Node.Id, content: string) => (
+        { 
+            ...this.base(), 
+            type: "stream:node_output", 
+            nodeId, 
+            content, 
+            topic: Orchestrator.Event.getTopic(this.jobId)
+        }
+    )
 }

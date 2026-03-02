@@ -7,8 +7,7 @@ import { Emitter } from "./event/emitter";
 
 export type StreamEvent =
     | { mode: "values"; state: RuntimeState }
-    | { mode: "messages"; nodeId: Workflow.Node.Id; content: string }
-    | { mode: "conversation"; nodeId: Workflow.Node.Id; content: string }
+    | { mode: "messages"; nodeId: Workflow.Node.Id; content: string; isChatOutput?: boolean }
     | { mode: "updates"; update: RuntimeState.Update }
 
 export class AggexEngine {
@@ -26,13 +25,13 @@ export class AggexEngine {
     ) {
         console.log(`Executing Node: ${activeNode.displayName} (${activeNode.id})`);
 
-        emit(b => b.nodeStarted(activeNode.id))
+        emit(b => b.workflow.node.started(activeNode.id))
 
         const inputs = this.resolveInputs(state, activeNode.id, workflow, workflowCache);
 
         const result = await nodeInstance.run(state, inputs)
 
-        emit(b => b.nodeCompleted(activeNode.id, result))
+        emit(b => b.workflow.node.completed(activeNode.id, result))
 
         return {
             node_outputs: {
@@ -122,9 +121,10 @@ export class AggexEngine {
                     const isConversation = conversationSourceNodeId === nodeId;
 
                     yield {
-                        mode: isConversation ? "conversation" : "messages",
+                        mode: "messages",
                         nodeId,
-                        content
+                        content,
+                        isChatOutput: isConversation
                     }
                     break;
                 case "values":

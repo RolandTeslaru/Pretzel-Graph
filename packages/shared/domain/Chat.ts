@@ -152,7 +152,8 @@ export namespace Chat {
                 export type Request = z.infer<typeof Request>
 
                 export const Response = z.object({
-                    jobId: z.string().brand("JobId")
+                    jobId: z.string().brand("JobId"),
+                    responseMessage: Chat.Message.Assistant,
                 })
                 export type Response = z.infer<typeof Response>
             }
@@ -194,6 +195,30 @@ export namespace Chat {
                     throw new Error("No token found");
                 
                 const response = await fetch(`${api_base_url}/api/chat/message/streamOutput`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(req)
+                })
+
+                return response;
+            }
+            export namespace StreamResponse {
+                export const Request = z.object({
+                    responseMessage: Chat.Message.Assistant,
+                    jobId: z.string().brand("JobId")
+                })
+                export type Request = z.infer<typeof Request>
+            }
+            export async function streamResponse(supabase: SupabaseClient, api_base_url: string, req: StreamResponse.Request): Promise<Response> {
+                const { data } = await supabase.auth.getSession();
+                const token = data.session?.access_token;
+                if (!token)
+                    throw new Error("No token found");
+                
+                const response = await fetch(`${api_base_url}/api/chat/message/streamResponse`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
