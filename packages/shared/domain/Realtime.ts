@@ -1,9 +1,8 @@
 import { z } from "zod"
 import { Orchestrator } from "./Orchestrator"
-import { Chat } from "./Chat"
 
 export namespace Realtime {
-    export const Topic = z.string().brand("topic")
+    export const Topic = z.string().brand("topicId");
     export type Topic = z.infer<typeof Topic>
 
     export namespace Event {
@@ -12,7 +11,6 @@ export namespace Realtime {
         export const Base = z.object({
             topic: Topic,
             type: Type,
-            timestamp: z.number().default(Date.now()),
         })
     }
     export type Event = z.infer<typeof Event.Base>

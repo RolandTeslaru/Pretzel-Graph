@@ -1,4 +1,4 @@
-import { memo, useRef } from 'react'
+import { memo } from 'react'
 import { WorkbenchSDK } from '../../../sdk';
 import { NodeHeader } from './Header';
 import NodeInputs from './Inputs';
@@ -63,6 +63,9 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
             <NodeOutputs node={node} isWorkflowLocked={isWorkflowLocked} />
           </div>
         }
+
+        <div className='absolute z-[-1] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-4xl duration-700 bg-sky-300/80 border-2  animate-ping-fixed-50 pointer-events-none' />
+
       </div>
     </>
   )

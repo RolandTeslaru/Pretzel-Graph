@@ -75,6 +75,15 @@ export class EventBuilder {
                     isChatOutput, 
                     topic: Orchestrator.Event.getTopic(this.jobId)
                 } satisfies Orchestrator.Event.Job.MessageChunk
+            ),
+            error: (nodeId: Workflow.Node.Id, error: any) => (
+                { 
+                    ...this.base(), 
+                    type: "node:error", 
+                    nodeId, 
+                    error, 
+                    topic: Orchestrator.Event.getTopic(this.jobId)
+                } satisfies Orchestrator.Event.Job.Node.Error
             )
         }
     }
