@@ -17,7 +17,7 @@ const AIMessageBubble = ({ message }: { message: Chat.Message.Assistant }) => {
         <div className="bg-muted/40 border border-border text-foreground px-2 py-0.5 rounded-2xl rounded-bl-sm text-sm shadow-sm">
         {showSpinner
           ? 
-          <Spinner elementClassName='fill-black!'/>
+          <Spinner elementClassName='dark:fill-white fill-black'/>
           :
           <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
         }

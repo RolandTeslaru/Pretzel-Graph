@@ -35,14 +35,13 @@ export class AggexWorkerImpl {
         const eventBuilder = new EventBuilder(
             jobId,
             workflow.id,
-            `job:${jobId}:events` as Realtime.Topic.Id
         )
 
         const emit: Emitter = (builderFn) => {
             this.publishToRedis(builderFn(eventBuilder))
         }
 
-        emit(b => b.started());
+        emit(b => b.workflow.started());
 
         const { compiledGraph, state } = await this.engine.compile(workflow, emit, snapshot)
 
@@ -50,13 +49,10 @@ export class AggexWorkerImpl {
             for await (const payload of this.engine.stream(compiledGraph, state)) {
                 switch (payload.mode) {
                     case "messages":
-                        emit(eb => eb.messageChunk(payload.nodeId, payload.content));
-                        break
-                    case "conversation":
-                        emit(eb => eb.conversationChunk(payload.nodeId, payload.content));
+                        emit(eb => eb.workflow.node.stream(payload.nodeId, payload.content, payload.isChatOutput));
                         break
                     case "updates":
-                        emit(eb => eb.update(payload.update as any))
+                        emit(eb => eb.workflow.update(payload.update as any))
                         break
                     case "values":
                         break;
@@ -65,11 +61,11 @@ export class AggexWorkerImpl {
 
         } catch (err) {
             console.error("Error during execution of job ", jobId, err)
-            emit(eb => eb.failed((err as Error).message))
+            emit(eb => eb.workflow.failed((err as Error).message))
             return { status: 'failed', error: (err as Error).message }
         }
 
-        emit(eb => eb.completed(""))
+        emit(eb => eb.workflow.completed(""))
 
         return { status: 'completed' };
     }
@@ -81,7 +77,7 @@ export class AggexWorkerImpl {
     )
 
     public async publishToRedis(event: Orchestrator.Event) {
-        this.redis.publish(event.topicId, JSON.stringify(event));
+        this.redis.publish(event.topic, JSON.stringify(event));
     }
 }
 
