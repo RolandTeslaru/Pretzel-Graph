@@ -7,6 +7,7 @@ import { WithSupabase } from "@/handlers/database";
 import { OrchestratorService } from "../Orchestrator/service";
 import Redis from "ioredis";
 import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
+import { channel } from "node:diagnostics_channel";
 
 @Service("Chat")
 export class ChatServiceImpl {
@@ -100,7 +101,7 @@ export class ChatServiceImpl {
         message: {
             send: async (token, { message, workflow, snapshot }) => {
                 const supabase = createAuthenticatedClient(token);
-                
+                const chatId = message.chat_id;
                 await this.dbOps.message.send(supabase, message)
 
                 const { jobId } = await OrchestratorService.ops.execution.run(token, {
@@ -108,20 +109,8 @@ export class ChatServiceImpl {
                     snapshot
                 })
 
-                return { jobId }
-            },
-            erase: async (token, payload) => {
-                const supabase = createAuthenticatedClient(token);
-                // TODO: Delete the message
-            },
-            streamOutput: async (token, { chatId, jobId }, req, res) => {
-                res.setHeader('Content-Type', 'text/event-stream');
-                res.setHeader('Cache-Control', 'no-cache');
-                res.setHeader('Connection', 'keep-alive');
-
                 const responseMessageId = Chat.Message.createId(chatId, "assistant");
 
-                // Send initial response message
                 const responseMessage: Chat.Message.Assistant = {
                     id: responseMessageId,
                     chat_id: chatId,
@@ -134,44 +123,11 @@ export class ChatServiceImpl {
                     tool_calls: []
                 }
 
-                const responseCreatedEvent: Chat.Event.ResponseCreated = {
-                    type: "response:created",
-                    responseMessageId: responseMessageId,
-                }
-                    
-                res.write(`${JSON.stringify(responseCreatedEvent)}\n\n`);
-
-                const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT })
-                
-                const topic = `job:${jobId}:chat:${chatId}:streamOutput`
-            
-                redis.on("message", (channel, message) => {
-                    if(channel != topic) 
-                        return
-
-                    const event = JSON.parse(message)
-
-                    if(event.type === "message:chunk") {
-                        res.write(`${JSON.stringify(event.chunk)}\n\n`);
-                    }
-                    else if (
-                        event.type === "completed" || 
-                        event.type === "failed" || 
-                        event.type === "terminated"
-                    ) {
-                        redis.quit()
-                        res.end();
-                    }
-                })
-
-                await redis.subscribe(topic);
-
-                req.on('close', () => {
-                    console.log("Client disconnected")
-                    redis.unsubscribe();
-                    redis.quit();
-                    res.end();
-                })
+                return { jobId, responseMessage }
+            },
+            erase: async (token, payload) => {
+                const supabase = createAuthenticatedClient(token);
+                // TODO: Delete the message
             }
         }
     }
@@ -199,11 +155,7 @@ export class ChatServiceImpl {
             erase: withAuth(async (token, req) => {
                 const payload = Chat.API.Message.Erase.Request.parse(req.body);
                 return await this.ops.message.erase(token, payload);
-            }),
-            streamOutput: withAuth( async (token, req, res) => {
-                const payload = Chat.API.Message.StreamOutput.Request.parse(req.body);
-                return await this.ops.message.streamOutput(token, payload, req, res);
-            }),
+            })
         },
     }
 
@@ -214,7 +166,6 @@ export class ChatServiceImpl {
         .post("/erase", this.controller.erase)
         .post("/message/send", this.controller.message.send)
         .post("/message/erase", this.controller.message.erase)
-        .post("/message/streamOutput", this.controller.message.streamOutput)
 }
 
 export const ChatService = Service.get<ChatServiceImpl>("Chat");
@@ -243,7 +194,6 @@ export namespace ChatService {
         message: {
             send: WithAuth<(payload: Chat.API.Message.Send.Request) => Promise<Chat.API.Message.Send.Response>>
             erase: WithAuth<(payload: Chat.API.Message.Erase.Request) => Promise<void>>,
-            streamOutput: WithAuth<(payload: Chat.API.Message.StreamOutput.Request, req: Request, res: Response) => Promise<void>>
         }
     }
 
@@ -255,7 +205,6 @@ export namespace ChatService {
         message: {
             send: (req: Request, res: Response) => void
             erase: (req: Request, res: Response) => void
-            streamOutput: (req: Request, res: Response) => void
         }
     }
 }

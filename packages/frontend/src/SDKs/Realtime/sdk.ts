@@ -15,10 +15,10 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
     )
 
     private socket: WebSocket | null = null;
-    private listeners = new Map<Realtime.Topic.Id, Set<(data: any) => void>>();
+    private listeners = new Map<Realtime.Topic, Set<(data: any) => void>>();
 
     public subscribeToTopic<T>(
-        topic: Realtime.Topic.Id,
+        topic: Realtime.Topic,
         callback: (data: T) => void
     ) {
         if (!this.listeners.has(topic)) {
@@ -92,11 +92,11 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
             }
         };
 
-        this.socket.onmessage = (event) => {
+        this.socket.onmessage = (message) => {
             try {
-                const message = JSON.parse(event.data);
-                // Expecting message to have a topicId field (from Event.Base)
-                const topic = message.topicId as Realtime.Topic.Id;
+                const event = JSON.parse(message.data) as Realtime.Event;
+                // Expecting message to have a topic field (from Event.Base)
+                const topic = event.topic as Realtime.Topic;
 
                 if (topic && this.listeners.has(topic)) {
                     this.listeners.get(topic)!.forEach(callback => callback(message));

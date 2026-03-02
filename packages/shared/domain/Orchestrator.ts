@@ -39,6 +39,10 @@ export namespace Orchestrator {
 
 
     export namespace Event {
+        export function getTopic(jobId: Orchestrator.Job.Id) {
+            return `job:${jobId}` as Realtime.Topic
+        }
+
         // Create a base from the realtime event base
         const Base = Realtime.Event.Base.extend({
             jobId: Orchestrator.Job.Id,
@@ -78,7 +82,8 @@ export namespace Orchestrator {
             export const MessageChunk = Base.extend({
                 type: z.literal('node_messages:chunk'),
                 nodeId: Workflow.Node.Id,
-                chunk: z.string()
+                chunk: z.string(),
+                isChatOutput: z.boolean().optional(),
             })
 
             export type Started = z.infer<typeof Started>
