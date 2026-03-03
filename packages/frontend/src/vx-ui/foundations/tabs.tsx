@@ -50,11 +50,11 @@ const triggerVars = cva(
 )
 
 const indicatorVars = cva(
-  "absolute z-0 pointer-events-none! border transition-all duration-300 ease-out",
+  "absolute z-0 pointer-events-none! border transition-all duration-300 ease-out shadow-sm",
   {
     variants: {
       variant: {
-        primary: "bg-primary border-primary-accent shadow-primary-accent",
+        primary: "bg-primary border-primary-accent shadow-black/20",
         accent: "bg-accent border-secondary"
       },
       size: {

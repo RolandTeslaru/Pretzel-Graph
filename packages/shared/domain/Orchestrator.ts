@@ -3,7 +3,7 @@ import { Workflow } from "./Workflow"
 import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
 import { type AxiosInstance } from "axios"
-import { Runtime } from "./Runtime"
+import { Execution as ExecutionD } from "./Execution"
 
 export namespace Orchestrator {
     export namespace Job {
@@ -31,7 +31,7 @@ export namespace Orchestrator {
                 jobId: Job.Id,
                 workflow: Workflow.Schema,
                 userId: Auth.User.Id,
-                snapshot: Runtime.Snapshot.Schema
+                executionContext: ExecutionD.Context.Schema
             })
         }
         export type Item = z.infer<typeof Item.Schema>
@@ -48,6 +48,7 @@ export namespace Orchestrator {
             jobId: Orchestrator.Job.Id,
             workflowId: Workflow.Id,
         })
+        
         export namespace Job {
             export const Started = Base.extend({
                 type: z.literal('started'),
@@ -55,7 +56,7 @@ export namespace Orchestrator {
 
             export const Update = Base.extend({
                 type: z.literal('update'),
-                update: Runtime.Snapshot.Update
+                update: ExecutionD.Context.Update
             })
 
 
@@ -158,7 +159,7 @@ export namespace Orchestrator {
             export namespace Run {
                 export const Request = z.object({
                     workflow: Workflow.Schema,
-                    snapshot: Runtime.Snapshot.Schema,
+                    executionContext: ExecutionD.Context.Schema,
                 })
                 export const Response = z.object({
                     jobId: Job.Id

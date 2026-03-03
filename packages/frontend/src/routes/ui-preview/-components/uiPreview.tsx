@@ -87,6 +87,7 @@ import { ButtonGroup } from "@/vx-ui/foundations/button-group"
 import { DialogSDK } from "@/vx-ui/SDKs/DialogSDK"
 import { SystemSDK } from "@/SDKs/SystemSDK"
 import ThemeSelector from "@/SDKs/SystemSDK/ui/ThemeSelector"
+import { NotificationSDKTestPanel } from "@/vx-ui/SDKs/NotificationSDK/components/testPanel"
 
 export default function CoverExample() {
     return (
@@ -106,8 +107,17 @@ export default function CoverExample() {
                 <DialogExamples />
                 <InputsNoCard />
                 <InputsWithCard />
+                <NotificationExample />
             </ExampleWrapper>
         </div>
+    )
+}
+
+function NotificationExample() {
+    return (
+        <Example title="Notifications Test Panel">
+            <NotificationSDKTestPanel />
+        </Example>
     )
 }
 

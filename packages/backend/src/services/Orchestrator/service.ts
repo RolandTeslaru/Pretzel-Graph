@@ -48,7 +48,7 @@ export class OrchestratorServiceImpl {
 
     public readonly ops: OrchestratorService.Ops = {
         execution: {
-            run: async (token, { workflow, snapshot }) => {
+            run: async (token, { workflow, executionContext }) => {
                 const wfCache = Workflow.createCache(workflow);
 
                 const workflowIssues = Validation.Issue.checkWorkflow(workflow, wfCache);
@@ -71,7 +71,7 @@ export class OrchestratorServiceImpl {
                         jobId,
                         workflow,
                         userId,
-                        snapshot
+                        executionContext
                     }
 
                     await this.executionQueue.add('run', queueItem);

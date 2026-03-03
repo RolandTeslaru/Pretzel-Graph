@@ -5,7 +5,7 @@ import { Synthesizer } from "./synthesizer";
 import { Emitter } from "./event/emitter";
 import type { AggexEngine } from "./engine";
 import { RuntimeState } from "./runtime";
-import { Runtime } from "@vx-agent-editor/shared/domain";
+import { Execution } from "@vx-agent-editor/shared/domain";
 
 export class WorkflowCompiler {
     constructor() { }
@@ -14,11 +14,11 @@ export class WorkflowCompiler {
         workflow: Workflow,
         emit: Emitter,
         nodeRunnerFn: AggexEngine["runNode"],
-        snapshot: Runtime.Snapshot
+        executionContext: Execution.Context
     ) {
         const workflowCache = Workflow.createCache(workflow);
 
-        const state = Synthesizer.synthesizeState(snapshot);
+        const state = Synthesizer.synthesizeState(executionContext);
 
         // Create the state graph
         const graph = new StateGraph(RuntimeState.Schema);
@@ -39,6 +39,7 @@ export class WorkflowCompiler {
                 workflowNode: node,
                 state
             });
+            
             graph.addNode(node.id, async (state) => {
                 return nodeRunnerFn(state, node, vertex, workflow, workflowCache, emit);
             });

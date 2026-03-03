@@ -36,12 +36,22 @@ const UIOverlay = memo((props) => {
                     "--normal-border": "var(--border)",
                     "--border-radius": "var(--radius-xl)",
 
-                    "--success-bg": "var(--color-green-950)",
-                    "--success-border": "color-mix(in srgb, var(--color-green-500) 10%, transparent)",
+                    "--success-bg": "var(--success-background)",
+                    "--success-text": "var(--success-foreground)",
+                    "--success-border": "color-mix(in srgb, var(--success-foreground) 30%, var(--success-background))",
 
-                    // Warning
-                    "--warning-bg": "var(--color-yellow-950)",
-                    "--warning-border": "color-mix(in srgb, var(--color-yellow-500) 10%, transparent)",
+                    "--warning-bg": "var(--warning-background)",
+                    "--warning-text": "var(--warning-foreground)",
+                    "--warning-border": "color-mix(in srgb, var(--warning-foreground) 30%, var(--warning-background))",
+
+                    "--error-bg": "var(--error-background)",
+                    "--error-text": "var(--error-foreground)",
+                    "--error-border": "color-mix(in srgb, var(--error-foreground) 30%, var(--error-background))",
+
+                    "--info-bg": "var(--info-background)",
+                    "--info-text": "var(--info-foreground)",
+                    "--info-border": "color-mix(in srgb, var(--info-foreground) 30%, var(--info-background))",
+
                     "--toast-icon-margin-end": "10px",
                 } as React.CSSProperties
             }

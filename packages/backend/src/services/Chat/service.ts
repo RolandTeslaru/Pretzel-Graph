@@ -2,12 +2,8 @@ import { Service } from "../ServiceManager";
 import { Router, Request, Response } from "express";
 import { WithAuth, withAuth } from "@/handlers/controller";
 import { createAuthenticatedClient, getUserId } from "@/utils/supabase";
-import { Auth, Chat, Orchestrator, Workbench } from "@vx-agent-editor/shared/domain";
+import { Auth, Chat, Workflow } from "@vx-agent-editor/shared/domain";
 import { WithSupabase } from "@/handlers/database";
-import { OrchestratorService } from "../Orchestrator/service";
-import Redis from "ioredis";
-import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
-import { channel } from "node:diagnostics_channel";
 
 @Service("Chat")
 export class ChatServiceImpl {
@@ -17,101 +13,139 @@ export class ChatServiceImpl {
 
     }
 
+    private assertSupabaseOk(error: unknown, operation: string): void {
+        if (!error) return;
+
+        const message =
+            typeof error === "object" && error !== null && "message" in error
+                ? String((error as { message?: unknown }).message ?? "Unknown Supabase error")
+                : "Unknown Supabase error";
+
+        throw new Error(`[ChatService:${operation}] ${message}`);
+    }
+
     private readonly dbOps: ChatService.DbOps = {
         chat: {
-            create: async (supabase, userId) => {
-                const chatId = crypto.randomUUID() as Chat.Id
-                await supabase.from('chats').insert({
-                    id: chatId,
-                    user_id: userId,
+            create: async (supabase, userId, workflow_id) => {
+                
+                const { data, error } = await supabase
+                    .from('chats')
+                    .insert({
+                        user_id: userId,
+                        workflow_id,
+                        name: "New Chat",
+                        created_at: new Date(),
+                        updated_at: new Date(),
+                    })
+                    .select('id')
+                    .single();
+
+                this.assertSupabaseOk(error, "chat.create");
+                if (!data?.id) {
+                    throw new Error("[ChatService:chat.create] Missing inserted chat id");
+                }
+                return {
+                    id: data.id,
+                    workflow_id,
                     name: "New Chat",
-                    created_at: new Date(),
-                    updated_at: new Date(),
-                });
-                return chatId
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                } satisfies Chat;
             },
             get: async (supabase, chatId) => {
                 const { data, error } = await supabase
                     .from('chats')
-                    .select('*, chat_messages(*)')
+                    .select('id, user_id, workflow_id, name, created_at, updated_at, chat_messages(*)')
                     .eq('id', chatId)
+                    .order('created_at', { referencedTable: 'chat_messages', ascending: true })
                     .single();
 
-                if (error) throw error;
-                return data
+                this.assertSupabaseOk(error, "chat.get");
+                if (!data) {
+                    throw new Error("[ChatService:chat.get] Chat not found");
+                }
+
+                const { chat_messages, ...chat } = data;
+
+                return {
+                    chat,
+                    messages: chat_messages ?? []
+                };
             },
             list: async (supabase, userId) => {
                 const { data, error } = await supabase
                     .from('chats')
-                    .select('id, name, created_at, updated_at')
+                    .select('*')
                     .eq('user_id', userId)
                     .order('updated_at', { ascending: false });
 
-                if (error) throw error;
-                return data
+                this.assertSupabaseOk(error, "chat.list");
+                return data ?? []
             },
             erase: async (supabase, chatId) => {
-                await supabase.from('chats').delete().eq('id', chatId);
+                const { error } = await supabase.from('chats').delete().eq('id', chatId);
+                this.assertSupabaseOk(error, "chat.erase");
             },
         },
         message: {
-            send: async (supabase, message) => {
-                await supabase.from('chat_messages').insert({
-                    id: message.id,
+            add: async (supabase, message) => {
+                const { error } = await supabase.from('chat_messages').insert({
                     chat_id: message.chat_id,
                     role: message.role,
                     content: message.content,
-                    metadata: null,
+                    data: message.data ?? {},
                     attachments: message.attachments ?? null,
                     created_at: new Date(),
                 });
+
+                this.assertSupabaseOk(error, "message.add");
             },
             erase: async (supabase, messageId) => {
-                await supabase.from('chat_messages').delete().eq('id', messageId);
+                const { error } = await supabase.from('chat_messages').delete().eq('id', messageId);
+                this.assertSupabaseOk(error, "message.erase");
             },
         }
     }
 
     public readonly ops: ChatService.Ops = {
-        create: async (token) => {
+        create: async (token, payload) => {
             const supabase = createAuthenticatedClient(token);
+            const { workflow_id } = payload
+
             const userId = await getUserId(supabase) as Auth.User.Id;
             if (!userId) throw new Error("User not found");
 
-            const chatId = await this.dbOps.chat.create(supabase, userId);
-            return { chatId }
+            const chat = await this.dbOps.chat.create(supabase, userId, workflow_id);
+            return { chat }
         },
         get: async (token, payload) => {
             const supabase = createAuthenticatedClient(token);
-            const chat = await this.dbOps.chat.get(supabase, payload.chatId);
-            return { chat }
+            const data = await this.dbOps.chat.get(supabase, payload.chatId);
+
+            return data;
         },
         list: async (token) => {
             const supabase = createAuthenticatedClient(token);
             const userId = await getUserId(supabase) as Auth.User.Id;
             if (!userId) throw new Error("User not found");
 
-            const chatMetas = await this.dbOps.chat.list(supabase, userId);
-            return { chatMetas }
+            const chats = await this.dbOps.chat.list(supabase, userId);
+            return { chats }
         },
         erase: async (token, payload) => {
             const supabase = createAuthenticatedClient(token);
             await this.dbOps.chat.erase(supabase, payload.chatId);
         },
         message: {
-            send: async (token, { message, workflow, snapshot }) => {
+            send: async (token, { message }) => {
                 const supabase = createAuthenticatedClient(token);
                 const chatId = message.chat_id;
-                await this.dbOps.message.send(supabase, message)
+                
+                await this.dbOps.message.add(supabase, message)
 
-                const { jobId } = await OrchestratorService.ops.execution.run(token, {
-                    workflow,
-                    snapshot
-                })
+                const responseMessageId = Chat.Message.createId();
 
-                const responseMessageId = Chat.Message.createId(chatId, "assistant");
-
-                const responseMessage: Chat.Message.Assistant = {
+                const responseMessage = {
                     id: responseMessageId,
                     chat_id: chatId,
                     role: "assistant",
@@ -119,22 +153,27 @@ export class ChatServiceImpl {
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                     attachments: {},
-                    isProcessing: true,
-                    tool_calls: []
-                }
+                    data: {
+                        isProcessing: true,
+                        tool_calls: []
+                    }
+                } satisfies Chat.Message.Assistant;
 
-                return { jobId, responseMessage }
+                await this.dbOps.message.add(supabase, responseMessage)
+
+                return { responseMessage }
             },
             erase: async (token, payload) => {
                 const supabase = createAuthenticatedClient(token);
-                // TODO: Delete the message
+                await this.dbOps.message.erase(supabase, payload.messageId);
             }
         }
     }
 
     public readonly controller: ChatService.Controller = {
         create: withAuth(async (token, req) => {
-            return await this.ops.create(token);
+            const payload = Chat.API.Create.Request.parse(req.body);
+            return await this.ops.create(token, payload);
         }),
         get: withAuth(async (token, req) => {
             const payload = Chat.API.Get.Request.parse(req.body);
@@ -175,19 +214,19 @@ export const ChatService = Service.get<ChatServiceImpl>("Chat");
 export namespace ChatService {
     export type DbOps = {
         chat: {
-            create: WithSupabase<(userId: Auth.User.Id) => Promise<Chat.Id>>
-            get: WithSupabase<(chatId: Chat.Id) => Promise<any>>
-            list: WithSupabase<(userId: Auth.User.Id) => Promise<any[]>>
+            create: WithSupabase<(userId: Auth.User.Id, workflow_id: Workflow.Id) => Promise<Chat>>
+            get: WithSupabase<(chatId: Chat.Id) => Promise<{ chat: Chat, messages: Chat.Message[] }>>
+            list: WithSupabase<(userId: Auth.User.Id) => Promise<Chat[]>>
             erase: WithSupabase<(chatId: Chat.Id) => Promise<void>>
         }
         message: {
-            send: WithSupabase<(message: Chat.Message) => Promise<void>>
+            add: WithSupabase<(message: Chat.Message) => Promise<void>>
             erase: WithSupabase<(messageId: Chat.Message.Id) => Promise<void>>
         }
     }
 
     export type Ops = {
-        create: WithAuth<() => Promise<Chat.API.Create.Response>>
+        create: WithAuth<(payload: Chat.API.Create.Request) => Promise<Chat.API.Create.Response>>
         get: WithAuth<(payload: Chat.API.Get.Request) => Promise<Chat.API.Get.Response>>
         list: WithAuth<() => Promise<Chat.API.List.Response>>
         erase: WithAuth<(payload: Chat.API.Erase.Request) => Promise<void>>

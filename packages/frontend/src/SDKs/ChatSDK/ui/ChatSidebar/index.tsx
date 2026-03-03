@@ -3,8 +3,9 @@ import { ChatSDK } from '../../sdk'
 import { StackSDK } from '@/SDKs/StackSDK'
 import PromptInput from './PromptInput'
 import MessagesArea from './MessagesArea'
+import ChatSelectPanel from './ChatSelectPanel'
 import { SystemIcons } from '@/vx-ui/icons'
-import { Button } from '@/vx-ui/foundations'
+import { Button, DropdownMenu } from '@/vx-ui/foundations'
 
 const ChatSidebar = () => {
     const isSidebarVisible = ChatSDK.useStore(s => s.isSidebarVisible);
@@ -36,9 +37,21 @@ const ChatSidebarContent = () => {
                     Conversation
                 </h4>
 
-                <Button size="icon-sm" variant="ghost" className='absolute right-2 top-2'>
-                    <SystemIcons.Maximize2 className='text-secondary-foreground'/>
-                </Button>
+                <div className='flex flex-row gap-1 ml-auto my-auto h-auto'>
+                    <Button size="icon-xs" variant="ghost" className="">
+                        <SystemIcons.Maximize2 className='text-secondary-foreground'/>
+                    </Button>
+                    <DropdownMenu.Root>
+                        <DropdownMenu.Trigger asChild>
+                            <Button size="icon-xs" variant="ghost" className=''>
+                                <SystemIcons.MessagesSquare className='text-secondary-foreground'/>
+                            </Button>
+                        </DropdownMenu.Trigger>
+                        <DropdownMenu.Content align="end" sideOffset={6} className='w-72'>
+                            <ChatSelectPanel />
+                        </DropdownMenu.Content>
+                    </DropdownMenu.Root>
+                </div>
             </div>
             <MessagesArea />
             <div className='mt-auto p-2'>
