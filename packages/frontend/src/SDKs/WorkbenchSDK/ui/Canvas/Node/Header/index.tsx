@@ -1,5 +1,5 @@
 import React from 'react'
-import { Workflow } from '@vx-agent-editor/shared/domain';
+import { Execution, Workflow } from '@vx-agent-editor/shared/domain';
 import MinimizedHandles from './MinimizedHandles';
 import { LazyIcon } from '@/vx-ui/icons/LazyIcon';
 import StatusIndicator from './StatusIndicator';
@@ -7,9 +7,10 @@ import StatusIndicator from './StatusIndicator';
 interface Props {
   node: Workflow.Node
   isWorkflowLocked: boolean
+  executionStatus?: Execution.NodeStatus
 }
 
-export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked }) => {
+export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionStatus }) => {
   const isMinimized = node.isMinimized;
 
   if (isMinimized)
@@ -26,7 +27,7 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked }) => {
           <div className="truncate font-semibold text-foreground/80">
             {node.displayName}
           </div>
-          <StatusIndicator nodeId={node.id} className='absolute top-0 right-0'/>
+          <StatusIndicator executionStatus={executionStatus} nodeId={node.id} className='absolute top-0 right-0' />
         </div>
       </MinimizedHandles>
     )
@@ -43,7 +44,7 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked }) => {
       <div className="flex-1 truncate font-semibold text-foreground/80">
         {node.displayName}
       </div>
-      <StatusIndicator nodeId={node.id}/>
+      <StatusIndicator executionStatus={executionStatus} nodeId={node.id} />
 
     </div>
   )

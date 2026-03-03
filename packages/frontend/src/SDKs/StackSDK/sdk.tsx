@@ -54,7 +54,7 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
         const xOffset = depth * -24;                      // shift right 24px per level
         const yOffset = depth * 48;                      // shift right 24px per level
         const scale = 1 + depth * 0.03;                // shrink 3% per level
-        const brightness = depth === 0 ? 1 : 1 / -(depth - 1);  // darken behind panels
+        const brightnessBase = depth === 0 ? 1 : 1 / -(depth - 1);  // darken behind panels
 
         const isFront = depth === 0;
 
@@ -72,7 +72,7 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                     y: yOffset,
                     opacity: 1,
                     scale: scale,
-                    filter: `brightness(${brightness})`,
+                    filter: `brightness(calc(1 - (1 - ${brightnessBase}) * var(--stack-depth-dim-mult, 0.08)))`,
                 }}
                 exit={{ x: "100%", opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -80,8 +80,9 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                 onClick={handleClick}
                 className={`
                     overflow-hidden
-                    fixed flex flex-col right-5 top-24 bottom-24 w-87.5 bg-card/80 backdrop-blur-lg 
+                    fixed flex flex-col right-5 top-24 bottom-24 w-87.5 bg-card/70 backdrop-blur-lg 
                     border border-border rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10
+                    [--stack-depth-dim-mult:0.3] dark:[--stack-depth-dim-mult:1]
                     ${!isFront ? 'cursor-pointer' : ''}
                     ${className || ''}
                 `}

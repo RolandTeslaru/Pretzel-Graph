@@ -10,12 +10,10 @@ export class RealtimeServiceImpl {
 
 
     constructor() { 
-        this.redisSub.on('pmessage', (pattern, topicId, message) => {
-            console.log(`Received message on topic ${topicId}:`, message);
-        });
+
     }
 
-    private subscriptions = new Map<Realtime.Topic.Id, Set<WebSocket>>()
+    private subscriptions = new Map<Realtime.Topic, Set<WebSocket>>()
     // {
     //   [topic]: Set<client WebSocket>
     // }
@@ -42,8 +40,8 @@ export class RealtimeServiceImpl {
         });
 
         // Relay Redis → WebSocket
-        this.redisSub.on('pmessage', (pattern, topicId, serializedEvent) => {
-            const clients = this.subscriptions.get(topicId as Realtime.Topic.Id);
+        this.redisSub.on('pmessage', (pattern, topic, serializedEvent) => {
+            const clients = this.subscriptions.get(topic as Realtime.Topic);
             if (clients)
                 clients.forEach(ws => {
                     if (ws.readyState === WebSocket.OPEN)
@@ -52,15 +50,15 @@ export class RealtimeServiceImpl {
         });
     }
 
-    private subscribe(ws: WebSocket, topicId: Realtime.Topic.Id) {
-        if (!this.subscriptions.has(topicId))
-            this.subscriptions.set(topicId, new Set());
+    private subscribe(ws: WebSocket, topic: Realtime.Topic) {
+        if (!this.subscriptions.has(topic))
+            this.subscriptions.set(topic, new Set());
 
-        this.subscriptions.get(topicId)!.add(ws);
+        this.subscriptions.get(topic)!.add(ws);
     }
 
-    private unsubscribe(ws: WebSocket, topicId: Realtime.Topic.Id) {
-        this.subscriptions.get(topicId)?.delete(ws);
+    private unsubscribe(ws: WebSocket, topic: Realtime.Topic) {
+        this.subscriptions.get(topic)?.delete(ws);
     }
 
     private removeClientFromAll(ws: WebSocket) {

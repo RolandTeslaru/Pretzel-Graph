@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
-import { Orchestrator, Runtime, Validation, Workflow } from "@vx-agent-editor/shared/domain";
+import { Orchestrator, Validation } from "@vx-agent-editor/shared/domain";
 import { api } from "../ApiInterceptorSDK";
 import { type OrchestratorSDKImpl } from "./sdk"
 
@@ -12,6 +12,11 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                     toast.warning("Workflow is already running")
                     return sdk.state.jobId
                 }
+
+
+                sdk.setState(s => {
+                    sdk.reducers.nodeStatuses.reset(s);
+                })
 
                 const workflow = WorkbenchSDK.state.workflow;
                 const wfCache = WorkbenchSDK.state.cache;
@@ -26,13 +31,13 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                 const executionPromise = Orchestrator.API.Execution.run(
                     api, {
                     workflow,
-                    snapshot: sdk.state.snapshot
+                    executionContext: sdk.state.executionContext
                 }
                 );
 
                 toast.promise(executionPromise, {
                     loading: "Preparing workflow execution",
-                    success: (data) => {
+                    success: () => {
                         return `Workflow execution started`
                     },
                     error: (error) => {
@@ -41,8 +46,14 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                     }
                 })
 
-                const data = await executionPromise;
-                return data.jobId;
+                const { jobId } = await executionPromise;
+
+                sdk.setState(s => {
+                    s.jobId = jobId 
+                    s.executionStatus = "running"
+                })
+
+                return jobId;
             },
             pause: async (jobId) => {
                 await Orchestrator.API.Execution.pause(api, { jobId });
@@ -58,7 +69,7 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
 
 export type OrchestratorSDKActions = {
         execution: {
-            run: (workflow: Workflow, cache: Workflow.Cache, snapshot: Runtime.Snapshot) => Promise<Orchestrator.Job.Id | null>,
+            run: () => Promise<Orchestrator.Job.Id | null>,
             pause: (jobId: Orchestrator.Job.Id) => Promise<void>,
             terminate: (jobId: Orchestrator.Job.Id) => Promise<void>
         }

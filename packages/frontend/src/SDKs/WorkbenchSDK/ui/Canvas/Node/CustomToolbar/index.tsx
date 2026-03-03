@@ -33,14 +33,14 @@ export const NodeCustomToolbar: React.FC<Props> = ({ node }) => {
 const MoreOptionsDropdown: React.FC<Props> = ({ node }) => {
     return (
         <DropdownMenu.Root>
-            <DropdownMenu.Trigger className='p-0! max-h-[24px]'>
-                <Button variant="ghost" size="icon-xs" className='p-0! mt-0! max-h-[24px]!' asChild >
+            <Button variant="ghost" size="icon-xs" className='p-0! mt-0! ' >
+                <DropdownMenu.Trigger className='p-0!' >
                     <SystemIcons.Ellipsis />
-                </Button>
-            </DropdownMenu.Trigger>
+                </DropdownMenu.Trigger>
+            </Button>
             <DropdownMenu.Content align="start">
                 <DropdownMenu.Item
-                    onClick={() => WorkbenchSDK.actions.clipboard.copyNode(node.id) }
+                    onClick={() => WorkbenchSDK.actions.clipboard.copyNode(node.id)}
                 >
                     <SystemIcons.Clipboard />
                     Copy
@@ -54,7 +54,7 @@ const MoreOptionsDropdown: React.FC<Props> = ({ node }) => {
                 <DropdownMenu.Item
                     onClick={() => {
                         ShelfSDK.actions.hydrateBlueprint(node.blueprintId);
-                        
+
                         const blueprint = ShelfSDK.state.blueprints[node.blueprintId];
                         if (!blueprint) return;
                         WorkbenchSDK.actions.node.recreate(node.id, blueprint)

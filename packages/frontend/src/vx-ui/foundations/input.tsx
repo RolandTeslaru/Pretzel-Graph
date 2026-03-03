@@ -1,22 +1,35 @@
 import * as React from "react"
 import { cn } from "../utils/cn"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+type InputSize = "default" | "sm" | "xs"
+
+type InputProps = Omit<React.ComponentProps<"input">, "size"> & {
+  size?: InputSize
+}
+
+const inputSizeClasses: Record<InputSize, string> = {
+  default: "rounded-md h-8 px-2.5 py-1 text-base md:text-sm",
+  sm: "rounded-sm! h-7 px-2 py-0.5 text-sm",
+  xs: "rounded-sm! h-6 px-1.5 py-0.5 text-xs",
+}
+
+function Input({ className, type, size = "default", ...props }: InputProps) {
   return (
     <input
       type={type}
       data-slot="input"
       className={cn(
-        `rounded-md bg-input/50 border-border focus-visible:border-ring focus-visible:ring-ring/50 
+        `bg-input/50 border-border focus-visible:border-ring focus-visible:ring-ring/50 
         aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive 
         dark:aria-invalid:border-destructive/50 disabled:bg-input/50 dark:disabled:bg-input/80 
-        h-8 border px-2.5 py-1 text-base transition-colors file:h-6 file:text-sm file:font-medium 
-        focus-visible:ring-[3px] aria-invalid:ring-[3px] md:text-sm file:text-foreground placeholder:text-muted-foreground 
+        border transition-colors file:h-6 file:text-sm file:font-medium 
+        focus-visible:ring-[3px] aria-invalid:ring-[3px] file:text-foreground placeholder:text-muted-foreground 
         w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent
         disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50
         shadow-sm shadow-black/10 
         
         `,
+        inputSizeClasses[size],
         className
       )}
       {...props}

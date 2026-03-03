@@ -143,18 +143,18 @@ const config: Config = {
                         opacity: "0.95",
                     },
                     "70%": {
-                        width: "calc(100% + 70px)",
-                        height: "calc(100% + 70px)",
+                        width: "calc(100% + 50px)",
+                        height: "calc(100% + 50px)",
                         opacity: "0.5",
                     },
-                    "92%": {
-                        width: "calc(100% + 70px)",
-                        height: "calc(100% + 70px)",
+                    "80%": {
+                        width: "calc(100% + 50px)",
+                        height: "calc(100% + 50px)",
                         opacity: "0.2",
                     },
                     "100%": {
-                        width: "calc(100% + 70px)",
-                        height: "calc(100% + 70px)",
+                        width: "calc(100% + 50px)",
+                        height: "calc(100% + 50px)",
                         opacity: "0"
                     }
                 },
