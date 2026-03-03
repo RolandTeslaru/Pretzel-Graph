@@ -2,11 +2,13 @@ import { Chat } from '@vx-agent-editor/shared/domain'
 import { SystemIcons } from '@/vx-ui/icons'
 import { motion } from 'motion/react'
 import { Spinner } from '@/vx-ui/foundations'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 const AIMessageBubble = ({ message }: { message: Chat.Message.Assistant }) => {
-  
-  const showSpinner = message.content === "" && message.data.isProcessing 
-  
+
+  const showSpinner = message.content === "" && message.data.isProcessing
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -15,12 +17,16 @@ const AIMessageBubble = ({ message }: { message: Chat.Message.Assistant }) => {
     >
       <div className="flex flex-row gap-3 items-end max-w-[85%]">
         <div className="bg-muted/40 border border-border text-foreground px-2 py-0.5 rounded-2xl rounded-bl-sm text-sm shadow-sm">
-        {showSpinner
-          ? 
-          <Spinner elementClassName='dark:fill-white fill-black'/>
-          :
-          <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
-        }
+          {showSpinner
+            ?
+            <Spinner elementClassName='dark:fill-white fill-black!' />
+            :
+            <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:p-0 prose-pre:my-2 ">
+              <Markdown remarkPlugins={[remarkGfm]}>
+                {message.content}
+              </Markdown>
+            </div>
+          }
         </div>
       </div>
       {message.data.tool_calls && message.data.tool_calls.length > 0 && (

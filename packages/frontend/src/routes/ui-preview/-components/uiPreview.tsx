@@ -209,7 +209,6 @@ function FieldExamples() {
                                 id="number-of-gpus-f6l"
                                 value={gpuCount}
                                 onChange={handleGpuInputChange}
-                                size={3}
                                 maxLength={3}
                             />
                             <Button
