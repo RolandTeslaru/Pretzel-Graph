@@ -4,36 +4,31 @@ import { SystemIcons } from '@/vx-ui/icons'
 import { OrchestratorSDK } from '../sdk'
 
 const handlePause = () => {
-  const currentJobId = OrchestratorSDK.state.currentJobId;
+  const currentJobId = OrchestratorSDK.state.jobId;
   if (!currentJobId) return;
   OrchestratorSDK.actions.execution.pause(currentJobId);
 }
 
 const handleTerminate = () => {
-  const currentJobId = OrchestratorSDK.state.currentJobId;
+  const currentJobId = OrchestratorSDK.state.jobId;
   if (!currentJobId) return;
   OrchestratorSDK.actions.execution.terminate(currentJobId);
 }
 
 const handleRun = () => {
   const state = WorkbenchSDK.state;
-  const orchestrationState = OrchestratorSDK.state.orchestrationState
   
-  OrchestratorSDK.actions.execution.run(
-    state.workflow,
-    state.cache,
-    orchestrationState
-  );
+  OrchestratorSDK.actions.execution.run();
 }
 
 const WorkflowControls = () => {
 
-  const currentJobId = OrchestratorSDK.useStore(s => s.currentJobId);
+  const [jobId, executionStatus] = OrchestratorSDK.useStore(s => [s.jobId, s.executionStatus]);
 
   return (
     <>
 
-      {currentJobId === undefined ? (
+      {jobId === undefined ? (
         <>
           <Button className='my-auto' variant="success" onClick={handleRun}>
             <SystemIcons.Play />

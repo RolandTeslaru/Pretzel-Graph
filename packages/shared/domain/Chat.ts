@@ -1,14 +1,18 @@
 import { z } from "zod"
 import { Workflow } from "./Workflow"
-import { Orchestrator } from "./Orchestrator"
-import { Runtime } from "./Runtime"
-import { AxiosInstance } from "axios"
+import { type AxiosInstance } from "axios"
 import { type SupabaseClient } from "@supabase/supabase-js";
+import uid from "@/utils/uid";
 
 export namespace Chat {
 
     export const Id = z.string().brand("ChatId")
     export type Id = z.infer<typeof Id>
+
+    export function createId() {
+        return crypto.randomUUID() as Id
+    }
+
 
     export namespace Attachment {
         export const Id = z.string().brand("AttachmentId")
@@ -43,16 +47,12 @@ export namespace Chat {
         export const Id = z.string().brand("MessageId")
         export type Id = z.infer<typeof Message.Id>
 
+        export function createId() {
+            return crypto.randomUUID() as Id
+        }
 
         export const Role = z.enum(["user", "assistant", "tool", "system"])
         export type Role = z.infer<typeof Role>
-
-        export function createId(
-            chatId: Chat.Id,
-            role: Role
-        ) {
-            return `${chatId}|${role}|${crypto.randomUUID()}` as Message.Id
-        }
 
         export const Base = z.object({
             id: Message.Id,
@@ -68,26 +68,33 @@ export namespace Chat {
             return z.literal(value);
         }
 
-        export const User = Message.Base.extend({
+        export const User = Base.extend({
             role: configLiteral("user"),
+            data: z.object({}).optional(),
         })
 
-        export const Assistant = Message.Base.extend({
+        export const Assistant = Base.extend({
             role: configLiteral("assistant"),
-            isProcessing: z.boolean(),
-            tool_calls: z.array(ToolCall.Schema).optional()
+            data: z.object({
+                isProcessing: z.boolean(),
+                tool_calls: z.array(ToolCall.Schema).optional(),
+            }),
         })
 
-        export const Tool = Message.Base.extend({
+
+        export const Tool = Base.extend({
             role: configLiteral("tool"),
-            tool_call_id: ToolCall.Id,
-            tool_name: z.string(),
-            status: ToolCall.Status,
-            error: z.string().optional(),
+            data: z.object({
+                tool_call_id: ToolCall.Id,
+                tool_name: z.string(),
+                status: ToolCall.Status,
+                error: z.string().optional(),
+            }),
         })
 
-        export const System = Message.Base.extend({
+        export const System = Base.extend({
             role: configLiteral("system"),
+            data: z.object({}).optional(),
         })
 
         export interface Assistant extends z.infer<typeof Message.Assistant> { }
@@ -104,22 +111,13 @@ export namespace Chat {
     }
     export type Message = z.infer<typeof Message.Schema>
 
-
-    export const Meta = z.object({
+    export const Schema = z.object({
         id: Chat.Id,
         name: z.string(),
         workflow_id: Workflow.Id,
         created_at: z.iso.datetime(),
         updated_at: z.iso.datetime(),
     })
-    export type Meta = z.infer<typeof Meta>
-
-
-    export const Schema = Meta.extend({
-        messages: z.array(Message.Schema),
-    })
-    export type Schema = z.infer<typeof Schema>
-
 
     export namespace Event {
         export namespace ResponseCreated {
@@ -146,13 +144,10 @@ export namespace Chat {
             export namespace Send {
                 export const Request = z.lazy(() => z.object({
                     message: Chat.Message.Schema,
-                    workflow: Workflow.Schema,
-                    snapshot: Runtime.Snapshot.Schema
                 }))
                 export type Request = z.infer<typeof Request>
 
                 export const Response = z.object({
-                    jobId: z.string().brand("JobId"),
                     responseMessage: Chat.Message.Assistant,
                 })
                 export type Response = z.infer<typeof Response>
@@ -167,7 +162,7 @@ export namespace Chat {
 
             export namespace Erase {
                 export const Request = z.object({
-                    chatId: Chat.Id,
+                    messageId: Chat.Message.Id,
                 })
                 export type Request = z.infer<typeof Request>
 
@@ -248,11 +243,13 @@ export namespace Chat {
         }
 
         export namespace Create {
-            export const Request = z.object({})
+            export const Request = z.object({ 
+                workflow_id: Workflow.Id 
+            })
             export type Request = z.infer<typeof Request>
 
             export const Response = z.object({
-                chatId: Chat.Id,
+                chat: Chat.Schema
             })
             export type Response = z.infer<typeof Response>
         }
@@ -271,6 +268,7 @@ export namespace Chat {
 
             export const Response = z.object({
                 chat: Chat.Schema,
+                messages: z.array(Chat.Message.Schema),
             })
             export type Response = z.infer<typeof Response>
         }
@@ -287,7 +285,7 @@ export namespace Chat {
             export type Request = z.infer<typeof Request>
 
             export const Response = z.object({
-                chatMetas: z.array(Chat.Meta),
+                chats: z.array(Chat.Schema),
             })
             export type Response = z.infer<typeof Response>
         }
@@ -299,3 +297,4 @@ export namespace Chat {
         }
     }
 }
+export type Chat = z.infer<typeof Chat.Schema>

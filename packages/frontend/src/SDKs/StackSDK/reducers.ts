@@ -44,7 +44,7 @@ export const stackReducers = {
 } satisfies StackSDKReducers
 
 
-type StackSDKReducers = {
+interface StackSDKReducers {
     push: (state: StackSDK.State, panelId: string, renderer: StackSDK.Renderer) => void
     pop: (state: StackSDK.State, panelId: string) => void
     popAll: (state: StackSDK.State) => void

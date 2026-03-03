@@ -1,6 +1,6 @@
 import { WorkflowCompiler } from "./compiler";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
-import { Foundations, Orchestrator, Runtime } from "@vx-agent-editor/shared/domain";
+import { Foundations, Orchestrator, Execution } from "@vx-agent-editor/shared/domain";
 import { Synthesizer } from "./synthesizer";
 import { RuntimeNode, RuntimeState, RuntimeCompiledGraph } from "./runtime"
 import { Emitter } from "./event/emitter";
@@ -98,8 +98,12 @@ export class AggexEngine {
     }
 
 
-    public compile(workflow: Workflow, emit: Emitter, snapshot: Runtime.Snapshot) {
-        return this.compiler.compile(workflow, emit, this.runNode.bind(this), snapshot)
+    public compile(
+        workflow: Workflow,
+        emit: Emitter, 
+        executionContext: Execution.Context
+    ) {
+        return this.compiler.compile(workflow, emit, this.runNode.bind(this), executionContext)
     }
 
     public async *stream(

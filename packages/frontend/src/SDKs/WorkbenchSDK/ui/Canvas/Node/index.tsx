@@ -9,6 +9,7 @@ import { Workflow } from '@vx-agent-editor/shared/domain';
 import { NodeToolbar, Position } from '@xyflow/react';
 import { NodeCustomToolbar } from './CustomToolbar';
 import { cn } from '@/utils/styleUtils';
+import { OrchestratorSDK } from '@/SDKs/OrchestratorSDK/sdk';
 
 const WorkbenchNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const node = WorkbenchSDK.useStore(s => s.workflow.data.nodes[props.id as Workflow.Node.Id])
@@ -34,6 +35,9 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
   let backgroundColor = 'var(--secondary)';
   let borderColor = "var(--border)";
 
+
+  const executionStatus = OrchestratorSDK.useStore(s => s.nodeStatuses[node.id]);
+
   if (node.accent) {
     backgroundColor = `color-mix(in srgb, ${node.accent} 22%, var(--card))`;
     borderColor = `color-mix(in srgb, ${node.accent} 50%, var(--border))`;
@@ -56,7 +60,8 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
       )}
         style={{ backgroundColor, borderColor }}
       >
-        <NodeHeader node={node} isWorkflowLocked={isWorkflowLocked} />
+        <NodeHeader executionStatus={executionStatus} node={node} isWorkflowLocked={isWorkflowLocked} />
+
         {node.isMinimized === false &&
           <div className='pt-1 bg-card/80 border border-border/50 rounded-b-[22px] rounded-t-lg shadow-sm shadow-black/10'>
             <NodeInputs node={node} isWorkflowLocked={isWorkflowLocked} />
@@ -64,7 +69,7 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
           </div>
         }
 
-        <div className='absolute z-[-1] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-4xl duration-700 bg-sky-300/80 border-2  animate-ping-fixed-50 pointer-events-none' />
+        {/* <div className='absolute z-[-1] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-4xl duration-500 bg-sky-300/80   animate-ping-fixed-50 pointer-events-none' /> */}
 
       </div>
     </>

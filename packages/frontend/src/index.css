@@ -129,12 +129,13 @@ code {
   --error-red-border: oklch(0.65 0.22 27);
 
   /* Success states */
-  --success-background: #E8F5E5;
-  --success-foreground: oklch(0.35 0.18 145);
+  --success-background: var(--color-green-100);
+  --success-foreground: var(--color-green-700);
 
   /* Warning states */
   --warning: oklch(0.75 0.15 85);
-  --warning-foreground: oklch(0.3 0.12 85);
+  --warning-background: #FDF6E3;
+  --warning-foreground: var(--color-amber-700);
   --warning-text: oklch(0.4 0.15 85);
 
   /* Info states */
@@ -317,6 +318,9 @@ code {
 
   --info-background: oklch(0.25 0.08 240);
   --info-foreground: oklch(0.75 0.18 240);
+
+  --warning-background: oklch(0.25 0.08 85);
+  --warning-foreground: oklch(0.75 0.15 85);
 
   --placeholder: oklch(0.4 0.01 264);
   --placeholder-foreground: oklch(0.6 0.01 264);

@@ -2,8 +2,8 @@ import { z } from "zod"
 import { Workflow } from "./Workflow"
 import { Chat } from "./Chat"
 
-export namespace Runtime {
-    export namespace Snapshot {
+export namespace Execution {
+    export namespace Context {
         export const Schema = z.object({
             node_outputs: z.record(Workflow.Node.Id, z.any()).default(() => ({})),
             node_messages: z.record(Workflow.Node.Id, z.string()).default(() => ({})),
@@ -23,7 +23,7 @@ export namespace Runtime {
         export const Update = Schema.partial()
         export type Update = z.infer<typeof Update>
     }
-    export type Snapshot = z.infer<typeof Snapshot.Schema>
+    export type Context = z.infer<typeof Context.Schema>
 
 
     export namespace NodeStatus {

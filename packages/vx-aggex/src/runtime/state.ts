@@ -1,30 +1,30 @@
 import { CompiledStateGraph, MessagesValue, ReducedValue, StateSchema, UntrackedValue } from "@langchain/langgraph";
-import { Runtime } from "@vx-agent-editor/shared/domain";
+import { Execution } from "@vx-agent-editor/shared/domain";
 import { StreamController } from "src/StreamController";
 
 export namespace RuntimeState {
     export const Schema = new StateSchema({
         node_outputs: new ReducedValue(
-            Runtime.Snapshot.Schema.shape.node_outputs,
+            Execution.Context.Schema.shape.node_outputs,
             {
                 reducer: (x, y) => ({ ...x, ...y }),
             }
         ),
         messages: MessagesValue,
         attachments: new ReducedValue(
-            Runtime.Snapshot.Schema.shape.attachments,
+            Execution.Context.Schema.shape.attachments,
             {
                 reducer: (x, y) => ({ ...x, ...y }),
             }
         ),
         metadata: new ReducedValue(
-            Runtime.Snapshot.Schema.shape.metadata,
+            Execution.Context.Schema.shape.metadata,
             {
                 reducer: (x, y) => ({ ...x, ...y }),
             }
         ),
         node_messages: new ReducedValue(
-            Runtime.Snapshot.Schema.shape.node_messages,
+            Execution.Context.Schema.shape.node_messages,
             {
                 reducer: (x, y) => ({ ...x, ...y }),
             }

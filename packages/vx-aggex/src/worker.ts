@@ -29,8 +29,8 @@ export class AggexWorkerImpl {
     private processQueueItem = async (
         { data: queueItem }: { data: Orchestrator.ExecutionQueue.Item }
     ) => {
-        const { workflow, jobId, snapshot } = queueItem;
-        console.log("Processing Queue Item ", queueItem.jobId, " worlflow id ", queueItem.workflow.id, " SNAPSHOT ", JSON.stringify(snapshot, null, 2))
+        const { workflow, jobId, executionContext } = queueItem;
+        console.log("Processing Queue Item ", queueItem.jobId, " worlflow id ", queueItem.workflow.id, " EXECUTION CONTEXT ", JSON.stringify(executionContext, null, 2))
 
         const eventBuilder = new EventBuilder(
             jobId,
@@ -43,7 +43,7 @@ export class AggexWorkerImpl {
 
         emit(b => b.workflow.started());
 
-        const { compiledGraph, state } = await this.engine.compile(workflow, emit, snapshot)
+        const { compiledGraph, state } = await this.engine.compile(workflow, emit, executionContext)
 
         try {
             for await (const payload of this.engine.stream(compiledGraph, state)) {

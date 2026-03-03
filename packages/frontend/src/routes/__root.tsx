@@ -6,6 +6,7 @@ import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { NotificationSDK } from '@/vx-ui/SDKs/NotificationSDK'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import ThemeSelector from '@/SDKs/SystemSDK/ui/ThemeSelector'
+import VexrLabsWatermark from '@/vx-ui/brands/vexrWatermark'
 
 interface RouterContext {
     auth: AuthSDK.State
@@ -24,6 +25,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
                 <Outlet />
                 {/* <TanStackRouterDevtools /> */}
             </QuerySDK.Provider>
+
+            <VexrLabsWatermark/>
         </>
     ),
 })
