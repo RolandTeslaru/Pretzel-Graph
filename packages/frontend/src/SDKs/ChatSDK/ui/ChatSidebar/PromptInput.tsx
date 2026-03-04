@@ -24,13 +24,8 @@ const PromptInput = () => {
     const onSubmit = (data: PromptFormValues) => {
         if (!data.prompt.trim()) return;
 
-        const workflow = WorkbenchSDK.state.workflow;
-        const executionContext = OrchestratorSDK.state.executionContext;
-
-        ChatSDK.actions.message.send({ 
+        ChatSDK.actions.sendMessage({ 
             content: data.prompt.trim(),
-            workflow,
-            executionContext
          })
         reset({ prompt: "" })
     }

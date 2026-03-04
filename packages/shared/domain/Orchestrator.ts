@@ -4,6 +4,7 @@ import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
 import { type AxiosInstance } from "axios"
 import { Execution as ExecutionD } from "./Execution"
+import { Chat } from "./Chat"
 
 export namespace Orchestrator {
     export namespace Job {
@@ -48,7 +49,32 @@ export namespace Orchestrator {
             jobId: Orchestrator.Job.Id,
             workflowId: Workflow.Id,
         })
-        
+
+        export namespace Compilation {
+            export const Started = Base.extend({
+                type: z.literal('compilation:started'),
+            })
+
+            export const Completed = Base.extend({
+                type: z.literal('compilation:completed'),
+            })
+
+            export const Failed = Base.extend({
+                type: z.literal('compilation:failed'),
+                error: z.string()
+            })
+
+            export type Started = z.infer<typeof Started>
+            export type Completed = z.infer<typeof Completed>
+            export type Failed = z.infer<typeof Failed>
+
+            export const Schema = z.discriminatedUnion("type", [
+                Started,
+                Completed,
+                Failed,
+            ])
+        }
+
         export namespace Job {
             export const Started = Base.extend({
                 type: z.literal('started'),
@@ -148,7 +174,10 @@ export namespace Orchestrator {
             Job.MessageChunk,
             Job.Node.Started,
             Job.Node.Completed,
-            Job.Node.Error
+            Job.Node.Error,
+            Compilation.Started,
+            Compilation.Completed,
+            Compilation.Failed
         ])
     }
     export type Event = z.infer<typeof Event.Schema>

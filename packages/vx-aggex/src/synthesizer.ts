@@ -1,8 +1,9 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { LC } from "./langchain";
-import { Foundations, Orchestrator, Execution } from "@vx-agent-editor/shared/domain";
+import { Foundations, Orchestrator, Execution, Workflow } from "@vx-agent-editor/shared/domain";
 import { StreamController } from "./StreamController";
 import { RuntimeState } from "./runtime";
+import { Emitter } from "./event/emitter";
 
 export class Synthesizer {
 
@@ -128,11 +129,23 @@ export class Synthesizer {
         );
     }
 
-    public static synthesizeState(executionContext: Execution.Context) {
+    public static synthesizeState(props: { 
+        executionContext: Execution.Context, 
+        workflow: Workflow, 
+        workflowCache: Workflow.Cache,
+        emit: Emitter,
+        jobId: Orchestrator.Job.Id
+    }) {
+        const { executionContext, workflow, workflowCache, emit, jobId } = props
+
         const syntheticState = {
             ...executionContext,
+            workflow,
+            workflowCache,
+            jobId,
+            emit,
             streamController: new StreamController()
-        } as unknown as RuntimeState
+        } as unknown as RuntimeState;
 
         return syntheticState;
     }
