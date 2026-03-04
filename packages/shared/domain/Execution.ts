@@ -10,6 +10,7 @@ export namespace Execution {
             messages: z.array(Chat.Message.Schema).default(() => ([])),
             attachments: z.record(z.string(), Chat.Attachment.Schema).default(() => ({})),
             metadata: z.record(z.string(), z.any()).default(() => ({})),
+            chatId: Chat.Id.optional(),
         })
     
         export const INITIAL = {

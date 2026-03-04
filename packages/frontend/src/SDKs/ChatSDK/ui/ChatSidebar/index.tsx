@@ -3,7 +3,7 @@ import { ChatSDK } from '../../sdk'
 import { StackSDK } from '@/SDKs/StackSDK'
 import PromptInput from './PromptInput'
 import MessagesArea from './MessagesArea'
-import ChatSelectPanel from './ChatSelectPanel'
+import ChatSelect from './ChatSelect'
 import { SystemIcons } from '@/vx-ui/icons'
 import { Button, DropdownMenu } from '@/vx-ui/foundations'
 
@@ -38,8 +38,8 @@ const ChatSidebarContent = () => {
                 </h4>
 
                 <div className='flex flex-row gap-1 ml-auto my-auto h-auto'>
-                    <Button size="icon-xs" variant="ghost" className="">
-                        <SystemIcons.Maximize2 className='text-secondary-foreground'/>
+                    <Button size="icon-xs" variant="ghost" className="" onClick={() => ChatSDK.actions.newChat()}>
+                        <SystemIcons.Plus className='text-secondary-foreground'/>
                     </Button>
                     <DropdownMenu.Root>
                         <DropdownMenu.Trigger asChild>
@@ -48,9 +48,12 @@ const ChatSidebarContent = () => {
                             </Button>
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content align="end" sideOffset={6} className='w-72'>
-                            <ChatSelectPanel />
+                            <ChatSelect />
                         </DropdownMenu.Content>
                     </DropdownMenu.Root>
+                    <Button size="icon-xs" variant="ghost" className="">
+                        <SystemIcons.Maximize2 className='text-secondary-foreground'/>
+                    </Button>
                 </div>
             </div>
             <MessagesArea />

@@ -1,31 +1,32 @@
 import axios from "axios";
-import { supabase } from "@/libs/supabase"; // You need to create this!
-import { SDK } from "../SDKManager";
+import { container, singleton } from "tsyringe";
 
-@SDK("ApiInterceptor")
-export class ApiInterceptorSDKImpl {
+@singleton()
+export class AxiosServiceImpl {
     constructor() {
         this.init();
     }
+
     public readonly api = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
+        baseURL: process.env.API_URL,
     });
+
     public init() {
         // REQUEST INTERCEPTOR: Inject Token
         this.api.interceptors.request.use(async (config) => {
-            // All requests are for the new backend now
-            const { data } = await supabase.auth.getSession();
-            const token = data.session?.access_token;
+            const token = process.env.SUPABASE_ROLE_KEY;
+
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
+
             return config;
         });
-        // RESPONSE INTERCEPTOR: Global Error Handling (Optional)
+
+        // RESPONSE INTERCEPTOR: Global Error Handling
         this.api.interceptors.response.use(
             (response) => response,
             (error) => {
-                // If 401, Supabase client likely handles it, but good to debug
                 if (error.response?.status === 401) {
                     console.warn("Backend rejected token.");
                 }
@@ -34,5 +35,5 @@ export class ApiInterceptorSDKImpl {
         );
     }
 }
-export const ApiInterceptorSDK = SDK.get<ApiInterceptorSDKImpl>("ApiInterceptor");
-export const api = ApiInterceptorSDK.api;
+
+export const AxiosService = container.resolve(AxiosServiceImpl);

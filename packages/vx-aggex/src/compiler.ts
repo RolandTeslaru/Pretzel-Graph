@@ -5,7 +5,7 @@ import { Synthesizer } from "./synthesizer";
 import { Emitter } from "./event/emitter";
 import type { AggexEngine } from "./engine";
 import { RuntimeState } from "./runtime";
-import { Execution } from "@vx-agent-editor/shared/domain";
+import { Execution, Orchestrator } from "@vx-agent-editor/shared/domain";
 
 export class WorkflowCompiler {
     constructor() { }
@@ -14,11 +14,18 @@ export class WorkflowCompiler {
         workflow: Workflow,
         emit: Emitter,
         nodeRunnerFn: AggexEngine["runNode"],
-        executionContext: Execution.Context
+        executionContext: Execution.Context,
+        jobId: Orchestrator.Job.Id
     ) {
         const workflowCache = Workflow.createCache(workflow);
 
-        const state = Synthesizer.synthesizeState(executionContext);
+        const state = Synthesizer.synthesizeState({
+            executionContext,
+            workflow,
+            workflowCache,
+            jobId,
+            emit
+        });
 
         // Create the state graph
         const graph = new StateGraph(RuntimeState.Schema);
@@ -28,17 +35,24 @@ export class WorkflowCompiler {
         // Add nodes to the graph along with their run function
         for (const node of Object.values(nodes)) {
 
-            const VerticeConstructor = await CatalogueService.getNode(node.blueprintId);
+            const NodeConstructor = await CatalogueService.getNode(node.blueprintId);
 
-            if (!VerticeConstructor)
-                throw new Error(`Could not find vertice with blueprintId ${node.blueprintId}`)
+            if (!NodeConstructor)
+                throw new Error(`Could not find node with blueprintId ${node.blueprintId}`)
 
-            const vertex = new VerticeConstructor({
+            const vertex = new NodeConstructor({
+                workflow,
+                workflowNode: node,
+                emit,
+            });
+
+            await vertex.init({
                 workflow,
                 workflowCache,
-                workflowNode: node,
-                state
-            });
+                state,
+                emit,
+                jobId
+            })
             
             graph.addNode(node.id, async (state) => {
                 return nodeRunnerFn(state, node, vertex, workflow, workflowCache, emit);
@@ -63,8 +77,6 @@ export class WorkflowCompiler {
         });
 
         const compiledGraph = graph.compile();
-
-
 
         return { compiledGraph, state };
     }

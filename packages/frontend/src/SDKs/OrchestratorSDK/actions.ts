@@ -1,8 +1,9 @@
 import { toast } from "sonner";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
-import { Orchestrator, Validation } from "@vx-agent-editor/shared/domain";
+import { Chat, Orchestrator, Validation } from "@vx-agent-editor/shared/domain";
 import { api } from "../ApiInterceptorSDK";
 import { type OrchestratorSDKImpl } from "./sdk"
+import { ChatSDK } from "../ChatSDK/sdk";
 
 export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
     return {
@@ -12,7 +13,6 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                     toast.warning("Workflow is already running")
                     return sdk.state.jobId
                 }
-
 
                 sdk.setState(s => {
                     sdk.reducers.nodeStatuses.reset(s);
@@ -29,10 +29,11 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                 }
 
                 const executionPromise = Orchestrator.API.Execution.run(
-                    api, {
-                    workflow,
-                    executionContext: sdk.state.executionContext
-                }
+                    api, 
+                    {
+                        workflow,
+                        executionContext: sdk.state.executionContext
+                    }
                 );
 
                 toast.promise(executionPromise, {
@@ -71,6 +72,6 @@ export type OrchestratorSDKActions = {
         execution: {
             run: () => Promise<Orchestrator.Job.Id | null>,
             pause: (jobId: Orchestrator.Job.Id) => Promise<void>,
-            terminate: (jobId: Orchestrator.Job.Id) => Promise<void>
+            terminate: (jobId: Orchestrator.Job.Id) => Promise<void>,
         }
     }

@@ -1,4 +1,3 @@
-import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
@@ -40,87 +39,55 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
 
     public readonly selectors: OrchestratorSDK.Selectors = {}
 
-
-    public useJobEvents = (
-        jobId: Orchestrator.Job.Id,
-        callback: (event: Orchestrator.Event.Job) => void
-    ) => {
-        useEffect(() => {
-            const topic = `job:${jobId}` as Realtime.Topic;
-            const unsubscribe = RealtimeSDK.subscribeToTopic(topic, callback);
-            return () => unsubscribe();
-        }, [jobId, callback])
-    }
-
-
-    public handleOnJobChange = (
-        prevJobId: Orchestrator.Job.Id | undefined, 
-        newJobId: Orchestrator.Job.Id | undefined
-    ) => {
-        if (prevJobId === newJobId)
-            return;
-
-        if (!newJobId){
-            this.runtime.unsubscribeFromJobTopic?.();
-            return;
+    
+    public handleOnEvent = (event: Orchestrator.Event) => {
+        switch (event.type) {
+            case "started":
+                this.setState(s => {
+                    s.jobId = event.jobId;
+                    s.executionStatus = "running";
+                })
+                break;
+            case "completed":
+                this.setState(s => {
+                    s.jobId = undefined;
+                    s.executionStatus = "completed";
+                })
+                break;
+            case "failed":
+                this.setState(s => {
+                    s.jobId = undefined;
+                    s.executionStatus = "failed";
+                })
+                break;
+            case "node:started":
+                this.setState(s => {
+                    s.nodeStatuses[event.nodeId] = {
+                        status: "running",
+                        started_at: new Date().toISOString()
+                    }
+                })
+                break;
+            case "node:completed":
+                this.setState(s => {
+                    s.nodeStatuses[event.nodeId] = {
+                        status: "completed",
+                        started_at: s.nodeStatuses[event.nodeId]?.started_at,
+                        completed_at: new Date().toISOString()
+                    }
+                })
+                break;
+            case "node:error":
+                this.setState(s => {
+                    s.nodeStatuses[event.nodeId] = {
+                        status: "failed",
+                        error: event.error,
+                        started_at: s.nodeStatuses[event.nodeId]?.started_at,
+                        completed_at: new Date().toISOString()
+                    }
+                })
+                break;
         }
-
-        console.log
-
-        const topic = Orchestrator.Event.getTopic(newJobId);
-
-        this.runtime.unsubscribeFromJobTopic = RealtimeSDK.subscribeToTopic(
-            topic,
-            (event: Orchestrator.Event) => {
-                console.log("Received event for job ", newJobId, event);
-                switch (event.type) {
-                    case "started":
-                        OrchestratorSDK.setState(s => {
-                            s.jobId = event.jobId;
-                            s.executionStatus = "running";
-                        })
-                        break;
-                    case "completed":
-                        OrchestratorSDK.setState(s => {
-                            s.jobId = undefined;
-                            s.executionStatus = "completed";
-                        })
-                        break;
-                    case "failed":
-                        OrchestratorSDK.setState(s => {
-                            s.jobId = undefined;
-                            s.executionStatus = "failed";
-                        })
-                        break;
-                    case "node:started":
-                        OrchestratorSDK.setState(s => {
-                            s.nodeStatuses[event.nodeId] = {
-                                status: "running",
-                                started_at: new Date().toISOString()
-                            }
-                        })
-                        break;
-                    case "node:completed":
-                        OrchestratorSDK.setState(s => {
-                            s.nodeStatuses[event.nodeId] = {
-                                status: "completed",
-                                started_at: s.nodeStatuses[event.nodeId]?.started_at,
-                                completed_at: new Date().toISOString()
-                            }
-                        })
-                        break;
-                    case "node:error":
-                        OrchestratorSDK.setState(s => {
-                            s.nodeStatuses[event.nodeId] = {
-                                status: "failed",
-                                error: event.error,
-                                started_at: s.nodeStatuses[event.nodeId]?.started_at,
-                                completed_at: new Date().toISOString()
-                            }
-                        })
-                        break;
-                }
-            });
     }
 }
 
@@ -128,13 +95,18 @@ export const OrchestratorSDK = SDK.get<OrchestratorSDKImpl>("Orchestrator")
 
 
 OrchestratorSDK.useStore.subscribe((state, prevState) => {
-
-    console.log("JobId changed from ", prevState.jobId, " to ", state.jobId);
-
     if (state.jobId === prevState.jobId)
         return;
 
-    OrchestratorSDK.handleOnJobChange(prevState.jobId, state.jobId)
+    if(!state.jobId){
+        OrchestratorSDK.runtime.unsubscribeFromJobTopic?.();
+        return;
+    }
+
+    OrchestratorSDK.runtime.unsubscribeFromJobTopic = RealtimeSDK.subscribeToTopic(
+        Orchestrator.Event.getTopic(state.jobId),
+        OrchestratorSDK.handleOnEvent
+    )
 })
 
 

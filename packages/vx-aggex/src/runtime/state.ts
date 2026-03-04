@@ -1,5 +1,6 @@
 import { CompiledStateGraph, MessagesValue, ReducedValue, StateSchema, UntrackedValue } from "@langchain/langgraph";
-import { Execution } from "@vx-agent-editor/shared/domain";
+import { Execution, Orchestrator, Workflow } from "@vx-agent-editor/shared/domain";
+import { Emitter } from "src/event/emitter";
 import { StreamController } from "src/StreamController";
 
 export namespace RuntimeState {
@@ -23,13 +24,13 @@ export namespace RuntimeState {
                 reducer: (x, y) => ({ ...x, ...y }),
             }
         ),
-        node_messages: new ReducedValue(
-            Execution.Context.Schema.shape.node_messages,
-            {
-                reducer: (x, y) => ({ ...x, ...y }),
-            }
-        ),
-        streamController: new UntrackedValue<StreamController>()
+        chatId: Execution.Context.Schema.shape.chatId,
+        streamController: new UntrackedValue<StreamController>(),
+        emit: new UntrackedValue<Emitter>(),
+        jobId: new UntrackedValue<Orchestrator.Job.Id>(),
+        workflowCache: new UntrackedValue<Workflow.Cache>(),
+        // TODO: fix typing here
+        workflow: new UntrackedValue<any>(),
     });
     export const Update = RuntimeState.Schema.Update
     export type Update = typeof Update

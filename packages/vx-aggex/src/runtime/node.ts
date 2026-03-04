@@ -1,23 +1,24 @@
-import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import { Foundations, Orchestrator, Workflow } from "@vx-agent-editor/shared/domain";
 import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "src/types";
 import { RuntimeState } from "./state";
+import { Emitter } from "../event/emitter"
 
 export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
 
-    public workflowNode: Workflow.Node;
+    public readonly workflowNode: Workflow.Node;
+    public readonly emit: Emitter;
+    public fields: InferFields<T_Blueprint>
 
     constructor(props: {
-        state: RuntimeState;
         workflowNode: Workflow.Node;
         workflow: Workflow;
-        workflowCache: Workflow.Cache;
+        emit: Emitter;
     }) {
         this.workflowNode = props.workflowNode;
 
         this.fields = RuntimeNode.resolveFields<T_Blueprint>(this.workflowNode.id, props.workflow)
+        this.emit = props.emit;
     }
-
-    public fields: InferFields<T_Blueprint>
 
 
     /**
@@ -31,6 +32,16 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
         globalState: RuntimeState,
         inputs: InferInputs<T_Blueprint>
     ): Promise<InferOutputs<T_Blueprint>>;
+
+    public init(
+        props: {
+            state: RuntimeState;
+            workflow: Workflow;
+            workflowCache: Workflow.Cache;
+            emit: Emitter
+            jobId: Orchestrator.Job.Id
+        }
+    ): Promise<void> | void {}
 
     protected async onConversion(
         currentBlueprint: T_Blueprint
@@ -82,4 +93,5 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
 
 export namespace RuntimeNode {
     export type ConstructorProps = ConstructorParameters<typeof RuntimeNode>[0]
+    export type InitProps = Parameters<RuntimeNode<Foundations.Blueprint>["init"]>[0]
 }
