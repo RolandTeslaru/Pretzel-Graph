@@ -8,10 +8,7 @@ import { WithSupabase } from "@/handlers/database";
 @Service("Chat")
 export class ChatServiceImpl {
 
-    constructor() { 
-
-
-    }
+    constructor() { }
 
     private assertSupabaseOk(error: unknown, operation: string): void {
         if (!error) return;
@@ -26,14 +23,14 @@ export class ChatServiceImpl {
 
     private readonly dbOps: ChatService.DbOps = {
         chat: {
-            create: async (supabase, userId, workflow_id) => {
-                
+            create: async (supabase, userId, workflow_id, name = "New Chat") => {
+
                 const { data, error } = await supabase
                     .from('chats')
                     .insert({
                         user_id: userId,
                         workflow_id,
-                        name: "New Chat",
+                        name,
                         created_at: new Date(),
                         updated_at: new Date(),
                     })
@@ -110,12 +107,12 @@ export class ChatServiceImpl {
     public readonly ops: ChatService.Ops = {
         create: async (token, payload) => {
             const supabase = createAuthenticatedClient(token);
-            const { workflow_id } = payload
+            const { workflow_id, name } = payload
 
             const userId = await getUserId(supabase) as Auth.User.Id;
             if (!userId) throw new Error("User not found");
 
-            const chat = await this.dbOps.chat.create(supabase, userId, workflow_id);
+            const chat = await this.dbOps.chat.create(supabase, userId, workflow_id, name);
             return { chat }
         },
         get: async (token, payload) => {
@@ -135,37 +132,24 @@ export class ChatServiceImpl {
         erase: async (token, payload) => {
             const supabase = createAuthenticatedClient(token);
             await this.dbOps.chat.erase(supabase, payload.chatId);
+            return {}
         },
         message: {
             send: async (token, { message }) => {
                 const supabase = createAuthenticatedClient(token);
-                const chatId = message.chat_id;
-                
                 await this.dbOps.message.add(supabase, message)
-
-                const responseMessageId = Chat.Message.createId();
-
-                const responseMessage = {
-                    id: responseMessageId,
-                    chat_id: chatId,
-                    role: "assistant",
-                    content: "",
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    attachments: {},
-                    data: {
-                        isProcessing: true,
-                        tool_calls: []
-                    }
-                } satisfies Chat.Message.Assistant;
-
-                await this.dbOps.message.add(supabase, responseMessage)
-
-                return { responseMessage }
+                return { };
             },
+            respond: async (token, { responseMessage }) => {
+                const supabase = createAuthenticatedClient(token);
+                
+                await this.dbOps.message.add(supabase, responseMessage)
+                return { };
+            }, 
             erase: async (token, payload) => {
                 const supabase = createAuthenticatedClient(token);
                 await this.dbOps.message.erase(supabase, payload.messageId);
+                return {};
             }
         }
     }
@@ -194,16 +178,21 @@ export class ChatServiceImpl {
             erase: withAuth(async (token, req) => {
                 const payload = Chat.API.Message.Erase.Request.parse(req.body);
                 return await this.ops.message.erase(token, payload);
-            })
+            }),
+            respond: withAuth(async (token, req) => {
+                const payload = Chat.API.Message.Respond.Request.parse(req.body);
+                return await this.ops.message.respond(token, payload);
+             })
         },
     }
 
     public readonly routes = Router()
         .post("/create", this.controller.create)
         .post("/get", this.controller.get)
-        .get("/list", this.controller.list)
+        .post("/list", this.controller.list)
         .post("/erase", this.controller.erase)
         .post("/message/send", this.controller.message.send)
+        .post("/message/respond", this.controller.message.respond)
         .post("/message/erase", this.controller.message.erase)
 }
 
@@ -214,8 +203,8 @@ export const ChatService = Service.get<ChatServiceImpl>("Chat");
 export namespace ChatService {
     export type DbOps = {
         chat: {
-            create: WithSupabase<(userId: Auth.User.Id, workflow_id: Workflow.Id) => Promise<Chat>>
-            get: WithSupabase<(chatId: Chat.Id) => Promise<{ chat: Chat, messages: Chat.Message[] }>>
+            create: WithSupabase<(userId: Auth.User.Id, workflow_id: Workflow.Id, name?: string) => Promise<Chat>>
+            get: WithSupabase<(chatId: Chat.Id) => Promise<Chat.API.Get.Response>>
             list: WithSupabase<(userId: Auth.User.Id) => Promise<Chat[]>>
             erase: WithSupabase<(chatId: Chat.Id) => Promise<void>>
         }
@@ -229,10 +218,11 @@ export namespace ChatService {
         create: WithAuth<(payload: Chat.API.Create.Request) => Promise<Chat.API.Create.Response>>
         get: WithAuth<(payload: Chat.API.Get.Request) => Promise<Chat.API.Get.Response>>
         list: WithAuth<() => Promise<Chat.API.List.Response>>
-        erase: WithAuth<(payload: Chat.API.Erase.Request) => Promise<void>>
+        erase: WithAuth<(payload: Chat.API.Erase.Request) => Promise<Chat.API.Erase.Response>>
         message: {
             send: WithAuth<(payload: Chat.API.Message.Send.Request) => Promise<Chat.API.Message.Send.Response>>
-            erase: WithAuth<(payload: Chat.API.Message.Erase.Request) => Promise<void>>,
+            respond: WithAuth<(payload: Chat.API.Message.Respond.Request) => Promise<Chat.API.Message.Respond.Response>>
+            erase: WithAuth<(payload: Chat.API.Message.Erase.Request) => Promise<Chat.API.Message.Erase.Response>>,
         }
     }
 
@@ -243,6 +233,7 @@ export namespace ChatService {
         erase: (req: Request, res: Response) => void
         message: {
             send: (req: Request, res: Response) => void
+            respond: (req: Request, res: Response) => void
             erase: (req: Request, res: Response) => void
         }
     }

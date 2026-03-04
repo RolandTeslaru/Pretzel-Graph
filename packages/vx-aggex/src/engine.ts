@@ -17,7 +17,7 @@ export class AggexEngine {
 
     private async runNode(
         state: RuntimeState,
-        activeNode: Workflow.Node,
+        activeNode: Workflow.Node, 
         nodeInstance: RuntimeNode<Foundations.Blueprint>,
         workflow: Workflow,
         workflowCache: Workflow.Cache,
@@ -25,14 +25,27 @@ export class AggexEngine {
     ) {
         console.log(`Executing Node: ${activeNode.displayName} (${activeNode.id})`);
 
-        emit(b => b.workflow.node.started(activeNode.id))
+        emit({
+            jobId: state.jobId,
+            workflowId: workflow.id,
+            type: "node:started",
+            nodeId: activeNode.id,
+            topic: Orchestrator.Event.getTopic(state.jobId)
+        } satisfies Orchestrator.Event.Job.Node.Started)
 
         const inputs = this.resolveInputs(state, activeNode.id, workflow, workflowCache);
 
-
         try {
             const result = await nodeInstance.run(state, inputs)
-            emit(b => b.workflow.node.completed(activeNode.id, result))
+
+            emit({
+                jobId: state.jobId,
+                workflowId: workflow.id,
+                type: "node:completed",
+                nodeId: activeNode.id,
+                topic: Orchestrator.Event.getTopic(state.jobId),
+                output: result
+            } satisfies Orchestrator.Event.Job.Node.Completed)
 
             return {
                 node_outputs: {
@@ -42,7 +55,15 @@ export class AggexEngine {
 
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error)
-            emit(b => b.workflow.node.error(activeNode.id, errorMessage))
+    
+            emit({
+                jobId: state.jobId,
+                workflowId: workflow.id,
+                type: "node:error",
+                nodeId: activeNode.id,
+                topic: Orchestrator.Event.getTopic(state.jobId),
+                error: errorMessage
+            } satisfies Orchestrator.Event.Job.Node.Error)
         }        
     }
 
@@ -101,9 +122,24 @@ export class AggexEngine {
     public compile(
         workflow: Workflow,
         emit: Emitter, 
-        executionContext: Execution.Context
+        executionContext: Execution.Context,
+        jobId: Orchestrator.Job.Id
     ) {
-        return this.compiler.compile(workflow, emit, this.runNode.bind(this), executionContext)
+        try {
+            return this.compiler.compile(workflow, emit, this.runNode.bind(this), executionContext, jobId)
+        } catch (err) {
+            console.error("Error during compilation of workflow ", workflow.id, err)
+
+            emit({
+                jobId,
+                workflowId: workflow.id,
+                type: "compilation:failed",
+                topic: Orchestrator.Event.getTopic(jobId),
+                error: err instanceof Error ? err.message : String(err)
+            } satisfies Orchestrator.Event.Compilation.Failed)
+
+            throw err;
+        }
     }
 
     public async *stream(
@@ -113,8 +149,6 @@ export class AggexEngine {
         const stream = await compiledGraph.stream(engineState, {
             streamMode: ["values", "messages", "updates"]
         })
-
-        const conversationSourceNodeId = engineState.streamController.conversationSourceNodeId;
 
         for await (const [mode, payload] of stream) {
             switch (mode) {
@@ -128,13 +162,12 @@ export class AggexEngine {
                             .map(b => typeof b === "string" ? b : ("text" in b ? b.text : ""))
                             .join("");
 
-                    const isConversation = conversationSourceNodeId === nodeId;
+                    engineState.streamController.yieldLlmChunk(nodeId, content);
 
                     yield {
                         mode: "messages",
                         nodeId,
                         content,
-                        isChatOutput: isConversation
                     }
                     break;
                 case "values":

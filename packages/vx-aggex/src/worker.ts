@@ -5,7 +5,7 @@ import { Orchestrator, Realtime, Workflow } from '@vx-agent-editor/shared/domain
 import { AggexEngine } from 'src/engine';
 import { container, singleton } from 'tsyringe';
 import { EventBuilder } from './event/builder';
-import { Emitter } from './event/emitter';
+import { Emitter, EmitterEvent } from './event/emitter';
 
 
 @singleton()
@@ -32,40 +32,60 @@ export class AggexWorkerImpl {
         const { workflow, jobId, executionContext } = queueItem;
         console.log("Processing Queue Item ", queueItem.jobId, " worlflow id ", queueItem.workflow.id, " EXECUTION CONTEXT ", JSON.stringify(executionContext, null, 2))
 
-        const eventBuilder = new EventBuilder(
-            jobId,
-            workflow.id,
-        )
-
-        const emit: Emitter = (builderFn) => {
-            this.publishToRedis(builderFn(eventBuilder))
+        const emit: Emitter = (event: EmitterEvent) => {
+            this.publishToRedis(event)
         }
 
-        emit(b => b.workflow.started());
+        emit({
+            jobId,
+            workflowId: workflow.id,
+            type: "started",
+            topic: Orchestrator.Event.getTopic(jobId)
+        } satisfies Orchestrator.Event.Job.Started);
 
-        const { compiledGraph, state } = await this.engine.compile(workflow, emit, executionContext)
+        const { compiledGraph, state } = await this.engine.compile(workflow, emit, executionContext, jobId);
 
         try {
             for await (const payload of this.engine.stream(compiledGraph, state)) {
                 switch (payload.mode) {
-                    case "messages":
-                        emit(eb => eb.workflow.node.stream(payload.nodeId, payload.content, payload.isChatOutput));
-                        break
                     case "updates":
-                        emit(eb => eb.workflow.update(payload.update as any))
+                        emit({
+                            jobId,
+                            workflowId: workflow.id,
+                            type: "update",
+                            topic: Orchestrator.Event.getTopic(jobId),
+                            update: payload.update as any
+                        } satisfies Orchestrator.Event.Job.Update);
                         break
                     case "values":
                         break;
                 }
             }
 
+            state.streamController.disposeAll();
         } catch (err) {
             console.error("Error during execution of job ", jobId, err)
-            emit(eb => eb.workflow.failed((err as Error).message))
+
+            state.streamController.disposeAll();
+
+            emit({
+                jobId,
+                workflowId: workflow.id,
+                type: "failed",
+                topic: Orchestrator.Event.getTopic(jobId),
+                error: (err as Error).message
+            } satisfies Orchestrator.Event.Job.Failed);
+
             return { status: 'failed', error: (err as Error).message }
         }
 
-        emit(eb => eb.workflow.completed(""))
+        emit({
+            jobId,
+            workflowId: workflow.id,
+            type: "completed",
+            topic: Orchestrator.Event.getTopic(jobId),
+            result: "Workflow execution completed successfully"
+        } satisfies Orchestrator.Event.Job.Completed);
 
         return { status: 'completed' };
     }
@@ -76,7 +96,7 @@ export class AggexWorkerImpl {
         { connection: this.redis, autorun: false }
     )
 
-    public async publishToRedis(event: Orchestrator.Event) {
+    public async publishToRedis(event: EmitterEvent) {
         this.redis.publish(event.topic, JSON.stringify(event));
     }
 }

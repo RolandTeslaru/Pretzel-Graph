@@ -2,7 +2,7 @@ import { z } from "zod"
 import { Workflow } from "./Workflow"
 import { type AxiosInstance } from "axios"
 import { type SupabaseClient } from "@supabase/supabase-js";
-import uid from "@/utils/uid";
+import { Realtime } from "./Realtime";
 
 export namespace Chat {
 
@@ -120,41 +120,69 @@ export namespace Chat {
     })
 
     export namespace Event {
+        export function getTopic(chatId: Chat.Id) {
+            return `chat:${chatId}` as Realtime.Topic
+        }
+
+        const Base = Realtime.Event.Base.extend({
+            chatId: Chat.Id,
+        })
+
         export namespace ResponseCreated {
-            export const Schema = z.object({
+            export const Schema = Base.extend({
                 type: z.literal("response:created"),
-                responseMessageId: Message.Id,
+                responseMessage: Message.Assistant
             })
         }
         export type ResponseCreated = z.infer<typeof ResponseCreated.Schema>
 
-        export namespace MessageChunk {
-            export const Schema = z.object({
-                type: z.literal("message:chunk"),
-                chunk: z.string(),
-                targetMessageId: Message.Id,
+        export namespace ResponseChunk {
+            export const Schema = Base.extend({
+                type: z.literal("response:chunk"),
+                content: z.string(),
+                responseMessageId: Message.Id,
             })
-            export type Schema = z.infer<typeof Schema>
         }
-        export type MessageChunk = z.infer<typeof MessageChunk.Schema>
+        export type ResponseChunk = z.infer<typeof ResponseChunk.Schema>
+    
+        export const Schema = z.discriminatedUnion("type", [
+            ResponseCreated.Schema,
+            ResponseChunk.Schema,
+        ])
     }
+    export type Event = z.infer<typeof Event.Schema>
 
     export namespace API {
         export namespace Message {
             export namespace Send {
                 export const Request = z.lazy(() => z.object({
-                    message: Chat.Message.Schema,
+                    message: Chat.Message.User,
                 }))
                 export type Request = z.infer<typeof Request>
 
-                export const Response = z.object({
-                    responseMessage: Chat.Message.Assistant,
-                })
+                export const Response = z.object({})
                 export type Response = z.infer<typeof Response>
             }
             export async function send(api: AxiosInstance, req: Send.Request): Promise<Message.Send.Response> {
                 const { data } = await api.post<Send.Response>(
                     "/api/chat/message/send", req
+                )
+                return data
+            }
+
+
+            export namespace Respond {
+                export const Request = z.object({
+                    responseMessage: Chat.Message.Assistant,
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({})
+                export type Response = z.infer<typeof Response>
+            }
+            export async function respond(api: AxiosInstance, req: Respond.Request): Promise<Respond.Response> {
+                const { data } = await api.post<Respond.Response>(
+                    "/api/chat/message/respond", req
                 )
                 return data
             }
@@ -243,8 +271,9 @@ export namespace Chat {
         }
 
         export namespace Create {
-            export const Request = z.object({ 
-                workflow_id: Workflow.Id 
+            export const Request = z.object({
+                workflow_id: Workflow.Id,
+                name: z.string().optional(),
             })
             export type Request = z.infer<typeof Request>
 
@@ -263,6 +292,8 @@ export namespace Chat {
         export namespace Get {
             export const Request = z.object({
                 chatId: Chat.Id,
+                cursor: Chat.Message.Id.optional(),
+                limit: z.number().int().positive().default(50).optional(),
             })
             export type Request = z.infer<typeof Request>
 
