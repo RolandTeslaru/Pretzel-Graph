@@ -1,6 +1,6 @@
 {
-  "version": "1772661020349",
-  "generatedAt": "2026-03-04T21:50:20.349Z",
+  "version": "1772731838106",
+  "generatedAt": "2026-03-05T17:30:38.106Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -249,6 +249,45 @@
         }
       ],
       "description": "This node is a chat input"
+    },
+    "Core.Chat.Memory": {
+      "id": "Core.Chat.Memory",
+      "displayName": "Chat Memory",
+      "icon": "Memory",
+      "accent": "port-Message",
+      "fields": [
+        {
+          "id": "maxMessages",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Max Messages",
+          "tooltip": "Maximum number of messages to retain in memory.",
+          "variant": "Integer",
+          "initialValue": 50,
+          "min": 1,
+          "step": 1
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "variant": "Message",
+          "initialValue": "",
+          "required": true,
+          "internal": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "messages",
+          "displayName": "Messages",
+          "tooltip": "The conversation history from memory",
+          "variant": "Message"
+        }
+      ],
+      "description": "Stores and retrieves conversation history for chat sessions"
     },
     "Core.Chat.Output": {
       "id": "Core.Chat.Output",

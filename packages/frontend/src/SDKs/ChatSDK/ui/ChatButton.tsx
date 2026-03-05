@@ -10,7 +10,7 @@ const ChatButton = () => {
         <Button
             variant={isSidebarVisible ? "active" : "outline"}
             onClick={() => {
-                ChatSDK.actions.setSidebarVisiblity(!isSidebarVisible)
+                ChatSDK.actions.ui.setSidebarVisibility(!isSidebarVisible)
             }}
         >
             <SystemIcons.MessagesSquare />

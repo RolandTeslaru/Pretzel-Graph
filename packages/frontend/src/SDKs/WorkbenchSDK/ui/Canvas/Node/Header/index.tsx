@@ -27,7 +27,9 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionS
           <div className="truncate font-semibold text-foreground/80">
             {node.displayName}
           </div>
-          <StatusIndicator executionStatus={executionStatus} nodeId={node.id} className='absolute top-0 right-0' />
+          <div className='absolute top-1 right-2'>
+            <StatusIndicator executionStatus={executionStatus} nodeId={node.id}/>
+          </div>
         </div>
       </MinimizedHandles>
     )
