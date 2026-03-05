@@ -87,6 +87,7 @@ export class ChatServiceImpl {
         message: {
             add: async (supabase, message) => {
                 const { error } = await supabase.from('chat_messages').insert({
+                    id: message.id,
                     chat_id: message.chat_id,
                     role: message.role,
                     content: message.content,
@@ -101,6 +102,15 @@ export class ChatServiceImpl {
                 const { error } = await supabase.from('chat_messages').delete().eq('id', messageId);
                 this.assertSupabaseOk(error, "message.erase");
             },
+            update: async (supabase, messageId, content) => {
+                const { error } = await supabase
+                .from('chat_messages')
+                .update({ content })
+                .eq('id', messageId);
+                
+                console.log("Updating message", messageId, "with content", content, "errror" , error);
+                this.assertSupabaseOk(error, "message.update");
+            }
         }
     }
 
@@ -150,6 +160,11 @@ export class ChatServiceImpl {
                 const supabase = createAuthenticatedClient(token);
                 await this.dbOps.message.erase(supabase, payload.messageId);
                 return {};
+            },
+            update: async (token, { messageId, content }) => {
+                const supabase = createAuthenticatedClient(token);
+                await this.dbOps.message.update(supabase, messageId, content);
+                return {};
             }
         }
     }
@@ -182,7 +197,12 @@ export class ChatServiceImpl {
             respond: withAuth(async (token, req) => {
                 const payload = Chat.API.Message.Respond.Request.parse(req.body);
                 return await this.ops.message.respond(token, payload);
-             })
+             }),
+            update: withAuth(async (token, req) => {
+                const payload = Chat.API.Message.Update.Request.parse(req.body);
+                return await this.ops.message.update(token, payload);
+            })
+
         },
     }
 
@@ -194,6 +214,7 @@ export class ChatServiceImpl {
         .post("/message/send", this.controller.message.send)
         .post("/message/respond", this.controller.message.respond)
         .post("/message/erase", this.controller.message.erase)
+        .post("/message/update", this.controller.message.update)
 }
 
 export const ChatService = Service.get<ChatServiceImpl>("Chat");
@@ -211,6 +232,7 @@ export namespace ChatService {
         message: {
             add: WithSupabase<(message: Chat.Message) => Promise<void>>
             erase: WithSupabase<(messageId: Chat.Message.Id) => Promise<void>>
+            update: WithSupabase<(messageId: Chat.Message.Id, content: string) => Promise<void>>
         }
     }
 
@@ -223,6 +245,7 @@ export namespace ChatService {
             send: WithAuth<(payload: Chat.API.Message.Send.Request) => Promise<Chat.API.Message.Send.Response>>
             respond: WithAuth<(payload: Chat.API.Message.Respond.Request) => Promise<Chat.API.Message.Respond.Response>>
             erase: WithAuth<(payload: Chat.API.Message.Erase.Request) => Promise<Chat.API.Message.Erase.Response>>,
+            update: WithAuth<(payload: Chat.API.Message.Update.Request) => Promise<Chat.API.Message.Update.Response>>
         }
     }
 
@@ -235,6 +258,7 @@ export namespace ChatService {
             send: (req: Request, res: Response) => void
             respond: (req: Request, res: Response) => void
             erase: (req: Request, res: Response) => void
+            update: (req: Request, res: Response) => void
         }
     }
 }

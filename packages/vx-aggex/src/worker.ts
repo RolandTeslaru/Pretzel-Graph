@@ -30,7 +30,7 @@ export class AggexWorkerImpl {
         { data: queueItem }: { data: Orchestrator.ExecutionQueue.Item }
     ) => {
         const { workflow, jobId, executionContext } = queueItem;
-        console.log("Processing Queue Item ", queueItem.jobId, " worlflow id ", queueItem.workflow.id, " EXECUTION CONTEXT ", JSON.stringify(executionContext, null, 2))
+        console.log("Processing Queue Item ", queueItem.jobId, " worlflow id ", queueItem.workflow.id);
 
         const emit: Emitter = (event: EmitterEvent) => {
             this.publishToRedis(event)

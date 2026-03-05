@@ -3,7 +3,7 @@ import { SystemIcons } from '@/vx-ui/icons'
 import { motion } from 'motion/react'
 
 const ToolBubble = ({ message }: { message: Chat.Message.Tool }) => {
-    const isSuccess = message.status === "success";
+    const isSuccess = message.data.status === "success";
 
     return (
         <motion.div
@@ -17,8 +17,8 @@ const ToolBubble = ({ message }: { message: Chat.Message.Tool }) => {
                 ) : (
                     <SystemIcons.AlertTriangle className="w-3.5 h-3.5 text-destructive" />
                 )}
-                <span className="font-mono text-[11px] truncate" title={message.tool_name}>
-                    {message.tool_name}
+                <span className="font-mono text-[11px] truncate" title={message.data.tool_name}>
+                    {message.data.tool_name}
                 </span>
                 <div className="flex-1" />
                 {isSuccess ? (
@@ -27,9 +27,9 @@ const ToolBubble = ({ message }: { message: Chat.Message.Tool }) => {
                     <span className="text-destructive text-[9px] uppercase font-bold tracking-wider ml-2">Failed</span>
                 )}
             </div>
-            {(!isSuccess && message.error) && (
+            {(!isSuccess && message.data.error) && (
                 <div className="text-destructive text-xs bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2 mt-1 max-w-[90%] whitespace-pre-wrap font-mono">
-                    {message.error}
+                    {message.data.error}
                 </div>
             )}
         </motion.div>

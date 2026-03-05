@@ -16,6 +16,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         super(props);
     }
 
+    private responseMessageId: Chat.Message.Id | null = null;
+    private chatId: Chat.Id | null = null;
+
+
     public override async init(props: RuntimeNode.InitProps) {
         const incomingEdges = props.workflowCache.incomingEdgesMap[this.workflowNode.id];
         const upstreamNodeId = Object.keys(incomingEdges)[0] as Workflow.Node.Id | undefined;
@@ -27,6 +31,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
             if (!chatId)
                 return;
+
+            this.chatId = chatId;
 
             // Create the response message
             const responseMessage = {
@@ -43,7 +49,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 }
             } satisfies Chat.Message.Assistant
 
+            this.responseMessageId = responseMessage.id;
+
             await Chat.API.Message.respond(AxiosService.api, { responseMessage })
+            console.log("Created response message with id ", responseMessage.id, " for chat ", chatId)
+
 
             this.emit({
                 type: "response:created",
@@ -52,10 +62,9 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 chatId
             } satisfies Chat.Event.ResponseCreated)
 
-            const nodeId = this.workflowNode.id;
 
             // Listen and emit chunks as they come from the LLM
-            state.streamController.onLlmChunk(nodeId, (content) => {
+            state.streamController.onLlmChunk(upstreamNodeId, (content) => {
                 this.emit({
                     type: "response:chunk",
                     topic: Chat.Event.getTopic(chatId),
@@ -75,6 +84,30 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const { input } = inputs;
 
         state.messages.push(Synthesizer.coerceMessage("ai", input));
+
+        const rawContent = input.content;
+        const content = typeof rawContent === "string"
+            ? rawContent
+            : rawContent
+                .map(b => typeof b === "string" ? b : ("text" in b ? b.text : ""))
+                .join("");
+
+
+        if(this.responseMessageId && this.chatId){
+            this.emit({
+                type:              "response:finished",
+                topic:             Chat.Event.getTopic(this.chatId!),
+                responseMessageId: this.responseMessageId!,
+                finalContent:      content,
+                chatId:            this.chatId!,
+            } satisfies Chat.Event.ResponseFinished)
+
+            await Chat.API.Message.update(AxiosService.api, {
+                messageId: this.responseMessageId,
+                content
+            })
+        }
+
 
         state.streamController.disposeLlmCallbacks(this.workflowNode.id);
         return {};
