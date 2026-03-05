@@ -1,0 +1,57 @@
+# Gemini Project Rules
+
+This file provides guidance and context when working with code in this repository.
+
+## Project Overview
+
+**vxAgentEditor** is a monorepo for a visual agent workflow editor. Users build AI agent pipelines visually using a node-graph canvas. The system compiles those graphs and executes them via a LangGraph-based engine.
+
+## Monorepo Layout
+- `packages/frontend/`: React 19 + Vite + XYFlow graph editor. State management via Zustand + Zundo (Undo/Redo) using a typed SDK pattern.
+- `packages/backend/`: Express 5 + WebSocket + BullMQ. Handles workflow CRUD, shelf catalogs, and orchestrator triggers.
+- `packages/shared/`: Domain models (Zod schemas) used by all packages (e.g., `Workflow`, `Foundations`, `Vault`, `Orchestrator`).
+- `packages/vx-aggex/`: Workflow execution engine relying on LangChain + LangGraph. Handles workflow compilation and DAG execution node-by-node.
+
+## Architecture Highlights
+
+**Frontend SDK Pattern:**
+All state lives in Zustand stores wrapped by typed SDK classes in `src/SDKs/`. Each SDK extends `BaseSDK<T_State>` and exposes:
+- `useStore` — Zustand store
+- `reducers` — Immer-based state mutations
+- `actions` — Side-effectful operations (API calls)
+- `selectors` — Computed/derived values
+`SDKManager` acts as the DI container. `WorkbenchSDK` manages the workflow editor state.
+
+**Routing:**
+Frontend utilizes TanStack Router with file-based routes (`src/routes/`). `routeTree.gen.ts` is auto-generated and should not be edited manually.
+
+**Execution Engine:**
+- `WorkflowCompiler`: Validates DAG before execution.
+- `AggexEngine`: Executes the graph node-by-node, resolving field values and port data.
+- Nodes are implemented under `nodes/` by provider (e.g., Anthropic, OpenAI).
+
+**Styling:**
+Tailwind CSS 4 is used, leveraging CSS variables (`--port-message`, `--port-str`, etc.) for port colors.
+
+## Development Commands
+
+**Frontend:**
+```bash
+npm run dev      # Start Vite dev server
+npm run build    # Type-check + bundle
+npm run preview  # Preview production build
+```
+
+**Backend:**
+```bash
+npm run dev    # Start with tsx watch
+npm run build  # TypeScript compile
+npm start      # Run compiled backend
+```
+
+**Execution Engine (`vx-aggex`):**
+```bash
+npm run dev               # Run index + server concurrently (watch mode)
+npm run build             # TypeScript compile
+npm run generate-indexes  # Regenerate barrel index files
+```
