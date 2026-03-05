@@ -5,10 +5,15 @@ import HumanMessageBubble from './HumanMessageBubble'
 import AIMessageBubble from './AIMessageBubble'
 import ToolBubble from './ToolBubble'
 import { Chat } from '@vx-agent-editor/shared/domain'
+import PromptInput from './PromptInput'
+import { Spinner } from '@/vx-ui/foundations'
 
-const MessagesArea = () => {
+interface Props {
+  messagesAreaClassname?: string
+}
+
+const MessagesArea: React.FC<Props> = ({ messagesAreaClassname}) => {
   const messageIds = ChatSDK.useStore(s => s.messages);
-  const hasMore = ChatSDK.useStore(s => s.hasMore);
   const isLoading = ChatSDK.useStore(s => s.isLoading);
   const lastMessageContent = ChatSDK.useStore(s => {
     const lastId = s.messages[s.messages.length - 1];
@@ -26,25 +31,18 @@ const MessagesArea = () => {
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
-    if (target.scrollTop < 100 && hasMore && !isLoading) {
+    if (target.scrollTop < 100 && !isLoading) {
       prevScrollHeightRef.current = target.scrollHeight;
-      ChatSDK.actions.loadMoreMessages().then(() => {
-        requestAnimationFrame(() => {
-          if (scrollRef.current) {
-            const newScrollHeight = scrollRef.current.scrollHeight;
-            scrollRef.current.scrollTop = newScrollHeight - prevScrollHeightRef.current;
-          }
-        });
-      });
     }
-  }, [hasMore, isLoading]);
+  }, [isLoading]);
 
   return (
-    <ScrollArea.Root className="flex-1 overflow-hidden h-full" ref={scrollRef} onScroll={handleScroll}>
-      <div className="flex flex-col gap-4 pb-4 px-2 mt-auto">
+    <ScrollArea.Root className="flex-1 overflow-hidden h-full relative" ref={scrollRef} onScroll={handleScroll}>
+      <PromptInput className='absolute bottom-2 left-1/2 -translate-x-1/2 w-[calc(100%-16px)] backdrop-blur-md bg-input/80 shadow-md! '/>
+      <div className={"flex flex-col gap-4 py-2 px-2 mt-auto pb-[116px] " + messagesAreaClassname }>
         {isLoading && (
           <div className="flex justify-center py-2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+            <Spinner/>
           </div>
         )}
         {messageIds.map((id) => (

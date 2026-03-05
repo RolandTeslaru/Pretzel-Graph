@@ -40,11 +40,14 @@ const StatusIndicator = ({
     )
   else if (executionStatus.status === "failed")
     return (
-  <SystemIcons.X size={22} className={'text-red-500 cursor-pointer '} />
+      <div className='relative'>
+        <SystemIcons.X size={22} className={'text-red-500 cursor-pointer '} />
+        <SystemIcons.X size={22} className={'text-red-500 cursor-pointer animate-ping absolute top-0 right-0'} />
+      </div>
     )
   else if (executionStatus.status === "completed") {
     return (
-      <SystemIcons.Check size={22} className={'text-green-500 cursor-pointer '} />
+      <SystemIcons.Check size={22} className={'text-green-400 dark:text-green-500 cursor-pointer'} />
     )
   }
 
@@ -98,7 +101,7 @@ const renderInputIssueMessage = (issue: Validation.Issue.Input) => {
 const SpinnerSvg = ({ fill = 'currentColor', className = '' }: { fill?: string, className?: string }) => (
   <svg className={`overflow-visible ${className}`} width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <g fill={fill}>
-      <rect x="11" y="1" width="2" height="5" opacity=".14" rx="1"/>
+      <rect x="11" y="1" width="2" height="5" opacity=".14" rx="1" />
       <rect x="11" y="1" width="2" height="5" transform="rotate(30 12 12)" opacity=".29" rx="1" />
       <rect x="11" y="1" width="2" height="5" transform="rotate(60 12 12)" opacity=".43" rx="1" />
       <rect x="11" y="1" width="2" height="5" transform="rotate(90 12 12)" opacity=".57" rx="1" />

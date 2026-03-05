@@ -2,6 +2,7 @@ import { memo, useState, useEffect } from "react";
 import { create } from "zustand"
 import { immer } from "zustand/middleware/immer"
 import React from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { enableMapSet } from 'immer';
 import { BaseSDK } from "../Base";
 import { AlertDialog, Dialog } from "../../foundations";
@@ -94,6 +95,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
             </Dialog.Root>
         )
     }
+
 
     public readonly AlertTemplate: DialogSDK.AlertTemplate = ({ children, entry, dialogsSize, index, className, onCancel, onApprove, type = "warning" }) => {
         const delayStyle = useAnimationDelay();
@@ -190,5 +192,6 @@ export namespace DialogSDK {
     }
 
     export type Template = React.FC<TemplateProps>
+    export type UnstyledTemplate = React.FC<TemplateProps>
     export type AlertTemplate = React.FC<AlertTemplateProps>
 }

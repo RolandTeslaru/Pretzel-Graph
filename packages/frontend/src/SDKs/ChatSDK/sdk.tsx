@@ -11,9 +11,10 @@ import { RealtimeSDK } from "../Realtime/sdk";
 export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
     constructor() {
         super()
+        QuerySDK.client.invalidateQueries({ queryKey: ["chats"] })
         QuerySDK.client.fetchQuery({
             queryKey: ["chats"],
-            queryFn: () => this.actions.getAllChats(),
+            queryFn: () => this.actions.chat.getAll(),
             staleTime: Infinity
         })
     }
@@ -59,14 +60,16 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 
 
     public handleOnEvent = (event: Chat.Event) => {
-        switch(event.type){
+        console.log("ChatSDK received event: ", event);
+        switch (event.type) {
             case "response:created":
-                const responseMessage = event.responseMessage;
-                this.actions.upsertMessage(responseMessage);
+                this.actions.message.upsert(event.responseMessage);
                 break;
             case "response:chunk":
-                const { responseMessageId, content } = event;
-                this.actions.appendContent(responseMessageId, content);
+                this.actions.message.appendContent(event.responseMessageId, event.content);
+                break;
+            case "response:finished":
+                this.actions.message.setContent(event.responseMessageId, event.finalContent);
                 break;
         }
     }
@@ -75,10 +78,10 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 export const ChatSDK = SDK.get<ChatSDKImpl>("Chat")
 
 ChatSDK.subscribe((state, prevState) => {
-    if(state.currentChatId === prevState.currentChatId)
+    if (state.currentChatId === prevState.currentChatId)
         return;
 
-    if(!state.currentChatId){
+    if (!state.currentChatId) {
         ChatSDK.runtime.unsubscribeFromChatTopic?.();
         return;
     }

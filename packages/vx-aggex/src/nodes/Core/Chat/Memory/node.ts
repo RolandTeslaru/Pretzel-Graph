@@ -1,21 +1,15 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { Synthesizer } from "src/synthesizer";
 import { RuntimeNode, RuntimeState } from "src/runtime";
-import { InferFields, InferInputs, InferOutputs } from "src/types";
-import { BaseMessageChunk } from "@langchain/core/messages";
+import { InferInputs, InferOutputs } from "src/types";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;
 
-    private readonly llm: ChatGoogleGenerativeAI
-
     constructor(props: RuntimeNode.ConstructorProps) {
         super(props);
-        this.llm = new ChatGoogleGenerativeAI(this.fields);
     }
 
     public override async run(
@@ -23,16 +17,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { systemMessage, input } = inputs;
-
-        const response = await this.llm.invoke([
-            systemMessage,
-            input
-        ]);
+        const { input } = inputs;
 
         return {
-            response,
-            languageModel: this.llm
+            messages: input,
         };
     }
 }

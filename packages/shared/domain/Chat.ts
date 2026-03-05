@@ -145,9 +145,19 @@ export namespace Chat {
         }
         export type ResponseChunk = z.infer<typeof ResponseChunk.Schema>
     
+        export namespace ResponseFinished {
+            export const Schema = Base.extend({
+                type: z.literal("response:finished"),
+                responseMessageId: Message.Id,
+                finalContent: z.string(),
+            })
+        }
+        export type ResponseFinished = z.infer<typeof ResponseFinished.Schema>
+    
         export const Schema = z.discriminatedUnion("type", [
             ResponseCreated.Schema,
             ResponseChunk.Schema,
+            ResponseFinished.Schema,
         ])
     }
     export type Event = z.infer<typeof Event.Schema>
@@ -183,6 +193,24 @@ export namespace Chat {
             export async function respond(api: AxiosInstance, req: Respond.Request): Promise<Respond.Response> {
                 const { data } = await api.post<Respond.Response>(
                     "/api/chat/message/respond", req
+                )
+                return data
+            }
+
+
+            export namespace Update {
+                export const Request = z.object({
+                    messageId: Chat.Message.Id,
+                    content: z.string(),
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({})
+                export type Response = z.infer<typeof Response>
+            }
+            export async function update(api: AxiosInstance, req: Update.Request): Promise<Update.Response> {
+                const { data } = await api.post<Update.Response>(
+                    "/api/chat/message/update", req
                 )
                 return data
             }
