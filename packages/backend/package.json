@@ -3,11 +3,17 @@
     "version": "0.0.1",
     "private": true,
     "scripts": {
-        "dev": "tsx watch src/index.ts",
+        "dev": "tsx watch src/main.ts",
         "build": "tsc",
-        "start": "node dist/index.js"
+        "start": "node dist/main.js"
     },
     "dependencies": {
+        "@nestjs/bullmq": "^11.0.4",
+        "@nestjs/common": "^11.1.16",
+        "@nestjs/core": "^11.1.16",
+        "@nestjs/platform-express": "^11.1.16",
+        "@nestjs/platform-ws": "^11.1.16",
+        "@nestjs/websockets": "^11.1.16",
         "@supabase/supabase-js": "^2.93.3",
         "@vx-agent-builder/vx-aggex": "file:../vx-aggex",
         "@vx-agent-editor/shared": "*",
@@ -16,6 +22,9 @@
         "dotenv": "^17.2.3",
         "express": "^5.2.1",
         "ioredis": "^5.9.2",
+        "nestjs-zod": "^5.1.1",
+        "reflect-metadata": "^0.2.2",
+        "rxjs": "^7.8.2",
         "ws": "^8.19.0",
         "zod": "^4.3.6"
     },
