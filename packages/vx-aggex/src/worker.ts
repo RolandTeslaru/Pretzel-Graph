@@ -29,7 +29,7 @@ export class AggexWorkerImpl {
     private processQueueItem = async (
         { data: queueItem }: { data: Orchestrator.ExecutionQueue.Item }
     ) => {
-        const { workflow, jobId, executionContext } = queueItem;
+        const { workflow, jobId, executionSession } = queueItem;
         console.log("Processing Queue Item ", queueItem.jobId, " worlflow id ", queueItem.workflow.id);
 
         const emit: Emitter = (event: EmitterEvent) => {
@@ -43,7 +43,7 @@ export class AggexWorkerImpl {
             topic: Orchestrator.Event.getTopic(jobId)
         } satisfies Orchestrator.Event.Job.Started);
 
-        const { compiledGraph, state } = await this.engine.compile(workflow, emit, executionContext, jobId);
+        const { compiledGraph, state } = await this.engine.compile(workflow, emit, executionSession, jobId);
 
         try {
             for await (const payload of this.engine.stream(compiledGraph, state)) {

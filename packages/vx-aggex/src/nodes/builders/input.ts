@@ -58,35 +58,6 @@ export namespace InputBuilder {
         };
     }
 
-    export function SystemMessage<TId extends string>(
-        config: { initialValue?: string } & BaseProps<TId>
-    ): LiteralInput<TId, "SystemMessage", Foundations.Port.Variants.SystemMessage, LC.SystemMessage> {
-        return {
-            ...buildBase(config),
-            variant: "SystemMessage" as const,
-            initialValue: config.initialValue ?? "",
-        };
-    }
-
-    export function AIMessage<TId extends string>(
-        config: { initialValue?: string } & BaseProps<TId>
-    ): LiteralInput<TId, "AIMessage", Foundations.Port.Variants.AIMessage, LC.AIMessage> {
-        return {
-            ...buildBase(config),
-            variant: "AIMessage" as const,
-            initialValue: config.initialValue ?? "",
-        };
-    }
-
-    export function HumanMessage<TId extends string>(
-        config: { initialValue?: string } & BaseProps<TId>
-    ): LiteralInput<TId, "HumanMessage", Foundations.Port.Variants.HumanMessage, LC.HumanMessage> {
-        return {
-            ...buildBase(config),
-            variant: "HumanMessage" as const,
-            initialValue: config.initialValue ?? "",
-        };
-    }
 
     export function Text<TId extends string>(
         config: { initialValue?: string } & BaseProps<TId>

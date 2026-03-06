@@ -37,7 +37,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             // Create the response message
             const responseMessage = {
                 id: Chat.Message.createId(),
-                role: "assistant",
+                role: "ai",
                 content: "",
                 job_id: props.jobId,
                 created_at: new Date().toISOString(),

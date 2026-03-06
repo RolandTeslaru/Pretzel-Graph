@@ -4,6 +4,7 @@ import { WorkbenchSDK } from '../../sdk'
 import { Textarea } from '@/vx-ui/foundations'
 import { HighlightedTextarea } from './HighlightedTextarea'
 import { InputLabel } from './label';
+import { SystemIcons } from '@/vx-ui/icons';
 
 
 type RendererProps<K extends Foundations.Port.Input['variant']> = {
@@ -64,12 +65,9 @@ const EdgeOnlyInput = memo(({ input, nodeId, className, showTypeBadge }: { input
         s.issues[nodeId]?.inputs[input.id] ?? null
     )
 
-    let innerClassName = ""
-    if(issue)
-        innerClassName = "border-2 border-destructive border-dashed animate-border-ping rounded"
 
     return (
-        <div className={className + " w-full flex flex-col gap-1 " + innerClassName}>
+        <div className={className + " w-full flex flex-col relative gap-1 "}>
             <InputLabel input={input} showTypeBadges={showTypeBadge} />
         </div>
     )

@@ -147,20 +147,6 @@ code {
   --port-Message-foreground: theme(--color-blue-500);
   --port-Message-accent: theme(--color-blue-200);
 
-  /* System: Deeper, muted structural blue */
-  --port-SystemMessage: theme(--color-slate-400);
-  --port-SystemMessage-foreground: theme(--color-slate-500);
-  --port-SystemMessage-accent: theme(--color-slate-200);
-
-  /* AI: Brighter, energetic purple/violet */
-  --port-AIMessage: theme(--color-violet-400);
-  --port-AIMessage-foreground: theme(--color-violet-500);
-  --port-AIMessage-accent: theme(--color-violet-200);
-
-  /* Human: Warmer, organic teal/cyan */
-  --port-HumanMessage: theme(--color-teal-400);
-  --port-HumanMessage-foreground: theme(--color-teal-500);
-  --port-HumanMessage-accent: theme(--color-teal-200);
 
   --port-MessageList: theme(--color-indigo-400);
   --port-MessageList-foreground: theme(--color-indigo-500);

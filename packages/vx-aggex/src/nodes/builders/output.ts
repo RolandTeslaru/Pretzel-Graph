@@ -40,32 +40,6 @@ export namespace OutputBuilder {
         };
     }
 
-    export function SystemMessage<TId extends string>(
-        config: BaseProps<TId>
-    ): LiteralOutput<TId, "SystemMessage", Foundations.Port.Variants.SystemMessage, LC.SystemMessage> {
-        return {
-            ...buildBase(config),
-            variant: "SystemMessage" as const,
-        };
-    }
-
-    export function AIMessage<TId extends string>(
-        config: BaseProps<TId>
-    ): LiteralOutput<TId, "AIMessage", Foundations.Port.Variants.AIMessage, LC.AIMessage> {
-        return {
-            ...buildBase(config),
-            variant: "AIMessage" as const,
-        };
-    }
-
-    export function HumanMessage<TId extends string>(
-        config: BaseProps<TId>
-    ): LiteralOutput<TId, "HumanMessage", Foundations.Port.Variants.HumanMessage, LC.HumanMessage> {
-        return {
-            ...buildBase(config),
-            variant: "HumanMessage" as const,
-        };
-    }
 
     export function Text<TId extends string>(
         config: BaseProps<TId>

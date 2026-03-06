@@ -1,4 +1,4 @@
-import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { LC } from "./langchain";
 import { Foundations, Orchestrator, Workflow, ExecutionSession } from "@vx-agent-editor/shared/domain";
 import { StreamController } from "./StreamController";
@@ -56,37 +56,48 @@ export class Synthesizer {
     ): any {
         switch (variant) {
             case "Message":
-                if (rawReference instanceof LC.BaseMessage) return rawReference;
-                if (typeof rawReference === "string") return new HumanMessage(rawReference);
+                if (rawReference instanceof LC.BaseMessage) 
+                    return rawReference;
+                if (typeof rawReference === "string") 
+                    return new HumanMessage(rawReference);
+
                 throw this.coercionError(variant, rawReference);
 
             case "Text":
-                if (typeof rawReference === "string") return rawReference;
+                if (typeof rawReference === "string") 
+                    return rawReference;
                 return String(rawReference);
 
             case "Document":
-                if (rawReference instanceof LC.Document) return rawReference;
-                if (typeof rawReference === "string") return new LC.Document({ pageContent: rawReference });
+                if (rawReference instanceof LC.Document) 
+                    return rawReference;
+                if (typeof rawReference === "string") 
+                    return new LC.Document({ pageContent: rawReference });
                 throw this.coercionError(variant, rawReference);
 
             case "LanguageModel":
-                if (rawReference instanceof LC.BaseLanguageModel) return rawReference;
+                if (rawReference instanceof LC.BaseLanguageModel) 
+                    return rawReference;
                 throw this.coercionError(variant, rawReference);
 
             case "Embeddings":
-                if (rawReference instanceof LC.Embeddings) return rawReference;
+                if (rawReference instanceof LC.Embeddings) 
+                    return rawReference;
                 throw this.coercionError(variant, rawReference);
 
             case "VectorStore":
-                if (rawReference instanceof LC.VectorStore) return rawReference;
+                if (rawReference instanceof LC.VectorStore) 
+                    return rawReference;
                 throw this.coercionError(variant, rawReference);
 
             case "Retriever":
-                if (rawReference instanceof LC.BaseRetriever) return rawReference;
+                if (rawReference instanceof LC.BaseRetriever) 
+                    return rawReference;
                 throw this.coercionError(variant, rawReference);
 
             case "Tool":
-                if (rawReference instanceof LC.Tool) return rawReference;
+                if (rawReference instanceof LC.Tool) 
+                    return rawReference;
                 throw this.coercionError(variant, rawReference);
 
             case "Data":
@@ -138,8 +149,18 @@ export class Synthesizer {
     }) {
         const { session, workflow, workflowCache, emit, jobId } = props
 
+        const synthesizedMessages: BaseMessage[] = [];
+
+        session.messages.forEach(msg => {
+            synthesizedMessages.push(
+                this.coerceMessage(msg.role as "system" | "ai" | "human", 
+                    msg.content
+                ));
+        })
+
         const syntheticState = {
             ...session,
+            messages: synthesizedMessages,
             workflow,
             workflowCache,
             jobId,
