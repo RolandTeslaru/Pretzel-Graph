@@ -148,6 +148,10 @@ export namespace Foundations {
     export namespace Port {
         export const Variant = z.enum([
             "Message",
+            "SystemMessage",
+            "AIMessage",
+            "HumanMessage",
+            "MessageList",
             "Document",
             "Text",
             "Data",
@@ -179,6 +183,29 @@ export namespace Foundations {
                 variant: portLiteral("Message"),
                 initialValue: z.string().optional(),
                 placeholder: z.string().optional(),
+            })
+
+            export const SystemMessage = Base.extend({
+                variant: portLiteral("SystemMessage"),
+                initialValue: z.string().optional(),
+                placeholder: z.string().optional(),
+            })
+
+            export const AIMessage = Base.extend({
+                variant: portLiteral("AIMessage"),
+                initialValue: z.string().optional(),
+                placeholder: z.string().optional(),
+            })
+
+            export const HumanMessage = Base.extend({
+                variant: portLiteral("HumanMessage"),
+                initialValue: z.string().optional(),
+                placeholder: z.string().optional(),
+            })
+
+            export const MessageList = Base.extend({
+                variant: portLiteral("MessageList"),
+                initialValue: z.array(z.string()).optional(),
             })
 
             export const Text = Base.extend({
@@ -224,6 +251,10 @@ export namespace Foundations {
 
             export const Schema = z.discriminatedUnion("variant", [
                 Message,
+                SystemMessage,
+                AIMessage,
+                HumanMessage,
+                MessageList,
                 Text,
                 LanguageModel,
                 Document,
@@ -237,6 +268,10 @@ export namespace Foundations {
             ])
 
             export type Message = z.infer<typeof Message>
+            export type SystemMessage = z.infer<typeof SystemMessage>
+            export type AIMessage = z.infer<typeof AIMessage>
+            export type HumanMessage = z.infer<typeof HumanMessage>
+            export type MessageList = z.infer<typeof MessageList>
             export type Text = z.infer<typeof Text>
             export type LanguageModel = z.infer<typeof LanguageModel>
             export type Document = z.infer<typeof Document>
@@ -264,6 +299,10 @@ export namespace Foundations {
 
             // Variant-specific input schemas (variant fields + InputId + required)
             export const Message = Port.Variants.Message.extend(inputFields);
+            export const SystemMessage = Port.Variants.SystemMessage.extend(inputFields);
+            export const AIMessage = Port.Variants.AIMessage.extend(inputFields);
+            export const HumanMessage = Port.Variants.HumanMessage.extend(inputFields);
+            export const MessageList = Port.Variants.MessageList.extend(inputFields);
             export const Text = Port.Variants.Text.extend(inputFields);
             export const LanguageModel = Port.Variants.LanguageModel.extend(inputFields);
             export const Document = Port.Variants.Document.extend(inputFields);
@@ -276,7 +315,8 @@ export namespace Foundations {
             export const Json = Port.Variants.Json.extend(inputFields);
 
             export const Schema = z.discriminatedUnion("variant", [
-                Message, Text, LanguageModel, Document, Retriever, Embeddings, VectorStore, Tool, Integer, Json
+                Message, SystemMessage, AIMessage, HumanMessage, MessageList, Text, LanguageModel, Document, Retriever,
+                Embeddings, VectorStore, Tool, Integer, Json
             ]);
         }
         export type Input = z.infer<typeof Input.Schema>
@@ -294,6 +334,10 @@ export namespace Foundations {
 
             // Variant-specific output schemas (variant fields + OutputId)
             export const Message = Port.Variants.Message.extend(outputFields);
+            export const SystemMessage = Port.Variants.SystemMessage.extend(outputFields);
+            export const AIMessage = Port.Variants.AIMessage.extend(outputFields);
+            export const HumanMessage = Port.Variants.HumanMessage.extend(outputFields);
+            export const MessageList = Port.Variants.MessageList.extend(outputFields);
             export const Text = Port.Variants.Text.extend(outputFields);
             export const LanguageModel = Port.Variants.LanguageModel.extend(outputFields);
             export const Document = Port.Variants.Document.extend(outputFields);
@@ -306,7 +350,8 @@ export namespace Foundations {
             export const Json = Port.Variants.Json.extend(outputFields);
 
             export const Schema = z.discriminatedUnion("variant", [
-                Message, Text, LanguageModel, Document, Retriever, Embeddings, VectorStore, Tool, DataFrame, Integer, Json
+                Message, SystemMessage, AIMessage, HumanMessage, MessageList, Text, LanguageModel, Document, Retriever, Embeddings,
+                VectorStore, Tool, DataFrame, Integer, Json
             ]);
         }
         export type Output = z.infer<typeof Output.Schema>

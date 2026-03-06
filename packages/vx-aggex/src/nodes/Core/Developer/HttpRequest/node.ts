@@ -15,18 +15,17 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public override async run(
         state: RuntimeState,
-        fields: InferFields<typeof Blueprint>,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { method, url, headers, body } = fields;
+        const { method, url, headers, body } = this.fields;
 
         const requestOptions: RequestInit = {
             method: method,
             headers: new Headers(headers as Record<string, string>),
         };
 
-        if (method !== 'GET' && method !== 'HEAD') {
+        if (method !== 'GET' && method !== "HEAD" as any) {
             requestOptions.body = JSON.stringify(body);
             // Ensure Content-Type is set if body is present and not overridden
             if (!(requestOptions.headers as Headers).has('Content-Type')) {

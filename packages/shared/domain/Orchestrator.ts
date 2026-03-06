@@ -3,7 +3,7 @@ import { Workflow } from "./Workflow"
 import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
 import { type AxiosInstance } from "axios"
-import { Execution as ExecutionD } from "./Execution"
+import { ExecutionSession } from "./ExecutionSession"
 import { Chat } from "./Chat"
 
 export namespace Orchestrator {
@@ -32,7 +32,7 @@ export namespace Orchestrator {
                 jobId: Job.Id,
                 workflow: Workflow.Schema,
                 userId: Auth.User.Id,
-                executionContext: ExecutionD.Context.Schema
+                executionSession: ExecutionSession.Schema
             })
         }
         export type Item = z.infer<typeof Item.Schema>
@@ -82,7 +82,7 @@ export namespace Orchestrator {
 
             export const Update = Base.extend({
                 type: z.literal('update'),
-                update: ExecutionD.Context.Update
+                update: ExecutionSession.Update
             })
 
 
@@ -184,111 +184,109 @@ export namespace Orchestrator {
 
 
     export namespace API {
-        export namespace Execution {
-            export namespace Run {
-                export const Request = z.object({
-                    workflow: Workflow.Schema,
-                    executionContext: ExecutionD.Context.Schema,
-                })
-                export const Response = z.object({
-                    jobId: Job.Id
-                })
+        export namespace Run {
+            export const Request = z.object({
+                workflow: Workflow.Schema,
+                executionSession: ExecutionSession.Schema,
+            })
+            export const Response = z.object({
+                jobId: Job.Id
+            })
 
-                export type Request = z.infer<typeof Request>
-                export type Response = z.infer<typeof Response>
-            }
-            export async function run(
-                api: AxiosInstance,
-                req: Run.Request
-            ): Promise<Run.Response> {
-                const { data } = await api.post<Run.Response>(
-                    '/api/orchestrator/execution/run',
-                    req
-                );
-                return data;
-            }
+            export type Request = z.infer<typeof Request>
+            export type Response = z.infer<typeof Response>
+        }
+        export async function run(
+            api: AxiosInstance,
+            req: Run.Request
+        ): Promise<Run.Response> {
+            const { data } = await api.post<Run.Response>(
+                '/api/orchestrator/run',
+                req
+            );
+            return data;
+        }
 
-            export namespace Pause {
-                export const Request = z.object({
-                    jobId: Job.Id
-                })
-                export const Response = z.object({})
+        export namespace Pause {
+            export const Request = z.object({
+                jobId: Job.Id
+            })
+            export const Response = z.object({})
 
-                export type Request = z.infer<typeof Request>
-                export type Response = z.infer<typeof Response>
-            }
+            export type Request = z.infer<typeof Request>
+            export type Response = z.infer<typeof Response>
+        }
 
-            export async function pause(
-                api: AxiosInstance,
-                req: Pause.Request
-            ): Promise<Pause.Response> {
-                const { data } = await api.post<Pause.Response>(
-                    '/api/orchestrator/execution/pause',
-                    req
-                );
-                return data;
-            }
+        export async function pause(
+            api: AxiosInstance,
+            req: Pause.Request
+        ): Promise<Pause.Response> {
+            const { data } = await api.post<Pause.Response>(
+                '/api/orchestrator/pause',
+                req
+            );
+            return data;
+        }
 
-            export namespace Resume {
-                export const Request = z.object({
-                    jobId: Job.Id
-                })
-                export const Response = z.object({})
+        export namespace Resume {
+            export const Request = z.object({
+                jobId: Job.Id
+            })
+            export const Response = z.object({})
 
-                export type Request = z.infer<typeof Request>
-                export type Response = z.infer<typeof Response>
-            }
-            export async function resume(
-                api: AxiosInstance,
-                req: Resume.Request
-            ): Promise<Resume.Response> {
-                const { data } = await api.post<Resume.Response>(
-                    '/api/orchestrator/execution/resume',
-                    req
-                );
-                return data;
-            }
+            export type Request = z.infer<typeof Request>
+            export type Response = z.infer<typeof Response>
+        }
+        export async function resume(
+            api: AxiosInstance,
+            req: Resume.Request
+        ): Promise<Resume.Response> {
+            const { data } = await api.post<Resume.Response>(
+                '/api/orchestrator/resume',
+                req
+            );
+            return data;
+        }
 
-            export namespace Terminate {
-                export const Request = z.object({
-                    jobId: Job.Id
-                })
-                export const Response = z.object({})
+        export namespace Terminate {
+            export const Request = z.object({
+                jobId: Job.Id
+            })
+            export const Response = z.object({})
 
-                export type Request = z.infer<typeof Request>
-                export type Response = z.infer<typeof Response>
-            }
-            export async function terminate(
-                api: AxiosInstance,
-                req: Terminate.Request
-            ): Promise<Terminate.Response> {
-                const { data } = await api.post<Terminate.Response>(
-                    '/api/orchestrator/execution/terminate',
-                    req
-                );
-                return data;
-            }
+            export type Request = z.infer<typeof Request>
+            export type Response = z.infer<typeof Response>
+        }
+        export async function terminate(
+            api: AxiosInstance,
+            req: Terminate.Request
+        ): Promise<Terminate.Response> {
+            const { data } = await api.post<Terminate.Response>(
+                '/api/orchestrator/terminate',
+                req
+            );
+            return data;
+        }
 
-            export namespace Finalise {
-                export const Request = z.object({
-                    jobId: Job.Id,
-                    status: Job.Status,
-                })
-                export const Response = z.object({})
+        export namespace Finalise {
+            export const Request = z.object({
+                jobId: Job.Id,
+                status: Job.Status,
+            })
+            export const Response = z.object({})
 
-                export type Request = z.infer<typeof Request>
-                export type Response = z.infer<typeof Response>
-            }
-            export async function finalise(
-                api: AxiosInstance,
-                req: Finalise.Request
-            ): Promise<Finalise.Response> {
-                const { data } = await api.post<Finalise.Response>(
-                    '/api/orchestrator/execution/finalise',
-                    req
-                );
-                return data;
-            }
+            export type Request = z.infer<typeof Request>
+            export type Response = z.infer<typeof Response>
+        }
+        export async function finalise(
+            api: AxiosInstance,
+            req: Finalise.Request
+        ): Promise<Finalise.Response> {
+            const { data } = await api.post<Finalise.Response>(
+                '/api/orchestrator/finalise',
+                req
+            );
+            return data;
         }
 
         export namespace Schedule {

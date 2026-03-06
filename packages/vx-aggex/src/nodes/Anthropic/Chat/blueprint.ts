@@ -66,23 +66,8 @@ export const Blueprint = defineBlueprint({
             tooltip: "Top-K sampling parameter.",
         }),
     ],
-    inputs: [
-        InputBuilder.Message({
-            id: "input",
-            displayName: "Input",
-            required: true
-        }),
-        InputBuilder.Message({
-            id: "systemMessage",
-            displayName: "System Message",
-        }),
-    ],
+    inputs: [],
     outputs: [
-        OutputBuilder.Message({
-            id: "response",
-            displayName: "Response",
-            tooltip: "The response from the model",
-        }),
         OutputBuilder.LanguageModel({
             id: "languageModel",
             displayName: "Language Model",

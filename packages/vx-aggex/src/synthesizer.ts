@@ -51,50 +51,50 @@ export class Synthesizer {
      * that are already the correct type; coerces when possible.
      */
     public static ensureReference(
-        value: any,
+        rawReference: any,
         variant: Foundations.Port.Variant
     ): any {
         switch (variant) {
             case "Message":
-                if (value instanceof LC.BaseMessage) return value;
-                if (typeof value === "string") return new HumanMessage(value);
-                throw this.coercionError(variant, value);
+                if (rawReference instanceof LC.BaseMessage) return rawReference;
+                if (typeof rawReference === "string") return new HumanMessage(rawReference);
+                throw this.coercionError(variant, rawReference);
 
             case "Text":
-                if (typeof value === "string") return value;
-                return String(value);
+                if (typeof rawReference === "string") return rawReference;
+                return String(rawReference);
 
             case "Document":
-                if (value instanceof LC.Document) return value;
-                if (typeof value === "string") return new LC.Document({ pageContent: value });
-                throw this.coercionError(variant, value);
+                if (rawReference instanceof LC.Document) return rawReference;
+                if (typeof rawReference === "string") return new LC.Document({ pageContent: rawReference });
+                throw this.coercionError(variant, rawReference);
 
             case "LanguageModel":
-                if (value instanceof LC.BaseLanguageModel) return value;
-                throw this.coercionError(variant, value);
+                if (rawReference instanceof LC.BaseLanguageModel) return rawReference;
+                throw this.coercionError(variant, rawReference);
 
             case "Embeddings":
-                if (value instanceof LC.Embeddings) return value;
-                throw this.coercionError(variant, value);
+                if (rawReference instanceof LC.Embeddings) return rawReference;
+                throw this.coercionError(variant, rawReference);
 
             case "VectorStore":
-                if (value instanceof LC.VectorStore) return value;
-                throw this.coercionError(variant, value);
+                if (rawReference instanceof LC.VectorStore) return rawReference;
+                throw this.coercionError(variant, rawReference);
 
             case "Retriever":
-                if (value instanceof LC.BaseRetriever) return value;
-                throw this.coercionError(variant, value);
+                if (rawReference instanceof LC.BaseRetriever) return rawReference;
+                throw this.coercionError(variant, rawReference);
 
             case "Tool":
-                if (value instanceof LC.Tool) return value;
-                throw this.coercionError(variant, value);
+                if (rawReference instanceof LC.Tool) return rawReference;
+                throw this.coercionError(variant, rawReference);
 
             case "Data":
             case "DataFrame":
                 // Pass through — no canonical LC class
-                return value;
-
+                return rawReference;            
             default:
+                return rawReference;
                 throw new Error(
                     `AGGEX Synthesizer: Unknown variant "${variant}"`
                 );

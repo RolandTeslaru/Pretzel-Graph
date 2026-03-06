@@ -1,6 +1,6 @@
 {
-  "version": "1772731838106",
-  "generatedAt": "2026-03-05T17:30:38.106Z",
+  "version": "1772805951986",
+  "generatedAt": "2026-03-06T14:05:51.986Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -90,31 +90,8 @@
           "slider": true
         }
       ],
-      "inputs": [
-        {
-          "id": "input",
-          "displayName": "Input",
-          "variant": "Message",
-          "initialValue": "",
-          "required": true,
-          "internal": false
-        },
-        {
-          "id": "systemMessage",
-          "displayName": "System Message",
-          "variant": "Message",
-          "initialValue": "",
-          "required": false,
-          "internal": false
-        }
-      ],
+      "inputs": [],
       "outputs": [
-        {
-          "id": "response",
-          "displayName": "Response",
-          "tooltip": "The response from the model",
-          "variant": "Message"
-        },
         {
           "id": "languageModel",
           "displayName": "Language Model",
@@ -124,105 +101,45 @@
       ],
       "description": "This node talks to Anthropic Claude models"
     },
-    "Core.Agent": {
-      "id": "Core.Agent",
-      "displayName": "Agent",
-      "icon": "Bot",
-      "accent": "port-LanguageModel",
+    "Core.Chat.History": {
+      "id": "Core.Chat.History",
+      "displayName": "Chat History",
+      "icon": "History",
+      "accent": "port-Message",
       "fields": [
         {
-          "id": "provider",
-          "advanced": false,
-          "required": false,
-          "reconcile": true,
-          "displayName": "Model Provider",
-          "tooltip": "The provider of the language model that the agent will use to generate responses.",
-          "variant": "MultiOption",
-          "initialValue": "Google",
-          "options": [
-            "Google",
-            "OpenAI",
-            "Anthropic",
-            "Connect other models"
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "model",
+          "id": "maxTokensPercentage",
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "displayName": "Model",
-          "variant": "MultiOption",
-          "initialValue": "gemini-3-pro-preview",
-          "options": [
-            "gemini-3-pro-preview",
-            "gemini-2.5-pro",
-            "gemini-3-flash-preview",
-            "gemini-2.5-flash",
-            "gemini-2.5-flash-lite"
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "apiKey",
-          "advanced": false,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Google Generative API Key",
-          "tooltip": "The API key to use for the model (if using a built-in provider).",
-          "variant": "Secret",
-          "initialValue": ""
-        },
-        {
-          "id": "maxOutputTokens",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Max Output Tokens",
-          "tooltip": "The maximum number of tokens to generate.",
+          "displayName": "Max Tokens Percentage",
+          "tooltip": "Percentage at whitch the context window gets summerized",
           "variant": "Integer",
-          "initialValue": 2048,
-          "step": 1
+          "initialValue": 80,
+          "min": 10,
+          "max": 90,
+          "step": 1,
+          "slider": true
         }
       ],
       "inputs": [
         {
-          "id": "systemPrompt",
-          "displayName": "Agent Instructions",
-          "tooltip": "System Prompt: Initial instructions and context provided to guide the agent's behavior.",
-          "variant": "Message",
-          "initialValue": "You are a helpful assistant that can use tools to answer questions and perform tasks.",
-          "required": false,
-          "internal": false
-        },
-        {
-          "id": "input",
-          "displayName": "Input",
-          "tooltip": "The user input message.",
-          "variant": "Message",
-          "initialValue": "",
+          "id": "summerizationLLM",
+          "displayName": "Summerization LLM",
+          "variant": "LanguageModel",
           "required": true,
-          "internal": false
-        },
-        {
-          "id": "tools",
-          "displayName": "Tools",
-          "tooltip": "Tools the agent can use.",
-          "variant": "Tool",
-          "required": false,
           "internal": false
         }
       ],
       "outputs": [
         {
-          "id": "response",
-          "displayName": "Response",
-          "tooltip": "The agent's final response.",
-          "variant": "Message"
+          "id": "messages",
+          "displayName": "Messages",
+          "tooltip": "The conversation history from memory",
+          "variant": "MessageList"
         }
       ],
-      "description": "Define the agent's instructions, then enter a task to complete using tools."
+      "description": "Stores and retrieves conversation history for chat sessions"
     },
     "Core.Chat.Input": {
       "id": "Core.Chat.Input",
@@ -245,49 +162,10 @@
           "id": "response",
           "displayName": "Response",
           "tooltip": "The response from the model",
-          "variant": "Message"
+          "variant": "HumanMessage"
         }
       ],
       "description": "This node is a chat input"
-    },
-    "Core.Chat.Memory": {
-      "id": "Core.Chat.Memory",
-      "displayName": "Chat Memory",
-      "icon": "Memory",
-      "accent": "port-Message",
-      "fields": [
-        {
-          "id": "maxMessages",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Max Messages",
-          "tooltip": "Maximum number of messages to retain in memory.",
-          "variant": "Integer",
-          "initialValue": 50,
-          "min": 1,
-          "step": 1
-        }
-      ],
-      "inputs": [
-        {
-          "id": "input",
-          "displayName": "Input",
-          "variant": "Message",
-          "initialValue": "",
-          "required": true,
-          "internal": false
-        }
-      ],
-      "outputs": [
-        {
-          "id": "messages",
-          "displayName": "Messages",
-          "tooltip": "The conversation history from memory",
-          "variant": "Message"
-        }
-      ],
-      "description": "Stores and retrieves conversation history for chat sessions"
     },
     "Core.Chat.Output": {
       "id": "Core.Chat.Output",
@@ -815,53 +693,6 @@
       "accent": "port-LanguageModel",
       "fields": [
         {
-          "id": "provider",
-          "advanced": false,
-          "required": false,
-          "reconcile": true,
-          "displayName": "Model Provider",
-          "tooltip": "Select the model provider",
-          "variant": "MultiOption",
-          "initialValue": "OpenAI",
-          "options": [
-            "OpenAI",
-            "Anthropic",
-            "Google"
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "model",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Model Name",
-          "tooltip": "Select the model to use",
-          "variant": "MultiOption",
-          "initialValue": "gpt-4o",
-          "options": [
-            "gpt-4.5-preview",
-            "gpt-4o",
-            "gpt-4o-mini",
-            "o1",
-            "o1-mini",
-            "o3-mini",
-            "gpt-4-turbo",
-            "gpt-3.5-turbo"
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "apiKey",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "OpenAI API Key",
-          "tooltip": "Model Provider API key",
-          "variant": "Secret",
-          "initialValue": ""
-        },
-        {
           "id": "stream",
           "advanced": true,
           "required": false,
@@ -870,67 +701,29 @@
           "tooltip": "Whether to stream the response",
           "variant": "Boolean",
           "initialValue": false
-        },
-        {
-          "id": "temperature",
-          "advanced": true,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Temperature",
-          "tooltip": "Controls randomness in responses",
-          "variant": "Float",
-          "initialValue": 0.1,
-          "min": 0,
-          "max": 1,
-          "step": 0.01,
-          "slider": true
-        },
-        {
-          "id": "maxOutputTokens",
-          "advanced": true,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Max Output Tokens",
-          "tooltip": "Maximum number of tokens to generate.",
-          "variant": "Integer",
-          "initialValue": 2048,
-          "min": 1,
-          "step": 1
-        },
-        {
-          "id": "topP",
-          "advanced": true,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Top P",
-          "tooltip": "Nucleus sampling probability.",
-          "variant": "Float",
-          "initialValue": 0.95,
-          "min": 0,
-          "max": 1,
-          "step": 0.01,
-          "slider": true
-        },
-        {
-          "id": "topK",
-          "advanced": true,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Top K",
-          "tooltip": "Top-K sampling parameter.",
-          "variant": "Integer",
-          "initialValue": 64,
-          "min": 1,
-          "step": 1,
-          "slider": true
         }
       ],
       "inputs": [
         {
+          "id": "languageModel",
+          "displayName": "Language Model",
+          "variant": "LanguageModel",
+          "required": false,
+          "internal": false
+        },
+        {
+          "id": "chatHistory",
+          "displayName": "Chat History",
+          "tooltip": "Chat history to be included in the context window",
+          "variant": "MessageList",
+          "required": false,
+          "internal": false
+        },
+        {
           "id": "input",
           "displayName": "Input",
           "tooltip": "The input text to send to the model",
-          "variant": "Message",
+          "variant": "HumanMessage",
           "initialValue": "",
           "required": true,
           "internal": false
@@ -939,19 +732,13 @@
           "id": "systemMessage",
           "displayName": "System Message",
           "tooltip": "A system message that helps set the behavior of the assistant",
-          "variant": "Message",
+          "variant": "SystemMessage",
           "initialValue": "",
           "required": false,
           "internal": false
         }
       ],
       "outputs": [
-        {
-          "id": "languageModel",
-          "displayName": "Language Model",
-          "tooltip": "The configured language model instance",
-          "variant": "LanguageModel"
-        },
         {
           "id": "response",
           "displayName": "Response",
@@ -987,9 +774,19 @@
       ],
       "description": "This node is a Text input"
     },
+    "Core.Utils.ToolDictionary": {
+      "id": "Core.Utils.ToolDictionary",
+      "displayName": "Tool Dictionary",
+      "icon": "Settings",
+      "accent": "port-Tool",
+      "fields": [],
+      "inputs": [],
+      "outputs": [],
+      "description": "Utility node for managing a dictionary of tools."
+    },
     "Google.GenerativeAI": {
       "id": "Google.GenerativeAI",
-      "displayName": "Google Generative AI",
+      "displayName": "Google Gen AI",
       "icon": "Google",
       "accent": "port-LanguageModel",
       "fields": [
@@ -1073,31 +870,8 @@
           "slider": true
         }
       ],
-      "inputs": [
-        {
-          "id": "input",
-          "displayName": "Input",
-          "variant": "Message",
-          "initialValue": "",
-          "required": true,
-          "internal": false
-        },
-        {
-          "id": "systemMessage",
-          "displayName": "System Message",
-          "variant": "Message",
-          "initialValue": "",
-          "required": false,
-          "internal": false
-        }
-      ],
+      "inputs": [],
       "outputs": [
-        {
-          "id": "response",
-          "displayName": "Response",
-          "tooltip": "The response from the model",
-          "variant": "Message"
-        },
         {
           "id": "languageModel",
           "displayName": "Language Model",
@@ -1209,31 +983,8 @@
           "step": 0.1
         }
       ],
-      "inputs": [
-        {
-          "id": "input",
-          "displayName": "Input",
-          "variant": "Message",
-          "initialValue": "",
-          "required": true,
-          "internal": false
-        },
-        {
-          "id": "systemMessage",
-          "displayName": "System Message",
-          "variant": "Message",
-          "initialValue": "",
-          "required": false,
-          "internal": false
-        }
-      ],
+      "inputs": [],
       "outputs": [
-        {
-          "id": "response",
-          "displayName": "Response",
-          "tooltip": "The response message from the model",
-          "variant": "Message"
-        },
         {
           "id": "languageModel",
           "displayName": "Language Model",

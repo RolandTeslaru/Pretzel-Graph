@@ -11,9 +11,9 @@ export const reconcile = (
     const newBlueprint = cloneDeep(Blueprint);
     const fields = new Map(newBlueprint.fields.map(f => [f.id, f]));
 
-    if (changedFieldId === "provider") {
-        const modelField = fields.get("model" as any) as Foundations.Field.MultiOption;
-        const apiKeyField = fields.get("apiKey" as any) as Foundations.Field.Secret;
+    if (changedFieldId === "provider" as any) {
+        const modelField = fields.get("model" as any) as unknown as Foundations.Field.MultiOption;
+        const apiKeyField = fields.get("apiKey" as any) as unknown as Foundations.Field.Secret;
 
         if (!modelField || !apiKeyField) return newBlueprint;
 

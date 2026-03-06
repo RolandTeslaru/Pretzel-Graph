@@ -15,11 +15,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public override async run(
         state: RuntimeState,
-        fields: InferFields<typeof Blueprint>,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { code } = fields;
+        const { code } = this.fields;
 
         try {
             // Create a function that takes inputs and returns the result
@@ -30,7 +29,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 })();
             `);
 
-            const result = await fn(inputs, fields, state);
+            const result = await fn(inputs, this.fields, state);
 
             return {
                 output: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
