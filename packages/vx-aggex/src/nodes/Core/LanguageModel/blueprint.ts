@@ -26,13 +26,13 @@ export const Blueprint = defineBlueprint({
             required: false,
             tooltip: "Chat history to be included in the context window"
         }),
-        InputBuilder.HumanMessage({
+        InputBuilder.Message({
             id: "input",
             displayName: "Input",
             required: true,
             tooltip: "The input text to send to the model"
         }),
-        InputBuilder.SystemMessage({
+        InputBuilder.Message({
             id: "systemMessage",
             displayName: "System Message",
             tooltip: "A system message that helps set the behavior of the assistant"

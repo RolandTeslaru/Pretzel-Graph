@@ -3,6 +3,7 @@ import { Workflow } from "./Workflow"
 import { type AxiosInstance } from "axios"
 import { type SupabaseClient } from "@supabase/supabase-js";
 import { Realtime } from "./Realtime";
+import { ExecutionSession } from "./ExecutionSession";
 
 export namespace Chat {
 
@@ -51,7 +52,7 @@ export namespace Chat {
             return crypto.randomUUID() as Id
         }
 
-        export const Role = z.enum(["user", "assistant", "tool", "system"])
+        export const Role = z.enum(["user", "ai", "tool", "system"])
         export type Role = z.infer<typeof Role>
 
         export const Base = z.object({
@@ -73,8 +74,8 @@ export namespace Chat {
             data: z.object({}).optional(),
         })
 
-        export const Assistant = Base.extend({
-            role: configLiteral("assistant"),
+        export const AI = Base.extend({
+            role: configLiteral("ai"),
             data: z.object({
                 isProcessing: z.boolean(),
                 tool_calls: z.array(ToolCall.Schema).optional(),
@@ -97,14 +98,14 @@ export namespace Chat {
             data: z.object({}).optional(),
         })
 
-        export interface Assistant extends z.infer<typeof Message.Assistant> { }
+        export interface AI extends z.infer<typeof Message.AI> { }
         export interface Tool extends z.infer<typeof Message.Tool> { }
         export interface System extends z.infer<typeof Message.System> { }
         export interface User extends z.infer<typeof Message.User> { }
 
         export const Schema = z.discriminatedUnion("role", [
             Message.User,
-            Message.Assistant,
+            Message.AI,
             Message.Tool,
             Message.System,
         ])
@@ -117,6 +118,7 @@ export namespace Chat {
         workflow_id: Workflow.Id,
         created_at: z.iso.datetime(),
         updated_at: z.iso.datetime(),
+        execution_session_id: z.lazy(() => ExecutionSession.Id)
     })
 
     export namespace Event {
@@ -131,7 +133,7 @@ export namespace Chat {
         export namespace ResponseCreated {
             export const Schema = Base.extend({
                 type: z.literal("response:created"),
-                responseMessage: Message.Assistant
+                responseMessage: Message.AI
             })
         }
         export type ResponseCreated = z.infer<typeof ResponseCreated.Schema>
@@ -144,7 +146,7 @@ export namespace Chat {
             })
         }
         export type ResponseChunk = z.infer<typeof ResponseChunk.Schema>
-    
+
         export namespace ResponseFinished {
             export const Schema = Base.extend({
                 type: z.literal("response:finished"),
@@ -153,7 +155,7 @@ export namespace Chat {
             })
         }
         export type ResponseFinished = z.infer<typeof ResponseFinished.Schema>
-    
+
         export const Schema = z.discriminatedUnion("type", [
             ResponseCreated.Schema,
             ResponseChunk.Schema,
@@ -183,7 +185,7 @@ export namespace Chat {
 
             export namespace Respond {
                 export const Request = z.object({
-                    responseMessage: Chat.Message.Assistant,
+                    responseMessage: Chat.Message.AI,
                 })
                 export type Request = z.infer<typeof Request>
 
@@ -258,7 +260,7 @@ export namespace Chat {
             }
             export namespace StreamResponse {
                 export const Request = z.object({
-                    responseMessage: Chat.Message.Assistant,
+                    responseMessage: Chat.Message.AI,
                     jobId: z.string().brand("JobId")
                 })
                 export type Request = z.infer<typeof Request>
@@ -302,6 +304,7 @@ export namespace Chat {
             export const Request = z.object({
                 workflow_id: Workflow.Id,
                 name: z.string().optional(),
+                execution_session: z.lazy(() => ExecutionSession.Schema)
             })
             export type Request = z.infer<typeof Request>
 

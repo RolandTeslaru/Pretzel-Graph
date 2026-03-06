@@ -16,10 +16,10 @@ export namespace ExecutionSession {
         id: Id,
         node_outputs: z.record(Workflow.Node.Id, z.any()).default(() => ({})),
         node_messages: z.record(Workflow.Node.Id, z.string()).default(() => ({})),
-        messages: z.array(Chat.Message.Schema).default(() => ([])),
-        attachments: z.record(z.string(), Chat.Attachment.Schema).default(() => ({})),
+        messages: z.array(z.lazy(() => Chat.Message.Schema)).default(() => ([])),
+        attachments: z.record(z.string(), z.lazy(() => Chat.Attachment.Schema)).default(() => ({})),
         metadata: z.record(z.string(), z.any()).default(() => ({})),
-        chatId: Chat.Id.optional(),
+        chatId: z.lazy(() => Chat.Id).optional(),
     })
 
     export const INITIAL = {
@@ -46,6 +46,18 @@ export namespace ExecutionSession {
     }
     export type NodeStatus = z.infer<typeof NodeStatus.Schema>
 
+
+    export namespace Database {
+        export namespace Row {
+            export const Schema = z.object({
+                id: ExecutionSession.Id,
+                data: ExecutionSession.Schema,
+                created_at: z.string().optional(),
+                updated_at: z.string().optional(),
+            })
+            export type Type = z.infer<typeof Schema>
+        }
+    }
 
     export namespace API {
         export namespace Create {

@@ -62,7 +62,7 @@ const MessageItem = memo(({ id }: { id: Chat.Message.Id }) => {
     return <HumanMessageBubble message={message} />;
   }
 
-  if (message.role === "assistant") {
+  if (message.role === "ai") {
     return <AIMessageBubble message={message} />;
   }
 

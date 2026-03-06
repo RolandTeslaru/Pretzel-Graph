@@ -1,4 +1,4 @@
-import { Chat, Orchestrator, Workflow } from "@vx-agent-editor/shared/domain";
+import { Chat } from "@vx-agent-editor/shared/domain";
 import { OrchestratorSDK } from "../OrchestratorSDK/sdk";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import type { ChatSDKImpl } from "./sdk";
@@ -31,7 +31,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
             },
             finaliseStreaming: (messageId) => {
                 sdk.setState(s => {
-                    const msg = s.messagesRecord[messageId] as Chat.Message.Assistant;
+                    const msg = s.messagesRecord[messageId] as Chat.Message.AI;
                     msg.data.isProcessing = false;
                 })
             },
@@ -42,10 +42,12 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                 let currentChatId = sdk.state.currentChatId;
                 let currentChat = currentChatId ? sdk.state.chats[currentChatId] : null;
 
+                const execution_session = ExecutionSessionSDK.state.session;
+
                 // Ensures we have a chat
                 if (!currentChat) {
                     try {
-                        const { chat } = await Chat.API.create(api, { workflow_id, name: deriveChatName(content) })
+                        const { chat } = await Chat.API.create(api, { workflow_id, name: deriveChatName(content), execution_session })
 
                         currentChat = chat;
                         currentChatId = chat.id;
