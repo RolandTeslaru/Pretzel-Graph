@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { createAuthenticatedClient, getUserId } from '@/utils/supabase';
-import { Auth, Chat, Workflow } from '@vx-agent-editor/shared/domain';
+import { Auth, Chat, ExecutionSession, Workflow } from '@vx-agent-editor/shared/domain';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { ExecutionSessionService } from '../ExecutionSession/execution-session.service';
 
 @Injectable()
 export class ChatService {
+    constructor(private readonly executionSessionService: ExecutionSessionService) { }
+
     private assertSupabaseOk(error: unknown, operation: string): void {
         if (!error) return;
 
@@ -17,13 +21,20 @@ export class ChatService {
 
     private readonly dbOps = {
         chat: {
-            create: async (supabase: any, userId: string, workflow_id: string, name = "New Chat") => {
+            create: async (
+                supabase: SupabaseClient,
+                userId: Auth.User.Id,
+                workflow_id: Workflow.Id,
+                execution_session_id: ExecutionSession.Id,
+                name = "New Chat"
+            ) => {
                 const { data, error } = await supabase
                     .from('chats')
                     .insert({
                         user_id: userId,
                         workflow_id,
-                        name,
+                        name: name ?? "New Chat",
+                        execution_session_id,
                         created_at: new Date(),
                         updated_at: new Date(),
                     })
@@ -37,15 +48,16 @@ export class ChatService {
                 return {
                     id: data.id as Chat.Id,
                     workflow_id: workflow_id as any as Workflow.Id,
-                    name: "New Chat",
+                    name: name ?? "New Chat",
+                    execution_session_id,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 } satisfies Chat;
             },
-            get: async (supabase: any, chatId: string) => {
+            get: async (supabase: SupabaseClient, chatId: Chat.Id) => {
                 const { data, error } = await supabase
                     .from('chats')
-                    .select('id, user_id, workflow_id, name, created_at, updated_at, chat_messages(*)')
+                    .select('id, user_id, workflow_id, name, created_at, updated_at, execution_session_id, chat_messages(*)')
                     .eq('id', chatId)
                     .order('created_at', { referencedTable: 'chat_messages', ascending: true })
                     .single();
@@ -62,7 +74,7 @@ export class ChatService {
                     messages: chat_messages ?? []
                 };
             },
-            list: async (supabase: any, userId: string) => {
+            list: async (supabase: SupabaseClient, userId: Auth.User.Id) => {
                 const { data, error } = await supabase
                     .from('chats')
                     .select('*')
@@ -72,13 +84,13 @@ export class ChatService {
                 this.assertSupabaseOk(error, "chat.list");
                 return data ?? [];
             },
-            erase: async (supabase: any, chatId: string) => {
+            erase: async (supabase: SupabaseClient, chatId: Chat.Id) => {
                 const { error } = await supabase.from('chats').delete().eq('id', chatId);
                 this.assertSupabaseOk(error, "chat.erase");
             },
         },
         message: {
-            add: async (supabase: any, message: Chat.Message) => {
+            add: async (supabase: SupabaseClient, message: Chat.Message) => {
                 const { error } = await supabase.from('chat_messages').insert({
                     id: message.id,
                     chat_id: message.chat_id,
@@ -91,11 +103,11 @@ export class ChatService {
 
                 this.assertSupabaseOk(error, "message.add");
             },
-            erase: async (supabase: any, messageId: string) => {
+            erase: async (supabase: SupabaseClient, messageId: Chat.Message.Id) => {
                 const { error } = await supabase.from('chat_messages').delete().eq('id', messageId);
                 this.assertSupabaseOk(error, "message.erase");
             },
-            update: async (supabase: any, messageId: string, content: string) => {
+            update: async (supabase: SupabaseClient, messageId: Chat.Message.Id, content: string) => {
                 const { error } = await supabase
                     .from('chat_messages')
                     .update({ content })
@@ -112,12 +124,18 @@ export class ChatService {
         payload: Chat.API.Create.Request
     ): Promise<Chat.API.Create.Response> {
         const supabase = createAuthenticatedClient(token);
-        const { workflow_id, name } = payload;
+        const { workflow_id, name, execution_session } = payload
 
         const userId = await getUserId(supabase) as Auth.User.Id;
-        if (!userId) throw new Error("User not found");
+        if (!userId)
+            throw new Error("User not found");
 
-        const chat = await this.dbOps.chat.create(supabase, userId, workflow_id as any as Workflow.Id, name);
+        // Ensure the execution session exists in the DB (insert if missing, update if existing)
+        await this.executionSessionService.dbOps.upsert(supabase, execution_session);
+
+        const chat = await this.dbOps.chat.create(
+            supabase, userId, workflow_id, execution_session.id, name
+        );
 
         return { chat };
     }
