@@ -75,23 +75,8 @@ export const Blueprint = defineBlueprint({
             advanced: true,
         }),
     ],
-    inputs: [
-        InputBuilder.Message({
-            id: "input",
-            displayName: "Input",
-            required: true
-        }),
-        InputBuilder.Message({
-            id: "systemMessage",
-            displayName: "System Message",
-        }),
-    ],
+    inputs: [],
     outputs: [
-        OutputBuilder.Message({
-            id: "response",
-            displayName: "Response",
-            tooltip: "The response message from the model",
-        }),
         OutputBuilder.LanguageModel({
             id: "languageModel",
             displayName: "Language Model",

@@ -17,6 +17,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 import { LibraryService } from './services/Library/service';
 import { OrchestratorService } from './services/Orchestrator/service';
+import { ExecutionSessionService } from './services/ExecutionSession/service';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { RealtimeService } from './services/Realtime/service';
@@ -27,6 +28,7 @@ import { ShelfService } from './services/Shelf/service';
 app.use('/api/library', LibraryService.routes);
 app.use('/api/shelf', ShelfService.routes);
 app.use('/api/orchestrator', OrchestratorService.routes);
+app.use('/api/execution-session', ExecutionSessionService.routes);
 app.use('/api/workbench', WorkbenchService.routes)
 app.use('/api/chat', ChatService.routes)
 

@@ -15,11 +15,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public override async run(
         state: RuntimeState,
-        fields: InferFields<typeof Blueprint>,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { stringField } = fields;
+        const { stringField } = this.fields;
         const {
             messageInput,
             languageModelInput,

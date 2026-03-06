@@ -73,7 +73,7 @@ code {
 :root {
   --background: theme(--color-gray-200);
   --foreground: #2C1810;
-  --card: #ffffff; 
+  --card: #ffffff;
   --card-foreground: theme(--color-stone-600);
 
   --popover: theme(--color-stone-50);
@@ -86,19 +86,19 @@ code {
 
   --secondary: #ededed;
   --secondary-foreground: #3D2117;
-  
+
   --accent: theme(--color-neutral-300);
   --accent-foreground: theme(--color-neutral-700);
-  
+
   --destructive: theme(--color-red-600);
   --destructive-foreground: theme(--color-white);
   --border: theme(--color-stone-300);
-  
+
   --muted: theme(--color-neutral-200);
   --muted-foreground: theme(--color-neutral-500);
   --input: theme(--color-neutral-50);
-  
-  
+
+
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -147,6 +147,24 @@ code {
   --port-Message-foreground: theme(--color-blue-500);
   --port-Message-accent: theme(--color-blue-200);
 
+  /* System: Deeper, muted structural blue */
+  --port-SystemMessage: theme(--color-slate-400);
+  --port-SystemMessage-foreground: theme(--color-slate-500);
+  --port-SystemMessage-accent: theme(--color-slate-200);
+
+  /* AI: Brighter, energetic purple/violet */
+  --port-AIMessage: theme(--color-violet-400);
+  --port-AIMessage-foreground: theme(--color-violet-500);
+  --port-AIMessage-accent: theme(--color-violet-200);
+
+  /* Human: Warmer, organic teal/cyan */
+  --port-HumanMessage: theme(--color-teal-400);
+  --port-HumanMessage-foreground: theme(--color-teal-500);
+  --port-HumanMessage-accent: theme(--color-teal-200);
+
+  --port-MessageList: theme(--color-indigo-400);
+  --port-MessageList-foreground: theme(--color-indigo-500);
+  --port-MessageList-accent: theme(--color-indigo-200);
   --port-LanguageModel: theme(--color-fuchsia-400);
   --port-LanguageModel-foreground: theme(--color-fuchsia-500);
   --port-LanguageModel-accent: theme(--color-fuchsia-200);

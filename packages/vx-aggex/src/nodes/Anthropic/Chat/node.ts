@@ -23,15 +23,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { systemMessage, input } = inputs;
-
-        const response = await this.llm.invoke([
-            systemMessage,
-            input
-        ]);
-
         return {
-            response,
             languageModel: this.llm
         };
     }

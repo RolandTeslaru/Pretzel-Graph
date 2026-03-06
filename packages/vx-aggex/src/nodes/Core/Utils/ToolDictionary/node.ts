@@ -1,13 +1,12 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
-import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import { RuntimeNode, RuntimeState } from "src/runtime";
-import { InferFields, InferInputs, InferOutputs } from "src/types";
+import { InferInputs, InferOutputs } from "src/types";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    public readonly Blueprint = Blueprint;
+    public static readonly Blueprint = Blueprint;
 
     constructor(props: RuntimeNode.ConstructorProps) {
         super(props);
@@ -18,12 +17,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { data } = this.fields;
-
-        return {
-            output: data
-        };
+        // Implement ToolDictionary node logic here
+        return {};
     }
-
-
 }

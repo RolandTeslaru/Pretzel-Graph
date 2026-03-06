@@ -17,10 +17,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { input } = inputs;
+        const { maxTokensPercentage } = this.fields;
+
+        const { summerizationLLM } = inputs;
 
         return {
-            messages: input,
+            messages: [],
         };
     }
 }

@@ -1,8 +1,7 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Orchestrator, Realtime, Execution, Workflow } from "@vx-agent-editor/shared/domain";
-import { useEffect } from "react";
+import { Orchestrator, Workflow } from "@vx-agent-editor/shared/domain";
 import { RealtimeSDK } from "../Realtime/sdk";
 import { createOrchestratorSDKActions, type OrchestratorSDKActions } from "./actions";
 import { orchestratorSDKReducers } from "./reducers";
@@ -11,15 +10,14 @@ import { shallow } from "zustand/shallow";
 
 @SDK("Orchestrator")
 export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
-    
-    
+
+
     constructor() { super() }
 
 
     public readonly useStore: BaseSDK.Store<OrchestratorSDK.State> = createWithEqualityFn(
         immer<OrchestratorSDK.State>(() => ({
             jobId: undefined,
-            executionContext: Execution.Context.INITIAL,
             executionStatus: "idle",
             nodeStatuses: {}
         })),
@@ -39,7 +37,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
 
     public readonly selectors: OrchestratorSDK.Selectors = {}
 
-    
+
     public handleOnEvent = (event: Orchestrator.Event) => {
         switch (event.type) {
             case "started":
@@ -98,7 +96,7 @@ OrchestratorSDK.useStore.subscribe((state, prevState) => {
     if (state.jobId === prevState.jobId)
         return;
 
-    if(!state.jobId){
+    if (!state.jobId) {
         OrchestratorSDK.runtime.unsubscribeFromJobTopic?.();
         return;
     }
@@ -114,8 +112,7 @@ export namespace OrchestratorSDK {
 
     export type State = {
         jobId: Orchestrator.Job.Id | undefined
-        executionContext: Execution.Context
-        nodeStatuses: Record<Workflow.Node.Id, Execution.NodeStatus>
+        nodeStatuses: Record<Workflow.Node.Id, any>
         executionStatus: "idle" | "running" | "completed" | "failed"
     }
 
