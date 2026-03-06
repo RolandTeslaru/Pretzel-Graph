@@ -5,7 +5,7 @@ import { Synthesizer } from "./synthesizer";
 import { Emitter } from "./event/emitter";
 import type { AggexEngine } from "./engine";
 import { RuntimeState } from "./runtime";
-import { Execution, Orchestrator } from "@vx-agent-editor/shared/domain";
+import { ExecutionSession, Orchestrator } from "@vx-agent-editor/shared/domain";
 
 export class WorkflowCompiler {
     constructor() { }
@@ -14,13 +14,13 @@ export class WorkflowCompiler {
         workflow: Workflow,
         emit: Emitter,
         nodeRunnerFn: AggexEngine["runNode"],
-        executionContext: Execution.Context,
+        session: ExecutionSession,
         jobId: Orchestrator.Job.Id
     ) {
         const workflowCache = Workflow.createCache(workflow);
 
         const state = Synthesizer.synthesizeState({
-            executionContext,
+            session,
             workflow,
             workflowCache,
             jobId,

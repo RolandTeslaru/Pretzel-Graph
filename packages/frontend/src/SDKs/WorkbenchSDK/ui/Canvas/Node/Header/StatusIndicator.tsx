@@ -1,7 +1,7 @@
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
 import { Popover } from '@/vx-ui/foundations'
 import { SystemIcons } from '@/vx-ui/icons'
-import type { Execution, Validation, Workflow } from '@vx-agent-editor/shared/domain'
+import type { ExecutionSession, Validation, Workflow } from '@vx-agent-editor/shared/domain'
 
 
 const StatusIndicator = ({
@@ -11,7 +11,7 @@ const StatusIndicator = ({
 }: {
   nodeId: Workflow.Node.Id,
   className?: string,
-  executionStatus?: Execution.NodeStatus
+  executionStatus?: ExecutionSession.NodeStatus
 }) => {
   const hasIssues = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.doesNodeHaveIssues(s, nodeId))
 

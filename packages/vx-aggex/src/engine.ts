@@ -1,7 +1,6 @@
 import { WorkflowCompiler } from "./compiler";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
-import { Foundations, Orchestrator, Execution } from "@vx-agent-editor/shared/domain";
-import { Synthesizer } from "./synthesizer";
+import { Foundations, Orchestrator, ExecutionSession } from "@vx-agent-editor/shared/domain";
 import { RuntimeNode, RuntimeState, RuntimeCompiledGraph } from "./runtime"
 import { Emitter } from "./event/emitter";
 
@@ -122,11 +121,11 @@ export class AggexEngine {
     public compile(
         workflow: Workflow,
         emit: Emitter, 
-        executionContext: Execution.Context,
+        session: ExecutionSession,
         jobId: Orchestrator.Job.Id
     ) {
         try {
-            return this.compiler.compile(workflow, emit, this.runNode.bind(this), executionContext, jobId)
+            return this.compiler.compile(workflow, emit, this.runNode.bind(this), session, jobId)
         } catch (err) {
             console.error("Error during compilation of workflow ", workflow.id, err)
 

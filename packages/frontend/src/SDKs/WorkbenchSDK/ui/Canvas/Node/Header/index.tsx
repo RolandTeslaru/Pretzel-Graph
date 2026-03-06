@@ -1,5 +1,5 @@
 import React from 'react'
-import { Execution, Workflow } from '@vx-agent-editor/shared/domain';
+import { ExecutionSession, Workflow } from '@vx-agent-editor/shared/domain';
 import MinimizedHandles from './MinimizedHandles';
 import { LazyIcon } from '@/vx-ui/icons/LazyIcon';
 import StatusIndicator from './StatusIndicator';
@@ -7,7 +7,7 @@ import StatusIndicator from './StatusIndicator';
 interface Props {
   node: Workflow.Node
   isWorkflowLocked: boolean
-  executionStatus?: Execution.NodeStatus
+  executionStatus?: ExecutionSession.NodeStatus
 }
 
 export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionStatus }) => {
