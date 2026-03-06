@@ -15,7 +15,7 @@ export const Blueprint = defineBlueprint({
         })
     ],
     outputs: [
-        OutputBuilder.Message({
+        OutputBuilder.HumanMessage({
             id: "response",
             displayName: "Response",
             tooltip: "The response from the model",

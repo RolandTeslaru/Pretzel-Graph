@@ -101,7 +101,7 @@ export class AggexEngine {
                 const sourceOutputs = state.node_outputs[edge.source.nodeId];
                 if (sourceOutputs) {
                     const rawReference = sourceOutputs[edge.source.portId as string];
-                    resolved[input.id] = Synthesizer.ensureReference(rawReference, input.variant);
+                    resolved[input.id] = rawReference;
                 }
             } else {
                 // ── No edge: synthesize from static value or initialValue ──
@@ -110,7 +110,7 @@ export class AggexEngine {
                 const raw = staticValue ?? fallback;
 
                 if (raw !== undefined) {
-                    resolved[input.id] = Synthesizer.synthesizeInput(input, raw as Foundations.Field.Value);
+                    resolved[input.id] = raw as Foundations.Field.Value;
                 }
             }
         }

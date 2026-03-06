@@ -15,30 +15,17 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;
 
-    private readonly llmVertex: RuntimeNode<Foundations.Blueprint>
-
     constructor(props: RuntimeNode.ConstructorProps) {
         super(props);
-        
-        switch(this.fields.provider){
-            case "Google":
-                this.llmVertex = new GoogleGenerativeAINode(props);
-                break;
-            case "Anthropic":
-                this.llmVertex = new AnthropicChatNode(props);
-                break;
-            case "OpenAI":
-                this.llmVertex = new OpenAIChatNode(props);
-                break;
-            default:
-                throw new Error(`Provider "${this.fields.provider}" not supported`)
-        }
     }
 
     public override async run(
         state: RuntimeState,
         inputs: Inputs
     ): Promise<Outputs> {
-        return await this.llmVertex.run(state, inputs) as Outputs
+        return await inputs.languageModel.invoke([
+            inputs.systemMessage,
+            inputs.input
+        ])
     }
 }

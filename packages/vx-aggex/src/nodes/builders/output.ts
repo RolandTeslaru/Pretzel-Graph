@@ -40,6 +40,33 @@ export namespace OutputBuilder {
         };
     }
 
+    export function SystemMessage<TId extends string>(
+        config: BaseProps<TId>
+    ): LiteralOutput<TId, "SystemMessage", Foundations.Port.Variants.SystemMessage, LC.SystemMessage> {
+        return {
+            ...buildBase(config),
+            variant: "SystemMessage" as const,
+        };
+    }
+
+    export function AIMessage<TId extends string>(
+        config: BaseProps<TId>
+    ): LiteralOutput<TId, "AIMessage", Foundations.Port.Variants.AIMessage, LC.AIMessage> {
+        return {
+            ...buildBase(config),
+            variant: "AIMessage" as const,
+        };
+    }
+
+    export function HumanMessage<TId extends string>(
+        config: BaseProps<TId>
+    ): LiteralOutput<TId, "HumanMessage", Foundations.Port.Variants.HumanMessage, LC.HumanMessage> {
+        return {
+            ...buildBase(config),
+            variant: "HumanMessage" as const,
+        };
+    }
+
     export function Text<TId extends string>(
         config: BaseProps<TId>
     ): LiteralOutput<TId, "Text", Foundations.Port.Variants.Text, string> {
@@ -127,6 +154,15 @@ export namespace OutputBuilder {
         return {
             ...buildBase(config),
             variant: "DataFrame" as const,
+        };
+    }
+
+    export function MessageList<TId extends string>(
+        config: BaseProps<TId>
+    ): LiteralOutput<TId, "MessageList", Foundations.Port.Variants.MessageList, LC.BaseMessage[]> {
+        return {
+            ...buildBase(config),
+            variant: "MessageList" as const,
         };
     }
 }

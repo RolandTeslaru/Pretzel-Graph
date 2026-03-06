@@ -25,9 +25,9 @@ export namespace InputBuilder {
         tooltip?: string;
         placeholder?: string;
     } & (
-        | { internal?: false | undefined; required?: boolean }
-        | { internal: true; required?: false }
-    );
+            | { internal?: false | undefined; required?: boolean }
+            | { internal: true; required?: false }
+        );
 
     function buildBase<TId extends string>(
         props: BaseProps<TId>,
@@ -54,6 +54,36 @@ export namespace InputBuilder {
         return {
             ...buildBase(config),
             variant: "Message" as const,
+            initialValue: config.initialValue ?? "",
+        };
+    }
+
+    export function SystemMessage<TId extends string>(
+        config: { initialValue?: string } & BaseProps<TId>
+    ): LiteralInput<TId, "SystemMessage", Foundations.Port.Variants.SystemMessage, LC.SystemMessage> {
+        return {
+            ...buildBase(config),
+            variant: "SystemMessage" as const,
+            initialValue: config.initialValue ?? "",
+        };
+    }
+
+    export function AIMessage<TId extends string>(
+        config: { initialValue?: string } & BaseProps<TId>
+    ): LiteralInput<TId, "AIMessage", Foundations.Port.Variants.AIMessage, LC.AIMessage> {
+        return {
+            ...buildBase(config),
+            variant: "AIMessage" as const,
+            initialValue: config.initialValue ?? "",
+        };
+    }
+
+    export function HumanMessage<TId extends string>(
+        config: { initialValue?: string } & BaseProps<TId>
+    ): LiteralInput<TId, "HumanMessage", Foundations.Port.Variants.HumanMessage, LC.HumanMessage> {
+        return {
+            ...buildBase(config),
+            variant: "HumanMessage" as const,
             initialValue: config.initialValue ?? "",
         };
     }
@@ -119,6 +149,15 @@ export namespace InputBuilder {
         return {
             ...buildBase(config),
             variant: "Tool" as const,
+        };
+    }
+
+    export function MessageList<TId extends string>(
+        config: BaseProps<TId>
+    ): LiteralInput<TId, "MessageList", Foundations.Port.Variants.MessageList, LC.BaseMessage[]> {
+        return {
+            ...buildBase(config),
+            variant: "MessageList" as const,
         };
     }
 }

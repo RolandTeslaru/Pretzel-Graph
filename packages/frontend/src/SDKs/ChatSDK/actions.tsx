@@ -1,12 +1,12 @@
-import { Chat, Execution, Orchestrator, Workflow } from "@vx-agent-editor/shared/domain";
+import { Chat, Orchestrator, Workflow } from "@vx-agent-editor/shared/domain";
 import { OrchestratorSDK } from "../OrchestratorSDK/sdk";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
-import type { ChatSDK, ChatSDKImpl } from "./sdk";
-import { RealtimeSDK } from "../Realtime/sdk";
+import type { ChatSDKImpl } from "./sdk";
 import { toast } from "sonner";
 import { api } from "../ApiInterceptorSDK";
 import { DialogSDK } from "@/vx-ui/SDKs/DialogSDK";
 import FullscreenChat from "./ui/FullscreenChat";
+import { ExecutionSessionSDK } from "../ExecutionSessionSDK/sdk";
 
 function deriveChatName(content: string, maxLength = 50): string {
     const trimmed = content.trim().replace(/\s+/g, ' ');
@@ -77,11 +77,11 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
 
                     sdk.actions.message.upsert(message)
 
-                    OrchestratorSDK.setState(s => {
-                        s.executionContext.messages.push(message);
-                        s.executionContext.chatId = currentChatId!;
+                    ExecutionSessionSDK.setState(s => {
+                        s.session.messages.push(message)
+                        s.session.chatId = currentChatId!;
                     })
-                    const jobId = await OrchestratorSDK.actions.execution.run()
+                    const jobId = await OrchestratorSDK.actions.run()
 
                     if (!jobId)
                         throw new Error("No job id returned");
@@ -135,8 +135,12 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     s.isLoading = false;
                 })
 
-                OrchestratorSDK.setState(s => {
-                    s.executionContext.messages = messages;
+                ExecutionSessionSDK.setState(s => {
+                    s.session.messages = [];
+
+                    messages.forEach(msg => {
+                        s.session.messages.push(msg)
+                    })
                 })
             },
             new: () => {
@@ -145,8 +149,8 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     s.messages = [];
                     s.messagesRecord = {};
                 });
-                OrchestratorSDK.setState(s => {
-                    s.executionContext.messages = [];
+                ExecutionSessionSDK.setState(s => {
+                    s.session.messages = [];
                 });
             },
             clearMessages: async () => {
