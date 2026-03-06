@@ -101,9 +101,9 @@ class Synthesizer {
             `"${typeof value}" into variant "${variant}".`);
     }
     static synthesizeState(props) {
-        const { executionContext, workflow, workflowCache, emit, jobId } = props;
+        const { session, workflow, workflowCache, emit, jobId } = props;
         const syntheticState = {
-            ...executionContext,
+            ...session,
             workflow,
             workflowCache,
             jobId,

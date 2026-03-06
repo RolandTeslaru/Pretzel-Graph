@@ -6,17 +6,17 @@ const domain_1 = require("@vx-agent-editor/shared/domain");
 var RuntimeState;
 (function (RuntimeState) {
     RuntimeState.Schema = new langgraph_1.StateSchema({
-        node_outputs: new langgraph_1.ReducedValue(domain_1.Execution.Context.Schema.shape.node_outputs, {
+        node_outputs: new langgraph_1.ReducedValue(domain_1.ExecutionSession.Schema.shape.node_outputs, {
             reducer: (x, y) => ({ ...x, ...y }),
         }),
         messages: langgraph_1.MessagesValue,
-        attachments: new langgraph_1.ReducedValue(domain_1.Execution.Context.Schema.shape.attachments, {
+        attachments: new langgraph_1.ReducedValue(domain_1.ExecutionSession.Schema.shape.attachments, {
             reducer: (x, y) => ({ ...x, ...y }),
         }),
-        metadata: new langgraph_1.ReducedValue(domain_1.Execution.Context.Schema.shape.metadata, {
+        metadata: new langgraph_1.ReducedValue(domain_1.ExecutionSession.Schema.shape.metadata, {
             reducer: (x, y) => ({ ...x, ...y }),
         }),
-        chatId: domain_1.Execution.Context.Schema.shape.chatId,
+        chatId: domain_1.Chat.Id,
         streamController: new langgraph_1.UntrackedValue(),
         emit: new langgraph_1.UntrackedValue(),
         jobId: new langgraph_1.UntrackedValue(),

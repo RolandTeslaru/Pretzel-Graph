@@ -47,7 +47,9 @@ export class OrchestratorService {
         payload: Orchestrator.API.Run.Request
     ): Promise<Orchestrator.API.Run.Response> {
         const { workflow, executionSession } = payload
+
         const wfCache = Workflow.createCache(workflow);
+        
         const workflowIssues = Validation.Issue.checkWorkflow(workflow, wfCache);
 
         if (Object.entries(workflowIssues).length > 0)

@@ -1,7 +1,6 @@
 import { z } from "zod"
 import { Workflow } from "./Workflow"
 import { Chat } from "./Chat"
-import uid from "@/utils/uid";
 import { type AxiosInstance } from "axios"
 
 export namespace ExecutionSession {
@@ -10,7 +9,7 @@ export namespace ExecutionSession {
     export type Id = z.infer<typeof Id>
 
     export function createId() {
-        return `${uid.randomUUID(5)}` as Id
+        return crypto.randomUUID() as Id
     }
 
     export const Schema = z.object({
@@ -35,6 +34,17 @@ export namespace ExecutionSession {
     export const Update = Schema.partial()
     export type Update = z.infer<typeof Update>
 
+
+    export namespace NodeStatus {
+        export const Schema = z.object({
+            status: z.enum(["idle", "running", "completed", "failed"]),
+            error: z.string().optional(),
+            started_at: z.string().optional(),
+            completed_at: z.string().optional(),
+        })
+        export type Type = z.infer<typeof Schema>
+    }
+    export type NodeStatus = z.infer<typeof NodeStatus.Schema>
 
 
     export namespace API {

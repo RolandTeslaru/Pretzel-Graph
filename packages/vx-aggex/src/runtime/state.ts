@@ -1,30 +1,30 @@
 import { CompiledStateGraph, MessagesValue, ReducedValue, StateSchema, UntrackedValue } from "@langchain/langgraph";
-import { Execution, Orchestrator, Workflow } from "@vx-agent-editor/shared/domain";
+import { Chat, ExecutionSession, Orchestrator, Workflow } from "@vx-agent-editor/shared/domain";
 import { Emitter } from "src/event/emitter";
 import { StreamController } from "src/StreamController";
 
 export namespace RuntimeState {
     export const Schema = new StateSchema({
         node_outputs: new ReducedValue(
-            Execution.Context.Schema.shape.node_outputs,
+            ExecutionSession.Schema.shape.node_outputs,
             {
                 reducer: (x, y) => ({ ...x, ...y }),
             }
         ),
         messages: MessagesValue,
         attachments: new ReducedValue(
-            Execution.Context.Schema.shape.attachments,
+            ExecutionSession.Schema.shape.attachments,
             {
                 reducer: (x, y) => ({ ...x, ...y }),
             }
         ),
         metadata: new ReducedValue(
-            Execution.Context.Schema.shape.metadata,
+            ExecutionSession.Schema.shape.metadata,
             {
                 reducer: (x, y) => ({ ...x, ...y }),
             }
         ),
-        chatId: Execution.Context.Schema.shape.chatId,
+        chatId: Chat.Id,
         streamController: new UntrackedValue<StreamController>(),
         emit: new UntrackedValue<Emitter>(),
         jobId: new UntrackedValue<Orchestrator.Job.Id>(),
