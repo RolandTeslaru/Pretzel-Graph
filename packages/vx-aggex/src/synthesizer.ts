@@ -56,54 +56,54 @@ export class Synthesizer {
     ): any {
         switch (variant) {
             case "Message":
-                if (rawReference instanceof LC.BaseMessage) 
+                if (rawReference instanceof LC.BaseMessage)
                     return rawReference;
-                if (typeof rawReference === "string") 
+                if (typeof rawReference === "string")
                     return new HumanMessage(rawReference);
 
                 throw this.coercionError(variant, rawReference);
 
             case "Text":
-                if (typeof rawReference === "string") 
+                if (typeof rawReference === "string")
                     return rawReference;
                 return String(rawReference);
 
             case "Document":
-                if (rawReference instanceof LC.Document) 
+                if (rawReference instanceof LC.Document)
                     return rawReference;
-                if (typeof rawReference === "string") 
+                if (typeof rawReference === "string")
                     return new LC.Document({ pageContent: rawReference });
                 throw this.coercionError(variant, rawReference);
 
             case "LanguageModel":
-                if (rawReference instanceof LC.BaseLanguageModel) 
+                if (rawReference instanceof LC.BaseLanguageModel)
                     return rawReference;
                 throw this.coercionError(variant, rawReference);
 
             case "Embeddings":
-                if (rawReference instanceof LC.Embeddings) 
+                if (rawReference instanceof LC.Embeddings)
                     return rawReference;
                 throw this.coercionError(variant, rawReference);
 
             case "VectorStore":
-                if (rawReference instanceof LC.VectorStore) 
+                if (rawReference instanceof LC.VectorStore)
                     return rawReference;
                 throw this.coercionError(variant, rawReference);
 
             case "Retriever":
-                if (rawReference instanceof LC.BaseRetriever) 
+                if (rawReference instanceof LC.BaseRetriever)
                     return rawReference;
                 throw this.coercionError(variant, rawReference);
 
             case "Tool":
-                if (rawReference instanceof LC.Tool) 
+                if (rawReference instanceof LC.Tool)
                     return rawReference;
                 throw this.coercionError(variant, rawReference);
 
             case "Data":
             case "DataFrame":
                 // Pass through — no canonical LC class
-                return rawReference;            
+                return rawReference;
             default:
                 return rawReference;
                 throw new Error(
@@ -117,7 +117,7 @@ export class Synthesizer {
      * Coerce a string (or BaseMessage) into the specific message subclass.
      */
     public static coerceMessage(
-        kind: "human" | "system" | "ai",
+        kind: "human" | "system" | "ai" | string,
         input: LC.BaseMessage | string
     ): LC.BaseMessage {
         const content = typeof input === "string" ? input : input.content;
@@ -129,6 +129,8 @@ export class Synthesizer {
                 return input instanceof HumanMessage ? input : new HumanMessage(content);
             case "ai":
                 return input instanceof AIMessage ? input : new AIMessage(content);
+            default:
+                throw new Error(`AGGEX Synthesizer: Unsupported message role "${kind}". Only human, system, and ai are supported.`);
         }
     }
 
@@ -140,9 +142,9 @@ export class Synthesizer {
         );
     }
 
-    public static synthesizeState(props: { 
-        session: ExecutionSession, 
-        workflow: Workflow, 
+    public static synthesizeState(props: {
+        session: ExecutionSession,
+        workflow: Workflow,
         workflowCache: Workflow.Cache,
         emit: Emitter,
         jobId: Orchestrator.Job.Id
@@ -153,9 +155,8 @@ export class Synthesizer {
 
         session.messages.forEach(msg => {
             synthesizedMessages.push(
-                this.coerceMessage(msg.role as "system" | "ai" | "human", 
-                    msg.content
-                ));
+                this.coerceMessage(msg.role, msg.content)
+            );
         })
 
         const syntheticState = {

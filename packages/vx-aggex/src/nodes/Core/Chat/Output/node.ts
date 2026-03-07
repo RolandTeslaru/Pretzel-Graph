@@ -10,8 +10,6 @@ import { AxiosService } from "src/axios";
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    public readonly Blueprint = Blueprint;
-
     constructor(props: RuntimeNode.ConstructorProps) {
         super(props);
     }
@@ -47,7 +45,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     isProcessing: true,
                     tool_calls: []
                 }
-            } satisfies Chat.Message.Assistant
+            } satisfies Chat.Message.AI
 
             this.responseMessageId = responseMessage.id;
 
@@ -82,6 +80,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ): Promise<InferOutputs<typeof Blueprint>> {
 
         const { input } = inputs;
+
+        return {};
 
         state.messages.push(Synthesizer.coerceMessage("ai", input));
 

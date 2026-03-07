@@ -19,6 +19,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
             if (clients) {
                 clients.forEach(ws => {
                     if (ws.readyState === WebSocket.OPEN) {
+
                         ws.send(serializedEvent);
                     }
                 });

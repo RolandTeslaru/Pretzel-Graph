@@ -52,7 +52,7 @@ export namespace Chat {
             return crypto.randomUUID() as Id
         }
 
-        export const Role = z.enum(["user", "ai", "tool", "system"])
+        export const Role = z.enum(["human", "ai", "tool", "system"])
         export type Role = z.infer<typeof Role>
 
         export const Base = z.object({
@@ -69,8 +69,8 @@ export namespace Chat {
             return z.literal(value);
         }
 
-        export const User = Base.extend({
-            role: configLiteral("user"),
+        export const Human = Base.extend({
+            role: configLiteral("human"),
             data: z.object({}).optional(),
         })
 
@@ -101,10 +101,10 @@ export namespace Chat {
         export interface AI extends z.infer<typeof Message.AI> { }
         export interface Tool extends z.infer<typeof Message.Tool> { }
         export interface System extends z.infer<typeof Message.System> { }
-        export interface User extends z.infer<typeof Message.User> { }
+        export interface Human extends z.infer<typeof Message.Human> { }
 
         export const Schema = z.discriminatedUnion("role", [
-            Message.User,
+            Message.Human,
             Message.AI,
             Message.Tool,
             Message.System,
@@ -168,7 +168,7 @@ export namespace Chat {
         export namespace Message {
             export namespace Send {
                 export const Request = z.lazy(() => z.object({
-                    message: Chat.Message.User,
+                    message: Chat.Message.Human,
                 }))
                 export type Request = z.infer<typeof Request>
 

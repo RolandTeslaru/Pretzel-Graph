@@ -131,7 +131,7 @@ export class ChatService {
             throw new Error("User not found");
 
         // Ensure the execution session exists in the DB (insert if missing, update if existing)
-        await this.executionSessionService.dbOps.upsert(supabase, execution_session);
+        await this.executionSessionService.dbOps.upsert(supabase, userId, workflow_id, execution_session);
 
         const chat = await this.dbOps.chat.create(
             supabase, userId, workflow_id, execution_session.id, name

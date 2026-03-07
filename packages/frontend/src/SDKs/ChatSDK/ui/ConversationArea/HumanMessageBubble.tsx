@@ -1,8 +1,7 @@
 import { Chat } from '@vx-agent-editor/shared/domain'
-import { Avatar, AvatarFallback } from '@/vx-ui/foundations/avatar'
 import { motion } from 'motion/react'
 
-const HumanMessageBubble = ({ message }: { message: Chat.Message.User }) => {
+const HumanMessageBubble = ({ message }: { message: Chat.Message.Human }) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
