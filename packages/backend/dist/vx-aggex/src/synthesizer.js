@@ -102,8 +102,13 @@ class Synthesizer {
     }
     static synthesizeState(props) {
         const { session, workflow, workflowCache, emit, jobId } = props;
+        const synthesizedMessages = [];
+        session.messages.forEach(msg => {
+            synthesizedMessages.push(this.coerceMessage(msg.role, msg.content));
+        });
         const syntheticState = {
             ...session,
+            messages: synthesizedMessages,
             workflow,
             workflowCache,
             jobId,

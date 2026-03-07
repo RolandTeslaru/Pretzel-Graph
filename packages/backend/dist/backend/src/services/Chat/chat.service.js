@@ -5,21 +5,27 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatService = void 0;
 const common_1 = require("@nestjs/common");
 const supabase_1 = require("@/utils/supabase");
+const execution_session_service_1 = require("../ExecutionSession/execution-session.service");
 let ChatService = class ChatService {
-    constructor() {
+    constructor(executionSessionService) {
+        this.executionSessionService = executionSessionService;
         this.dbOps = {
             chat: {
-                create: async (supabase, userId, workflow_id, name = "New Chat") => {
+                create: async (supabase, userId, workflow_id, execution_session_id, name = "New Chat") => {
                     const { data, error } = await supabase
                         .from('chats')
                         .insert({
                         user_id: userId,
                         workflow_id,
-                        name,
+                        name: name ?? "New Chat",
+                        execution_session_id,
                         created_at: new Date(),
                         updated_at: new Date(),
                     })
@@ -32,7 +38,8 @@ let ChatService = class ChatService {
                     return {
                         id: data.id,
                         workflow_id: workflow_id,
-                        name: "New Chat",
+                        name: name ?? "New Chat",
+                        execution_session_id,
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     };
@@ -40,7 +47,7 @@ let ChatService = class ChatService {
                 get: async (supabase, chatId) => {
                     const { data, error } = await supabase
                         .from('chats')
-                        .select('id, user_id, workflow_id, name, created_at, updated_at, chat_messages(*)')
+                        .select('id, user_id, workflow_id, name, created_at, updated_at, execution_session_id, chat_messages(*)')
                         .eq('id', chatId)
                         .order('created_at', { referencedTable: 'chat_messages', ascending: true })
                         .single();
@@ -131,11 +138,13 @@ let ChatService = class ChatService {
     }
     async create(token, payload) {
         const supabase = (0, supabase_1.createAuthenticatedClient)(token);
-        const { workflow_id, name } = payload;
+        const { workflow_id, name, execution_session } = payload;
         const userId = await (0, supabase_1.getUserId)(supabase);
         if (!userId)
             throw new Error("User not found");
-        const chat = await this.dbOps.chat.create(supabase, userId, workflow_id, name);
+        // Ensure the execution session exists in the DB (insert if missing, update if existing)
+        await this.executionSessionService.dbOps.upsert(supabase, userId, execution_session);
+        const chat = await this.dbOps.chat.create(supabase, userId, workflow_id, execution_session.id, name);
         return { chat };
     }
     async get(token, payload) {
@@ -158,5 +167,6 @@ let ChatService = class ChatService {
 };
 exports.ChatService = ChatService;
 exports.ChatService = ChatService = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [execution_session_service_1.ExecutionSessionService])
 ], ChatService);

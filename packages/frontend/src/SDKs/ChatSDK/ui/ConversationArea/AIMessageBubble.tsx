@@ -5,7 +5,7 @@ import { Spinner } from '@/vx-ui/foundations'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
-const AIMessageBubble = ({ message }: { message: Chat.Message.Assistant }) => {
+const AIMessageBubble = ({ message }: { message: Chat.Message.AI }) => {
 
   const showSpinner = message.content === "" && message.data.isProcessing
 

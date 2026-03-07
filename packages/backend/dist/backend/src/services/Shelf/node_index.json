@@ -1,6 +1,6 @@
 {
-    "version": "1772805951986",
-    "generatedAt": "2026-03-06T14:05:51.986Z",
+    "version": "1772872158796",
+    "generatedAt": "2026-03-07T08:29:18.796Z",
     "drawers": {},
     "blueprints": {
         "Anthropic.Chat": {
@@ -162,7 +162,7 @@
                     "id": "response",
                     "displayName": "Response",
                     "tooltip": "The response from the model",
-                    "variant": "HumanMessage"
+                    "variant": "Message"
                 }
             ],
             "description": "This node is a chat input"
@@ -723,7 +723,7 @@
                     "id": "input",
                     "displayName": "Input",
                     "tooltip": "The input text to send to the model",
-                    "variant": "HumanMessage",
+                    "variant": "Message",
                     "initialValue": "",
                     "required": true,
                     "internal": false
@@ -732,7 +732,7 @@
                     "id": "systemMessage",
                     "displayName": "System Message",
                     "tooltip": "A system message that helps set the behavior of the assistant",
-                    "variant": "SystemMessage",
+                    "variant": "Message",
                     "initialValue": "",
                     "required": false,
                     "internal": false

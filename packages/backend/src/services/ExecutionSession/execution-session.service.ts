@@ -1,16 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { createAuthenticatedClient } from '@/utils/supabase';
-import { ExecutionSession } from '@vx-agent-editor/shared/domain';
+import { createAuthenticatedClient, getUserId } from '@/utils/supabase';
+import { Auth, ExecutionSession, Workflow } from '@vx-agent-editor/shared/domain';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class ExecutionSessionService {
     public readonly dbOps = {
-        upsert: async (supabase: any, session: ExecutionSession) => {
+        upsert: async (supabase: SupabaseClient, userId: Auth.User.Id, workflowId: Workflow.Id, session: ExecutionSession) => {
             const { data, error } = await supabase
                 .from('execution_sessions')
                 .upsert({
                     id: session.id,
                     data: session,
+                    user_id: userId,
+                    workflow_id: workflowId,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'id' })
                 .select('id')
@@ -19,21 +22,23 @@ export class ExecutionSessionService {
             if (error) throw error;
             return data.id as ExecutionSession.Id;
         },
-        get: async (supabase: any, sessionId: ExecutionSession.Id) => {
+        get: async (supabase: SupabaseClient, userId: Auth.User.Id, sessionId: ExecutionSession.Id) => {
             const { data, error } = await supabase
                 .from('execution_sessions')
                 .select('data')
                 .eq('id', sessionId)
+                .eq('user_id', userId)
                 .single();
 
             if (error) throw error;
             return data.data as ExecutionSession;
         },
-        update: async (supabase: any, sessionId: ExecutionSession.Id, updates: ExecutionSession.Update) => {
+        update: async (supabase: SupabaseClient, userId: Auth.User.Id, sessionId: ExecutionSession.Id, updates: ExecutionSession.Update) => {
             const { data: existingData, error: getError } = await supabase
                 .from('execution_sessions')
                 .select('data')
                 .eq('id', sessionId)
+                .eq('user_id', userId)
                 .single();
 
             if (getError) throw getError;
@@ -41,7 +46,7 @@ export class ExecutionSessionService {
             const newSession = {
                 ...existingData.data,
                 ...updates
-            } as ExecutionSession;
+            } satisfies ExecutionSession;
 
             const { data, error } = await supabase
                 .from('execution_sessions')
@@ -50,10 +55,12 @@ export class ExecutionSessionService {
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', sessionId)
+                .eq('user_id', userId)
                 .select('data')
                 .single();
 
-            if (error) throw error;
+            if (error) 
+                throw error;
             return data.data as ExecutionSession;
         }
     };
@@ -63,8 +70,13 @@ export class ExecutionSessionService {
         payload: ExecutionSession.API.Create.Request
     ): Promise<ExecutionSession.API.Create.Response> {
         const supabase = createAuthenticatedClient(token);
+
+        const userId = await getUserId(supabase) as Auth.User.Id;
+        if (!userId)
+            throw new Error("User not found");
+
         const { workflowId, session } = payload;
-        await this.dbOps.upsert(supabase, session);
+        await this.dbOps.upsert(supabase, userId, workflowId, session);
         return { session };
     }
 
@@ -74,8 +86,13 @@ export class ExecutionSessionService {
         payload: ExecutionSession.API.Get.Request
     ): Promise<ExecutionSession.API.Get.Response> {
         const supabase = createAuthenticatedClient(token);
+
+        const userId = await getUserId(supabase) as Auth.User.Id;
+        if (!userId)
+            throw new Error("User not found");
+
         const { id } = payload;
-        const session = await this.dbOps.get(supabase, id);
+        const session = await this.dbOps.get(supabase, userId, id);
         return { session };
     }
 
@@ -85,8 +102,13 @@ export class ExecutionSessionService {
         payload: ExecutionSession.API.Update.Request
     ): Promise<ExecutionSession.API.Update.Response> {
         const supabase = createAuthenticatedClient(token);
+
+        const userId = await getUserId(supabase) as Auth.User.Id;
+        if (!userId)
+            throw new Error("User not found");
+
         const { id, session } = payload;
-        const updatedSession = await this.dbOps.update(supabase, id, session);
+        const updatedSession = await this.dbOps.update(supabase, userId, id, session);
         return { session: updatedSession };
     }
 }

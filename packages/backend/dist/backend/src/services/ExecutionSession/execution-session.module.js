@@ -17,5 +17,6 @@ exports.ExecutionSessionModule = ExecutionSessionModule = __decorate([
     (0, common_1.Module)({
         controllers: [execution_session_controller_1.ExecutionSessionController],
         providers: [execution_session_service_1.ExecutionSessionService],
+        exports: [execution_session_service_1.ExecutionSessionService]
     })
 ], ExecutionSessionModule);

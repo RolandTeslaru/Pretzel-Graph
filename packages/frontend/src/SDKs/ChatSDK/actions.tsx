@@ -64,11 +64,11 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     }
                 }
 
-                const message: Chat.Message.User = {
+                const message: Chat.Message.Human = {
                     content: content,
                     id: Chat.Message.createId(),
                     chat_id: currentChat.id,
-                    role: "user",
+                    role: "human",
                     attachments,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
