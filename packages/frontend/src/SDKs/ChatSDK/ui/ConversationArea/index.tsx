@@ -58,7 +58,7 @@ const MessageItem = memo(({ id }: { id: Chat.Message.Id }) => {
 
   if (!message) return null;
 
-  if (message.role === "user") {
+  if (message.role === "human") {
     return <HumanMessageBubble message={message} />;
   }
 

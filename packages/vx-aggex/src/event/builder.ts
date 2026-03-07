@@ -88,7 +88,7 @@ export class EventBuilder {
     }
 
     public readonly chat = {
-        responseCreated: (chatId: Chat.Id, responseMessage: Chat.Message.Assistant) => (
+        responseCreated: (chatId: Chat.Id, responseMessage: Chat.Message.AI) => (
             {
                 type: "response:created",
                 responseMessage,

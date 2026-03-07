@@ -2,6 +2,7 @@ import { z } from "zod"
 import { Workflow } from "./Workflow"
 import { Chat } from "./Chat"
 import { type AxiosInstance } from "axios"
+import { Auth } from "./Auth"
 
 export namespace ExecutionSession {
 
@@ -39,8 +40,8 @@ export namespace ExecutionSession {
         export const Schema = z.object({
             status: z.enum(["idle", "running", "completed", "failed"]),
             error: z.string().optional(),
-            started_at: z.string().optional(),
-            completed_at: z.string().optional(),
+            started_at:   z.iso.datetime(),
+            completed_at: z.iso.datetime(),
         })
         export type Type = z.infer<typeof Schema>
     }
@@ -52,8 +53,10 @@ export namespace ExecutionSession {
             export const Schema = z.object({
                 id: ExecutionSession.Id,
                 data: ExecutionSession.Schema,
-                created_at: z.string().optional(),
-                updated_at: z.string().optional(),
+                user_id: Auth.User.Id,
+                workflow_id: Workflow.Id,
+                created_at: z.iso.datetime(),
+                updated_at: z.iso.datetime(),
             })
             export type Type = z.infer<typeof Schema>
         }

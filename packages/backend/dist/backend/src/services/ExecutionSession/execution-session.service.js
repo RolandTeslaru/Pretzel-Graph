@@ -12,10 +12,15 @@ const supabase_1 = require("@/utils/supabase");
 let ExecutionSessionService = class ExecutionSessionService {
     constructor() {
         this.dbOps = {
-            create: async (supabase, session) => {
+            upsert: async (supabase, userId, session) => {
                 const { data, error } = await supabase
                     .from('execution_sessions')
-                    .insert(session)
+                    .upsert({
+                    id: session.id,
+                    data: session,
+                    user_id: userId,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'id' })
                     .select('id')
                     .single();
                 if (error)
@@ -25,40 +30,63 @@ let ExecutionSessionService = class ExecutionSessionService {
             get: async (supabase, sessionId) => {
                 const { data, error } = await supabase
                     .from('execution_sessions')
-                    .select('*')
+                    .select('data')
                     .eq('id', sessionId)
                     .single();
                 if (error)
                     throw error;
-                return data;
+                return data.data;
             },
             update: async (supabase, sessionId, updates) => {
+                const { data: existingData, error: getError } = await supabase
+                    .from('execution_sessions')
+                    .select('data')
+                    .eq('id', sessionId)
+                    .single();
+                if (getError)
+                    throw getError;
+                const newSession = {
+                    ...existingData.data,
+                    ...updates
+                };
                 const { data, error } = await supabase
                     .from('execution_sessions')
-                    .update(updates)
+                    .update({
+                    data: newSession,
+                    updated_at: new Date().toISOString()
+                })
                     .eq('id', sessionId)
-                    .select()
+                    .select('data')
                     .single();
                 if (error)
                     throw error;
-                return data;
+                return data.data;
             }
         };
     }
     async create(token, payload) {
         const supabase = (0, supabase_1.createAuthenticatedClient)(token);
+        const userId = await (0, supabase_1.getUserId)(supabase);
+        if (!userId)
+            throw new Error("User not found");
         const { workflowId, session } = payload;
-        await this.dbOps.create(supabase, session);
+        await this.dbOps.upsert(supabase, userId, session);
         return { session };
     }
     async get(token, payload) {
         const supabase = (0, supabase_1.createAuthenticatedClient)(token);
+        const userId = await (0, supabase_1.getUserId)(supabase);
+        if (!userId)
+            throw new Error("User not found");
         const { id } = payload;
         const session = await this.dbOps.get(supabase, id);
         return { session };
     }
     async update(token, payload) {
         const supabase = (0, supabase_1.createAuthenticatedClient)(token);
+        const userId = await (0, supabase_1.getUserId)(supabase);
+        if (!userId)
+            throw new Error("User not found");
         const { id, session } = payload;
         const updatedSession = await this.dbOps.update(supabase, id, session);
         return { session: updatedSession };
