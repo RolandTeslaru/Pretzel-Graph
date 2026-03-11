@@ -1,84 +1,94 @@
-import { StateGraph, START, END, LangGraphRunnableConfig } from "@langchain/langgraph";
+import { RuntimeGraph, START, END, RuntimeState, RuntimeContext } from "./runtime";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { CatalogueService } from "src/services/Catalogue/service";
-import { Synthesizer } from "./synthesizer";
-import { Emitter } from "./event/emitter";
 import type { AggexEngine } from "./engine";
-import { RuntimeState } from "./runtime";
+import { PretzelCompilerError } from "./errors";
+import { Synthesizer } from "./synthesizer";
 import { ExecutionSession, Orchestrator } from "@vx-agent-editor/shared/domain";
+import { Emitter } from "./event/emitter";
+import { StateController } from "./runtime/state";
+import { StreamController } from "./StreamController";
+import { S2Graph } from "./S2Engine/graph";
 
 export class WorkflowCompiler {
     constructor() { }
 
     public async compile(
         workflow: Workflow,
-        emit: Emitter,
-        nodeRunnerFn: AggexEngine["runNode"],
+        jobId: Orchestrator.Job.Id,
         session: ExecutionSession,
-        jobId: Orchestrator.Job.Id
-    ) {
+        nodeRunnerFn: typeof AggexEngine.runNode,
+        emit: Emitter,
+    ): Promise<{ compiledGraph: S2Graph, context: RuntimeContext }> {
         const workflowCache = Workflow.createCache(workflow);
 
-        const state = Synthesizer.synthesizeState({
-            session,
-            workflow,
-            workflowCache,
-            jobId,
-            emit
-        });
+        const initialState = Synthesizer.synthesizeState(session)
 
         // Create the state graph
-        const graph = new StateGraph(RuntimeState.Schema);
+        const graph = new RuntimeGraph(RuntimeState.Definition);
         const nodes = workflow.data.nodes;
         const edges = workflow.data.edges;
 
-        // Add nodes to the graph along with their run function
-        for (const node of Object.values(nodes)) {
+        const context = {
+            workflow,
+            workflowCache,
+            emit,
+            jobId,
+            stateController: new StateController(initialState),
+            streamController: new StreamController()
+        } satisfies RuntimeContext
 
-            const NodeConstructor = await CatalogueService.getNode(node.blueprintId);
+        // Add nodes to the graph along with their run function
+        for (const wfNode of Object.values(nodes)) {
+
+            const NodeConstructor = await CatalogueService.getNode(wfNode.blueprintId);
 
             if (!NodeConstructor)
-                throw new Error(`Could not find node with blueprintId ${node.blueprintId}`)
+                throw new PretzelCompilerError(`Could not find node with blueprintId ${wfNode.blueprintId}`)
 
-            const vertex = new NodeConstructor({
-                workflow,
-                workflowNode: node,
-                emit,
-            });
+            const nodeInstance = new NodeConstructor(wfNode, context);
 
-            await vertex.init({
-                workflow,
-                workflowCache,
-                state,
-                emit,
-                jobId
-            })
-            
-            graph.addNode(node.id, async (state) => {
-                return nodeRunnerFn(state, node, vertex, workflow, workflowCache, emit);
+            await nodeInstance.init(context)
+
+            graph.addNode(wfNode.id, async () => {
+                return nodeRunnerFn(wfNode, nodeInstance, context);
             });
         }
 
         // Add Edges
         for (const edge of Object.values(edges)) {
             graph.addEdge(
-                edge.source.nodeId as any,
-                edge.target.nodeId as any
+                edge.source.nodeId,
+                edge.target.nodeId
             );
         }
 
         // Set Entry Points (Start Nodes)
         const startNodes = this.findStartNodes(nodes, edges);
         if (startNodes.length === 0)
-            throw new Error("AGGEX Compiler: No start nodes found! Graph might be disconnected.")
+            throw new PretzelCompilerError("No start nodes found! Graph might be disconnected.")
 
         startNodes.forEach(nodeId => {
-            graph.addEdge(START, nodeId as "__start__");
+            graph.addEdge(START, nodeId);
         });
+
+        console.log("\n==================== WORKFLOW COMPILATION ====================");
+        console.log("Nodes:");
+        for (const node of Object.values(nodes)) {
+            console.log(`  [Node] ${node.displayName} (ID: ${node.id})`);
+        }
+        console.log("\nEdges:");
+        for (const edge of Object.values(edges)) {
+            const sourceNode = nodes[edge.source.nodeId];
+            const targetNode = nodes[edge.target.nodeId];
+            console.log(`  [Edge] ${sourceNode?.displayName} (${edge.source.nodeId} : ${String(edge.source.portId)}) ---> ${targetNode?.displayName} (${edge.target.nodeId} : ${String(edge.target.portId)})`);
+        }
+        console.log("\nStart Nodes:", startNodes);
+        console.log("==============================================================\n");
 
         const compiledGraph = graph.compile();
 
-        return { compiledGraph, state };
+        return { compiledGraph, context };
     }
 
     private findStartNodes(

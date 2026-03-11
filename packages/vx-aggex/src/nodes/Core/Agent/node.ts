@@ -1,8 +1,10 @@
-import { RegisterNode } from "src/services/Catalogue/service";
-import { Blueprint } from "./blueprint";
+import { RegisterNode } from "../../../services/Catalogue/service";
+import { Blueprint } from "./blueprint"
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import { RuntimeNode, RuntimeState } from "src/runtime";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
+import { createAgent } from "langchain"
+
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -13,15 +15,15 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public override async run(
         state: RuntimeState,
-        inputs: InferInputs<typeof Blueprint>,
+        inputs: InferInputs<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { data } = this.fields;
+        const { input } = inputs;
 
-        return {
-            output: data
-        };
+        const messages = state.messages;
+
+
+        // input is already a BaseMessage (from upstream edge or synthesized from field value)
+        return { response: messages[messages.length - 1] };
     }
-
-
 }

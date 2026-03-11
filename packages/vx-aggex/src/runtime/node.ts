@@ -1,23 +1,21 @@
 import { Foundations, Orchestrator, Workflow } from "@vx-agent-editor/shared/domain";
 import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "src/types";
 import { RuntimeState } from "./state";
+import { RuntimeContext } from "./context";
 import { Emitter } from "../event/emitter"
 
 export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
 
-    public readonly workflowNode: Workflow.Node;
     public readonly emit: Emitter;
     public fields: InferFields<T_Blueprint>
 
-    constructor(props: {
-        workflowNode: Workflow.Node;
-        workflow: Workflow;
-        emit: Emitter;
-    }) {
-        this.workflowNode = props.workflowNode;
+    constructor(
+        public readonly workflowNode: Workflow.Node,
+        context: RuntimeContext
+    ) {
 
-        this.fields = RuntimeNode.resolveFields<T_Blueprint>(this.workflowNode.id, props.workflow)
-        this.emit = props.emit;
+        this.fields = RuntimeNode.resolveFields<T_Blueprint>(this.workflowNode.id, context.workflow)
+        this.emit = context.emit;
     }
 
 
@@ -34,13 +32,7 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
     ): Promise<InferOutputs<T_Blueprint>>;
 
     public init(
-        props: {
-            state: RuntimeState;
-            workflow: Workflow;
-            workflowCache: Workflow.Cache;
-            emit: Emitter
-            jobId: Orchestrator.Job.Id
-        }
+        context: RuntimeContext
     ): Promise<void> | void {}
 
     protected async onConversion(

@@ -6,6 +6,8 @@ import { AggexEngine } from 'src/engine';
 import { container, singleton } from 'tsyringe';
 import { EventBuilder } from './event/builder';
 import { Emitter, EmitterEvent } from './event/emitter';
+import { Synthesizer } from './synthesizer';
+import { WorkflowCompiler } from './compiler';
 
 
 @singleton()
@@ -23,7 +25,10 @@ export class AggexWorkerImpl {
         });
 
     }
+    
     private engine = new AggexEngine();
+    private compiler = new WorkflowCompiler();
+
     private redis = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
 
     private processQueueItem = async (
@@ -43,30 +48,15 @@ export class AggexWorkerImpl {
             topic: Orchestrator.Event.getTopic(jobId)
         } satisfies Orchestrator.Event.Job.Started);
 
-        const { compiledGraph, state } = await this.engine.compile(workflow, emit, executionSession, jobId);
+
 
         try {
-            for await (const payload of this.engine.stream(compiledGraph, state)) {
-                switch (payload.mode) {
-                    case "updates":
-                        emit({
-                            jobId,
-                            workflowId: workflow.id,
-                            type: "update",
-                            topic: Orchestrator.Event.getTopic(jobId),
-                            update: payload.update as any
-                        } satisfies Orchestrator.Event.Job.Update);
-                        break
-                    case "values":
-                        break;
-                }
-            }
-
-            state.streamController.disposeAll();
+            const { compiledGraph, context } = await this.compiler.compile(workflow, jobId, executionSession, AggexEngine.runNode, emit);
+    
+            await this.engine.start(compiledGraph, context);
+            context.streamController.disposeAll();
         } catch (err) {
             console.error("Error during execution of job ", jobId, err)
-
-            state.streamController.disposeAll();
 
             emit({
                 jobId,
