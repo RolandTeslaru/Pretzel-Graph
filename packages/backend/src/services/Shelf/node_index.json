@@ -1,6 +1,6 @@
 {
-  "version": "1772877179602",
-  "generatedAt": "2026-03-07T09:52:59.602Z",
+  "version": "1773258543708",
+  "generatedAt": "2026-03-11T19:49:03.708Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -100,6 +100,68 @@
         }
       ],
       "description": "This node talks to Anthropic Claude models"
+    },
+    "Core.LanguageModel": {
+      "id": "Core.LanguageModel",
+      "displayName": "Language Model",
+      "icon": "BrainCircuit",
+      "accent": "port-LanguageModel",
+      "fields": [
+        {
+          "id": "stream",
+          "advanced": true,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Stream",
+          "tooltip": "Whether to stream the response",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "languageModel",
+          "displayName": "Language Model",
+          "variant": "LanguageModel",
+          "required": false,
+          "internal": false
+        },
+        {
+          "id": "chatHistory",
+          "displayName": "Chat History",
+          "tooltip": "Chat history to be included in the context window",
+          "variant": "MessageList",
+          "required": false,
+          "internal": false
+        },
+        {
+          "id": "input",
+          "displayName": "Input",
+          "tooltip": "The input text to send to the model",
+          "variant": "Message",
+          "initialValue": "",
+          "required": true,
+          "internal": false
+        },
+        {
+          "id": "systemMessage",
+          "displayName": "System Message",
+          "tooltip": "A system message that helps set the behavior of the assistant",
+          "variant": "Message",
+          "initialValue": "",
+          "required": false,
+          "internal": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "response",
+          "displayName": "Response",
+          "tooltip": "The response from the model",
+          "variant": "Message"
+        }
+      ],
+      "description": "Runs a language model given a specified provider."
     },
     "Core.Chat.History": {
       "id": "Core.Chat.History",
@@ -685,68 +747,6 @@
         }
       ],
       "description": "Pauses execution for a specified duration."
-    },
-    "Core.LanguageModel": {
-      "id": "Core.LanguageModel",
-      "displayName": "Language Model",
-      "icon": "BrainCircuit",
-      "accent": "port-LanguageModel",
-      "fields": [
-        {
-          "id": "stream",
-          "advanced": true,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Stream",
-          "tooltip": "Whether to stream the response",
-          "variant": "Boolean",
-          "initialValue": false
-        }
-      ],
-      "inputs": [
-        {
-          "id": "languageModel",
-          "displayName": "Language Model",
-          "variant": "LanguageModel",
-          "required": false,
-          "internal": false
-        },
-        {
-          "id": "chatHistory",
-          "displayName": "Chat History",
-          "tooltip": "Chat history to be included in the context window",
-          "variant": "MessageList",
-          "required": false,
-          "internal": false
-        },
-        {
-          "id": "input",
-          "displayName": "Input",
-          "tooltip": "The input text to send to the model",
-          "variant": "Message",
-          "initialValue": "",
-          "required": true,
-          "internal": false
-        },
-        {
-          "id": "systemMessage",
-          "displayName": "System Message",
-          "tooltip": "A system message that helps set the behavior of the assistant",
-          "variant": "Message",
-          "initialValue": "",
-          "required": false,
-          "internal": false
-        }
-      ],
-      "outputs": [
-        {
-          "id": "response",
-          "displayName": "Response",
-          "tooltip": "The response from the model",
-          "variant": "Message"
-        }
-      ],
-      "description": "Runs a language model given a specified provider."
     },
     "Core.Text.Input": {
       "id": "Core.Text.Input",

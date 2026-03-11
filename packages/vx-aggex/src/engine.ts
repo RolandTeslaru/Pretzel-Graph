@@ -1,70 +1,82 @@
 import { WorkflowCompiler } from "./compiler";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { Foundations, Orchestrator, ExecutionSession } from "@vx-agent-editor/shared/domain";
-import { RuntimeNode, RuntimeState, RuntimeCompiledGraph } from "./runtime"
+import { RuntimeNode, RuntimeState, RuntimeContext } from "./runtime"
+import { StateController } from "./runtime/state";
+import { S2Engine } from "./S2Engine";
 import { Emitter } from "./event/emitter";
-
-export type StreamEvent =
-    | { mode: "values"; state: RuntimeState }
-    | { mode: "messages"; nodeId: Workflow.Node.Id; content: string; isChatOutput?: boolean }
-    | { mode: "updates"; update: RuntimeState.Update }
+import { Synthesizer } from "./synthesizer";
+import { S2Graph } from "./S2Engine/graph";
 
 export class AggexEngine {
-    private compiler = new WorkflowCompiler();
-
     constructor() { }
 
-    private async runNode(
-        state: RuntimeState,
-        activeNode: Workflow.Node, 
+    public static async runNode(
+        wfNode: Workflow.Node,
         nodeInstance: RuntimeNode<Foundations.Blueprint>,
-        workflow: Workflow,
-        workflowCache: Workflow.Cache,
-        emit: Emitter
+        context: RuntimeContext
     ) {
-        console.log(`Executing Node: ${activeNode.displayName} (${activeNode.id})`);
+        console.log(`Executing Node: ${wfNode.displayName} (${wfNode.id})`);
+        
+        const state = context.stateController.get();
 
-        emit({
-            jobId: state.jobId,
-            workflowId: workflow.id,
+        context.emit({
+            jobId: state.chatId as string as Orchestrator.Job.Id, // Fallback if jobId not in state
+            workflowId: context.workflow.id,
             type: "node:started",
-            nodeId: activeNode.id,
-            topic: Orchestrator.Event.getTopic(state.jobId)
+            nodeId: wfNode.id,
+            topic: Orchestrator.Event.getTopic(state.chatId as string as Orchestrator.Job.Id)
         } satisfies Orchestrator.Event.Job.Node.Started)
 
-        const inputs = this.resolveInputs(state, activeNode.id, workflow, workflowCache);
+        const inputs = this.resolveInputs(state, wfNode.id, context);
 
         try {
             const result = await nodeInstance.run(state, inputs)
 
-            emit({
-                jobId: state.jobId,
-                workflowId: workflow.id,
+            context.emit({
+                jobId: state.chatId as string as Orchestrator.Job.Id,
+                workflowId: context.workflow.id,
                 type: "node:completed",
-                nodeId: activeNode.id,
-                topic: Orchestrator.Event.getTopic(state.jobId),
+                nodeId: wfNode.id,
+                topic: Orchestrator.Event.getTopic(state.chatId as string as Orchestrator.Job.Id),
                 output: result
             } satisfies Orchestrator.Event.Job.Node.Completed)
 
-            return {
+            // Emit the update event for Orchestrator monitoring
+            context.emit({
+                jobId: state.chatId as string as Orchestrator.Job.Id,
+                workflowId: context.workflow.id,
+                type: "update",
+                topic: Orchestrator.Event.getTopic(state.chatId as string as Orchestrator.Job.Id),
+                update: {
+                    node_outputs: {
+                        [wfNode.id]: result
+                    }
+                } as any
+            } satisfies Orchestrator.Event.Job.Update)
+
+            // Update the state using our new strict Manager
+            context.stateController.update({
                 node_outputs: {
-                    [activeNode.id]: result
+                    [wfNode.id]: result
                 }
-            };
+            } as any);
 
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error)
-    
-            emit({
-                jobId: state.jobId,
-                workflowId: workflow.id,
+
+            context.emit({
+                jobId: state.chatId as string as Orchestrator.Job.Id,
+                workflowId: context.workflow.id,
                 type: "node:error",
-                nodeId: activeNode.id,
-                topic: Orchestrator.Event.getTopic(state.jobId),
+                nodeId: wfNode.id,
+                topic: Orchestrator.Event.getTopic(state.chatId as string as Orchestrator.Job.Id),
                 error: errorMessage
             } satisfies Orchestrator.Event.Job.Node.Error)
-        }        
+        }
     }
+
+
 
 
     /**
@@ -78,12 +90,14 @@ export class AggexEngine {
      * 2. If no edge → synthesize from the static value (or initialValue fallback)
      *    because the raw primitive must be coerced into a class instance
      */
-    private resolveInputs(
+    private static resolveInputs(
         state: RuntimeState,
         nodeId: Workflow.Node.Id,
-        workflow: Workflow,
-        workflowCache: Workflow.Cache
+        context: RuntimeContext
     ): Record<Foundations.Port.Input.Id, any> {
+        const workflow = context.workflow;
+        const workflowCache = context.workflowCache
+
         const node = workflow.data.nodes[nodeId];
         const staticValues = workflow.data.staticValues[nodeId] ?? {};
 
@@ -118,75 +132,29 @@ export class AggexEngine {
     }
 
 
-    public compile(
-        workflow: Workflow,
-        emit: Emitter, 
-        session: ExecutionSession,
-        jobId: Orchestrator.Job.Id
+    public async start(
+        compiledGraph: S2Graph,
+        context: RuntimeContext
     ) {
         try {
-            return this.compiler.compile(workflow, emit, this.runNode.bind(this), session, jobId)
-        } catch (err) {
-            console.error("Error during compilation of workflow ", workflow.id, err)
+            
+            const s2Engine = new S2Engine();
+            
+            await s2Engine.ignite(compiledGraph);
 
-            emit({
-                jobId,
-                workflowId: workflow.id,
-                type: "compilation:failed",
-                topic: Orchestrator.Event.getTopic(jobId),
+            return context.stateController.get();
+        } catch (err) {
+            console.error("Error during compilation of workflow ", context.workflow.id, err)
+
+            context.emit({
+                jobId: context.jobId,
+                workflowId: context.workflow.id,
+                type:  "compilation:failed",
+                topic: Orchestrator.Event.getTopic(context.jobId),
                 error: err instanceof Error ? err.message : String(err)
             } satisfies Orchestrator.Event.Compilation.Failed)
 
             throw err;
         }
-    }
-
-    public async *stream(
-        compiledGraph: RuntimeCompiledGraph,
-        engineState: RuntimeState,
-    ): AsyncIterable<StreamEvent> {
-        const stream = await compiledGraph.stream(engineState, {
-            streamMode: ["values", "messages", "updates"]
-        })
-
-        for await (const [mode, payload] of stream) {
-            switch (mode) {
-                case "messages":
-                    const [msgChunk, metadata] = payload
-                    const nodeId = metadata.langgraph_node as Workflow.Node.Id
-                    const rawContent = msgChunk.content;
-                    const content = typeof rawContent === "string"
-                        ? rawContent
-                        : rawContent
-                            .map(b => typeof b === "string" ? b : ("text" in b ? b.text : ""))
-                            .join("");
-
-                    engineState.streamController.yieldLlmChunk(nodeId, content);
-
-                    yield {
-                        mode: "messages",
-                        nodeId,
-                        content,
-                    }
-                    break;
-                case "values":
-                    yield {
-                        mode,
-                        state: payload
-                    }
-                    break;
-                case "updates":
-                    yield {
-                        mode,
-                        update: payload
-                    }
-                    break;
-            }
-        }
-    }
-
-
-    public async run(initialInputs: Record<string, any>) {
-        // return await this.compiledGraph.invoke(state);
     }
 }
