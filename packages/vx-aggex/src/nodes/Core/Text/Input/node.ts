@@ -10,9 +10,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public readonly Blueprint = Blueprint;
 
-    constructor(props: RuntimeNode.ConstructorProps) {
-        super(props);
-    }
+    
 
     public override async run(
         state: RuntimeState,

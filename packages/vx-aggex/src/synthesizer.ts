@@ -2,8 +2,9 @@ import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/
 import { LC } from "./langchain";
 import { Foundations, Orchestrator, Workflow, ExecutionSession } from "@vx-agent-editor/shared/domain";
 import { StreamController } from "./StreamController";
-import { RuntimeState } from "./runtime";
+import { RuntimeContext, RuntimeState } from "./runtime";
 import { Emitter } from "./event/emitter";
+import { SynthesizerCoercionError, SynthesizerError } from "./errors";
 
 export class Synthesizer {
 
@@ -61,7 +62,7 @@ export class Synthesizer {
                 if (typeof rawReference === "string")
                     return new HumanMessage(rawReference);
 
-                throw this.coercionError(variant, rawReference);
+                throw new SynthesizerCoercionError(variant, rawReference);
 
             case "Text":
                 if (typeof rawReference === "string")
@@ -73,32 +74,32 @@ export class Synthesizer {
                     return rawReference;
                 if (typeof rawReference === "string")
                     return new LC.Document({ pageContent: rawReference });
-                throw this.coercionError(variant, rawReference);
+                throw new SynthesizerCoercionError(variant, rawReference);
 
             case "LanguageModel":
                 if (rawReference instanceof LC.BaseLanguageModel)
                     return rawReference;
-                throw this.coercionError(variant, rawReference);
+                throw new SynthesizerCoercionError(variant, rawReference);
 
             case "Embeddings":
                 if (rawReference instanceof LC.Embeddings)
                     return rawReference;
-                throw this.coercionError(variant, rawReference);
+                throw new SynthesizerCoercionError(variant, rawReference);
 
             case "VectorStore":
                 if (rawReference instanceof LC.VectorStore)
                     return rawReference;
-                throw this.coercionError(variant, rawReference);
+                throw new SynthesizerCoercionError(variant, rawReference);
 
             case "Retriever":
                 if (rawReference instanceof LC.BaseRetriever)
                     return rawReference;
-                throw this.coercionError(variant, rawReference);
+                throw new SynthesizerCoercionError(variant, rawReference);
 
             case "Tool":
                 if (rawReference instanceof LC.Tool)
                     return rawReference;
-                throw this.coercionError(variant, rawReference);
+                throw new SynthesizerCoercionError(variant, rawReference);
 
             case "Data":
             case "DataFrame":
@@ -106,8 +107,8 @@ export class Synthesizer {
                 return rawReference;
             default:
                 return rawReference;
-                throw new Error(
-                    `AGGEX Synthesizer: Unknown variant "${variant}"`
+                throw new SynthesizerError(
+                    ` Unknown variant "${variant}"`
                 );
         }
     }
@@ -130,27 +131,12 @@ export class Synthesizer {
             case "ai":
                 return input instanceof AIMessage ? input : new AIMessage(content);
             default:
-                throw new Error(`AGGEX Synthesizer: Unsupported message role "${kind}". Only human, system, and ai are supported.`);
+                throw new SynthesizerError(`Unsupported message role "${kind}". Only human, system, and ai are supported.`);
         }
     }
 
-
-    private static coercionError(variant: string, value: any): Error {
-        return new Error(
-            `AGGEX Synthesizer: Cannot coerce value of type ` +
-            `"${typeof value}" into variant "${variant}".`
-        );
-    }
-
-    public static synthesizeState(props: {
-        session: ExecutionSession,
-        workflow: Workflow,
-        workflowCache: Workflow.Cache,
-        emit: Emitter,
-        jobId: Orchestrator.Job.Id
-    }) {
-        const { session, workflow, workflowCache, emit, jobId } = props
-
+    
+    public static synthesizeState(session: ExecutionSession) {
         const synthesizedMessages: BaseMessage[] = [];
 
         session.messages.forEach(msg => {
@@ -162,13 +148,18 @@ export class Synthesizer {
         const syntheticState = {
             ...session,
             messages: synthesizedMessages,
-            workflow,
-            workflowCache,
-            jobId,
-            emit,
-            streamController: new StreamController()
         } as unknown as RuntimeState;
 
         return syntheticState;
+    }
+
+    public static synthesizeContext(props: {
+        jobId: Orchestrator.Job.Id,
+        emit: Emitter
+    }) {
+        return {
+            ...props,
+            streamController: new StreamController()
+        } as RuntimeContext
     }
 }
