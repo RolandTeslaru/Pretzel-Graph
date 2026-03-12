@@ -1,102 +1,37 @@
-import { WorkflowCompiler } from "./compiler";
+import { CompilationResult } from "./compiler";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
-import { Foundations, Orchestrator, ExecutionSession } from "@vx-agent-editor/shared/domain";
-import { RuntimeNode, RuntimeState, RuntimeContext } from "./runtime"
-import { StateController } from "./runtime/state";
-import { S2Engine } from "./S2Engine";
-import { Emitter } from "./event/emitter";
+import { Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
+import { RuntimeNode } from "./node"
+import { ExecutionContext } from "./context";
+import { S2Engine, S2Hooks } from "./S2";
+import { Vertex } from "./S2/graph";
 import { Synthesizer } from "./synthesizer";
-import { S2Graph } from "./S2Engine/graph";
 
 export class AggexEngine {
     constructor() { }
 
-    public static async runNode(
+    private async runNode(
         wfNode: Workflow.Node,
         nodeInstance: RuntimeNode<Foundations.Blueprint>,
-        context: RuntimeContext
+        ctx: ExecutionContext
     ) {
-        console.log(`Executing Node: ${wfNode.displayName} (${wfNode.id})`);
-        
-        const state = context.stateController.get();
+        const inputs = this.resolveInputs(ctx, wfNode.id);
+        const result = await nodeInstance.run(inputs);
 
-        context.emit({
-            jobId: state.chatId as string as Orchestrator.Job.Id, // Fallback if jobId not in state
-            workflowId: context.workflow.id,
-            type: "node:started",
-            nodeId: wfNode.id,
-            topic: Orchestrator.Event.getTopic(state.chatId as string as Orchestrator.Job.Id)
-        } satisfies Orchestrator.Event.Job.Node.Started)
+        // console.log(`Node ${wfNode.id} produced the result`, JSON.stringify(result, null, 2))
 
-        const inputs = this.resolveInputs(state, wfNode.id, context);
+        ctx.updateSession(d => {
+            d.node_outputs[wfNode.id] = result;
+        });
 
-        try {
-            const result = await nodeInstance.run(state, inputs)
-
-            context.emit({
-                jobId: state.chatId as string as Orchestrator.Job.Id,
-                workflowId: context.workflow.id,
-                type: "node:completed",
-                nodeId: wfNode.id,
-                topic: Orchestrator.Event.getTopic(state.chatId as string as Orchestrator.Job.Id),
-                output: result
-            } satisfies Orchestrator.Event.Job.Node.Completed)
-
-            // Emit the update event for Orchestrator monitoring
-            context.emit({
-                jobId: state.chatId as string as Orchestrator.Job.Id,
-                workflowId: context.workflow.id,
-                type: "update",
-                topic: Orchestrator.Event.getTopic(state.chatId as string as Orchestrator.Job.Id),
-                update: {
-                    node_outputs: {
-                        [wfNode.id]: result
-                    }
-                } as any
-            } satisfies Orchestrator.Event.Job.Update)
-
-            // Update the state using our new strict Manager
-            context.stateController.update({
-                node_outputs: {
-                    [wfNode.id]: result
-                }
-            } as any);
-
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error)
-
-            context.emit({
-                jobId: state.chatId as string as Orchestrator.Job.Id,
-                workflowId: context.workflow.id,
-                type: "node:error",
-                nodeId: wfNode.id,
-                topic: Orchestrator.Event.getTopic(state.chatId as string as Orchestrator.Job.Id),
-                error: errorMessage
-            } satisfies Orchestrator.Event.Job.Node.Error)
-        }
+        console.log(`Session after vertex ${wfNode.id} runs `, JSON.stringify(ctx.session, null, 2))
     }
 
-
-
-
-    /**
-     * Resolve port input values for a node.
-     *
-     * Port inputs must be actual class instances (BaseMessage, BaseLanguageModel, etc.).
-     *
-     * Resolution per input:
-     * 1. If an edge connects to this input → extract the value from the source
-     *    node's outputs and ensure it's the correct LC class via Synthesizer
-     * 2. If no edge → synthesize from the static value (or initialValue fallback)
-     *    because the raw primitive must be coerced into a class instance
-     */
-    private static resolveInputs(
-        state: RuntimeState,
+    private resolveInputs(
+        context: ExecutionContext,
         nodeId: Workflow.Node.Id,
-        context: RuntimeContext
     ): Record<Foundations.Port.Input.Id, any> {
-        const workflow = context.workflow;
-        const workflowCache = context.workflowCache
+        const { workflow, workflowCache, session } = context;
 
         const node = workflow.data.nodes[nodeId];
         const staticValues = workflow.data.staticValues[nodeId] ?? {};
@@ -110,14 +45,12 @@ export class AggexEngine {
             const edge = workflow.data.edges[edgeId];
 
             if (edge) {
-                // ── Edge-connected: pull value from upstream node's outputs ──
-                const sourceOutputs = state.node_outputs[edge.source.nodeId];
+                const sourceOutputs = session.node_outputs[edge.source.nodeId];
                 if (sourceOutputs) {
                     const rawReference = sourceOutputs[edge.source.portId as string];
-                    resolved[input.id] = rawReference;
+                    resolved[input.id] = Synthesizer.ensureReference(rawReference, input.variant);
                 }
             } else {
-                // ── No edge: synthesize from static value or initialValue ──
                 const staticValue = staticValues[input.id];
                 const fallback = "initialValue" in input ? input.initialValue : undefined;
                 const raw = staticValue ?? fallback;
@@ -133,23 +66,92 @@ export class AggexEngine {
 
 
     public async start(
-        compiledGraph: S2Graph,
-        context: RuntimeContext
+        { compiledGraph, context, nodeInstanceMap }: CompilationResult
     ) {
-        try {
-            
-            const s2Engine = new S2Engine();
-            
-            await s2Engine.ignite(compiledGraph);
+        const topic = Orchestrator.Event.getTopic(context.jobId);
 
-            return context.stateController.get();
+        try {
+            const s2Engine = new S2Engine();
+
+            const hooks: S2Hooks = {
+                onVertexFired: (vertexId) => {
+                    const entry = nodeInstanceMap.get(vertexId);
+                    if (!entry) return;
+
+                    context.emit({
+                        jobId: context.jobId,
+                        workflowId: context.workflow.id,
+                        type: "node:started",
+                        nodeId: entry.wfNode.id,
+                        topic,
+                    } satisfies Orchestrator.Event.Job.Node.Started);
+                },
+
+                onVertexExecute: async (vertexId: Vertex.Id) => {
+                    const entry = nodeInstanceMap.get(vertexId);
+                    if (!entry) return;
+
+                    await this.runNode(entry.wfNode, entry.instance, context);
+                },
+
+                onVertexCompleted: (vertexId) => {
+                    const entry = nodeInstanceMap.get(vertexId);
+                    if (!entry) return;
+
+                    const output = context.session.node_outputs[entry.wfNode.id];
+
+                    context.emit({
+                        jobId: context.jobId,
+                        workflowId: context.workflow.id,
+                        type: "node:completed",
+                        nodeId: entry.wfNode.id,
+                        topic,
+                        output,
+                    } satisfies Orchestrator.Event.Job.Node.Completed);
+                },
+
+                onVertexWaiting: (vertexId, resolvedDependencies) => {
+                    const entry = nodeInstanceMap.get(vertexId);
+                    if (!entry) return;
+
+                    const { instance, wfNode } = entry;
+
+                    const depResolutionMap: Record<Workflow.Node.Id, boolean> = {};
+                    const dependencies = compiledGraph.dependenciesMap.get(vertexId)!;
+                    for (const depId of dependencies) {
+                        const depNodeId = depId as unknown as Workflow.Node.Id;
+                        depResolutionMap[depNodeId] = resolvedDependencies.has(depId);
+                    }
+
+                    const partialInputs = this.resolveInputs(context, wfNode.id);
+                    instance.wait(partialInputs, depResolutionMap);
+                },
+                onVertexError(vertexId, error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error)
+
+                    console.error(`Error during node execution execution, ${vertexId} `, error)
+
+                    context.emit({
+                        jobId: context.jobId,
+                        workflowId: context.workflow.id,
+                        type: "node:error",
+                        nodeId: vertexId as unknown as Workflow.Node.Id,
+                        topic,
+                        error: errorMessage
+                    } satisfies Orchestrator.Event.Job.Node.Error)
+                },
+            };
+
+            await s2Engine.ignite(compiledGraph, hooks);
+
+            return context.session;
         } catch (err) {
-            console.error("Error during compilation of workflow ", context.workflow.id, err)
+            console.error("Error during execution of workflow ", context.workflow.id, err)
 
             context.emit({
                 jobId: context.jobId,
                 workflowId: context.workflow.id,
-                type:  "compilation:failed",
+                type: "compilation:failed",
                 topic: Orchestrator.Event.getTopic(context.jobId),
                 error: err instanceof Error ? err.message : String(err)
             } satisfies Orchestrator.Event.Compilation.Failed)

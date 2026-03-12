@@ -3,7 +3,8 @@ import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { Synthesizer } from "src/synthesizer";
-import { RuntimeNode, RuntimeState, RuntimeContext } from "src/runtime";
+import { RuntimeNode } from "src/node";
+import { ExecutionContext } from "src/context";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
 
 @RegisterNode(Blueprint.id)
@@ -13,13 +14,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private readonly llm: ChatAnthropic;
 
-    constructor(workflowNode: Workflow.Node, context: RuntimeContext) {
+    constructor(workflowNode: Workflow.Node, context: ExecutionContext) {
         super(workflowNode, context);
         this.llm = new ChatAnthropic(this.fields);
     }
 
-    public override async run(
-        state: RuntimeState,
+    protected override async onRun(
+        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 

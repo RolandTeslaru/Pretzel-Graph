@@ -131,4 +131,14 @@ export namespace InputBuilder {
             variant: "MessageList" as const,
         };
     }
+
+    export function Dynamic<TId extends string, TSyncGroup extends string>(
+        config: { syncGroup: TSyncGroup } & BaseProps<TId>
+    ): LiteralInput<TId, "Dynamic", Foundations.Port.Variants.Dynamic, any> & { readonly __syncGroup?: TSyncGroup } {
+        return {
+            ...buildBase(config),
+            variant: "Dynamic" as const,
+            syncGroup: config.syncGroup,
+        };
+    }
 }

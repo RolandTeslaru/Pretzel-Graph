@@ -1,6 +1,6 @@
 {
-  "version": "1773258543708",
-  "generatedAt": "2026-03-11T19:49:03.708Z",
+  "version": "1773352493442",
+  "generatedAt": "2026-03-12T21:54:53.442Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -748,6 +748,190 @@
       ],
       "description": "Pauses execution for a specified duration."
     },
+    "Core.Routing.Accumulator": {
+      "id": "Core.Routing.Accumulator",
+      "displayName": "Accumulator",
+      "icon": "GitPullRequestArrow",
+      "accent": "group-routing",
+      "fields": [
+        {
+          "id": "strategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Strategy",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            "AND",
+            "OR",
+            "XOR"
+          ],
+          "kind": "tab"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "variant": "Message",
+          "initialValue": "",
+          "required": false,
+          "internal": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "output",
+          "displayName": "Output",
+          "tooltip": "The accumulated result.",
+          "variant": "Message"
+        }
+      ],
+      "description": "Collects inputs over multiple executions and emits the accumulated result."
+    },
+    "Core.Routing.IfElse": {
+      "id": "Core.Routing.IfElse",
+      "displayName": "If Else",
+      "icon": "Split",
+      "accent": "group-routing",
+      "fields": [
+        {
+          "id": "condition",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Condition",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "Expression to evaluate"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "variant": "Dynamic",
+          "syncGroup": "data",
+          "required": false,
+          "internal": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "true",
+          "displayName": "True",
+          "tooltip": "Output when condition is true.",
+          "variant": "Dynamic",
+          "syncGroup": "data"
+        },
+        {
+          "id": "false",
+          "displayName": "False",
+          "tooltip": "Output when condition is false.",
+          "variant": "Dynamic",
+          "syncGroup": "data"
+        }
+      ],
+      "description": "Routes input to one of multiple outputs based on a condition."
+    },
+    "Core.Routing.Merge": {
+      "id": "Core.Routing.Merge",
+      "displayName": "Merge",
+      "icon": "Merge",
+      "accent": "group-routing",
+      "fields": [
+        {
+          "id": "strategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Strategy",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            "AND",
+            "OR",
+            "XOR"
+          ],
+          "kind": "tab"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input_1",
+          "displayName": "Input 1",
+          "variant": "Dynamic",
+          "syncGroup": "data",
+          "required": false,
+          "internal": false
+        },
+        {
+          "id": "input_2",
+          "displayName": "Input 2",
+          "variant": "Dynamic",
+          "syncGroup": "data",
+          "required": false,
+          "internal": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "output",
+          "displayName": "Output",
+          "variant": "Dynamic",
+          "syncGroup": "data"
+        }
+      ],
+      "description": "Merges multiple inputs into a single output."
+    },
+    "Core.Routing.Switch": {
+      "id": "Core.Routing.Switch",
+      "displayName": "Switch",
+      "icon": "ListTree",
+      "accent": "group-routing",
+      "fields": [
+        {
+          "id": "condition",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Condition",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "Expression to evaluate"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "variant": "Dynamic",
+          "syncGroup": "data",
+          "required": false,
+          "internal": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "true",
+          "displayName": "True",
+          "tooltip": "Output when condition is true.",
+          "variant": "Dynamic",
+          "syncGroup": "data"
+        },
+        {
+          "id": "false",
+          "displayName": "False",
+          "tooltip": "Output when condition is false.",
+          "variant": "Dynamic",
+          "syncGroup": "data"
+        }
+      ],
+      "description": "Routes input to one of multiple outputs based on a condition."
+    },
     "Core.Text.Input": {
       "id": "Core.Text.Input",
       "displayName": "Text Input",
@@ -774,15 +958,48 @@
       ],
       "description": "This node is a Text input"
     },
-    "Core.Utils.ToolDictionary": {
-      "id": "Core.Utils.ToolDictionary",
-      "displayName": "Tool Dictionary",
+    "Core.Utils.Tool.Catalog": {
+      "id": "Core.Utils.Tool.Catalog",
+      "displayName": "Tool Catalog",
       "icon": "Settings",
       "accent": "port-Tool",
       "fields": [],
       "inputs": [],
       "outputs": [],
-      "description": "Utility node for managing a dictionary of tools."
+      "description": "Utility node for managing a catalog of tools."
+    },
+    "Core.Utils.Tool.Runner": {
+      "id": "Core.Utils.Tool.Runner",
+      "displayName": "Tool Runner",
+      "icon": "Play",
+      "accent": "port-Tool",
+      "fields": [],
+      "inputs": [
+        {
+          "id": "tool",
+          "displayName": "Tool",
+          "variant": "Tool",
+          "required": false,
+          "internal": false
+        },
+        {
+          "id": "input",
+          "displayName": "Input",
+          "variant": "Message",
+          "initialValue": "",
+          "required": false,
+          "internal": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "output",
+          "displayName": "Output",
+          "tooltip": "The result of the tool execution.",
+          "variant": "Message"
+        }
+      ],
+      "description": "Executes a tool with the provided input and returns the result."
     },
     "Google.GenerativeAI": {
       "id": "Google.GenerativeAI",

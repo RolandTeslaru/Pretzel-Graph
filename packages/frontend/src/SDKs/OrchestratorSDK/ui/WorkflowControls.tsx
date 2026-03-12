@@ -6,19 +6,19 @@ import { OrchestratorSDK } from '../sdk'
 const handlePause = () => {
   const currentJobId = OrchestratorSDK.state.jobId;
   if (!currentJobId) return;
-  OrchestratorSDK.actions.execution.pause(currentJobId);
+  OrchestratorSDK.actions.pause(currentJobId)
 }
 
 const handleTerminate = () => {
   const currentJobId = OrchestratorSDK.state.jobId;
   if (!currentJobId) return;
-  OrchestratorSDK.actions.execution.terminate(currentJobId);
+  OrchestratorSDK.actions.terminate(currentJobId);
 }
 
 const handleRun = () => {
   const state = WorkbenchSDK.state;
   
-  OrchestratorSDK.actions.execution.run();
+  OrchestratorSDK.actions.run();
 }
 
 const WorkflowControls = () => {

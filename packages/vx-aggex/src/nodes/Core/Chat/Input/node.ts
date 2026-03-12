@@ -1,8 +1,9 @@
 import { RegisterNode } from "../../../../services/Catalogue/service";
 import { Blueprint } from "./blueprint"
-import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
-import { RuntimeNode, RuntimeState } from "src/runtime";
-import { InferFields, InferInputs, InferOutputs } from "src/types";
+import { ExecutionContext } from "src/context";
+import { RuntimeNode } from "src/node";
+import { InferInputs, InferOutputs } from "src/types";
+import { HumanMessage } from "@langchain/core/messages";
 
 
 @RegisterNode(Blueprint.id)
@@ -10,19 +11,17 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public readonly Blueprint = Blueprint;
 
-    
-
-    public override async run(
-        state: RuntimeState,
+    protected override async onRun(
+        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { input } = inputs;
+        const lastMessage = context.session.messages[context.session.messages.length - 1];
 
-        const messages = state.messages;
+        if (!lastMessage) {
+            return { response: new HumanMessage("") }
+        }
 
-
-        // input is already a BaseMessage (from upstream edge or synthesized from field value)
-        return { response: messages[messages.length - 1] };
+        return { response: lastMessage };
     }
 }

@@ -1,7 +1,8 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
-import { RuntimeNode, RuntimeState } from "src/runtime";
+import { ExecutionContext } from "src/context";
+import { RuntimeNode } from "src/node";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
 import { HumanMessage } from "@langchain/core/messages";
 
@@ -12,8 +13,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     
 
-    public override async run(
-        state: RuntimeState,
+    protected override async onRun(
+        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {
 

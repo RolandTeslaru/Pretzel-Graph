@@ -1,9 +1,10 @@
 import { RegisterNode } from "../../../../services/Catalogue/service";
 import { Blueprint } from "./blueprint"
 import { Workflow } from "@vx-agent-editor/shared/domain";
-import { RuntimeNode, RuntimeState, RuntimeContext } from "src/runtime";
+import { RuntimeNode } from "src/node";
+import { ExecutionContext } from "src/context";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
-import { Synthesizer } from "src/synthesizer";
+
 import { Chat } from "@vx-agent-editor/shared/domain";
 import { AxiosService } from "src/axios";
 
@@ -15,18 +16,16 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     private responseMessageId: Chat.Message.Id | null = null;
     private chatId: Chat.Id | null = null;
 
-    constructor(workflowNode: Workflow.Node, context: RuntimeContext) {
+    constructor(workflowNode: Workflow.Node, context: ExecutionContext) {
         super(workflowNode, context);
     }
 
-    public override async init(context: RuntimeContext) {
+    public override async init(context: ExecutionContext) {
         const incomingEdges = context.workflowCache.incomingEdgesMap[this.workflowNode.id];
         const upstreamNodeId = Object.keys(incomingEdges)[0] as Workflow.Node.Id | undefined;
 
-        const state = context.stateController.get();
-
         if (upstreamNodeId) {
-            const chatId = state.chatId;
+            const chatId = context.session.chatId;
 
             if (!chatId)
                 return;
@@ -75,16 +74,16 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         }
     }
 
-    public override async run(
-        state: RuntimeState,
+    protected override async onRun(
+        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {
 
         const { input } = inputs;
 
-        return {}; // Early return from older logic? Keep it if needed, but the user code had it. Wait, I will remove early return to actually fix typing below it. Or I'll just comment the rest out? The user put `return {};` earlier. I'll just fix types for now.
-        /*
-        state.messages.push(Synthesizer.coerceMessage("ai", input));
+        context.updateSession(d => {
+            d.messages.push(input);
+        });
 
         const rawContent = input.content;
         const content = typeof rawContent === "string"
@@ -108,7 +107,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 content
             })
         }
-        */
-        // return {};
+
+        return {};
     }
 }
