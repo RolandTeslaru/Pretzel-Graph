@@ -1,14 +1,20 @@
-import { RuntimeGraph, START, END, RuntimeState, RuntimeContext } from "./runtime";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
+import { Foundations, ExecutionSession, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { CatalogueService } from "src/services/Catalogue/service";
-import type { AggexEngine } from "./engine";
 import { PretzelCompilerError } from "./errors";
-import { Synthesizer } from "./synthesizer";
-import { ExecutionSession, Orchestrator } from "@vx-agent-editor/shared/domain";
+import { RuntimeNode } from "./node";
 import { Emitter } from "./event/emitter";
-import { StateController } from "./runtime/state";
 import { StreamController } from "./StreamController";
-import { S2Graph } from "./S2Engine/graph";
+import { S2Graph, Vertex } from "./S2/graph";
+import { ExecutionContext, createExecutionContext } from "./context";
+
+const START = "__START__" as Vertex.Id;
+
+export interface CompilationResult {
+    compiledGraph: S2Graph;
+    context: ExecutionContext;
+    nodeInstanceMap: Map<Vertex.Id, { wfNode: Workflow.Node; instance: RuntimeNode<Foundations.Blueprint> }>;
+}
 
 export class WorkflowCompiler {
     constructor() { }
@@ -17,28 +23,29 @@ export class WorkflowCompiler {
         workflow: Workflow,
         jobId: Orchestrator.Job.Id,
         session: ExecutionSession,
-        nodeRunnerFn: typeof AggexEngine.runNode,
         emit: Emitter,
-    ): Promise<{ compiledGraph: S2Graph, context: RuntimeContext }> {
+    ): Promise<CompilationResult> {
         const workflowCache = Workflow.createCache(workflow);
 
-        const initialState = Synthesizer.synthesizeState(session)
-
-        // Create the state graph
-        const graph = new RuntimeGraph(RuntimeState.Definition);
+        const graph = new S2Graph();
         const nodes = workflow.data.nodes;
         const edges = workflow.data.edges;
 
-        const context = {
+        // START vertex — S2Engine ignites from here
+        graph.addVertex(START);
+
+        const context = createExecutionContext({
             workflow,
             workflowCache,
             emit,
             jobId,
-            stateController: new StateController(initialState),
+            session,
             streamController: new StreamController()
-        } satisfies RuntimeContext
+        });
 
-        // Add nodes to the graph along with their run function
+        const nodeInstanceMap = new Map<Vertex.Id, { wfNode: Workflow.Node; instance: RuntimeNode<Foundations.Blueprint> }>();
+
+        // Add nodes to the graph
         for (const wfNode of Object.values(nodes)) {
 
             const NodeConstructor = await CatalogueService.getNode(wfNode.blueprintId);
@@ -50,14 +57,23 @@ export class WorkflowCompiler {
 
             await nodeInstance.init(context)
 
-            graph.addNode(wfNode.id, async () => {
-                return nodeRunnerFn(wfNode, nodeInstance, context);
-            });
+            const vertexId = wfNode.id as unknown as Vertex.Id;
+
+            graph.addVertex(wfNode.id);
+
+            nodeInstanceMap.set(vertexId, { wfNode, instance: nodeInstance });
+
+            if(Object.hasOwn(wfNode.fields, "strategy"))
+                graph.setVertexStrategy(
+                    vertexId,
+                    // @ts-expect-error
+                    wfNode.fields.strategy
+                );
         }
 
-        // Add Edges
+        // Add Edges. Might also get ran multiple times because nodes can have multiple edges between them because of ports.
         for (const edge of Object.values(edges)) {
-            graph.addEdge(
+            graph.addDependency(
                 edge.source.nodeId,
                 edge.target.nodeId
             );
@@ -69,26 +85,10 @@ export class WorkflowCompiler {
             throw new PretzelCompilerError("No start nodes found! Graph might be disconnected.")
 
         startNodes.forEach(nodeId => {
-            graph.addEdge(START, nodeId);
+            graph.addDependency(START, nodeId);
         });
 
-        console.log("\n==================== WORKFLOW COMPILATION ====================");
-        console.log("Nodes:");
-        for (const node of Object.values(nodes)) {
-            console.log(`  [Node] ${node.displayName} (ID: ${node.id})`);
-        }
-        console.log("\nEdges:");
-        for (const edge of Object.values(edges)) {
-            const sourceNode = nodes[edge.source.nodeId];
-            const targetNode = nodes[edge.target.nodeId];
-            console.log(`  [Edge] ${sourceNode?.displayName} (${edge.source.nodeId} : ${String(edge.source.portId)}) ---> ${targetNode?.displayName} (${edge.target.nodeId} : ${String(edge.target.portId)})`);
-        }
-        console.log("\nStart Nodes:", startNodes);
-        console.log("==============================================================\n");
-
-        const compiledGraph = graph.compile();
-
-        return { compiledGraph, context };
+        return { compiledGraph: graph, context, nodeInstanceMap };
     }
 
     private findStartNodes(

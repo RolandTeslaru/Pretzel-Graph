@@ -1,7 +1,8 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { Foundations } from "@vx-agent-editor/shared/domain";
-import { RuntimeNode, RuntimeState } from "src/runtime";
+import { ExecutionContext } from "src/context";
+import { RuntimeNode } from "src/node";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
 import { Node as GoogleGenerativeAINode } from "../../Google/GenerativeAI/node"
 import { Node as OpenAIChatNode } from "../../OpenAI/Chat/node"
@@ -17,13 +18,14 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     
 
-    public override async run(
-        state: RuntimeState,
+    protected override async onRun(
+        context: ExecutionContext,
         inputs: Inputs
     ): Promise<Outputs> {
-        return await inputs.languageModel.invoke([
+        const response = await inputs.languageModel.invoke([
             inputs.systemMessage,
             inputs.input
         ])
+        return { response }
     }
 }

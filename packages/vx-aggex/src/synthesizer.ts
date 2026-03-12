@@ -1,9 +1,6 @@
-import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { LC } from "./langchain";
-import { Foundations, Orchestrator, Workflow, ExecutionSession } from "@vx-agent-editor/shared/domain";
-import { StreamController } from "./StreamController";
-import { RuntimeContext, RuntimeState } from "./runtime";
-import { Emitter } from "./event/emitter";
+import { Foundations } from "@vx-agent-editor/shared/domain";
 import { SynthesizerCoercionError, SynthesizerError } from "./errors";
 
 export class Synthesizer {
@@ -106,10 +103,7 @@ export class Synthesizer {
                 // Pass through — no canonical LC class
                 return rawReference;
             default:
-                return rawReference;
-                throw new SynthesizerError(
-                    ` Unknown variant "${variant}"`
-                );
+                throw new SynthesizerError(`Unknown variant "${variant}"`);
         }
     }
 
@@ -133,33 +127,5 @@ export class Synthesizer {
             default:
                 throw new SynthesizerError(`Unsupported message role "${kind}". Only human, system, and ai are supported.`);
         }
-    }
-
-    
-    public static synthesizeState(session: ExecutionSession) {
-        const synthesizedMessages: BaseMessage[] = [];
-
-        session.messages.forEach(msg => {
-            synthesizedMessages.push(
-                this.coerceMessage(msg.role, msg.content)
-            );
-        })
-
-        const syntheticState = {
-            ...session,
-            messages: synthesizedMessages,
-        } as unknown as RuntimeState;
-
-        return syntheticState;
-    }
-
-    public static synthesizeContext(props: {
-        jobId: Orchestrator.Job.Id,
-        emit: Emitter
-    }) {
-        return {
-            ...props,
-            streamController: new StreamController()
-        } as RuntimeContext
     }
 }

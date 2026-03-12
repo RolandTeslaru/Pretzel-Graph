@@ -1,8 +1,9 @@
 import { z } from "zod"
 import { Workflow } from "./Workflow"
-import { Chat } from "./Chat"
 import { type AxiosInstance } from "axios"
 import { Auth } from "./Auth"
+import { Chat } from "./Chat"
+import { BaseMessage } from "@langchain/core/messages"
 
 export namespace ExecutionSession {
 
@@ -13,32 +14,9 @@ export namespace ExecutionSession {
         return crypto.randomUUID() as Id
     }
 
-    export const Schema = z.object({
-        id: Id,
-        node_outputs: z.record(Workflow.Node.Id, z.any()).default(() => ({})),
-        node_messages: z.record(Workflow.Node.Id, z.string()).default(() => ({})),
-        messages: z.array(z.lazy(() => Chat.Message.Schema)).default(() => ([])),
-        attachments: z.record(z.string(), z.lazy(() => Chat.Attachment.Schema)).default(() => ({})),
-        metadata: z.record(z.string(), z.any()).default(() => ({})),
-        chatId: z.lazy(() => Chat.Id).optional(),
-    })
-
-    export const INITIAL = {
-        id: createId(),
-        node_outputs: {},
-        node_messages: {},
-        messages: [],
-        attachments: {},
-        metadata: {}
-    } as z.infer<typeof Schema>
-
-    export const Update = Schema.partial()
-    export type Update = z.infer<typeof Update>
-
-
     export namespace NodeStatus {
         export const Schema = z.object({
-            status: z.enum(["idle", "running", "completed", "failed"]),
+            status: z.enum(["idle", "running", "completed", "waiting", "failed"]),
             error: z.string().optional(),
             started_at:   z.iso.datetime(),
             completed_at: z.iso.datetime(),
@@ -46,6 +24,29 @@ export namespace ExecutionSession {
         export type Type = z.infer<typeof Schema>
     }
     export type NodeStatus = z.infer<typeof NodeStatus.Schema>
+
+    export const Schema = z.object({
+        id: Id,
+        node_outputs: z.record(Workflow.Node.Id, z.any()).default(() => ({})),
+        node_messages: z.record(Workflow.Node.Id, z.string()).default(() => ({})),
+        node_status: z.record(Workflow.Node.Id, NodeStatus.Schema).default(() => ({})),
+        messages: z.array(z.instanceof(BaseMessage)).default(() => ([])),
+        metadata: z.record(z.string(), z.any()).default(() => ({})),
+        chatId: z.lazy(() => Chat.Id).optional(),
+    })
+
+    export const INITIAL = {
+        id: createId(),
+        node_outputs: {},
+        node_status: {},
+        node_messages: {},
+        messages: [],
+        metadata: {}
+    } as z.infer<typeof Schema>
+
+    export const Update = Schema.partial()
+    export type Update = z.infer<typeof Update>
+
 
 
     export namespace Database {

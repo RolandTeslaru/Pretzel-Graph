@@ -16,12 +16,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { maxTokensPercentage } = this.fields;
-
-        const { summerizationLLM } = inputs;
-
-        return {
-            messages: [],
-        };
+        // Implement ToolDictionary node logic here
+        return {};
     }
 }

@@ -24,6 +24,7 @@ export namespace Workflow {
             icon: z.string().nullable().optional(),
             description: z.string().nullable().optional(),
             isMinimized: z.boolean().default(false),
+            isFlipped: z.boolean().optional(),
             accent: z.string().optional(),
         });
 

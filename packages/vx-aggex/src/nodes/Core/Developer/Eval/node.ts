@@ -1,7 +1,8 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
-import { RuntimeNode, RuntimeState } from "src/runtime";
+import { ExecutionContext } from "src/context";
+import { RuntimeNode } from "src/node";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
 
 @RegisterNode(Blueprint.id)
@@ -11,8 +12,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     
 
-    public override async run(
-        state: RuntimeState,
+    protected override async onRun(
+        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
@@ -21,13 +22,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         try {
             // Create a function that takes inputs and returns the result
             // Wrap in async IIFE to allow await usage in the script
-            const fn = new Function('inputs', 'fields', 'state', `
+            const fn = new Function('inputs', 'fields', 'session', `
                 return (async () => {
                     ${code}
                 })();
             `);
 
-            const result = await fn(inputs, this.fields, state);
+            const result = await fn(inputs, this.fields, context.session);
 
             return {
                 output: typeof result === 'string' ? result : JSON.stringify(result, null, 2)

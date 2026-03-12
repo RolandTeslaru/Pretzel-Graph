@@ -7,19 +7,19 @@ export class Vertex {
     private strategy: Vertex.STRATEGY = "AND";
 
     constructor(
-        public readonly id: Vertex.Id
-    ) {}
+        public readonly id: Vertex.Id,
+        strategy: Vertex.STRATEGY = "AND"
+    ) {
+        if(strategy)
+            this.strategy = strategy;
+    }
 
-    public setStragety(newStartegy: Vertex.STRATEGY) {
-        this.strategy = newStartegy;
+    public setStrategy(newStrategy: Vertex.STRATEGY) {
+        this.strategy = newStrategy;
     }
 
     public getStrategy(): Vertex.STRATEGY {
         return this.strategy;
-    }
-
-    public compute(): Promise<void> {
-        throw new S2EngineError("Method 'compute' must be implemented.");
     }
 }
 export namespace Vertex {
@@ -39,22 +39,32 @@ export class S2Graph {
     public arcs: Map<Vertex.Id, Set<Vertex.Id>> = new Map()
 
     public dependentsMap: Map<Vertex.Id, Set<Vertex.Id>> = new Map();
-    public dependeciesMap: Map<Vertex.Id, Set<Vertex.Id>> = new Map();
+    public dependenciesMap: Map<Vertex.Id, Set<Vertex.Id>> = new Map();
 
     public addVertex(
         vertexId: string,
-        computeFn: () => Promise<void>
+        strategy?: Vertex.STRATEGY
     ) {
         const vertex = new Vertex(
-            vertexId as Vertex.Id
+            vertexId as Vertex.Id,
+            strategy
         );
-        vertex.compute = computeFn;
         this.vertices.set(vertex.id, vertex)
 
         this.arcs.set(vertex.id, new Set());
 
-        this.dependeciesMap.set(vertexId as Vertex.Id, new Set<Vertex.Id>())
+        this.dependenciesMap.set(vertexId as Vertex.Id, new Set<Vertex.Id>())
         this.dependentsMap.set(vertexId as Vertex.Id, new Set<Vertex.Id>())
+    }
+
+    public setVertexStrategy(vertexId: Vertex.Id, strategy: Vertex.STRATEGY){
+        const vertex = this.vertices.get(vertexId);
+
+        if (!vertex) {
+            throw new S2EngineError("Vertex not found");
+        }
+
+        vertex.setStrategy(strategy);
     }
 
     public addDependency(
@@ -73,6 +83,6 @@ export class S2Graph {
 
         this.dependentsMap.get(sourceVertex.id)!.add(targetVertex.id)
 
-        this.dependeciesMap.get(targetVertex.id)!.add(sourceVertex.id);
+        this.dependenciesMap.get(targetVertex.id)!.add(sourceVertex.id);
     }
 }

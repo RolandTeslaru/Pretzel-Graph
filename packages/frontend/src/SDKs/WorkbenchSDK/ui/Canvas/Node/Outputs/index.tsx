@@ -1,17 +1,19 @@
 import React, { useMemo } from 'react'
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import NodeHandle from '../Handle'
+import { cn } from '@/utils/styleUtils'
 
 interface NodeOutputProps {
   node: Workflow.Node
   isWorkflowLocked: boolean
   output: Foundations.Port.Output
+  isFlipped?: boolean
 }
 
-const NodeOutput: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output }) => {
+const NodeOutput: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFlipped }) => {
   return (
-    <div className="relative w-full flex justify-end items-center h-8 pr-1">
-      <div className="mr-4 text-sm font-medium text-foreground">
+    <div className={cn("relative w-full flex items-center h-8", isFlipped ? "justify-start pl-1" : "justify-end pr-1")}>
+      <div className={cn("text-sm font-medium text-foreground", isFlipped ? "ml-4" : "mr-4")}>
         {output.displayName ?? output.id}
       </div>
       <NodeHandle
@@ -19,6 +21,7 @@ const NodeOutput: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output 
         isWorkflowLocked={isWorkflowLocked}
         port={output}
         nodeId={node.id}
+        isFlipped={isFlipped}
       />
     </div>
   )
@@ -28,9 +31,10 @@ const NodeOutput: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output 
 interface Props {
   node: Workflow.Node
   isWorkflowLocked: boolean
+  isFlipped?: boolean
 }
 
-const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked }) => {
+const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped }) => {
   const outputs = useMemo(() => {
     return Object.values(node.outputs) as Foundations.Port.Output[]
   }, [node.outputs])
@@ -45,6 +49,7 @@ const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked }) => {
           node={node}
           isWorkflowLocked={isWorkflowLocked}
           output={output}
+          isFlipped={isFlipped}
         />
       ))}
       {/* <Select.Root>

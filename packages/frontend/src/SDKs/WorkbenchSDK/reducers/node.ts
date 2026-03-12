@@ -52,6 +52,7 @@ export const nodeReducers = {
             icon        : blueprint.icon,
             description : blueprint.description,
             isMinimized : false,
+            isFlipped   : false,
             accent      : blueprint.accent ? `var(--${blueprint.accent})` : undefined,
         } satisfies Workflow.Node
 
@@ -89,6 +90,7 @@ export const nodeReducers = {
             throw new Error(`Node ${nodeId} not found`);
 
         const isMinimized = node.isMinimized;
+        const isFlipped = node.isFlipped;
         s.isDirty = true;
 
         // Delete the edges coming into the node 
@@ -116,6 +118,7 @@ export const nodeReducers = {
             icon        : blueprint.icon,
             description : blueprint.description,
             isMinimized : isMinimized,
+            isFlipped   : isFlipped,
             accent      : blueprint.accent ? `var(--${blueprint.accent})` : undefined,
         } satisfies Workflow.Node
 
@@ -149,6 +152,7 @@ export const nodeReducers = {
             icon         : originalNode.icon,
             description  : originalNode.description,
             isMinimized  : originalNode.isMinimized,
+            isFlipped    : originalNode.isFlipped,
             accent       : originalNode.accent,
         } satisfies Workflow.Node
 
@@ -196,6 +200,10 @@ export const nodeReducers = {
         s.isDirty = true;
         s.workflow.data.nodes[nodeId].isMinimized = isMinimized;
     },
+    setFlipped: (s, nodeId, isFlipped) => {
+        s.isDirty = true;
+        s.workflow.data.nodes[nodeId].isFlipped = isFlipped;
+    },
     setDisplayName: (s, nodeId, newDisplayName) => {
         s.isDirty = true;
         s.workflow.data.nodes[nodeId].displayName = newDisplayName;
@@ -228,6 +236,7 @@ interface NodeReducers {
     duplicate     : (state: WorkbenchSDK.State, originalNode: Workflow.Node, position?: { x: number, y: number }) => Workflow.Node;
     reconcile     : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
     setMinimized  : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void;
+    setFlipped    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isFlipped: boolean) => void;
     setDisplayName: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDisplayName: string) => void;
     setDescription: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDescription: string) => void;
     validate: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;

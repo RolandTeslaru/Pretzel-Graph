@@ -1,12 +1,12 @@
 import path from "path";
 import { container, singleton } from "tsyringe";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
-import { RuntimeNode, RuntimeContext } from "src/index";
+import { RuntimeNode, ExecutionContext } from "src/index";
 
 export type NodeConstructor = {
     new(
         workflowNode: Workflow.Node,
-        context: RuntimeContext
+        context: ExecutionContext
     ): RuntimeNode<Foundations.Blueprint>;
 }
 

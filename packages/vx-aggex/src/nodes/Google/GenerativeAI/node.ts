@@ -2,7 +2,8 @@ import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { Synthesizer } from "src/synthesizer";
-import { RuntimeNode, RuntimeState, RuntimeContext } from "src/runtime";
+import { RuntimeNode } from "src/node";
+import { ExecutionContext } from "src/context";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
 import { Workflow } from "@vx-agent-editor/shared/domain";
 import { BaseMessageChunk } from "@langchain/core/messages";
@@ -14,13 +15,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private readonly llm: ChatGoogleGenerativeAI
 
-    constructor(workflowNode: Workflow.Node, context: RuntimeContext) {
+    constructor(workflowNode: Workflow.Node, context: ExecutionContext) {
         super(workflowNode, context);
         this.llm = new ChatGoogleGenerativeAI(this.fields);
     }
 
-    public override async run(
-        state: RuntimeState,
+    protected override async onRun(
+        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
