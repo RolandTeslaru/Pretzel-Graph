@@ -150,14 +150,22 @@ export namespace Orchestrator {
                     error: z.string()
                 })
 
+                export const Waiting = Base.extend({
+                    type: z.literal("node:waiting"),
+                    nodeId: Workflow.Node.Id,
+                    dependencyResolutionMap: z.record(Workflow.Node.Id, z.boolean())
+                })
+
                 export type Started = z.infer<typeof Started>
                 export type Completed = z.infer<typeof Completed>
                 export type Error = z.infer<typeof Error>
+                export type Waiting = z.infer<typeof Waiting>
 
                 export const Schema = z.discriminatedUnion("type", [
                     Started,
                     Completed,
                     Error,
+                    Waiting
                 ])
             }
             export type Node = z.infer<typeof Node.Schema>
@@ -175,6 +183,7 @@ export namespace Orchestrator {
             Job.Node.Started,
             Job.Node.Completed,
             Job.Node.Error,
+            Job.Node.Waiting,
             Compilation.Started,
             Compilation.Completed,
             Compilation.Failed

@@ -6,7 +6,6 @@ import { AggexEngine } from 'src/engine';
 import { container, singleton } from 'tsyringe';
 import { EventBuilder } from './event/builder';
 import { Emitter, EmitterEvent } from './event/emitter';
-import { Synthesizer } from './synthesizer';
 import { WorkflowCompiler } from './compiler';
 
 
@@ -51,10 +50,10 @@ export class AggexWorkerImpl {
 
 
         try {
-            const { compiledGraph, context } = await this.compiler.compile(workflow, jobId, executionSession, AggexEngine.runNode, emit);
-    
-            await this.engine.start(compiledGraph, context);
-            context.streamController.disposeAll();
+            const compilationResult = await this.compiler.compile(workflow, jobId, executionSession, emit);
+
+            await this.engine.start(compilationResult);
+            compilationResult.context.streamController.disposeAll();
         } catch (err) {
             console.error("Error during execution of job ", jobId, err)
 

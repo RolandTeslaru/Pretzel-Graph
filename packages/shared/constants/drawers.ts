@@ -59,17 +59,24 @@ export const CORE_DRAWERS = {
     icon: "ListFilter",
     blueprintIds: [],
   },
-  flow_controls: {
-    displayName: "Flow Controls",
-    id: "flow_controls",
-    icon: "ArrowRightLeft",
-    blueprintIds: [],
+  routing: {
+    displayName: "Routing",
+    id: "routing",
+    icon: "ChevronsLeftRightEllipsis",
+    blueprintIds: [
+      "Core.Routing.IfElse",
+      "Core.Routing.Switch",
+      "Core.Routing.Merge",
+      "Core.Routing.Accumulator",
+    ],
   },
   utilities: {
     displayName: "Utilities",
     id: "utilities",
     icon: "Wand2",
-    blueprintIds: [],
+    blueprintIds: [
+
+    ],
   },
   prototypes: {
     displayName: "Prototypes",

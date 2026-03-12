@@ -15,7 +15,7 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionS
 
   if (isMinimized)
     return (
-      <MinimizedHandles node={node} isWorkflowLocked={isWorkflowLocked}>
+      <MinimizedHandles node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped}>
         <div className='flex w-full flex-col! items-center gap-1 px-4 py-1 relative'
 
         >

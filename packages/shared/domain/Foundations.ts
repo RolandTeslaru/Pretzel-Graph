@@ -160,6 +160,7 @@ export namespace Foundations {
             "DataFrame",
             "Integer",
             "Json",
+            "Dynamic",
         ])
         export type Variant = z.infer<typeof Variant>
 
@@ -228,6 +229,12 @@ export namespace Foundations {
                 variant: portLiteral("Json"),
             })
 
+            export const Dynamic = Base.extend({
+                variant: portLiteral("Dynamic"),
+                syncGroup: z.string(),
+                resolvedVariant: Port.Variant.optional(),
+            })
+
             export const Schema = z.discriminatedUnion("variant", [
                 Message,
                 MessageList,
@@ -241,6 +248,7 @@ export namespace Foundations {
                 DataFrame,
                 Integer,
                 Json,
+                Dynamic,
             ])
 
             export type Message = z.infer<typeof Message>
@@ -255,6 +263,7 @@ export namespace Foundations {
             export type DataFrame = z.infer<typeof DataFrame>
             export type Integer = z.infer<typeof Integer>
             export type Json = z.infer<typeof Json>
+            export type Dynamic = z.infer<typeof Dynamic>
         }
 
         export namespace Input {
@@ -283,10 +292,11 @@ export namespace Foundations {
             export const Integer = Port.Variants.Integer.extend(inputFields);
 
             export const Json = Port.Variants.Json.extend(inputFields);
+            export const Dynamic = Port.Variants.Dynamic.extend(inputFields);
 
             export const Schema = z.discriminatedUnion("variant", [
                 Message, MessageList, Text, LanguageModel, Document, Retriever,
-                Embeddings, VectorStore, Tool, Integer, Json
+                Embeddings, VectorStore, Tool, Integer, Json, Dynamic
             ]);
         }
         export type Input = z.infer<typeof Input.Schema>
@@ -315,10 +325,11 @@ export namespace Foundations {
             export const DataFrame = Port.Variants.DataFrame.extend(outputFields);
             export const Integer = Port.Variants.Integer.extend(outputFields);
             export const Json = Port.Variants.Json.extend(outputFields);
+            export const Dynamic = Port.Variants.Dynamic.extend(outputFields);
 
             export const Schema = z.discriminatedUnion("variant", [
                 Message, MessageList, Text, LanguageModel, Document, Retriever, Embeddings,
-                VectorStore, Tool, DataFrame, Integer, Json
+                VectorStore, Tool, DataFrame, Integer, Json, Dynamic
             ]);
         }
         export type Output = z.infer<typeof Output.Schema>

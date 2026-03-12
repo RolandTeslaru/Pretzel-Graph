@@ -592,3 +592,64 @@ export const History: React.FC<BaseIconProps> = (props) => (
     </BaseIcon>
 )
 History.displayName = "History"
+
+export const ChevronsLeftRightEllipsis: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M12 12h.01"/><path d="M16 12h.01"/><path d="m17 7 5 5-5 5"/><path d="m7 7-5 5 5 5"/><path d="M8 12h.01"/>
+    </BaseIcon>
+)
+ChevronsLeftRightEllipsis.displayName = "ChevronsLeftRightEllipsis"
+
+export const ChevronsLeftRight: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="m9 18-6-6 6-6"/><path d="m15 18 6-6-6-6"/><path d="m3 12 18 0"/>
+    </BaseIcon>
+)
+ChevronsLeftRight.displayName = "ChevronsLeftRight"
+
+
+export const Option: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M3 3h6l6 18h6"/><path d="M14 3h7"/>
+    </BaseIcon>
+)
+Option.displayName = "Option"
+
+export const Split: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/>
+    </BaseIcon>
+)
+Split.displayName = "Split"
+
+export const GitPullRequestArrow: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <circle cx="5" cy="6" r="3"/><path d="M5 9v12"/><circle cx="19" cy="18" r="3"/><path d="m15 9-3-3 3-3"/><path d="M12 6h5a2 2 0 0 1 2 2v7"/>
+    </BaseIcon>
+)
+GitPullRequestArrow.displayName = "GitPullRequestArrow"
+
+
+export const ListTree: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M8 5h13"/><path d="M13 12h8"/><path d="M13 19h8"/><path d="M3 10a2 2 0 0 0 2 2h3"/><path d="M3 5v12a2 2 0 0 0 2 2h3"/>
+    </BaseIcon>
+)
+ListTree.displayName = "ListTree"
+
+
+export const Merge: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="m8 6 4-4 4 4"/><path d="M12 2v10.3a4 4 0 0 1-1.172 2.872L4 22"/><path d="m20 22-5-5"/>
+    </BaseIcon>
+)
+Merge.displayName = "Merge"
+
+
+// Arrow left right
+export const ArrowLeftRight: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>
+    </BaseIcon>
+)
+ArrowLeftRight.displayName = "ArrowLeftRight"

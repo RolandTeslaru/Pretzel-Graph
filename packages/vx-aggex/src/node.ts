@@ -1,45 +1,68 @@
-import { Foundations, Orchestrator, Workflow } from "@vx-agent-editor/shared/domain";
+import { Foundations, Workflow, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "src/types";
-import { RuntimeState } from "./state";
-import { RuntimeContext } from "./context";
-import { Emitter } from "../event/emitter"
+import { ExecutionContext } from "./context";
+import { Emitter } from "./event/emitter"
 
 export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
 
     public readonly emit: Emitter;
     public fields: InferFields<T_Blueprint>
 
+    private isWaiting: boolean = false;
+
     constructor(
         public readonly workflowNode: Workflow.Node,
-        context: RuntimeContext
+        protected readonly context: ExecutionContext
     ) {
-
         this.fields = RuntimeNode.resolveFields<T_Blueprint>(this.workflowNode.id, context.workflow)
         this.emit = context.emit;
     }
 
 
     /**
-     * Execute this node.
-     * 
-     * @param globalState - The full LangGraph runtime state
-     * @param config - Static configuration values (NodeConfig fields like temperature, model, etc.)
-     * @param inputs - Port inputs resolved from upstream edges or fallback values
+     * Called by the engine. Wraps onRun with shared pre/post logic.
      */
-    public abstract run(
-        globalState: RuntimeState,
+    public async run(
+        inputs: InferInputs<T_Blueprint>
+    ): Promise<InferOutputs<T_Blueprint>> {
+        this.isWaiting = false;
+        return this.onRun(this.context, inputs);
+    }
+
+    public async wait(
+        partialInputs: InferInputs<T_Blueprint>,
+        dependencyResolutionMap: Record<Workflow.Node.Id, boolean>
+    ): Promise<void> {
+        this.isWaiting = true;
+
+        this.emit({
+            type: "node:waiting",
+            jobId: this.context.jobId,
+            nodeId: this.workflowNode.id,
+            topic: Orchestrator.Event.getTopic(this.context.jobId),
+            workflowId: this.context.workflow.id,
+            dependencyResolutionMap,
+        } satisfies Orchestrator.Event.Job.Node.Waiting)
+
+        return this.onWait(this.context, partialInputs);
+    }
+
+    /**
+     * Implement this in each node. Called by run().
+     */
+    protected abstract onRun(
+        context: ExecutionContext,
         inputs: InferInputs<T_Blueprint>
     ): Promise<InferOutputs<T_Blueprint>>;
 
-    public init(
-        context: RuntimeContext
+    protected onWait(
+        context: ExecutionContext,
+        inputs: InferInputs<T_Blueprint>
     ): Promise<void> | void {}
 
-    protected async onConversion(
-        currentBlueprint: T_Blueprint
-    ): Promise<T_Blueprint> {
-        return currentBlueprint
-    }
+    public init(
+        context: ExecutionContext
+    ): Promise<void> | void {}
 
     public static resolveInitialFieldValues<T_Blueprint extends Foundations.Blueprint>(
         blueprint: T_Blueprint,

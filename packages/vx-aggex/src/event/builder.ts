@@ -1,5 +1,4 @@
 import { Chat, Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/domain";
-import { RuntimeState } from "..";
 
 export class EventBuilder {
     constructor(

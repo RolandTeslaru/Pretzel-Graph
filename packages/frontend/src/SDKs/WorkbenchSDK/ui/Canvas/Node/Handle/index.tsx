@@ -12,6 +12,7 @@ interface Props {
     isWorkflowLocked: boolean
     port: Foundations.Port.Input | Foundations.Port.Output
     nodeId: Workflow.Node.Id
+    isFlipped?: boolean
 }
 
 const handleStyle: React.CSSProperties = {
@@ -35,8 +36,10 @@ const isValidConnectionCallback = (conn: Connection | Edge) => {
     );
 }
 
-const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId }) => {
-    const position = type === "target" ? Position.Left : Position.Right;
+const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, isFlipped }) => {
+    const defaultPosition = type === "target" ? Position.Left : Position.Right;
+    const flippedPosition = type === "target" ? Position.Right : Position.Left;
+    const position = isFlipped ? flippedPosition : defaultPosition;
 
     const draggedHandle = WorkbenchSDK.useStore(s => s.draggedHandle)
 
@@ -86,7 +89,7 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId }) =
                     isConnectable={!isWorkflowLocked}
                     style={{
                         ...handleStyle,
-                        [type === "target" ? "left" : "right"]: "-6px" // push further out (default is -4/-5px)
+                        [position === Position.Left ? "left" : "right"]: "-6px" // push further out (default is -4/-5px)
                     }}
                     id={port.id}
                     isValidConnection={isValidConnectionCallback}
@@ -122,7 +125,7 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId }) =
                 </Handle>
 
             </Tooltip.Trigger>
-            <Tooltip.Content side={type === "target" ? "left" : "right"} sideOffset={3}>
+            <Tooltip.Content side={position === Position.Left ? "left" : "right"} sideOffset={3}>
                 <HandleTooltipContent
                     draggedHandle={draggedHandle}
                     handleType={type}

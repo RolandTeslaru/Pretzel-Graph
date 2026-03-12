@@ -23,7 +23,14 @@ export const NodeCustomToolbar: React.FC<Props> = ({ node }) => {
                     <SystemIcons.Minimize2 />
                 }
             </Button>
-            <Button variant="success" size="xs" className='text-xs'>Simulate</Button>
+            <Button variant="ghost" size="icon-xs" className='h-6!'
+                onClick={() => {
+                    WorkbenchSDK.actions.node.setFlipped(node.id, !node.isFlipped)
+                }}
+            >
+                <SystemIcons.ArrowLeftRight />
+            </Button>
+            {/* <Button variant="success" size="xs" className='text-xs'>Simulate</Button> */}
             <MoreOptionsDropdown node={node} />
         </div>
     )
