@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { createAuthenticatedClient, getUserId } from '@/utils/supabase';
+import { createAuthenticatedClient } from '@/utils/supabase';
 import { Auth, ExecutionSession, Workflow } from '@vx-agent-editor/shared/domain';
 import { SupabaseClient } from '@supabase/supabase-js';
 
@@ -59,7 +59,7 @@ export class ExecutionSessionService {
                 .select('data')
                 .single();
 
-            if (error) 
+            if (error)
                 throw error;
             return data.data as ExecutionSession;
         }
@@ -67,14 +67,10 @@ export class ExecutionSessionService {
 
     async create(
         token: string,
+        userId: Auth.User.Id,
         payload: ExecutionSession.API.Create.Request
     ): Promise<ExecutionSession.API.Create.Response> {
         const supabase = createAuthenticatedClient(token);
-
-        const userId = await getUserId(supabase) as Auth.User.Id;
-        if (!userId)
-            throw new Error("User not found");
-
         const { workflowId, session } = payload;
         await this.dbOps.upsert(supabase, userId, workflowId, session);
         return { session };
@@ -83,14 +79,10 @@ export class ExecutionSessionService {
 
     async get(
         token: string,
+        userId: Auth.User.Id,
         payload: ExecutionSession.API.Get.Request
     ): Promise<ExecutionSession.API.Get.Response> {
         const supabase = createAuthenticatedClient(token);
-
-        const userId = await getUserId(supabase) as Auth.User.Id;
-        if (!userId)
-            throw new Error("User not found");
-
         const { id } = payload;
         const session = await this.dbOps.get(supabase, userId, id);
         return { session };
@@ -99,14 +91,10 @@ export class ExecutionSessionService {
 
     async update(
         token: string,
+        userId: Auth.User.Id,
         payload: ExecutionSession.API.Update.Request
     ): Promise<ExecutionSession.API.Update.Response> {
         const supabase = createAuthenticatedClient(token);
-
-        const userId = await getUserId(supabase) as Auth.User.Id;
-        if (!userId)
-            throw new Error("User not found");
-
         const { id, session } = payload;
         const updatedSession = await this.dbOps.update(supabase, userId, id, session);
         return { session: updatedSession };

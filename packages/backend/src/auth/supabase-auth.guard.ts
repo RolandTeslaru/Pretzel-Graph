@@ -1,6 +1,11 @@
 import { CanActivate, ExecutionContext as NestExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { createAuthenticatedClient, getUserId } from '../utils/supabase';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 export interface AuthenticatedRequest extends Request {
     user: {
@@ -20,15 +25,12 @@ export class SupabaseAuthGuard implements CanActivate {
         }
 
         // Allow service_role key (used by vx-aggex worker for server-to-server calls)
-        // The Supabase service_role key is a JWT with role: "service_role" in its payload
-        try {
-            const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-            if (payload.role === 'service_role') {
-                request.user = { id: 'service-role' };
-                request.token = token;
-                return true;
-            }
-        } catch { /* not a valid JWT format, continue to normal auth */ }
+        // Verified by comparing against the known key from environment
+        if (SUPABASE_SERVICE_ROLE_KEY && token === SUPABASE_SERVICE_ROLE_KEY) {
+            request.user = { id: 'service-role' };
+            request.token = token;
+            return true;
+        }
 
         try {
             const supabase = createAuthenticatedClient(token);

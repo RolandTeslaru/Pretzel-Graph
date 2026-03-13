@@ -1,6 +1,6 @@
 import { Controller, Post, Body, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { ChatService } from './chat.service';
-import { Chat } from '@vx-agent-editor/shared/domain';
+import { Auth, Chat } from '@vx-agent-editor/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
 
 @Controller('chat')
@@ -12,22 +12,22 @@ export class ChatController {
     @Post('create')
     @HttpCode(200)
     async create(
-        @Req() req: AuthenticatedRequest, 
+        @Req() req: AuthenticatedRequest,
         @Body() body: any
     ) {
         const payload = Chat.API.Create.Request.parse(body);
-        return await this.chatService.create(req.token, payload);
+        return await this.chatService.create(req.token, req.user.id as Auth.User.Id, payload);
     }
 
 
     @Post('get')
     @HttpCode(200)
     async get(
-        @Req() req: AuthenticatedRequest, 
+        @Req() req: AuthenticatedRequest,
         @Body() body: any
     ) {
         const payload = Chat.API.Get.Request.parse(body);
-        return await this.chatService.get(req.token, payload);
+        return await this.chatService.get(req.token, req.user.id as Auth.User.Id, payload);
     }
 
 
@@ -36,25 +36,25 @@ export class ChatController {
     async list(
         @Req() req: AuthenticatedRequest
     ) {
-        return await this.chatService.list(req.token);
+        return await this.chatService.list(req.token, req.user.id as Auth.User.Id);
     }
 
 
     @Post('erase')
     @HttpCode(200)
     async erase(
-        @Req() req: AuthenticatedRequest, 
+        @Req() req: AuthenticatedRequest,
         @Body() body: any
     ) {
         const payload = Chat.API.Erase.Request.parse(body);
-        return await this.chatService.erase(req.token, payload);
+        return await this.chatService.erase(req.token, req.user.id as Auth.User.Id, payload);
     }
 
 
     @Post('message/send')
     @HttpCode(200)
     async sendMessage(
-        @Req() req: AuthenticatedRequest, 
+        @Req() req: AuthenticatedRequest,
         @Body() body: any
     ) {
         const payload = Chat.API.Message.Send.Request.parse(body);
@@ -65,7 +65,7 @@ export class ChatController {
     @Post('message/respond')
     @HttpCode(200)
     async respondMessage(
-        @Req() req: AuthenticatedRequest, 
+        @Req() req: AuthenticatedRequest,
         @Body() body: any
     ) {
         const payload = Chat.API.Message.Respond.Request.parse(body);
@@ -76,7 +76,7 @@ export class ChatController {
     @Post('message/erase')
     @HttpCode(200)
     async eraseMessage(
-        @Req() req: AuthenticatedRequest, 
+        @Req() req: AuthenticatedRequest,
         @Body() body: any
     ) {
         const payload = Chat.API.Message.Erase.Request.parse(body);
@@ -87,7 +87,7 @@ export class ChatController {
     @Post('message/update')
     @HttpCode(200)
     async updateMessage(
-        @Req() req: AuthenticatedRequest, 
+        @Req() req: AuthenticatedRequest,
         @Body() body: any
     ) {
         const payload = Chat.API.Message.Update.Request.parse(body);

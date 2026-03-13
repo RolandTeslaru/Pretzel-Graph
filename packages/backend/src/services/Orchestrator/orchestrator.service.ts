@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import Redis from 'ioredis';
-import { createAuthenticatedClient, getUserId } from '@/utils/supabase';
+import { createAuthenticatedClient } from '@/utils/supabase';
 import { REDIS_HOST, REDIS_PORT } from '@vx-agent-editor/shared/constants';
 import { Auth, Validation, Workflow } from '@vx-agent-editor/shared/domain';
 import { Orchestrator } from '@vx-agent-editor/shared/domain';
@@ -47,22 +47,20 @@ export class OrchestratorService {
 
 
     async run(
-        token: string, 
+        token: string,
+        userId: Auth.User.Id,
         payload: Orchestrator.API.Run.Request
     ): Promise<Orchestrator.API.Run.Response> {
         const { workflow, executionSession } = payload
 
         const wfCache = Workflow.createCache(workflow);
-        
+
         const workflowIssues = Validation.Issue.checkWorkflow(workflow, wfCache);
 
         if (Object.entries(workflowIssues).length > 0)
             throw new Error("Workflow has issues");
 
         const supabase = createAuthenticatedClient(token);
-        const userId = await getUserId(supabase) as Auth.User.Id;
-
-        if (!userId) throw new Error("User not found");
 
         const jobId = await this.dbOps.job.create(supabase, { workflowId: workflow.id, userId });
 
@@ -89,7 +87,7 @@ export class OrchestratorService {
 
 
     async pause(
-        token: string, 
+        token: string,
         payload: Orchestrator.API.Pause.Request
     ): Promise<void> {
         const supabase = createAuthenticatedClient(token);
@@ -99,7 +97,7 @@ export class OrchestratorService {
 
 
     async resume(
-        token: string, 
+        token: string,
         payload: Orchestrator.API.Resume.Request
     ): Promise<void> {
         const supabase = createAuthenticatedClient(token);
@@ -121,7 +119,7 @@ export class OrchestratorService {
 
 
     async finalise(
-        token: string, 
+        token: string,
         payload: Orchestrator.API.Finalise.Request
     ): Promise<void> {
         const supabase = createAuthenticatedClient(token);
