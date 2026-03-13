@@ -7,8 +7,6 @@ export async function resolveCredential(supabase: SupabaseClient, credentialId: 
             p_credential_id: credentialId
         })
 
-    console.log("RPC result for credentialId", credentialId, "data", data, "error", error)
-
     if (error)
         throw error;
     return data.value as Vault.Credential;

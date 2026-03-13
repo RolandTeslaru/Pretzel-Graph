@@ -13,6 +13,7 @@
         "@nestjs/core": "^11.1.16",
         "@nestjs/platform-express": "^11.1.16",
         "@nestjs/platform-ws": "^11.1.16",
+        "@nestjs/throttler": "^6.5.0",
         "@nestjs/websockets": "^11.1.16",
         "@supabase/supabase-js": "^2.93.3",
         "@vx-agent-builder/vx-aggex": "file:../vx-aggex",

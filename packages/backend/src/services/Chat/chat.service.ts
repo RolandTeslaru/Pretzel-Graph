@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { createAuthenticatedClient, getUserId } from '@/utils/supabase';
+import { createAuthenticatedClient } from '@/utils/supabase';
 import { Auth, Chat, ExecutionSession, Workflow } from '@vx-agent-editor/shared/domain';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { ExecutionSessionService } from '../ExecutionSession/execution-session.service';
@@ -54,11 +54,16 @@ export class ChatService {
                     updated_at: new Date().toISOString()
                 } satisfies Chat;
             },
-            get: async (supabase: SupabaseClient, chatId: Chat.Id) => {
+            get: async (
+                supabase: SupabaseClient,
+                userId: Auth.User.Id,
+                chatId: Chat.Id
+            ) => {
                 const { data, error } = await supabase
                     .from('chats')
                     .select('id, user_id, workflow_id, name, created_at, updated_at, execution_session_id, chat_messages(*)')
                     .eq('id', chatId)
+                    .eq("user_id", userId)
                     .order('created_at', { referencedTable: 'chat_messages', ascending: true })
                     .single();
 
@@ -84,8 +89,8 @@ export class ChatService {
                 this.assertSupabaseOk(error, "chat.list");
                 return data ?? [];
             },
-            erase: async (supabase: SupabaseClient, chatId: Chat.Id) => {
-                const { error } = await supabase.from('chats').delete().eq('id', chatId);
+            erase: async (supabase: SupabaseClient, userId: Auth.User.Id, chatId: Chat.Id) => {
+                const { error } = await supabase.from('chats').delete().eq('id', chatId).eq('user_id', userId);
                 this.assertSupabaseOk(error, "chat.erase");
             },
         },
@@ -113,7 +118,6 @@ export class ChatService {
                     .update({ content })
                     .eq('id', messageId);
 
-                console.log("Updating message", messageId, "with content", content, "errror", error);
                 this.assertSupabaseOk(error, "message.update");
             }
         }
@@ -121,14 +125,11 @@ export class ChatService {
 
     async create(
         token: string,
+        userId: Auth.User.Id,
         payload: Chat.API.Create.Request
     ): Promise<Chat.API.Create.Response> {
         const supabase = createAuthenticatedClient(token);
         const { workflow_id, name, execution_session } = payload
-
-        const userId = await getUserId(supabase) as Auth.User.Id;
-        if (!userId)
-            throw new Error("User not found");
 
         // Ensure the execution session exists in the DB (insert if missing, update if existing)
         await this.executionSessionService.dbOps.upsert(supabase, userId, workflow_id, execution_session);
@@ -140,37 +141,31 @@ export class ChatService {
         return { chat };
     }
 
-
     async get(
         token: string,
+        userId: Auth.User.Id,
         payload: Chat.API.Get.Request
     ): Promise<Chat.API.Get.Response> {
         const supabase = createAuthenticatedClient(token);
-        return await this.dbOps.chat.get(supabase, payload.chatId);
+        return await this.dbOps.chat.get(supabase, userId, payload.chatId);
     }
 
-
     async list(
-        token: string
+        token: string,
+        userId: Auth.User.Id
     ): Promise<Chat.API.List.Response> {
         const supabase = createAuthenticatedClient(token);
-
-        const userId = await getUserId(supabase) as Auth.User.Id;
-        if (!userId) throw new Error("User not found");
-
         const chats = await this.dbOps.chat.list(supabase, userId);
-
         return { chats };
     }
 
-
     async erase(
         token: string,
+        userId: Auth.User.Id,
         payload: Chat.API.Erase.Request
     ): Promise<Chat.API.Erase.Response> {
         const supabase = createAuthenticatedClient(token);
-        await this.dbOps.chat.erase(supabase, payload.chatId);
-
+        await this.dbOps.chat.erase(supabase, userId, payload.chatId);
         return {};
     }
 
@@ -182,7 +177,6 @@ export class ChatService {
             const supabase = createAuthenticatedClient(token);
             const { message } = payload;
             await this.dbOps.message.add(supabase, message);
-
             return {};
         },
 
@@ -193,7 +187,6 @@ export class ChatService {
             const supabase = createAuthenticatedClient(token);
             const { responseMessage } = payload;
             await this.dbOps.message.add(supabase, responseMessage);
-
             return {};
         },
 
@@ -202,7 +195,6 @@ export class ChatService {
             payload: Chat.API.Message.Erase.Request
         ): Promise<Chat.API.Message.Erase.Response> => {
             const supabase = createAuthenticatedClient(token);
-
             await this.dbOps.message.erase(supabase, payload.messageId);
             return {};
         },
@@ -213,7 +205,6 @@ export class ChatService {
         ): Promise<Chat.API.Message.Update.Response> => {
             const supabase = createAuthenticatedClient(token);
             const { messageId, content } = payload;
-
             await this.dbOps.message.update(supabase, messageId, content);
             return {};
         }
