@@ -7,6 +7,7 @@ import { Realtime } from "@vx-agent-editor/shared/domain/Realtime";
 @WebSocketGateway()
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+    
     private subscriptions = new Map<Realtime.Topic, Set<WebSocket>>();
 
     constructor() {

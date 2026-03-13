@@ -9,9 +9,17 @@ import { Emitter, EmitterEvent } from './event/emitter';
 import { WorkflowCompiler } from './compiler';
 
 
+const TERMINATE_CHANNEL = "aggex:terminate";
+
 @singleton()
 export class AggexWorkerImpl {
     constructor() { }
+
+    private compiler = new WorkflowCompiler();
+    private runningEngines = new Map<Orchestrator.Job.Id, AggexEngine>();
+
+    private redisPub = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
+    private redisSub = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
 
     public init() {
         this.worker.run()
@@ -23,12 +31,16 @@ export class AggexWorkerImpl {
             console.error(`Job ${job?.id} failed:`, err);
         });
 
+        this.redisSub.subscribe(TERMINATE_CHANNEL);
+        this.redisSub.on('message', (_channel, message) => {
+            const jobId = message as Orchestrator.Job.Id;
+            const engine = this.runningEngines.get(jobId);
+            if (engine) {
+                console.log(`Terminating job ${jobId}`);
+                engine.kill();
+            }
+        });
     }
-    
-    private engine = new AggexEngine();
-    private compiler = new WorkflowCompiler();
-
-    private redis = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
 
     private processQueueItem = async (
         { data: queueItem }: { data: Orchestrator.ExecutionQueue.Item }
@@ -40,41 +52,51 @@ export class AggexWorkerImpl {
             this.publishToRedis(event)
         }
 
-        emit({
+        emit<Orchestrator.Event.Job.Started>({
             jobId,
             workflowId: workflow.id,
             type: "started",
             topic: Orchestrator.Event.getTopic(jobId)
-        } satisfies Orchestrator.Event.Job.Started);
+        });
 
+        const engine = new AggexEngine();
+        this.runningEngines.set(jobId, engine);
 
+        let killed = false;
 
         try {
             const compilationResult = await this.compiler.compile(workflow, jobId, executionSession, emit);
 
-            await this.engine.start(compilationResult);
+            const result = await engine.start(compilationResult);
+            killed = result.killed;
             compilationResult.context.streamController.disposeAll();
         } catch (err) {
             console.error("Error during execution of job ", jobId, err)
 
-            emit({
+            emit<Orchestrator.Event.Job.Failed>({
                 jobId,
                 workflowId: workflow.id,
                 type: "failed",
                 topic: Orchestrator.Event.getTopic(jobId),
                 error: (err as Error).message
-            } satisfies Orchestrator.Event.Job.Failed);
+            });
 
             return { status: 'failed', error: (err as Error).message }
+        } finally {
+            this.runningEngines.delete(jobId);
         }
 
-        emit({
+        if (killed) {
+            return { status: 'terminated' };
+        }
+
+        emit<Orchestrator.Event.Job.Completed>({
             jobId,
             workflowId: workflow.id,
             type: "completed",
             topic: Orchestrator.Event.getTopic(jobId),
             result: "Workflow execution completed successfully"
-        } satisfies Orchestrator.Event.Job.Completed);
+        });
 
         return { status: 'completed' };
     }
@@ -82,11 +104,11 @@ export class AggexWorkerImpl {
     private worker = new Worker(
         EXECUTION_QUEUE_ID,
         this.processQueueItem,
-        { connection: this.redis, autorun: false }
+        { connection: this.redisPub, autorun: false }
     )
 
     public async publishToRedis(event: EmitterEvent) {
-        this.redis.publish(event.topic, JSON.stringify(event));
+        this.redisPub.publish(event.topic, JSON.stringify(event));
     }
 }
 

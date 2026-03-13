@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import Redis from 'ioredis';
 import { createAuthenticatedClient, getUserId } from '@/utils/supabase';
+import { REDIS_HOST, REDIS_PORT } from '@vx-agent-editor/shared/constants';
 import { Auth, Validation, Workflow } from '@vx-agent-editor/shared/domain';
 import { Orchestrator } from '@vx-agent-editor/shared/domain';
 import { SecretsResolver } from './utils';
 
 @Injectable()
 export class OrchestratorService {
+    private readonly redisPub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+
     constructor(
         @InjectQueue('workflow-execution')
         private readonly executionQueue: Queue,
@@ -105,12 +109,14 @@ export class OrchestratorService {
 
 
     async terminate(
-        token: string, 
+        token: string,
         payload: Orchestrator.API.Terminate.Request
     ): Promise<void> {
         const supabase = createAuthenticatedClient(token);
         const { jobId } = payload;
-        await this.dbOps.job.delete(supabase, jobId);
+
+        await this.redisPub.publish("aggex:terminate", jobId);
+        await this.dbOps.job.update(supabase, { jobId, status: "terminated" });
     }
 
 

@@ -1,7 +1,7 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Orchestrator, Workflow } from "@vx-agent-editor/shared/domain";
+import { Orchestrator } from "@vx-agent-editor/shared/domain";
 import { RealtimeSDK } from "../Realtime/sdk";
 import { createOrchestratorSDKActions, type OrchestratorSDKActions } from "./actions";
 import { orchestratorSDKReducers } from "./reducers";
@@ -58,33 +58,11 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                     s.executionStatus = "failed";
                 })
                 break;
-            case "node:started":
+            case "terminated":
                 this.setState(s => {
-                    s.nodeStatuses[event.nodeId] = {
-                        status: "running",
-                        started_at: new Date().toISOString()
-                    }
+                    s.jobId = undefined;
+                    s.executionStatus = "terminated"
                 })
-                break;
-            case "node:completed":
-                this.setState(s => {
-                    s.nodeStatuses[event.nodeId] = {
-                        status: "completed",
-                        started_at: s.nodeStatuses[event.nodeId]?.started_at,
-                        completed_at: new Date().toISOString()
-                    }
-                })
-                break;
-            case "node:error":
-                this.setState(s => {
-                    s.nodeStatuses[event.nodeId] = {
-                        status: "failed",
-                        error: event.error,
-                        started_at: s.nodeStatuses[event.nodeId]?.started_at,
-                        completed_at: new Date().toISOString()
-                    }
-                })
-                break;
         }
     }
 }
@@ -112,8 +90,7 @@ export namespace OrchestratorSDK {
 
     export type State = {
         jobId: Orchestrator.Job.Id | undefined
-        nodeStatuses: Record<Workflow.Node.Id, any>
-        executionStatus: "idle" | "running" | "completed" | "failed"
+        executionStatus: "idle" | "running" | "completed" | "failed" | "terminated"
     }
 
     export type Reducers = typeof orchestratorSDKReducers
