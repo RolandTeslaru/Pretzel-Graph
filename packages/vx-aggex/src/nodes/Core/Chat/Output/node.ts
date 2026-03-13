@@ -53,23 +53,23 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             console.log("Created response message with id ", responseMessage.id, " for chat ", chatId)
 
 
-            this.emit({
+            this.emit<Chat.Event.ResponseCreated>({
                 type: "response:created",
                 topic: Chat.Event.getTopic(chatId),
                 responseMessage,
                 chatId
-            } satisfies Chat.Event.ResponseCreated)
+            })
 
 
             // Listen and emit chunks as they come from the LLM
             context.streamController.onLlmChunk(upstreamNodeId, (content) => {
-                this.emit({
+                this.emit<Chat.Event.ResponseChunk>({
                     type: "response:chunk",
                     topic: Chat.Event.getTopic(chatId),
                     chatId,
                     responseMessageId: responseMessage.id,
                     content
-                } satisfies Chat.Event.ResponseChunk)
+                })
             } )
         }
     }
@@ -94,13 +94,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
 
         if(this.responseMessageId && this.chatId){
-            this.emit({
+            this.emit<Chat.Event.ResponseFinished>({
                 type:              "response:finished",
                 topic:             Chat.Event.getTopic(this.chatId!),
                 responseMessageId: this.responseMessageId!,
                 finalContent:      content,
                 chatId:            this.chatId!,
-            } satisfies Chat.Event.ResponseFinished)
+            })
 
             await Chat.API.Message.update(AxiosService.api, {
                 messageId: this.responseMessageId!,

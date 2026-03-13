@@ -40,14 +40,18 @@ export namespace Orchestrator {
 
 
     export namespace Event {
+        export const Topic = Realtime.Topic.brand("OrchestratorTopic")
+        export type Topic = z.infer<typeof Topic>
+
         export function getTopic(jobId: Orchestrator.Job.Id) {
-            return `job:${jobId}` as Realtime.Topic
+            return `job:${jobId}` as Topic
         }
 
         // Create a base from the realtime event base
         const Base = Realtime.Event.Base.extend({
             jobId: Orchestrator.Job.Id,
             workflowId: Workflow.Id,
+            topic: Topic
         })
 
         export namespace Compilation {
@@ -106,20 +110,13 @@ export namespace Orchestrator {
                 result: z.string()
             })
 
-            export const MessageChunk = Base.extend({
-                type: z.literal('node_messages:chunk'),
-                nodeId: Workflow.Node.Id,
-                chunk: z.string(),
-                isChatOutput: z.boolean().optional(),
-            })
-
+       
             export type Started = z.infer<typeof Started>
             export type Update = z.infer<typeof Update>
             export type Terminated = z.infer<typeof Terminated>
             export type Paused = z.infer<typeof Paused>
             export type Failed = z.infer<typeof Failed>
             export type Completed = z.infer<typeof Completed>
-            export type MessageChunk = z.infer<typeof MessageChunk>
 
 
             export const Schema = z.discriminatedUnion("type", [
@@ -129,46 +126,7 @@ export namespace Orchestrator {
                 Job.Paused,
                 Job.Failed,
                 Job.Completed,
-                Job.MessageChunk,
             ])
-
-            export namespace Node {
-                export const Started = Base.extend({
-                    type: z.literal('node:started'),
-                    nodeId: Workflow.Node.Id
-                })
-
-                export const Completed = Base.extend({
-                    type: z.literal('node:completed'),
-                    nodeId: Workflow.Node.Id,
-                    output: z.unknown()
-                })
-
-                export const Error = Base.extend({
-                    type: z.literal('node:error'),
-                    nodeId: Workflow.Node.Id,
-                    error: z.string()
-                })
-
-                export const Waiting = Base.extend({
-                    type: z.literal("node:waiting"),
-                    nodeId: Workflow.Node.Id,
-                    dependencyResolutionMap: z.record(Workflow.Node.Id, z.boolean())
-                })
-
-                export type Started = z.infer<typeof Started>
-                export type Completed = z.infer<typeof Completed>
-                export type Error = z.infer<typeof Error>
-                export type Waiting = z.infer<typeof Waiting>
-
-                export const Schema = z.discriminatedUnion("type", [
-                    Started,
-                    Completed,
-                    Error,
-                    Waiting
-                ])
-            }
-            export type Node = z.infer<typeof Node.Schema>
         }
         export type Job = z.infer<typeof Job.Schema>
 
@@ -179,11 +137,6 @@ export namespace Orchestrator {
             Job.Paused,
             Job.Failed,
             Job.Completed,
-            Job.MessageChunk,
-            Job.Node.Started,
-            Job.Node.Completed,
-            Job.Node.Error,
-            Job.Node.Waiting,
             Compilation.Started,
             Compilation.Completed,
             Compilation.Failed

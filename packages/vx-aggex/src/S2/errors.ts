@@ -9,6 +9,15 @@ export class S2EngineError extends Error {
     }
 }
 
+export class S2EngineKilledError extends Error {
+    constructor() {
+        super("Engine was killed");
+
+        Object.setPrototypeOf(this, S2EngineKilledError.prototype);
+        this.name = this.constructor.name;
+    }
+}
+
 export class S2EngineXORCollisionError extends Error {
     constructor(collidedVertices: Vertex.Id[], xorVertex: Vertex.Id) {
         super(`Vertices: ${collidedVertices.join(", ")} collided into vertex with XOR strategy "${xorVertex}"`);

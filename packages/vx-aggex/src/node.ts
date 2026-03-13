@@ -1,4 +1,4 @@
-import { Foundations, Workflow, Orchestrator } from "@vx-agent-editor/shared/domain";
+import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "src/types";
 import { ExecutionContext } from "./context";
 import { Emitter } from "./event/emitter"
@@ -34,16 +34,6 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
         dependencyResolutionMap: Record<Workflow.Node.Id, boolean>
     ): Promise<void> {
         this.isWaiting = true;
-
-        this.emit({
-            type: "node:waiting",
-            jobId: this.context.jobId,
-            nodeId: this.workflowNode.id,
-            topic: Orchestrator.Event.getTopic(this.context.jobId),
-            workflowId: this.context.workflow.id,
-            dependencyResolutionMap,
-        } satisfies Orchestrator.Event.Job.Node.Waiting)
-
         return this.onWait(this.context, partialInputs);
     }
 

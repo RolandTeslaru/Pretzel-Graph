@@ -11,7 +11,7 @@ interface Props {
 
 export const NodeCustomToolbar: React.FC<Props> = ({ node }) => {
     return (
-        <div className='bg-card border border-border rounded-lg p-0.5 gap-1 flex flex-row'>
+        <div className='bg-card border border-border rounded-lg p-0.5 gap-1 flex flex-row shadow-md shadow-black/10'>
             <Button variant="ghost" size="icon-xs" className='h-6!'
                 onClick={() => {
                     WorkbenchSDK.actions.node.setMinimized(node.id, !node.isMinimized)
