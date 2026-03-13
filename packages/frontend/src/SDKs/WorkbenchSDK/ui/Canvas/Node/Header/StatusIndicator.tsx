@@ -38,6 +38,10 @@ const StatusIndicator = ({
     return (
       <GlowingRunningSpinner />
     )
+  else if (executionStatus.status === "waiting")
+    return (
+      <SystemIcons.Clock size={22} className={'text-yellow-500 dark:text-yellow-400 animate-pulse cursor-pointer'} />
+    )
   else if (executionStatus.status === "failed")
     return (
       <div className='relative'>

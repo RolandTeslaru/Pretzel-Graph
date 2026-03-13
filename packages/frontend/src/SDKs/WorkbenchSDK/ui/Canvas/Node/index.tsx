@@ -10,6 +10,7 @@ import { NodeToolbar, Position } from '@xyflow/react';
 import { NodeCustomToolbar } from './CustomToolbar';
 import { cn } from '@/utils/styleUtils';
 import { OrchestratorSDK } from '@/SDKs/OrchestratorSDK/sdk';
+import { ExecutionSessionSDK } from '@/SDKs/ExecutionSessionSDK/sdk';
 
 const WorkbenchNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const node = WorkbenchSDK.useStore(s => s.workflow.data.nodes[props.id as Workflow.Node.Id])
@@ -35,8 +36,8 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
   let backgroundColor = 'var(--secondary)';
   let borderColor = "var(--border)";
 
+  const executionStatus = ExecutionSessionSDK.useStore(s => s.session.node_status[node.id]);
 
-  const executionStatus = OrchestratorSDK.useStore(s => s.nodeStatuses[node.id]);
 
   if (node.accent) {
     backgroundColor = `color-mix(in srgb, ${node.accent} 22%, var(--card))`;
