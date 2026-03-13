@@ -30,7 +30,7 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
     public readonly selectors: ExecutionSessionSDK.Selectors = {}
 
 
-    public handleOnEvent(event: ExecutionSession.Event){
+    public handleOnEvent = (event: ExecutionSession.Event) => {
         console.log("EXECUTION SESSION EVENT ", event)
 
         switch(event.type){

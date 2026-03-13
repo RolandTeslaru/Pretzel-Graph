@@ -3,6 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
 import { Realtime } from "@vx-agent-editor/shared/domain";
+import { supabase } from "@/libs/supabase";
 
 @SDK("Realtime")
 export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
@@ -58,7 +59,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
     private currentUrl: string | null = null;
     private isIntentionalClose = false;
 
-    public connect(url: string) {
+    public async connect(url: string) {
         this.currentUrl = url;
         this.isIntentionalClose = false;
 
@@ -70,7 +71,13 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
             this.reconnectTimeout = null;
         }
 
-        this.socket = new WebSocket(url);
+        // Attach auth token to WebSocket URL for server-side verification
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        const separator = url.includes('?') ? '&' : '?';
+        const authenticatedUrl = token ? `${url}${separator}token=${token}` : url;
+
+        this.socket = new WebSocket(authenticatedUrl);
 
         this.socket.onopen = () => {
             console.log("RealtimeSDK: Connected");
