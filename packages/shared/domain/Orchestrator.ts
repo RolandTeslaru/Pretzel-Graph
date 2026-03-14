@@ -25,6 +25,7 @@ export namespace Orchestrator {
         })
     }
 
+    export const EXECUTION_QUEUE_ID = 'workflow-execution'
 
     export namespace ExecutionQueue {
         export namespace Item {
@@ -39,19 +40,20 @@ export namespace Orchestrator {
     }
 
 
+    // Events are usually emitted by the Aggex Worker
     export namespace Event {
-        export const Topic = Realtime.Topic.brand("OrchestratorTopic")
-        export type Topic = z.infer<typeof Topic>
+        export const Channel = Realtime.Channel.brand("OrchestratorChannel")
+        export type Channel = z.infer<typeof Channel>
 
-        export function getTopic(jobId: Orchestrator.Job.Id) {
-            return `job:${jobId}` as Topic
+        export function getChannel(jobId: Orchestrator.Job.Id) {
+            return `job:${jobId}` as Channel
         }
 
         // Create a base from the realtime event base
         const Base = Realtime.Event.Base.extend({
             jobId: Orchestrator.Job.Id,
             workflowId: Workflow.Id,
-            topic: Topic
+            channel: Channel
         })
 
         export namespace Compilation {
@@ -144,6 +146,45 @@ export namespace Orchestrator {
     }
     export type Event = z.infer<typeof Event.Schema>
 
+    // Signals are sent from the backend and subscribed on the worker
+    export namespace Signal {
+        export const Channel = Realtime.Channel.brand("OrchestratorSignalChannel")
+        export type Channel = z.infer<typeof Channel>
+
+        export const getChannel = (jobId: Job.Id) => `job:${jobId}:signal` as Channel
+
+        export const Base = Realtime.Signal.Base.extend({
+            jobId: Job.Id
+        })
+
+        export namespace Terminate {
+            export const Schema = Base.extend({
+                type: z.literal("terminate")
+            })
+        }
+        export type Terminate = z.infer<typeof Terminate.Schema>
+
+        export namespace Pause {
+            export const Schema = Base.extend({
+                type: z.literal("pause")
+            })
+        }
+        export type Pause= z.infer<typeof Pause.Schema>
+
+        export namespace Resume {
+            export const Schema = Base.extend({
+                type: z.literal("resume")
+            })
+        }
+        export type Resume= z.infer<typeof Resume.Schema>
+
+        export const Schema = z.discriminatedUnion("type", [
+            Terminate.Schema,
+            Pause.Schema,
+            Resume.Schema
+        ])
+    }
+    export type Signal = z.infer<typeof Signal.Schema>
 
     export namespace API {
         export namespace Run {
@@ -247,6 +288,48 @@ export namespace Orchestrator {
             const { data } = await api.post<Finalise.Response>(
                 '/api/orchestrator/finalise',
                 req
+            );
+            return data;
+        }
+
+        export namespace TerminateAll {
+            export const Request = z.object({})
+            export const Response = z.object({
+                terminatedCount: z.number()
+            })
+
+            export type Request = z.infer<typeof Request>
+            export type Response = z.infer<typeof Response>
+        }
+        export async function terminateAll(
+            api: AxiosInstance,
+        ): Promise<TerminateAll.Response> {
+            const { data } = await api.post<TerminateAll.Response>(
+                '/api/orchestrator/terminate-all',
+            );
+            return data;
+        }
+
+        export namespace ListActive {
+            export const Request = z.object({})
+            export const Response = z.object({
+                jobs: z.array(z.object({
+                    id: Job.Id,
+                    workflow_id: Workflow.Id,
+                    status: Job.Status,
+                    created_at: z.string(),
+                    updated_at: z.string(),
+                }))
+            })
+
+            export type Request = z.infer<typeof Request>
+            export type Response = z.infer<typeof Response>
+        }
+        export async function listActive(
+            api: AxiosInstance,
+        ): Promise<ListActive.Response> {
+            const { data } = await api.post<ListActive.Response>(
+                '/api/orchestrator/list-active',
             );
             return data;
         }

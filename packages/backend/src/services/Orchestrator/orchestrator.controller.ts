@@ -42,6 +42,24 @@ export class OrchestratorController {
     }
 
 
+    @Post('list-active')
+    @HttpCode(200)
+    async listActive(
+        @Req() req: AuthenticatedRequest,
+    ) {
+        return await this.orchestratorService.listActive(req.token, req.user.id as Auth.User.Id);
+    }
+
+
+    @Post('terminate-all')
+    @HttpCode(200)
+    async terminateAll(
+        @Req() req: AuthenticatedRequest,
+    ) {
+        return await this.orchestratorService.terminateAll(req.token, req.user.id as Auth.User.Id);
+    }
+
+
     @Post('finalise')
     @HttpCode(200)
     async finalise(

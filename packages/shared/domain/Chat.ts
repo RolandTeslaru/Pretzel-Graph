@@ -122,8 +122,11 @@ export namespace Chat {
     })
 
     export namespace Event {
-        export function getTopic(chatId: Chat.Id) {
-            return `chat:${chatId}` as Realtime.Topic
+        export const Channel = Realtime.Channel.brand("ChatChannel");
+        export type Channel = z.infer<typeof Channel>
+
+        export function getChannel(chatId: Chat.Id) {
+            return `chat:${chatId}` as Channel
         }
 
         const Base = Realtime.Event.Base.extend({

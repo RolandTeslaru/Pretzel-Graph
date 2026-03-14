@@ -12,6 +12,7 @@ import { Button } from '@/vx-ui/foundations'
 import NodeSidebar from '@/SDKs/WorkbenchSDK/ui/NodeSidebar'
 import ChatSidebar from '@/SDKs/ChatSDK/ui/ChatSidebar'
 import WorkflowControls from '@/SDKs/OrchestratorSDK/ui/WorkflowControls'
+import { AdminJobsPanel } from '@/SDKs/OrchestratorSDK/ui/AdminJobsPanel'
 import ChatButton from '@/SDKs/ChatSDK/ui/ChatButton'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
@@ -83,6 +84,7 @@ function WorkflowLayoutComponent() {
             <ChatSidebar/>
             <NodeSidebar />
             <BottomPanel/>
+            <AdminJobsPanel />
             {/* <StackDebugPanel/> */}
             {/* <WorkflowStateViewer /> */}
             <Outlet />

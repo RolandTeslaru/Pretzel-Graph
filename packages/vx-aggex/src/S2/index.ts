@@ -19,13 +19,9 @@ export interface S2ExecutionState {
 
 // S² Engine (Super Solenoid Engine from Neon Genesis Evangelion)
 export class S2Engine {
-    private killed = false;
-
     constructor() { }
 
-    public async ignite(graph: S2Graph, hooks: S2Hooks) {
-        this.killed = false;
-
+    public async ignite(graph: S2Graph, hooks: S2Hooks): Promise<any> {
         return new Promise((resolve, reject) => {
             const startVertex = graph.vertices.get("__START__" as Vertex.Id);
 
@@ -51,8 +47,6 @@ export class S2Engine {
         state: S2ExecutionState,
         reject: (reason?: any) => void
     ): boolean {
-        if (this.killed) return false;
-
         const dependencies = graph.dependenciesMap.get(vertexId)!;
         const vertex = graph.vertices.get(vertexId);
 
@@ -88,26 +82,17 @@ export class S2Engine {
         reject: (reason?: any) => void,
         hooks: S2Hooks
     ){
-        if (this.killed) {
-            if (state.activeTasks === 0) resolve("Killed");
-            return;
-        }
-
         state.activeTasks ++;
         hooks.onVertexFired?.(vertexId);
 
         try {
             await hooks.onVertexExecute(vertexId);
 
-            if (this.killed) return;
-
             hooks.onVertexCompleted?.(vertexId);
 
             const dependents = graph.dependentsMap.get(vertexId)!
 
             dependents.forEach(dep => {
-                if (this.killed) 
-                    return;
 
                 const signals = state.accumulatedSignals.get(dep)!;
                 signals.add(vertexId);
@@ -127,7 +112,6 @@ export class S2Engine {
             })
         }
         catch (err){
-            if (this.killed) return;
             hooks.onVertexError?.(vertexId, err);
             console.error(`Vertex ${vertexId} failed:`, err);
             reject(err);
@@ -135,16 +119,8 @@ export class S2Engine {
         finally {
             state.activeTasks --;
 
-            if (this.killed && state.activeTasks === 0) {
-                hooks.onKilled?.();
-                resolve("Killed");
-            }
-            else if(state.activeTasks === 0)
+            if(state.activeTasks === 0)
                 resolve("Finished");
         }
-    }
-
-    public kill() {
-        this.killed = true;
     }
 }

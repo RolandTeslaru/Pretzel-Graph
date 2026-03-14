@@ -2,11 +2,12 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { OrchestratorController } from './orchestrator.controller';
 import { OrchestratorService } from './orchestrator.service';
+import { Orchestrator } from '@vx-agent-editor/shared/domain';
 
 @Module({
     imports: [
         BullModule.registerQueue({
-            name: 'workflow-execution',
+            name: Orchestrator.EXECUTION_QUEUE_ID,
         }),
     ],
     controllers: [OrchestratorController],

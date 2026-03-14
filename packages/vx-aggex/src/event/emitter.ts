@@ -1,5 +1,4 @@
 import { Chat, ExecutionSession, Orchestrator, Realtime } from "@vx-agent-editor/shared/domain";
-import { EventBuilder } from "./builder";
 
 export type EmitterEvent =
     | Orchestrator.Event

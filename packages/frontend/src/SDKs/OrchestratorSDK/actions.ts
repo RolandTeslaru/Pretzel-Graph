@@ -13,10 +13,6 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                 return sdk.state.jobId
             }
 
-            sdk.setState(s => {
-                sdk.reducers.nodeStatuses.reset(s);
-            })
-
             const workflow = WorkbenchSDK.state.workflow;
             const wfCache = WorkbenchSDK.state.cache;
 

@@ -6,6 +6,7 @@ import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { createExecutionSessionSDKActions, type ExecutionSessionSDKActions } from "./actions";
 import { RealtimeSDK } from "../Realtime/sdk";
+import { _createExecutionSessionReducers_, type _ExecutionSessionReducers } from "./reducers";
 
 @SDK("ExecutionSession")
 export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> {
@@ -19,75 +20,60 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
         shallow
     )
 
-    public readonly reducers: ExecutionSessionSDK.Reducers = {}
+    public readonly reducers: ExecutionSessionSDK.Reducers = _createExecutionSessionReducers_(this)
 
     public readonly runtime = {
-        unsubscribeFromJobTopic: null as (() => void) | null
+        unsubscribeFromJobChannel: null as (() => void) | null
     }
 
     public readonly actions: ExecutionSessionSDK.Actions = createExecutionSessionSDKActions(this);
 
     public readonly selectors: ExecutionSessionSDK.Selectors = {}
 
+    public subscribeToEvents() {
+        // Unsubscribe from previous channel if any
+        this.runtime.unsubscribeFromJobChannel?.();
+
+        const channel = ExecutionSession.Event.getChannel(this.state.session.id);
+        console.log("Subscribing to channel ", channel)
+        this.runtime.unsubscribeFromJobChannel = RealtimeSDK.subscribeToChannel(
+            channel,
+            this.handleOnEvent
+        );
+    }
+
+
 
     public handleOnEvent = (event: ExecutionSession.Event) => {
         console.log("EXECUTION SESSION EVENT ", event)
 
-        switch(event.type){
-            case "node:started":
-                this.setState(s => {
-                    const stat = s.session.node_status[event.nodeId]
-                    stat.status = "running"
-                })
-                break;
-            case "node:completed":
-                this.setState(s => {
-                    s.session.node_status[event.nodeId] = {
-                        status: "completed",
-                        completed_at: new Date().toISOString()
-                    }
-                })
-                break;
-            case "node:waiting":
-                this.setState(s => {
-                    s.session.node_status[event.nodeId] = {
-                        status: "waiting",
-                    }
-                })
-                break;
-            case "node:error":
-                this.setState(s => {
-                    const stat = s.session.node_status[event.nodeId];
-                    s.session.node_status[event.nodeId] = {
-                        status: "failed",
-                        error: event.error,
-                        started_at: stat?.started_at,
-                        completed_at: new Date().toISOString()
-                    }
-                })
-                break;
+        if (event.type === "node:started") {
+            this.setState(s => this.reducers.nodeStarted(s, event.nodeId))
+        }
+        else if (event.type === "node:completed") {
+            this.setState(s => this.reducers.nodeCompleted(s, event.nodeId))
+        }
+        else if (event.type === "node:waiting") {
+            this.setState(s => this.reducers.nodeWaiting(s, event.nodeId))
+        }
+        else if (event.type === "node:error") {
+            this.setState(s => this.reducers.nodeError(s, event.nodeId, event.error))
         }
     }
 }
 
 export const ExecutionSessionSDK = SDK.get<ExecutionSessionSDKImpl>("ExecutionSession")
 
+// Always stay subscribed to the current session's channel.
+// Subscribe immediately, and re-subscribe whenever session.id changes.
+ExecutionSessionSDK.subscribeToEvents();
 
 ExecutionSessionSDK.useStore.subscribe((state, prevState) => {
     if (state.session.id === prevState.session.id)
-        return
-
-    if (!state.session.id) {
-        ExecutionSessionSDK.runtime.unsubscribeFromJobTopic?.();
         return;
-    }
 
-    ExecutionSessionSDK.runtime.unsubscribeFromJobTopic = RealtimeSDK.subscribeToTopic(
-        ExecutionSession.Event.getTopic(state.session.id),
-        ExecutionSessionSDK.handleOnEvent
-    )
+    ExecutionSessionSDK.subscribeToEvents();
 })
-
 
 export namespace ExecutionSessionSDK {
 
@@ -95,7 +81,7 @@ export namespace ExecutionSessionSDK {
         session: ExecutionSession
     }
 
-    export type Reducers = {}
+    export type Reducers = _ExecutionSessionReducers
     export type Actions = ExecutionSessionSDKActions;
     export type Selectors = {}
 }
