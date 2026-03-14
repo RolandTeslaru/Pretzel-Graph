@@ -35,7 +35,7 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
         this.runtime.unsubscribeFromJobChannel?.();
 
         const channel = ExecutionSession.Event.getChannel(this.state.session.id);
-        console.log("Subscribing to channel ", channel)
+
         this.runtime.unsubscribeFromJobChannel = RealtimeSDK.subscribeToChannel(
             channel,
             this.handleOnEvent
@@ -48,16 +48,16 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
         console.log("EXECUTION SESSION EVENT ", event)
 
         if (event.type === "node:started") {
-            this.setState(s => this.reducers.nodeStarted(s, event.nodeId))
+            this.actions.session.setNodeStatus(event.nodeId, { status: "running", started_at: new Date().toISOString() })
         }
         else if (event.type === "node:completed") {
-            this.setState(s => this.reducers.nodeCompleted(s, event.nodeId))
+            this.actions.session.setNodeStatus(event.nodeId, { status: "completed", completed_at: new Date().toISOString() })
         }
         else if (event.type === "node:waiting") {
-            this.setState(s => this.reducers.nodeWaiting(s, event.nodeId))
+            this.actions.session.setNodeStatus(event.nodeId, { status: "waiting" })
         }
         else if (event.type === "node:error") {
-            this.setState(s => this.reducers.nodeError(s, event.nodeId, event.error))
+            this.actions.session.setNodeStatus(event.nodeId, { status: "failed", error: event.error, completed_at: new Date().toISOString() })
         }
     }
 }
