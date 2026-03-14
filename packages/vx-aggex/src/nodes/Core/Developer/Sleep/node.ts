@@ -20,7 +20,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const { duration } = this.fields;
         const { trigger } = inputs;
 
-        await new Promise(resolve => setTimeout(resolve, duration));
+        await this.AbortablePromise((resolve, reject, signal) => {
+            const timer = setTimeout(resolve, duration);
+            signal.addEventListener("abort", () => clearTimeout(timer), { once: true });
+        });
 
         return {
             done: trigger

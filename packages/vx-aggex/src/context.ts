@@ -9,6 +9,7 @@ export interface ExecutionContext {
     workflow: Readonly<Workflow>,
     workflowCache: Readonly<Workflow.Cache>,
     streamController: StreamController,
+    abortController: AbortController
     emit: Emitter,
     updateSession: (recipe: (draft: ExecutionSession) => void) => void,
 }
@@ -18,6 +19,7 @@ export function createExecutionContext(
 ): ExecutionContext {
     const ctx: ExecutionContext = {
         ...props,
+        abortController: new AbortController(),
         updateSession: (recipe) => {
             ctx.session = produce(ctx.session, recipe);
         },

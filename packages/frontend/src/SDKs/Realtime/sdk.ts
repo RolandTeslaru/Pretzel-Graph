@@ -16,29 +16,29 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
     )
 
     private socket: WebSocket | null = null;
-    private listeners = new Map<Realtime.Topic, Set<(data: any, websocketMessage: MessageEvent<any>) => void>>();
+    private listeners = new Map<Realtime.Channel, Set<(data: any, websocketMessage: MessageEvent<any>) => void>>();
 
-    public subscribeToTopic<T>(
-        topic: Realtime.Topic,
+    public subscribeToChannel<T>(
+        channel: Realtime.Channel,
         callback: (data: T, websocketMessage: MessageEvent<T>) => void
     ) {
-        if (!this.listeners.has(topic)) {
-            this.listeners.set(topic, new Set());
-            // Tell Backend to subscribe us to this Redis topic
-            this.send({ action: "subscribe", topic });
+        if (!this.listeners.has(channel)) {
+            this.listeners.set(channel, new Set());
+            // Tell Backend to subscribe us to this Redis channel
+            this.send({ action: "subscribe", channel });
         }
-        this.listeners.get(topic)!.add(callback);
+        this.listeners.get(channel)!.add(callback);
 
         return () => {
-            const topicListeners = this.listeners.get(topic);
-            if (!topicListeners)
+            const channelListeners = this.listeners.get(channel);
+            if (!channelListeners)
                 return
 
-            topicListeners.delete(callback);
-            // If no more listeners for this topic, unsubscribe from backend
-            if (topicListeners.size === 0) {
-                this.listeners.delete(topic);
-                this.send({ action: "unsubscribe", topic });
+            channelListeners.delete(callback);
+            // If no more listeners for this channel, unsubscribe from backend
+            if (channelListeners.size === 0) {
+                this.listeners.delete(channel);
+                this.send({ action: "unsubscribe", channel });
             }
         };
     }
@@ -86,9 +86,11 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
             });
             this.reconnectAttempts = 0;
 
-            // Resubscribe to existing topics if any (reconnection logic)
-            this.listeners.forEach((_, topic) => {
-                this.send({ action: "subscribe", topic });
+            // Resubscribe to existing channels if any (reconnection logic)
+            this.listeners.forEach((_, channel) => {
+                console.log(`Connecting to channel ${channel}`)
+
+                this.send({ action: "subscribe", channel });
             });
         };
 
@@ -104,11 +106,13 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
         this.socket.onmessage = (message) => {
             try {
                 const event = JSON.parse(message.data) as Realtime.Event;
-                // Expecting message to have a topic field (from Event.Base)
-                const topic = event.topic as Realtime.Topic;
+                // Expecting message to have a channel field (from Event.Base)
+                const channel = event.channel as Realtime.Channel;
 
-                if (topic && this.listeners.has(topic)) {
-                    this.listeners.get(topic)!.forEach(callback => callback(event, message));
+                console.log("RealtimeSDK: received event from channel ", channel, " with event: ", event)
+
+                if (channel && this.listeners.has(channel)) {
+                    this.listeners.get(channel)!.forEach(callback => callback(event, message));
                 }
             } catch (err) {
                 console.error("RealtimeSDK: Failed to parse message", err);

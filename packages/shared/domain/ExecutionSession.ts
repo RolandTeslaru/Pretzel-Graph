@@ -70,18 +70,18 @@ export namespace ExecutionSession {
 
 
     export namespace Event {
-        export const Topic = Realtime.Topic.brand("ExecutionSessionTopic")
-        export type Topic = z.infer<typeof Topic>
+        export const Channel = Realtime.Channel.brand("ExecutionSessionChannel")
+        export type Channel = z.infer<typeof Channel>
         
-        export function getTopic(executionSessionId: ExecutionSession.Id) {
-            return `execution_session:${executionSessionId}` as Topic
+        export function getChannel(executionSessionId: ExecutionSession.Id) {
+            return `execution_session:${executionSessionId}` as Channel
         }
 
         // Create a base from the realtime event base
         const Base = Realtime.Event.Base.extend({
             executionSessionId: ExecutionSession.Id,
             workflowId: Workflow.Id,
-            topic: Event.Topic
+            channel: Event.Channel
         })
 
         export const Update = Base.extend({
