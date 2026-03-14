@@ -23,6 +23,8 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                 return null
             }
 
+            ExecutionSessionSDK.actions.session.clearAllNodeStatuses();
+
             const executionPromise = Orchestrator.API.run(
                 api,
                 {

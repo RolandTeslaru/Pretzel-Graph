@@ -2,6 +2,7 @@ import { ExecutionSession, Workflow } from "@vx-agent-editor/shared/domain";
 import { api } from "../ApiInterceptorSDK";
 import { type ExecutionSessionSDKImpl } from "./sdk"
 import { toast } from "sonner";
+import type { DropFirstArg } from "../types";
 
 export const createExecutionSessionSDKActions = (sdk: ExecutionSessionSDKImpl) => {
     return {
@@ -53,7 +54,10 @@ export const createExecutionSessionSDKActions = (sdk: ExecutionSessionSDKImpl) =
                 sdk.setState(s => {
                     s.session = session;
                 });
-            }
+            },
+            setNodeStatus: (...args) => sdk.setState(s => sdk.reducers.setNodeStatus(s, ...args)),
+            clearNodeStatus: (...args) => sdk.setState(s => sdk.reducers.clearNodeStatus(s, ...args)),
+            clearAllNodeStatuses: () => sdk.setState(s => sdk.reducers.clearAllNodeStatuses(s)),
         }
     } satisfies ExecutionSessionSDKActions
 }
@@ -63,6 +67,9 @@ export type ExecutionSessionSDKActions = {
         create: (workflowId: Workflow.Id) => Promise<ExecutionSession>,
         get: (id: ExecutionSession.Id) => Promise<ExecutionSession>,
         update: (id: ExecutionSession.Id, session: ExecutionSession.Update) => Promise<ExecutionSession>,
-        loadLocal: (session: ExecutionSession) => void
+        loadLocal: (session: ExecutionSession) => void,
+        setNodeStatus: DropFirstArg<ExecutionSessionSDKImpl["reducers"]["setNodeStatus"]>,
+        clearNodeStatus: DropFirstArg<ExecutionSessionSDKImpl["reducers"]["clearNodeStatus"]>,
+        clearAllNodeStatuses: () => void,
     }
 }
