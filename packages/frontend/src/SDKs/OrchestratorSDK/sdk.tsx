@@ -28,7 +28,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
 
 
     public readonly runtime = {
-        unsubscribeFromJobTopic: null as (() => void) | null
+        unsubscribeFromJobChannel: null as (() => void) | null
     }
 
 
@@ -75,12 +75,12 @@ OrchestratorSDK.useStore.subscribe((state, prevState) => {
         return;
 
     if (!state.jobId) {
-        OrchestratorSDK.runtime.unsubscribeFromJobTopic?.();
+        OrchestratorSDK.runtime.unsubscribeFromJobChannel?.();
         return;
     }
 
-    OrchestratorSDK.runtime.unsubscribeFromJobTopic = RealtimeSDK.subscribeToTopic(
-        Orchestrator.Event.getTopic(state.jobId),
+    OrchestratorSDK.runtime.unsubscribeFromJobChannel = RealtimeSDK.subscribeToChannel(
+        Orchestrator.Event.getChannel(state.jobId),
         OrchestratorSDK.handleOnEvent
     )
 })

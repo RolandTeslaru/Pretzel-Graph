@@ -21,7 +21,7 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 
 
     public readonly runtime = {
-        unsubscribeFromChatTopic: null as (() => void) | null
+        unsubscribeFromChatChannel: null as (() => void) | null
     }
 
 
@@ -82,12 +82,12 @@ ChatSDK.subscribe((state, prevState) => {
         return;
 
     if (!state.currentChatId) {
-        ChatSDK.runtime.unsubscribeFromChatTopic?.();
+        ChatSDK.runtime.unsubscribeFromChatChannel?.();
         return;
     }
 
-    ChatSDK.runtime.unsubscribeFromChatTopic = RealtimeSDK.subscribeToTopic(
-        Chat.Event.getTopic(state.currentChatId),
+    ChatSDK.runtime.unsubscribeFromChatChannel = RealtimeSDK.subscribeToChannel(
+        Chat.Event.getChannel(state.currentChatId),
         ChatSDK.handleOnEvent
     )
 })

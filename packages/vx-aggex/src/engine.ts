@@ -65,111 +65,86 @@ export class AggexEngine {
     }
 
 
-    public async start(
+    public async run(
         { compiledGraph, context, nodeInstanceMap }: CompilationResult
     ) {
-        try {
-            this.s2Engine = new S2Engine();
+        this.s2Engine = new S2Engine();
 
-            const topic = ExecutionSession.Event.getTopic(context.session.id)
+        const channel = ExecutionSession.Event.getChannel(context.session.id)
 
-            const hooks: S2Hooks = {
-                onVertexFired: (vertexId) => {
-                    const entry = nodeInstanceMap.get(vertexId);
-                    if (!entry) return;
+        const hooks: S2Hooks = {
+            onVertexFired: (vertexId) => {
+                const entry = nodeInstanceMap.get(vertexId);
+                if (!entry) return;
 
-                    context.emit<ExecutionSession.Event.Node.Started>({
-                        workflowId: context.workflow.id,
-                        type: "node:started",
-                        executionSessionId: context.session.id,
-                        nodeId: entry.wfNode.id,
-                        topic,
-                    });
-                },
+                context.emit<ExecutionSession.Event.Node.Started>({
+                    workflowId: context.workflow.id,
+                    type: "node:started",
+                    executionSessionId: context.session.id,
+                    nodeId: entry.wfNode.id,
+                    channel,
+                });
+            },
+            onVertexExecute: async (vertexId: Vertex.Id) => {
+                const entry = nodeInstanceMap.get(vertexId);
+                if (!entry) return;
 
-                onVertexExecute: async (vertexId: Vertex.Id) => {
-                    const entry = nodeInstanceMap.get(vertexId);
-                    if (!entry) return;
+                await this.runNode(entry.wfNode, entry.instance, context);
+            },
+            onVertexCompleted: (vertexId) => {
+                const entry = nodeInstanceMap.get(vertexId);
+                if (!entry) return;
 
-                    await this.runNode(entry.wfNode, entry.instance, context);
-                },
+                const output = context.session.node_outputs[entry.wfNode.id];
 
-                onVertexCompleted: (vertexId) => {
-                    const entry = nodeInstanceMap.get(vertexId);
-                    if (!entry) return;
+                context.emit<ExecutionSession.Event.Node.Completed>({
+                    executionSessionId: context.session.id,
+                    workflowId: context.workflow.id,
+                    type: "node:completed",
+                    nodeId: entry.wfNode.id,
+                    channel,
+                    output,
+                });
+            },
+            onVertexWaiting: (vertexId, dependencyResolutionMap, totalDeps) => {
+                const entry = nodeInstanceMap.get(vertexId);
+                if (!entry) return;
 
-                    const output = context.session.node_outputs[entry.wfNode.id];
+                const { instance, wfNode } = entry;
 
-                    context.emit<ExecutionSession.Event.Node.Completed>({
-                        executionSessionId: context.session.id,
-                        workflowId: context.workflow.id,
-                        type: "node:completed",
-                        nodeId: entry.wfNode.id,
-                        topic,
-                        output,
-                    });
-                },
+                const nodeDepMap: Record<Workflow.Node.Id, boolean> = {};
+                for (const [depId, resolved] of Object.entries(dependencyResolutionMap)) {
+                    nodeDepMap[depId as unknown as Workflow.Node.Id] = resolved;
+                }
 
-                onVertexWaiting: (vertexId, dependencyResolutionMap, totalDeps) => {
-                    const entry = nodeInstanceMap.get(vertexId);
-                    if (!entry) return;
+                context.emit<ExecutionSession.Event.Node.Waiting>({
+                    executionSessionId: context.session.id,
+                    workflowId: context.workflow.id,
+                    type: "node:waiting",
+                    nodeId: wfNode.id,
+                    channel,
+                    dependencyResolutionMap: nodeDepMap,
+                    totalDeps
+                });
 
-                    const { instance, wfNode } = entry;
+                const partialInputs = this.resolveInputs(context, wfNode.id);
+                instance.wait(partialInputs, nodeDepMap);
+            },
+            onVertexError(vertexId, error) {
+                const errorMessage = error instanceof Error ? error.message : String(error)
+                console.error(`Error during node execution, ${vertexId}:`, error)
 
-                    // Re-key from Vertex.Id to Workflow.Node.Id
-                    const nodeDepMap: Record<Workflow.Node.Id, boolean> = {};
-                    for (const [depId, resolved] of Object.entries(dependencyResolutionMap)) {
-                        nodeDepMap[depId as unknown as Workflow.Node.Id] = resolved;
-                    }
+                context.emit<ExecutionSession.Event.Node.Error>({
+                    executionSessionId: context.session.id,
+                    workflowId: context.workflow.id,
+                    type: "node:error",
+                    nodeId: vertexId as unknown as Workflow.Node.Id,
+                    channel,
+                    error: errorMessage
+                })
+            },
+        };
 
-                    context.emit<ExecutionSession.Event.Node.Waiting>({
-                        executionSessionId: context.session.id,
-                        workflowId: context.workflow.id,
-                        type: "node:waiting",
-                        nodeId: wfNode.id,
-                        topic,
-                        dependencyResolutionMap: nodeDepMap,
-                        totalDeps
-                    });
-
-                    const partialInputs = this.resolveInputs(context, wfNode.id);
-                    instance.wait(partialInputs, nodeDepMap);
-                },
-                onVertexError(vertexId, error) {
-                    const errorMessage = error instanceof Error ? error.message : String(error)
-
-                    console.error(`Error during node execution execution, ${vertexId} `, error)
-
-                    context.emit<ExecutionSession.Event.Node.Error>({
-                        executionSessionId: context.session.id,
-                        workflowId: context.workflow.id,
-                        type: "node:error",
-                        nodeId: vertexId as unknown as Workflow.Node.Id,
-                        topic,
-                        error: errorMessage
-                    })
-                },
-            };
-
-            const result = await this.s2Engine.ignite(compiledGraph, hooks);
-
-            return { session: context.session, killed: result === "Killed" };
-        } catch (err) {
-            console.error("Error during execution of workflow ", context.workflow.id, err)
-
-            context.emit<Orchestrator.Event.Compilation.Failed>({
-                jobId: context.jobId,
-                workflowId: context.workflow.id,
-                type: "compilation:failed",
-                topic: Orchestrator.Event.getTopic(context.jobId),
-                error: err instanceof Error ? err.message : String(err)
-            })
-
-            throw err;
-        }
-    }
-
-    public kill() {
-        this.s2Engine?.kill();
+        await this.s2Engine.ignite(compiledGraph, hooks);
     }
 }

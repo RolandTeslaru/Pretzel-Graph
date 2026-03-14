@@ -40,7 +40,8 @@ export class WorkflowCompiler {
             emit,
             jobId,
             session,
-            streamController: new StreamController()
+            streamController: new StreamController(),
+            abortController: new AbortController()
         });
 
         const nodeInstanceMap = new Map<Vertex.Id, { wfNode: Workflow.Node; instance: RuntimeNode<Foundations.Blueprint> }>();

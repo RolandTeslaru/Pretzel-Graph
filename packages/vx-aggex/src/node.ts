@@ -94,6 +94,32 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
 
         return resolved as InferFields<T_Blueprint>
     }
+
+
+    protected AbortablePromise<T>(
+        executor: (
+            resolve: (value: T) => void, 
+            reject: (reason?: any) => void,
+            signal: AbortSignal
+        ) => void
+    ): Promise<T> {
+        const signal = this.context.abortController.signal;
+        
+        if(signal.aborted)
+            return Promise.reject(signal.reason);
+
+        return new Promise<T>((resolve, reject,) => {
+            const onAbort = () => reject(signal.reason);
+
+            signal.addEventListener("abort", onAbort, { once: true });
+            
+            executor(
+              (value) => { signal.removeEventListener("abort", onAbort); resolve(value); },
+              (reason) => { signal.removeEventListener("abort", onAbort); reject(reason); },
+              signal
+            );
+        })
+    }
 }
 
 export namespace RuntimeNode {
