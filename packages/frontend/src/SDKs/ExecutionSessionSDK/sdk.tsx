@@ -45,8 +45,6 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
 
 
     public handleOnEvent = (event: ExecutionSession.Event) => {
-        console.log("EXECUTION SESSION EVENT ", event)
-
         if (event.type === "node:started") {
             this.actions.session.setNodeStatus(event.nodeId, { status: "running", started_at: new Date().toISOString() })
         }

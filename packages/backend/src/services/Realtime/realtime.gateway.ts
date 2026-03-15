@@ -10,7 +10,7 @@ import { createAuthenticatedClient, getUserId } from '../../utils/supabase';
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 
-    private subscriptions = new Map<Realtime.Channel, Set<WebSocket>>();
+    private wsSubscriptions = new Map<Realtime.Channel, Set<WebSocket>>();
 
     constructor() {
         this.redisSub.psubscribe('*', (err) => {
@@ -18,7 +18,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         });
 
         this.redisSub.on('pmessage', (pattern, channel, serializedEvent) => {
-            const clients = this.subscriptions.get(channel as Realtime.Channel);
+            const clients = this.wsSubscriptions.get(channel as Realtime.Channel);
             if (clients) {
                 clients.forEach(ws => {
                     if (ws.readyState === WebSocket.OPEN) {
@@ -29,7 +29,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         });
     }
 
-    async handleConnection(ws: WebSocket, req: IncomingMessage) {
+    public async handleConnection(ws: WebSocket, req: IncomingMessage) {
         // Buffer messages that arrive during async auth
         const pendingMessages: string[] = [];
         let authenticated = false;
@@ -89,24 +89,26 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         }
     }
 
-    handleDisconnect(ws: WebSocket) {
-        this.subscriptions.forEach((clients, channel) => {
+    public handleDisconnect(ws: WebSocket) {
+        this.wsSubscriptions.forEach((clients, channel) => {
             clients.delete(ws);
             if (clients.size === 0) {
-                this.subscriptions.delete(channel);
+                this.wsSubscriptions.delete(channel);
             }
         });
     }
 
     private subscribe(ws: WebSocket, channel: Realtime.Channel) {
-        console.log(`Subscribing to top ${channel}`)
-        if (!this.subscriptions.has(channel)) {
-            this.subscriptions.set(channel, new Set());
+        if (!this.wsSubscriptions.has(channel)) {
+            this.wsSubscriptions.set(channel, new Set());
         }
-        this.subscriptions.get(channel)!.add(ws);
+        this.wsSubscriptions.get(channel)!.add(ws);
     }
 
     private unsubscribe(ws: WebSocket, channel: Realtime.Channel) {
-        this.subscriptions.get(channel)?.delete(ws);
+        this.wsSubscriptions.get(channel)?.delete(ws);
+
+        if (this.wsSubscriptions.get(channel)?.size === 0)
+            this.wsSubscriptions.delete(channel);
     }
 }

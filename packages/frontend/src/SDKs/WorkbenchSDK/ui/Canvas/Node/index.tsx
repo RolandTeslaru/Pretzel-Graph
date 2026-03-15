@@ -33,7 +33,7 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
     ]
   );
 
-  let backgroundColor = 'var(--secondary)';
+  let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
 
   const executionStatus = ExecutionSessionSDK.useStore(s => s.session.node_status[node.id]);

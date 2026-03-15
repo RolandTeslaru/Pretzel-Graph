@@ -109,8 +109,6 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
                 // Expecting message to have a channel field (from Event.Base)
                 const channel = event.channel as Realtime.Channel;
 
-                console.log("RealtimeSDK: received event from channel ", channel, " with event: ", event)
-
                 if (channel && this.listeners.has(channel)) {
                     this.listeners.get(channel)!.forEach(callback => callback(event, message));
                 }

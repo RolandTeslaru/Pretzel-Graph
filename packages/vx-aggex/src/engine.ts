@@ -18,6 +18,7 @@ export class AggexEngine {
         ctx: ExecutionContext
     ) {
         const inputs = this.resolveInputs(ctx, wfNode.id);
+        
         const result = await nodeInstance.run(inputs);
 
         console.log("RUNNNING NODE ", wfNode.id)
