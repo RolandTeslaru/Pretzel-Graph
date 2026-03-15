@@ -84,7 +84,7 @@ code {
   --primary-accent: theme(--color-orange-300);
   --ring: theme(--color-orange-500);
 
-  --secondary: var(--color-stone-300);
+  --secondary: var(--color-neutral-200);
   --secondary-foreground: #3D2117;
 
   --accent: theme(--color-neutral-300);
@@ -293,9 +293,9 @@ code {
   --primary-foreground: theme(--color-white);
   --primary-accent: theme(--color-orange-400);
 
-  --secondary: theme(--color-stone-600);
+  --secondary: theme(--color-neutral-700);
   --secondary-foreground: theme(--color-white);
-  --muted: theme(--color-stone-800);
+  --muted: theme(--color-stone-700);
   --muted-foreground: theme(--color-neutral-400);
   --accent: theme(--color-neutral-700);
   --accent-foreground: theme(--color-white);

@@ -18,7 +18,7 @@ export const buttonVariants = cva(
     aria-invalid:ring-[3px] 
     [&_svg:not([class*='size-'])]:size-4 
     [&_svg]:pointer-events-none 
-    inline-flex items-center justify-center whitespace-nowrap transition-all 
+    inline-flex items-center justify-center whitespace-nowrap transition-[color,background-color,border-color,opacity]
     disabled:pointer-events-none disabled:opacity-50 
     shrink-0 [&_svg]:shrink-0 outline-none group/button select-none
     shadow-md shadow-black/10
@@ -29,10 +29,10 @@ export const buttonVariants = cva(
         default: "bg-primary border-primary-accent text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80",
         outline: "border-border bg-card hover:bg-muted hover:text-foreground dark:bg-input/30 dark:border-border dark:hover:bg-input/50 aria-expanded:bg-muted aria-expanded:text-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-        ghost: "hover:bg-muted shadow-none hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground",
-        destructive: "bg-destructive/10 border-destructive/50 hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/20 text-destructive focus-visible:border-destructive/40 dark:hover:bg-destructive/30",
-        warning: "bg-yellow-500/10 border-yellow-500/50 hover:bg-yellow-500/20 focus-visible:ring-yellow-500/20 dark:focus-visible:ring-yellow-500/40 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 focus-visible:border-yellow-500/40 dark:hover:bg-yellow-500/30",
-        success: "bg-green-500/10 border-green-500/50 hover:bg-green-500/20 focus-visible:ring-green-500/20 dark:focus-visible:ring-green-500/40 dark:bg-green-500/20 text-green-600 dark:text-green-400 focus-visible:border-green-500/40 dark:hover:bg-green-500/30",
+        ghost: "hover:bg-muted shadow-none hover:text-foreground dark:hover:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground",
+        destructive: "bg-red-600/20 border-red-600/50 text-red-600 hover:bg-red-600/20 dark:bg-red-600/20 dark:border-red-600/30 dark:text-red-600 dark:hover:bg-red-600/25 focus-visible:ring-red-600/20 dark:focus-visible:ring-red-600/40 focus-visible:border-red-600/40",
+        warning: "bg-amber-500/10 border-amber-500/40 text-amber-600 hover:bg-amber-500/20 dark:bg-amber-500/15 dark:border-amber-500/30 dark:text-amber-400 dark:hover:bg-amber-500/25 focus-visible:ring-amber-500/20 dark:focus-visible:ring-amber-500/40 focus-visible:border-amber-500/40",
+        success: "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/20 dark:bg-emerald-500/15 dark:border-emerald-500/30 dark:text-emerald-400 dark:hover:bg-emerald-500/25 focus-visible:ring-emerald-500/20 dark:focus-visible:ring-emerald-500/40 focus-visible:border-emerald-500/40",
         accent: "bg-accent/10 border-accent/50 hover:bg-accent/20 focus-visible:ring-accent/20 dark:focus-visible:ring-accent/40 dark:bg-accent/20 text-accent-foreground focus-visible:border-accent/40 dark:hover:bg-accent/30",
         link: "text-primary shadow-none underline-offset-4 hover:underline",
         input: "bg-input/60 border-border",

@@ -1,5 +1,5 @@
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
-import { Button } from '@/vx-ui/foundations'
+import { Button, Spinner } from '@/vx-ui/foundations'
 import { SystemIcons } from '@/vx-ui/icons'
 import { OrchestratorSDK } from '../sdk'
 
@@ -23,28 +23,48 @@ const handleRun = () => {
 
 const WorkflowControls = () => {
 
-  const [jobId, executionStatus] = OrchestratorSDK.useStore(s => [s.jobId, s.executionStatus]);
+  const [jobId, awaitedConfirmation] = OrchestratorSDK.useStore(s => [s.jobId, s.awaitedConfirmation]);
+
+  const isAwaitingStarted = awaitedConfirmation.has("started")
+  const isAwaitingPaused = awaitedConfirmation.has("paused")
+  const isAwaitingTerminated = awaitedConfirmation.has("terminated")
 
   return (
     <>
 
       {jobId === undefined ? (
         <>
-          <Button className='my-auto' variant="success" onClick={handleRun}>
-            <SystemIcons.Play />
-            Run
+          <Button disabled={isAwaitingStarted} className='my-auto w-18' variant="success" onClick={handleRun}>
+            {isAwaitingStarted ? 
+              <Spinner/> : 
+              <>
+                <SystemIcons.Play className='mr-auto'/>
+                Run
+              </>  
+            }
+
           </Button>
         </>
       )
         : (
           <>
-            <Button className='my-auto' variant="destructive" onClick={handleTerminate}>
-              <SystemIcons.X className='size-4' />
-              Terminate
+            <Button disabled={isAwaitingTerminated} className='my-auto w-26' variant="destructive" onClick={handleTerminate}>
+              {isAwaitingTerminated ? 
+                <Spinner/> : 
+                <>
+                  <SystemIcons.X className='size-4' />
+                  Terminate
+                </>
+              }
             </Button>
-            <Button className='my-auto' variant="warning" onClick={handlePause}>
-              <SystemIcons.PauseFill />
-              Pause
+            <Button disabled={isAwaitingPaused} className='my-auto w-20' variant="warning" onClick={handlePause}>
+              {isAwaitingPaused ? 
+                <Spinner/> : 
+                <>
+                  <SystemIcons.PauseFill />
+                  Pause
+                </>
+              }
             </Button>
           </>
         )

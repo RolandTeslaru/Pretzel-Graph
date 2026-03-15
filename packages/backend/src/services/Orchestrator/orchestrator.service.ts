@@ -8,10 +8,10 @@ import { Auth, Realtime, Validation, Workflow } from '@vx-agent-editor/shared/do
 import { Orchestrator } from '@vx-agent-editor/shared/domain';
 import { SecretsResolver } from './utils';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { RealtimeService } from '../Realtime/realtime.service';
 
 @Injectable()
 export class OrchestratorService {
-    private readonly redisPub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 
     private readonly queueEvents = new QueueEvents(Orchestrator.EXECUTION_QUEUE_ID, {
         connection: { 
@@ -24,13 +24,10 @@ export class OrchestratorService {
     private readonly serviceSupabase = createServiceClient()
 
 
-    private emitSignal<T extends Realtime.Signal>(signal: T){
-        this.redisPub.publish(signal.channel, JSON.stringify(signal));
-    }
-
     constructor(
         @InjectQueue(Orchestrator.EXECUTION_QUEUE_ID)
         private readonly executionQueue: Queue,
+        private readonly realtime: RealtimeService,
     ) {
         
         this.queueEvents.on("completed", async ({ jobId, returnvalue }) => {
@@ -40,7 +37,9 @@ export class OrchestratorService {
         });
 
         this.queueEvents.on("failed", async ({ jobId, failedReason }) => {
-            const status = failedReason === 'Terminated by user' ? 'terminated' : 'failed';
+            if(failedReason === "terminated")
+                return;
+
             await this.dbOps.job.update(this.serviceSupabase, { jobId, status, error: failedReason });
         });
     }
@@ -117,45 +116,81 @@ export class OrchestratorService {
     async pause(
         token: string,
         payload: Orchestrator.API.Pause.Request
-    ): Promise<void> {
+    ): Promise<Orchestrator.API.Pause.Response> {
         const supabase = createAuthenticatedClient(token);
         const { jobId } = payload;
         
-        const channel = Orchestrator.Signal.getChannel(jobId);
+        const confirmation = this.realtime.withEventConfirmation(
+            Orchestrator.Event.getChannel(jobId),
+            "paused"
+        )
 
-        this.emitSignal<Orchestrator.Signal.Pause>({
-            channel,
+        this.realtime.emitSignal<Orchestrator.Signal.Pause>({
+            channel: Orchestrator.Signal.getChannel(jobId),
             type: "pause",
             jobId
         })
 
-        await this.dbOps.job.update(supabase, { jobId, status: "paused" });
+        const success = await confirmation;
+
+        if(success)
+            await this.dbOps.job.update(supabase, { jobId, status: "paused" });
+    
+        return { success }
     }
 
 
     async resume(
         token: string,
-        payload: Orchestrator.API.Resume.Request
-    ): Promise<void> {
+        { jobId }: Orchestrator.API.Resume.Request
+    ): Promise<Orchestrator.API.Resume.Response> {
         const supabase = createAuthenticatedClient(token);
-        const { jobId } = payload;
-        await this.dbOps.job.update(supabase, { jobId, status: "running" });
+
+        const confirmation = this.realtime.withEventConfirmation(
+            Orchestrator.Event.getChannel(jobId),
+            "resumed"
+        );
+
+        this.realtime.emitSignal<Orchestrator.Signal.Resume>({
+            channel: Orchestrator.Signal.getChannel(jobId),
+            type: "resume",
+            jobId
+        })
+
+        const success = await confirmation;
+
+        if(success)
+            await this.dbOps.job.update(supabase, { jobId, status: "running" });
+
+        return { success };
     }
 
 
     async terminate(
         token: string,
         payload: Orchestrator.API.Terminate.Request
-    ): Promise<void> {
+    ): Promise<Orchestrator.API.Terminate.Response> {
+        const supabase = createAuthenticatedClient(token);
         const { jobId } = payload;
 
-        const channel = Orchestrator.Signal.getChannel(jobId);
+        // Subscribe before emitting to avoid missing the response
+        const confirmation = this.realtime.withEventConfirmation(
+            Orchestrator.Event.getChannel(jobId),
+            "terminated"
+        );
 
-        this.emitSignal<Orchestrator.Signal.Terminate>({
-            channel,
+        this.realtime.emitSignal<Orchestrator.Signal.Terminate>({
+            channel: Orchestrator.Signal.getChannel(jobId),
             type: "terminate",
             jobId
-        })
+        });
+
+        const success = await confirmation;
+
+        if (success)
+            await this.dbOps.job.update(supabase, { jobId, status: "terminated" });
+
+        return { success };
     }
 
 
@@ -208,7 +243,11 @@ export class OrchestratorService {
 
         // 2. Signal running engines to stop via Redis (engine.kill() is graceful)
         for (const job of activeJobs) {
-            await this.redisPub.publish("aggex:terminate", job.id);
+            this.realtime.emitSignal<Orchestrator.Signal.Terminate>({
+                channel: Orchestrator.Signal.getChannel(job.id),
+                type: "terminate",
+                jobId: job.id
+            })
         }
 
         // 3. Remove waiting/delayed jobs from the queue (not yet picked up by a worker)
@@ -237,4 +276,5 @@ export class OrchestratorService {
         const { jobId, status } = payload;
         await this.dbOps.job.update(supabase, { jobId, status });
     }
+
 }
