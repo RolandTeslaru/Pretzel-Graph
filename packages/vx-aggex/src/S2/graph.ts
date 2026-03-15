@@ -22,6 +22,12 @@ export class Vertex {
         return this.strategy;
     }
 }
+
+export class RouterVertex extends Vertex{
+    constructor(...args: ConstructorParameters<typeof Vertex>){
+        super(...args)
+    }
+}
 export namespace Vertex {
     export const Id = z.string().brand("VertexId");
     export type Id = z.infer<typeof Vertex.Id>;

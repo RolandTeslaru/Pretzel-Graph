@@ -1,4 +1,4 @@
-import z from "zod"
+import z, { success } from "zod"
 import { Workflow } from "./Workflow"
 import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
@@ -81,64 +81,57 @@ export namespace Orchestrator {
             ])
         }
 
-        export namespace Job {
-            export const Started = Base.extend({
-                type: z.literal('started'),
-            })
+        export const Started = Base.extend({
+            type: z.literal('started'),
+        })
 
-            export const Update = Base.extend({
-                type: z.literal('update'),
-                update: ExecutionSession.Update
-            })
-
-
-            export const Terminated = Base.extend({
-                type: z.literal('terminated'),
-            })
+        export const Update = Base.extend({
+            type: z.literal('update'),
+            update: ExecutionSession.Update
+        })
 
 
-            export const Paused = Base.extend({
-                type: z.literal('paused'),
-            })
+        export const Terminated = Base.extend({
+            type: z.literal('terminated'),
+        })
 
 
-            export const Failed = Base.extend({
-                type: z.literal('failed'),
-                error: z.string()
-            })
+        export const Paused = Base.extend({
+            type: z.literal('paused'),
+        })
 
-            export const Completed = Base.extend({
-                type: z.literal('completed'),
-                result: z.string()
-            })
-
-       
-            export type Started = z.infer<typeof Started>
-            export type Update = z.infer<typeof Update>
-            export type Terminated = z.infer<typeof Terminated>
-            export type Paused = z.infer<typeof Paused>
-            export type Failed = z.infer<typeof Failed>
-            export type Completed = z.infer<typeof Completed>
+        export const Resumed = Base.extend({
+            type: z.literal('resumed'),
+        })
 
 
-            export const Schema = z.discriminatedUnion("type", [
-                Job.Started,
-                Job.Update,
-                Job.Terminated,
-                Job.Paused,
-                Job.Failed,
-                Job.Completed,
-            ])
-        }
-        export type Job = z.infer<typeof Job.Schema>
+        export const Failed = Base.extend({
+            type: z.literal('failed'),
+            error: z.string()
+        })
+
+        export const Completed = Base.extend({
+            type: z.literal('completed'),
+            result: z.string()
+        })
+
+   
+        export type Started = z.infer<typeof Started>
+        export type Update = z.infer<typeof Update>
+        export type Terminated = z.infer<typeof Terminated>
+        export type Paused = z.infer<typeof Paused>
+        export type Failed = z.infer<typeof Failed>
+        export type Completed = z.infer<typeof Completed>
+        export type Resumed = z.infer<typeof Resumed>
 
         export const Schema = z.discriminatedUnion("type", [
-            Job.Started,
-            Job.Update,
-            Job.Terminated,
-            Job.Paused,
-            Job.Failed,
-            Job.Completed,
+            Started,
+            Update,
+            Terminated,
+            Paused,
+            Failed,
+            Completed,
+            Resumed,
             Compilation.Started,
             Compilation.Completed,
             Compilation.Failed
@@ -214,7 +207,9 @@ export namespace Orchestrator {
             export const Request = z.object({
                 jobId: Job.Id
             })
-            export const Response = z.object({})
+            export const Response = z.object({
+                success: z.boolean()
+            })
 
             export type Request = z.infer<typeof Request>
             export type Response = z.infer<typeof Response>
@@ -235,7 +230,9 @@ export namespace Orchestrator {
             export const Request = z.object({
                 jobId: Job.Id
             })
-            export const Response = z.object({})
+            export const Response = z.object({
+                success: z.boolean()
+            })
 
             export type Request = z.infer<typeof Request>
             export type Response = z.infer<typeof Response>
@@ -255,7 +252,9 @@ export namespace Orchestrator {
             export const Request = z.object({
                 jobId: Job.Id
             })
-            export const Response = z.object({})
+            export const Response = z.object({
+                success: z.boolean()
+            })
 
             export type Request = z.infer<typeof Request>
             export type Response = z.infer<typeof Response>

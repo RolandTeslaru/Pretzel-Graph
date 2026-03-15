@@ -2,14 +2,22 @@ import { toast } from "sonner";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import { Orchestrator, Validation } from "@vx-agent-editor/shared/domain";
 import { api } from "../ApiInterceptorSDK";
-import { type OrchestratorSDKImpl } from "./sdk"
+import { type OrchestratorSDKImpl, type OrchestratorSDK } from "./sdk"
 import { ExecutionSessionSDK } from "../ExecutionSessionSDK/sdk";
 
 export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
     return {
         run: async () => {
+            sdk.actions.addAwaitedConfirmation("started")
+            
+            
+            const handleReject = () => {
+                sdk.actions.removeAwaitedConfirmation("started")
+            }
+
             if (sdk.state.jobId) {
                 toast.warning("Workflow is already running")
+                handleReject();
                 return sdk.state.jobId
             }
 
@@ -20,6 +28,7 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
             const workflowIssues = Validation.Issue.checkWorkflow(workflow, wfCache);
             if (Object.entries(workflowIssues).length > 0) {
                 toast.error("Workflow has nodes with missing fields or inputs. Please fix them before running.")
+                handleReject();
                 return null
             }
 
@@ -35,9 +44,6 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
 
             toast.promise(executionPromise, {
                 loading: "Preparing workflow execution",
-                success: () => {
-                    return `Workflow execution started`
-                },
                 error: (error) => {
                     const message = error?.response?.data?.error || error.message;
                     return `Workflow execution failed to start: ${message}`
@@ -51,21 +57,47 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                 s.executionStatus = "running"
             })
 
+            handleReject();
             return jobId;
         },
+        addAwaitedConfirmation: (event) => {
+            sdk.setState(s => {
+                s.awaitedConfirmation.add(event)
+            })
+        },
+        removeAwaitedConfirmation: (event) => {
+            sdk.setState(s => {
+                s.awaitedConfirmation.delete(event)
+            })
+        },
         pause: async (jobId) => {
-            await Orchestrator.API.pause(api, { jobId });
+            sdk.actions.addAwaitedConfirmation("paused")
+
+            const { success } = await Orchestrator.API.pause(api, { jobId });
+            if(!success)
+                toast.error("Failed to pause workflow")
+
+            sdk.actions.removeAwaitedConfirmation("paused")
+            return success;
         },
         terminate: async (jobId) => {
-            await Orchestrator.API.terminate(api, { jobId });
-
-            sdk.setState(s => s.jobId = undefined)
+            sdk.actions.addAwaitedConfirmation("terminated")
+            const { success } = await Orchestrator.API.terminate(api, { jobId });
+            if(success)
+                sdk.setState(s => s.jobId = undefined)
+            else
+                toast.error("Failed to terminate workflow")
+            sdk.actions.removeAwaitedConfirmation("terminated")
+            return success;
         }
     } satisfies OrchestratorSDKActions
 }
 
 export type OrchestratorSDKActions = {
+    addAwaitedConfirmation: (event: OrchestratorSDK.AwaitedConfirmation) => void,
+    removeAwaitedConfirmation: (event: OrchestratorSDK.AwaitedConfirmation) => void,
+
     run: () => Promise<Orchestrator.Job.Id | null>,
-    pause: (jobId: Orchestrator.Job.Id) => Promise<void>,
-    terminate: (jobId: Orchestrator.Job.Id) => Promise<void>,
+    pause: (jobId: Orchestrator.Job.Id) => Promise<boolean>,
+    terminate: (jobId: Orchestrator.Job.Id) => Promise<boolean>,
 }

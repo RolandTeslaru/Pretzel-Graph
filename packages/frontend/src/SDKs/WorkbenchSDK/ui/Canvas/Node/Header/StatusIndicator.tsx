@@ -51,7 +51,7 @@ const StatusIndicator = ({
     )
   else if (executionStatus.status === "completed") {
     return (
-      <SystemIcons.Check size={22} className={'text-green-400 dark:text-green-500 cursor-pointer'} />
+      <GlowingCompletedCheck />
     )
   }
 
@@ -115,6 +115,99 @@ const SpinnerSvg = ({ fill = 'currentColor', className = '' }: { fill?: string, 
     </g>
   </svg>
 )
+
+const GlowingCompletedCheck = () => {
+  return (
+    <svg
+      width="36"
+      height="36"
+      viewBox="-6 -6 36 36"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="cursor-pointer overflow-visible"
+      style={{ margin: '-6px' }}
+    >
+      <defs>
+        {/* Outer glow: flood-fill green, blurred wide */}
+        <filter id="check-glow-far" x="-150%" y="-150%" width="400%" height="400%">
+          <feFlood floodColor="#22c55e" floodOpacity="1" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="9" result="blur1" />
+          <feMerge>
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur1" />
+          </feMerge>
+        </filter>
+        {/* Mid glow: tighter, brighter green */}
+        <filter id="check-glow-mid" x="-100%" y="-100%" width="300%" height="300%">
+          <feFlood floodColor="#4ade80" floodOpacity="1" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="2.5" result="blur2" />
+          <feMerge>
+            <feMergeNode in="blur2" />
+            <feMergeNode in="blur2" />
+          </feMerge>
+        </filter>
+        {/* Tight glow hugging the shape */}
+        <filter id="check-glow-tight" x="-50%" y="-50%" width="200%" height="200%">
+          <feFlood floodColor="#86efac" floodOpacity="0.9" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="1" result="blur3" />
+          <feMerge>
+            <feMergeNode in="blur3" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <style>{`
+        @keyframes checkGlowPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
+      `}</style>
+      {/* Checkmark path (Lucide check icon) */}
+      {/* Layer 1: far green glow */}
+      <g filter="url(#check-glow-far)" style={{ animation: 'checkGlowPulse 2s ease-in-out infinite' }}>
+        <polyline
+          points="4,12 9,17 20,6"
+          stroke="#22c55e"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </g>
+      {/* Layer 2: mid glow */}
+      <g filter="url(#check-glow-mid)">
+        <polyline
+          points="4,12 9,17 20,6"
+          stroke="#4ade80"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </g>
+      {/* Layer 3: tight glow */}
+      <g filter="url(#check-glow-tight)">
+        <polyline
+          points="4,12 9,17 20,6"
+          stroke="#86efac"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </g>
+      {/* Layer 4: crisp white-green core */}
+      <polyline
+        points="4,12 9,17 20,6"
+        stroke="#bbf7d0"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
 
 const GlowingRunningSpinner = () => {
   return (

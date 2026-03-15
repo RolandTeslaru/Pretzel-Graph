@@ -19,7 +19,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
         immer<OrchestratorSDK.State>(() => ({
             jobId: undefined,
             executionStatus: "idle",
-            nodeStatuses: {}
+            awaitedConfirmation: new Set()
         })),
         shallow
     )
@@ -88,9 +88,12 @@ OrchestratorSDK.useStore.subscribe((state, prevState) => {
 
 export namespace OrchestratorSDK {
 
+    export type AwaitedConfirmation = "started" | "paused" | "resumed" | "terminated"
+
     export type State = {
         jobId: Orchestrator.Job.Id | undefined
         executionStatus: "idle" | "running" | "completed" | "failed" | "terminated"
+        awaitedConfirmation: Set<"started" | "paused" | "resumed" | "terminated">
     }
 
     export type Reducers = typeof orchestratorSDKReducers
