@@ -85,7 +85,7 @@ code {
   --ring: theme(--color-orange-500);
 
   --secondary: var(--color-neutral-200);
-  --secondary-foreground: #3D2117;
+  --secondary-foreground:var(--color-neutral-100);
 
   --accent: theme(--color-neutral-300);
   --accent-foreground: theme(--color-neutral-700);
@@ -206,13 +206,11 @@ code {
   --port-null: var(--secondary);
   --port-null-foreground: theme(--color-neutral-100);
 
-  --port-Dynamic: theme(--color-gray-500);
-  --port-Dynamic-foreground: theme(--color-gray-500);
-  --port-Dynamic-accent: theme(--color-gray-300);
+  --port-Unresolved: theme(--color-gray-500);
+  --port-Unresolved-foreground: theme(--color-gray-500);
 
 
-  --group-routing: var(--primary);
-  --group-routing-foreground: var(--primary-foreground);
+  --group-routing: var(--secondary);
 
   /* Note colors */
   --note-amber: oklch(0.88 0.10 70);
@@ -306,6 +304,8 @@ code {
   /* --border: theme(--color-stone-800); */
   --input: theme(--color-stone-700);
   --ring: theme(--color-orange-500);
+
+  /* --group-routing: theme(--color-white); */
 
 
   /* Dark mode custom variables */

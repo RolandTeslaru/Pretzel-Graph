@@ -1,6 +1,6 @@
 {
-  "version": "1773500178123",
-  "generatedAt": "2026-03-14T14:56:18.123Z",
+  "version": "1773704158766",
+  "generatedAt": "2026-03-16T23:35:58.766Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -123,14 +123,6 @@
           "id": "languageModel",
           "displayName": "Language Model",
           "variant": "LanguageModel",
-          "required": false,
-          "internal": false
-        },
-        {
-          "id": "chatHistory",
-          "displayName": "Chat History",
-          "tooltip": "Chat history to be included in the context window",
-          "variant": "MessageList",
           "required": false,
           "internal": false
         },
@@ -812,8 +804,9 @@
         {
           "id": "input",
           "displayName": "Input",
-          "variant": "Dynamic",
-          "syncGroup": "data",
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "variant": "Unresolved",
           "required": false,
           "internal": false
         }
@@ -823,15 +816,17 @@
           "id": "true",
           "displayName": "True",
           "tooltip": "Output when condition is true.",
-          "variant": "Dynamic",
-          "syncGroup": "data"
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "variant": "Unresolved"
         },
         {
           "id": "false",
           "displayName": "False",
           "tooltip": "Output when condition is false.",
-          "variant": "Dynamic",
-          "syncGroup": "data"
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "variant": "Unresolved"
         }
       ],
       "description": "Routes input to one of multiple outputs based on a condition."
@@ -862,16 +857,18 @@
         {
           "id": "input_1",
           "displayName": "Input 1",
-          "variant": "Dynamic",
-          "syncGroup": "data",
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "variant": "Unresolved",
           "required": false,
           "internal": false
         },
         {
           "id": "input_2",
           "displayName": "Input 2",
-          "variant": "Dynamic",
-          "syncGroup": "data",
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "variant": "Unresolved",
           "required": false,
           "internal": false
         }
@@ -880,8 +877,9 @@
         {
           "id": "output",
           "displayName": "Output",
-          "variant": "Dynamic",
-          "syncGroup": "data"
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "variant": "Unresolved"
         }
       ],
       "description": "Merges multiple inputs into a single output."
@@ -908,8 +906,9 @@
         {
           "id": "input",
           "displayName": "Input",
-          "variant": "Dynamic",
-          "syncGroup": "data",
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "variant": "Unresolved",
           "required": false,
           "internal": false
         }
@@ -919,15 +918,17 @@
           "id": "true",
           "displayName": "True",
           "tooltip": "Output when condition is true.",
-          "variant": "Dynamic",
-          "syncGroup": "data"
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "variant": "Unresolved"
         },
         {
           "id": "false",
           "displayName": "False",
           "tooltip": "Output when condition is false.",
-          "variant": "Dynamic",
-          "syncGroup": "data"
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "variant": "Unresolved"
         }
       ],
       "description": "Routes input to one of multiple outputs based on a condition."

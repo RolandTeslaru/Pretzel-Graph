@@ -130,6 +130,11 @@ export namespace Validation {
         if (!sourcePort || !targetPort)
             return false
 
+        if(sourcePort.variant !== "Unresolved" && targetPort.variant === "Unresolved")
+            return true;
+        if(sourcePort.variant === "Unresolved" && targetPort.variant !== "Unresolved")
+            return true;
+
         if (sourcePort.variant === targetPort.variant)
             return true
 
@@ -201,14 +206,14 @@ export namespace Validation {
             if (isTargetPortAlreadyConnected(targetNode.id, targetHandleId, cache))
                 return false
 
-            const hasCycle = detectCycle(
-                targetNode.id,
-                sourceNode.id,
-                cache
-            )
+            // const hasCycle = detectCycle(
+            //     targetNode.id,
+            //     sourceNode.id,
+            //     cache
+            // )
 
-            if (hasCycle)
-                return false
+            // if (hasCycle)
+            //     return false
 
             return true;
         }

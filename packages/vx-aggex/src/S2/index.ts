@@ -4,7 +4,7 @@ import { S2Graph, Vertex } from "./graph";
 // Bulk Asynchronous Parallel Directed Cyclical Graph Engine
 
 export interface S2Hooks {
-    onVertexExecute(vertexId: Vertex.Id): Promise<void>;
+    onVertexExecute(vertexId: Vertex.Id): Promise<Set<Vertex.Id> | void>;
     onVertexWaiting?(vertexId: Vertex.Id, dependencyResolutionMap: Record<Vertex.Id, boolean>, totalDeps: number): void;
     onVertexFired?(vertexId: Vertex.Id): void;
     onVertexCompleted?(vertexId: Vertex.Id): void;
@@ -86,11 +86,12 @@ export class S2Engine {
         hooks.onVertexFired?.(vertexId);
 
         try {
-            await hooks.onVertexExecute(vertexId);
+            const signalSet = await hooks.onVertexExecute(vertexId);
 
             hooks.onVertexCompleted?.(vertexId);
 
-            const dependents = graph.dependentsMap.get(vertexId)!
+            const allDependents = graph.dependentsMap.get(vertexId)!;
+            const dependents = signalSet ?? allDependents;
 
             dependents.forEach(dep => {
 

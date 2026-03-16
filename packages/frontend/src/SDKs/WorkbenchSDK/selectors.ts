@@ -88,7 +88,54 @@ export const workbenchSelectors = {
             return true;
 
         return false;
+    },
+    getDynamicPortSiblings: (s, nodeId, portId) => {
+        const node = s.workflow.data.nodes[nodeId];
+        let triggerPort;
+
+        if(node.inputs.find(port => port.id === portId))
+            triggerPort = node.inputs.find(port => port.id === portId);
+        else
+            triggerPort = node.outputs.find(port => port.id === portId);
+
+        if(!triggerPort)
+            throw new Error(`Port ${portId} not found`);
+
+        if(!triggerPort.isDynamic)
+            throw new Error(`Port ${portId} is not dynamic`);
+
+        const syncGroupId = triggerPort.syncGroupId
+
+        const siblings = new Set<Foundations.Port.Input | Foundations.Port.Output>();
+
+        node.inputs.forEach(input => {
+            if(input.isDynamic && input.syncGroupId === syncGroupId)
+                siblings.add(input);
+        })
+
+        node.outputs.forEach(output => {
+            if(output.isDynamic && output.syncGroupId === syncGroupId)
+                siblings.add(output);
+        })
+
+        return siblings;
+    },
+    syncGroupHasEdges: (s, nodeId, syncGroupId) => {
+        const node = s.workflow.data.nodes[nodeId];
+        const inputHandles = s.cache.inputHandlesMap[nodeId];
+        const outputHandles = s.cache.outputHandlesMap[nodeId];
+
+        for (const input of node.inputs) {
+            if (input.isDynamic && input.syncGroupId === syncGroupId && inputHandles[input.id])
+                return true;
+        }
+        for (const output of node.outputs) {
+            if (output.isDynamic && output.syncGroupId === syncGroupId && outputHandles[output.id])
+                return true;
+        }
+        return false;
     }
+
 } satisfies _WorkBenchSDKSelectors
 
 type NodeId = Workflow.Node.Id
@@ -113,4 +160,6 @@ export type _WorkBenchSDKSelectors = {
 
     doesWorkflowHaveIssues: (state: WorkbenchSDK.State) => boolean
     doesNodeHaveIssues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
+    getDynamicPortSiblings: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Id) => Set<Foundations.Port.Input | Foundations.Port.Output>
+    syncGroupHasEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => boolean
 }

@@ -140,13 +140,14 @@ export namespace OutputBuilder {
         };
     }
 
-    export function Dynamic<TId extends string, TSyncGroup extends string>(
-        config: { syncGroup: TSyncGroup } & BaseProps<TId>
-    ): LiteralOutput<TId, "Dynamic", Foundations.Port.Variants.Dynamic, any> & { readonly __syncGroup?: TSyncGroup } {
+    export function Unresolved<TId extends string, TSyncGroup extends string>(
+        config: { syncGroupId: TSyncGroup } & BaseProps<TId>
+    ): LiteralOutput<TId, "Unresolved", Foundations.Port.Variants.Unresolved, any> & { readonly __syncGroup?: TSyncGroup } {
         return {
             ...buildBase(config),
-            variant: "Dynamic" as const,
-            syncGroup: config.syncGroup,
+            variant: "Unresolved" as const,
+            isDynamic: true,
+            syncGroupId: config.syncGroupId,
         };
     }
 }
