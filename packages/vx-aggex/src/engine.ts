@@ -1,7 +1,7 @@
 import { CompilationResult } from "./compiler";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { ExecutionSession, Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
-import { RuntimeNode } from "./node"
+import { RuntimeNode, RuntimeRouterNode } from "./node"
 import { ExecutionContext } from "./context";
 import { S2Engine, S2Hooks } from "./S2";
 import { Vertex } from "./S2/graph";
@@ -16,9 +16,9 @@ export class AggexEngine {
         wfNode: Workflow.Node,
         nodeInstance: RuntimeNode<Foundations.Blueprint>,
         ctx: ExecutionContext
-    ) {
+    ): Promise<Set<Vertex.Id> | void> {
         const inputs = this.resolveInputs(ctx, wfNode.id);
-        
+
         const result = await nodeInstance.run(inputs);
 
         console.log("RUNNNING NODE ", wfNode.id)
@@ -26,6 +26,28 @@ export class AggexEngine {
         ctx.updateSession(d => {
             d.node_outputs[wfNode.id] = result;
         });
+
+        if ('isRouterNode' in nodeInstance) {
+            return this.resolveRouterSignals(ctx, wfNode.id, result);
+        }
+    }
+
+    private resolveRouterSignals(
+        ctx: ExecutionContext,
+        nodeId: Workflow.Node.Id,
+        result: Record<string, any>
+    ): Set<Vertex.Id> {
+        const signals = new Set<Vertex.Id>();
+        const edges = ctx.workflow.data.edges;
+        const returnedKeys = new Set(Object.keys(result));
+
+        for (const edge of Object.values(edges)) {
+            if (edge.source.nodeId === nodeId && returnedKeys.has(edge.source.portId)) {
+                signals.add(edge.target.nodeId as unknown as Vertex.Id);
+            }
+        }
+
+        return signals;
     }
 
     private resolveInputs(

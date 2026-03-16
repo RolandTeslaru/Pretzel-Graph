@@ -49,7 +49,7 @@ export class AggexWorkerImpl {
         const signalChannel = Orchestrator.Signal.getChannel(jobId);
         const eventChannel = Orchestrator.Event.getChannel(jobId);
 
-        this.emit<Orchestrator.Event.Job.Started>({
+        this.emit<Orchestrator.Event.Started>({
             jobId,
             workflowId: workflow.id,
             type: "started",
@@ -84,7 +84,7 @@ export class AggexWorkerImpl {
             context.streamController.disposeAll();
 
             if (result === 'terminated') {
-                this.emit<Orchestrator.Event.Job.Terminated>({
+                this.emit<Orchestrator.Event.Terminated>({
                     jobId,
                     workflowId: workflow.id,
                     type: "terminated",
@@ -93,7 +93,7 @@ export class AggexWorkerImpl {
                 return { status: 'terminated' };
             }
 
-            this.emit<Orchestrator.Event.Job.Completed>({
+            this.emit<Orchestrator.Event.Completed>({
                 jobId,
                 workflowId: workflow.id,
                 type: "completed",
@@ -105,7 +105,7 @@ export class AggexWorkerImpl {
         } catch (err) {
             console.error("Error during execution of job", jobId, err);
 
-            this.emit<Orchestrator.Event.Job.Failed>({
+            this.emit<Orchestrator.Event.Failed>({
                 jobId,
                 workflowId: workflow.id,
                 type: "failed",

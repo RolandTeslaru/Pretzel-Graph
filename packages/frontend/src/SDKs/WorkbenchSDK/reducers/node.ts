@@ -37,7 +37,6 @@ export const nodeReducers = {
         cacheReducers.deleteNode(s, deletedNodeId);
         layoutReducers.node.remove(s, deletedNodeId);
     },
-    createId: Workflow.Node.createId,
     create: (s, blueprint, position) => {
         s.isDirty = true;
         const nodeId = Workflow.Node.createId(blueprint.id);
@@ -196,6 +195,37 @@ export const nodeReducers = {
 
         s.workflow.data.staticValues[nodeId] = initialStaticValues;
     },
+    resolveDynamicPortGroup: (s, nodeId, triggerPort, resolvedVariant) => {
+        const node = s.workflow.data.nodes[nodeId];
+
+        if(!triggerPort.isDynamic || !triggerPort.syncGroupId)
+            throw new Error(`Port ${triggerPort.id} is not dynamic`);
+
+        const syncGroupId = triggerPort.syncGroupId;
+
+        node.inputs.forEach(input => {
+            if(!input.isDynamic || input.syncGroupId !== syncGroupId) return;
+            (input as any).variant = resolvedVariant;
+        })
+
+        node.outputs.forEach(output => {
+            if(!output.isDynamic || output.syncGroupId !== syncGroupId) return;
+            (output as any).variant = resolvedVariant;
+        })
+    },
+    unresolveDynamicPortGroup: (s, nodeId, syncGroupId) => {
+        const node = s.workflow.data.nodes[nodeId];
+
+        node.inputs.forEach(input => {
+            if(!input.isDynamic || input.syncGroupId !== syncGroupId) return;
+            (input as any).variant = "Unresolved";
+        })
+
+        node.outputs.forEach(output => {
+            if(!output.isDynamic || output.syncGroupId !== syncGroupId) return;
+            (output as any).variant = "Unresolved";
+        })
+    },
     setMinimized: (s, nodeId, isMinimized) => {
         s.isDirty = true;
         s.workflow.data.nodes[nodeId].isMinimized = isMinimized;
@@ -229,16 +259,18 @@ export const nodeReducers = {
 } satisfies NodeReducers
 
 interface NodeReducers {
-    remove        : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
-    createId      : typeof Workflow.Node.createId
-    create        : (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }) => void;
-    recreate      : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
-    duplicate     : (state: WorkbenchSDK.State, originalNode: Workflow.Node, position?: { x: number, y: number }) => Workflow.Node;
-    reconcile     : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
-    setMinimized  : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void;
-    setFlipped    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isFlipped: boolean) => void;
-    setDisplayName: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDisplayName: string) => void;
-    setDescription: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDescription: string) => void;
-    validate: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
-    clearIssues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
+    remove         : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
+    create         : (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }) => void;
+    recreate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
+    duplicate      : (state: WorkbenchSDK.State, originalNode: Workflow.Node, position?: { x: number, y: number }) => Workflow.Node;
+    reconcile      : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
+    setMinimized   : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void;
+    setFlipped     : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isFlipped: boolean) => void;
+    setDisplayName : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDisplayName: string) => void;
+    setDescription : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDescription: string) => void;
+    validate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
+    clearIssues    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
+
+    resolveDynamicPortGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, triggerPort: Foundations.Port.Input | Foundations.Port.Output, resolvedVariant: Foundations.Port.Variant) => void
+    unresolveDynamicPortGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => void
 }

@@ -22,7 +22,7 @@ const StatusIndicator = ({
       <Popover.Root>
         <Popover.Trigger asChild>
           <div className={className}>
-            <SystemIcons.PingingAlertTriangle size={22} className={'text-red-500 cursor-pointer '} />
+            <GlowingAlertTriangle />
           </div>
         </Popover.Trigger>
         <Popover.Content align="center" side="right" sideOffset={10}>
@@ -40,14 +40,11 @@ const StatusIndicator = ({
     )
   else if (executionStatus.status === "waiting")
     return (
-      <SystemIcons.Clock size={22} className={'text-yellow-500 dark:text-yellow-400 animate-pulse cursor-pointer'} />
+      <GlowingWaitingClock />
     )
   else if (executionStatus.status === "failed")
     return (
-      <div className='relative'>
-        <SystemIcons.X size={22} className={'text-red-500 cursor-pointer '} />
-        <SystemIcons.X size={22} className={'text-red-500 cursor-pointer animate-ping absolute top-0 right-0'} />
-      </div>
+      <GlowingFailedX />
     )
   else if (executionStatus.status === "completed") {
     return (
@@ -115,6 +112,226 @@ const SpinnerSvg = ({ fill = 'currentColor', className = '' }: { fill?: string, 
     </g>
   </svg>
 )
+
+const GlowingWaitingClock = () => {
+  return (
+    <svg
+      width="36"
+      height="36"
+      viewBox="-6 -6 36 36"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="cursor-pointer overflow-visible"
+      style={{ margin: '-6px' }}
+    >
+      <defs>
+        <filter id="clock-glow-far" x="-150%" y="-150%" width="400%" height="400%">
+          <feFlood floodColor="#eab308" floodOpacity="1" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="9" result="blur1" />
+          <feMerge>
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur1" />
+          </feMerge>
+        </filter>
+        <filter id="clock-glow-mid" x="-100%" y="-100%" width="300%" height="300%">
+          <feFlood floodColor="#facc15" floodOpacity="1" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="2.5" result="blur2" />
+          <feMerge>
+            <feMergeNode in="blur2" />
+            <feMergeNode in="blur2" />
+          </feMerge>
+        </filter>
+        <filter id="clock-glow-tight" x="-50%" y="-50%" width="200%" height="200%">
+          <feFlood floodColor="#fde047" floodOpacity="0.9" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="1" result="blur3" />
+          <feMerge>
+            <feMergeNode in="blur3" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <style>{`
+        @keyframes clockGlowPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
+      {/* Layer 1: far yellow glow */}
+      <g filter="url(#clock-glow-far)" style={{ animation: 'clockGlowPulse 2s ease-in-out infinite' }}>
+        <circle cx="12" cy="12" r="9" stroke="#eab308" strokeWidth="2" />
+        <polyline points="12,7 12,12 15.5,14" stroke="#eab308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+      {/* Layer 2: mid glow */}
+      <g filter="url(#clock-glow-mid)">
+        <circle cx="12" cy="12" r="9" stroke="#facc15" strokeWidth="1.5" />
+        <polyline points="12,7 12,12 15.5,14" stroke="#facc15" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+      {/* Layer 3: tight glow */}
+      <g filter="url(#clock-glow-tight)">
+        <circle cx="12" cy="12" r="9" stroke="#fde047" strokeWidth="1.5" />
+        <polyline points="12,7 12,12 15.5,14" stroke="#fde047" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+      {/* Layer 4: crisp core */}
+      <circle cx="12" cy="12" r="9" stroke="#fef9c3" strokeWidth="1.5" fill="none" />
+      <polyline points="12,7 12,12 15.5,14" stroke="#fef9c3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  )
+}
+
+const GlowingFailedX = () => {
+  return (
+    <svg
+      width="36"
+      height="36"
+      viewBox="-6 -6 36 36"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="cursor-pointer overflow-visible"
+      style={{ margin: '-6px' }}
+    >
+      <defs>
+        <filter id="x-glow-far" x="-150%" y="-150%" width="400%" height="400%">
+          <feFlood floodColor="#ef4444" floodOpacity="1" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="9" result="blur1" />
+          <feMerge>
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur1" />
+          </feMerge>
+        </filter>
+        <filter id="x-glow-mid" x="-100%" y="-100%" width="300%" height="300%">
+          <feFlood floodColor="#f87171" floodOpacity="1" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="2.5" result="blur2" />
+          <feMerge>
+            <feMergeNode in="blur2" />
+            <feMergeNode in="blur2" />
+          </feMerge>
+        </filter>
+        <filter id="x-glow-tight" x="-50%" y="-50%" width="200%" height="200%">
+          <feFlood floodColor="#fca5a5" floodOpacity="0.9" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="1" result="blur3" />
+          <feMerge>
+            <feMergeNode in="blur3" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <style>{`
+        @keyframes xGlowPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
+      `}</style>
+      {/* Layer 1: far red glow */}
+      <g filter="url(#x-glow-far)" style={{ animation: 'xGlowPulse 1.5s ease-in-out infinite' }}>
+        <line x1="6" y1="6" x2="18" y2="18" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+        <line x1="18" y1="6" x2="6" y2="18" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+      </g>
+      {/* Layer 2: mid glow */}
+      <g filter="url(#x-glow-mid)">
+        <line x1="6" y1="6" x2="18" y2="18" stroke="#f87171" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="18" y1="6" x2="6" y2="18" stroke="#f87171" strokeWidth="2.5" strokeLinecap="round" />
+      </g>
+      {/* Layer 3: tight glow */}
+      <g filter="url(#x-glow-tight)">
+        <line x1="6" y1="6" x2="18" y2="18" stroke="#fca5a5" strokeWidth="2" strokeLinecap="round" />
+        <line x1="18" y1="6" x2="6" y2="18" stroke="#fca5a5" strokeWidth="2" strokeLinecap="round" />
+      </g>
+      {/* Layer 4: crisp core */}
+      <line x1="6" y1="6" x2="18" y2="18" stroke="#fecaca" strokeWidth="2" strokeLinecap="round" />
+      <line x1="18" y1="6" x2="6" y2="18" stroke="#fecaca" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+const GlowingAlertTriangle = () => {
+  return (
+    <svg
+      width="36"
+      height="36"
+      viewBox="-6 -4 36 36"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="cursor-pointer overflow-visible"
+      style={{ margin: '-6px' }}
+    >
+      <defs>
+        <filter id="alert-glow-far" x="-150%" y="-150%" width="400%" height="400%">
+          <feFlood floodColor="#f59e0b" floodOpacity="1" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="9" result="blur1" />
+          <feMerge>
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur1" />
+          </feMerge>
+        </filter>
+        <filter id="alert-glow-mid" x="-100%" y="-100%" width="300%" height="300%">
+          <feFlood floodColor="#fbbf24" floodOpacity="1" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="2.5" result="blur2" />
+          <feMerge>
+            <feMergeNode in="blur2" />
+            <feMergeNode in="blur2" />
+          </feMerge>
+        </filter>
+        <filter id="alert-glow-tight" x="-50%" y="-50%" width="200%" height="200%">
+          <feFlood floodColor="#fde68a" floodOpacity="0.9" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="1" result="blur3" />
+          <feMerge>
+            <feMergeNode in="blur3" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <style>{`
+        @keyframes alertGlowPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        @keyframes alertPing {
+          0% { transform: scale(1); opacity: 0.8; }
+          75%, 100% { transform: scale(1.6); opacity: 0; }
+        }
+      `}</style>
+      {/* Ping layer: expands outward and fades */}
+      <g style={{ animation: 'alertPing 1.2s cubic-bezier(0, 0, 0.2, 1) infinite', transformOrigin: '12px 14px' }}>
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      </g>
+      {/* Triangle path + exclamation mark (Lucide alert-triangle) */}
+      {/* Layer 1: far amber glow */}
+      <g filter="url(#alert-glow-far)" style={{ animation: 'alertGlowPulse 1.2s ease-in-out infinite' }}>
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <line x1="12" y1="9" x2="12" y2="13" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="12" cy="17" r="0.5" fill="#f59e0b" stroke="#f59e0b" strokeWidth="1" />
+      </g>
+      {/* Layer 2: mid glow */}
+      <g filter="url(#alert-glow-mid)">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <line x1="12" y1="9" x2="12" y2="13" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="12" cy="17" r="0.5" fill="#fbbf24" stroke="#fbbf24" strokeWidth="1" />
+      </g>
+      {/* Layer 3: tight glow */}
+      <g filter="url(#alert-glow-tight)">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#fde68a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <line x1="12" y1="9" x2="12" y2="13" stroke="#fde68a" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="12" cy="17" r="0.5" fill="#fde68a" stroke="#fde68a" strokeWidth="1" />
+      </g>
+      {/* Layer 4: crisp core */}
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#fef3c7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <line x1="12" y1="9" x2="12" y2="13" stroke="#fef3c7" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="17" r="0.5" fill="#fef3c7" stroke="#fef3c7" strokeWidth="1" />
+    </svg>
+  )
+}
 
 const GlowingCompletedCheck = () => {
   return (

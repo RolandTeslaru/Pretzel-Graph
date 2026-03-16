@@ -8,7 +8,7 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
     public readonly emit: Emitter;
     public fields: InferFields<T_Blueprint>
 
-    private isWaiting: boolean = false;
+    protected isWaiting: boolean = false;
 
     constructor(
         public readonly workflowNode: Workflow.Node,
@@ -24,7 +24,7 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
      */
     public async run(
         inputs: InferInputs<T_Blueprint>
-    ): Promise<InferOutputs<T_Blueprint>> {
+    ): Promise<Partial<InferOutputs<T_Blueprint>>> {
         this.isWaiting = false;
         return this.onRun(this.context, inputs);
     }
@@ -43,7 +43,7 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
     protected abstract onRun(
         context: ExecutionContext,
         inputs: InferInputs<T_Blueprint>
-    ): Promise<InferOutputs<T_Blueprint>>;
+    ): Promise<Partial<InferOutputs<T_Blueprint>>>;
 
     protected onWait(
         context: ExecutionContext,
@@ -121,6 +121,30 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
         })
     }
 }
+
+export abstract class RuntimeRouterNode<T_Blueprint extends Foundations.Blueprint> extends RuntimeNode<T_Blueprint>{
+    
+    public readonly isRouterNode: true = true;
+
+    constructor(
+        ...args: ConstructorParameters<typeof RuntimeNode>
+    ) {
+        super(...args)
+    }
+
+    public override async run(
+        inputs: InferInputs<T_Blueprint>
+    ): Promise<InferOutputs<T_Blueprint>> {
+        this.isWaiting = false;
+        return this.onRun(this.context, inputs) as Promise<InferOutputs<T_Blueprint>>;
+    }
+
+    protected abstract override onRun(
+        context: ExecutionContext,
+        inputs: InferInputs<T_Blueprint>
+    ): Promise<Partial<InferOutputs<T_Blueprint>>>;
+}
+
 
 export namespace RuntimeNode {
     export type ConstructorProps = ConstructorParameters<typeof RuntimeNode>[0]

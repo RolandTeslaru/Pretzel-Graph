@@ -38,12 +38,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 lastSelection: null,
                 clickedNodeId: null,
                 draggedHandle: null,
-                cache: {
-                    incomingEdgesMap: {},
-                    outgoingEdgesMap: {},
-                    inputHandlesMap: {},
-                    outputHandlesMap: {},
-                },
+                cache: cloneDeep(Workflow.Cache.INITIAL),
                 issues: {},
                 clipboard: {
                     nodes: new Set(),

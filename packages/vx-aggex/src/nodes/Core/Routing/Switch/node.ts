@@ -1,11 +1,11 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { ExecutionContext } from "src/context";
-import { RuntimeNode } from "src/node";
+import { RuntimeNode, RuntimeRouterNode } from "src/node";
 import { InferInputs, InferOutputs } from "src/types";
 
 @RegisterNode(Blueprint.id)
-export class Node extends RuntimeNode<typeof Blueprint> {
+export class Node extends RuntimeRouterNode<typeof Blueprint> {
 
     public readonly Blueprint = Blueprint;
 
@@ -21,7 +21,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const result = Boolean(condition);
 
         return {
-            result
+            true: input,
+            false: input,
         };
     }
 }

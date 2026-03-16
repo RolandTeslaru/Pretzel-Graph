@@ -15,24 +15,24 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
-        InputBuilder.Dynamic({
+        InputBuilder.Unresolved({
             id: "input",
             displayName: "Input",
-            syncGroup: "data"
+            syncGroupId: "data"
         }),
     ],
     outputs: [
-        OutputBuilder.Dynamic({
+        OutputBuilder.Unresolved({
             id: "true",
             displayName: "True",
             tooltip: "Output when condition is true.",
-            syncGroup: "data"
+            syncGroupId: "data"
         }),
-        OutputBuilder.Dynamic({
+        OutputBuilder.Unresolved({
             id: "false",
             displayName: "False",
             tooltip: "Output when condition is false.",
-            syncGroup: "data"
+            syncGroupId: "data"
         }),
     ],
 });
