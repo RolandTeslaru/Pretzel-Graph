@@ -20,7 +20,7 @@ export function _createShelfReducers_(sdk: ShelfSDKImpl) {
         }
     } satisfies DrawerReducers
 
-    const checkIfDefintionHasHandles = (s: State, blueprint: Foundations.Blueprint, dataTypes: Set<Foundations.HandleVariant>) => {
+    const checkIfDefintionHasHandles = (s: State, blueprint: Foundations.Blueprint, dataTypes: Set<Foundations.Port.Variant>) => {
         return blueprint.outputs.some(output => {
             return Array.from(dataTypes).some(
                 (type) => output.handleVariants.includes(type)

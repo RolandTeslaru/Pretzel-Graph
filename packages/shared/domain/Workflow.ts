@@ -229,14 +229,36 @@ export namespace Workflow {
                 Foundations.Port.Output.Id,
                 Workflow.Edge.Id
             >
+        >,
+        dependenciesMap: Record<
+            Workflow.Node.Id,
+            Record<Workflow.Node.Id, Workflow.Edge.Id[]>
+        >,
+        dependentsMap: Record<
+            Workflow.Node.Id,
+            Record<Workflow.Node.Id, Workflow.Edge.Id[]>
         >
     }
+
+    export namespace Cache {
+        export const INITIAL = {
+            incomingEdgesMap: {},
+            outgoingEdgesMap: {},
+            inputHandlesMap: {},
+            outputHandlesMap: {},
+            dependenciesMap: {},
+            dependentsMap: {},
+        }
+    }
+
     export function createCache(wf: Workflow): Cache {
         const cache = {
             incomingEdgesMap: {},
             outgoingEdgesMap: {},
             inputHandlesMap: {},
             outputHandlesMap: {},
+            dependenciesMap: {},
+            dependentsMap: {},
         } as Cache;
 
         Object.values(wf.data.nodes).forEach(node => {
@@ -244,6 +266,9 @@ export namespace Workflow {
             cache.incomingEdgesMap[node.id] = {};
             cache.inputHandlesMap[node.id] = {};
             cache.outputHandlesMap[node.id] = {};
+
+            cache.dependenciesMap[node.id] = {};
+            cache.dependentsMap[node.id] = {};
         })
 
         Object.values(wf.data.edges).forEach(edge => {
@@ -262,6 +287,18 @@ export namespace Workflow {
             cache.inputHandlesMap[targetNodeId][targetHandleId] = edge.id
 
             cache.outputHandlesMap[sourceNodeId][sourceHandleId] = edge.id
+
+
+            // dependenciesMap
+            if (!cache.dependenciesMap[targetNodeId][sourceNodeId]) {
+                cache.dependenciesMap[targetNodeId][sourceNodeId] = [];
+            }
+            cache.dependenciesMap[targetNodeId][sourceNodeId].push(edge.id);
+
+            if (!cache.dependentsMap[sourceNodeId][targetNodeId]) {
+                cache.dependentsMap[sourceNodeId][targetNodeId] = [];
+            }
+            cache.dependentsMap[sourceNodeId][targetNodeId].push(edge.id);
         })
 
         return cache

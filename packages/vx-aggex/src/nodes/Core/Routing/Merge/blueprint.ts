@@ -16,22 +16,22 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
-        InputBuilder.Dynamic({
+        InputBuilder.Unresolved({
             id: "input_1",
             displayName: "Input 1",
-            syncGroup: "data"
+            syncGroupId: "data"
         }),
-        InputBuilder.Dynamic({
+        InputBuilder.Unresolved({
             id: "input_2",
             displayName: "Input 2",
-            syncGroup: "data"
+            syncGroupId: "data"
         }),
     ],
     outputs: [
-        OutputBuilder.Dynamic({
+        OutputBuilder.Unresolved({
             id: "output",
             displayName: "Output",
-            syncGroup: "data"
+            syncGroupId: "data"
         }),
     ],
 });

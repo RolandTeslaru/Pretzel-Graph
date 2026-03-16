@@ -160,9 +160,12 @@ export namespace Foundations {
             "DataFrame",
             "Integer",
             "Json",
-            "Dynamic",
+            "Unresolved",
         ])
         export type Variant = z.infer<typeof Variant>
+
+        export const Id = z.string().brand("PortId")
+        export type Id = z.infer<typeof Port.Id>
 
         function portLiteral<T extends Port.Variant>(value: T) {
             return z.literal(value);
@@ -173,6 +176,8 @@ export namespace Foundations {
 
             displayName: z.string().optional(),
             tooltip: z.string().optional(),
+            isDynamic: z.boolean().optional(),
+            syncGroupId: z.string().optional() 
         })
         export interface Base extends z.infer<typeof Base> { }
 
@@ -229,10 +234,8 @@ export namespace Foundations {
                 variant: portLiteral("Json"),
             })
 
-            export const Dynamic = Base.extend({
-                variant: portLiteral("Dynamic"),
-                syncGroup: z.string(),
-                resolvedVariant: Port.Variant.optional(),
+            export const Unresolved = Base.extend({
+                variant: portLiteral("Unresolved"),
             })
 
             export const Schema = z.discriminatedUnion("variant", [
@@ -248,7 +251,7 @@ export namespace Foundations {
                 DataFrame,
                 Integer,
                 Json,
-                Dynamic,
+                Unresolved,
             ])
 
             export type Message = z.infer<typeof Message>
@@ -263,12 +266,12 @@ export namespace Foundations {
             export type DataFrame = z.infer<typeof DataFrame>
             export type Integer = z.infer<typeof Integer>
             export type Json = z.infer<typeof Json>
-            export type Dynamic = z.infer<typeof Dynamic>
+            export type Unresolved = z.infer<typeof Unresolved>
         }
 
         export namespace Input {
-            export const Id = z.string().brand("InputId");
-            export type Id = z.infer<typeof Id>;
+            export const Id = Port.Id.brand("InputId");
+            export type Id = z.infer<typeof Input.Id>;
 
             const inputFields = {
                 id: Input.Id,
@@ -292,17 +295,17 @@ export namespace Foundations {
             export const Integer = Port.Variants.Integer.extend(inputFields);
 
             export const Json = Port.Variants.Json.extend(inputFields);
-            export const Dynamic = Port.Variants.Dynamic.extend(inputFields);
+            export const Unresolved = Port.Variants.Unresolved.extend(inputFields);
 
             export const Schema = z.discriminatedUnion("variant", [
                 Message, MessageList, Text, LanguageModel, Document, Retriever,
-                Embeddings, VectorStore, Tool, Integer, Json, Dynamic
+                Embeddings, VectorStore, Tool, Integer, Json, Unresolved
             ]);
         }
         export type Input = z.infer<typeof Input.Schema>
 
         export namespace Output {
-            export const Id = z.string().brand("OutputId");
+            export const Id = Port.Id.brand("OutputId");
             export type Id = z.infer<typeof Id>;
 
             const outputFields = {
@@ -325,11 +328,11 @@ export namespace Foundations {
             export const DataFrame = Port.Variants.DataFrame.extend(outputFields);
             export const Integer = Port.Variants.Integer.extend(outputFields);
             export const Json = Port.Variants.Json.extend(outputFields);
-            export const Dynamic = Port.Variants.Dynamic.extend(outputFields);
+            export const Unresolved = Port.Variants.Unresolved.extend(outputFields);
 
             export const Schema = z.discriminatedUnion("variant", [
                 Message, MessageList, Text, LanguageModel, Document, Retriever, Embeddings,
-                VectorStore, Tool, DataFrame, Integer, Json, Dynamic
+                VectorStore, Tool, DataFrame, Integer, Json, Unresolved
             ]);
         }
         export type Output = z.infer<typeof Output.Schema>
