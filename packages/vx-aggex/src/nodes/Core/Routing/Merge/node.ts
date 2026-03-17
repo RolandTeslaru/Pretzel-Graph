@@ -35,6 +35,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const output = {};
 
-        return { output };
+        return { output: inputs.input_1 ?? inputs.input_2 };
     }
 }

@@ -52,7 +52,7 @@ export const nodeReducers = {
             description : blueprint.description,
             isMinimized : false,
             isFlipped   : false,
-            accent      : blueprint.accent ? `var(--${blueprint.accent})` : undefined,
+            accent      : blueprint.accent ? blueprint.accent : undefined,
         } satisfies Workflow.Node
 
         const result = Workflow.Node.Schema.safeParse(newNode)

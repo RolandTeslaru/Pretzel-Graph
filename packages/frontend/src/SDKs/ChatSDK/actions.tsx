@@ -7,6 +7,7 @@ import { api } from "../ApiInterceptorSDK";
 import { DialogSDK } from "@/vx-ui/SDKs/DialogSDK";
 import FullscreenChat from "./ui/FullscreenChat";
 import { ExecutionSessionSDK } from "../ExecutionSessionSDK/sdk";
+import { HumanMessage } from "@langchain/core/messages";
 
 function deriveChatName(content: string, maxLength = 50): string {
     const trimmed = content.trim().replace(/\s+/g, ' ');
@@ -80,7 +81,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     sdk.actions.message.upsert(message)
 
                     ExecutionSessionSDK.setState(s => {
-                        s.session.messages.push(message)
+                        s.session.messages.push(new HumanMessage(message.content))
                         s.session.chatId = currentChatId!;
                     })
                     const jobId = await OrchestratorSDK.actions.run()
@@ -137,13 +138,13 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     s.isLoading = false;
                 })
 
-                ExecutionSessionSDK.setState(s => {
-                    s.session.messages = [];
+                // ExecutionSessionSDK.setState(s => {
+                //     s.session.messages = [];
 
-                    messages.forEach(msg => {
-                        s.session.messages.push(msg)
-                    })
-                })
+                //     messages.forEach(msg => {
+                //         s.session.messages.push(msg)
+                //     })
+                // })
             },
             new: () => {
                 sdk.setState(s => {
