@@ -24,7 +24,7 @@ export class SupabaseAuthGuard implements CanActivate {
             throw new UnauthorizedException('No token provided');
         }
 
-        // Allow service_role key (used by vx-aggex worker for server-to-server calls)
+        // Allow service_role key (used by worker for server-to-server calls)
         // Verified by comparing against the known key from environment
         if (SUPABASE_SERVICE_ROLE_KEY && token === SUPABASE_SERVICE_ROLE_KEY) {
             request.user = { id: 'service-role' };

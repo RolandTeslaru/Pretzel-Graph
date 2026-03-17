@@ -23,7 +23,7 @@ npm run build  # TypeScript compile
 npm start      # Run compiled dist/index.js
 ```
 
-### Execution Engine (`packages/vx-aggex`)
+### Execution Engine (`packages/worker`)
 ```bash
 npm run dev    # Run index + server concurrently (watch mode)
 npm run build  # TypeScript compile
@@ -42,7 +42,7 @@ packages/
   frontend/    # React 19 + Vite + XYFlow graph editor
   backend/     # Express 5 + WebSocket + BullMQ
   shared/      # Domain models (Zod schemas) used by all packages
-  vx-aggex/    # Workflow execution engine (LangChain + LangGraph)
+  worker/      # Workflow execution engine (LangChain + LangGraph)
 ```
 
 ### Frontend State Management — SDK Pattern
@@ -69,7 +69,7 @@ Branded string types (e.g., `Workflow.Id`, `Node.Id`) are used throughout for ty
 ### Graph Canvas
 `WorkbenchSDK/ui/Canvas/` contains the XYFlow canvas, custom node components, and edge renderers. Nodes are defined by Blueprints; the `FieldRenderer` dynamically renders each node's input fields based on the field's type.
 
-### Execution Engine (`vx-aggex`)
+### Execution Engine (`worker`)
 - `WorkflowCompiler` — Validates a workflow DAG before execution
 - `AggexEngine` — Executes the graph node-by-node; resolves field values and incoming port data
 - Node implementations live under `nodes/` organized by provider (Core, OpenAI, Google, Anthropic)
@@ -94,8 +94,8 @@ Tailwind CSS 4 with an extensive CSS variable system. Port types have dedicated 
 | State reducers | `packages/frontend/src/SDKs/WorkbenchSDK/reducers/` |
 | Graph canvas | `packages/frontend/src/SDKs/WorkbenchSDK/ui/Canvas/` |
 | Domain models | `packages/shared/domain/` |
-| Workflow execution | `packages/vx-aggex/src/engine.ts` |
-| Workflow compiler | `packages/vx-aggex/src/compiler.ts` |
+| Workflow execution | `packages/worker/src/engine.ts` |
+| Workflow compiler | `packages/worker/src/compiler.ts` |
 | Backend entry | `packages/backend/src/index.ts` |
 | Tailwind config | `packages/frontend/tailwind.config.ts` |
 | UI component library | `packages/frontend/src/vx-ui/foundations/` |

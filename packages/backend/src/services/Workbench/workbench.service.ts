@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Workbench } from '@vx-agent-editor/shared/domain';
-import { CatalogueService as AGGEXCatalogueService } from '@vx-agent-builder/vx-aggex';
+import { CatalogueService as AGGEXCatalogueService } from '@vx-agent-builder/worker';
 
 @Injectable()
 export class WorkbenchService {

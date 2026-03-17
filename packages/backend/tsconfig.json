@@ -8,14 +8,14 @@
             "@/*": [
                 "src/*"
             ],
-            "@vx-agent-builder/vx-aggex": [
-                "../vx-aggex/src/index.ts"
+            "@vx-agent-builder/worker": [
+                "../worker/src/index.ts"
             ],
-            "@vx-agent-builder/vx-aggex/*": [
-                "../vx-aggex/src/*"
+            "@vx-agent-builder/worker/*": [
+                "../worker/src/*"
             ],
             "src/*": [
-                "../vx-aggex/src/*"
+                "../worker/src/*"
             ]
         },
         "outDir": "./dist",
