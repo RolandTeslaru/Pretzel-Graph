@@ -13,7 +13,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const { threshold } = this.fields;
         const { input } = inputs;
 
         // TODO: Implement accumulation logic (collect inputs, emit when threshold is met)

@@ -7,6 +7,9 @@ import { Emitter } from "./event/emitter";
 import { StreamController } from "./StreamController";
 import { S2Graph, Vertex } from "./S2/graph";
 import { ExecutionContext, createExecutionContext } from "./context";
+import { load } from "@langchain/core/load";
+import { BaseMessage } from "@langchain/core/messages";
+import { InferFields } from "./types";
 
 const START = "__START__" as Vertex.Id;
 
@@ -34,12 +37,21 @@ export class WorkflowCompiler {
         // START vertex — S2Engine ignites from here
         graph.addVertex(START);
 
+        // Reconstruct BaseMessage instances from plain serialized objects (messages arrive as JSON over HTTP/Redis)
+        const reconstructedMessages = await Promise.all(
+            session.messages.map(async (msg) => {
+                if (msg instanceof BaseMessage) return msg;
+                return load(JSON.stringify(msg)) as Promise<BaseMessage>;
+            })
+        );
+        const hydratedSession = { ...session, messages: reconstructedMessages };
+
         const context = createExecutionContext({
             workflow,
             workflowCache,
             emit,
             jobId,
-            session,
+            session: hydratedSession,
             streamController: new StreamController(),
             abortController: new AbortController()
         });
@@ -64,11 +76,15 @@ export class WorkflowCompiler {
 
             nodeInstanceMap.set(vertexId, { wfNode, instance: nodeInstance });
 
-            if(Object.hasOwn(wfNode.fields, "strategy"))
+            console.log("COMPILING NODE ", wfNode.id, " ", JSON.stringify(wfNode.fields, null, 2))
+
+            const fieldValues = resolveFields(wfNode.id, workflow);
+
+            if(Object.hasOwn(fieldValues, "strategy"))
                 graph.setVertexStrategy(
                     vertexId,
                     // @ts-expect-error
-                    wfNode.fields.strategy
+                    fieldValues.strategy
                 );
         }
 
@@ -105,4 +121,28 @@ export class WorkflowCompiler {
             id => !targetNodeIds.has(id as Workflow.Node.Id)
         ) as Workflow.Node.Id[];
     }
+}
+
+
+
+
+function resolveFields<T_Blueprint extends Foundations.Blueprint>(
+        nodeId: Workflow.Node.Id,
+        workflow: Workflow
+    ): InferFields<T_Blueprint> {
+    const node = workflow.data.nodes[nodeId];
+    const staticValues = workflow.data.staticValues[nodeId] ?? {};
+
+    const resolved: Record<Foundations.Field.Id, Foundations.Field.Value> = {};
+
+    for (const field of node.fields) {
+        const fieldId = field.id as Foundations.Field.Id;
+
+        if (fieldId in staticValues)
+            resolved[fieldId] = staticValues[fieldId] as Foundations.Field.Value;
+        else
+            resolved[fieldId] = field.initialValue as Foundations.Field.Value;
+    }
+
+    return resolved as InferFields<T_Blueprint>
 }

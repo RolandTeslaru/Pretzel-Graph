@@ -3,7 +3,7 @@ import { Workflow } from "./Workflow"
 import { type AxiosInstance } from "axios"
 import { Auth } from "./Auth"
 import { Chat } from "./Chat"
-import { BaseMessage } from "@langchain/core/messages"
+import { type BaseMessage } from "@langchain/core/messages"
 import { Realtime } from "./Realtime"
 
 export namespace ExecutionSession {
@@ -28,13 +28,24 @@ export namespace ExecutionSession {
     }
     export type NodeStatus = z.infer<typeof NodeStatus.Schema>
 
-    
+
+    export namespace EdgeState {
+        export const Schema = z.object({
+            status: z.enum(["idle", "preparing", "waiting", "completed"]),
+            runCount: z.number().default(0),
+        })
+        export type Type = z.infer<typeof Schema>
+    }
+    export type EdgeState = z.infer<typeof EdgeState.Schema>
+
+
     export const Schema = z.object({
         id: Id,
         node_outputs: z.record(Workflow.Node.Id, z.any()).default(() => ({})),
         node_messages: z.record(Workflow.Node.Id, z.string()).default(() => ({})),
         node_status: z.record(Workflow.Node.Id, NodeStatus.Schema).default(() => ({})),
-        messages: z.array(z.instanceof(BaseMessage)).default(() => ([])),
+        edge_state: z.record(Workflow.Edge.Id, EdgeState.Schema).default(() => ({})),
+        messages: z.array(z.custom<BaseMessage>((v) => v !== null && typeof v === 'object')).default(() => ([])),
         metadata: z.record(z.string(), z.any()).default(() => ({})),
         chatId: z.lazy(() => Chat.Id).optional(),
     })
@@ -45,6 +56,7 @@ export namespace ExecutionSession {
         node_outputs: {},
         node_status: {},
         node_messages: {},
+        edge_state: {},
         messages: [],
         metadata: {}
     } as z.infer<typeof Schema>

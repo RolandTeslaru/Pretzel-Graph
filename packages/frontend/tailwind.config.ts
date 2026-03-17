@@ -61,6 +61,10 @@ const config: Config = {
                 "3xl": "1500px",
             },
             keyframes: {
+                "spin-slow": {
+                    from: { transform: "translate(-50%, -50%) rotate(0deg)" },
+                    to: { transform: "translate(-50%, -50%) rotate(360deg)" },
+                },
                 neonPulse: {
                     '0%, 100%': {
                         boxShadow: '0 0 0 3px var(--node-ring), 0 0 8px currentColor, 0 0 16px currentColor'
@@ -162,6 +166,24 @@ const config: Config = {
                         opacity: "0"
                     }
                 },
+                "ping-fixed-10": {
+                    "0%": {
+                        inset: "0px",
+                        opacity: "0.95",
+                    },
+                    "70%": {
+                        inset: "-15px",
+                        opacity: "0.5",
+                    },
+                    "80%": {
+                        inset: "-15px",
+                        opacity: "0.2",
+                    },
+                    "100%": {
+                        inset: "-15px",
+                        opacity: "0"
+                    }
+                },
             },
             animation: {
                 neonPulse: 'neonPulse 1.1s ease-in-out infinite',
@@ -178,8 +200,10 @@ const config: Config = {
                 "border-ping": "border-ping 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
                 "bg-ping": "bg-ping 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
                 "ping-fixed-50": "ping-fixed-50 700ms linear infinite",
+                "ping-fixed-10": "ping-fixed-10 700ms linear infinite",
                 "slow-wiggle": "wiggle 500ms ease-in-out 1",
                 "border-beam": "border-beam calc(var(--duration)*1s) infinite linear",
+                "spin-slow": "spin-slow 1.5s linear infinite",
             },
             colors: {
                 port: portColors,
