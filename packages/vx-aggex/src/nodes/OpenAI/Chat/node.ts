@@ -23,8 +23,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {
-        return { 
-            languageModel: this.llm 
+        return {
+            languageModel: this.llm
         };
     }
 }

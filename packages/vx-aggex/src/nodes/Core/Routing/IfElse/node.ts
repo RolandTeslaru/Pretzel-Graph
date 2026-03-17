@@ -20,9 +20,9 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
         // TODO: Implement condition evaluation logic
         const result = Boolean(condition);
 
-        if(result)
+        if (result)
             return { true: input }
         else
-            return { false: input}
+            return { false: input }
     }
 }

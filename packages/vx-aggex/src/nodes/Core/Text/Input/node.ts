@@ -11,7 +11,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public readonly Blueprint = Blueprint;
 
-    
+
 
     protected override async onRun(
         context: ExecutionContext,

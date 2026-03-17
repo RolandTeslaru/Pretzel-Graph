@@ -48,11 +48,11 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
     protected onWait(
         context: ExecutionContext,
         inputs: InferInputs<T_Blueprint>
-    ): Promise<void> | void {}
+    ): Promise<void> | void { }
 
     public init(
         context: ExecutionContext
-    ): Promise<void> | void {}
+    ): Promise<void> | void { }
 
     public static resolveInitialFieldValues<T_Blueprint extends Foundations.Blueprint>(
         blueprint: T_Blueprint,
@@ -98,32 +98,32 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
 
     protected AbortablePromise<T>(
         executor: (
-            resolve: (value: T) => void, 
+            resolve: (value: T) => void,
             reject: (reason?: any) => void,
             signal: AbortSignal
         ) => void
     ): Promise<T> {
         const signal = this.context.abortController.signal;
-        
-        if(signal.aborted)
+
+        if (signal.aborted)
             return Promise.reject(signal.reason);
 
         return new Promise<T>((resolve, reject,) => {
             const onAbort = () => reject(signal.reason);
 
             signal.addEventListener("abort", onAbort, { once: true });
-            
+
             executor(
-              (value) => { signal.removeEventListener("abort", onAbort); resolve(value); },
-              (reason) => { signal.removeEventListener("abort", onAbort); reject(reason); },
-              signal
+                (value) => { signal.removeEventListener("abort", onAbort); resolve(value); },
+                (reason) => { signal.removeEventListener("abort", onAbort); reject(reason); },
+                signal
             );
         })
     }
 }
 
-export abstract class RuntimeRouterNode<T_Blueprint extends Foundations.Blueprint> extends RuntimeNode<T_Blueprint>{
-    
+export abstract class RuntimeRouterNode<T_Blueprint extends Foundations.Blueprint> extends RuntimeNode<T_Blueprint> {
+
     public readonly isRouterNode: true = true;
 
     constructor(

@@ -9,7 +9,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;
 
-    
+
 
     protected override async onRun(
         context: ExecutionContext,

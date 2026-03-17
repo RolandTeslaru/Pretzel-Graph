@@ -11,7 +11,7 @@ import { AxiosService } from "src/axios";
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    
+
 
     private responseMessageId: Chat.Message.Id | null = null;
     private chatId: Chat.Id | null = null;
@@ -70,7 +70,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     responseMessageId: responseMessage.id,
                     content
                 })
-            } )
+            })
         }
     }
 
@@ -93,13 +93,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 .join("");
 
 
-        if(this.responseMessageId && this.chatId){
+        if (this.responseMessageId && this.chatId) {
             this.emit<Chat.Event.ResponseFinished>({
-                type:              "response:finished",
-                channel:           Chat.Event.getChannel(this.chatId!),
+                type: "response:finished",
+                channel: Chat.Event.getChannel(this.chatId!),
                 responseMessageId: this.responseMessageId!,
-                finalContent:      content,
-                chatId:            this.chatId!,
+                finalContent: content,
+                chatId: this.chatId!,
             })
 
             await Chat.API.Message.update(AxiosService.api, {
