@@ -7,6 +7,7 @@ import { shallow } from "zustand/shallow";
 import { createExecutionSessionSDKActions, type ExecutionSessionSDKActions } from "./actions";
 import { RealtimeSDK } from "../Realtime/sdk";
 import { _createExecutionSessionReducers_, type _ExecutionSessionReducers } from "./reducers";
+import { cloneDeep } from "lodash";
 
 @SDK("ExecutionSession")
 export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> {
@@ -15,7 +16,7 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
 
     public readonly useStore: BaseSDK.Store<ExecutionSessionSDK.State> = createWithEqualityFn(
         immer<ExecutionSessionSDK.State>(() => ({
-            session: ExecutionSession.INITIAL,
+            session: cloneDeep(ExecutionSession.INITIAL),
         })),
         shallow
     )
@@ -56,6 +57,13 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
         }
         else if (event.type === "node:error") {
             this.actions.session.setNodeStatus(event.nodeId, { status: "failed", error: event.error, completed_at: new Date().toISOString() })
+        }
+        else if (event.type === "update") {
+            if (event.update.edge_state) {
+                this.setState(s => {
+                    Object.assign(s.session.edge_state, event.update.edge_state);
+                });
+            }
         }
     }
 }

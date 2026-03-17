@@ -33,6 +33,10 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
             }
 
             ExecutionSessionSDK.actions.session.clearAllNodeStatuses();
+            ExecutionSessionSDK.setState(s => {
+                s.session.edge_state = {};
+                s.session.node_outputs = {};
+            });
 
             const executionPromise = Orchestrator.API.run(
                 api,

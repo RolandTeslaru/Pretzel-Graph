@@ -9,7 +9,6 @@ import { Workflow } from '@vx-agent-editor/shared/domain';
 import { NodeToolbar, Position } from '@xyflow/react';
 import { NodeCustomToolbar } from './CustomToolbar';
 import { cn } from '@/utils/styleUtils';
-import { OrchestratorSDK } from '@/SDKs/OrchestratorSDK/sdk';
 import { ExecutionSessionSDK } from '@/SDKs/ExecutionSessionSDK/sdk';
 
 const WorkbenchNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
@@ -36,12 +35,12 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
   let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
 
-  const executionStatus = ExecutionSessionSDK.useStore(s => s.session.node_status[node.id]);
+  const nodeStatus = ExecutionSessionSDK.useStore(s => s.session.node_status[node.id]);
 
 
   if (node.accent) {
-    backgroundColor = `color-mix(in srgb, ${node.accent} 22%, var(--card))`;
-    borderColor = `color-mix(in srgb, ${node.accent} 50%, var(--border))`;
+    backgroundColor = `color-mix(in srgb, var(--${node.accent}) 22%, var(--card))`;
+    borderColor = `color-mix(in srgb, var(--${node.accent}) 50%, var(--border))`;
   }
 
 
@@ -61,7 +60,7 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
       )}
         style={{ backgroundColor, borderColor }}
       >
-        <NodeHeader executionStatus={executionStatus} node={node} isWorkflowLocked={isWorkflowLocked} />
+        <NodeHeader executionStatus={nodeStatus} node={node} isWorkflowLocked={isWorkflowLocked} />
 
         {node.isMinimized === false &&
           <div className='pt-1 bg-card/80 border border-border/50 rounded-b-[22px] rounded-t-lg shadow-sm shadow-black/10'>
@@ -70,7 +69,53 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
           </div>
         }
 
-        {/* <div className='absolute z-[-1] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-4xl duration-500 bg-sky-300/80   animate-ping-fixed-50 pointer-events-none' /> */}
+{/* Status Border */}
+        {nodeStatus?.status && nodeStatus.status !== "idle" && nodeStatus.status !== "failed" && (
+          <div
+            className={cn(
+              'absolute z-[-1] rounded-4xl pointer-events-none overflow-hidden',
+              nodeStatus.status === "waiting" && "animate-pulse",
+            )}
+            style={{ inset: -7 }}
+          >
+            {/* Gradient fill / spinning beam */}
+            <div
+              className="absolute inset-0"
+              style={nodeStatus.status === "running" ? {
+                background: "conic-gradient(from 0deg, transparent 60%, var(--status-active) 80%, var(--status-active) 90%, transparent 100%)",
+                animation: "spin 1.5s linear infinite",
+                inset: "-40%",
+              } : {
+                background: nodeStatus.status === "completed"
+                  ? "var(--status-success)"
+                  : nodeStatus.status === "waiting"
+                    ? "var(--status-waiting)"
+                    : "transparent",
+                opacity: 0.6,
+              }}
+            />
+            {/* Inner mask to hollow out the center */}
+   
+          </div>
+        )}
+
+        {/* Failed ping border */}
+        {nodeStatus?.status === "failed" && (
+          <>
+            <div
+              className="absolute z-[-1] rounded-4xl pointer-events-none"
+              style={{ inset: -7, background: "var(--destructive)", opacity: 0.6 }}
+            />
+            <div
+              className="absolute z-[-1] rounded-4xl pointer-events-none animate-ping-fixed-10"
+              style={{ inset: -7, background: "var(--destructive)", opacity: 0.6 }}
+            />
+            <div
+              className="absolute z-[-1] rounded-[calc(2rem-3px)] pointer-events-none"
+              style={{  background: backgroundColor }}
+            />
+          </>
+        )}
 
       </div>
     </>

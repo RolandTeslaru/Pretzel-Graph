@@ -1,6 +1,7 @@
 import { CompilationResult } from "./compiler";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { ExecutionSession, Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
+import { z } from "zod";
 import { RuntimeNode, RuntimeRouterNode } from "./node"
 import { ExecutionContext } from "./context";
 import { S2Engine, S2Hooks } from "./S2";
@@ -88,9 +89,9 @@ export class AggexEngine {
     }
 
 
-    public async run(
-        { compiledGraph, context, nodeInstanceMap }: CompilationResult
-    ) {
+    public async run({ 
+        compiledGraph, context, nodeInstanceMap 
+    }: CompilationResult) {
         this.s2Engine = new S2Engine();
 
         const channel = ExecutionSession.Event.getChannel(context.session.id)
@@ -99,6 +100,62 @@ export class AggexEngine {
             onVertexFired: (vertexId) => {
                 const entry = nodeInstanceMap.get(vertexId);
                 if (!entry) return;
+
+                // Set all incoming (dependency) edges to completed
+                const incomingEdges = context.workflowCache.incomingEdgesMap[entry.wfNode.id];
+                if (incomingEdges) {
+                    context.updateSession(d => {
+                        if (!d.edge_state) d.edge_state = {};
+                        for (const edgeId of Object.values(incomingEdges)) {
+                            if (d.edge_state[edgeId]) {
+                                d.edge_state[edgeId].status = "completed";
+                            }
+                        }
+                    });
+
+                    const edgeStateUpdate: ExecutionSession["edge_state"] = {};
+                    for (const edgeId of Object.values(incomingEdges)) {
+                        if (context.session.edge_state[edgeId]) {
+                            edgeStateUpdate[edgeId] = context.session.edge_state[edgeId];
+                        }
+                    }
+
+                    context.emit<z.infer<typeof ExecutionSession.Event.Update>>({
+                        executionSessionId: context.session.id,
+                        workflowId: context.workflow.id,
+                        type: "update",
+                        channel,
+                        update: { edge_state: edgeStateUpdate },
+                    });
+                }
+
+                // Set all outgoing edges to preparing
+                const outgoingEdgesFired = context.workflowCache.outgoingEdgesMap[entry.wfNode.id];
+                if (outgoingEdgesFired) {
+                    context.updateSession(d => {
+                        if (!d.edge_state) d.edge_state = {};
+                        for (const edgeId of Object.values(outgoingEdgesFired)) {
+                            if (!d.edge_state[edgeId]) {
+                                d.edge_state[edgeId] = { status: "preparing", runCount: 0 };
+                            } else {
+                                d.edge_state[edgeId].status = "preparing";
+                            }
+                        }
+                    });
+
+                    const preparingUpdate: ExecutionSession["edge_state"] = {};
+                    for (const edgeId of Object.values(outgoingEdgesFired)) {
+                        preparingUpdate[edgeId] = context.session.edge_state[edgeId];
+                    }
+
+                    context.emit<z.infer<typeof ExecutionSession.Event.Update>>({
+                        executionSessionId: context.session.id,
+                        workflowId: context.workflow.id,
+                        type: "update",
+                        channel,
+                        update: { edge_state: preparingUpdate },
+                    });
+                }
 
                 context.emit<ExecutionSession.Event.Node.Started>({
                     workflowId: context.workflow.id,
@@ -119,6 +176,34 @@ export class AggexEngine {
                 if (!entry) return;
 
                 const output = context.session.node_outputs[entry.wfNode.id];
+
+                // Set all outgoing edges to waiting and increment runCount
+                const outgoingEdges = context.workflowCache.outgoingEdgesMap[entry.wfNode.id];
+                if (outgoingEdges) {
+                    context.updateSession(d => {
+                        if (!d.edge_state) d.edge_state = {};
+                        for (const edgeId of Object.values(outgoingEdges)) {
+                            if (!d.edge_state[edgeId]) {
+                                d.edge_state[edgeId] = { status: "waiting", runCount: 0 };
+                            }
+                            d.edge_state[edgeId].status = "waiting";
+                            d.edge_state[edgeId].runCount += 1;
+                        }
+                    });
+
+                    const edgeStateUpdate: ExecutionSession["edge_state"] = {};
+                    for (const edgeId of Object.values(outgoingEdges)) {
+                        edgeStateUpdate[edgeId] = context.session.edge_state[edgeId];
+                    }
+
+                    context.emit<z.infer<typeof ExecutionSession.Event.Update>>({
+                        executionSessionId: context.session.id,
+                        workflowId: context.workflow.id,
+                        type: "update",
+                        channel,
+                        update: { edge_state: edgeStateUpdate },
+                    });
+                }
 
                 context.emit<ExecutionSession.Event.Node.Completed>({
                     executionSessionId: context.session.id,

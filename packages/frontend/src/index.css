@@ -90,7 +90,7 @@ code {
   --accent: theme(--color-neutral-300);
   --accent-foreground: theme(--color-neutral-700);
 
-  --destructive: theme(--color-red-600);
+  --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
   --border: theme(--color-stone-300);
 
@@ -99,11 +99,6 @@ code {
   --input: theme(--color-neutral-50);
 
 
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.875rem;
 
 
@@ -111,22 +106,13 @@ code {
   --canvas: #F2EEEB;
   --canvas-dot: #8f867f;
 
-  --node-bg-mix: 22%;
-  --node-border-mix: 50%;
 
-  /* Status colors */
-  --status-green: oklch(0.55 0.18 145);
-  --status-red: oklch(0.55 0.22 25);
-  --status-yellow: oklch(0.70 0.15 85);
-  --status-gray: oklch(0.55 0.01 50);
-  --status-blue: oklch(0.55 0.18 240);
+  /* Execution status colors */
+  --status-active: theme(--color-cyan-400);
+  --status-success: theme(--color-emerald-400);
+  --status-waiting: theme(--color-amber-400);
 
-  /* Error states */
-  --error: oklch(0.577 0.245 27.325);
-  --error-background: #FDECEA;
-  --error-foreground: oklch(0.4 0.2 27);
-  --error-red: oklch(0.55 0.24 27);
-  --error-red-border: oklch(0.65 0.22 27);
+
 
   /* Success states */
   --success-background: var(--color-green-100);
@@ -144,27 +130,28 @@ code {
 
 
   --port-Message: theme(--color-blue-400);
-  --port-Message-foreground: theme(--color-blue-500);
+  --port-Message-foreground: theme(--color-blue-400);
   --port-Message-accent: theme(--color-blue-200);
 
 
   --port-MessageList: theme(--color-indigo-400);
-  --port-MessageList-foreground: theme(--color-indigo-500);
+  --port-MessageList-foreground: theme(--color-indigo-400);
   --port-MessageList-accent: theme(--color-indigo-200);
+  
   --port-LanguageModel: theme(--color-fuchsia-400);
-  --port-LanguageModel-foreground: theme(--color-fuchsia-500);
+  --port-LanguageModel-foreground: theme(--color-fuchsia-400);
   --port-LanguageModel-accent: theme(--color-fuchsia-200);
 
   --port-Tool: theme(--color-cyan-400);
-  --port-Tool-foreground: theme(--color-cyan-500);
+  --port-Tool-foreground: theme(--color-cyan-400);
   --port-Tool-accent: theme(--color-cyan-200);
 
   --port-Embeddings: theme(--color-emerald-400);
-  --port-Embeddings-foreground: theme(--color-emerald-500);
+  --port-Embeddings-foreground: theme(--color-emerald-300);
   --port-Embeddings-accent: theme(--color-emerald-200);
 
   --port-DataFrame: theme(--color-red-400);
-  --port-DataFrame-foreground: theme(--color-red-500);
+  --port-DataFrame-foreground: theme(--color-red-300);
   --port-DataFrame-accent: theme(--color-red-200);
 
   --port-Text: theme(--color-slate-500);
@@ -192,11 +179,11 @@ code {
   --port-Data-accent: theme(--color-red-400);
 
   --port-VectorStore: theme(--color-amber-400);
-  --port-VectorStore-foreground: theme(--color-yellow-600);
+  --port-VectorStore-foreground: theme(--color-yellow-400);
   --port-VectorStore-accent: theme(--color-yellow-200);
 
   --port-Retriever: theme(--color-yellow-400);
-  --port-Retriever-foreground: theme(--color-yellow-500);
+  --port-Retriever-foreground: theme(--color-yellow-400);
   --port-Retriever-accent: theme(--color-yellow-200);
 
   --port-Integer: theme(--color-purple-500);
@@ -208,52 +195,10 @@ code {
 
   --port-Unresolved: theme(--color-gray-500);
   --port-Unresolved-foreground: theme(--color-gray-500);
+  --port-Unresolved-accent: theme(--color-gray-300);
 
+  --group-routing: theme(--color-neutral-300);
 
-  --group-routing: var(--secondary);
-
-  /* Note colors */
-  --note-amber: oklch(0.88 0.10 70);
-  --note-neutral: oklch(0.88 0.01 50);
-  --note-rose: oklch(0.88 0.10 10);
-  --note-blue: oklch(0.88 0.10 240);
-  --note-lime: oklch(0.88 0.10 130);
-
-  /* Neon/futuristic colors */
-  --neon-fuschia: oklch(0.65 0.28 320);
-  --digital-orchid: oklch(0.60 0.25 300);
-  --plasma-purple: oklch(0.55 0.25 290);
-  --electric-blue: oklch(0.60 0.25 240);
-  --holo-frost: oklch(0.88 0.06 200);
-  --terminal-green: oklch(0.65 0.2 145);
-  --cosmic-void: oklch(0.15 0.02 50);
-
-  /* Additional custom colors */
-  --build-trigger: oklch(0.55 0.2 50);
-  --chat-trigger: oklch(0.60 0.18 50);
-  --chat-trigger-disabled: oklch(0.70 0.05 50);
-  --chat-bot-icon: oklch(0.55 0.18 50);
-  --chat-user-icon: oklch(0.60 0.15 200);
-  --code-background: #1E1410;
-  --code-foreground: oklch(0.88 0.04 50);
-  --code-description-background: #2A1E18;
-  --placeholder: #B8A090;
-  --placeholder-foreground: #8B7263;
-  --tooltip: #2C1810;
-  --tooltip-foreground: #FAF5F0;
-  --ice: oklch(0.88 0.06 200);
-  --filter-foreground: #3D2117;
-  --filter-background: #EDE0D4;
-  --beta-background: oklch(0.50 0.2 50);
-  --beta-foreground: oklch(0.98 0.02 50);
-  --beta-foreground-soft: oklch(0.85 0.06 50);
-  --primary-hover: theme(--color-orange-600);
-  --secondary-hover: #E0D0C0;
-  --slider-input-border: #D4BFAE;
-  --zinc-foreground: #5C4A3A;
-  --red-foreground: oklch(0.4 0.2 27);
-  --indigo-foreground: oklch(0.4 0.18 264);
-  --discord-color: oklch(0.55 0.18 264);
 
   --radius-xs: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -264,13 +209,6 @@ code {
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  /* Gradient colors */
-  --color-bg1: rgb(248, 240, 232);
-  --color1: 180, 120, 80;
-  --color2: 220, 140, 100;
-  --color3: 255, 165, 100;
-  --color-interactive: 200, 120, 60;
-  --circle-size: 50%;
   --blending: hard-light;
 
   /* Font families */
@@ -297,7 +235,7 @@ code {
   --muted-foreground: theme(--color-neutral-400);
   --accent: theme(--color-neutral-700);
   --accent-foreground: theme(--color-white);
-  --destructive: theme(--color-red-600);
+  --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
   --border: theme(--color-stone-700);
 
@@ -311,25 +249,13 @@ code {
   /* Dark mode custom variables */
   --canvas: oklch(0.18 0.01 264);
   --canvas-dot: oklch(0.35 0.015 264);
-  --selected: oklch(0.55 0.25 264);
-  --hover: oklch(0.22 0.015 264);
-  --node-ring: oklch(0.6 0.2 264);
-  --node-selected: oklch(0.55 0.25 264);
+
+
 
   --node-bg-mix: 20%;
   --node-border-mix: 50%;
 
-  --error-background: oklch(0.25 0.08 27);
-  --error-foreground: oklch(0.75 0.2 27);
-
-  --success-background: oklch(0.25 0.08 145);
-  --success-foreground: oklch(0.75 0.18 145);
-
-  --info-background: oklch(0.25 0.08 240);
-  --info-foreground: oklch(0.75 0.18 240);
-
-  --warning-background: oklch(0.25 0.08 85);
-  --warning-foreground: oklch(0.75 0.15 85);
+  --group-routing: theme(--color-neutral-500);
 
   --placeholder: oklch(0.4 0.01 264);
   --placeholder-foreground: oklch(0.6 0.01 264);
@@ -339,13 +265,7 @@ code {
   --primary-hover: theme(--color-amber-500);
   --secondary-hover: oklch(0.3 0.02 264);
 
-  /* Dark gradient colors */
-  --color-bg1: rgb(0, 0, 0);
-  --color1: 156, 138, 236;
-  --color2: 255, 130, 184;
-  --color3: 255, 165, 100;
-  --color-interactive: 140, 100, 255;
-  --circle-size: 60%;
+
   --blending: hard-light;
 }
 
@@ -354,38 +274,6 @@ code {
   --font-mono: 'Geist Mono', 'Geist Mono Fallback', 'Courier New', monospace;
   --font-chivo: 'Chivo', system-ui, sans-serif;
 
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
