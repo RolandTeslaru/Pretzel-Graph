@@ -11,7 +11,7 @@ import { ExecutionContext } from './context';
 
 @singleton()
 export class AggexWorkerImpl {
-    constructor() {}
+    constructor() { }
 
     private compiler = new WorkflowCompiler();
     private runningEngines = new Map<Orchestrator.Job.Id, AggexEngine>();
@@ -72,7 +72,7 @@ export class AggexWorkerImpl {
 
         try {
             // Catch abort rejections from the orphaned engine promise
-            const enginePromise = engine.run(compilationResult).catch(() => {});
+            const enginePromise = engine.run(compilationResult).catch(() => { });
 
             const result = await Promise.race([
                 enginePromise.then(() => 'completed' as const),

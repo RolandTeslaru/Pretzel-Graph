@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
-import NodeHandle from '../Handle'
+import { Port } from '../Port'
 import { cn } from '@/utils/styleUtils'
 
 interface NodeOutputProps {
@@ -10,13 +10,13 @@ interface NodeOutputProps {
   isFlipped?: boolean
 }
 
-const NodeOutput: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFlipped }) => {
+const OutputPort: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFlipped }) => {
   return (
     <div className={cn("relative w-full flex items-center h-8", isFlipped ? "justify-start pl-1" : "justify-end pr-1")}>
       <div className={cn("text-sm font-medium text-foreground", isFlipped ? "ml-4" : "mr-4")}>
         {output.displayName ?? output.id}
       </div>
-      <NodeHandle
+      <Port
         type="source"
         isWorkflowLocked={isWorkflowLocked}
         port={output}
@@ -44,7 +44,7 @@ const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped }) => 
   return (
     <div className="relative flex flex-col gap-1 py-1">
       {outputs.map((output) => (
-        <NodeOutput
+        <OutputPort
           key={output.id}
           node={node}
           isWorkflowLocked={isWorkflowLocked}

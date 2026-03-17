@@ -36,7 +36,7 @@ const isValidConnectionCallback = (conn: Connection | Edge) => {
     );
 }
 
-const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, isFlipped }) => {
+export const Port: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, isFlipped }) => {
     const defaultPosition = type === "target" ? Position.Left : Position.Right;
     const flippedPosition = type === "target" ? Position.Right : Position.Left;
     const position = isFlipped ? flippedPosition : defaultPosition;
@@ -107,13 +107,13 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, isF
                             // Glow only if hovered OR if actively dragging a compatible connection
                             !isNullHandle && (isDraggedHandleCompatible
                                 ? `w-4 h-4 border-white!
-                                
-                                
-                                    shadow-[0_0_8px_2px_var(--tw-ring-color),0_0_20px_4px_var(--tw-ring-color),0_0_40px_8px_var(--tw-ring-color),0_0_60px_10px_var(--tw-ring-color)] 
+                                    shadow-[0_0_4px_1px_var(--tw-ring-color),0_0_10px_3px_var(--tw-ring-color),0_0_20px_5px_var(--tw-ring-color)]
+                                    dark:shadow-[0_0_8px_2px_var(--tw-ring-color),0_0_20px_4px_var(--tw-ring-color),0_0_40px_8px_var(--tw-ring-color),0_0_60px_10px_var(--tw-ring-color)]
                                     `
                                 : `
                                 group-hover:w-4 group-hover:h-4 hover:border-white!
-                                    group-hover:shadow-[0_0_8px_2px_var(--tw-ring-color),0_0_20px_4px_var(--tw-ring-color),0_0_40px_8px_var(--tw-ring-color),0_0_60px_10px_var(--tw-ring-color)]`
+                                    group-hover:shadow-[0_0_4px_1px_var(--tw-ring-color),0_0_10px_3px_var(--tw-ring-color),0_0_20px_5px_var(--tw-ring-color)]
+                                    dark:group-hover:shadow-[0_0_8px_2px_var(--tw-ring-color),0_0_20px_4px_var(--tw-ring-color),0_0_40px_8px_var(--tw-ring-color),0_0_60px_10px_var(--tw-ring-color)]`
                             )
                         )}
                         style={{
@@ -137,5 +137,3 @@ const NodeHandle: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, isF
         </Tooltip.Root>
     )
 }
-
-export default NodeHandle

@@ -1,7 +1,7 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { LC } from "./langchain";
+import { LC } from "../langchain";
 import { Foundations } from "@vx-agent-editor/shared/domain";
-import { SynthesizerCoercionError, SynthesizerError } from "./errors";
+import { SynthesizerCoercionError, SynthesizerError } from "../errors";
 
 export class Synthesizer {
 

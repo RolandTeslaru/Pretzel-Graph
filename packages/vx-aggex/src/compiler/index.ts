@@ -1,15 +1,15 @@
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { Foundations, ExecutionSession, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { CatalogueService } from "src/services/Catalogue/service";
-import { PretzelCompilerError } from "./errors";
-import { RuntimeNode } from "./node";
-import { Emitter } from "./event/emitter";
-import { StreamController } from "./StreamController";
-import { S2Graph, Vertex } from "./S2/graph";
-import { ExecutionContext, createExecutionContext } from "./context";
+import { PretzelCompilerError } from "../errors";
+import { RuntimeNode } from "../node";
+import { Emitter } from "../event/emitter";
+import { StreamController } from "../context/stream-controller";
+import { S2Graph, Vertex } from "../S2/graph";
+import { ExecutionContext, createExecutionContext } from "../context";
 import { load } from "@langchain/core/load";
 import { BaseMessage } from "@langchain/core/messages";
-import { InferFields } from "./types";
+import { InferFields } from "../types";
 
 const START = "__START__" as Vertex.Id;
 
@@ -76,11 +76,9 @@ export class WorkflowCompiler {
 
             nodeInstanceMap.set(vertexId, { wfNode, instance: nodeInstance });
 
-            console.log("COMPILING NODE ", wfNode.id, " ", JSON.stringify(wfNode.fields, null, 2))
-
             const fieldValues = resolveFields(wfNode.id, workflow);
 
-            if(Object.hasOwn(fieldValues, "strategy"))
+            if (Object.hasOwn(fieldValues, "strategy"))
                 graph.setVertexStrategy(
                     vertexId,
                     // @ts-expect-error
@@ -127,9 +125,9 @@ export class WorkflowCompiler {
 
 
 function resolveFields<T_Blueprint extends Foundations.Blueprint>(
-        nodeId: Workflow.Node.Id,
-        workflow: Workflow
-    ): InferFields<T_Blueprint> {
+    nodeId: Workflow.Node.Id,
+    workflow: Workflow
+): InferFields<T_Blueprint> {
     const node = workflow.data.nodes[nodeId];
     const staticValues = workflow.data.staticValues[nodeId] ?? {};
 
