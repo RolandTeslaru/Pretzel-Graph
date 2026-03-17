@@ -10,7 +10,7 @@ This file provides guidance and context when working with code in this repositor
 - `packages/frontend/`: React 19 + Vite + XYFlow graph editor. State management via Zustand + Zundo (Undo/Redo) using a typed SDK pattern.
 - `packages/backend/`: Express 5 + WebSocket + BullMQ. Handles workflow CRUD, shelf catalogs, and orchestrator triggers.
 - `packages/shared/`: Domain models (Zod schemas) used by all packages (e.g., `Workflow`, `Foundations`, `Vault`, `Orchestrator`).
-- `packages/vx-aggex/`: Workflow execution engine relying on LangChain + LangGraph. Handles workflow compilation and DAG execution node-by-node.
+- `packages/worker/`: Workflow execution engine relying on LangChain + LangGraph. Handles workflow compilation and DAG execution node-by-node.
 
 ## Architecture Highlights
 
@@ -49,7 +49,7 @@ npm run build  # TypeScript compile
 npm start      # Run compiled backend
 ```
 
-**Execution Engine (`vx-aggex`):**
+**Execution Engine (`worker`):**
 ```bash
 npm run dev               # Run index + server concurrently (watch mode)
 npm run build             # TypeScript compile

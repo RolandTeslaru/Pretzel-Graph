@@ -1,5 +1,5 @@
 {
-    "name": "@vx-agent-builder/vx-aggex",
+    "name": "@vx-agent-builder/worker",
     "version": "1.0.0",
     "description": "Vexr Agentic Graph Execution Engine based on LangGraph",
     "main": "dist/index.js",
