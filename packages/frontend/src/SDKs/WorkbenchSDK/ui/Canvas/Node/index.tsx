@@ -10,6 +10,7 @@ import { NodeToolbar, Position } from '@xyflow/react';
 import { NodeCustomToolbar } from './CustomToolbar';
 import { cn } from '@/utils/styleUtils';
 import { ExecutionSessionSDK } from '@/SDKs/ExecutionSessionSDK/sdk';
+import { StatusBorder } from './StatusBorder';
 
 const WorkbenchNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const node = WorkbenchSDK.useStore(s => s.workflow.data.nodes[props.id as Workflow.Node.Id])
@@ -69,53 +70,9 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
           </div>
         }
 
-{/* Status Border */}
-        {nodeStatus?.status && nodeStatus.status !== "idle" && nodeStatus.status !== "failed" && (
-          <div
-            className={cn(
-              'absolute z-[-1] rounded-4xl pointer-events-none overflow-hidden',
-              nodeStatus.status === "waiting" && "animate-pulse",
-            )}
-            style={{ inset: -7 }}
-          >
-            {/* Gradient fill / spinning beam */}
-            <div
-              className="absolute inset-0"
-              style={nodeStatus.status === "running" ? {
-                background: "conic-gradient(from 0deg, transparent 60%, var(--status-active) 80%, var(--status-active) 90%, transparent 100%)",
-                animation: "spin 1.5s linear infinite",
-                inset: "-40%",
-              } : {
-                background: nodeStatus.status === "completed"
-                  ? "var(--status-success)"
-                  : nodeStatus.status === "waiting"
-                    ? "var(--status-waiting)"
-                    : "transparent",
-                opacity: 0.6,
-              }}
-            />
-            {/* Inner mask to hollow out the center */}
-   
-          </div>
-        )}
 
-        {/* Failed ping border */}
-        {nodeStatus?.status === "failed" && (
-          <>
-            <div
-              className="absolute z-[-1] rounded-4xl pointer-events-none"
-              style={{ inset: -7, background: "var(--destructive)", opacity: 0.6 }}
-            />
-            <div
-              className="absolute z-[-1] rounded-4xl pointer-events-none animate-ping-fixed-10"
-              style={{ inset: -7, background: "var(--destructive)", opacity: 0.6 }}
-            />
-            <div
-              className="absolute z-[-1] rounded-[calc(2rem-3px)] pointer-events-none"
-              style={{  background: backgroundColor }}
-            />
-          </>
-        )}
+
+        <StatusBorder status={nodeStatus?.status} backgroundColor={backgroundColor} />
 
       </div>
     </>

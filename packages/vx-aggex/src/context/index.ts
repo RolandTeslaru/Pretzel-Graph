@@ -1,5 +1,5 @@
 import { ExecutionSession, Orchestrator, Workflow } from "@vx-agent-editor/shared/domain"
-import { StreamController } from "./StreamController";
+import { StreamController } from "./stream-controller";
 import { Emitter } from "src/event/emitter";
 import { produce } from "immer";
 

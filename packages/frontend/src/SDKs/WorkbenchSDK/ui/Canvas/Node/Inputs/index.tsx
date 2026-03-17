@@ -1,7 +1,7 @@
 import React, { memo, useMemo } from 'react'
 import { WorkbenchSDK } from '../../../../sdk'
 import { Workflow, Foundations } from '@vx-agent-editor/shared/domain';
-import NodeHandle from '../Handle'
+import { Port } from '../Port'
 import { InputRenderer } from '../../../InputRenderer';
 
 const InputPort: React.FC<{
@@ -17,7 +17,7 @@ const InputPort: React.FC<{
 
     return (
         <div className="w-full relative px-3">
-            <NodeHandle
+            <Port
                 type="target"
                 isWorkflowLocked={isWorkflowLocked}
                 port={input}

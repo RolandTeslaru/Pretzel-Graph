@@ -19,6 +19,7 @@ export const Blueprint = defineBlueprint({
         InputBuilder.LanguageModel({
             id: "languageModel",
             displayName: "Language Model",
+            required: true
         }),
         InputBuilder.Message({
             id: "input",

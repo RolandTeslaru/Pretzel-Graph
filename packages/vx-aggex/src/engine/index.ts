@@ -1,12 +1,12 @@
-import { CompilationResult } from "./compiler";
+import { CompilationResult } from "../compiler";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { ExecutionSession, Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { z } from "zod";
-import { RuntimeNode, RuntimeRouterNode } from "./node"
-import { ExecutionContext } from "./context";
-import { S2Engine, S2Hooks } from "./S2";
-import { Vertex } from "./S2/graph";
-import { Synthesizer } from "./synthesizer";
+import { RuntimeNode, RuntimeRouterNode } from "../node"
+import { S2Engine, S2Hooks } from "../S2/engine";
+import { Vertex } from "../S2/graph";
+import { Synthesizer } from "../synthesizer";
+import { ExecutionContext } from "../context";
 
 export class AggexEngine {
     private s2Engine: S2Engine | null = null;
@@ -89,8 +89,8 @@ export class AggexEngine {
     }
 
 
-    public async run({ 
-        compiledGraph, context, nodeInstanceMap 
+    public async run({
+        compiledGraph, context, nodeInstanceMap
     }: CompilationResult) {
         this.s2Engine = new S2Engine();
 

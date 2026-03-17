@@ -132,70 +132,87 @@ code {
   --port-Message: theme(--color-blue-400);
   --port-Message-foreground: theme(--color-blue-400);
   --port-Message-accent: theme(--color-blue-200);
+  --port-Message-glow: theme(--color-blue-600);
 
 
   --port-MessageList: theme(--color-indigo-400);
   --port-MessageList-foreground: theme(--color-indigo-400);
   --port-MessageList-accent: theme(--color-indigo-200);
-  
+  --port-MessageList-glow: theme(--color-indigo-600);
+
   --port-LanguageModel: theme(--color-fuchsia-400);
   --port-LanguageModel-foreground: theme(--color-fuchsia-400);
   --port-LanguageModel-accent: theme(--color-fuchsia-200);
+  --port-LanguageModel-glow: theme(--color-fuchsia-600);
 
   --port-Tool: theme(--color-cyan-400);
   --port-Tool-foreground: theme(--color-cyan-400);
   --port-Tool-accent: theme(--color-cyan-200);
+  --port-Tool-glow: theme(--color-cyan-600);
 
   --port-Embeddings: theme(--color-emerald-400);
   --port-Embeddings-foreground: theme(--color-emerald-300);
   --port-Embeddings-accent: theme(--color-emerald-200);
+  --port-Embeddings-glow: theme(--color-emerald-600);
 
   --port-DataFrame: theme(--color-red-400);
   --port-DataFrame-foreground: theme(--color-red-300);
   --port-DataFrame-accent: theme(--color-red-200);
+  --port-DataFrame-glow: theme(--color-red-600);
 
   --port-Text: theme(--color-slate-500);
   --port-Text-foreground: theme(--color-slate-400);
   --port-Text-accent: theme(--color-slate-200);
+  --port-Text-glow: theme(--color-slate-600);
 
   --port-Memory: theme(--color-orange-500);
   --port-Memory-foreground: theme(--color-orange-100);
   --port-Memory-accent: theme(--color-orange-200);
+  --port-Memory-glow: theme(--color-orange-600);
 
   --port-File: theme(--color-lime-500);
   --port-File-foreground: theme(--color-lime-100);
   --port-File-accent: theme(--color-lime-400);
+  --port-File-glow: theme(--color-lime-600);
 
   --port-Json: theme(--color-amber-500);
   --port-Json-foreground: theme(--color-amber-100);
   --port-Json-accent: theme(--color-amber-400);
+  --port-Json-glow: theme(--color-amber-600);
 
   --port-Document: theme(--color-lime-400);
   --port-Document-foreground: theme(--color-lime-500);
   --port-Document-accent: theme(--color-lime-200);
+  --port-Document-glow: theme(--color-lime-600);
 
   --port-Data: theme(--color-red-500);
   --port-Data-foreground: theme(--color-red-100);
   --port-Data-accent: theme(--color-red-400);
+  --port-Data-glow: theme(--color-red-600);
 
   --port-VectorStore: theme(--color-amber-400);
   --port-VectorStore-foreground: theme(--color-yellow-400);
   --port-VectorStore-accent: theme(--color-yellow-200);
+  --port-VectorStore-glow: theme(--color-amber-600);
 
   --port-Retriever: theme(--color-yellow-400);
   --port-Retriever-foreground: theme(--color-yellow-400);
   --port-Retriever-accent: theme(--color-yellow-200);
+  --port-Retriever-glow: theme(--color-yellow-600);
 
   --port-Integer: theme(--color-purple-500);
   --port-Integer-foreground: theme(--color-purple-100);
   --port-Integer-accent: theme(--color-purple-400);
+  --port-Integer-glow: theme(--color-purple-600);
 
   --port-null: var(--secondary);
   --port-null-foreground: theme(--color-neutral-100);
+  --port-null-glow: var(--secondary);
 
   --port-Unresolved: theme(--color-gray-500);
   --port-Unresolved-foreground: theme(--color-gray-500);
   --port-Unresolved-accent: theme(--color-gray-300);
+  --port-Unresolved-glow: theme(--color-gray-600);
 
   --group-routing: theme(--color-neutral-300);
 
@@ -256,6 +273,25 @@ code {
   --node-border-mix: 50%;
 
   --group-routing: theme(--color-neutral-500);
+
+  /* Dark mode: glow uses the base port color (already vibrant on dark bg) */
+  --port-Message-glow: theme(--color-blue-400);
+  --port-MessageList-glow: theme(--color-indigo-400);
+  --port-LanguageModel-glow: theme(--color-fuchsia-400);
+  --port-Tool-glow: theme(--color-cyan-400);
+  --port-Embeddings-glow: theme(--color-emerald-400);
+  --port-DataFrame-glow: theme(--color-red-400);
+  --port-Text-glow: theme(--color-slate-400);
+  --port-Memory-glow: theme(--color-orange-400);
+  --port-File-glow: theme(--color-lime-400);
+  --port-Json-glow: theme(--color-amber-400);
+  --port-Document-glow: theme(--color-lime-400);
+  --port-Data-glow: theme(--color-red-400);
+  --port-VectorStore-glow: theme(--color-amber-400);
+  --port-Retriever-glow: theme(--color-yellow-400);
+  --port-Integer-glow: theme(--color-purple-400);
+  --port-null-glow: var(--secondary);
+  --port-Unresolved-glow: theme(--color-gray-400);
 
   --placeholder: oklch(0.4 0.01 264);
   --placeholder-foreground: oklch(0.6 0.01 264);

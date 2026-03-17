@@ -1,6 +1,6 @@
 import { Workflow } from '@vx-agent-editor/shared/domain'
 import React, { useMemo } from 'react'
-import NodeHandle from '../../Handle'
+import { Port } from '../../Port'
 
 interface Props {
     node: Workflow.Node
@@ -18,7 +18,7 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped, 
             <div className='flex flex-col h-auto my-auto gap-4'>
                 {inputs.map(input =>
                     <div className='h-2 relative' key={input.id}>
-                        <NodeHandle
+                        <Port
                             type="target"
                             port={input}
                             nodeId={node.id}
@@ -32,7 +32,7 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped, 
             <div className={`flex flex-col h-auto my-auto gap-4 relative ${isFlipped ? 'mr-auto' : 'ml-auto'}`}>
                 {node.outputs.map(output =>
                     <div className='h-2 relative' key={output.id}>
-                        <NodeHandle
+                        <Port
                             type="source"
                             port={output}
                             nodeId={node.id}
