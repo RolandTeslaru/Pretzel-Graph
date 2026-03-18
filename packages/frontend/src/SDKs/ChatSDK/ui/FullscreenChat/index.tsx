@@ -1,5 +1,6 @@
 import { ChatSDK } from '../../sdk'
 import { Input } from '@vx-agent-editor/vx-ui/foundations/input'
+import { ContextMenu } from '@vx-agent-editor/vx-ui/foundations'
 import type { Chat } from '@vx-agent-editor/shared/domain'
 import MessagesArea from '../ConversationArea'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
@@ -75,23 +76,33 @@ const ChatListItem = ({ chat }: { chat: Chat }) => {
     const formattedDate = formatChatDate(chat.created_at)
 
     return (
-        <div className='group flex items-start gap-2.5 px-3 py-2.5  hover:bg-secondary/60 active:bg-secondary/80 cursor-pointer transition-colors duration-150'
-            onClick={() => {
-                ChatSDK.actions.chat.load(chat.id);
-            }}
-
-        >
-
-            {/* Content */}
-            <div className='flex flex-row min-w-0 flex-1'>
-                <span className='text-sm font-medium text-foreground truncate leading-snug'>
-                    {chat.name}
-                </span>
-            </div>
-            <span className='text-xs my-auto h-auto text-muted-foreground leading-none'>
-                {formattedDate}
-            </span>
-        </div>
+        <ContextMenu.Root>
+            <ContextMenu.Trigger asChild>
+                <div className='group flex items-start gap-2.5 px-3 py-2.5  hover:bg-secondary/60 active:bg-secondary/80 cursor-pointer transition-colors duration-150'
+                    onClick={() => {
+                        ChatSDK.actions.chat.load(chat.id);
+                    }}
+                >
+                    <div className='flex flex-row min-w-0 flex-1'>
+                        <span className='text-sm font-medium text-foreground truncate leading-snug'>
+                            {chat.name}
+                        </span>
+                    </div>
+                    <span className='text-xs my-auto h-auto text-muted-foreground leading-none'>
+                        {formattedDate}
+                    </span>
+                </div>
+            </ContextMenu.Trigger>
+            <ContextMenu.Content>
+                <ContextMenu.Item
+                    variant="destructive"
+                    icon={<SystemIcons.Trash />}
+                    onClick={() => ChatSDK.actions.chat.erase(chat.id)}
+                >
+                    Delete
+                </ContextMenu.Item>
+            </ContextMenu.Content>
+        </ContextMenu.Root>
     )
 }
 

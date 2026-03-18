@@ -32,21 +32,29 @@ export class OrchestratorService {
         
         this.queueEvents.on("completed", async ({ jobId, returnvalue }) => {
             const result = typeof returnvalue === 'string' ? JSON.parse(returnvalue) : returnvalue;
+            
             const status = result?.status === 'terminated' ? 'terminated' : 'completed';
-            await this.dbOps.job.update(this.serviceSupabase, { jobId, status });
+
+            await this.dbOps.job.update(this.serviceSupabase, { jobId: jobId as Orchestrator.Job.Id, status });
         });
 
         this.queueEvents.on("failed", async ({ jobId, failedReason }) => {
-            if(failedReason === "terminated")
-                return;
+            const newStatus = failedReason === "terminated" ? "terminated" : "failed";
 
-            await this.dbOps.job.update(this.serviceSupabase, { jobId, status, error: failedReason });
+            await this.dbOps.job.update(
+                this.serviceSupabase, 
+                { 
+                    jobId: jobId as Orchestrator.Job.Id, 
+                    status: newStatus, 
+                    error: failedReason 
+                }
+            );
         });
     }
 
     private readonly dbOps = {
         job: {
-            create: async (supabase: SupabaseClient, { workflowId, userId }: { workflowId: string, userId: string }) => {
+            create: async (supabase: SupabaseClient, { workflowId, userId }: { workflowId: Workflow.Id, userId: Auth.User.Id }) => {
                 const jobId = crypto.randomUUID() as Orchestrator.Job.Id;
                 await supabase.from('jobs').insert({
                     id: jobId,
@@ -59,14 +67,19 @@ export class OrchestratorService {
                 });
                 return jobId;
             },
-            update: async (supabase: SupabaseClient, { jobId, status, error }: { jobId: string, status: string, error?: string }) => {
-                await supabase.from('jobs').update({
+            update: async (supabase: SupabaseClient, { jobId, status, error }: { jobId: Orchestrator.Job.Id, status: string, error?: string }) => {
+
+                console.log(`Updating jobs table for ${jobId} with status ${status}`)
+
+                const { error: supabaseError } = await supabase.from('jobs').update({
                     status,
                     error,
                     updated_at: new Date()
                 }).eq('id', jobId);
+
+                console.log("SUPABASE ERRROR ", supabaseError)
             },
-            delete: async (supabase: SupabaseClient, jobId: string) => {
+            delete: async (supabase: SupabaseClient, jobId: Orchestrator.Job.Id) => {
                 await supabase.from('jobs').delete().eq('id', jobId);
             }
         }
@@ -101,7 +114,7 @@ export class OrchestratorService {
                 executionSession
             };
 
-            await this.executionQueue.add('run', queueItem);
+            await this.executionQueue.add('run', queueItem, { jobId });
 
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);

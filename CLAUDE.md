@@ -87,6 +87,10 @@ Express server on port 3001 (configurable via `.env` `BACKEND_PORT`). Routes:
 ### Styling
 Tailwind CSS 4 with an extensive CSS variable system. Port types have dedicated colors (`--port-message`, `--port-str`, etc.) defined as CSS variables. Dark/light theme is class-based. Custom animations (`neonPulse`, `border-beam`, accordion transitions) are defined in `tailwind.config.ts`.
 
+## Conventions
+
+- **Dialogs/Confirmations**: Always use `DialogSDK.actions.push()` with `DialogSDK.Template` or `DialogSDK.AlertTemplate` to open dialogs. Do not use inline `AlertDialog.Root`/`Trigger`/`Content` patterns. See `VaultSDK/ui/VaultPanel.tsx` for examples.
+
 ## Key File Locations
 
 | Concern | Path |

@@ -90,7 +90,17 @@ export class ChatService {
                 return data ?? [];
             },
             erase: async (supabase: SupabaseClient, userId: Auth.User.Id, chatId: Chat.Id) => {
-                const { error } = await supabase.from('chats').delete().eq('id', chatId).eq('user_id', userId);
+                const { error: messagesError } = await supabase
+                    .from('chat_messages')
+                    .delete()
+                    .eq('chat_id', chatId);
+                this.assertSupabaseOk(messagesError, "chat.erase.messages");
+
+                const { error } = await supabase
+                    .from('chats')
+                    .delete()
+                    .eq('id', chatId)
+                    .eq('user_id', userId);
                 this.assertSupabaseOk(error, "chat.erase");
             },
         },

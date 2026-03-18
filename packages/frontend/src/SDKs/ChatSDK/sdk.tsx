@@ -27,7 +27,7 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 
     public readonly useStore: BaseSDK.Store<ChatSDK.State> = create(
         immer<ChatSDK.State>(() => ({
-            currentChatId: null,
+            currentChatId: Chat.createId(),
             messages: [],
             messagesRecord: {},
             isLoading: false,
@@ -60,7 +60,6 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 
 
     public handleOnEvent = (event: Chat.Event) => {
-        console.log("ChatSDK received event: ", event);
         switch (event.type) {
             case "response:created":
                 this.actions.message.upsert(event.responseMessage);
