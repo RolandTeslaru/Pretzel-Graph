@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Input, Form, Button, Select, Tabs, Spinner } from '@/vx-ui/foundations'
+import { Input, Form, Button, Select, Tabs, Spinner } from '@vx-agent-editor/vx-ui/foundations'
 import { useState } from 'react'
 import { AuthSDK } from '../sdk'
 

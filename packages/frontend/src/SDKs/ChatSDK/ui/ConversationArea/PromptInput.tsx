@@ -1,8 +1,8 @@
 import { useRef } from 'react'
 import type { KeyboardEvent } from 'react'
 import { useForm, Controller } from 'react-hook-form'
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@/vx-ui/foundations/input-group'
-import { SystemIcons } from '@/vx-ui/icons'
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@vx-agent-editor/vx-ui/foundations/input-group'
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { ChatSDK } from '../../sdk'
 
 type PromptFormValues = {

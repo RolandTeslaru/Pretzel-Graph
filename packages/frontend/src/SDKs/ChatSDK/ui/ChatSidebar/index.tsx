@@ -3,8 +3,8 @@ import { ChatSDK } from '../../sdk'
 import { StackSDK } from '@/SDKs/StackSDK'
 import MessagesArea from '../ConversationArea'
 import ChatSelect from './ChatSelect'
-import { SystemIcons } from '@/vx-ui/icons'
-import { Button, DropdownMenu } from '@/vx-ui/foundations'
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
 
 
 const ChatSidebar = () => {

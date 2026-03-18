@@ -1,12 +1,12 @@
 import { memo, useCallback, useEffect, useRef } from 'react'
 import { ChatSDK } from '@/SDKs/ChatSDK/sdk'
-import { ScrollArea } from '@/vx-ui/foundations/scrollArea'
+import { ScrollArea } from '@vx-agent-editor/vx-ui/foundations/scrollArea'
 import HumanMessageBubble from './HumanMessageBubble'
 import AIMessageBubble from './AIMessageBubble'
 import ToolBubble from './ToolBubble'
 import { Chat } from '@vx-agent-editor/shared/domain'
 import PromptInput from './PromptInput'
-import { Spinner } from '@/vx-ui/foundations'
+import { Spinner } from '@vx-agent-editor/vx-ui/foundations'
 
 interface Props {
   messagesAreaClassname?: string

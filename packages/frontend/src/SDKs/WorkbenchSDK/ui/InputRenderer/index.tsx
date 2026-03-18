@@ -1,10 +1,10 @@
 import { memo } from 'react'
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { WorkbenchSDK } from '../../sdk'
-import { Textarea } from '@/vx-ui/foundations'
+import { Textarea } from '@vx-agent-editor/vx-ui/foundations'
 import { HighlightedTextarea } from './HighlightedTextarea'
 import { InputLabel } from './label';
-import { SystemIcons } from '@/vx-ui/icons';
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons';
 
 
 type RendererProps<K extends Foundations.Port.Input['variant']> = {

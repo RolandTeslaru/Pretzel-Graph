@@ -1,4 +1,4 @@
-import { Button, Input } from "@/vx-ui/foundations"
+import { Button, Input } from "@vx-agent-editor/vx-ui/foundations"
 import { useState } from "react"
 import { NotificationSDK } from "../sdk";
 

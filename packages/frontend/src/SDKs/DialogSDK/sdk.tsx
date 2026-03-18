@@ -5,10 +5,10 @@ import React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { enableMapSet } from 'immer';
 import { BaseSDK } from "../Base";
-import { AlertDialog, Dialog } from "../../foundations";
+import { AlertDialog, Dialog } from "@vx-agent-editor/vx-ui/foundations";
 import { SDK } from "@/SDKs/SDKManager";
 import { type _DialogSDKActions_, createDialogSDKActions } from "./actions";
-import { AlertTriangle } from "@/vx-ui/icons/system";
+import { AlertTriangle } from "@vx-agent-editor/vx-ui/icons/system";
 
 enableMapSet()
 

@@ -1,5 +1,5 @@
-import { CollapsiblePanel } from '../../../components/CollapsiblePanel'
-import { AlertDialog, Button, Dialog } from '../../../foundations'
+import { CollapsiblePanel } from '@vx-agent-editor/vx-ui/components/CollapsiblePanel'
+import { AlertDialog, Button, Dialog } from '@vx-agent-editor/vx-ui/foundations'
 import { DialogSDK } from '../sdk'
 
 export const DialogSDKDebugPanel = ({defaultOpen}: {defaultOpen?: boolean}) => {

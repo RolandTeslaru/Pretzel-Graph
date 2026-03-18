@@ -3,7 +3,7 @@ import classNames from "classnames"
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { WindowStyling } from '../../foundations';
-import { SystemIcons } from '@/vx-ui/icons';
+import { SystemIcons } from '../../icons';
 
 gsap.registerPlugin(useGSAP);
 gsap.config({
