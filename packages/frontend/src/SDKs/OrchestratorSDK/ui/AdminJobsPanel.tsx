@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Button, Badge, AlertDialog, Spinner } from '@/vx-ui/foundations'
-import { SystemIcons } from '@/vx-ui/icons'
+import { Button, Badge, AlertDialog, Spinner } from '@vx-agent-editor/vx-ui/foundations'
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { Orchestrator } from '@vx-agent-editor/shared/domain'
 import { api } from '@/SDKs/ApiInterceptorSDK'

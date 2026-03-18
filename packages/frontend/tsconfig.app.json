@@ -38,6 +38,9 @@
       ],
       "@vx-agent-editor/shared/*": [
         "../shared/*"
+      ],
+      "@vx-agent-editor/vx-ui/*": [
+        "../vx-ui/src/*"
       ]
     }
   },

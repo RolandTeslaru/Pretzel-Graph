@@ -1,6 +1,6 @@
 import { SystemSDK } from '@/SDKs/SystemSDK'
-import { Spinner } from '@/vx-ui/foundations'
-import { SystemIcons } from '@/vx-ui/icons'
+import { Spinner } from '@vx-agent-editor/vx-ui/foundations'
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import React, { memo } from 'react'
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 

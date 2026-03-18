@@ -1,5 +1,5 @@
-import { Button } from '@/vx-ui/foundations'
-import { SystemIcons } from '@/vx-ui/icons'
+import { Button } from '@vx-agent-editor/vx-ui/foundations'
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { ChatSDK } from '../sdk'
 
 const ChatButton = () => {

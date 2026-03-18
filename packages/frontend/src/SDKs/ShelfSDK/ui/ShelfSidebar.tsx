@@ -1,4 +1,4 @@
-import { ScrollArea, Separator } from '@/vx-ui/foundations'
+import { ScrollArea, Separator } from '@vx-agent-editor/vx-ui/foundations'
 import { Drawers } from './Drawers'
 import SectionTabs from './SectionTabs'
 import Search from './Search'
