@@ -16,7 +16,7 @@ const listVars = cva(
     variants: {
       variant: {
         primary: "bg-input/30 border-border text-foreground",
-        accent: "bg-input/30 border-border text-foreground",
+        accent: "bg-accent/30 border-border text-foreground",
       },
       size: {
         xs: "p-px gap-px",
@@ -33,7 +33,7 @@ const listVars = cva(
 )
 
 const triggerVars = cva(
-  "inline-flex items-center z-10 justify-center whitespace-nowrap font-semibold text-label-primary! ring-offset-background transition-all border border-transparent cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-white!",
+  "inline-flex items-center z-10 justify-center whitespace-nowrap font-semibold text-label-primary! ring-offset-background transition-all border border-transparent cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-data-[variant=primary]/list:data-[state=active]:text-white!",
   {
     variants: {
       size: {
@@ -55,7 +55,7 @@ const indicatorVars = cva(
     variants: {
       variant: {
         primary: "bg-primary border-primary-accent shadow-black/20",
-        accent: "bg-accent border-secondary"
+        accent: "bg-input dark:border-neutral-600 border-white"
       },
       size: {
         xs: "rounded-sm",

@@ -7,6 +7,7 @@ import { createOrchestratorSDKActions, type OrchestratorSDKActions } from "./act
 import { orchestratorSDKReducers } from "./reducers";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
+import { toast } from "sonner";
 
 @SDK("Orchestrator")
 export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
@@ -51,18 +52,21 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                     s.jobId = undefined;
                     s.executionStatus = "completed";
                 })
+                toast.success(`Workflow completed successfully`)
                 break;
             case "failed":
                 this.setState(s => {
                     s.jobId = undefined;
                     s.executionStatus = "failed";
                 })
+                toast.error(`Workflow failed: ${event.error}`)
                 break;
             case "terminated":
                 this.setState(s => {
                     s.jobId = undefined;
                     s.executionStatus = "terminated"
                 })
+                toast.error(`Workflow terminated`)
         }
     }
 }

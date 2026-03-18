@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Button, Badge, AlertDialog, Spinner } from '@vx-agent-editor/vx-ui/foundations'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
+import { DialogSDK } from '@/SDKs/DialogSDK'
 import { Orchestrator } from '@vx-agent-editor/shared/domain'
 import { api } from '@/SDKs/ApiInterceptorSDK'
 import { toast } from 'sonner'
@@ -90,28 +91,33 @@ export const AdminJobsPanel = () => {
 
             {jobs.length > 0 && (
                 <div className="border-t border-border px-4 py-3">
-                    <AlertDialog.Root>
-                        <AlertDialog.Trigger asChild>
-                            <Button variant="destructive" size="sm" className="w-full" disabled={terminating}>
-                                {terminating ? <Spinner /> : <SystemIcons.X className="size-3.5" />}
-                                Terminate All ({jobs.length})
-                            </Button>
-                        </AlertDialog.Trigger>
-                        <AlertDialog.Content className="w-[400px] p-6 -translate-x-1/2 -translate-y-1/2">
-                            <AlertDialog.Header>
-                                <AlertDialog.Title>Terminate all active jobs?</AlertDialog.Title>
-                                <AlertDialog.Description>
-                                    This will forcefully terminate {jobs.length} running job(s). This action cannot be undone.
-                                </AlertDialog.Description>
-                            </AlertDialog.Header>
-                            <AlertDialog.Footer className="mt-4">
-                                <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-                                <AlertDialog.Action variant="destructive" onClick={handleTerminateAll}>
-                                    Terminate All
-                                </AlertDialog.Action>
-                            </AlertDialog.Footer>
-                        </AlertDialog.Content>
-                    </AlertDialog.Root>
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        className="w-full"
+                        disabled={terminating}
+                        onClick={() => {
+                            DialogSDK.actions.push('terminate-all-jobs', (props) => (
+                                <DialogSDK.AlertTemplate
+                                    {...props}
+                                    type="danger"
+                                    onApprove={async () => {
+                                        await handleTerminateAll()
+                                        DialogSDK.actions.pop('terminate-all-jobs')
+                                    }}
+                                    onCancel={() => DialogSDK.actions.pop('terminate-all-jobs')}
+                                >
+                                    <AlertDialog.Title>Terminate all active jobs?</AlertDialog.Title>
+                                    <AlertDialog.Description>
+                                        This will forcefully terminate {jobs.length} running job(s). This action cannot be undone.
+                                    </AlertDialog.Description>
+                                </DialogSDK.AlertTemplate>
+                            ))
+                        }}
+                    >
+                        {terminating ? <Spinner /> : <SystemIcons.X className="size-3.5" />}
+                        Terminate All ({jobs.length})
+                    </Button>
                 </div>
             )}
         </div>
