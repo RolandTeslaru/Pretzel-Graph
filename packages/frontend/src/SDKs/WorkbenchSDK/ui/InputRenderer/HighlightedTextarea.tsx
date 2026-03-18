@@ -1,9 +1,9 @@
 
 import React, { useMemo } from 'react';
-import { cn } from '@/vx-ui/utils/cn';
-import { Button, Dialog } from '@/vx-ui/foundations';
-import { SystemIcons } from '@/vx-ui/icons';
-import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK';
+import { cn } from '@vx-agent-editor/vx-ui/utils/cn';
+import { Button, Dialog } from '@vx-agent-editor/vx-ui/foundations';
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons';
+import { DialogSDK } from '@/SDKs/DialogSDK';
 import type { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { WorkbenchSDK } from '../../sdk';
 

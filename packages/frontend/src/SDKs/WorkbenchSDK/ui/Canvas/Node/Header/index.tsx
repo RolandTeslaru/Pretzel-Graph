@@ -1,7 +1,7 @@
 import React from 'react'
 import { ExecutionSession, Workflow } from '@vx-agent-editor/shared/domain';
 import MinimizedHandles from './MinimizedHandles';
-import { LazyIcon } from '@/vx-ui/icons/LazyIcon';
+import { LazyIcon } from '@vx-agent-editor/vx-ui/icons/LazyIcon';
 import StatusIndicator from './StatusIndicator';
 
 interface Props {

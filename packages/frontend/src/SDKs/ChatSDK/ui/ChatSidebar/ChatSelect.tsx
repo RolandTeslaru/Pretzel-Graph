@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DropdownMenu, Input } from '@/vx-ui/foundations'
+import { DropdownMenu, Input } from '@vx-agent-editor/vx-ui/foundations'
 import { ChatSDK } from '../../sdk'
 
 

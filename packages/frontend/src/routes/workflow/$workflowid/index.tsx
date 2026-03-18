@@ -1,5 +1,5 @@
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
-import { Spinner } from '@/vx-ui/foundations';
+import { Spinner } from '@vx-agent-editor/vx-ui/foundations';
 import { createFileRoute } from '@tanstack/react-router'
 import type { Workflow } from '@vx-agent-editor/shared/domain';
 

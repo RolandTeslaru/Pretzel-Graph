@@ -1,5 +1,5 @@
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
-import { Button } from '@/vx-ui/foundations'
+import { Button } from '@vx-agent-editor/vx-ui/foundations'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
 

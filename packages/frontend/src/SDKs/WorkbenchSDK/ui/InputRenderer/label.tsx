@@ -1,4 +1,4 @@
-import { Label } from "@/vx-ui/foundations/label"
+import { Label } from "@vx-agent-editor/vx-ui/foundations/label"
 import type { Foundations } from "@vx-agent-editor/shared/domain"
 import { PortBadge } from "../PortBadge"
 

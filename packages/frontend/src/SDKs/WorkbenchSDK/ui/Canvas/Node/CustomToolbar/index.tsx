@@ -1,7 +1,7 @@
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
-import { Button, DropdownMenu } from '@/vx-ui/foundations'
-import { SystemIcons } from '@/vx-ui/icons'
+import { Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import type { Workflow } from '@vx-agent-editor/shared/domain'
 import React from 'react'
 

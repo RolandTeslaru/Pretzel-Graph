@@ -1,5 +1,5 @@
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
-import { Badge } from '@/vx-ui/foundations'
+import { Badge } from '@vx-agent-editor/vx-ui/foundations'
 import type { Foundations } from '@vx-agent-editor/shared/domain'
 import React from 'react'
 

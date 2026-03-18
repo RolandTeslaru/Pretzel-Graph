@@ -1,8 +1,8 @@
 import { ChatSDK } from '../../sdk'
-import { Input } from '@/vx-ui/foundations/input'
+import { Input } from '@vx-agent-editor/vx-ui/foundations/input'
 import type { Chat } from '@vx-agent-editor/shared/domain'
 import MessagesArea from '../ConversationArea'
-import { SystemIcons } from '@/vx-ui/icons'
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 
 // ---------------------------------------------------------------------------
 // Helpers

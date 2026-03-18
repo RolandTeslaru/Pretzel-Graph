@@ -1,12 +1,12 @@
-import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK'
+import { DialogSDK } from '@/SDKs/DialogSDK'
 import { StackSDK } from '@/SDKs/StackSDK'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
-import { NotificationSDK } from '@/vx-ui/SDKs/NotificationSDK'
+import { NotificationSDK } from '@/SDKs/NotificationSDK'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import ThemeSelector from '@/SDKs/SystemSDK/ui/ThemeSelector'
-import VexrLabsWatermark from '@/vx-ui/brands/vexrWatermark'
+import VexrLabsWatermark from '@vx-agent-editor/vx-ui/brands/vexrWatermark'
 
 interface RouterContext {
     auth: AuthSDK.State
