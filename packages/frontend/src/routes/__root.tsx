@@ -1,7 +1,6 @@
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { StackSDK } from '@/SDKs/StackSDK'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { NotificationSDK } from '@/SDKs/NotificationSDK'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
@@ -23,7 +22,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
                 <DialogSDK.UIOverlay />
                 <StackSDK.UIOverlay />
                 <Outlet />
-                {/* <TanStackRouterDevtools /> */}
             </QuerySDK.Provider>
 
             <VexrLabsWatermark/>

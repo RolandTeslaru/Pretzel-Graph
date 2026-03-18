@@ -11,13 +11,13 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
             sdk.actions.addAwaitedConfirmation("started")
             
             
-            const handleReject = () => {
+            const confirmEvent = () => {
                 sdk.actions.removeAwaitedConfirmation("started")
             }
 
             if (sdk.state.jobId) {
                 toast.warning("Workflow is already running")
-                handleReject();
+                confirmEvent();
                 return sdk.state.jobId
             }
 
@@ -28,7 +28,7 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
             const workflowIssues = Validation.Issue.checkWorkflow(workflow, wfCache);
             if (Object.entries(workflowIssues).length > 0) {
                 toast.error("Workflow has nodes with missing fields or inputs. Please fix them before running.")
-                handleReject();
+                confirmEvent();
                 return null
             }
 
@@ -61,7 +61,7 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                 s.executionStatus = "running"
             })
 
-            handleReject();
+            confirmEvent();
             return jobId;
         },
         addAwaitedConfirmation: (event) => {

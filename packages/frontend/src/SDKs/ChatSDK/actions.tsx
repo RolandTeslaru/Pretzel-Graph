@@ -162,6 +162,23 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     s.messagesRecord = {};
                 })
             },
+            erase: async (chatId: Chat.Id) => {
+                try {
+                    await Chat.API.erase(api, { chatId });
+
+                    sdk.setState(s => {
+                        delete s.chats[chatId];
+                        if (s.currentChatId === chatId) {
+                            s.currentChatId = Chat.createId();
+                            s.messages = [];
+                            s.messagesRecord = {};
+                        }
+                    });
+                } catch (err) {
+                    toast.error("Failed to delete chat");
+                    console.error("Failed to delete chat", err);
+                }
+            },
         },
 
         ui: {
@@ -201,6 +218,7 @@ export interface ChatSDKActions {
         load: (chatId: Chat.Id) => Promise<void>
         new: () => void
         clearMessages: () => Promise<void>
+        erase: (chatId: Chat.Id) => Promise<void>
     }
     ui: {
         setSidebarVisibility: (show: boolean) => void

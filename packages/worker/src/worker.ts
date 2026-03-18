@@ -115,6 +115,9 @@ export class AggexWorkerImpl {
             return { status: 'failed', error: (err as Error).message };
 
         } finally {
+
+            console.log("Deleting job", jobId, "from running engines and contexts")
+
             this.runningEngines.delete(jobId);
             this.runningExecutionContexts.delete(jobId);
             this.redisSub.unsubscribe(signalChannel);

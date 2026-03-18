@@ -81,6 +81,9 @@ import { DualRangeSlider } from '@vx-agent-editor/vx-ui/foundations/dualRangeSli
 import {
     Tooltip,
 } from '@vx-agent-editor/vx-ui/foundations/Tooltip'
+import {
+    ContextMenu,
+} from '@vx-agent-editor/vx-ui/foundations/contextMenu'
 import { SystemIcons } from "@vx-agent-editor/vx-ui/icons"
 import { Field } from "@vx-agent-editor/vx-ui/foundations/fieldLayout"
 import { ButtonGroup } from "@vx-agent-editor/vx-ui/foundations/button-group"
@@ -108,6 +111,7 @@ export default function CoverExample() {
                 <InputsNoCard />
                 <InputsWithCard />
                 <NotificationExample />
+                <ContextMenuExample />
             </ExampleWrapper>
         </div>
     )
@@ -117,6 +121,77 @@ function NotificationExample() {
     return (
         <Example title="Notifications Test Panel">
             <NotificationSDKTestPanel />
+        </Example>
+    )
+}
+
+function ContextMenuExample() {
+    const [bookmarked, setBookmarked] = useState(false)
+    const [showLabels, setShowLabels] = useState(true)
+    const [label, setLabel] = useState("personal")
+
+    return (
+        <Example title="Context Menu">
+            <ContextMenu.Root>
+                <ContextMenu.Trigger>
+                    <div className="flex items-center justify-center h-36 w-72 rounded-xl border border-dashed border-border-primary bg-surface-secondary text-xs text-label-secondary select-none">
+                        Right-click here
+                    </div>
+                </ContextMenu.Trigger>
+                <ContextMenu.Content className="w-56">
+                    <ContextMenu.Group>
+                        <ContextMenu.Label>Actions</ContextMenu.Label>
+                        <ContextMenu.Item icon={<SystemIcons.Plus className="size-4" />}>
+                            New File
+                            <ContextMenu.Shortcut>⌘N</ContextMenu.Shortcut>
+                        </ContextMenu.Item>
+                        <ContextMenu.Item icon={<SystemIcons.Copy className="size-4" />}>
+                            Copy
+                            <ContextMenu.Shortcut>⌘C</ContextMenu.Shortcut>
+                        </ContextMenu.Item>
+                        <ContextMenu.Item icon={<SystemIcons.Clipboard className="size-4" />}>
+                            Paste
+                            <ContextMenu.Shortcut>⌘V</ContextMenu.Shortcut>
+                        </ContextMenu.Item>
+                    </ContextMenu.Group>
+                    <ContextMenu.Separator />
+                    <ContextMenu.Group>
+                        <ContextMenu.CheckboxItem
+                            checked={bookmarked}
+                            onCheckedChange={setBookmarked}
+                        >
+                            Bookmark
+                        </ContextMenu.CheckboxItem>
+                        <ContextMenu.CheckboxItem
+                            checked={showLabels}
+                            onCheckedChange={setShowLabels}
+                        >
+                            Show Labels
+                        </ContextMenu.CheckboxItem>
+                    </ContextMenu.Group>
+                    <ContextMenu.Separator />
+                    <ContextMenu.Sub>
+                        <ContextMenu.SubTrigger icon={<SystemIcons.Tag className="size-4" />}>
+                            Label
+                        </ContextMenu.SubTrigger>
+                        <ContextMenu.SubContent>
+                            <ContextMenu.RadioGroup value={label} onValueChange={setLabel}>
+                                <ContextMenu.RadioItem value="personal">Personal</ContextMenu.RadioItem>
+                                <ContextMenu.RadioItem value="work">Work</ContextMenu.RadioItem>
+                                <ContextMenu.RadioItem value="other">Other</ContextMenu.RadioItem>
+                            </ContextMenu.RadioGroup>
+                        </ContextMenu.SubContent>
+                    </ContextMenu.Sub>
+                    <ContextMenu.Separator />
+                    <ContextMenu.Item variant="warning">
+                        Archive
+                    </ContextMenu.Item>
+                    <ContextMenu.Item variant="destructive">
+                        Delete
+                        <ContextMenu.Shortcut>⌘⌫</ContextMenu.Shortcut>
+                    </ContextMenu.Item>
+                </ContextMenu.Content>
+            </ContextMenu.Root>
         </Example>
     )
 }
