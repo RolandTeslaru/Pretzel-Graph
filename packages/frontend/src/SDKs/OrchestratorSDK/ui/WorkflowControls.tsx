@@ -1,6 +1,6 @@
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
-import { Button, Spinner } from '@/vx-ui/foundations'
-import { SystemIcons } from '@/vx-ui/icons'
+import { Button, Spinner } from '@vx-agent-editor/vx-ui/foundations'
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { OrchestratorSDK } from '../sdk'
 
 const handlePause = () => {

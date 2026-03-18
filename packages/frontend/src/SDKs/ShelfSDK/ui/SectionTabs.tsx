@@ -1,4 +1,4 @@
-import { Tabs } from '@/vx-ui/foundations'
+import { Tabs } from '@vx-agent-editor/vx-ui/foundations'
 import { memo } from 'react'
 import { ShelfSDK } from '../sdk'
 import type { Shelf } from '@vx-agent-editor/shared/domain';

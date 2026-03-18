@@ -1,4 +1,4 @@
-import { cn } from "@/vx-ui/utils/cn";
+import { cn } from "../../../utils/cn";
 export const AthenaComponent = ({ className, ...props }) => (
   <svg
     width="300"

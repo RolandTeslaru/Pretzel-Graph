@@ -4,7 +4,7 @@ import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import type { ChatSDKImpl } from "./sdk";
 import { toast } from "sonner";
 import { api } from "../ApiInterceptorSDK";
-import { DialogSDK } from "@/vx-ui/SDKs/DialogSDK";
+import { DialogSDK } from "@/SDKs/DialogSDK";
 import FullscreenChat from "./ui/FullscreenChat";
 import { ExecutionSessionSDK } from "../ExecutionSessionSDK/sdk";
 import { HumanMessage } from "@langchain/core/messages";

@@ -1,7 +1,7 @@
 import { Chat } from '@vx-agent-editor/shared/domain'
-import { SystemIcons } from '@/vx-ui/icons'
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { motion } from 'motion/react'
-import { Spinner } from '@/vx-ui/foundations'
+import { Spinner } from '@vx-agent-editor/vx-ui/foundations'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 

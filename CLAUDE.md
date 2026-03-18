@@ -42,6 +42,7 @@ packages/
   frontend/    # React 19 + Vite + XYFlow graph editor
   backend/     # Express 5 + WebSocket + BullMQ
   shared/      # Domain models (Zod schemas) used by all packages
+  vx-ui/       # UI component library (Radix + Tailwind foundations, icons)
   worker/      # Workflow execution engine (LangChain + LangGraph)
 ```
 
@@ -98,4 +99,4 @@ Tailwind CSS 4 with an extensive CSS variable system. Port types have dedicated 
 | Workflow compiler | `packages/worker/src/compiler.ts` |
 | Backend entry | `packages/backend/src/index.ts` |
 | Tailwind config | `packages/frontend/tailwind.config.ts` |
-| UI component library | `packages/frontend/src/vx-ui/foundations/` |
+| UI component library | `packages/vx-ui/src/foundations/` |

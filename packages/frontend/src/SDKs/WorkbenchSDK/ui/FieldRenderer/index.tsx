@@ -1,13 +1,13 @@
 import { memo, useEffect } from 'react'
-import { Switch } from '@/vx-ui/foundations/switch'
-import { Label } from '@/vx-ui/foundations/label'
-import { Input } from "@/vx-ui/foundations/input"
-import { Select } from "@/vx-ui/foundations/select"
+import { Switch } from '@vx-agent-editor/vx-ui/foundations/switch'
+import { Label } from '@vx-agent-editor/vx-ui/foundations/label'
+import { Input } from "@vx-agent-editor/vx-ui/foundations/input"
+import { Select } from "@vx-agent-editor/vx-ui/foundations/select"
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { WorkbenchSDK } from '../../sdk'
-import { Slider, Tabs, Badge, Textarea } from '@/vx-ui/foundations'
+import { Slider, Tabs, Badge, Textarea } from '@vx-agent-editor/vx-ui/foundations'
 import { VaultSDK } from '../../../VaultSDK/sdk'
-import { DialogSDK } from '@/vx-ui/SDKs/DialogSDK'
+import { DialogSDK } from '@/SDKs/DialogSDK'
 import VaultPanel from '@/SDKs/VaultSDK/ui/VaultPanel'
 import { ScriptTriggerField } from './ScriptDialog'
 

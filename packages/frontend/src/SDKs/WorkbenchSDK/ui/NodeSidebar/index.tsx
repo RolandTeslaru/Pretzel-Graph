@@ -1,10 +1,10 @@
-import { ScrollArea, Spinner } from '@/vx-ui/foundations'
+import { ScrollArea, Spinner } from '@vx-agent-editor/vx-ui/foundations'
 import { useMemo, memo, useEffect } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { StackSDK } from '@/SDKs/StackSDK'
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
-import { Accordion } from '@/vx-ui/foundations/accordion';
-import { LazyIcon } from '@/vx-ui/icons/LazyIcon';
+import { Accordion } from '@vx-agent-editor/vx-ui/foundations/accordion';
+import { LazyIcon } from '@vx-agent-editor/vx-ui/icons/LazyIcon';
 import { FieldRenderer } from '../FieldRenderer';
 import { InputRenderer } from '../InputRenderer';
 import { PortBadge } from '../PortBadge';

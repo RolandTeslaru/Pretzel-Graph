@@ -6,7 +6,7 @@ import './index.css'
 import { SystemSDK } from './SDKs/SystemSDK/sdk'
 import { AuthSDK } from './SDKs/AuthSDK/sdk'
 import { routeTree } from './routeTree.gen'
-import { Spinner } from "./vx-ui/foundations"
+import { Spinner } from "@vx-agent-editor/vx-ui/foundations"
 
 SystemSDK.init()
 AuthSDK.init()

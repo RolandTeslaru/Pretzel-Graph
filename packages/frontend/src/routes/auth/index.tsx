@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import AuthenticationPanel from '@/SDKs/AuthSDK/ui/AuthenticationPanel'
-import VexrLogo from '@/vx-ui/SDKs/DialogSDK/components/VexrLogo'
+import VexrLogo from '@/SDKs/DialogSDK/components/VexrLogo'
 import GameOfLifeBackground from './GameOfLifeBackground'
 
 
