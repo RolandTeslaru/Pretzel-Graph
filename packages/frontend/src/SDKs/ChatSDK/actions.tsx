@@ -7,7 +7,7 @@ import { api } from "../ApiInterceptorSDK";
 import { DialogSDK } from "@/SDKs/DialogSDK";
 import FullscreenChat from "./ui/FullscreenChat";
 import { ExecutionSessionSDK } from "../ExecutionSessionSDK/sdk";
-import { HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 
 function deriveChatName(content: string, maxLength = 50): string {
     const trimmed = content.trim().replace(/\s+/g, ' ');
@@ -19,23 +19,16 @@ function deriveChatName(content: string, maxLength = 50): string {
 export function createChatSDKActions(sdk: ChatSDKImpl) {
     return {
         message: {
-            upsert: (message) => {
-                sdk.setState(s => sdk.reducers.upsertMessage(s, message))
-            },
-            appendContent: (messageId, content) => {
-                sdk.setState(s => sdk.reducers.appendContent(s, messageId, content))
-            },
-            setContent: (messageId, content) => {
-                sdk.setState(s => {
-                    s.messagesRecord[messageId].content = content;
-                })
-            },
-            finaliseStreaming: (messageId) => {
-                sdk.setState(s => {
-                    const msg = s.messagesRecord[messageId] as Chat.Message.AI;
-                    msg.data.isProcessing = false;
-                })
-            },
+            upsert: (message) => sdk.setState(s => sdk.reducers.upsertMessage(s, message)),
+            appendContent: (messageId, content) => sdk.setState(s => sdk.reducers.appendContent(s, messageId, content))
+            ,
+            setContent: (messageId, content) => sdk.setState(s => {
+                s.messagesRecord[messageId].content = content;
+            }),
+            finaliseStreaming: (messageId) => sdk.setState(s => {
+                const msg = s.messagesRecord[messageId] as Chat.Message.AI;
+                msg.data.isProcessing = false;
+            }),
             send: async ({ content, attachments }) => {
 
                 const workflow_id = WorkbenchSDK.state.workflow.id
@@ -43,12 +36,10 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                 let currentChatId = sdk.state.currentChatId;
                 let currentChat = currentChatId ? sdk.state.chats[currentChatId] : null;
 
-                const execution_session = ExecutionSessionSDK.state.session;
-
                 // Ensures we have a chat
                 if (!currentChat) {
                     try {
-                        const { chat } = await Chat.API.create(api, { workflow_id, name: deriveChatName(content), execution_session })
+                        const { chat } = await Chat.API.create(api, { workflow_id, name: deriveChatName(content) })
 
                         currentChat = chat;
                         currentChatId = chat.id;
@@ -82,7 +73,6 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
 
                     ExecutionSessionSDK.setState(s => {
                         s.session.messages.push(new HumanMessage(message.content))
-                        s.session.chatId = currentChatId!;
                     })
                     const jobId = await OrchestratorSDK.actions.run()
 
@@ -138,17 +128,30 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     s.isLoading = false;
                 })
 
-                // ExecutionSessionSDK.setState(s => {
-                //     s.session.messages = [];
+                ExecutionSessionSDK.setState(s => {
+                    s.session.messages = [];
 
-                //     messages.forEach(msg => {
-                //         s.session.messages.push(msg)
-                //     })
-                // })
+                    messages.forEach(msg => {
+
+                        switch(msg.role){
+                            case "ai":
+                                s.session.messages.push(new AIMessage(msg.content));
+                                break
+                            case "human":
+                                s.session.messages.push(new HumanMessage(msg.content));
+                                break;
+                            case "system":
+                                s.session.messages.push(new SystemMessage(msg.content));
+                                break;
+                            // case "tool":
+                            // s.session.messages.push(new ToolMessage(msg.));
+                        }
+                    })
+                })
             },
             new: () => {
                 sdk.setState(s => {
-                    s.currentChatId = null;
+                    s.currentChatId = Chat.createId();
                     s.messages = [];
                     s.messagesRecord = {};
                 });

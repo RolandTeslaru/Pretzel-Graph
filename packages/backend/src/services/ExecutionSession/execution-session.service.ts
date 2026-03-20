@@ -16,27 +16,30 @@ export class ExecutionSessionService {
                     workflow_id: workflowId,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'id' })
-                .select('id')
+                .select<string, { id: ExecutionSession.Id }>('id')
                 .single();
 
-            if (error) throw error;
-            return data.id as ExecutionSession.Id;
+            if (error) 
+                throw error;
+            return data.id;
         },
         get: async (supabase: SupabaseClient, userId: Auth.User.Id, sessionId: ExecutionSession.Id) => {
             const { data, error } = await supabase
                 .from('execution_sessions')
-                .select('data')
+                .select<string, ExecutionSession.Database.Row["data"]>('data')
                 .eq('id', sessionId)
                 .eq('user_id', userId)
-                .single();
+                .single()
 
-            if (error) throw error;
-            return data.data as ExecutionSession;
+            if (error) 
+                throw error;
+
+            return data as ExecutionSession
         },
         update: async (supabase: SupabaseClient, userId: Auth.User.Id, sessionId: ExecutionSession.Id, updates: ExecutionSession.Update) => {
-            const { data: existingData, error: getError } = await supabase
+            const { data: oldSession, error: getError } = await supabase
                 .from('execution_sessions')
-                .select('data')
+                .select<string, ExecutionSession.Database.Row["data"]>('data')
                 .eq('id', sessionId)
                 .eq('user_id', userId)
                 .single();
@@ -44,7 +47,7 @@ export class ExecutionSessionService {
             if (getError) throw getError;
 
             const newSession = {
-                ...existingData.data,
+                ...oldSession,
                 ...updates
             } satisfies ExecutionSession;
 
@@ -56,14 +59,16 @@ export class ExecutionSessionService {
                 })
                 .eq('id', sessionId)
                 .eq('user_id', userId)
-                .select('data')
+                .select<string, ExecutionSession.Database.Row["data"]>('data')
                 .single();
 
             if (error)
                 throw error;
-            return data.data as ExecutionSession;
+            
+            return data
         }
     };
+
 
     async create(
         token: string,
@@ -100,3 +105,5 @@ export class ExecutionSessionService {
         return { session: updatedSession };
     }
 }
+
+
