@@ -20,6 +20,17 @@ export class ChatController {
     }
 
 
+    @Post('ensure')
+    @HttpCode(200)
+    async ensure(
+        @Req() req: AuthenticatedRequest,
+        @Body() body: any
+    ) {
+        const payload = Chat.API.Ensure.Request.parse(body);
+        return await this.chatService.ensure(req.token, req.user.id as Auth.User.Id, payload);
+    }
+
+
     @Post('get')
     @HttpCode(200)
     async get(

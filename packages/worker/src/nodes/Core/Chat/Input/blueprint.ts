@@ -1,4 +1,4 @@
-import { defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Chat.Input",
