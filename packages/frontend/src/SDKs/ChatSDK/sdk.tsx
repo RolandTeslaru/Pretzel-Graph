@@ -95,7 +95,7 @@ ChatSDK.subscribe((state, prevState) => {
 
 export namespace ChatSDK {
     export type State = {
-        currentChatId: Chat.Id | null,
+        currentChatId: Chat.Id,
         messages: Chat.Message.Id[],
         messagesRecord: Record<Chat.Message.Id, Chat.Message>,
         isLoading: boolean,

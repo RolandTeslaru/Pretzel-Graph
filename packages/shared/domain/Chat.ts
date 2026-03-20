@@ -3,7 +3,6 @@ import { Workflow } from "./Workflow"
 import { type AxiosInstance } from "axios"
 import { type SupabaseClient } from "@supabase/supabase-js";
 import { Realtime } from "./Realtime";
-import { ExecutionSession } from "./ExecutionSession";
 
 export namespace Chat {
 
@@ -118,7 +117,6 @@ export namespace Chat {
         workflow_id: Workflow.Id,
         created_at: z.iso.datetime(),
         updated_at: z.iso.datetime(),
-        execution_session_id: z.lazy(() => ExecutionSession.Id)
     })
 
     export namespace Event {
@@ -307,7 +305,6 @@ export namespace Chat {
             export const Request = z.object({
                 workflow_id: Workflow.Id,
                 name: z.string().optional(),
-                execution_session: z.lazy(() => ExecutionSession.Schema)
             })
             export type Request = z.infer<typeof Request>
 
@@ -319,6 +316,26 @@ export namespace Chat {
         export async function create(api: AxiosInstance, req: Create.Request): Promise<Create.Response> {
             const { data } = await api.post<Create.Response>(
                 "/api/chat/create", req
+            )
+            return data
+        }
+
+        export namespace Ensure {
+            export const Request = z.object({
+                chatId: Chat.Id,
+                workflow_id: Workflow.Id,
+                name: z.string().optional(),
+            })
+            export type Request = z.infer<typeof Request>
+
+            export const Response = z.object({
+                chat: Chat.Schema
+            })
+            export type Response = z.infer<typeof Response>
+        }
+        export async function ensure(api: AxiosInstance, req: Ensure.Request): Promise<Ensure.Response> {
+            const { data } = await api.post<Ensure.Response>(
+                "/api/chat/ensure", req
             )
             return data
         }

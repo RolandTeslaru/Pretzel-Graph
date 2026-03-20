@@ -2,9 +2,10 @@ import { z } from "zod"
 import { Workflow } from "./Workflow"
 import { type AxiosInstance } from "axios"
 import { Auth } from "./Auth"
-import { Chat } from "./Chat"
 import { type BaseMessage } from "@langchain/core/messages"
 import { Realtime } from "./Realtime"
+import { Chat } from "./Chat"
+
 
 export namespace ExecutionSession {
 
@@ -40,27 +41,29 @@ export namespace ExecutionSession {
 
 
     export const Schema = z.object({
-        id: Id,
-        node_outputs: z.record(Workflow.Node.Id, z.any()).default(() => ({})),
-        node_messages: z.record(Workflow.Node.Id, z.string()).default(() => ({})),
-        node_status: z.record(Workflow.Node.Id, NodeStatus.Schema).default(() => ({})),
-        edge_state: z.record(Workflow.Edge.Id, EdgeState.Schema).default(() => ({})),
-        messages: z.array(z.custom<BaseMessage>((v) => v !== null && typeof v === 'object')).default(() => ([])),
-        metadata: z.record(z.string(), z.any()).default(() => ({})),
-        chatId: z.lazy(() => Chat.Id).optional(),
+        id: Id.default(createId()),
+        node_outputs: z.record(Workflow.Node.Id, z.any()).default({}),
+        node_messages: z.record(Workflow.Node.Id, z.string()).default({}),
+        node_status: z.record(Workflow.Node.Id, NodeStatus.Schema).default({}),
+        edge_state: z.record(Workflow.Edge.Id, EdgeState.Schema).default({}),
+        messages: z.array(z.custom<BaseMessage>((v) => v !== null && typeof v === 'object')).default([]),
+        metadata: z.record(z.string(), z.any()).default({}),
+        chatId: z.lazy(() => Chat.Id)
     })
 
 
-    export const INITIAL = {
-        id: createId(),
-        node_outputs: {},
-        node_status: {},
-        node_messages: {},
-        edge_state: {},
-        messages: [],
-        metadata: {}
-    } as z.infer<typeof Schema>
-
+    export const createInitial = (chatId: Chat.Id) => {
+        return {
+            id: createId(),
+            node_outputs: {},
+            node_status: {},
+            node_messages: {},
+            edge_state: {},
+            messages: [],
+            metadata: {},
+            chatId
+        } as z.infer<typeof Schema>
+    }
 
     export const Update = Schema.partial()
     export type Update = z.infer<typeof Update>
@@ -76,14 +79,14 @@ export namespace ExecutionSession {
                 created_at: z.iso.datetime(),
                 updated_at: z.iso.datetime(),
             })
-            export type Type = z.infer<typeof Schema>
         }
+        export type Row = z.infer<typeof Row.Schema>
     }
 
 
     export namespace Event {
         export const Channel = Realtime.Channel.brand("ExecutionSessionChannel")
-        export type Channel = z.infer<typeof Channel>
+        export type  Channel = z.infer<typeof Channel>
         
         export function getChannel(executionSessionId: ExecutionSession.Id) {
             return `execution_session:${executionSessionId}` as Channel
