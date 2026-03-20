@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { createAuthenticatedClient } from '@/utils/supabase';
-import { Auth, Chat, ExecutionSession, Workflow } from '@vx-agent-editor/shared/domain';
+import { Auth, Chat, Workflow } from '@vx-agent-editor/shared/domain';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { ExecutionSessionService } from '../ExecutionSession/execution-session.service';
 
 @Injectable()
 export class ChatService {
-    constructor(private readonly executionSessionService: ExecutionSessionService) { }
 
     private assertSupabaseOk(error: unknown, operation: string): void {
         if (!error) return;
@@ -25,7 +23,6 @@ export class ChatService {
                 supabase: SupabaseClient,
                 userId: Auth.User.Id,
                 workflow_id: Workflow.Id,
-                execution_session_id: ExecutionSession.Id,
                 name = "New Chat"
             ) => {
                 const { data, error } = await supabase
@@ -34,22 +31,21 @@ export class ChatService {
                         user_id: userId,
                         workflow_id,
                         name: name ?? "New Chat",
-                        execution_session_id,
                         created_at: new Date(),
                         updated_at: new Date(),
                     })
-                    .select('id')
+                    .select<string, { id: Chat.Id }>('id')
                     .single();
 
                 this.assertSupabaseOk(error, "chat.create");
-                if (!data?.id) {
+
+                if (!data?.id)
                     throw new Error("[ChatService:chat.create] Missing inserted chat id");
-                }
+                
                 return {
-                    id: data.id as Chat.Id,
-                    workflow_id: workflow_id as any as Workflow.Id,
+                    id: data.id,
+                    workflow_id,
                     name: name ?? "New Chat",
-                    execution_session_id,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 } satisfies Chat;
@@ -61,7 +57,7 @@ export class ChatService {
             ) => {
                 const { data, error } = await supabase
                     .from('chats')
-                    .select('id, user_id, workflow_id, name, created_at, updated_at, execution_session_id, chat_messages(*)')
+                    .select<string, Chat & { chat_messages: Chat.Message[] }>('id, user_id, workflow_id, name, created_at, updated_at, chat_messages(*)')
                     .eq('id', chatId)
                     .eq("user_id", userId)
                     .order('created_at', { referencedTable: 'chat_messages', ascending: true })
@@ -82,12 +78,50 @@ export class ChatService {
             list: async (supabase: SupabaseClient, userId: Auth.User.Id) => {
                 const { data, error } = await supabase
                     .from('chats')
-                    .select('*')
+                    .select<string, Chat>('*')
                     .eq('user_id', userId)
                     .order('updated_at', { ascending: false });
 
                 this.assertSupabaseOk(error, "chat.list");
                 return data ?? [];
+            },
+            ensure: async (
+                supabase: SupabaseClient,
+                userId: Auth.User.Id,
+                chatId: Chat.Id,
+                workflow_id: Workflow.Id,
+                name = "New Chat"
+            ) => {
+                const { data: existing } = await supabase
+                    .from('chats')
+                    .select<string, Chat>('*')
+                    .eq('id', chatId)
+                    .eq('user_id', userId)
+                    .single();
+
+                if (existing) {
+                    return existing
+                }
+
+                const { data, error } = await supabase
+                    .from('chats')
+                    .insert({
+                        id: chatId,
+                        user_id: userId,
+                        workflow_id,
+                        name: name ?? "New Chat",
+                        created_at: new Date(),
+                        updated_at: new Date(),
+                    })
+                    .select<string, Chat>('*')
+                    .single();
+
+                this.assertSupabaseOk(error, "chat.ensure");
+
+                if (!data)
+                    throw new Error("[ChatService:chat.ensure] Missing inserted chat");
+
+                return data;
             },
             erase: async (supabase: SupabaseClient, userId: Auth.User.Id, chatId: Chat.Id) => {
                 const { error: messagesError } = await supabase
@@ -106,15 +140,17 @@ export class ChatService {
         },
         message: {
             add: async (supabase: SupabaseClient, message: Chat.Message) => {
-                const { error } = await supabase.from('chat_messages').insert({
-                    id: message.id,
-                    chat_id: message.chat_id,
-                    role: message.role,
-                    content: message.content,
-                    data: message.data ?? {},
-                    attachments: message.attachments ?? null,
-                    created_at: new Date(),
-                });
+                const { error } = await supabase
+                    .from('chat_messages')
+                    .insert({
+                        id: message.id,
+                        chat_id: message.chat_id,
+                        role: message.role,
+                        content: message.content,
+                        data: message.data ?? {},
+                        attachments: message.attachments ?? null,
+                        created_at: new Date(),
+                    });
 
                 this.assertSupabaseOk(error, "message.add");
             },
@@ -139,15 +175,23 @@ export class ChatService {
         payload: Chat.API.Create.Request
     ): Promise<Chat.API.Create.Response> {
         const supabase = createAuthenticatedClient(token);
-        const { workflow_id, name, execution_session } = payload
-
-        // Ensure the execution session exists in the DB (insert if missing, update if existing)
-        await this.executionSessionService.dbOps.upsert(supabase, userId, workflow_id, execution_session);
+        const { workflow_id, name } = payload
 
         const chat = await this.dbOps.chat.create(
-            supabase, userId, workflow_id, execution_session.id, name
+            supabase, userId, workflow_id, name
         );
 
+        return { chat };
+    }
+
+    async ensure(
+        token: string,
+        userId: Auth.User.Id,
+        payload: Chat.API.Ensure.Request
+    ): Promise<Chat.API.Ensure.Response> {
+        const supabase = createAuthenticatedClient(token);
+        const { chatId, workflow_id, name } = payload;
+        const chat = await this.dbOps.chat.ensure(supabase, userId, chatId, workflow_id, name);
         return { chat };
     }
 

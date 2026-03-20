@@ -33,7 +33,8 @@ export namespace Orchestrator {
                 jobId: Job.Id,
                 workflow: Workflow.Schema,
                 userId: Auth.User.Id,
-                executionSession: ExecutionSession.Schema
+                executionSession: ExecutionSession.Schema,
+                chatId: Chat.Id.optional()
             })
         }
         export type Item = z.infer<typeof Item.Schema>

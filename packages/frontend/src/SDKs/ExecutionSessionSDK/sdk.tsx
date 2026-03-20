@@ -1,13 +1,13 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { ExecutionSession } from "@vx-agent-editor/shared/domain";
+import { Chat, ExecutionSession } from "@vx-agent-editor/shared/domain";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { createExecutionSessionSDKActions, type ExecutionSessionSDKActions } from "./actions";
 import { RealtimeSDK } from "../Realtime/sdk";
 import { _createExecutionSessionReducers_, type _ExecutionSessionReducers } from "./reducers";
-import { cloneDeep } from "lodash";
+import { toast } from "sonner";
 
 @SDK("ExecutionSession")
 export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> {
@@ -16,7 +16,7 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
 
     public readonly useStore: BaseSDK.Store<ExecutionSessionSDK.State> = createWithEqualityFn(
         immer<ExecutionSessionSDK.State>(() => ({
-            session: cloneDeep(ExecutionSession.INITIAL),
+            session: ExecutionSession.createInitial(Chat.createId()),
         })),
         shallow
     )
@@ -45,25 +45,28 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
 
 
 
-    public handleOnEvent = (event: ExecutionSession.Event) => {
-        if (event.type === "node:started") {
-            this.actions.session.setNodeStatus(event.nodeId, { status: "running", started_at: new Date().toISOString() })
-        }
-        else if (event.type === "node:completed") {
-            this.actions.session.setNodeStatus(event.nodeId, { status: "completed", completed_at: new Date().toISOString() })
-        }
-        else if (event.type === "node:waiting") {
-            this.actions.session.setNodeStatus(event.nodeId, { status: "waiting" })
-        }
-        else if (event.type === "node:error") {
-            this.actions.session.setNodeStatus(event.nodeId, { status: "failed", error: event.error, completed_at: new Date().toISOString() })
-        }
-        else if (event.type === "update") {
-            if (event.update.edge_state) {
-                this.setState(s => {
-                    Object.assign(s.session.edge_state, event.update.edge_state);
-                });
-            }
+    public handleOnEvent = (e: ExecutionSession.Event) => {
+        switch(e.type){
+            case "node:started":
+                this.actions.setNodeStatus(e.nodeId, { status: "running", started_at: new Date().toISOString() })
+                break;
+            case "node:completed":
+                this.actions.setNodeStatus(e.nodeId, { status: "completed", completed_at: new Date().toISOString() })
+                break;
+            case "node:waiting":
+                this.actions.setNodeStatus(e.nodeId, { status: "waiting" })
+                break;
+            case "node:error":
+                this.actions.setNodeStatus(e.nodeId, { status: "failed", error: e.error, completed_at: new Date().toISOString() })
+                break;
+            case "update":
+                if (e.update.edge_state)
+                    this.setState(s => {
+                        Object.assign(s.session.edge_state, e.update.edge_state);
+                    });
+                break;
+            default:
+                toast.error(`Received unknown event: ${e.type}`)
         }
     }
 }
