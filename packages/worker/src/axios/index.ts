@@ -14,7 +14,7 @@ export class AxiosServiceImpl {
     public init() {
         // REQUEST INTERCEPTOR: Inject Token
         this.api.interceptors.request.use(async (config) => {
-            const token = process.env.SUPABASE_ROLE_KEY;
+            const token = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
