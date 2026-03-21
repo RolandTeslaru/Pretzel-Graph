@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
@@ -10,6 +10,7 @@ import { LibraryModule } from './services/Library/library.module';
 import { ShelfModule } from './services/Shelf/shelf.module';
 import { WorkbenchModule } from './services/Workbench/workbench.module';
 import { RealtimeModule } from './services/Realtime/realtime.module';
+import { GlobalExceptionFilter } from './filters/global-exception.filter';
 
 @Module({
     imports: [
@@ -35,6 +36,7 @@ import { RealtimeModule } from './services/Realtime/realtime.module';
     providers: [
         // Apply rate limiting globally to all endpoints
         { provide: APP_GUARD, useClass: ThrottlerGuard },
+        { provide: APP_FILTER, useClass: GlobalExceptionFilter },
     ],
 })
 export class AppModule { }

@@ -15,6 +15,7 @@ export interface S2Hooks {
 export interface S2ExecutionState {
     accumulatedSignals: Map<Vertex.Id, Set<Vertex.Id>>;
     activeTasks: number;
+    settled: boolean;
 }
 
 // S² Engine (Super Solenoid Engine from Neon Genesis Evangelion)
@@ -30,7 +31,8 @@ export class S2Engine {
 
             const state: S2ExecutionState = {
                 accumulatedSignals: new Map(),
-                activeTasks: 0
+                activeTasks: 0,
+                settled: false
             };
 
             for (const vertexId of graph.vertices.keys()) {
@@ -82,11 +84,15 @@ export class S2Engine {
         reject: (reason?: any) => void,
         hooks: S2Hooks
     ){
+        if (state.settled) return;
+
         state.activeTasks ++;
         hooks.onVertexFired?.(vertexId);
 
         try {
             const signalSet = await hooks.onVertexExecute(vertexId);
+
+            if (state.settled) return;
 
             hooks.onVertexCompleted?.(vertexId);
 
@@ -94,6 +100,7 @@ export class S2Engine {
             const dependents = signalSet ?? allDependents;
 
             dependents.forEach(dep => {
+                if (state.settled) return;
 
                 const signals = state.accumulatedSignals.get(dep)!;
                 signals.add(vertexId);
@@ -113,15 +120,20 @@ export class S2Engine {
             })
         }
         catch (err){
-            hooks.onVertexError?.(vertexId, err);
-            console.error(`Vertex ${vertexId} failed:`, err);
-            reject(err);
+            if (!state.settled) {
+                state.settled = true;
+                hooks.onVertexError?.(vertexId, err);
+                console.error(`Vertex ${vertexId} failed:`, err);
+                reject(err);
+            }
         }
         finally {
             state.activeTasks --;
 
-            if(state.activeTasks === 0)
+            if(state.activeTasks === 0 && !state.settled){
+                state.settled = true;
                 resolve("Finished");
+            }
         }
     }
 }

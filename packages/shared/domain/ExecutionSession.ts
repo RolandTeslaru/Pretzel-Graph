@@ -103,6 +103,7 @@ export namespace ExecutionSession {
             type: z.literal('update'),
             update: ExecutionSession.Update
         })
+        export type Update = z.infer<typeof Update>
 
         export const MessageChunk = Base.extend({
             type: z.literal('node_messages:chunk'),
@@ -110,6 +111,7 @@ export namespace ExecutionSession {
             chunk: z.string(),
             isChatOutput: z.boolean().optional(),
         })
+        export type MessageChunk = z.infer<typeof MessageChunk>
 
         export namespace Node {
             export const Started = Base.extend({

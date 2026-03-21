@@ -56,23 +56,26 @@ export class AggexWorkerImpl {
             channel: eventChannel
         });
 
-        const compilationResult = await this.compiler.compile(workflow, jobId, executionSession, this.emit);
-        const context = compilationResult.context;
-
-        this.redisSub.subscribe(signalChannel);
-        this.redisSub.on("message", (ch, msg) => {
-            if (ch !== signalChannel) return;
-            const signal = JSON.parse(msg) as Orchestrator.Signal;
-            this.handleSignal(signal);
-        });
-
-        const engine = new AggexEngine();
-        this.runningEngines.set(jobId, engine);
-        this.runningExecutionContexts.set(jobId, context);
-
         try {
-            // Catch abort rejections from the orphaned engine promise
-            const enginePromise = engine.run(compilationResult).catch(() => { });
+            const compilationResult = await this.compiler.compile(workflow, jobId, executionSession, this.emit);
+            const context = compilationResult.context;
+
+            this.redisSub.subscribe(signalChannel);
+            this.redisSub.on("message", (ch, msg) => {
+                if (ch !== signalChannel) return;
+                const signal = JSON.parse(msg) as Orchestrator.Signal;
+                this.handleSignal(signal);
+            });
+
+            const engine = new AggexEngine(compilationResult);
+            this.runningEngines.set(jobId, engine);
+            this.runningExecutionContexts.set(jobId, context);
+
+            let engineError: Error | null = null;
+
+            const enginePromise = engine.run().catch((err) => {
+                engineError = err instanceof Error ? err : new Error(String(err));
+            });
 
             const result = await Promise.race([
                 enginePromise.then(() => 'completed' as const),
@@ -91,6 +94,10 @@ export class AggexWorkerImpl {
                     channel: eventChannel,
                 });
                 return { status: 'terminated' };
+            }
+
+            if (engineError) {
+                throw engineError;
             }
 
             this.emit<Orchestrator.Event.Completed>({
@@ -115,7 +122,6 @@ export class AggexWorkerImpl {
             return { status: 'failed', error: (err as Error).message };
 
         } finally {
-
             console.log("Deleting job", jobId, "from running engines and contexts")
 
             this.runningEngines.delete(jobId);
