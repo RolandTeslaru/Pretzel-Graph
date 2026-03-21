@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { createAuthenticatedClient } from '@/utils/supabase';
 import { Auth, ExecutionSession, Workflow } from '@vx-agent-editor/shared/domain';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { withSupabaseAssert } from '@vx-agent-editor/shared/errors/supabase';
 
 @Injectable()
 export class ExecutionSessionService {
     public readonly dbOps = {
-        upsert: async (supabase: SupabaseClient, userId: Auth.User.Id, workflowId: Workflow.Id, session: ExecutionSession) => {
-            const { data, error } = await supabase
+        upsert: withSupabaseAssert('executionSession.upsert', async (supabase: SupabaseClient, userId: Auth.User.Id, workflowId: Workflow.Id, session: ExecutionSession) => {
+            const { data } = await supabase
                 .from('execution_sessions')
                 .upsert({
                     id: session.id,
@@ -17,41 +18,37 @@ export class ExecutionSessionService {
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'id' })
                 .select<string, { id: ExecutionSession.Id }>('id')
-                .single();
+                .single()
+                .throwOnError();
 
-            if (error) 
-                throw error;
-            return data.id;
-        },
-        get: async (supabase: SupabaseClient, userId: Auth.User.Id, sessionId: ExecutionSession.Id) => {
-            const { data, error } = await supabase
+            return data!.id;
+        }),
+        get: withSupabaseAssert('executionSession.get', async (supabase: SupabaseClient, userId: Auth.User.Id, sessionId: ExecutionSession.Id) => {
+            const { data } = await supabase
                 .from('execution_sessions')
                 .select<string, ExecutionSession.Database.Row["data"]>('data')
                 .eq('id', sessionId)
                 .eq('user_id', userId)
                 .single()
-
-            if (error) 
-                throw error;
+                .throwOnError();
 
             return data as ExecutionSession
-        },
-        update: async (supabase: SupabaseClient, userId: Auth.User.Id, sessionId: ExecutionSession.Id, updates: ExecutionSession.Update) => {
-            const { data: oldSession, error: getError } = await supabase
+        }),
+        update: withSupabaseAssert('executionSession.update', async (supabase: SupabaseClient, userId: Auth.User.Id, sessionId: ExecutionSession.Id, updates: ExecutionSession.Update) => {
+            const { data: oldSession } = await supabase
                 .from('execution_sessions')
                 .select<string, ExecutionSession.Database.Row["data"]>('data')
                 .eq('id', sessionId)
                 .eq('user_id', userId)
-                .single();
-
-            if (getError) throw getError;
+                .single()
+                .throwOnError();
 
             const newSession = {
                 ...oldSession,
                 ...updates
             } satisfies ExecutionSession;
 
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('execution_sessions')
                 .update({
                     data: newSession,
@@ -60,13 +57,11 @@ export class ExecutionSessionService {
                 .eq('id', sessionId)
                 .eq('user_id', userId)
                 .select<string, ExecutionSession.Database.Row["data"]>('data')
-                .single();
+                .single()
+                .throwOnError();
 
-            if (error)
-                throw error;
-            
             return data
-        }
+        })
     };
 
 

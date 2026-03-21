@@ -10,6 +10,7 @@ import { SecretsResolver } from './utils';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { ChatService } from '../Chat/chat.service';
+import { withSupabaseAssert } from '@vx-agent-editor/shared/errors/supabase';
 
 @Injectable()
 export class OrchestratorService {
@@ -58,7 +59,7 @@ export class OrchestratorService {
 
     private readonly dbOps = {
         job: {
-            create: async (supabase: SupabaseClient, { workflowId, userId }: { workflowId: Workflow.Id, userId: Auth.User.Id }) => {
+            create: withSupabaseAssert('job.create', async (supabase: SupabaseClient, { workflowId, userId }: { workflowId: Workflow.Id, userId: Auth.User.Id }) => {
                 const jobId = crypto.randomUUID() as Orchestrator.Job.Id;
                 await supabase.from('jobs').insert({
                     id: jobId,
@@ -68,25 +69,19 @@ export class OrchestratorService {
                     updated_at: new Date(),
                     duration: 0,
                     user_id: userId
-                });
+                }).throwOnError();
                 return jobId;
-            },
-            update: async (supabase: SupabaseClient, { jobId, status, error }: { jobId: Orchestrator.Job.Id, status: string, error?: string }) => {
-
-                console.log(`Updating jobs table for ${jobId} with status ${status}`)
-
-                const { error: supabaseError } = await supabase.from('jobs').update({
+            }),
+            update: withSupabaseAssert('job.update', async (supabase: SupabaseClient, { jobId, status, error }: { jobId: Orchestrator.Job.Id, status: string, error?: string }) => {
+                await supabase.from('jobs').update({
                     status,
                     error,
                     updated_at: new Date()
-                }).eq('id', jobId);
-
-                if(supabaseError)
-                    console.log("SUPABASE ERRROR ", supabaseError)
-            },
-            delete: async (supabase: SupabaseClient, jobId: Orchestrator.Job.Id) => {
-                await supabase.from('jobs').delete().eq('id', jobId);
-            }
+                }).eq('id', jobId).throwOnError();
+            }),
+            delete: withSupabaseAssert('job.delete', async (supabase: SupabaseClient, jobId: Orchestrator.Job.Id) => {
+                await supabase.from('jobs').delete().eq('id', jobId).throwOnError();
+            })
         }
     };
 
