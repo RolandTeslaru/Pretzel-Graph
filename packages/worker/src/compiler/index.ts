@@ -1,7 +1,7 @@
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { Foundations, ExecutionSession, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { CatalogueService } from "src/services/Catalogue/service";
-import { PretzelCompilerError } from "../errors";
+import { AggexCompilerError } from "../errors";
 import { RuntimeNode } from "../node";
 import { Emitter } from "../event/emitter";
 import { StreamController } from "../context/stream-controller";
@@ -16,7 +16,7 @@ const START = "__START__" as Vertex.Id;
 export interface CompilationResult {
     compiledGraph: S2Graph;
     context: ExecutionContext;
-    nodeInstanceMap: Map<Vertex.Id, { wfNode: Workflow.Node; instance: RuntimeNode<Foundations.Blueprint> }>;
+    nodeInstanceMap: Map<Vertex.Id | Workflow.Node.Id, { wfNode: Workflow.Node; instance: RuntimeNode<Foundations.Blueprint> }>;
 }
 
 export class WorkflowCompiler {
@@ -64,7 +64,7 @@ export class WorkflowCompiler {
             const NodeConstructor = await CatalogueService.getNode(wfNode.blueprintId);
 
             if (!NodeConstructor)
-                throw new PretzelCompilerError(`Could not find node with blueprintId ${wfNode.blueprintId}`)
+                throw new AggexCompilerError(`Could not find node with blueprintId ${wfNode.blueprintId}`)
 
             const nodeInstance = new NodeConstructor(wfNode, context);
 
@@ -97,7 +97,7 @@ export class WorkflowCompiler {
         // Set Entry Points (Start Nodes)
         const startNodes = this.findStartNodes(nodes, edges);
         if (startNodes.length === 0)
-            throw new PretzelCompilerError("No start nodes found! Graph might be disconnected.")
+            throw new AggexCompilerError("No start nodes found! Graph might be disconnected.")
 
         startNodes.forEach(nodeId => {
             graph.addDependency(START, nodeId);
