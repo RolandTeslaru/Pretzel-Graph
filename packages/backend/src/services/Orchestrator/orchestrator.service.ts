@@ -9,6 +9,7 @@ import { Orchestrator } from '@vx-agent-editor/shared/domain';
 import { SecretsResolver } from './utils';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { RealtimeService } from '../Realtime/realtime.service';
+import { ChatService } from '../Chat/chat.service';
 
 @Injectable()
 export class OrchestratorService {
@@ -28,6 +29,7 @@ export class OrchestratorService {
         @InjectQueue(Orchestrator.EXECUTION_QUEUE_ID)
         private readonly executionQueue: Queue,
         private readonly realtime: RealtimeService,
+        private readonly chat: ChatService,
     ) {
         
         this.queueEvents.on("completed", async ({ jobId, returnvalue }) => {
@@ -39,6 +41,8 @@ export class OrchestratorService {
         });
 
         this.queueEvents.on("failed", async ({ jobId, failedReason }) => {
+            console.error(`[Orchestrator] Job ${jobId} failed:`, failedReason);
+
             const newStatus = failedReason === "terminated" ? "terminated" : "failed";
 
             await this.dbOps.job.update(
@@ -77,7 +81,8 @@ export class OrchestratorService {
                     updated_at: new Date()
                 }).eq('id', jobId);
 
-                console.log("SUPABASE ERRROR ", supabaseError)
+                if(supabaseError)
+                    console.log("SUPABASE ERRROR ", supabaseError)
             },
             delete: async (supabase: SupabaseClient, jobId: Orchestrator.Job.Id) => {
                 await supabase.from('jobs').delete().eq('id', jobId);
@@ -106,6 +111,18 @@ export class OrchestratorService {
 
         try {
             await SecretsResolver.resolveWorkflow(supabase, workflow);
+
+            const needsChat = Object.values(workflow.data.nodes).some(n =>
+                n.blueprintId === "Core.Chat.Output"
+            );
+
+            if (needsChat) {
+                await this.chat.ensure(token, userId, {
+                    chatId: executionSession.chatId,
+                    workflow_id: workflow.id,
+                });
+            }
+
 
             const queueItem: Orchestrator.ExecutionQueue.Item = {
                 jobId,

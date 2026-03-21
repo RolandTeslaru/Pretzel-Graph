@@ -17,6 +17,11 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
             queryFn: () => this.actions.chat.getAll(),
             staleTime: Infinity
         })
+
+        this.runtime.unsubscribeFromChatChannel = RealtimeSDK.subscribeToChannel(
+            Chat.Event.getChannel(this.state.currentChatId),
+            this.handleOnEvent
+        )
     }
 
 
@@ -62,7 +67,10 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
     public handleOnEvent = (event: Chat.Event) => {
         switch (event.type) {
             case "response:created":
-                this.actions.message.upsert(event.responseMessage);
+                this.useStore.setState(s => {
+                    this.reducers.upsertMessage(s, event.responseMessage);
+                    s.isSidebarVisible = true;
+                })
                 break;
             case "response:chunk":
                 this.actions.message.appendContent(event.responseMessageId, event.content);
