@@ -20,12 +20,6 @@ export const Blueprint = defineBlueprint({
             id: "languageModel",
             displayName: "Language Model",
         }),
-        InputBuilder.MessageList({
-            id: "chatHistory",
-            displayName: "Chat History",
-            required: false,
-            tooltip: "Chat history to be included in the context window"
-        }),
         InputBuilder.Message({
             id: "input",
             displayName: "Input",
@@ -36,7 +30,7 @@ export const Blueprint = defineBlueprint({
             id: "systemMessage",
             displayName: "System Message",
             tooltip: "A system message that helps set the behavior of the assistant"
-        })
+        }),
     ],
     outputs: [
         OutputBuilder.Message({

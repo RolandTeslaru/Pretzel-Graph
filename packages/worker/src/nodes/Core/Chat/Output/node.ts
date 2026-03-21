@@ -53,7 +53,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             console.log("Created response message with id ", responseMessage.id, " for chat ", chatId)
 
 
-            this.emit<Chat.Event.ResponseCreated>({
+            this.emit<Chat.Event.Response.Created>({
                 type: "response:created",
                 channel: Chat.Event.getChannel(chatId),
                 responseMessage,
@@ -63,7 +63,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
             // Listen and emit chunks as they come from the LLM
             context.streamController.onLlmChunk(upstreamNodeId, (content) => {
-                this.emit<Chat.Event.ResponseChunk>({
+                this.emit<Chat.Event.Response.Chunk>({
                     type: "response:chunk",
                     channel: Chat.Event.getChannel(chatId),
                     chatId,
@@ -94,7 +94,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
 
         if (this.responseMessageId && this.chatId) {
-            this.emit<Chat.Event.ResponseFinished>({
+            this.emit<Chat.Event.Response.Finished>({
                 type: "response:finished",
                 channel: Chat.Event.getChannel(this.chatId!),
                 responseMessageId: this.responseMessageId!,
