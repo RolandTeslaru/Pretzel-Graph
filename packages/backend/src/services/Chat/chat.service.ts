@@ -2,30 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { createAuthenticatedClient } from '@/utils/supabase';
 import { Auth, Chat, Workflow } from '@vx-agent-editor/shared/domain';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { withSupabaseAssert } from '@vx-agent-editor/shared/errors/supabase';
 
 @Injectable()
 export class ChatService {
 
-    private assertSupabaseOk(error: unknown, operation: string): void {
-        if (!error) return;
-
-        const message =
-            typeof error === "object" && error !== null && "message" in error
-                ? String((error as { message?: unknown }).message ?? "Unknown Supabase error")
-                : "Unknown Supabase error";
-
-        throw new Error(`[ChatService:${operation}] ${message}`);
-    }
-
     private readonly dbOps = {
         chat: {
-            create: async (
+            create: withSupabaseAssert('chat.create', async (
                 supabase: SupabaseClient,
                 userId: Auth.User.Id,
                 workflow_id: Workflow.Id,
                 name = "New Chat"
             ) => {
-                const { data, error } = await supabase
+                const { data } = await supabase
                     .from('chats')
                     .insert({
                         user_id: userId,
@@ -35,37 +25,33 @@ export class ChatService {
                         updated_at: new Date(),
                     })
                     .select<string, { id: Chat.Id }>('id')
-                    .single();
+                    .single()
+                    .throwOnError();
 
-                this.assertSupabaseOk(error, "chat.create");
-
-                if (!data?.id)
-                    throw new Error("[ChatService:chat.create] Missing inserted chat id");
-                
                 return {
-                    id: data.id,
+                    id: data!.id,
                     workflow_id,
                     name: name ?? "New Chat",
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 } satisfies Chat;
-            },
-            get: async (
+            }),
+            get: withSupabaseAssert('chat.get', async (
                 supabase: SupabaseClient,
                 userId: Auth.User.Id,
                 chatId: Chat.Id
             ) => {
-                const { data, error } = await supabase
+                const { data } = await supabase
                     .from('chats')
                     .select<string, Chat & { chat_messages: Chat.Message[] }>('id, user_id, workflow_id, name, created_at, updated_at, chat_messages(*)')
                     .eq('id', chatId)
                     .eq("user_id", userId)
                     .order('created_at', { referencedTable: 'chat_messages', ascending: true })
-                    .single();
+                    .single()
+                    .throwOnError();
 
-                this.assertSupabaseOk(error, "chat.get");
                 if (!data) {
-                    throw new Error("[ChatService:chat.get] Chat not found");
+                    throw new Error("Chat not found");
                 }
 
                 const { chat_messages, ...chat } = data;
@@ -74,18 +60,21 @@ export class ChatService {
                     chat,
                     messages: chat_messages ?? []
                 };
-            },
-            list: async (supabase: SupabaseClient, userId: Auth.User.Id) => {
-                const { data, error } = await supabase
+            }),
+            list: withSupabaseAssert('chat.list', async (
+                supabase: SupabaseClient,
+                userId: Auth.User.Id
+            ) => {
+                const { data } = await supabase
                     .from('chats')
                     .select<string, Chat>('*')
                     .eq('user_id', userId)
-                    .order('updated_at', { ascending: false });
+                    .order('updated_at', { ascending: false })
+                    .throwOnError();
 
-                this.assertSupabaseOk(error, "chat.list");
                 return data ?? [];
-            },
-            ensure: async (
+            }),
+            ensure: withSupabaseAssert('chat.ensure', async (
                 supabase: SupabaseClient,
                 userId: Auth.User.Id,
                 chatId: Chat.Id,
@@ -100,10 +89,10 @@ export class ChatService {
                     .single();
 
                 if (existing) {
-                    return existing
+                    return existing;
                 }
 
-                const { data, error } = await supabase
+                const { data } = await supabase
                     .from('chats')
                     .insert({
                         id: chatId,
@@ -114,33 +103,39 @@ export class ChatService {
                         updated_at: new Date(),
                     })
                     .select<string, Chat>('*')
-                    .single();
-
-                this.assertSupabaseOk(error, "chat.ensure");
+                    .single()
+                    .throwOnError();
 
                 if (!data)
-                    throw new Error("[ChatService:chat.ensure] Missing inserted chat");
+                    throw new Error("Missing inserted chat");
 
                 return data;
-            },
-            erase: async (supabase: SupabaseClient, userId: Auth.User.Id, chatId: Chat.Id) => {
-                const { error: messagesError } = await supabase
+            }),
+            erase: withSupabaseAssert('chat.erase', async (
+                supabase: SupabaseClient,
+                userId: Auth.User.Id,
+                chatId: Chat.Id
+            ) => {
+                await supabase
                     .from('chat_messages')
                     .delete()
-                    .eq('chat_id', chatId);
-                this.assertSupabaseOk(messagesError, "chat.erase.messages");
+                    .eq('chat_id', chatId)
+                    .throwOnError();
 
-                const { error } = await supabase
+                await supabase
                     .from('chats')
                     .delete()
                     .eq('id', chatId)
-                    .eq('user_id', userId);
-                this.assertSupabaseOk(error, "chat.erase");
-            },
+                    .eq('user_id', userId)
+                    .throwOnError();
+            }),
         },
         message: {
-            add: async (supabase: SupabaseClient, message: Chat.Message) => {
-                const { error } = await supabase
+            add: withSupabaseAssert('message.add', async (
+                supabase: SupabaseClient,
+                message: Chat.Message
+            ) => {
+                await supabase
                     .from('chat_messages')
                     .insert({
                         id: message.id,
@@ -150,22 +145,30 @@ export class ChatService {
                         data: message.data ?? {},
                         attachments: message.attachments ?? null,
                         created_at: new Date(),
-                    });
-
-                this.assertSupabaseOk(error, "message.add");
-            },
-            erase: async (supabase: SupabaseClient, messageId: Chat.Message.Id) => {
-                const { error } = await supabase.from('chat_messages').delete().eq('id', messageId);
-                this.assertSupabaseOk(error, "message.erase");
-            },
-            update: async (supabase: SupabaseClient, messageId: Chat.Message.Id, content: string) => {
-                const { error } = await supabase
+                    })
+                    .throwOnError();
+            }),
+            erase: withSupabaseAssert('message.erase', async (
+                supabase: SupabaseClient,
+                messageId: Chat.Message.Id
+            ) => {
+                await supabase
+                    .from('chat_messages')
+                    .delete()
+                    .eq('id', messageId)
+                    .throwOnError();
+            }),
+            update: withSupabaseAssert('message.update', async (
+                supabase: SupabaseClient,
+                messageId: Chat.Message.Id,
+                content: string
+            ) => {
+                await supabase
                     .from('chat_messages')
                     .update({ content })
-                    .eq('id', messageId);
-
-                this.assertSupabaseOk(error, "message.update");
-            }
+                    .eq('id', messageId)
+                    .throwOnError();
+            })
         }
     };
 

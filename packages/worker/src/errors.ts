@@ -1,14 +1,24 @@
-export class PretzelCompilerError extends Error {
-    constructor (message: string){
+export class AggexCompilerError extends Error {
+    constructor(message: string) {
         super(message)
 
-        Object.setPrototypeOf(this, PretzelCompilerError.prototype);
+        Object.setPrototypeOf(this, AggexCompilerError.prototype);
         this.name = this.constructor.name;
     }
 }
 
+export class AggexExecutionError extends Error {
+    constructor(message: string) {
+        super(message)
+
+        Object.setPrototypeOf(this, AggexExecutionError.prototype);
+        this.name = this.constructor.name;
+    }
+}
+    
+
 export class SynthesizerError extends Error {
-    constructor (message: string){
+    constructor(message: string) {
         super(message)
 
         Object.setPrototypeOf(this, SynthesizerError.prototype);
@@ -17,7 +27,7 @@ export class SynthesizerError extends Error {
 }
 
 export class SynthesizerCoercionError extends Error {
-    constructor (variant: string, value: any){
+    constructor(variant: string, value: any) {
         super(`Cannot coerce value of type "${typeof value}" into variant "${variant}"`)
 
         Object.setPrototypeOf(this, SynthesizerCoercionError.prototype);
