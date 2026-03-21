@@ -131,36 +131,40 @@ export namespace Chat {
             chatId: Chat.Id,
         })
 
-        export namespace ResponseCreated {
-            export const Schema = Base.extend({
-                type: z.literal("response:created"),
-                responseMessage: Message.AI
-            })
+        export namespace Response {
+            export namespace Created {
+                export const Schema = Base.extend({
+                    type: z.literal("response:created"),
+                    responseMessage: Message.AI
+                })
+            }
+            export type Created = z.infer<typeof Created.Schema>
+    
+            export namespace Chunk {
+                export const Schema = Base.extend({
+                    type: z.literal("response:chunk"),
+                    content: z.string(),
+                    responseMessageId: Message.Id,
+                })
+            }
+            export type Chunk = z.infer<typeof Chunk.Schema>
+    
+            export namespace Finished {
+                export const Schema = Base.extend({
+                    type: z.literal("response:finished"),
+                    responseMessageId: Message.Id,
+                    finalContent: z.string(),
+                })
+            }
+            export type Finished = z.infer<typeof Finished.Schema>
+            
         }
-        export type ResponseCreated = z.infer<typeof ResponseCreated.Schema>
 
-        export namespace ResponseChunk {
-            export const Schema = Base.extend({
-                type: z.literal("response:chunk"),
-                content: z.string(),
-                responseMessageId: Message.Id,
-            })
-        }
-        export type ResponseChunk = z.infer<typeof ResponseChunk.Schema>
-
-        export namespace ResponseFinished {
-            export const Schema = Base.extend({
-                type: z.literal("response:finished"),
-                responseMessageId: Message.Id,
-                finalContent: z.string(),
-            })
-        }
-        export type ResponseFinished = z.infer<typeof ResponseFinished.Schema>
 
         export const Schema = z.discriminatedUnion("type", [
-            ResponseCreated.Schema,
-            ResponseChunk.Schema,
-            ResponseFinished.Schema,
+            Response.Created.Schema,
+            Response.Chunk.Schema,
+            Response.Finished.Schema,
         ])
     }
     export type Event = z.infer<typeof Event.Schema>
