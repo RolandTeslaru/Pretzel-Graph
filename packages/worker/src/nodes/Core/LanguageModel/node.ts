@@ -20,7 +20,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             inputs.systemMessage,
             inputs.input
         ], {
-            signal: this.context.abortController.signal
+            signal: context.abortController.signal
         })
         return { response }
     }
