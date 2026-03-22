@@ -128,6 +128,10 @@ code {
   --info-background: #E5F0FA;
   --info-foreground: oklch(0.35 0.18 240);
 
+  /* Error states */
+  --error-background: var(--color-red-100);
+  --error-foreground: var(--color-red-700);
+
 
   --port-Message: theme(--color-blue-400);
   --port-Message-foreground: theme(--color-blue-400);
@@ -262,6 +266,22 @@ code {
 
   /* --group-routing: theme(--color-white); */
 
+  /* Success states */
+  --success-background: theme(--color-emerald-950);
+  --success-foreground: theme(--color-emerald-400);
+
+  /* Warning states */
+  --warning-background: theme(--color-amber-950);
+  --warning-foreground: theme(--color-amber-400);
+  --warning-text: theme(--color-amber-400);
+
+  /* Info states */
+  --info-background: theme(--color-blue-950);
+  --info-foreground: theme(--color-blue-400);
+
+  /* Error states */
+  --error-background: theme(--color-red-950);
+  --error-foreground: theme(--color-red-400);
 
   /* Dark mode custom variables */
   --canvas: oklch(0.18 0.01 264);

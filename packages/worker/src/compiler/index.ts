@@ -11,8 +11,6 @@ import { load } from "@langchain/core/load";
 import { BaseMessage } from "@langchain/core/messages";
 import { InferFields } from "../types";
 
-const START = "__START__" as Vertex.Id;
-
 export interface CompilationResult {
     compiledGraph: S2Graph;
     context: ExecutionContext;
@@ -35,7 +33,7 @@ export class WorkflowCompiler {
         const edges = workflow.data.edges;
 
         // START vertex — S2Engine ignites from here
-        graph.addVertex(START);
+        graph.addVertex(S2Graph.START_VERTEX_ID);
 
         // Reconstruct BaseMessage instances from plain serialized objects (messages arrive as JSON over HTTP/Redis)
         const reconstructedMessages = await Promise.all(
@@ -100,7 +98,7 @@ export class WorkflowCompiler {
             throw new AggexCompilerError("No start nodes found! Graph might be disconnected.")
 
         startNodes.forEach(nodeId => {
-            graph.addDependency(START, nodeId);
+            graph.addDependency(S2Graph.START_VERTEX_ID, nodeId);
         });
 
         return { compiledGraph: graph, context, nodeInstanceMap };

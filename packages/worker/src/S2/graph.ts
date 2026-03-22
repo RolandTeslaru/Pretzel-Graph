@@ -47,6 +47,8 @@ export class S2Graph {
     public dependentsMap: Map<Vertex.Id, Set<Vertex.Id>> = new Map();
     public dependenciesMap: Map<Vertex.Id, Set<Vertex.Id>> = new Map();
 
+    public static readonly START_VERTEX_ID = "__START__" as Vertex.Id;
+
     public addVertex(
         vertexId: string,
         strategy?: Vertex.STRATEGY
