@@ -17,7 +17,6 @@ export class AggexEngine {
     private nodeInstanceMap: CompilationResult['nodeInstanceMap'];
     private compiledGraph: CompilationResult['compiledGraph'];
     private eventChannel: ExecutionSession.Event.Channel;
-    private readonly session: ExecutionSession
     private readonly workflow: Workflow;
     private readonly workflowCache: Workflow.Cache;
 
@@ -29,7 +28,6 @@ export class AggexEngine {
         this.compiledGraph = compilationResult.compiledGraph;
         this.eventChannel = ExecutionSession.Event.getChannel(this.context.session.id)
         this.emit = this.context.emit;
-        this.session = this.context.session;
         this.workflow = this.context.workflow;
         this.workflowCache = this.context.workflowCache;
     }
@@ -68,7 +66,7 @@ export class AggexEngine {
             const edge = this.workflow.data.edges[edgeId];
 
             if (edge) {
-                const sourceOutputs = this.session.node_outputs[edge.source.nodeId];
+                const sourceOutputs = this.context.session.node_outputs[edge.source.nodeId];
                 if (sourceOutputs) {
                     const rawReference = sourceOutputs[edge.source.portId as string];
                     resolved[input.id] = Synthesizer.ensureReference(rawReference, input.variant);
@@ -92,7 +90,8 @@ export class AggexEngine {
 
     private onNodeFired(nodeId: Vertex.Id) {
         const entry = this.nodeInstanceMap.get(nodeId);
-        if (!entry) return;
+        if (!entry) 
+            return;
 
         // Set all incoming (dependency) edges to completed
         const incomingEdges = this.workflowCache.incomingEdgesMap[entry.wfNode.id];
@@ -109,11 +108,11 @@ export class AggexEngine {
             const edgeStateUpdate: ExecutionSession["edge_state"] = {};
 
             for (const edgeId of Object.values(incomingEdges))
-                if (this.session.edge_state[edgeId])
-                    edgeStateUpdate[edgeId] = this.session.edge_state[edgeId];
+                if (this.context.session.edge_state[edgeId])
+                    edgeStateUpdate[edgeId] = this.context.session.edge_state[edgeId];
 
             this.emit<ExecutionSession.Event.Update>({
-                executionSessionId: this.session.id,
+                executionSessionId: this.context.session.id,
                 workflowId: this.workflow.id,
                 type: "update",
                 channel: this.eventChannel,
@@ -136,10 +135,10 @@ export class AggexEngine {
 
             const preparingUpdate: ExecutionSession["edge_state"] = {};
             for (const edgeId of Object.values(outgoingEdgesFired))
-                preparingUpdate[edgeId] = this.session.edge_state[edgeId];
+                preparingUpdate[edgeId] = this.context.session.edge_state[edgeId];
 
             this.emit<ExecutionSession.Event.Update>({
-                executionSessionId: this.session.id,
+                executionSessionId: this.context.session.id,
                 workflowId: this.workflow.id,
                 type: "update",
                 channel: this.eventChannel,
@@ -150,7 +149,7 @@ export class AggexEngine {
         this.emit<ExecutionSession.Event.Node.Started>({
             workflowId: this.workflow.id,
             type: "node:started",
-            executionSessionId: this.session.id,
+            executionSessionId: this.context.session.id,
             nodeId: entry.wfNode.id,
             channel: this.eventChannel,
         });
@@ -159,10 +158,11 @@ export class AggexEngine {
 
 
 
+
     private onNodeExecuted = async (vertexId: Vertex.Id): Promise<Set<Vertex.Id> | void> => {
         const entry = this.nodeInstanceMap.get(vertexId);
         if (!entry)
-            throw new AggexExecutionError(`Could not find node with id ${vertexId}`);
+            return;
 
         const wfNode = entry.wfNode;
         const nodeInstance = entry.instance;
@@ -185,9 +185,9 @@ export class AggexEngine {
     private onNodeCompleted(vertexId: Vertex.Id) {
         const entry = this.nodeInstanceMap.get(vertexId);
         if (!entry)
-            throw new AggexExecutionError(`Could not find node with id ${vertexId}`);
-
-        const output = this.session.node_outputs[entry.wfNode.id];
+            return 
+        
+        const output = this.context.session.node_outputs[entry.wfNode.id];
 
         // Set all outgoing edges to waiting and increment runCount
         const outgoingEdges = this.workflowCache.outgoingEdgesMap[entry.wfNode.id];
@@ -207,10 +207,10 @@ export class AggexEngine {
 
             const edgeStateUpdate: ExecutionSession["edge_state"] = {};
             for (const edgeId of Object.values(outgoingEdges))
-                edgeStateUpdate[edgeId] = this.session.edge_state[edgeId];
+                edgeStateUpdate[edgeId] = this.context.session.edge_state[edgeId];
 
             this.emit<ExecutionSession.Event.Update>({
-                executionSessionId: this.session.id,
+                executionSessionId: this.context.session.id,
                 workflowId: this.workflow.id,
                 type: "update",
                 channel: this.eventChannel,
@@ -219,7 +219,7 @@ export class AggexEngine {
         }
 
         this.emit<ExecutionSession.Event.Node.Completed>({
-            executionSessionId: this.session.id,
+            executionSessionId: this.context.session.id,
             workflowId: this.workflow.id,
             type: "node:completed",
             nodeId: entry.wfNode.id,
@@ -238,7 +238,7 @@ export class AggexEngine {
     ) {
         const entry = this.nodeInstanceMap.get(vertexId);
         if (!entry)
-            throw new AggexExecutionError(`Could not find node with id ${vertexId}`);
+            return
 
         const { instance, wfNode } = entry;
 
@@ -248,7 +248,7 @@ export class AggexEngine {
         }
 
         this.emit<ExecutionSession.Event.Node.Waiting>({
-            executionSessionId: this.session.id,
+            executionSessionId: this.context.session.id,
             workflowId: this.workflow.id,
             type: "node:waiting",
             nodeId: wfNode.id,
@@ -269,7 +269,7 @@ export class AggexEngine {
         console.error(`Error during node execution, ${vertexId}:`, error)
 
         this.emit<ExecutionSession.Event.Node.Error>({
-            executionSessionId: this.session.id,
+            executionSessionId: this.context.session.id,
             workflowId: this.workflow.id,
             type: "node:error",
             nodeId: vertexId as unknown as Workflow.Node.Id,
