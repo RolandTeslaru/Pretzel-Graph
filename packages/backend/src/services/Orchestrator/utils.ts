@@ -1,5 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Vault, Workflow } from "@vx-agent-editor/shared/domain";
+import { SysError } from "@vx-agent-editor/shared/domain/SysError";
 
 
 export class SecretsResolver {
@@ -7,7 +8,7 @@ export class SecretsResolver {
         const resolvedSecrets: Record<Vault.Credential.Id, Vault.Secret> = {};
 
         for (const [_, node] of Object.entries(workflow.data.nodes)) {
-            
+
             const staticValues = workflow.data.staticValues[node.id];
 
             for (const [_, field] of Object.entries(node.fields)) {
@@ -17,7 +18,11 @@ export class SecretsResolver {
                 const credentialId = staticValues[field.id] as Vault.Credential.Id;
 
                 if(!credentialId)
-                    throw new Error(`Field '${field.id}' on node '${node.id}' does not have a credential assigned to it.`);
+                    throw new SysError(
+                        SysError.Code.CONFIG_MISSING_CREDENTIAL,
+                        `Node "${node.blueprintId}" is missing a credential for field "${field.id}"`,
+                        { data: { nodeId: node.id, fieldId: field.id, blueprintId: node.blueprintId } }
+                    );
 
                 if (credentialId in resolvedSecrets) {
                     staticValues[field.id] = resolvedSecrets[credentialId];
@@ -27,7 +32,11 @@ export class SecretsResolver {
                 const { value: secret } = await Vault.API.Credential.reveal(supabase, { id: credentialId })
 
                 if (!secret)
-                    throw new Error(`Failed to resolve secret for credentialId ${credentialId}`)
+                    throw new SysError(
+                        SysError.Code.CONFIG_MISSING_CREDENTIAL,
+                        `Failed to resolve secret for credential "${credentialId}"`,
+                        { data: { nodeId: node.id, credentialId } }
+                    );
 
                 resolvedSecrets[credentialId] = secret;
                 staticValues[field.id] = secret;

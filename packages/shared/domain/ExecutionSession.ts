@@ -5,6 +5,7 @@ import { Auth } from "./Auth"
 import { type BaseMessage } from "@langchain/core/messages"
 import { Realtime } from "./Realtime"
 import { Chat } from "./Chat"
+import { SysError } from "./SysError"
 
 
 export namespace ExecutionSession {
@@ -21,7 +22,7 @@ export namespace ExecutionSession {
     export namespace NodeStatus {
         export const Schema = z.object({
             status: z.enum(["idle", "running", "completed", "waiting", "failed"]),
-            error: z.string().optional(),
+            error: SysError.Schema.optional(),
             started_at:   z.iso.datetime().optional(),
             completed_at: z.iso.datetime().optional(),
         })
@@ -128,7 +129,7 @@ export namespace ExecutionSession {
             export const Error = Base.extend({
                 type: z.literal('node:error'),
                 nodeId: Workflow.Node.Id,
-                error: z.string()
+                error: SysError.Schema
             })
 
             export const Waiting = Base.extend({

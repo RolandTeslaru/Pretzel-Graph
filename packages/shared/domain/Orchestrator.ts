@@ -5,6 +5,7 @@ import { Realtime } from "./Realtime"
 import { type AxiosInstance } from "axios"
 import { ExecutionSession } from "./ExecutionSession"
 import { Chat } from "./Chat"
+import { SysError } from "./SysError"
 
 export namespace Orchestrator {
     export namespace Job {
@@ -68,7 +69,7 @@ export namespace Orchestrator {
 
             export const Failed = Base.extend({
                 type: z.literal('compilation:failed'),
-                error: z.string()
+                error: SysError.Schema
             })
 
             export type Started = z.infer<typeof Started>
@@ -108,7 +109,7 @@ export namespace Orchestrator {
 
         export const Failed = Base.extend({
             type: z.literal('failed'),
-            error: z.string()
+            error: SysError.Schema
         })
 
         export const Completed = Base.extend({

@@ -62,25 +62,14 @@ export class ChatController {
     }
 
 
-    @Post('message/send')
+    @Post('message/add')
     @HttpCode(200)
-    async sendMessage(
+    async addMessage(
         @Req() req: AuthenticatedRequest,
         @Body() body: any
     ) {
-        const payload = Chat.API.Message.Send.Request.parse(body);
-        return await this.chatService.message.send(req.token, payload);
-    }
-
-
-    @Post('message/respond')
-    @HttpCode(200)
-    async respondMessage(
-        @Req() req: AuthenticatedRequest,
-        @Body() body: any
-    ) {
-        const payload = Chat.API.Message.Respond.Request.parse(body);
-        return await this.chatService.message.respond(req.token, payload);
+        const payload = Chat.API.Message.Add.Request.parse(body);
+        return await this.chatService.message.add(req.token, payload);
     }
 
 

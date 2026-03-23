@@ -1,4 +1,4 @@
-import { Chat } from "@vx-agent-editor/shared/domain";
+import { Chat, SysError } from "@vx-agent-editor/shared/domain";
 import { OrchestratorSDK } from "../OrchestratorSDK/sdk";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import type { ChatSDKImpl } from "./sdk";
@@ -36,6 +36,8 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                 let currentChatId = sdk.state.currentChatId;
                 let currentChat = currentChatId ? sdk.state.chats[currentChatId] : null;
 
+                let createdNewChat = false
+
                 // Ensures we have a chat
                 if (!currentChat) {
                     try {
@@ -48,9 +50,11 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                             s.currentChatId = chat.id;
                             s.chats[chat.id] = chat;
                         })
+
+                        createdNewChat = true;
                     }
                     catch (err) {
-                        toast.error("Failed to create chat");
+                        toast.error(SysError.messageFrom(err, "create chat"));
                         console.error("Failed to create chat", err);
                         return;
                     }
@@ -67,7 +71,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                 }
 
                 try {
-                    await Chat.API.Message.send(api, { message })
+                    await Chat.API.Message.add(api, { message })
 
                     sdk.actions.message.upsert(message)
 
@@ -84,8 +88,12 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     })
                 }
                 catch (err) {
-                    toast.error("Failed to send message");
+                    toast.error(SysError.messageFrom(err, "send message"));
                     console.error("Failed to send message", err);
+
+                    if(createdNewChat){
+                        sdk.actions.chat.erase(currentChat.id);
+                    }
                     return;
                 }
             },
@@ -104,7 +112,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     })
                     return true;
                 } catch (err) {
-                    toast.error("Failed to get chats");
+                    toast.error(SysError.messageFrom(err, "load chats"));
                     console.error("Failed to get chats", err);
                     return false;
                 }
@@ -113,41 +121,49 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                 sdk.useStore.setState(s => {
                     s.messages = [];
                     s.messagesRecord = {};
-                    s.currentChatId = chatId;
                     s.isLoading = true;
                 })
 
-                const { chat, messages } = await Chat.API.get(api, { chatId });
-
-                sdk.useStore.setState(s => {
-                    s.currentChatId = chatId;
-                    messages.forEach(m => {
-                        s.messages.push(m.id);
-                        s.messagesRecord[m.id] = m;
+                try {
+                    const { chat, messages } = await Chat.API.get(api, { chatId });
+    
+                    sdk.useStore.setState(s => {
+                        s.currentChatId = chatId;
+                        messages.forEach(m => {
+                            s.messages.push(m.id);
+                            s.messagesRecord[m.id] = m;
+                        })
+                        s.isLoading = false;
                     })
-                    s.isLoading = false;
-                })
-
-                ExecutionSessionSDK.setState(s => {
-                    s.session.messages = [];
-
-                    messages.forEach(msg => {
-
-                        switch(msg.role){
-                            case "ai":
-                                s.session.messages.push(new AIMessage(msg.content));
-                                break
-                            case "human":
-                                s.session.messages.push(new HumanMessage(msg.content));
-                                break;
-                            case "system":
-                                s.session.messages.push(new SystemMessage(msg.content));
-                                break;
-                            // case "tool":
-                            // s.session.messages.push(new ToolMessage(msg.));
-                        }
+    
+                    ExecutionSessionSDK.setState(s => {
+                        s.session.messages = [];
+    
+                        messages.forEach(msg => {
+    
+                            switch(msg.role){
+                                case "ai":
+                                    s.session.messages.push(new AIMessage(msg.content));
+                                    break
+                                case "human":
+                                    s.session.messages.push(new HumanMessage(msg.content));
+                                    break;
+                                case "system":
+                                    s.session.messages.push(new SystemMessage(msg.content));
+                                    break;
+                                // case "tool":
+                                // s.session.messages.push(new ToolMessage(msg.));
+                            }
+                        })
                     })
-                })
+                
+                } catch(err){
+                    sdk.setState(s => {
+                        s.isLoading = false;
+                    })
+                    toast.error(SysError.messageFrom(err, "load chat"));
+                    console.error("Failed to load chat", err);
+                }
             },
             new: () => {
                 sdk.setState(s => {
@@ -178,7 +194,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                         }
                     });
                 } catch (err) {
-                    toast.error("Failed to delete chat");
+                    toast.error(SysError.messageFrom(err, "delete chat"));
                     console.error("Failed to delete chat", err);
                 }
             },
