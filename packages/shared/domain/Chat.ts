@@ -171,35 +171,18 @@ export namespace Chat {
 
     export namespace API {
         export namespace Message {
-            export namespace Send {
+            export namespace Add {
                 export const Request = z.lazy(() => z.object({
-                    message: Chat.Message.Human,
+                    message: Chat.Message.Schema,
                 }))
                 export type Request = z.infer<typeof Request>
 
                 export const Response = z.object({})
                 export type Response = z.infer<typeof Response>
             }
-            export async function send(api: AxiosInstance, req: Send.Request): Promise<Message.Send.Response> {
-                const { data } = await api.post<Send.Response>(
-                    "/api/chat/message/send", req
-                )
-                return data
-            }
-
-
-            export namespace Respond {
-                export const Request = z.object({
-                    responseMessage: Chat.Message.AI,
-                })
-                export type Request = z.infer<typeof Request>
-
-                export const Response = z.object({})
-                export type Response = z.infer<typeof Response>
-            }
-            export async function respond(api: AxiosInstance, req: Respond.Request): Promise<Respond.Response> {
-                const { data } = await api.post<Respond.Response>(
-                    "/api/chat/message/respond", req
+            export async function add(api: AxiosInstance, req: Add.Request): Promise<Add.Response> {
+                const { data } = await api.post<Add.Response>(
+                    "/api/chat/message/add", req
                 )
                 return data
             }

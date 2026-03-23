@@ -1,36 +1,43 @@
-export class AggexCompilerError extends Error {
-    constructor(message: string) {
-        super(message)
+import { SysError } from "@vx-agent-editor/shared/domain/SysError";
 
-        Object.setPrototypeOf(this, AggexCompilerError.prototype);
-        this.name = this.constructor.name;
+/**
+ * Base error for the Aggex execution engine.
+ * Extends SysError so it serializes over the wire automatically.
+ */
+export class AggexError extends SysError {
+    constructor(
+        code: SysError.Code,
+        message: string,
+        opts?: { severity?: SysError.Severity; detail?: string; data?: unknown }
+    ) {
+        super(code, message, opts)
+        this.name = "AggexError"
+        Object.setPrototypeOf(this, AggexError.prototype)
     }
 }
 
-export class AggexExecutionError extends Error {
-    constructor(message: string) {
-        super(message)
-
-        Object.setPrototypeOf(this, AggexExecutionError.prototype);
-        this.name = this.constructor.name;
-    }
-}
-    
-
-export class SynthesizerError extends Error {
-    constructor(message: string) {
-        super(message)
-
-        Object.setPrototypeOf(this, SynthesizerError.prototype);
-        this.name = this.constructor.name;
+/** Thrown during workflow compilation (graph validation, missing nodes, etc.) */
+export class AggexCompilerError extends AggexError {
+    constructor(
+        code: SysError.Code,
+        message: string,
+        opts?: { severity?: SysError.Severity; detail?: string; data?: unknown }
+    ) {
+        super(code, message, opts)
+        this.name = "AggexCompilerError"
+        Object.setPrototypeOf(this, AggexCompilerError.prototype)
     }
 }
 
-export class SynthesizerCoercionError extends Error {
-    constructor(variant: string, value: any) {
-        super(`Cannot coerce value of type "${typeof value}" into variant "${variant}"`)
-
-        Object.setPrototypeOf(this, SynthesizerCoercionError.prototype);
-        this.name = this.constructor.name;
+/** Thrown during node execution within the engine. */
+export class AggexExecutionError extends AggexError {
+    constructor(
+        code: SysError.Code,
+        message: string,
+        opts?: { severity?: SysError.Severity; detail?: string; data?: unknown }
+    ) {
+        super(code, message, opts)
+        this.name = "AggexExecutionError"
+        Object.setPrototypeOf(this, AggexExecutionError.prototype)
     }
 }

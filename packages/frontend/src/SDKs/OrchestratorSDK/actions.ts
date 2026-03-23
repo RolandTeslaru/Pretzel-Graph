@@ -41,7 +41,8 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
             toast.promise(executionPromise, {
                 loading: "Preparing workflow execution",
                 error: (error) => {
-                    const message = error?.response?.data?.error || error.message;
+                    const sysError = error?.response?.data?.error;
+                    const message = sysError?.message || error.message;
                     return `Workflow execution failed to start: ${message}`
                 }
             })

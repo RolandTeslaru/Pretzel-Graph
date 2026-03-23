@@ -1,6 +1,7 @@
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { Foundations, ExecutionSession, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { CatalogueService } from "src/services/Catalogue/service";
+import { SysError } from "@vx-agent-editor/shared/domain/SysError";
 import { AggexCompilerError } from "../errors";
 import { RuntimeNode } from "../node";
 import { Emitter } from "../event/emitter";
@@ -62,7 +63,11 @@ export class WorkflowCompiler {
             const NodeConstructor = await CatalogueService.getNode(wfNode.blueprintId);
 
             if (!NodeConstructor)
-                throw new AggexCompilerError(`Could not find node with blueprintId ${wfNode.blueprintId}`)
+                throw new AggexCompilerError(
+                    SysError.Code.COMPILATION_NODE_NOT_FOUND,
+                    `Could not find node "${wfNode.blueprintId}"`,
+                    { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
+                )
 
             const nodeInstance = new NodeConstructor(wfNode, context);
 
@@ -95,7 +100,10 @@ export class WorkflowCompiler {
         // Set Entry Points (Start Nodes)
         const startNodes = this.findStartNodes(nodes, edges);
         if (startNodes.length === 0)
-            throw new AggexCompilerError("No start nodes found! Graph might be disconnected.")
+            throw new AggexCompilerError(
+                SysError.Code.COMPILATION_NO_START_NODES,
+                "No start nodes found — the graph may be disconnected"
+            )
 
         startNodes.forEach(nodeId => {
             graph.addDependency(S2Graph.START_VERTEX_ID, nodeId);

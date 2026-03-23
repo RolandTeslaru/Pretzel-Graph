@@ -7,7 +7,7 @@ import { S2Engine, S2Hooks } from "../S2/engine";
 import { Vertex } from "../S2/graph";
 import { Synthesizer } from "../synthesizer";
 import { ExecutionContext } from "../context";
-import { AggexExecutionError } from "src/errors";
+import { SysError } from "@vx-agent-editor/shared/domain/SysError";
 import { Emitter } from "src/event/emitter";
 
 export class AggexEngine {
@@ -265,8 +265,9 @@ export class AggexEngine {
 
 
     private onVertexError(vertexId: Vertex.Id, error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : String(error)
         console.error(`Error during node execution, ${vertexId}:`, error)
+
+        const sysError = SysError.fromUnknown(error, SysError.Code.EXECUTION_NODE_FAILED)
 
         this.emit<ExecutionSession.Event.Node.Error>({
             executionSessionId: this.context.session.id,
@@ -274,7 +275,7 @@ export class AggexEngine {
             type: "node:error",
             nodeId: vertexId as unknown as Workflow.Node.Id,
             channel: this.eventChannel,
-            error: errorMessage
+            error: sysError.toJSON()
         })
     }
 

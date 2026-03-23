@@ -227,23 +227,13 @@ export class ChatService {
     }
 
     public readonly message = {
-        send: async (
+        add: async (
             token: string,
-            payload: Chat.API.Message.Send.Request
-        ): Promise<Chat.API.Message.Send.Response> => {
+            payload: Chat.API.Message.Add.Request
+        ): Promise<Chat.API.Message.Add.Response> => {
             const supabase = createAuthenticatedClient(token);
             const { message } = payload;
             await this.dbOps.message.add(supabase, message);
-            return {};
-        },
-
-        respond: async (
-            token: string,
-            payload: Chat.API.Message.Respond.Request
-        ): Promise<Chat.API.Message.Respond.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            const { responseMessage } = payload;
-            await this.dbOps.message.add(supabase, responseMessage);
             return {};
         },
 
