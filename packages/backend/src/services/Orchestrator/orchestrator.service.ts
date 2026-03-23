@@ -6,6 +6,7 @@ import { createAuthenticatedClient, createServiceClient } from '@/utils/supabase
 import { REDIS_HOST, REDIS_PORT } from '@vx-agent-editor/shared/constants';
 import { Auth, Realtime, Validation, Workflow } from '@vx-agent-editor/shared/domain';
 import { Orchestrator } from '@vx-agent-editor/shared/domain';
+import { SysError } from '@vx-agent-editor/shared/domain/SysError';
 import { SecretsResolver } from './utils';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { RealtimeService } from '../Realtime/realtime.service';
@@ -98,7 +99,11 @@ export class OrchestratorService {
         const workflowIssues = Validation.Issue.checkWorkflow(workflow, wfCache);
 
         if (Object.entries(workflowIssues).length > 0)
-            throw new Error("Workflow has issues");
+            throw new SysError(
+                SysError.Code.CONFIG_INVALID_FIELD,
+                "Workflow has nodes with missing fields or inputs — fix them before running",
+                { data: { issues: workflowIssues } }
+            );
 
         const supabase = createAuthenticatedClient(token);
 

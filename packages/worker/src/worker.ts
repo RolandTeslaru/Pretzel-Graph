@@ -2,6 +2,7 @@ import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants"
 import { Orchestrator } from '@vx-agent-editor/shared/domain';
+import { SysError } from '@vx-agent-editor/shared/domain/SysError';
 import { AggexEngine } from 'src/engine';
 import { container, singleton } from 'tsyringe';
 import { Emitter, EmitterEvent } from './event/emitter';
@@ -112,14 +113,16 @@ export class AggexWorkerImpl {
         } catch (err) {
             console.error("Error during execution of job", jobId, err);
 
+            const sysError = SysError.fromUnknown(err)
+
             this.emit<Orchestrator.Event.Failed>({
                 jobId,
                 workflowId: workflow.id,
                 type: "failed",
                 channel: eventChannel,
-                error: (err as Error).message
+                error: sysError.toJSON()
             });
-            return { status: 'failed', error: (err as Error).message };
+            return { status: 'failed', error: sysError.toJSON() };
 
         } finally {
             console.log("Deleting job", jobId, "from running engines and contexts")
