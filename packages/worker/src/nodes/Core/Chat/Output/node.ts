@@ -49,7 +49,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
             this.responseMessageId = responseMessage.id;
 
-            await Chat.API.Message.respond(AxiosService.api, { responseMessage })
+            await Chat.API.Message.add(AxiosService.api, { message: responseMessage })
             console.log("Created response message with id ", responseMessage.id, " for chat ", chatId)
 
 

@@ -58,6 +58,7 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
                 break;
             case "node:error":
                 this.actions.setNodeStatus(e.nodeId, { status: "failed", error: e.error, completed_at: new Date().toISOString() })
+                toast.error(e.error.message)
                 break;
             case "update":
                 if (e.update.edge_state)
