@@ -3,6 +3,7 @@ import { Workflow } from "./Workflow"
 import { type AxiosInstance } from "axios"
 import { type SupabaseClient } from "@supabase/supabase-js";
 import { Realtime } from "./Realtime";
+import { SystemError } from "./SystemError";
 
 export namespace Chat {
 
@@ -158,6 +159,14 @@ export namespace Chat {
             }
             export type Finished = z.infer<typeof Finished.Schema>
             
+            export namespace Failed {
+                export const Schema = Base.extend({
+                    type: z.literal("response:failed"),
+                    responseMessageId: Message.Id,
+                    error: SystemError.Schema,
+                })
+            }
+            export type Failed = z.infer<typeof Failed.Schema>
         }
 
 
