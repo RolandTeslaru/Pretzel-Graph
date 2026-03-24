@@ -16,12 +16,40 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         context: ExecutionContext,
         inputs: Inputs
     ): Promise<Outputs> {
-        const response = await inputs.languageModel.invoke([
-            inputs.systemMessage,
-            inputs.input
-        ], {
-            signal: context.abortController.signal
-        })
-        return { response }
+
+        const isStreaming = this.fields.stream;
+
+        if (isStreaming) {
+            const stream = await inputs.languageModel.stream([
+                inputs.systemMessage,
+                inputs.input
+            ], {
+                signal: context.abortController.signal,
+            });
+
+            let response: any = null;
+
+            for await (const chunk of stream) {
+                if (typeof chunk.content === "string") {
+                    context.streamController.yieldLlmChunk(this.workflowNode.id, chunk.content);
+                }
+
+                if (!response) {
+                    response = chunk;
+                } else {
+                    response = response.concat(chunk);
+                }
+            }
+
+            return { response };
+        } else {
+            const response = await inputs.languageModel.invoke([
+                inputs.systemMessage,
+                inputs.input
+            ], {
+                signal: context.abortController.signal,
+            });
+            return { response };
+        }
     }
 }
