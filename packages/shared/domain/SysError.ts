@@ -3,34 +3,26 @@ import z from "zod"
 
 export class SysError extends Error {
     public readonly code: SysError.Code
-    public readonly severity: SysError.Severity
     public readonly detail?: string
     public readonly data?: unknown
 
     constructor(
         code: SysError.Code,
         message: string,
-        opts?: { severity?: SysError.Severity; detail?: string; data?: unknown }
+        opts?: { detail?: string; data?: unknown }
     ) {
         super(message)
         this.code = code
-        this.severity = opts?.severity ?? "error"
         this.detail = opts?.detail
         this.data = opts?.data
         this.name = "SysError"
         Object.setPrototypeOf(this, SysError.prototype)
     }
 
-    public get category(): SysError.Category {
-        return SysError.categoryFromCode(this.code)
-    }
-
     /** Serialize to plain JSON for the wire (Redis, WebSocket, HTTP). */
     public toJSON(): SysError.Serialized {
         return {
             code: this.code,
-            category: this.category,
-            severity: this.severity,
             message: this.message,
             ...(this.detail !== undefined && { detail: this.detail }),
             ...(this.data !== undefined && { data: this.data }),
@@ -41,10 +33,22 @@ export class SysError extends Error {
     public static fromUnknown(err: unknown, fallbackCode?: SysError.Code): SysError {
         if (err instanceof SysError) return err
 
+        // Axios error — extract SysError.Serialized from response if present
+        if (typeof err === "object" && err !== null && "response" in err) {
+            const serialized = (err as any).response?.data?.error as SysError.Serialized | undefined
+            if (serialized?.code !== undefined && serialized?.message) {
+                return new SysError(serialized.code, serialized.message, {
+                    detail: serialized.detail,
+                    data: serialized.data,
+                })
+            }
+        }
+
+        // Unknown error — preserve the original message, stack goes in detail
         const message = err instanceof Error ? err.message : String(err)
         const detail = err instanceof Error ? err.stack : undefined
         return new SysError(
-            fallbackCode ?? SysError.Code.EXECUTION_NODE_FAILED,
+            fallbackCode ?? SysError.Code.INFRA_UNKNOWN,
             message,
             { detail }
         )
@@ -52,10 +56,23 @@ export class SysError extends Error {
 }
 
 
+/** Infrastructure / database errors. */
+export class DatabaseError extends SysError {
+    constructor(
+        code: SysError.Code,
+        message: string,
+        opts?: { detail?: string; data?: unknown }
+    ) {
+        super(code, message, opts)
+        this.name = "DatabaseError"
+        Object.setPrototypeOf(this, DatabaseError.prototype)
+    }
+}
+
+
 export namespace SysError {
 
     // ── Error Codes ────────────────────────────────────────────────
-    // Numeric enum grouped by domain. The thousand-digit = category.
 
     export enum Code {
         // Compilation (1xxx)
@@ -90,33 +107,17 @@ export namespace SysError {
         // Infrastructure (5xxx)
         INFRA_DATABASE_ERROR               = 5001,
         INFRA_QUEUE_ERROR                  = 5002,
+        INFRA_UNKNOWN                      = 5999,
     }
-
-
-    // ── Derived enums ──────────────────────────────────────────────
-
-    export const Category = z.enum([
-        "COMPILATION",
-        "EXECUTION",
-        "CONFIG",
-        "PROVIDER",
-        "INFRA",
-    ])
-    export type Category = z.infer<typeof Category>
-
-    export const Severity = z.enum(["warning", "error"])
-    export type Severity = z.infer<typeof Severity>
 
 
     // ── Serialized (wire format) ───────────────────────────────────
 
     export const Schema = z.object({
-        code:     z.enum(Code),
-        category: Category,
-        severity: Severity,
-        message:  z.string(),
-        detail:   z.string().optional(),
-        data:     z.unknown().optional(),
+        code:    z.enum(Code),
+        message: z.string(),
+        detail:  z.string().optional(),
+        data:    z.unknown().optional(),
     })
 
     export type Serialized = z.infer<typeof Schema>
@@ -124,70 +125,20 @@ export namespace SysError {
 
     // ── Helpers ────────────────────────────────────────────────────
 
-    /** Human-readable category labels for toast display. */
-    const CATEGORY_LABELS: Record<Category, string> = {
-        COMPILATION: "Compilation error",
-        EXECUTION:   "Execution error",
-        CONFIG:      "Configuration error",
-        PROVIDER:    "Provider error",
-        INFRA:       "Database error",
-    }
-
     /**
-     * Build a user-facing error string from any caught error.
-     * Pass `context` to describe what the user was trying to do.
-     *
-     * Examples:
-     *   messageFrom(err)                    → "Database error 5001"
-     *   messageFrom(err, "send message")    → "Could not send message — Database error 5001"
-     *   messageFrom(err, "compile workflow") → "Could not compile workflow — Compilation error 1001"
-     *
-     * For user-facing categories (config, provider, compilation), uses the SysError message directly:
-     *   messageFrom(err, "run workflow")    → "Could not run workflow — Missing API key for OpenAI"
+     * Extract the user-facing message from any caught error.
+     * If the error is a SysError (or carries one in an Axios response), returns its message.
+     * Otherwise returns a generic fallback.
      */
-    export function messageFrom(err: unknown, context?: string): string {
-        const serialized = extractSerialized(err)
+    export function messageFrom(err: unknown): string {
+        if (err instanceof SysError) return err.message
 
-        if (serialized) {
-            const isInternal = serialized.category === "INFRA" || serialized.category === "EXECUTION"
-            const errorPart = isInternal
-                ? `${CATEGORY_LABELS[serialized.category]} ${serialized.code}`
-                : serialized.message
-
-            return context
-                ? `Could not ${context} — ${errorPart}`
-                : errorPart
-        }
-
-        const fallback = err instanceof Error ? err.message : String(err)
-        return context ? `Could not ${context}` : fallback
-    }
-
-    /**
-     * Extract the full SysError.Serialized from any caught error, if present.
-     * Useful when the frontend needs to switch on code/category for programmatic decisions.
-     */
-    export function extractSerialized(err: unknown): Serialized | null {
-        // SysError class instance
-        if (err instanceof SysError) return err.toJSON()
-        // Axios error with SysError.Serialized in response body
+        // Axios error with SysError.Serialized in response
         if (typeof err === "object" && err !== null && "response" in err) {
-            const sysError = (err as any).response?.data?.error as Serialized | undefined
-            if (sysError?.code !== undefined && sysError?.message) return sysError
+            const serialized = (err as any).response?.data?.error as Serialized | undefined
+            if (serialized?.message) return serialized.message
         }
-        return null
-    }
 
-    /** Derive category from the code's thousand-digit. */
-    export function categoryFromCode(code: Code): Category {
-        const prefix = Math.floor(code / 1000)
-        switch (prefix) {
-            case 1: return "COMPILATION"
-            case 2: return "EXECUTION"
-            case 3: return "CONFIG"
-            case 4: return "PROVIDER"
-            case 5: return "INFRA"
-            default: return "INFRA"
-        }
+        return "Something went wrong"
     }
 }

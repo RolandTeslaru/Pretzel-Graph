@@ -54,7 +54,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                         createdNewChat = true;
                     }
                     catch (err) {
-                        toast.error(SysError.messageFrom(err, "create chat"));
+                        toast.error(SysError.messageFrom(err));
                         console.error("Failed to create chat", err);
                         return;
                     }
@@ -88,7 +88,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     })
                 }
                 catch (err) {
-                    toast.error(SysError.messageFrom(err, "send message"));
+                    toast.error(SysError.messageFrom(err));
                     console.error("Failed to send message", err);
 
                     if(createdNewChat){
@@ -112,7 +112,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     })
                     return true;
                 } catch (err) {
-                    toast.error(SysError.messageFrom(err, "load chats"));
+                    toast.error(SysError.messageFrom(err));
                     console.error("Failed to get chats", err);
                     return false;
                 }
@@ -161,7 +161,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     sdk.setState(s => {
                         s.isLoading = false;
                     })
-                    toast.error(SysError.messageFrom(err, "load chat"));
+                    toast.error(SysError.messageFrom(err));
                     console.error("Failed to load chat", err);
                 }
             },
@@ -194,7 +194,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                         }
                     });
                 } catch (err) {
-                    toast.error(SysError.messageFrom(err, "delete chat"));
+                    toast.error(SysError.messageFrom(err));
                     console.error("Failed to delete chat", err);
                 }
             },

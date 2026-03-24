@@ -1,14 +1,14 @@
 import { CompilationResult } from "../compiler";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
-import { ExecutionSession, Foundations, Orchestrator } from "@vx-agent-editor/shared/domain";
-import { z } from "zod";
-import { RuntimeNode, RuntimeRouterNode } from "../node"
-import { S2Engine, S2Hooks } from "../S2/engine";
+import { ExecutionSession, Foundations } from "@vx-agent-editor/shared/domain";
+import { S2Engine } from "../S2/engine";
 import { Vertex } from "../S2/graph";
 import { Synthesizer } from "../synthesizer";
 import { ExecutionContext } from "../context";
 import { SysError } from "@vx-agent-editor/shared/domain/SysError";
 import { Emitter } from "src/event/emitter";
+import { S2Hooks } from "src/S2/types";
+import { AggexExecutionError } from "src/errors";
 
 export class AggexEngine {
     private s2Engine: S2Engine | null = null;
@@ -88,63 +88,56 @@ export class AggexEngine {
 
 
 
+    /**
+     * Mutates edge states in the session and returns the updated entries for event emission.
+     * @param edgeIds   — edge ID map from the workflow cache
+     * @param status    — the status to set on each edge
+     * @param onUpdate  — optional callback applied to each edge state after status is set (e.g. runCount increment)
+     */
+    private applyEdgeStateUpdate(
+        edgeIds: Record<string, Workflow.Edge.Id>,
+        status: ExecutionSession.EdgeState["status"],
+        onUpdate?: (state: ExecutionSession.EdgeState) => void,
+    ): ExecutionSession["edge_state"] {
+        this.context.updateSession(d => {
+            if (!d.edge_state)
+                d.edge_state = {};
+
+            for (const edgeId of Object.values(edgeIds)) {
+                if (!d.edge_state[edgeId])
+                    d.edge_state[edgeId] = { status, runCount: 0 };
+                else
+                    d.edge_state[edgeId].status = status;
+
+                if (onUpdate)
+                    onUpdate(d.edge_state[edgeId]);
+            }
+        });
+
+        const update: ExecutionSession["edge_state"] = {};
+        for (const edgeId of Object.values(edgeIds))
+            update[edgeId] = this.context.session.edge_state[edgeId];
+
+        return update;
+    }
+
+
     private onNodeFired(nodeId: Vertex.Id) {
         const entry = this.nodeInstanceMap.get(nodeId);
-        if (!entry) 
+        if (!entry)
             return;
+
+        const edgeStateUpdate: ExecutionSession["edge_state"] = {};
 
         // Set all incoming (dependency) edges to completed
         const incomingEdges = this.workflowCache.incomingEdgesMap[entry.wfNode.id];
-        if (incomingEdges) {
-            this.context.updateSession(d => {
-                if (!d.edge_state)
-                    d.edge_state = {};
-
-                for (const edgeId of Object.values(incomingEdges))
-                    if (d.edge_state[edgeId])
-                        d.edge_state[edgeId].status = "completed";
-            });
-
-            const edgeStateUpdate: ExecutionSession["edge_state"] = {};
-
-            for (const edgeId of Object.values(incomingEdges))
-                if (this.context.session.edge_state[edgeId])
-                    edgeStateUpdate[edgeId] = this.context.session.edge_state[edgeId];
-
-            this.emit<ExecutionSession.Event.Update>({
-                executionSessionId: this.context.session.id,
-                workflowId: this.workflow.id,
-                type: "update",
-                channel: this.eventChannel,
-                update: { edge_state: edgeStateUpdate },
-            });
-        }
+        if (incomingEdges)
+            Object.assign(edgeStateUpdate, this.applyEdgeStateUpdate(incomingEdges, "completed"));
 
         // Set all outgoing edges to preparing
-        const outgoingEdgesFired = this.workflowCache.outgoingEdgesMap[entry.wfNode.id];
-        if (outgoingEdgesFired) {
-            this.context.updateSession(d => {
-                if (!d.edge_state) d.edge_state = {};
-
-                for (const edgeId of Object.values(outgoingEdgesFired))
-                    if (!d.edge_state[edgeId])
-                        d.edge_state[edgeId] = { status: "preparing", runCount: 0 };
-                    else
-                        d.edge_state[edgeId].status = "preparing";
-            });
-
-            const preparingUpdate: ExecutionSession["edge_state"] = {};
-            for (const edgeId of Object.values(outgoingEdgesFired))
-                preparingUpdate[edgeId] = this.context.session.edge_state[edgeId];
-
-            this.emit<ExecutionSession.Event.Update>({
-                executionSessionId: this.context.session.id,
-                workflowId: this.workflow.id,
-                type: "update",
-                channel: this.eventChannel,
-                update: { edge_state: preparingUpdate },
-            });
-        }
+        const outgoingEdges = this.workflowCache.outgoingEdgesMap[entry.wfNode.id];
+        if (outgoingEdges)
+            Object.assign(edgeStateUpdate, this.applyEdgeStateUpdate(outgoingEdges, "preparing"));
 
         this.emit<ExecutionSession.Event.Node.Started>({
             workflowId: this.workflow.id,
@@ -152,6 +145,7 @@ export class AggexEngine {
             executionSessionId: this.context.session.id,
             nodeId: entry.wfNode.id,
             channel: this.eventChannel,
+            stateUpdate: { edge_state: edgeStateUpdate },
         });
     }
 
@@ -170,15 +164,14 @@ export class AggexEngine {
         const inputs = this.resolveInputs(wfNode.id);
 
         const result = await nodeInstance.run(inputs);
-
         this.context.updateSession(d => {
             d.node_outputs[wfNode.id] = result;
         });
 
         if ('isRouterNode' in nodeInstance)
             return this.resolveRouterSignals(wfNode.id, result);
-    }
 
+    }
 
 
 
@@ -191,32 +184,9 @@ export class AggexEngine {
 
         // Set all outgoing edges to waiting and increment runCount
         const outgoingEdges = this.workflowCache.outgoingEdgesMap[entry.wfNode.id];
-        if (outgoingEdges) {
-            this.context.updateSession(d => {
-                if (!d.edge_state)
-                    d.edge_state = {};
-
-                for (const edgeId of Object.values(outgoingEdges)) {
-                    if (!d.edge_state[edgeId])
-                        d.edge_state[edgeId] = { status: "waiting", runCount: 0 };
-
-                    d.edge_state[edgeId].status = "waiting";
-                    d.edge_state[edgeId].runCount += 1;
-                }
-            });
-
-            const edgeStateUpdate: ExecutionSession["edge_state"] = {};
-            for (const edgeId of Object.values(outgoingEdges))
-                edgeStateUpdate[edgeId] = this.context.session.edge_state[edgeId];
-
-            this.emit<ExecutionSession.Event.Update>({
-                executionSessionId: this.context.session.id,
-                workflowId: this.workflow.id,
-                type: "update",
-                channel: this.eventChannel,
-                update: { edge_state: edgeStateUpdate },
-            });
-        }
+        const edgeStateUpdate: ExecutionSession["edge_state"] = outgoingEdges
+            ? this.applyEdgeStateUpdate(outgoingEdges, "waiting", s => { s.runCount += 1; })
+            : {};
 
         this.emit<ExecutionSession.Event.Node.Completed>({
             executionSessionId: this.context.session.id,
@@ -225,6 +195,7 @@ export class AggexEngine {
             nodeId: entry.wfNode.id,
             channel: this.eventChannel,
             output,
+            stateUpdate: { edge_state: edgeStateUpdate },
         });
     }
 
@@ -267,7 +238,14 @@ export class AggexEngine {
     private onVertexError(vertexId: Vertex.Id, error: unknown) {
         console.error(`Error during node execution, ${vertexId}:`, error)
 
-        const sysError = SysError.fromUnknown(error, SysError.Code.EXECUTION_NODE_FAILED)
+        // If the node already threw a SysError (or subclass), preserve it.
+        // Otherwise wrap the S2/unknown error into an AggexExecutionError.
+        const aggexError = error instanceof SysError
+            ? error
+            : new AggexExecutionError(
+                SysError.Code.EXECUTION_NODE_FAILED,
+                error instanceof Error ? error.message : String(error),
+            )
 
         this.emit<ExecutionSession.Event.Node.Error>({
             executionSessionId: this.context.session.id,
@@ -275,7 +253,7 @@ export class AggexEngine {
             type: "node:error",
             nodeId: vertexId as unknown as Workflow.Node.Id,
             channel: this.eventChannel,
-            error: sysError.toJSON()
+            error: aggexError.toJSON()
         })
     }
 

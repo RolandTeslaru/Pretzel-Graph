@@ -117,13 +117,15 @@ export namespace ExecutionSession {
         export namespace Node {
             export const Started = Base.extend({
                 type: z.literal('node:started'),
-                nodeId: Workflow.Node.Id
+                nodeId: Workflow.Node.Id,
+                stateUpdate: ExecutionSession.Update.optional()
             })
 
             export const Completed = Base.extend({
                 type: z.literal('node:completed'),
                 nodeId: Workflow.Node.Id,
-                output: z.unknown()
+                output: z.unknown(),
+                stateUpdate: ExecutionSession.Update.optional()
             })
 
             export const Error = Base.extend({
