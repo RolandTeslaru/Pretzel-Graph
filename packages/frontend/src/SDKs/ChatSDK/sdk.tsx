@@ -6,6 +6,7 @@ import { Chat, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { QuerySDK } from "../QuerySDK/sdk";
 import { createChatSDKActions, type ChatSDKActions } from "./actions";
 import { RealtimeSDK } from "../Realtime/sdk";
+import { DialogSDK } from "../DialogSDK";
 
 @SDK("Chat")
 export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
@@ -65,11 +66,14 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 
 
     public handleOnEvent = (event: Chat.Event) => {
+        console.log("Handle on Event ", event)
         switch (event.type) {
             case "response:created":
                 this.useStore.setState(s => {
                     this.reducers.upsertMessage(s, event.responseMessage);
-                    s.isSidebarVisible = true;
+
+                    if (DialogSDK.state.dialogs.has("fullscreen-chat") === false)
+                        s.isSidebarVisible = true;
                 })
                 break;
             case "response:chunk":
