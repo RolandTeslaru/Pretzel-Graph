@@ -1,24 +1,13 @@
 import { S2EngineError, S2EngineKilledError, S2EngineXORCollisionError } from "./errors";
 import { S2Graph, Vertex } from "./graph";
+import { S2ExecutionState, S2Hooks } from "./types";
 
-// Bulk Asynchronous Parallel Directed Cyclical Graph Engine
-
-export interface S2Hooks {
-    onVertexExecute(vertexId: Vertex.Id): Promise<Set<Vertex.Id> | void>;
-    onVertexWaiting?(vertexId: Vertex.Id, dependencyResolutionMap: Record<Vertex.Id, boolean>, totalDeps: number): void;
-    onVertexFired?(vertexId: Vertex.Id): void;
-    onVertexCompleted?(vertexId: Vertex.Id): void;
-    onVertexError?(vertexId: Vertex.Id, error: unknown): void;
-    onKilled?(): void;
-}
-
-export interface S2ExecutionState {
-    accumulatedSignals: Map<Vertex.Id, Set<Vertex.Id>>;
-    activeTasks: number;
-    settled: boolean;
-}
+// Bulk Asynchronous Parallel Directed Cyclical Signal based Graph Engine
 
 // S² Engine (Super Solenoid Engine from Neon Genesis Evangelion)
+
+// or Super Signal Engine ( simmilar to super steps in Pregel)
+
 export class S2Engine {
     constructor() { }
 
@@ -123,7 +112,6 @@ export class S2Engine {
             if (!state.settled) {
                 state.settled = true;
                 hooks.onVertexError?.(vertexId, err);
-                console.error(`Vertex ${vertexId} failed:`, err);
                 reject(err);
             }
         }

@@ -59,7 +59,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                     s.jobId = undefined;
                     s.executionStatus = "failed";
                 })
-                toast.error(event.error.message)
+                toast.error(`Workflow execution failed: ${event.error.message} [${event.error.code}]`)
                 break;
             case "terminated":
                 this.setState(s => {

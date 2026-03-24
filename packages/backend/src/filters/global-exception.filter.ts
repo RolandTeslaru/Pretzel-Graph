@@ -19,22 +19,27 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     private resolve(exception: unknown): { status: number; error: SysError.Serialized } {
+        // Already a SysError — use it directly
         if (exception instanceof SysError) {
             return {
-                status: this.httpStatusFromCategory(exception.category),
+                status: this.httpStatusFromCode(exception.code),
                 error: exception.toJSON(),
             };
         }
 
+        // NestJS HttpException — preserve the HTTP status, wrap as infra
         if (exception instanceof HttpException) {
-            const status = exception.getStatus();
-            const code = status >= 500 ? SysError.Code.INFRA_QUEUE_ERROR : SysError.Code.CONFIG_INVALID_FIELD;
             return {
-                status,
-                error: SysError.fromUnknown(exception, code).toJSON(),
+                status: exception.getStatus(),
+                error: new SysError(
+                    SysError.Code.INFRA_UNKNOWN,
+                    "Something went wrong",
+                    { detail: exception.message }
+                ).toJSON(),
             };
         }
 
+        // Zod validation — bad request body
         if (exception instanceof ZodError) {
             const detail = exception.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
             return {
@@ -47,20 +52,22 @@ export class GlobalExceptionFilter implements ExceptionFilter {
             };
         }
 
-        // Unknown error — fallback
+        // Unknown — generic fallback
         return {
             status: 500,
-            error: SysError.fromUnknown(exception, SysError.Code.INFRA_DATABASE_ERROR).toJSON(),
+            error: SysError.fromUnknown(exception).toJSON(),
         };
     }
 
-    private httpStatusFromCategory(category: SysError.Category): number {
-        switch (category) {
-            case "CONFIG":      return 400;
-            case "COMPILATION": return 422;
-            case "PROVIDER":    return 502;
-            case "EXECUTION":   return 500;
-            case "INFRA":       return 500;
+    private httpStatusFromCode(code: SysError.Code): number {
+        const prefix = Math.floor(code / 1000)
+        switch (prefix) {
+            case 1: return 422;  // compilation
+            case 2: return 500;  // execution
+            case 3: return 400;  // config
+            case 4: return 502;  // provider
+            case 5: return 500;  // infra
+            default: return 500;
         }
     }
 }
