@@ -1,5 +1,5 @@
-import { SysError } from "../domain/SysError";
-import { DatabaseError } from "../domain/SysError";
+import { SystemError } from "../domain/SystemError";
+import { DatabaseError } from "../domain/SystemError";
 
 /**
  * Wraps an async function so that any error thrown (including from .throwOnError())
@@ -15,7 +15,7 @@ export function withSupabaseAssert<TArgs extends any[], TReturn>(
         } catch (err) {
             const detail = err instanceof Error ? err.message : String(err);
             throw new DatabaseError(
-                SysError.Code.INFRA_DATABASE_ERROR,
+                SystemError.Code.INFRA_DATABASE_ERROR,
                 "Something went wrong",
                 { detail: `[${operation}] ${detail}`, data: { operation } }
             );
