@@ -8,7 +8,7 @@ export class AggexError extends SysError {
     constructor(
         code: SysError.Code,
         message: string,
-        opts?: { severity?: SysError.Severity; detail?: string; data?: unknown }
+        opts?: { detail?: string; data?: unknown }
     ) {
         super(code, message, opts)
         this.name = "AggexError"
@@ -21,7 +21,7 @@ export class AggexCompilerError extends AggexError {
     constructor(
         code: SysError.Code,
         message: string,
-        opts?: { severity?: SysError.Severity; detail?: string; data?: unknown }
+        opts?: { detail?: string; data?: unknown }
     ) {
         super(code, message, opts)
         this.name = "AggexCompilerError"
@@ -34,7 +34,7 @@ export class AggexExecutionError extends AggexError {
     constructor(
         code: SysError.Code,
         message: string,
-        opts?: { severity?: SysError.Severity; detail?: string; data?: unknown }
+        opts?: { detail?: string; data?: unknown }
     ) {
         super(code, message, opts)
         this.name = "AggexExecutionError"

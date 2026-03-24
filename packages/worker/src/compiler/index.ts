@@ -65,7 +65,7 @@ export class WorkflowCompiler {
             if (!NodeConstructor)
                 throw new AggexCompilerError(
                     SysError.Code.COMPILATION_NODE_NOT_FOUND,
-                    `Could not find node "${wfNode.blueprintId}"`,
+                    `Could not find node with blueprintId "${wfNode.blueprintId}" in the catalogue`,
                     { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
                 )
 
@@ -102,7 +102,7 @@ export class WorkflowCompiler {
         if (startNodes.length === 0)
             throw new AggexCompilerError(
                 SysError.Code.COMPILATION_NO_START_NODES,
-                "No start nodes found — the graph may be disconnected"
+                "No start nodes found — the graph may be empty"
             )
 
         startNodes.forEach(nodeId => {
@@ -126,7 +126,6 @@ export class WorkflowCompiler {
         ) as Workflow.Node.Id[];
     }
 }
-
 
 
 
