@@ -1,6 +1,6 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger } from '@nestjs/common';
 import { Response } from 'express';
-import { SysError } from '@vx-agent-editor/shared/domain/SysError';
+import { SystemError } from '@vx-agent-editor/shared/domain/SystemError';
 import { ZodError } from 'zod';
 
 @Catch()
@@ -18,9 +18,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         res.status(status).json({ status, error });
     }
 
-    private resolve(exception: unknown): { status: number; error: SysError.Serialized } {
-        // Already a SysError — use it directly
-        if (exception instanceof SysError) {
+    private resolve(exception: unknown): { status: number; error: SystemError.Serialized } {
+        // Already a SystemError — use it directly
+        if (exception instanceof SystemError) {
             return {
                 status: this.httpStatusFromCode(exception.code),
                 error: exception.toJSON(),
@@ -31,8 +31,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         if (exception instanceof HttpException) {
             return {
                 status: exception.getStatus(),
-                error: new SysError(
-                    SysError.Code.INFRA_UNKNOWN,
+                error: new SystemError(
+                    SystemError.Code.INFRA_UNKNOWN,
                     "Something went wrong",
                     { detail: exception.message }
                 ).toJSON(),
@@ -44,8 +44,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
             const detail = exception.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
             return {
                 status: 400,
-                error: new SysError(
-                    SysError.Code.CONFIG_INVALID_FIELD,
+                error: new SystemError(
+                    SystemError.Code.CONFIG_INVALID_FIELD,
                     "Invalid request data",
                     { detail }
                 ).toJSON(),
@@ -55,11 +55,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         // Unknown — generic fallback
         return {
             status: 500,
-            error: SysError.fromUnknown(exception).toJSON(),
+            error: SystemError.fromUnknown(exception).toJSON(),
         };
     }
 
-    private httpStatusFromCode(code: SysError.Code): number {
+    private httpStatusFromCode(code: SystemError.Code): number {
         const prefix = Math.floor(code / 1000)
         switch (prefix) {
             case 1: return 422;  // compilation

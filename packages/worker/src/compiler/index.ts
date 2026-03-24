@@ -1,7 +1,7 @@
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { Foundations, ExecutionSession, Orchestrator } from "@vx-agent-editor/shared/domain";
 import { CatalogueService } from "src/services/Catalogue/service";
-import { SysError } from "@vx-agent-editor/shared/domain/SysError";
+import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
 import { AggexCompilerError } from "../errors";
 import { RuntimeNode } from "../node";
 import { Emitter } from "../event/emitter";
@@ -64,7 +64,7 @@ export class WorkflowCompiler {
 
             if (!NodeConstructor)
                 throw new AggexCompilerError(
-                    SysError.Code.COMPILATION_NODE_NOT_FOUND,
+                    SystemError.Code.COMPILATION_NODE_NOT_FOUND,
                     `Could not find node with blueprintId "${wfNode.blueprintId}" in the catalogue`,
                     { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
                 )
@@ -101,7 +101,7 @@ export class WorkflowCompiler {
         const startNodes = this.findStartNodes(nodes, edges);
         if (startNodes.length === 0)
             throw new AggexCompilerError(
-                SysError.Code.COMPILATION_NO_START_NODES,
+                SystemError.Code.COMPILATION_NO_START_NODES,
                 "No start nodes found — the graph may be empty"
             )
 

@@ -1,4 +1,4 @@
-import { Chat, SysError } from "@vx-agent-editor/shared/domain";
+import { Chat, SystemError } from "@vx-agent-editor/shared/domain";
 import { OrchestratorSDK } from "../OrchestratorSDK/sdk";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import type { ChatSDKImpl } from "./sdk";
@@ -54,7 +54,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                         createdNewChat = true;
                     }
                     catch (err) {
-                        toast.error(SysError.messageFrom(err));
+                        toast.error(SystemError.messageFrom(err));
                         console.error("Failed to create chat", err);
                         return;
                     }
@@ -88,10 +88,10 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     })
                 }
                 catch (err) {
-                    toast.error(SysError.messageFrom(err));
+                    toast.error(SystemError.messageFrom(err));
                     console.error("Failed to send message", err);
 
-                    if(createdNewChat){
+                    if (createdNewChat) {
                         sdk.actions.chat.erase(currentChat.id);
                     }
                     return;
@@ -112,7 +112,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     })
                     return true;
                 } catch (err) {
-                    toast.error(SysError.messageFrom(err));
+                    toast.error(SystemError.messageFrom(err));
                     console.error("Failed to get chats", err);
                     return false;
                 }
@@ -126,7 +126,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
 
                 try {
                     const { chat, messages } = await Chat.API.get(api, { chatId });
-    
+
                     sdk.useStore.setState(s => {
                         s.currentChatId = chatId;
                         messages.forEach(m => {
@@ -135,13 +135,13 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                         })
                         s.isLoading = false;
                     })
-    
+
                     ExecutionSessionSDK.setState(s => {
                         s.session.messages = [];
-    
+
                         messages.forEach(msg => {
-    
-                            switch(msg.role){
+
+                            switch (msg.role) {
                                 case "ai":
                                     s.session.messages.push(new AIMessage(msg.content));
                                     break
@@ -156,12 +156,12 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                             }
                         })
                     })
-                
-                } catch(err){
+
+                } catch (err) {
                     sdk.setState(s => {
                         s.isLoading = false;
                     })
-                    toast.error(SysError.messageFrom(err));
+                    toast.error(SystemError.messageFrom(err));
                     console.error("Failed to load chat", err);
                 }
             },
@@ -194,7 +194,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                         }
                     });
                 } catch (err) {
-                    toast.error(SysError.messageFrom(err));
+                    toast.error(SystemError.messageFrom(err));
                     console.error("Failed to delete chat", err);
                 }
             },

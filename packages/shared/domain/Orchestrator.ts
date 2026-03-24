@@ -5,7 +5,7 @@ import { Realtime } from "./Realtime"
 import { type AxiosInstance } from "axios"
 import { ExecutionSession } from "./ExecutionSession"
 import { Chat } from "./Chat"
-import { SysError } from "./SysError"
+import { SystemError } from "./SystemError"
 
 export namespace Orchestrator {
     export namespace Job {
@@ -69,7 +69,7 @@ export namespace Orchestrator {
 
             export const Failed = Base.extend({
                 type: z.literal('compilation:failed'),
-                error: SysError.Schema
+                error: SystemError.Schema
             })
 
             export type Started = z.infer<typeof Started>
@@ -109,7 +109,7 @@ export namespace Orchestrator {
 
         export const Failed = Base.extend({
             type: z.literal('failed'),
-            error: SysError.Schema
+            error: SystemError.Schema
         })
 
         export const Completed = Base.extend({
@@ -117,7 +117,7 @@ export namespace Orchestrator {
             result: z.string()
         })
 
-   
+
         export type Started = z.infer<typeof Started>
         export type Update = z.infer<typeof Update>
         export type Terminated = z.infer<typeof Terminated>
@@ -164,14 +164,14 @@ export namespace Orchestrator {
                 type: z.literal("pause")
             })
         }
-        export type Pause= z.infer<typeof Pause.Schema>
+        export type Pause = z.infer<typeof Pause.Schema>
 
         export namespace Resume {
             export const Schema = Base.extend({
                 type: z.literal("resume")
             })
         }
-        export type Resume= z.infer<typeof Resume.Schema>
+        export type Resume = z.infer<typeof Resume.Schema>
 
         export const Schema = z.discriminatedUnion("type", [
             Terminate.Schema,
