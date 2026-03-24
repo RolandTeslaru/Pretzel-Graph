@@ -110,10 +110,10 @@ export class AggexWorkerImpl {
             });
             return { status: 'completed' };
 
-        } catch (err) {
-            console.error("Error during execution of job", jobId, err);
-
+        } catch (err: unknown) {
             const sysError = SysError.fromUnknown(err)
+
+            console.error("Error during execution of job", jobId, sysError.message, sysError.detail || "");
 
             this.emit<Orchestrator.Event.Failed>({
                 jobId,

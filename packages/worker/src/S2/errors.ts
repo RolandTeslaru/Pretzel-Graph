@@ -9,7 +9,7 @@ export class S2EngineError extends Error {
     }
 }
 
-export class S2EngineKilledError extends Error {
+export class S2EngineKilledError extends S2EngineError {
     constructor() {
         super("Engine was killed");
 
@@ -18,7 +18,7 @@ export class S2EngineKilledError extends Error {
     }
 }
 
-export class S2EngineXORCollisionError extends Error {
+export class S2EngineXORCollisionError extends S2EngineError {
     constructor(collidedVertices: Vertex.Id[], xorVertex: Vertex.Id) {
         super(`Vertices: ${collidedVertices.join(", ")} collided into vertex with XOR strategy "${xorVertex}"`);
 

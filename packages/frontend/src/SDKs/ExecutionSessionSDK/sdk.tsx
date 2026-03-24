@@ -48,23 +48,29 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
     public handleOnEvent = (e: ExecutionSession.Event) => {
         switch(e.type){
             case "node:started":
-                this.actions.setNodeStatus(e.nodeId, { status: "running", started_at: new Date().toISOString() })
+                this.setState(s => {
+                    if(e.stateUpdate)
+                        this.reducers.applyUpdate(s, e.stateUpdate);
+                    this.reducers.setNodeStatus(s, e.nodeId, { status: "running", started_at: new Date().toISOString() })
+                })
                 break;
             case "node:completed":
-                this.actions.setNodeStatus(e.nodeId, { status: "completed", completed_at: new Date().toISOString() })
+                this.setState(s => {
+                    if(e.stateUpdate)
+                        this.reducers.applyUpdate(s, e.stateUpdate);
+                    this.reducers.setNodeStatus(s, e.nodeId, { status: "completed", completed_at: new Date().toISOString() })
+                })
                 break;
             case "node:waiting":
                 this.actions.setNodeStatus(e.nodeId, { status: "waiting" })
                 break;
             case "node:error":
                 this.actions.setNodeStatus(e.nodeId, { status: "failed", error: e.error, completed_at: new Date().toISOString() })
-                toast.error(e.error.message)
                 break;
             case "update":
-                if (e.update.edge_state)
-                    this.setState(s => {
-                        Object.assign(s.session.edge_state, e.update.edge_state);
-                    });
+                this.setState(s => {
+                    this.reducers.applyUpdate(s, e.update);
+                })
                 break;
             default:
                 toast.error(`Received unknown event: ${e.type}`)
