@@ -5,7 +5,7 @@ import { S2Engine } from "../S2/engine";
 import { Vertex } from "../S2/graph";
 import { Synthesizer } from "../synthesizer";
 import { ExecutionContext } from "../context";
-import { SysError } from "@vx-agent-editor/shared/domain/SysError";
+import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
 import { Emitter } from "src/event/emitter";
 import { S2Hooks } from "src/S2/types";
 import { AggexExecutionError } from "src/errors";
@@ -178,8 +178,8 @@ export class AggexEngine {
     private onNodeCompleted(vertexId: Vertex.Id) {
         const entry = this.nodeInstanceMap.get(vertexId);
         if (!entry)
-            return 
-        
+            return
+
         const output = this.context.session.node_outputs[entry.wfNode.id];
 
         // Set all outgoing edges to waiting and increment runCount
@@ -238,12 +238,12 @@ export class AggexEngine {
     private onVertexError(vertexId: Vertex.Id, error: unknown) {
         console.error(`Error during node execution, ${vertexId}:`, error)
 
-        // If the node already threw a SysError (or subclass), preserve it.
+        // If the node already threw a SystemError (or subclass), preserve it.
         // Otherwise wrap the S2/unknown error into an AggexExecutionError.
-        const aggexError = error instanceof SysError
+        const aggexError = error instanceof SystemError
             ? error
             : new AggexExecutionError(
-                SysError.Code.EXECUTION_NODE_FAILED,
+                SystemError.Code.EXECUTION_NODE_FAILED,
                 error instanceof Error ? error.message : String(error),
             )
 
@@ -258,16 +258,16 @@ export class AggexEngine {
     }
 
 
-    
+
     public async run() {
         this.s2Engine = new S2Engine();
 
         const hooks: S2Hooks = {
-            onVertexExecute:   this.onNodeExecuted.bind(this),
-            onVertexFired:     this.onNodeFired.bind(this),
+            onVertexExecute: this.onNodeExecuted.bind(this),
+            onVertexFired: this.onNodeFired.bind(this),
             onVertexCompleted: this.onNodeCompleted.bind(this),
-            onVertexWaiting:   this.onNodeWaiting.bind(this),
-            onVertexError:     this.onVertexError.bind(this),
+            onVertexWaiting: this.onNodeWaiting.bind(this),
+            onVertexError: this.onVertexError.bind(this),
         } as const
 
         await this.s2Engine.ignite(this.compiledGraph, hooks);

@@ -5,7 +5,7 @@ import { Auth } from "./Auth"
 import { type BaseMessage } from "@langchain/core/messages"
 import { Realtime } from "./Realtime"
 import { Chat } from "./Chat"
-import { SysError } from "./SysError"
+import { SystemError } from "./SystemError"
 
 
 export namespace ExecutionSession {
@@ -22,8 +22,8 @@ export namespace ExecutionSession {
     export namespace NodeStatus {
         export const Schema = z.object({
             status: z.enum(["idle", "running", "completed", "waiting", "failed"]),
-            error: SysError.Schema.optional(),
-            started_at:   z.iso.datetime().optional(),
+            error: SystemError.Schema.optional(),
+            started_at: z.iso.datetime().optional(),
             completed_at: z.iso.datetime().optional(),
         })
         export type Type = z.infer<typeof Schema>
@@ -87,8 +87,8 @@ export namespace ExecutionSession {
 
     export namespace Event {
         export const Channel = Realtime.Channel.brand("ExecutionSessionChannel")
-        export type  Channel = z.infer<typeof Channel>
-        
+        export type Channel = z.infer<typeof Channel>
+
         export function getChannel(executionSessionId: ExecutionSession.Id) {
             return `execution_session:${executionSessionId}` as Channel
         }
@@ -131,7 +131,7 @@ export namespace ExecutionSession {
             export const Error = Base.extend({
                 type: z.literal('node:error'),
                 nodeId: Workflow.Node.Id,
-                error: SysError.Schema
+                error: SystemError.Schema
             })
 
             export const Waiting = Base.extend({
