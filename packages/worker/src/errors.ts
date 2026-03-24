@@ -1,12 +1,12 @@
-import { SysError } from "@vx-agent-editor/shared/domain/SysError";
+import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
 
 /**
  * Base error for the Aggex execution engine.
- * Extends SysError so it serializes over the wire automatically.
+ * Extends SystemError so it serializes over the wire automatically.
  */
-export class AggexError extends SysError {
+export class AggexError extends SystemError {
     constructor(
-        code: SysError.Code,
+        code: SystemError.Code,
         message: string,
         opts?: { detail?: string; data?: unknown }
     ) {
@@ -19,7 +19,7 @@ export class AggexError extends SysError {
 /** Thrown during workflow compilation (graph validation, missing nodes, etc.) */
 export class AggexCompilerError extends AggexError {
     constructor(
-        code: SysError.Code,
+        code: SystemError.Code,
         message: string,
         opts?: { detail?: string; data?: unknown }
     ) {
@@ -32,7 +32,7 @@ export class AggexCompilerError extends AggexError {
 /** Thrown during node execution within the engine. */
 export class AggexExecutionError extends AggexError {
     constructor(
-        code: SysError.Code,
+        code: SystemError.Code,
         message: string,
         opts?: { detail?: string; data?: unknown }
     ) {

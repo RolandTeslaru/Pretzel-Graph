@@ -1,6 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Vault, Workflow } from "@vx-agent-editor/shared/domain";
-import { SysError } from "@vx-agent-editor/shared/domain/SysError";
+import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
 
 
 export class SecretsResolver {
@@ -12,14 +12,14 @@ export class SecretsResolver {
             const staticValues = workflow.data.staticValues[node.id];
 
             for (const [_, field] of Object.entries(node.fields)) {
-                if(field.variant !== "Secret")
+                if (field.variant !== "Secret")
                     continue;
 
                 const credentialId = staticValues[field.id] as Vault.Credential.Id;
 
-                if(!credentialId)
-                    throw new SysError(
-                        SysError.Code.CONFIG_MISSING_CREDENTIAL,
+                if (!credentialId)
+                    throw new SystemError(
+                        SystemError.Code.CONFIG_MISSING_CREDENTIAL,
                         `Node "${node.blueprintId}" is missing a credential for field "${field.id}"`,
                         { data: { nodeId: node.id, fieldId: field.id, blueprintId: node.blueprintId } }
                     );
@@ -32,8 +32,8 @@ export class SecretsResolver {
                 const { value: secret } = await Vault.API.Credential.reveal(supabase, { id: credentialId })
 
                 if (!secret)
-                    throw new SysError(
-                        SysError.Code.CONFIG_MISSING_CREDENTIAL,
+                    throw new SystemError(
+                        SystemError.Code.CONFIG_MISSING_CREDENTIAL,
                         `Failed to resolve secret for credential "${credentialId}"`,
                         { data: { nodeId: node.id, credentialId } }
                     );

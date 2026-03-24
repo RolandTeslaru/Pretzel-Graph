@@ -1,7 +1,7 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { LC } from "../langchain";
 import { Foundations } from "@vx-agent-editor/shared/domain";
-import { SysError } from "@vx-agent-editor/shared/domain/SysError";
+import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
 
 export class Synthesizer {
 
@@ -59,8 +59,8 @@ export class Synthesizer {
                 if (typeof rawReference === "string")
                     return new HumanMessage(rawReference);
 
-                throw new SysError(
-                    SysError.Code.EXECUTION_TYPE_MISMATCH,
+                throw new SystemError(
+                    SystemError.Code.EXECUTION_TYPE_MISMATCH,
                     `Cannot coerce value of type "${typeof rawReference}" into variant "${variant}"`,
                     { data: { variant } }
                 );
@@ -75,8 +75,8 @@ export class Synthesizer {
                     return rawReference;
                 if (typeof rawReference === "string")
                     return new LC.Document({ pageContent: rawReference });
-                throw new SysError(
-                    SysError.Code.EXECUTION_TYPE_MISMATCH,
+                throw new SystemError(
+                    SystemError.Code.EXECUTION_TYPE_MISMATCH,
                     `Cannot coerce value of type "${typeof rawReference}" into variant "${variant}"`,
                     { data: { variant } }
                 );
@@ -84,8 +84,8 @@ export class Synthesizer {
             case "LanguageModel":
                 if (rawReference instanceof LC.BaseLanguageModel)
                     return rawReference;
-                throw new SysError(
-                    SysError.Code.EXECUTION_TYPE_MISMATCH,
+                throw new SystemError(
+                    SystemError.Code.EXECUTION_TYPE_MISMATCH,
                     `Cannot coerce value of type "${typeof rawReference}" into variant "${variant}"`,
                     { data: { variant } }
                 );
@@ -93,8 +93,8 @@ export class Synthesizer {
             case "Embeddings":
                 if (rawReference instanceof LC.Embeddings)
                     return rawReference;
-                throw new SysError(
-                    SysError.Code.EXECUTION_TYPE_MISMATCH,
+                throw new SystemError(
+                    SystemError.Code.EXECUTION_TYPE_MISMATCH,
                     `Cannot coerce value of type "${typeof rawReference}" into variant "${variant}"`,
                     { data: { variant } }
                 );
@@ -102,8 +102,8 @@ export class Synthesizer {
             case "VectorStore":
                 if (rawReference instanceof LC.VectorStore)
                     return rawReference;
-                throw new SysError(
-                    SysError.Code.EXECUTION_TYPE_MISMATCH,
+                throw new SystemError(
+                    SystemError.Code.EXECUTION_TYPE_MISMATCH,
                     `Cannot coerce value of type "${typeof rawReference}" into variant "${variant}"`,
                     { data: { variant } }
                 );
@@ -111,8 +111,8 @@ export class Synthesizer {
             case "Retriever":
                 if (rawReference instanceof LC.BaseRetriever)
                     return rawReference;
-                throw new SysError(
-                    SysError.Code.EXECUTION_TYPE_MISMATCH,
+                throw new SystemError(
+                    SystemError.Code.EXECUTION_TYPE_MISMATCH,
                     `Cannot coerce value of type "${typeof rawReference}" into variant "${variant}"`,
                     { data: { variant } }
                 );
@@ -120,8 +120,8 @@ export class Synthesizer {
             case "Tool":
                 if (rawReference instanceof LC.Tool)
                     return rawReference;
-                throw new SysError(
-                    SysError.Code.EXECUTION_TYPE_MISMATCH,
+                throw new SystemError(
+                    SystemError.Code.EXECUTION_TYPE_MISMATCH,
                     `Cannot coerce value of type "${typeof rawReference}" into variant "${variant}"`,
                     { data: { variant } }
                 );
@@ -131,8 +131,8 @@ export class Synthesizer {
                 // Pass through — no canonical LC class
                 return rawReference;
             default:
-                throw new SysError(
-                    SysError.Code.CONFIG_INVALID_FIELD,
+                throw new SystemError(
+                    SystemError.Code.CONFIG_INVALID_FIELD,
                     `Unknown port variant "${variant}"`,
                     { data: { variant } }
                 );
@@ -157,8 +157,8 @@ export class Synthesizer {
             case "ai":
                 return input instanceof AIMessage ? input : new AIMessage(content);
             default:
-                throw new SysError(
-                    SysError.Code.CONFIG_INVALID_FIELD,
+                throw new SystemError(
+                    SystemError.Code.CONFIG_INVALID_FIELD,
                     `Unsupported message role "${kind}" — only human, system, and ai are supported`,
                     { data: { kind } }
                 );

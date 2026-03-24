@@ -6,7 +6,7 @@ import { createAuthenticatedClient, createServiceClient } from '@/utils/supabase
 import { REDIS_HOST, REDIS_PORT } from '@vx-agent-editor/shared/constants';
 import { Auth, Realtime, Validation, Workflow } from '@vx-agent-editor/shared/domain';
 import { Orchestrator } from '@vx-agent-editor/shared/domain';
-import { SysError } from '@vx-agent-editor/shared/domain/SysError';
+import { SystemError } from '@vx-agent-editor/shared/domain/SystemError';
 import { SecretsResolver } from './utils';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { RealtimeService } from '../Realtime/realtime.service';
@@ -17,11 +17,11 @@ import { withSupabaseAssert } from '@vx-agent-editor/shared/errors/supabase';
 export class OrchestratorService {
 
     private readonly queueEvents = new QueueEvents(Orchestrator.EXECUTION_QUEUE_ID, {
-        connection: { 
-            host: REDIS_HOST, 
-            port: REDIS_PORT, 
-            maxRetriesPerRequest: null 
-        }  
+        connection: {
+            host: REDIS_HOST,
+            port: REDIS_PORT,
+            maxRetriesPerRequest: null
+        }
     });
 
     private readonly serviceSupabase = createServiceClient()
@@ -33,10 +33,10 @@ export class OrchestratorService {
         private readonly realtime: RealtimeService,
         private readonly chat: ChatService,
     ) {
-        
+
         this.queueEvents.on("completed", async ({ jobId, returnvalue }) => {
             const result = typeof returnvalue === 'string' ? JSON.parse(returnvalue) : returnvalue;
-            
+
             const status = result?.status === 'terminated' ? 'terminated' : 'completed';
 
             await this.dbOps.job.update(this.serviceSupabase, { jobId: jobId as Orchestrator.Job.Id, status });
@@ -48,11 +48,11 @@ export class OrchestratorService {
             const newStatus = failedReason === "terminated" ? "terminated" : "failed";
 
             await this.dbOps.job.update(
-                this.serviceSupabase, 
-                { 
-                    jobId: jobId as Orchestrator.Job.Id, 
-                    status: newStatus, 
-                    error: failedReason 
+                this.serviceSupabase,
+                {
+                    jobId: jobId as Orchestrator.Job.Id,
+                    status: newStatus,
+                    error: failedReason
                 }
             );
         });
@@ -99,8 +99,8 @@ export class OrchestratorService {
         const workflowIssues = Validation.Issue.checkWorkflow(workflow, wfCache);
 
         if (Object.entries(workflowIssues).length > 0)
-            throw new SysError(
-                SysError.Code.CONFIG_INVALID_FIELD,
+            throw new SystemError(
+                SystemError.Code.CONFIG_INVALID_FIELD,
                 "Workflow has nodes with missing fields or inputs — fix them before running",
                 { data: { issues: workflowIssues } }
             );
@@ -149,7 +149,7 @@ export class OrchestratorService {
     ): Promise<Orchestrator.API.Pause.Response> {
         const supabase = createAuthenticatedClient(token);
         const { jobId } = payload;
-        
+
         const confirmation = this.realtime.withEventConfirmation(
             Orchestrator.Event.getChannel(jobId),
             "paused"
@@ -163,9 +163,9 @@ export class OrchestratorService {
 
         const success = await confirmation;
 
-        if(success)
+        if (success)
             await this.dbOps.job.update(supabase, { jobId, status: "paused" });
-    
+
         return { success }
     }
 
@@ -189,7 +189,7 @@ export class OrchestratorService {
 
         const success = await confirmation;
 
-        if(success)
+        if (success)
             await this.dbOps.job.update(supabase, { jobId, status: "running" });
 
         return { success };

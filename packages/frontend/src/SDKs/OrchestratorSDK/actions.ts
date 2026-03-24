@@ -9,8 +9,8 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
     return {
         run: async () => {
             sdk.actions.addAwaitedConfirmation("started")
-            
-            
+
+
             const confirmEvent = () => {
                 sdk.actions.removeAwaitedConfirmation("started")
             }
@@ -33,7 +33,7 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
 
             ExecutionSessionSDK.actions.prepareForRun()
 
-            const executionPromise = Orchestrator.API.run(api,{
+            const executionPromise = Orchestrator.API.run(api, {
                 workflow,
                 executionSession: ExecutionSessionSDK.state.session,
             });
@@ -41,8 +41,8 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
             toast.promise(executionPromise, {
                 loading: "Preparing workflow execution",
                 error: (error) => {
-                    const sysError = error?.response?.data?.error;
-                    const message = sysError?.message || error.message;
+                    const SystemError = error?.response?.data?.error;
+                    const message = SystemError?.message || error.message;
                     return `Workflow execution failed to start: ${message}`
                 }
             })
@@ -71,7 +71,7 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
             sdk.actions.addAwaitedConfirmation("paused")
 
             const { success } = await Orchestrator.API.pause(api, { jobId });
-            if(!success)
+            if (!success)
                 toast.error("Failed to pause workflow")
 
             sdk.actions.removeAwaitedConfirmation("paused")
@@ -80,7 +80,7 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
         terminate: async (jobId) => {
             sdk.actions.addAwaitedConfirmation("terminated")
             const { success } = await Orchestrator.API.terminate(api, { jobId });
-            if(success)
+            if (success)
                 sdk.setState(s => s.jobId = undefined)
             else
                 toast.error("Failed to terminate workflow")
