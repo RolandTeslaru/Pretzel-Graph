@@ -86,11 +86,13 @@ function SubTrigger({ className, inset, children, icon, ...rest }: ContextMenuCo
       data-slot="context-menu-sub-trigger"
       data-inset={inset}
       className={cn(
-        `focus:bg-primary/30 focus:text-accent-foreground
+        `focus:bg-primary/15 focus:text-accent-foreground
         border border-transparent
-        focus:border-primary-accent/20
-        data-[state=open]:bg-primary/30
-        data-[state=open]:border-primary-accent/20
+        focus:border-primary-accent/80
+        dark:focus:border-primary-accent/10
+        data-[state=open]:bg-primary/15
+        data-[state=open]:border-primary-accent/80
+        dark:data-[state=open]:border-primary-accent/10
         data-[state=open]:text-accent-foreground
         not-data-[variant=destructive]:focus:**:text-accent-foreground
         gap-1.5 rounded-sm px-1.5 py-1 text-sm
@@ -143,10 +145,11 @@ function Item({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        `focus:bg-primary/30
+        `focus:bg-primary/15
         cursor-pointer
         border border-transparent
-        focus:border-primary-accent/20
+        focus:border-primary-accent/80
+        dark:focus:border-primary-accent/10
         focus:text-accent-foreground
         data-[variant=destructive]:text-destructive
         data-[variant=destructive]:focus:bg-destructive/10
@@ -186,8 +189,9 @@ function CheckboxItem({ className, children, checked, ...rest }: ContextMenuComp
     <ContextMenuPrimitive.CheckboxItem
       data-slot="context-menu-checkbox-item"
       className={cn(
-        `focus:bg-primary/30 border border-transparent
-        focus:border-primary-accent/20
+        `focus:bg-primary/15 border border-transparent
+        focus:border-primary-accent/80
+        dark:focus:border-primary-accent/10
         focus:text-accent-foreground
         relative flex cursor-default items-center gap-2 rounded-sm
         py-1 pr-2 pl-8 text-sm outline-hidden select-none
@@ -215,8 +219,9 @@ function RadioItem({ className, children, ...rest }: ContextMenuComponents.Radio
     <ContextMenuPrimitive.RadioItem
       data-slot="context-menu-radio-item"
       className={cn(
-        `focus:bg-primary/30 border border-transparent
-        focus:border-primary-accent/20
+        `focus:bg-primary/15 border border-transparent
+        focus:border-primary-accent/80
+        dark:focus:border-primary-accent/10
         focus:text-accent-foreground
         relative flex cursor-default items-center gap-2 rounded-sm
         py-1 pr-2 pl-8 text-sm outline-hidden select-none
