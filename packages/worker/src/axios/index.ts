@@ -12,12 +12,12 @@ export class AxiosServiceImpl {
     });
 
     public init() {
-        // REQUEST INTERCEPTOR: Inject Token
+        // REQUEST INTERCEPTOR: Inject internal service token
         this.api.interceptors.request.use(async (config) => {
-            const token = process.env.SUPABASE_SERVICE_ROLE_KEY;
+            const token = process.env.INTERNAL_SERVICE_SECRET;
 
             if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
+                config.headers['X-Internal-Token'] = token;
             }
 
             return config;

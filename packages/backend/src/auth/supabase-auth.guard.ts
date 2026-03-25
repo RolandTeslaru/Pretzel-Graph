@@ -1,11 +1,7 @@
 import { CanActivate, ExecutionContext as NestExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { createAuthenticatedClient, getUserId } from '../utils/supabase';
-import dotenv from 'dotenv';
 
-dotenv.config();
-
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 export interface AuthenticatedRequest extends Request {
     user: {
         id: string;
@@ -21,14 +17,6 @@ export class SupabaseAuthGuard implements CanActivate {
 
         if (!token) {
             throw new UnauthorizedException('No token provided');
-        }
-
-        // Allow service_role key (used by worker for server-to-server calls)
-        // Verified by comparing against the known key from environment
-        if (SUPABASE_SERVICE_ROLE_KEY && token === SUPABASE_SERVICE_ROLE_KEY) {
-            request.user = { id: 'service-role' };
-            request.token = token;
-            return true;
         }
 
         try {
