@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**vxAgentEditor** is a monorepo for a visual agent workflow editor. Users build AI agent pipelines visually using a node-graph canvas. The system compiles those graphs and executes them via a LangGraph-based engine.
+**PretzelGraph** is a monorepo for a visual agent workflow editor. Users build AI agent pipelines visually using a node-graph canvas. The system compiles those graphs and executes them via a LangGraph-based engine.
 
 ## Development Commands
 

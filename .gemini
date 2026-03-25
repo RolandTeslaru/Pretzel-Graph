@@ -4,7 +4,7 @@ This file provides guidance and context when working with code in this repositor
 
 ## Project Overview
 
-**vxAgentEditor** is a monorepo for a visual agent workflow editor. Users build AI agent pipelines visually using a node-graph canvas. The system compiles those graphs and executes them via a LangGraph-based engine.
+**PretzelGraph** is a monorepo for a visual agent workflow editor. Users build AI agent pipelines visually using a node-graph canvas. The system compiles those graphs and executes them via a LangGraph-based engine.
 
 ## Monorepo Layout
 - `packages/frontend/`: React 19 + Vite + XYFlow graph editor. State management via Zustand + Zundo (Undo/Redo) using a typed SDK pattern.

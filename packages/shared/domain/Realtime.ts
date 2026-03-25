@@ -13,6 +13,15 @@ export namespace Realtime {
             channel: Channel,
             type: Type,
         })
+
+        export namespace Forbidden {
+            export const Schema = Base.extend({
+                type: z.literal("forbidden"),
+                message: z.string(),
+            })
+            export type Type = z.infer<typeof Schema>
+        }
+        export type Forbidden = z.infer<typeof Forbidden.Schema>
     }
     export type Event = z.infer<typeof Event.Base>
 
