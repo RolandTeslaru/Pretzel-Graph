@@ -152,8 +152,8 @@ const Label: SelectComponents.Label = ({ className, ...props }) => <SelectPrimit
 const Item: SelectComponents.Item = ({ className, children, ...props }) => (
   <SelectPrimitive.Item
     className={cn(
-      `focus:bg-primary/30 focus:text-accent-foreground 
-       border border-transparent focus:border-primary-accent/50
+      `focus:bg-primary/15 focus:text-accent-foreground
+       border border-transparent focus:border-primary-accent/80 dark:focus:border-primary-accent/10
        relative flex w-full cursor-pointer items-center gap-2 
        rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none 
        data-[disabled]:pointer-events-none 
