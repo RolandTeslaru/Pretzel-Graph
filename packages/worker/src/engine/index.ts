@@ -10,6 +10,11 @@ import { Emitter } from "src/event/emitter";
 import { S2Hooks } from "src/S2/types";
 import { AggexExecutionError } from "src/errors";
 
+export interface AggexHooks {
+    onPause?(): void;
+    onResume?(): void;
+}
+
 export class AggexEngine {
     private s2Engine: S2Engine | null = null;
 
@@ -22,7 +27,32 @@ export class AggexEngine {
 
     private emit: Emitter;
 
-    constructor(compilationResult: CompilationResult) {
+    private pausePromise: Promise<void> | null = null;
+    private pauseResolve: (() => void) | null = null;
+
+    private hooks: AggexHooks;
+    private activeNodes: Set<Workflow.Node.Id | Vertex.Id> = new Set();
+
+    public pause(){
+        if(this.pausePromise)
+            return
+
+        this.pausePromise = new Promise((resolve) => {
+            this.pauseResolve = resolve;
+        })
+    }
+
+    public resume(){
+        if(!this.pausePromise || !this.pauseResolve)
+            return;
+
+        this.hooks.onResume?.();
+        this.pauseResolve();
+        this.pauseResolve = null;
+        this.pausePromise = null;
+    }
+
+    constructor(compilationResult: CompilationResult, hooks: AggexHooks = {}) {
         this.context = compilationResult.context;
         this.nodeInstanceMap = compilationResult.nodeInstanceMap;
         this.compiledGraph = compilationResult.compiledGraph;
@@ -30,6 +60,7 @@ export class AggexEngine {
         this.emit = this.context.emit;
         this.workflow = this.context.workflow;
         this.workflowCache = this.context.workflowCache;
+        this.hooks = hooks;
     }
 
 
@@ -120,6 +151,7 @@ export class AggexEngine {
 
         return update;
     }
+    
 
 
     private onNodeFired(nodeId: Vertex.Id) {
@@ -139,6 +171,8 @@ export class AggexEngine {
         if (outgoingEdges)
             Object.assign(edgeStateUpdate, this.applyEdgeStateUpdate(outgoingEdges, "preparing"));
 
+        this.activeNodes.add(nodeId)
+
         this.emit<ExecutionSession.Event.Node.Started>({
             workflowId: this.workflow.id,
             type: "node:started",
@@ -150,7 +184,16 @@ export class AggexEngine {
     }
 
 
+    private async awaitPause() {
+        if(!this.pausePromise)
+            return
 
+        if(this.activeNodes.size === 0)
+            this.hooks.onPause?.();
+
+        await this.pausePromise;
+    }
+        
 
 
     private onNodeExecuted = async (vertexId: Vertex.Id): Promise<Set<Vertex.Id> | void> => {
@@ -164,18 +207,22 @@ export class AggexEngine {
         const inputs = this.resolveInputs(wfNode.id);
 
         const result = await nodeInstance.run(inputs);
+
         this.context.updateSession(d => {
             d.node_outputs[wfNode.id] = result;
         });
-
+            
         if ('isRouterNode' in nodeInstance)
             return this.resolveRouterSignals(wfNode.id, result);
+
 
     }
 
 
 
-    private onNodeCompleted(vertexId: Vertex.Id) {
+    private async onNodeCompleted(vertexId: Vertex.Id) {
+        this.activeNodes.delete(vertexId);
+
         const entry = this.nodeInstanceMap.get(vertexId);
         if (!entry)
             return
@@ -197,6 +244,8 @@ export class AggexEngine {
             output,
             stateUpdate: { edge_state: edgeStateUpdate },
         });
+
+        await this.awaitPause();
     }
 
 
@@ -261,6 +310,8 @@ export class AggexEngine {
 
     public async run() {
         this.s2Engine = new S2Engine();
+
+        this.activeNodes.clear();
 
         const hooks: S2Hooks = {
             onVertexExecute: this.onNodeExecuted.bind(this),
