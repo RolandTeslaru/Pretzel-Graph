@@ -86,6 +86,26 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                 toast.error("Failed to terminate workflow")
             sdk.actions.removeAwaitedConfirmation("terminated")
             return success;
+        },
+        resume: async (jobId: Orchestrator.Job.Id) => {
+            sdk.actions.addAwaitedConfirmation("resumed")
+
+            const { success } = await Orchestrator.API.resume(api, { jobId });
+            if (!success)
+                toast.error("Failed to resume workflow")
+
+            sdk.actions.removeAwaitedConfirmation("resumed")
+            return success;
+        },
+        suspend: async (jobId: Orchestrator.Job.Id) => {
+            sdk.actions.addAwaitedConfirmation("suspended")
+
+            const { success } = await Orchestrator.API.suspend(api, { jobId });
+            if (!success)
+                toast.error("Failed to suspend workflow")
+
+            sdk.actions.removeAwaitedConfirmation("suspended")
+            return success;
         }
     } satisfies OrchestratorSDKActions
 }
@@ -97,4 +117,6 @@ export type OrchestratorSDKActions = {
     run: () => Promise<Orchestrator.Job.Id | null>,
     pause: (jobId: Orchestrator.Job.Id) => Promise<boolean>,
     terminate: (jobId: Orchestrator.Job.Id) => Promise<boolean>,
+    resume: (jobId: Orchestrator.Job.Id) => Promise<boolean>,
+    suspend: (jobId: Orchestrator.Job.Id) => Promise<boolean>,
 }

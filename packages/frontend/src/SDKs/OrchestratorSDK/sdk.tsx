@@ -8,6 +8,7 @@ import { orchestratorSDKReducers } from "./reducers";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { toast } from "sonner";
+import { api } from "../ApiInterceptorSDK";
 
 @SDK("Orchestrator")
 export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
@@ -64,7 +65,20 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                     s.jobId = undefined;
                     s.executionStatus = "terminated"
                 })
-                toast.error(`Workflow terminated`)
+                toast.error(`Workflow execution terminated`)
+                break;
+            case "paused":
+                this.setState(s => {
+                    s.executionStatus = "paused"
+                })
+                toast.info(`Workflow execution paused`)
+                break;
+            case "resumed":
+                this.setState(s => {
+                    s.executionStatus = "running"
+                })
+                toast.info(`Workflow execution resumed`)
+                break;
         }
     }
 }
@@ -88,14 +102,52 @@ OrchestratorSDK.useStore.subscribe((state, prevState) => {
 })
 
 
+// Heartbeat: while paused, send a heartbeat every 2 minutes on mouse activity
+// to prevent the worker from terminating the paused job.
+const HEARTBEAT_INTERVAL_MS = 2 * 60_000;
+let heartbeatListener: (() => void) | null = null;
+
+function startHeartbeat(jobId: Orchestrator.Job.Id) {
+    stopHeartbeat();
+
+    let lastSent = 0;
+
+    heartbeatListener = () => {
+        const now = Date.now();
+        if (now - lastSent < HEARTBEAT_INTERVAL_MS) return;
+        lastSent = now;
+        Orchestrator.API.heartbeat(api, { jobId }).catch(() => {});
+    };
+
+    document.addEventListener("mousemove", heartbeatListener);
+}
+
+function stopHeartbeat() {
+    if (heartbeatListener) {
+        document.removeEventListener("mousemove", heartbeatListener);
+        heartbeatListener = null;
+    }
+}
+
+OrchestratorSDK.useStore.subscribe((state, prevState) => {
+    if (state.executionStatus === prevState.executionStatus) return;
+
+    if (state.executionStatus === "paused" && state.jobId) {
+        startHeartbeat(state.jobId);
+    } else {
+        stopHeartbeat();
+    }
+});
+
+
 export namespace OrchestratorSDK {
 
-    export type AwaitedConfirmation = "started" | "paused" | "resumed" | "terminated"
+    export type AwaitedConfirmation = "started" | "paused" | "resumed" | "terminated" | "suspended"
 
     export type State = {
         jobId: Orchestrator.Job.Id | undefined
-        executionStatus: "idle" | "running" | "completed" | "failed" | "terminated"
-        awaitedConfirmation: Set<"started" | "paused" | "resumed" | "terminated">
+        executionStatus: "idle" | "running" | "completed" | "failed" | "terminated" | "paused" | "suspended"
+        awaitedConfirmation: Set<"started" | "paused" | "resumed" | "terminated" | "suspended">
     }
 
     export type Reducers = typeof orchestratorSDKReducers

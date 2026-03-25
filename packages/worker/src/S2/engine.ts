@@ -1,6 +1,6 @@
 import { S2EngineError, S2EngineKilledError, S2EngineXORCollisionError } from "./errors";
 import { S2Graph, Vertex } from "./graph";
-import { S2ExecutionState, S2Hooks } from "./types";
+import { S2ExecutionContext, S2Hooks } from "./types";
 
 // Bulk Asynchronous Parallel Directed Cyclical Signal based Graph Engine
 
@@ -18,33 +18,36 @@ export class S2Engine {
             if (!startVertex)
                 throw new S2EngineError("Engine ignited without a __START__ vertex");
 
-            const state: S2ExecutionState = {
+            const ctx: S2ExecutionContext = {
+                graph,
                 accumulatedSignals: new Map(),
                 activeTasks: 0,
-                settled: false
+                activeVertexes: 0,
+                settled: false,
+                resolve,
+                reject,
+                hooks
             };
 
             for (const vertexId of graph.vertices.keys()) {
-                state.accumulatedSignals.set(vertexId, new Set());
+                ctx.accumulatedSignals.set(vertexId, new Set());
             }
 
-            this.fireVertex(startVertex.id, graph, state, resolve, reject, hooks);
+            this.fireVertex(startVertex.id, ctx);
         })
     }
 
     private canVertexRun(
         vertexId: Vertex.Id,
-        graph: S2Graph,
-        state: S2ExecutionState,
-        reject: (reason?: any) => void
+        ctx: S2ExecutionContext
     ): boolean {
-        const dependencies = graph.dependenciesMap.get(vertexId)!;
-        const vertex = graph.vertices.get(vertexId);
+        const dependencies = ctx.graph.dependenciesMap.get(vertexId)!;
+        const vertex = ctx.graph.vertices.get(vertexId);
 
         if (!vertex)
             throw new S2EngineError(`Could not verify vertex ${vertexId}.`);
 
-        const receivedSignals = state.accumulatedSignals.get(vertexId)!;
+        const receivedSignals = ctx.accumulatedSignals.get(vertexId)!;
 
         switch (vertex.getStrategy()) {
             case "OR":
@@ -52,7 +55,7 @@ export class S2Engine {
 
             case "XOR":
                 if (receivedSignals.size > 1) {
-                    reject(new S2EngineXORCollisionError(Array.from(receivedSignals), vertexId));
+                    ctx.reject(new S2EngineXORCollisionError(Array.from(receivedSignals), vertexId));
                     return false;
                 }
                 return receivedSignals.size === 1;
@@ -65,62 +68,77 @@ export class S2Engine {
         }
     }
 
+
+
+    private fireVertexDependents(
+        vertexId: Vertex.Id,
+        signalSet: Set<Vertex.Id> | void,
+        ctx: S2ExecutionContext
+    ) {
+        const allDependents = ctx.graph.dependentsMap.get(vertexId)!;
+        const dependents = signalSet ?? allDependents;
+
+        dependents.forEach(dep => {
+            if (ctx.settled) return;
+
+            const signals = ctx.accumulatedSignals.get(dep)!;
+            signals.add(vertexId);
+            const canRun = this.canVertexRun(dep, ctx);
+
+            if (canRun) {
+                signals.clear();
+                this.fireVertex(dep, ctx);
+            } else {
+                const allDeps = ctx.graph.dependenciesMap.get(dep)!;
+                const resolutionMap: Record<Vertex.Id, boolean> = {};
+                for (const depId of allDeps) {
+                    resolutionMap[depId] = signals.has(depId);
+                }
+                ctx.hooks.onVertexWaiting?.(dep, resolutionMap, allDeps.size);
+            }
+        })
+    }
+
+
+
     private async fireVertex(
         vertexId: Vertex.Id,
-        graph: S2Graph,
-        state: S2ExecutionState,
-        resolve: (value: unknown) => void,
-        reject: (reason?: any) => void,
-        hooks: S2Hooks
-    ){
-        if (state.settled) return;
+        ctx: S2ExecutionContext
+    ) {
+        if (ctx.settled) return;
 
-        state.activeTasks ++;
-        hooks.onVertexFired?.(vertexId);
+        ctx.activeTasks++;
+        ctx.activeVertexes ++;
+        ctx.hooks.onVertexFired?.(vertexId);
 
         try {
-            const signalSet = await hooks.onVertexExecute(vertexId);
+            const signalSet = await ctx.hooks.onVertexExecute(vertexId);
 
-            if (state.settled) return;
+            ctx.activeVertexes --;
 
-            hooks.onVertexCompleted?.(vertexId);
+            if (ctx.settled) 
+                return;
 
-            const allDependents = graph.dependentsMap.get(vertexId)!;
-            const dependents = signalSet ?? allDependents;
+            await ctx.hooks.onVertexCompleted?.(vertexId);
 
-            dependents.forEach(dep => {
-                if (state.settled) return;
-
-                const signals = state.accumulatedSignals.get(dep)!;
-                signals.add(vertexId);
-                const canRun = this.canVertexRun(dep, graph, state, reject);
-
-                if(canRun){
-                    signals.clear();
-                    this.fireVertex(dep, graph, state, resolve, reject, hooks);
-                } else {
-                    const allDeps = graph.dependenciesMap.get(dep)!;
-                    const resolutionMap: Record<Vertex.Id, boolean> = {};
-                    for (const depId of allDeps) {
-                        resolutionMap[depId] = signals.has(depId);
-                    }
-                    hooks.onVertexWaiting?.(dep, resolutionMap, allDeps.size);
-                }
-            })
+            // Dependents are fired without await — this is intentional.                                                                                                               
+            // Parallel branches run concurrently; `activeTasks` tracks settlement.                                                                                                    
+            // All code paths check `ctx.settled` to guard against post-resolution side effects. 
+            this.fireVertexDependents(vertexId, signalSet, ctx);
         }
-        catch (err){
-            if (!state.settled) {
-                state.settled = true;
-                hooks.onVertexError?.(vertexId, err);
-                reject(err);
+        catch (err) {
+            if (!ctx.settled) {
+                ctx.settled = true;
+                ctx.hooks.onVertexError?.(vertexId, err);
+                ctx.reject(err);
             }
         }
         finally {
-            state.activeTasks --;
+            ctx.activeTasks--;
 
-            if(state.activeTasks === 0 && !state.settled){
-                state.settled = true;
-                resolve("Finished");
+            if (ctx.activeTasks === 0 && !ctx.settled) {
+                ctx.settled = true;
+                ctx.resolve("Finished");
             }
         }
     }

@@ -31,6 +31,39 @@ export class OrchestratorController {
     }
 
 
+    @Post('resume')
+    @HttpCode(200)
+    async resume(
+        @Req() req: AuthenticatedRequest,
+        @Body() body: any
+    ) {
+        const payload = Orchestrator.API.Resume.Request.parse(body);
+        return await this.orchestratorService.resume(req.token, payload);
+    }
+
+
+    @Post('heartbeat')
+    @HttpCode(200)
+    async heartbeat(
+        @Req() req: AuthenticatedRequest,
+        @Body() body: any
+    ) {
+        const payload = Orchestrator.API.Heartbeat.Request.parse(body);
+        return await this.orchestratorService.heartbeat(payload);
+    }
+
+
+    @Post('suspend')
+    @HttpCode(200)
+    async suspend(
+        @Req() req: AuthenticatedRequest,
+        @Body() body: any
+    ) {
+        const payload = Orchestrator.API.Suspend.Request.parse(body);
+        return await this.orchestratorService.suspend(req.token, payload);
+    }
+
+
     @Post('terminate')
     @HttpCode(200)
     async terminate(

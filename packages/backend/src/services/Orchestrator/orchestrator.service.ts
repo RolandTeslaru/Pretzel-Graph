@@ -196,6 +196,46 @@ export class OrchestratorService {
     }
 
 
+    async heartbeat(
+        payload: Orchestrator.API.Heartbeat.Request
+    ): Promise<Orchestrator.API.Heartbeat.Response> {
+        const { jobId } = payload;
+        this.realtime.emitSignal<Orchestrator.Signal.Heartbeat>({
+            channel: Orchestrator.Signal.getChannel(jobId),
+            type: "heartbeat",
+            jobId
+        });
+        return {};
+    }
+
+
+    async suspend(
+        token: string,
+        payload: Orchestrator.API.Suspend.Request
+    ): Promise<Orchestrator.API.Suspend.Response> {
+        const supabase = createAuthenticatedClient(token);
+        const { jobId } = payload;
+
+        const confirmation = this.realtime.withEventConfirmation(
+            Orchestrator.Event.getChannel(jobId),
+            "suspended"
+        );
+
+        this.realtime.emitSignal<Orchestrator.Signal.Suspend>({
+            channel: Orchestrator.Signal.getChannel(jobId),
+            type: "suspend",
+            jobId
+        });
+
+        const success = await confirmation;
+
+        if (success)
+            await this.dbOps.job.update(supabase, { jobId, status: "suspended" });
+
+        return { success };
+    }
+
+
     async terminate(
         token: string,
         payload: Orchestrator.API.Terminate.Request
