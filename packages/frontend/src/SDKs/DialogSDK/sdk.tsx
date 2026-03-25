@@ -2,7 +2,6 @@ import { memo, useState, useEffect } from "react";
 import { create } from "zustand"
 import { immer } from "zustand/middleware/immer"
 import React from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { enableMapSet } from 'immer';
 import { BaseSDK } from "../Base";
 import { AlertDialog, Dialog } from "@vx-agent-editor/vx-ui/foundations";
