@@ -1,0 +1,62 @@
+# vxAgentEditor — Task Board
+
+> Legend: 🔴 Design Decision · 🟡 Implementation · 🟢 Micro-task
+> Status: [ ] Todo · [x] Done · [~] In Progress · [!] Blocked
+
+---
+
+## 🛡️ Bucket 1 — Hardening
+> Things that will break real users right now. Do these first.
+
+- [ ] 🟡 **Wire cycle limit enforcement** — `EXECUTION_CYCLE_LIMIT_EXCEEDED` (code 2006) exists in error codes but is never enforced in the engine. Add a configurable max-iterations counter to S2 execution state.
+- [ ] 🟡 **Add deadlock timeout to S2 engine** — if `activeTasks > 0` and no vertex fires for N seconds, abort with a timeout error. Currently the engine hangs forever on a broken exit condition.
+- [ ] 🟡 **Retry logic for transient node errors** — rate limits and API timeouts currently fail the whole job permanently. Add configurable retry with exponential backoff for `PROVIDER_RATE_LIMITED` and `EXECUTION_TIMEOUT` error codes.
+- [ ] 🟡 **Fix undo/redo** — `TEMPORAL_STACK_SIZE = 1` in WorkbenchSDK means only the last state is tracked. Raise to a sensible default (e.g. 50) and verify Zundo is working correctly.
+- [ ] 🔴 **Decide: node failure scope** — currently one node error kills the entire workflow. Decide whether errors should be branch-isolated (only kill downstream of the failed node) or keep the current fail-all behavior. Document the decision here.
+
+---
+
+## 🔧 Bucket 2 — Completion
+> Planned and half-built features. The previous dev left scaffolding for all of these.
+
+- [ ] 🟡 **Implement Accumulator node** — blueprint + runtime. Holds previous state across iterations. Core primitive for ReAct loops. Error code `EXECUTION_ACCUMULATOR_OVERFLOW` (2007) already exists.
+- [ ] 🟡 **Implement Pause/Resume** — `case "pause": break` in `worker.ts` is a stub. Design and implement actual pause behavior (freeze execution state, allow resume from same position).
+- [ ] 🟢 **Add iteration counter to execution session state** — track how many times each node has fired. Required for cycle limit enforcement and Accumulator overflow detection.
+- [ ] 🟡 **Surface errors on canvas nodes** — errors emit via WebSocket but it's unclear they visually appear on the node that failed. Verify the `node:error` event updates node status in `ExecutionSessionSDK` and the canvas reflects it.
+- [ ] 🟢 **Clean up `research/` package** — determine what's experimental POC vs intended feature. Either promote to a real package or delete.
+
+---
+
+## 🚀 Bucket 3 — Growth
+> New capabilities. Don't touch until Bucket 1 is mostly done.
+
+- [ ] 🔴 **Design the ReAct workflow pattern** — finalize the canonical Accumulator + Merge(OR) + Router pattern. Build a template workflow users can start from.
+- [ ] 🟡 **Cycle visualization on canvas** — cycles in the graph can become visually confusing. Add a visual indicator (e.g. loop badge on edges) so users can see which edges form a cycle.
+- [ ] 🔴 **Checkpoint / partial resume** — after a failure at step 8 of 10, the whole job restarts. Design a checkpointing strategy using `node_outputs` already stored in the session.
+- [ ] 🟡 **Execution history / replay** — store completed execution sessions so users can review past runs, inspect node outputs, and debug failures.
+- [ ] 🔴 **Worker horizontal scaling strategy** — currently a single worker process. Design queue partitioning or multiple worker instances for scale.
+
+---
+
+## 📖 Bucket 4 — Documentation
+> The codebase has zero docs. This is a risk for future work.
+
+- [ ] 🟢 **Document S2 engine** — write an explanation of signal accumulation, AND/OR/XOR strategies, ignite flow, and cycle handling. Lives in `packages/worker/src/S2/README.md`.
+- [ ] 🟢 **Write node implementation guide** — how to create a new node: blueprint schema, `@RegisterNode` decorator, `onRun()` contract, input/output types. Lives in `packages/worker/src/nodes/README.md`.
+- [ ] 🟢 **Architecture overview** — high-level diagram + explanation of the 6 packages, data flow from canvas → compiler → S2 engine → WebSocket → frontend. Lives in `docs/architecture.md`.
+
+---
+
+## ✅ Done
+
+<!-- Completed tasks move here -->
+
+---
+
+## 🗒️ Decisions Log
+
+> Record design decisions here so context is never lost.
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| — | — | — |

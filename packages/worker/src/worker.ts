@@ -17,12 +17,19 @@ export class AggexWorkerImpl {
     private compiler = new WorkflowCompiler();
     private runningEngines = new Map<Orchestrator.Job.Id, AggexEngine>();
     private runningExecutionContexts = new Map<Orchestrator.Job.Id, ExecutionContext>()
+    private signalHandlers = new Map<string, (signal: Orchestrator.Signal) => void>();
 
     private redisPub = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
     private redisSub = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
     private redisWorker = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
 
     public init() {
+        this.redisSub.on("message", (ch, msg) => {
+            const handler = this.signalHandlers.get(ch);
+            if (!handler) return;
+            const signal = JSON.parse(msg) as Orchestrator.Signal;
+            handler(signal);
+        });
         this.worker.run()
     }
 
@@ -61,12 +68,8 @@ export class AggexWorkerImpl {
             const compilationResult = await this.compiler.compile(workflow, jobId, executionSession, this.emit);
             const context = compilationResult.context;
 
+            this.signalHandlers.set(signalChannel, (signal) => this.handleSignal(signal));
             this.redisSub.subscribe(signalChannel);
-            this.redisSub.on("message", (ch, msg) => {
-                if (ch !== signalChannel) return;
-                const signal = JSON.parse(msg) as Orchestrator.Signal;
-                this.handleSignal(signal);
-            });
 
             const engine = new AggexEngine(compilationResult);
             this.runningEngines.set(jobId, engine);
@@ -129,6 +132,7 @@ export class AggexWorkerImpl {
 
             this.runningEngines.delete(jobId);
             this.runningExecutionContexts.delete(jobId);
+            this.signalHandlers.delete(signalChannel);
             this.redisSub.unsubscribe(signalChannel);
         }
     }

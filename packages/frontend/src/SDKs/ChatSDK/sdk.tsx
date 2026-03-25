@@ -66,7 +66,6 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 
 
     public handleOnEvent = (event: Chat.Event) => {
-        console.log("Handle on Event ", event)
         switch (event.type) {
             case "response:created":
                 this.useStore.setState(s => {

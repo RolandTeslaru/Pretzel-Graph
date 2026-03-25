@@ -4,6 +4,7 @@ import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
 import { Realtime } from "@vx-agent-editor/shared/domain";
 import { supabase } from "@/libs/supabase";
+import { toast } from "sonner";
 
 @SDK("Realtime")
 export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {

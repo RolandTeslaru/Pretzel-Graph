@@ -130,6 +130,8 @@ export class ChatService {
                     .throwOnError();
             }),
         },
+        // Note: chat_messages has RLS policies that join with chats to check user_id,
+        // so ownership is enforced at the database level — no need for application-level checks.
         message: {
             add: withSupabaseAssert('message.add', async (
                 supabase: SupabaseClient,

@@ -8,6 +8,13 @@ import { InferFields, InferInputs, InferOutputs } from "src/types";
 import { Chat } from "@vx-agent-editor/shared/domain";
 import { AxiosService } from "src/axios";
 
+const InternalChatAPI = {
+    messageAdd: (payload: Chat.API.Message.Add.Request) =>
+        AxiosService.api.post('/api/internal/chat/message/add', payload),
+    messageUpdate: (payload: Chat.API.Message.Update.Request) =>
+        AxiosService.api.post('/api/internal/chat/message/update', payload),
+};
+
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
@@ -49,7 +56,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
             this.responseMessageId = responseMessage.id;
 
-            await Chat.API.Message.add(AxiosService.api, { message: responseMessage })
+            await InternalChatAPI.messageAdd({ message: responseMessage })
             console.log("Created response message with id ", responseMessage.id, " for chat ", chatId)
 
 
@@ -102,7 +109,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 chatId: this.chatId!,
             })
 
-            await Chat.API.Message.update(AxiosService.api, {
+            await InternalChatAPI.messageUpdate({
                 messageId: this.responseMessageId!,
                 content
             })
