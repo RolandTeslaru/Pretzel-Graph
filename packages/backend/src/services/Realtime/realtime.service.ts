@@ -21,12 +21,21 @@ export class RealtimeService implements OnModuleDestroy {
         });
     }
 
+    /**
+     * Request-reply pattern over Redis pub/sub.
+     * Subscribes to the event channel BEFORE the caller emits a signal,
+     * then waits for the worker to publish a matching confirmation event.
+     * Resolves `true` if the worker confirms, `false` if it times out.
+     *
+     * Must be called before `emitSignal` to avoid missing the response.
+     */
     public withEventConfirmation(
         eventChannel: Orchestrator.Event.Channel,
         eventType: Orchestrator.Event['type'],
         timeoutMs: number = 5000
     ): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
+            // Matches incoming events by type and resolves the promise
             const waiter = (event: Orchestrator.Event) => {
                 if (event.type !== eventType) return;
                 clearTimeout(timeout);
@@ -34,6 +43,7 @@ export class RealtimeService implements OnModuleDestroy {
                 resolve(true);
             };
 
+            // Removes the waiter and unsubscribes if no more waiters remain on this channel
             const cleanup = () => {
                 const channelWaiters = this.waiters.get(eventChannel);
                 if (channelWaiters) {
@@ -45,6 +55,7 @@ export class RealtimeService implements OnModuleDestroy {
                 }
             };
 
+            // If the worker never responds, resolve false so the caller knows it wasn't confirmed
             const timeout = setTimeout(() => {
                 cleanup();
                 resolve(false);

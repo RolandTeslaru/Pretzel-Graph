@@ -12,7 +12,7 @@ export namespace Orchestrator {
         export const Id = z.string().brand("JobId")
         export type Id = z.infer<typeof Id>
 
-        export const Status = z.enum(["pending", "running", "paused", "completed", "failed", "terminated"])
+        export const Status = z.enum(["pending", "running", "paused", "suspended", "completed", "failed", "terminated"])
         export type Status = z.infer<typeof Status>
 
         export const Schema = z.object({
@@ -106,6 +106,10 @@ export namespace Orchestrator {
             type: z.literal('resumed'),
         })
 
+        export const Suspended = Base.extend({
+            type: z.literal('suspended'),
+        })
+
 
         export const Failed = Base.extend({
             type: z.literal('failed'),
@@ -125,6 +129,7 @@ export namespace Orchestrator {
         export type Failed = z.infer<typeof Failed>
         export type Completed = z.infer<typeof Completed>
         export type Resumed = z.infer<typeof Resumed>
+        export type Suspended = z.infer<typeof Suspended>
 
         export const Schema = z.discriminatedUnion("type", [
             Started,
@@ -134,6 +139,7 @@ export namespace Orchestrator {
             Failed,
             Completed,
             Resumed,
+            Suspended,
             Compilation.Started,
             Compilation.Completed,
             Compilation.Failed
@@ -173,10 +179,26 @@ export namespace Orchestrator {
         }
         export type Resume = z.infer<typeof Resume.Schema>
 
+        export namespace Suspend {
+            export const Schema = Base.extend({
+                type: z.literal("suspend")
+            })
+        }
+        export type Suspend = z.infer<typeof Suspend.Schema>
+
+        export namespace Heartbeat {
+            export const Schema = Base.extend({
+                type: z.literal("heartbeat")
+            })
+        }
+        export type Heartbeat = z.infer<typeof Heartbeat.Schema>
+
         export const Schema = z.discriminatedUnion("type", [
             Terminate.Schema,
             Pause.Schema,
-            Resume.Schema
+            Resume.Schema,
+            Suspend.Schema,
+            Heartbeat.Schema
         ])
     }
     export type Signal = z.infer<typeof Signal.Schema>
@@ -245,6 +267,48 @@ export namespace Orchestrator {
         ): Promise<Resume.Response> {
             const { data } = await api.post<Resume.Response>(
                 '/api/orchestrator/resume',
+                req
+            );
+            return data;
+        }
+
+        export namespace Suspend {
+            export const Request = z.object({
+                jobId: Job.Id
+            })
+            export const Response = z.object({
+                success: z.boolean()
+            })
+
+            export type Request = z.infer<typeof Request>
+            export type Response = z.infer<typeof Response>
+        }
+        export async function suspend(
+            api: AxiosInstance,
+            req: Suspend.Request
+        ): Promise<Suspend.Response> {
+            const { data } = await api.post<Suspend.Response>(
+                '/api/orchestrator/suspend',
+                req
+            );
+            return data;
+        }
+
+        export namespace Heartbeat {
+            export const Request = z.object({
+                jobId: Job.Id
+            })
+            export const Response = z.object({})
+
+            export type Request = z.infer<typeof Request>
+            export type Response = z.infer<typeof Response>
+        }
+        export async function heartbeat(
+            api: AxiosInstance,
+            req: Heartbeat.Request
+        ): Promise<Heartbeat.Response> {
+            const { data } = await api.post<Heartbeat.Response>(
+                '/api/orchestrator/heartbeat',
                 req
             );
             return data;

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Vertex } from "./graph";
+import { S2Graph, Vertex } from "./graph";
 
 export namespace Arc {
     export const Id = z.string().brand("ArcId");
@@ -14,13 +14,18 @@ export interface S2Hooks {
     onVertexExecute(vertexId: Vertex.Id): Promise<Set<Vertex.Id> | void>;
     onVertexWaiting?(vertexId: Vertex.Id, dependencyResolutionMap: Record<Vertex.Id, boolean>, totalDeps: number): void;
     onVertexFired?(vertexId: Vertex.Id): void;
-    onVertexCompleted?(vertexId: Vertex.Id): void;
+    onVertexCompleted?(vertexId: Vertex.Id): void | Promise<void>;
     onVertexError?(vertexId: Vertex.Id, error: unknown): void;
     onKilled?(): void;
 }
 
-export interface S2ExecutionState {
+export interface S2ExecutionContext {
+    graph: S2Graph;
     accumulatedSignals: Map<Vertex.Id, Set<Vertex.Id>>;
     activeTasks: number;
+    activeVertexes: number;
     settled: boolean;
+    resolve: (value: unknown) => void;
+    reject: (reason?: any) => void;
+    hooks: S2Hooks;
 }

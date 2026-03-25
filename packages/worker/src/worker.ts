@@ -1,13 +1,17 @@
-import { Worker } from 'bullmq';
+import { Job as BullJob, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants"
 import { Orchestrator } from '@vx-agent-editor/shared/domain';
 import { SystemError } from '@vx-agent-editor/shared/domain/SystemError';
-import { AggexEngine } from 'src/engine';
+import { AggexEngine, AggexHooks } from 'src/engine';
 import { container, singleton } from 'tsyringe';
 import { Emitter, EmitterEvent } from './event/emitter';
 import { WorkflowCompiler } from './compiler';
 import { ExecutionContext } from './context';
+
+const LOCK_EXTEND_INTERVAL_MS = 15_000;
+const LOCK_EXTEND_DURATION_MS = 30_000;
+const MAX_PAUSE_DURATION_MS = 5 * 60_000;
 
 
 @singleton()
@@ -33,7 +37,10 @@ export class AggexWorkerImpl {
         this.worker.run()
     }
 
+    private pauseTimeoutResetters = new Map<Orchestrator.Job.Id, () => void>();
+
     private handleSignal(signal: Orchestrator.Signal) {
+        const engine = this.runningEngines.get(signal.jobId);
         const ctx = this.runningExecutionContexts.get(signal.jobId);
         if (!ctx) return;
 
@@ -42,20 +49,60 @@ export class AggexWorkerImpl {
                 ctx.abortController.abort();
                 break;
             case "pause":
+                engine?.pause();
                 break;
             case "resume":
+                engine?.resume();
+                break;
+            case "suspend":
+                ctx.abortController.abort();
+                break;
+            case "heartbeat":
+                this.pauseTimeoutResetters.get(signal.jobId)?.();
                 break;
         }
     }
 
     private processQueueItem = async (
-        { data: queueItem }: { data: Orchestrator.ExecutionQueue.Item }
+        bullJob: BullJob<Orchestrator.ExecutionQueue.Item>,
+        token?: string
     ) => {
-        const { workflow, jobId, executionSession } = queueItem;
+        const { workflow, jobId, executionSession } = bullJob.data;
         console.log("Processing Queue Item", jobId, "workflow id", workflow.id, "execution session id:", executionSession.id);
 
         const signalChannel = Orchestrator.Signal.getChannel(jobId);
         const eventChannel = Orchestrator.Event.getChannel(jobId);
+
+        let lockExtendInterval: ReturnType<typeof setInterval> | null = null;
+        let pauseTimeout: ReturnType<typeof setTimeout> | null = null;
+
+        const startPauseTimeout = (onTimeout: () => void) => {
+            if (pauseTimeout) clearTimeout(pauseTimeout);
+            pauseTimeout = setTimeout(onTimeout, MAX_PAUSE_DURATION_MS);
+        };
+
+        const startLockExtension = () => {
+            if (lockExtendInterval || !token) return;
+            lockExtendInterval = setInterval(async () => {
+                try {
+                    await bullJob.extendLock(token, LOCK_EXTEND_DURATION_MS);
+                } catch (err) {
+                    console.error(`[Worker] Failed to extend lock for job ${jobId}:`, err);
+                }
+            }, LOCK_EXTEND_INTERVAL_MS);
+        };
+
+        const stopLockExtension = () => {
+            if (lockExtendInterval) {
+                clearInterval(lockExtendInterval);
+                lockExtendInterval = null;
+            }
+            if (pauseTimeout) {
+                clearTimeout(pauseTimeout);
+                pauseTimeout = null;
+            }
+            this.pauseTimeoutResetters.delete(jobId);
+        };
 
         this.emit<Orchestrator.Event.Started>({
             jobId,
@@ -71,7 +118,36 @@ export class AggexWorkerImpl {
             this.signalHandlers.set(signalChannel, (signal) => this.handleSignal(signal));
             this.redisSub.subscribe(signalChannel);
 
-            const engine = new AggexEngine(compilationResult);
+            const onPauseTimeout = () => {
+                console.log(`[Worker] Max pause duration reached for job ${jobId}, terminating`);
+                context.abortController.abort();
+                engine.resume();
+            };
+
+            const aggexHooks: AggexHooks = {
+                onPause: () => {
+                    startLockExtension();
+                    startPauseTimeout(onPauseTimeout);
+                    this.pauseTimeoutResetters.set(jobId, () => startPauseTimeout(onPauseTimeout));
+                    this.emit<Orchestrator.Event.Paused>({
+                        jobId,
+                        workflowId: workflow.id,
+                        type: "paused",
+                        channel: eventChannel,
+                    });
+                },
+                onResume: () => {
+                    stopLockExtension();
+                    this.emit<Orchestrator.Event.Resumed>({
+                        jobId,
+                        workflowId: workflow.id,
+                        type: "resumed",
+                        channel: eventChannel,
+                    });
+                },
+            };
+
+            const engine = new AggexEngine(compilationResult, aggexHooks);
             this.runningEngines.set(jobId, engine);
             this.runningExecutionContexts.set(jobId, context);
 
@@ -128,6 +204,7 @@ export class AggexWorkerImpl {
             return { status: 'failed', error: systemError.toJSON() };
 
         } finally {
+            stopLockExtension();
             console.log("Deleting job", jobId, "from running engines and contexts")
 
             this.runningEngines.delete(jobId);
