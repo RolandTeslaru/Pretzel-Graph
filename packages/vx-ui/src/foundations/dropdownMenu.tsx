@@ -93,27 +93,28 @@ function Item({ className, inset, variant = "default", ...rest }: DropdownMenu.I
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        `focus:bg-primary/30  
-        cursor-pointer
-        border border-transparent 
-        focus:border-primary-accent/20
-        focus:text-accent-foreground 
-        data-[variant=destructive]:text-destructive 
-        data-[variant=destructive]:focus:bg-destructive/10 
-        dark:data-[variant=destructive]:focus:bg-destructive/20 
-        data-[variant=destructive]:focus:text-destructive 
-        data-[variant=destructive]:*:[svg]:text-destructive 
-        data-[variant=destructive]:focus:border-destructive/20
-        not-data-[variant=destructive]:focus:**:text-accent-foreground 
-        gap-1.5 rounded-sm px-1.5 py-1 text-sm 
-        [&_svg:not([class*='size-'])]:size-4 group/dropdown-menu-item 
-        relative flex items-center outline-hidden select-none 
-        data-[disabled]:pointer-events-none 
-        data-[disabled]:opacity-50 
-        data-[inset]:pl-8 
-        [&_svg]:pointer-events-none 
-        [&_svg]:shrink-0
-        [&_svg]:text-accent-foreground/50
+        ` focus:bg-primary/15  
+          focus:border-primary-accent/80
+          cursor-pointer
+          border border-transparent
+          dark:focus:border-primary-accent/10
+          focus:text-accent-foreground 
+          data-[variant=destructive]:text-destructive 
+          data-[variant=destructive]:focus:bg-destructive/10 
+          dark:data-[variant=destructive]:focus:bg-destructive/20 
+          data-[variant=destructive]:focus:text-destructive 
+          data-[variant=destructive]:*:[svg]:text-destructive 
+          data-[variant=destructive]:focus:border-destructive/20
+          not-data-[variant=destructive]:focus:**:text-accent-foreground 
+          gap-1.5 rounded-sm px-1.5 py-1 text-sm 
+          [&_svg:not([class*='size-'])]:size-4 group/dropdown-menu-item 
+          relative flex items-center outline-hidden select-none 
+          data-[disabled]:pointer-events-none 
+          data-[disabled]:opacity-50 
+          data-[inset]:pl-8 
+          [&_svg]:pointer-events-none 
+          [&_svg]:shrink-0
+          [&_svg]:text-accent-foreground/50
         `,
         className
       )}
@@ -127,13 +128,14 @@ function CheckboxItem({ className, children, checked, ...rest }: DropdownMenu.Ch
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       className={cn(
-        `focus:bg-primary/30 border border-transparent 
-        focus:border-primary-accent/20 
-        focus:text-accent-foreground 
-        relative flex cursor-default items-center gap-2 rounded-sm 
-        py-1 pr-2 pl-8 text-sm outline-hidden select-none 
-        data-[disabled]:pointer-events-none data-[disabled]:opacity-50 
-        [&_svg]:pointer-events-none [&_svg]:shrink-0 
+        `focus:bg-primary/15 border border-transparent
+        focus:border-primary-accent/80
+        dark:focus:border-primary-accent/10
+        focus:text-accent-foreground
+        relative flex cursor-default items-center gap-2 rounded-sm
+        py-1 pr-2 pl-8 text-sm outline-hidden select-none
+        data-[disabled]:pointer-events-none data-[disabled]:opacity-50
+        [&_svg]:pointer-events-none [&_svg]:shrink-0
         [&_svg:not([class*='size-'])]:size-4
         [&_svg]:text-accent-foreground/50
         `,
@@ -166,14 +168,15 @@ function RadioItem({ className, children, ...rest }: DropdownMenu.RadioItem) {
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        `focus:bg-primary/30 border border-transparent 
-        focus:border-primary-accent/20 
-        focus:text-accent-foreground 
-        relative flex cursor-default items-center gap-2 rounded-sm 
-        py-1 pr-2 pl-8 text-sm outline-hidden select-none 
+        `focus:bg-primary/15 border border-transparent
+        focus:border-primary-accent/80
+        dark:focus:border-primary-accent/10
+        focus:text-accent-foreground
+        relative flex cursor-default items-center gap-2 rounded-sm
+        py-1 pr-2 pl-8 text-sm outline-hidden select-none
         data-[disabled]:pointer-events-none data-[disabled]:opacity-50
-        [&_svg]:pointer-events-none 
-        [&_svg]:shrink-0 
+        [&_svg]:pointer-events-none
+        [&_svg]:shrink-0
         [&_svg:not([class*='size-'])]:size-4
         [&_svg]:text-accent-foreground/50
         `,
@@ -235,12 +238,14 @@ function SubTrigger({ className, inset, children, ...rest }: DropdownMenu.SubTri
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
       className={cn(
-        `focus:bg-primary/30 focus:text-accent-foreground 
-        border border-transparent 
-        focus:border-primary-accent/20
-        data-open:bg-primary/30 
-        data-open:border-primary-accent/20
-        data-open:text-accent-foreground 
+        `focus:bg-primary/15 focus:text-accent-foreground
+        border border-transparent
+        focus:border-primary-accent/80
+        dark:focus:border-primary-accent/10
+        data-open:bg-primary/15
+        data-open:border-primary-accent/80
+        dark:data-open:border-primary-accent/10
+        data-open:text-accent-foreground
         not-data-[variant=destructive]:focus:**:text-accent-foreground 
         gap-1.5 rounded-md px-1.5 py-1 text-sm 
         [&_svg:not([class*='size-'])]:size-4 
