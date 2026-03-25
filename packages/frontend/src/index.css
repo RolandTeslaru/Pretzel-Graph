@@ -82,6 +82,7 @@ code {
   --primary: theme(--color-orange-500);
   --primary-foreground: theme(--color-white);
   --primary-accent: theme(--color-orange-300);
+  --primary-hover: theme(--color-amber-500);
   --ring: theme(--color-orange-500);
 
   --secondary: var(--color-neutral-200);
@@ -317,8 +318,6 @@ code {
   --placeholder-foreground: oklch(0.6 0.01 264);
   --tooltip: oklch(0.2 0.02 264);
   --tooltip-foreground: oklch(0.95 0.005 264);
-
-  --primary-hover: theme(--color-amber-500);
   --secondary-hover: oklch(0.3 0.02 264);
 
 
