@@ -653,3 +653,19 @@ export const ArrowLeftRight: React.FC<BaseIconProps> = (props) => (
     </BaseIcon>
 )
 ArrowLeftRight.displayName = "ArrowLeftRight"
+
+export const Undo: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/>
+    </BaseIcon>
+)
+Undo.displayName = "Undo"
+
+
+
+export const Redo: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13"/>
+    </BaseIcon>
+)
+Redo.displayName = "Redo"

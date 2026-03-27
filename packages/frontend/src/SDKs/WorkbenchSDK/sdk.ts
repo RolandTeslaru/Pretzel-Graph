@@ -20,7 +20,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
     constructor() { super() }
 
-    private readonly TEMPORAL_STACK_SIZE = 1
+    private readonly TEMPORAL_STACK_SIZE = 3
 
     // Mutatable non reactive state
     public readonly runtime = {
