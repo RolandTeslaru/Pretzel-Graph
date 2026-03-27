@@ -145,6 +145,11 @@ code {
   --port-MessageList-accent: theme(--color-indigo-200);
   --port-MessageList-glow: theme(--color-indigo-600);
 
+  --port-DataList: theme(--color-rose-400);
+  --port-DataList-foreground: theme(--color-rose-400);
+  --port-DataList-accent: theme(--color-rose-200);
+  --port-DataList-glow: theme(--color-rose-600);
+
   --port-LanguageModel: theme(--color-fuchsia-400);
   --port-LanguageModel-foreground: theme(--color-fuchsia-400);
   --port-LanguageModel-accent: theme(--color-fuchsia-200);
@@ -218,6 +223,11 @@ code {
   --port-Unresolved-foreground: theme(--color-gray-500);
   --port-Unresolved-accent: theme(--color-gray-300);
   --port-Unresolved-glow: theme(--color-gray-600);
+
+  --port-UnresolvedList: theme(--color-zinc-500);
+  --port-UnresolvedList-foreground: theme(--color-zinc-500);
+  --port-UnresolvedList-accent: theme(--color-zinc-300);
+  --port-UnresolvedList-glow: theme(--color-zinc-600);
 
   --group-routing: theme(--color-neutral-300);
 
@@ -298,6 +308,7 @@ code {
   /* Dark mode: glow uses the base port color (already vibrant on dark bg) */
   --port-Message-glow: theme(--color-blue-400);
   --port-MessageList-glow: theme(--color-indigo-400);
+  --port-DataList-glow: theme(--color-rose-400);
   --port-LanguageModel-glow: theme(--color-fuchsia-400);
   --port-Tool-glow: theme(--color-cyan-400);
   --port-Embeddings-glow: theme(--color-emerald-400);
@@ -313,6 +324,7 @@ code {
   --port-Integer-glow: theme(--color-purple-400);
   --port-null-glow: var(--secondary);
   --port-Unresolved-glow: theme(--color-gray-400);
+  --port-UnresolvedList-glow: theme(--color-zinc-400);
 
   --placeholder: oklch(0.4 0.01 264);
   --placeholder-foreground: oklch(0.6 0.01 264);

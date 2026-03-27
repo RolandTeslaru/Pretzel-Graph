@@ -202,15 +202,31 @@ export const nodeReducers = {
             throw new Error(`Port ${triggerPort.id} is not dynamic`);
 
         const syncGroupId = triggerPort.syncGroupId;
+        const triggerIsInput = 'required' in triggerPort;
+
+        const listPromotion: Partial<Record<Foundations.Port.Variant, Foundations.Port.Variant>> = {
+            Message: "MessageList",
+            Data: "DataList",
+        };
 
         node.inputs.forEach(input => {
             if(!input.isDynamic || input.syncGroupId !== syncGroupId) return;
-            (input as any).variant = resolvedVariant;
+            if (input.variant === "UnresolvedList") {
+                if (!triggerIsInput) return;
+                (input as any).variant = listPromotion[resolvedVariant] ?? resolvedVariant;
+            } else {
+                (input as any).variant = resolvedVariant;
+            }
         })
 
         node.outputs.forEach(output => {
             if(!output.isDynamic || output.syncGroupId !== syncGroupId) return;
-            (output as any).variant = resolvedVariant;
+            if (output.variant === "UnresolvedList") {
+                if (!triggerIsInput) return;
+                (output as any).variant = listPromotion[resolvedVariant] ?? resolvedVariant;
+            } else {
+                (output as any).variant = resolvedVariant;
+            }
         })
     },
     unresolveDynamicPortGroup: (s, nodeId, syncGroupId) => {
@@ -218,12 +234,16 @@ export const nodeReducers = {
 
         node.inputs.forEach(input => {
             if(!input.isDynamic || input.syncGroupId !== syncGroupId) return;
-            (input as any).variant = "Unresolved";
+            // Restore to the original blueprint variant ("Unresolved" or "UnresolvedList"),
+            // not always "Unresolved", so UnresolvedList ports stay as UnresolvedList after disconnection.
+            (input as any).variant = input.unresolvedVariant ?? "Unresolved";
         })
 
         node.outputs.forEach(output => {
             if(!output.isDynamic || output.syncGroupId !== syncGroupId) return;
-            (output as any).variant = "Unresolved";
+            // Restore to the original blueprint variant ("Unresolved" or "UnresolvedList"),
+            // not always "Unresolved", so UnresolvedList ports stay as UnresolvedList after disconnection.
+            (output as any).variant = output.unresolvedVariant ?? "Unresolved";
         })
     },
     setMinimized: (s, nodeId, isMinimized) => {

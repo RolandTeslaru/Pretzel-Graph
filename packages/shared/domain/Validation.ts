@@ -130,13 +130,29 @@ export namespace Validation {
         if (!sourcePort || !targetPort)
             return false
 
-        if(sourcePort.variant !== "Unresolved" && targetPort.variant === "Unresolved")
+        const isUnresolvedLike = (v: string) => v === "Unresolved" || v === "UnresolvedList";
+
+        // Unresolved ↔ any non-unresolved variant
+        if (sourcePort.variant === "Unresolved" && !isUnresolvedLike(targetPort.variant))
             return true;
-        if(sourcePort.variant === "Unresolved" && targetPort.variant !== "Unresolved")
+        if (targetPort.variant === "Unresolved" && !isUnresolvedLike(sourcePort.variant))
+            return true;
+
+        // UnresolvedList only accepts Message and Data — the two variants it can list-promote
+        const unresolvedListCompatible = new Set(["Message", "Data"]);
+        if (sourcePort.variant === "UnresolvedList" && unresolvedListCompatible.has(targetPort.variant))
+            return true;
+        if (targetPort.variant === "UnresolvedList" && unresolvedListCompatible.has(sourcePort.variant))
             return true;
 
         if (sourcePort.variant === targetPort.variant)
             return true
+
+        // One-way list promotions
+        if (sourcePort.variant === "Message" && targetPort.variant === "MessageList")
+            return true;
+        if (sourcePort.variant === "Data" && targetPort.variant === "DataList")
+            return true;
 
         return false
     }

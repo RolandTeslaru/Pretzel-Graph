@@ -126,6 +126,19 @@ export class Synthesizer {
                     { data: { variant } }
                 );
 
+            case "MessageList":
+                if (Array.isArray(rawReference) && rawReference.every(el => el instanceof LC.BaseMessage))
+                    return rawReference;
+                throw new SystemError(
+                    SystemError.Code.EXECUTION_TYPE_MISMATCH,
+                    `Cannot coerce value into variant "${variant}" — expected an array of BaseMessage`,
+                    { data: { variant } }
+                );
+
+            case "DataList":
+                // Pass through — no canonical LC class for arbitrary data lists
+                return rawReference;
+
             case "Data":
             case "DataFrame":
                 // Pass through — no canonical LC class

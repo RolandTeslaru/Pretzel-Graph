@@ -1,6 +1,6 @@
 {
-  "version": "1774598296603",
-  "generatedAt": "2026-03-27T07:58:16.603Z",
+  "version": "1774620020172",
+  "generatedAt": "2026-03-27T14:00:20.172Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -806,6 +806,7 @@
           "displayName": "Input",
           "isDynamic": true,
           "syncGroupId": "data",
+          "unresolvedVariant": "Unresolved",
           "variant": "Unresolved",
           "required": false,
           "internal": false
@@ -818,6 +819,7 @@
           "tooltip": "Output when condition is true.",
           "isDynamic": true,
           "syncGroupId": "data",
+          "unresolvedVariant": "Unresolved",
           "variant": "Unresolved"
         },
         {
@@ -826,6 +828,7 @@
           "tooltip": "Output when condition is false.",
           "isDynamic": true,
           "syncGroupId": "data",
+          "unresolvedVariant": "Unresolved",
           "variant": "Unresolved"
         }
       ],
@@ -859,7 +862,8 @@
           "displayName": "Input 1",
           "isDynamic": true,
           "syncGroupId": "data",
-          "variant": "Unresolved",
+          "unresolvedVariant": "UnresolvedList",
+          "variant": "UnresolvedList",
           "required": false,
           "internal": false
         },
@@ -868,7 +872,8 @@
           "displayName": "Input 2",
           "isDynamic": true,
           "syncGroupId": "data",
-          "variant": "Unresolved",
+          "unresolvedVariant": "UnresolvedList",
+          "variant": "UnresolvedList",
           "required": false,
           "internal": false
         }
@@ -879,7 +884,8 @@
           "displayName": "Output",
           "isDynamic": true,
           "syncGroupId": "data",
-          "variant": "Unresolved"
+          "unresolvedVariant": "UnresolvedList",
+          "variant": "UnresolvedList"
         }
       ],
       "description": "Merges multiple inputs into a single output."
@@ -908,6 +914,7 @@
           "displayName": "Input",
           "isDynamic": true,
           "syncGroupId": "data",
+          "unresolvedVariant": "Unresolved",
           "variant": "Unresolved",
           "required": false,
           "internal": false
@@ -920,6 +927,7 @@
           "tooltip": "Output when condition is true.",
           "isDynamic": true,
           "syncGroupId": "data",
+          "unresolvedVariant": "Unresolved",
           "variant": "Unresolved"
         },
         {
@@ -928,6 +936,7 @@
           "tooltip": "Output when condition is false.",
           "isDynamic": true,
           "syncGroupId": "data",
+          "unresolvedVariant": "Unresolved",
           "variant": "Unresolved"
         }
       ],
