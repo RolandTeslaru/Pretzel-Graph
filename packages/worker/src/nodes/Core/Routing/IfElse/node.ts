@@ -2,7 +2,7 @@ import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { ExecutionContext } from "src/context";
 import { RuntimeRouterNode } from "src/node";
-import { InferInputs, InferOutputs } from "src/types";
+import { InferInputs, InferOutputs, OneOf } from "src/types";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeRouterNode<typeof Blueprint> {
@@ -12,7 +12,7 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
     protected override async onRun(
         context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
-    ): Promise<Partial<InferOutputs<typeof Blueprint>>> {
+    ): Promise<OneOf<InferOutputs<typeof Blueprint>>> {
 
         const { condition } = this.fields;
         const { input } = inputs;

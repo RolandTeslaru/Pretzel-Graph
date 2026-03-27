@@ -66,6 +66,7 @@ export const CORE_DRAWERS = {
     blueprintIds: [
       "Core.Routing.IfElse",
       "Core.Routing.Switch",
+      "Core.Routing.Router",
       "Core.Routing.Merge",
       "Core.Routing.Accumulator",
     ],
