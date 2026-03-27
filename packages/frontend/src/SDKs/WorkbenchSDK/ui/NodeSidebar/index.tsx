@@ -116,7 +116,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                     )}
 
                     {/* Connected Inputs */}
-                    {connectedInputs.length > 0 && (
+                    {/* {connectedInputs.length > 0 && (
                         <Accordion.Item value='connected'>
                             <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
                                 <h4 className='text-md font-medium'>Connected</h4>
@@ -132,7 +132,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                                 ))}
                             </Accordion.Content>
                         </Accordion.Item>
-                    )}
+                    )} */}
 
                 </Accordion.Root>
             </ScrollArea.Root>

@@ -56,7 +56,7 @@ export const buttonVariants = cva(
           dark:focus-visible:ring-amber-500/40 focus-visible:border-amber-500/40
         `,
         success: `
-          bg-emerald-300  text-foreground hover:bg-emerald-400 
+          bg-emerald-400  text-foreground hover:bg-emerald-400 
           dark:bg-emerald-700  dark:text-emerald-50 
           dark:hover:bg-emerald-600 dark:hover:border-emerald-300 focus-visible:ring-emerald-500/20 
           dark:focus-visible:ring-emerald-500/40 focus-visible:border-emerald-500/40
