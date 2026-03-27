@@ -93,9 +93,9 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             },
             validate:          (...props) => { setState(s => { reducers.input.validate(s,      ...props) }) },
         },
-        history: {
-            undo:              ()         => { },
-            redo:              ()         => { }
+        temporal: {
+            undo:              ()         => { (sdk.useStore as any).temporal.getState().undo() },
+            redo:              ()         => { (sdk.useStore as any).temporal.getState().redo() }
         },
         layout: {
             node: {
@@ -188,7 +188,7 @@ export interface _WorkbenchSDKActions {
         paste              : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['paste']>;
         clear              : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['clear']>;
     };
-    history                 : {
+    temporal                 : {
         undo                : () => void;
         redo                : () => void;
     };

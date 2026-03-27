@@ -44,20 +44,20 @@ export const buttonVariants = cva(
           aria-expanded:bg-muted aria-expanded:text-foreground
         `,
         destructive: `
-          bg-red-100 border-red-300 text-foreground hover:bg-red-200 hover:border-red-400
-          dark:bg-red-900 dark:border-red-700 dark:hover:bg-red-800 dark:hover:border-red-600
+          bg-red-100 text-foreground hover:bg-red-200 hover:border-red-400
+          dark:bg-red-900 dark:hover:bg-red-800 dark:hover:border-red-600
           focus-visible:ring-red-600/20 dark:focus-visible:ring-red-600/40 
           focus-visible:border-red-600/40
         `,
         warning: `
-          bg-amber-100 border-amber-300 text-foreground hover:bg-amber-200 hover:border-amber-400
-          dark:bg-yellow-700 dark:border-yellow-500 dark:hover:bg-yellow-600 dark:hober:border-yellow-400
+          bg-amber-100 text-foreground hover:bg-amber-200 hover:border-amber-400
+          dark:bg-yellow-400/60 dark:hover:bg-yellow-300/60 dark:hover:border-yellow-300
           focus-visible:ring-amber-500/20 
           dark:focus-visible:ring-amber-500/40 focus-visible:border-amber-500/40
         `,
         success: `
-          bg-emerald-300 border-emerald-400 text-foreground hover:bg-emerald-400 
-          dark:bg-emerald-700 dark:border-emerald-400 dark:text-emerald-50 
+          bg-emerald-300  text-foreground hover:bg-emerald-400 
+          dark:bg-emerald-700  dark:text-emerald-50 
           dark:hover:bg-emerald-600 dark:hover:border-emerald-300 focus-visible:ring-emerald-500/20 
           dark:focus-visible:ring-emerald-500/40 focus-visible:border-emerald-500/40
         `,
