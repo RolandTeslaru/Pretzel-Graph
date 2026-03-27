@@ -259,7 +259,7 @@ code {
   --accent-foreground: theme(--color-white);
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: theme(--color-stone-700);
+  --border: oklch(34.07% 0.00004 271.152);
 
   /* --border: theme(--color-stone-800); */
   --input: theme(--color-stone-700);
