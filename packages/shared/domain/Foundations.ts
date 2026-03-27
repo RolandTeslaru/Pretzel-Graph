@@ -152,6 +152,7 @@ export namespace Foundations {
             "Document",
             "Text",
             "Data",
+            "DataList",
             "LanguageModel",
             "Embeddings",
             "VectorStore",
@@ -161,6 +162,7 @@ export namespace Foundations {
             "Integer",
             "Json",
             "Unresolved",
+            "UnresolvedList",
         ])
         export type Variant = z.infer<typeof Variant>
 
@@ -177,7 +179,10 @@ export namespace Foundations {
             displayName: z.string().optional(),
             tooltip: z.string().optional(),
             isDynamic: z.boolean().optional(),
-            syncGroupId: z.string().optional() 
+            syncGroupId: z.string().optional(),
+            // For dynamic ports: stores the original blueprint variant ("Unresolved" or "UnresolvedList")
+            // so that unresolveDynamicPortGroup can restore the correct unresolved state after disconnection.
+            unresolvedVariant: z.enum(["Unresolved", "UnresolvedList"]).optional(),
         })
         export interface Base extends z.infer<typeof Base> { }
 
@@ -191,6 +196,16 @@ export namespace Foundations {
             export const MessageList = Base.extend({
                 variant: portLiteral("MessageList"),
                 initialValue: z.array(z.string()).optional(),
+            })
+
+            export const Data = Base.extend({
+                variant: portLiteral("Data"),
+                initialValue: z.any().optional(),
+            })
+
+            export const DataList = Base.extend({
+                variant: portLiteral("DataList"),
+                initialValue: z.array(z.any()).optional(),
             })
 
             export const Text = Base.extend({
@@ -238,9 +253,15 @@ export namespace Foundations {
                 variant: portLiteral("Unresolved"),
             })
 
+            export const UnresolvedList = Base.extend({
+                variant: portLiteral("UnresolvedList"),
+            })
+
             export const Schema = z.discriminatedUnion("variant", [
                 Message,
                 MessageList,
+                Data,
+                DataList,
                 Text,
                 LanguageModel,
                 Document,
@@ -252,10 +273,13 @@ export namespace Foundations {
                 Integer,
                 Json,
                 Unresolved,
+                UnresolvedList,
             ])
 
             export type Message = z.infer<typeof Message>
             export type MessageList = z.infer<typeof MessageList>
+            export type Data = z.infer<typeof Data>
+            export type DataList = z.infer<typeof DataList>
             export type Text = z.infer<typeof Text>
             export type LanguageModel = z.infer<typeof LanguageModel>
             export type Document = z.infer<typeof Document>
@@ -267,6 +291,7 @@ export namespace Foundations {
             export type Integer = z.infer<typeof Integer>
             export type Json = z.infer<typeof Json>
             export type Unresolved = z.infer<typeof Unresolved>
+            export type UnresolvedList = z.infer<typeof UnresolvedList>
         }
 
         export namespace Input {
@@ -285,6 +310,8 @@ export namespace Foundations {
             // Variant-specific input schemas (variant fields + InputId + required)
             export const Message = Port.Variants.Message.extend(inputFields);
             export const MessageList = Port.Variants.MessageList.extend(inputFields);
+            export const Data = Port.Variants.Data.extend(inputFields);
+            export const DataList = Port.Variants.DataList.extend(inputFields);
             export const Text = Port.Variants.Text.extend(inputFields);
             export const LanguageModel = Port.Variants.LanguageModel.extend(inputFields);
             export const Document = Port.Variants.Document.extend(inputFields);
@@ -296,10 +323,11 @@ export namespace Foundations {
 
             export const Json = Port.Variants.Json.extend(inputFields);
             export const Unresolved = Port.Variants.Unresolved.extend(inputFields);
+            export const UnresolvedList = Port.Variants.UnresolvedList.extend(inputFields);
 
             export const Schema = z.discriminatedUnion("variant", [
-                Message, MessageList, Text, LanguageModel, Document, Retriever,
-                Embeddings, VectorStore, Tool, Integer, Json, Unresolved
+                Message, MessageList, Data, DataList, Text, LanguageModel, Document, Retriever,
+                Embeddings, VectorStore, Tool, Integer, Json, Unresolved, UnresolvedList
             ]);
         }
         export type Input = z.infer<typeof Input.Schema>
@@ -318,6 +346,8 @@ export namespace Foundations {
             // Variant-specific output schemas (variant fields + OutputId)
             export const Message = Port.Variants.Message.extend(outputFields);
             export const MessageList = Port.Variants.MessageList.extend(outputFields);
+            export const Data = Port.Variants.Data.extend(outputFields);
+            export const DataList = Port.Variants.DataList.extend(outputFields);
             export const Text = Port.Variants.Text.extend(outputFields);
             export const LanguageModel = Port.Variants.LanguageModel.extend(outputFields);
             export const Document = Port.Variants.Document.extend(outputFields);
@@ -329,10 +359,11 @@ export namespace Foundations {
             export const Integer = Port.Variants.Integer.extend(outputFields);
             export const Json = Port.Variants.Json.extend(outputFields);
             export const Unresolved = Port.Variants.Unresolved.extend(outputFields);
+            export const UnresolvedList = Port.Variants.UnresolvedList.extend(outputFields);
 
             export const Schema = z.discriminatedUnion("variant", [
-                Message, MessageList, Text, LanguageModel, Document, Retriever, Embeddings,
-                VectorStore, Tool, DataFrame, Integer, Json, Unresolved
+                Message, MessageList, Data, DataList, Text, LanguageModel, Document, Retriever, Embeddings,
+                VectorStore, Tool, DataFrame, Integer, Json, Unresolved, UnresolvedList
             ]);
         }
         export type Output = z.infer<typeof Output.Schema>
