@@ -59,6 +59,16 @@ export type InferInputs<D> = D extends { inputs: infer T }
  * Uses __reference phantom if present (set by OutputBuilder.Message → BaseMessage, etc.)
  * Falls back to `any`.
  */
+/**
+ * Given an object type T, produces a union where exactly one key is present
+ * and all other keys are explicitly disallowed (set to never).
+ *
+ * Useful for router nodes that must fire exactly one output branch.
+ */
+export type OneOf<T> = {
+    [K in keyof T]: Pick<T, K> & Partial<Record<Exclude<keyof T, K>, never>>;
+}[keyof T];
+
 export type InferOutputs<D> = D extends { outputs: infer T }
     ? T extends readonly { id: string }[]
     ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
