@@ -1,4 +1,4 @@
-import { Workflow, type Foundations } from "@vx-agent-editor/shared/domain";
+import { Workflow } from "@vx-agent-editor/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { cacheReducers } from "./cache";
 import { inputReducers } from "./input";
@@ -55,10 +55,10 @@ export const edgeReducers = {
 
         inputReducers.validate(s, targetNodeId, targetPort);
 
-        if (targetPort.isDynamic && targetPort.variant === "Unresolved") {
+        if (targetPort.isDynamic && (targetPort.variant === "Unresolved" || targetPort.variant === "UnresolvedList")) {
             nodeReducers.resolveDynamicPortGroup(s, targetNodeId, targetPort, sourcePort.variant);
         }
-        else if (sourcePort.isDynamic && sourcePort.variant === "Unresolved") {
+        else if (sourcePort.isDynamic && (sourcePort.variant === "Unresolved" || sourcePort.variant === "UnresolvedList")) {
             nodeReducers.resolveDynamicPortGroup(s, sourceNodeId, sourcePort, targetPort.variant);
         }
         return newEdge
