@@ -8,13 +8,13 @@ const ChatButton = () => {
 
     return (
         <Button
-            variant={isSidebarVisible ? "active" : "outline"}
+            variant={isSidebarVisible ? "active" : "ghost"}
             onClick={() => {
                 ChatSDK.actions.ui.setSidebarVisibility(!isSidebarVisible)
             }}
+            size={"icon-sm"}
         >
-            <SystemIcons.MessagesSquare />
-            Chat
+            <SystemIcons.MessagesSquare className='scale-80'/>
         </Button>
     )
 }

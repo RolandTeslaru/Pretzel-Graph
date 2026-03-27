@@ -40,7 +40,7 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
 
 
   if (node.accent) {
-    backgroundColor = `color-mix(in srgb, var(--${node.accent}) 22%, var(--card))`;
+    backgroundColor = `color-mix(in srgb, var(--${node.accent}) 32%, var(--card))`;
     borderColor = `color-mix(in srgb, var(--${node.accent}) 50%, var(--border))`;
   }
 
@@ -55,11 +55,11 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
       </NodeToolbar>
 
       <div className={cn(
-        "animate-in fade-in-0 duration-200 ease-out p-1 border-2 transition-colors",
+        "animate-in fade-in-0 duration-200 ease-out p-1 transition-colors",
         "flex flex-col relative rounded-3xl shadow-lg shadow-black/20 dark:shadow-black/30",
         node.isMinimized ? "min-w-[100px]" : "w-[250px]",
       )}
-        style={{ backgroundColor, borderColor }}
+        style={{ backgroundColor, borderColor, borderWidth: 2 }}
       >
         <NodeHeader executionStatus={nodeStatus} node={node} isWorkflowLocked={isWorkflowLocked} />
 
@@ -72,7 +72,7 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
 
 
 
-        <StatusBorder status={nodeStatus?.status} backgroundColor={backgroundColor} />
+        <StatusBorder status={nodeStatus?.status} backgroundColor={backgroundColor} isClicked={isNodeClicked} />
 
       </div>
     </>

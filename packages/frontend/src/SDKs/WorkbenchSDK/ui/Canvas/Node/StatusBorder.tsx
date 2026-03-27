@@ -5,10 +5,20 @@ import type { ExecutionSession } from '@vx-agent-editor/shared/domain';
 interface StatusBorderProps {
   status: ExecutionSession.NodeStatus['status'] | undefined
   backgroundColor: string
+  isClicked?: boolean
 }
 
-export const StatusBorder = memo(({ status, backgroundColor }: StatusBorderProps) => {
-  if (!status || status === "idle") return null;
+export const StatusBorder = memo(({ status, backgroundColor, isClicked }: StatusBorderProps) => {
+  if ((!status || status === "idle") && !isClicked) return null;
+
+  if (isClicked && (!status || status === "idle")) {
+    return (
+      <div
+        className="absolute z-[-1] rounded-4xl pointer-events-none"
+        style={{ inset: -7, background: "var(--muted-foreground)", opacity: 0.35 }}
+      />
+    );
+  }
 
   if (status === "failed") {
     return (
