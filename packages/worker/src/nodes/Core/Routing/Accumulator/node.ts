@@ -15,10 +15,16 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ): Promise<InferOutputs<typeof Blueprint>> {
         const { input } = inputs;
 
-        // TODO: Implement accumulation logic (collect inputs, emit when threshold is met)
+        const previousState: unknown[] =
+            this.context.session.node_outputs[this.workflowNode.id]?.state ?? [];
+
+        const incoming = Array.isArray(input) ? input.flat() : input != null ? [input] : [];
+
+        const accumulated = [...previousState, ...incoming];
 
         return {
-            output: input,
+            output: accumulated,
+            state: accumulated,
         };
     }
 }

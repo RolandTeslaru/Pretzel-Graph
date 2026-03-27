@@ -20,10 +20,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const isStreaming = this.fields.stream;
 
         if (isStreaming) {
-            const stream = await inputs.languageModel.stream([
-                inputs.systemMessage,
-                inputs.input
-            ], {
+            const messages = [inputs.systemMessage, ...inputs.messages].filter(Boolean);
+            const stream = await inputs.languageModel.stream(messages, {
                 signal: context.abortController.signal,
             });
 
@@ -43,10 +41,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
             return { response };
         } else {
-            const response = await inputs.languageModel.invoke([
-                inputs.systemMessage,
-                inputs.input
-            ], {
+            const messages = [inputs.systemMessage, ...inputs.messages].filter(Boolean);
+            const response = await inputs.languageModel.invoke(messages, {
                 signal: context.abortController.signal,
             });
             return { response };
