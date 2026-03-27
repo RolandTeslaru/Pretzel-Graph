@@ -132,6 +132,24 @@ export namespace InputBuilder {
         };
     }
 
+    export function Data<TId extends string>(
+        config: BaseProps<TId>
+    ): LiteralInput<TId, "Data", Foundations.Port.Variants.Data, any> {
+        return {
+            ...buildBase(config),
+            variant: "Data" as const,
+        };
+    }
+
+    export function DataList<TId extends string>(
+        config: BaseProps<TId>
+    ): LiteralInput<TId, "DataList", Foundations.Port.Variants.DataList, any[]> {
+        return {
+            ...buildBase(config),
+            variant: "DataList" as const,
+        };
+    }
+
     export function Unresolved<TId extends string, TSyncGroup extends string>(
         config: { syncGroupId: TSyncGroup } & BaseProps<TId>
     ): LiteralInput<TId, "Unresolved", Foundations.Port.Variants.Unresolved, any> & { readonly __syncGroup?: TSyncGroup } {
@@ -140,6 +158,21 @@ export namespace InputBuilder {
             variant: "Unresolved" as const,
             isDynamic: true,
             syncGroupId: config.syncGroupId,
+            // Stores the blueprint variant so the port can be restored correctly on disconnection
+            unresolvedVariant: "Unresolved" as const,
+        };
+    }
+
+    export function UnresolvedList<TId extends string, TSyncGroup extends string>(
+        config: { syncGroupId: TSyncGroup } & BaseProps<TId>
+    ): LiteralInput<TId, "UnresolvedList", Foundations.Port.Variants.UnresolvedList, any> & { readonly __syncGroup?: TSyncGroup } {
+        return {
+            ...buildBase(config),
+            variant: "UnresolvedList" as const,
+            isDynamic: true,
+            syncGroupId: config.syncGroupId,
+            // Stores the blueprint variant so the port can be restored correctly on disconnection
+            unresolvedVariant: "UnresolvedList" as const,
         };
     }
 }
