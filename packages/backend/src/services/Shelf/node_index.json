@@ -1,6 +1,6 @@
 {
-  "version": "1774622419338",
-  "generatedAt": "2026-03-27T14:40:19.338Z",
+  "version": "1774623769538",
+  "generatedAt": "2026-03-27T15:02:49.538Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -122,27 +122,25 @@
         {
           "id": "languageModel",
           "displayName": "Language Model",
+          "internal": false,
           "variant": "LanguageModel",
-          "required": true,
-          "internal": false
+          "required": true
         },
         {
-          "id": "input",
-          "displayName": "Input",
-          "tooltip": "The input text to send to the model",
-          "variant": "Message",
-          "initialValue": "",
-          "required": true,
-          "internal": false
+          "id": "messages",
+          "displayName": "Messages",
+          "internal": false,
+          "variant": "MessageList",
+          "required": true
         },
         {
           "id": "systemMessage",
           "displayName": "System Message",
           "tooltip": "A system message that helps set the behavior of the assistant",
+          "internal": false,
           "variant": "Message",
           "initialValue": "",
-          "required": false,
-          "internal": false
+          "required": false
         }
       ],
       "outputs": [
@@ -180,9 +178,9 @@
         {
           "id": "summerizationLLM",
           "displayName": "Summerization LLM",
+          "internal": false,
           "variant": "LanguageModel",
-          "required": true,
-          "internal": false
+          "required": true
         }
       ],
       "outputs": [
@@ -205,10 +203,10 @@
         {
           "id": "input",
           "displayName": "Input",
+          "internal": true,
           "variant": "Message",
           "initialValue": "",
-          "required": false,
-          "internal": true
+          "required": false
         }
       ],
       "outputs": [
@@ -231,10 +229,10 @@
         {
           "id": "input",
           "displayName": "Input",
+          "internal": false,
           "variant": "Message",
           "initialValue": "",
-          "required": true,
-          "internal": false
+          "required": true
         }
       ],
       "outputs": [],
@@ -412,52 +410,52 @@
         {
           "id": "messageInput",
           "displayName": "Message Input",
+          "internal": false,
           "variant": "Message",
           "initialValue": "",
-          "required": false,
-          "internal": false
+          "required": false
         },
         {
           "id": "languageModelInput",
           "displayName": "Language Model Input",
+          "internal": false,
           "variant": "LanguageModel",
-          "required": false,
-          "internal": false
+          "required": false
         },
         {
           "id": "documentInput",
           "displayName": "Document Input",
+          "internal": false,
           "variant": "Document",
-          "required": false,
-          "internal": false
+          "required": false
         },
         {
           "id": "retrieverInput",
           "displayName": "Retriever Input",
+          "internal": false,
           "variant": "Retriever",
-          "required": false,
-          "internal": false
+          "required": false
         },
         {
           "id": "embeddingsInput",
           "displayName": "Embeddings Input",
+          "internal": false,
           "variant": "Embeddings",
-          "required": false,
-          "internal": false
+          "required": false
         },
         {
           "id": "vectorStoreInput",
           "displayName": "Vector Store Input",
+          "internal": false,
           "variant": "VectorStore",
-          "required": false,
-          "internal": false
+          "required": false
         },
         {
           "id": "toolInput",
           "displayName": "Tool Input",
+          "internal": false,
           "variant": "Tool",
-          "required": false,
-          "internal": false
+          "required": false
         }
       ],
       "outputs": [
@@ -546,10 +544,10 @@
         {
           "id": "message",
           "displayName": "Message",
+          "internal": false,
           "variant": "Message",
           "initialValue": "",
-          "required": false,
-          "internal": false
+          "required": false
         }
       ],
       "outputs": [
@@ -582,10 +580,10 @@
         {
           "id": "input",
           "displayName": "Input",
+          "internal": false,
           "variant": "Message",
           "initialValue": "",
-          "required": false,
-          "internal": false
+          "required": false
         }
       ],
       "outputs": [
@@ -654,10 +652,10 @@
         {
           "id": "trigger",
           "displayName": "Trigger",
+          "internal": false,
           "variant": "Message",
           "initialValue": "",
-          "required": false,
-          "internal": false
+          "required": false
         }
       ],
       "outputs": [
@@ -724,10 +722,10 @@
           "id": "trigger",
           "displayName": "Trigger",
           "tooltip": "Optional trigger to start the sleep.",
+          "internal": false,
           "variant": "Message",
           "initialValue": "",
-          "required": false,
-          "internal": false
+          "required": false
         }
       ],
       "outputs": [
@@ -766,10 +764,12 @@
         {
           "id": "input",
           "displayName": "Input",
-          "variant": "Message",
-          "initialValue": "",
-          "required": false,
-          "internal": false
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "internal": false,
+          "unresolvedVariant": "UnresolvedList",
+          "variant": "UnresolvedList",
+          "required": false
         }
       ],
       "outputs": [
@@ -777,7 +777,18 @@
           "id": "output",
           "displayName": "Output",
           "tooltip": "The accumulated result.",
-          "variant": "Message"
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "unresolvedVariant": "UnresolvedList",
+          "variant": "UnresolvedList"
+        },
+        {
+          "id": "state",
+          "displayName": "State",
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "unresolvedVariant": "UnresolvedList",
+          "variant": "UnresolvedList"
         }
       ],
       "description": "Collects inputs over multiple executions and emits the accumulated result."
@@ -806,10 +817,10 @@
           "displayName": "Input",
           "isDynamic": true,
           "syncGroupId": "data",
+          "internal": false,
           "unresolvedVariant": "Unresolved",
           "variant": "Unresolved",
-          "required": false,
-          "internal": false
+          "required": false
         }
       ],
       "outputs": [
@@ -854,6 +865,18 @@
             "XOR"
           ],
           "kind": "tab"
+        },
+        {
+          "id": "ordering",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Input Ordering",
+          "variant": "List",
+          "initialValue": [
+            "input_1",
+            "input_2"
+          ]
         }
       ],
       "inputs": [
@@ -862,20 +885,20 @@
           "displayName": "Input 1",
           "isDynamic": true,
           "syncGroupId": "data",
+          "internal": false,
           "unresolvedVariant": "UnresolvedList",
           "variant": "UnresolvedList",
-          "required": false,
-          "internal": false
+          "required": false
         },
         {
           "id": "input_2",
           "displayName": "Input 2",
           "isDynamic": true,
           "syncGroupId": "data",
+          "internal": false,
           "unresolvedVariant": "UnresolvedList",
           "variant": "UnresolvedList",
-          "required": false,
-          "internal": false
+          "required": false
         }
       ],
       "outputs": [
@@ -914,10 +937,10 @@
           "displayName": "Input",
           "isDynamic": true,
           "syncGroupId": "data",
+          "internal": false,
           "unresolvedVariant": "Unresolved",
           "variant": "Unresolved",
-          "required": false,
-          "internal": false
+          "required": false
         }
       ],
       "outputs": [
@@ -966,10 +989,10 @@
           "displayName": "Input",
           "isDynamic": true,
           "syncGroupId": "data",
+          "internal": false,
           "unresolvedVariant": "Unresolved",
           "variant": "Unresolved",
-          "required": false,
-          "internal": false
+          "required": false
         }
       ],
       "outputs": [
@@ -1004,10 +1027,10 @@
         {
           "id": "text",
           "displayName": "Text",
+          "internal": false,
           "variant": "Text",
           "initialValue": "",
-          "required": true,
-          "internal": false
+          "required": true
         }
       ],
       "outputs": [
@@ -1040,17 +1063,17 @@
         {
           "id": "tool",
           "displayName": "Tool",
+          "internal": false,
           "variant": "Tool",
-          "required": false,
-          "internal": false
+          "required": false
         },
         {
           "id": "input",
           "displayName": "Input",
+          "internal": false,
           "variant": "Message",
           "initialValue": "",
-          "required": false,
-          "internal": false
+          "required": false
         }
       ],
       "outputs": [
