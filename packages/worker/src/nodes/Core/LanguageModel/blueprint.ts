@@ -21,11 +21,10 @@ export const Blueprint = defineBlueprint({
             displayName: "Language Model",
             required: true
         }),
-        InputBuilder.Message({
-            id: "input",
-            displayName: "Input",
+        InputBuilder.MessageList({
+            id: "messages",
+            displayName: "Messages",
             required: true,
-            tooltip: "The input text to send to the model"
         }),
         InputBuilder.Message({
             id: "systemMessage",

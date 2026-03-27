@@ -139,7 +139,7 @@ export namespace Validation {
             return true;
 
         // UnresolvedList only accepts Message and Data — the two variants it can list-promote
-        const unresolvedListCompatible = new Set(["Message", "Data"]);
+        const unresolvedListCompatible = new Set(["Message", "MessageList", "Data", "DataList"]);
         if (sourcePort.variant === "UnresolvedList" && unresolvedListCompatible.has(targetPort.variant))
             return true;
         if (targetPort.variant === "UnresolvedList" && unresolvedListCompatible.has(sourcePort.variant))

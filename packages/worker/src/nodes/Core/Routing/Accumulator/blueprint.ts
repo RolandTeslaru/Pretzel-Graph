@@ -16,16 +16,23 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
-        InputBuilder.Message({
+        InputBuilder.UnresolvedList({
             id: "input",
             displayName: "Input",
+            syncGroupId: "data"
         }),
     ],
     outputs: [
-        OutputBuilder.Message({
+        OutputBuilder.UnresolvedList({
             id: "output",
             displayName: "Output",
             tooltip: "The accumulated result.",
+            syncGroupId: "data"
+        }),
+        OutputBuilder.UnresolvedList({
+            id: "state",
+            displayName: "State",
+            syncGroupId: "data"
         }),
     ],
 });
