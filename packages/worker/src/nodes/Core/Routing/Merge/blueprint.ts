@@ -14,6 +14,11 @@ export const Blueprint = defineBlueprint({
             initialValue: "AND",
             variant: "tab",
         }),
+        FieldBuilder.List({
+            id: "ordering",
+            displayName: "Input Ordering",
+            initialValue: ["input_1", "input_2"],
+        }),
     ],
     inputs: [
         InputBuilder.UnresolvedList({

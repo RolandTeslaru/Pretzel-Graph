@@ -180,6 +180,7 @@ export namespace Foundations {
             tooltip: z.string().optional(),
             isDynamic: z.boolean().optional(),
             syncGroupId: z.string().optional(),
+            internal: z.boolean().optional(),
             // For dynamic ports: stores the original blueprint variant ("Unresolved" or "UnresolvedList")
             // so that unresolveDynamicPortGroup can restore the correct unresolved state after disconnection.
             unresolvedVariant: z.enum(["Unresolved", "UnresolvedList"]).optional(),
@@ -301,7 +302,6 @@ export namespace Foundations {
             const inputFields = {
                 id: Input.Id,
                 required: z.boolean(),
-                internal: z.boolean().optional()
             };
 
             export const Base = Port.Base.extend(inputFields)

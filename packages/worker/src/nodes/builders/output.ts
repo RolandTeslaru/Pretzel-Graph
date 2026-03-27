@@ -21,6 +21,7 @@ export namespace OutputBuilder {
         id: TId;
         displayName: string;
         tooltip?: string;
+        internal?: boolean;
     }
 
     function buildBase<TId extends string>(config: BaseProps<TId>) {
@@ -28,6 +29,7 @@ export namespace OutputBuilder {
             id: config.id as TId & Foundations.Port.Output.Id,
             displayName: config.displayName,
             tooltip: config.tooltip,
+            internal: config.internal,
         } satisfies { id: TId & Foundations.Port.Output.Id } & Omit<Foundations.Port.Output.Base, "id">;
     }
 

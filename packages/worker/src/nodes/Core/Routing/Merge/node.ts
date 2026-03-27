@@ -14,27 +14,20 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { strategy } = this.fields;
-        // const { a, b } = inputs;
+        const { ordering } = this.fields;
 
-        // // TODO: Implement merge strategies
-        // let output;
-        // switch (strategy) {
-        //     case "first":
-        //         output = a ?? b;
-        //         break;
-        //     case "last":
-        //         output = b ?? a;
-        //         break;
-        //     case "all":
-        //         output = a ?? b;
-        //         break;
-        //     default:
-        //         output = a ?? b;
-        // }
+        const output: unknown[] = [];
 
-        const output = {};
+        for (const portId of ordering) {
+            const value = inputs[portId as keyof typeof inputs];
+            if (value == null) continue;
+            if (Array.isArray(value)) {
+                output.push(...value);
+            } else {
+                output.push(value);
+            }
+        }
 
-        return { output: inputs.input_1 ?? inputs.input_2 };
+        return { output };
     }
 }
