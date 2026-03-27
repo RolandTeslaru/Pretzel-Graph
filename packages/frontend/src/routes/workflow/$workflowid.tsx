@@ -17,6 +17,7 @@ import ChatSidebar from '@/SDKs/ChatSDK/ui/ChatSidebar'
 import WorkflowControls from '@/SDKs/OrchestratorSDK/ui/WorkflowControls'
 import { AdminJobsPanel } from '@/SDKs/OrchestratorSDK/ui/AdminJobsPanel'
 import ChatButton from '@/SDKs/ChatSDK/ui/ChatButton'
+import TemporalControls from '@/SDKs/WorkbenchSDK/ui/TemporalControls'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -116,9 +117,9 @@ function WorkflowLayoutComponent() {
             <ChatSidebar/>
             <NodeSidebar />
             <BottomPanel/>
-            <AdminJobsPanel />
+            {/* <AdminJobsPanel /> */}
             {/* <StackDebugPanel/> */}
-            <StateViewer />
+            {/* <StateViewer /> */}
             <Outlet />
         </div>
     )
@@ -128,6 +129,7 @@ function WorkflowLayoutComponent() {
 const BottomPanel = () => {
     return (
         <div className='flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 -translate-x-1/2 z-10'>
+            <TemporalControls/>
             <ChatButton/>
             <WorkflowControls/>
         </div>
