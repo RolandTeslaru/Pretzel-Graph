@@ -1,10 +1,10 @@
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
-    id: "Core.Routing.Switch",
-    displayName: "Switch",
-    description: "Routes input to one of multiple outputs based on a condition.",
-    icon: "Option",
+    id: "Core.Routing.Router",
+    displayName: "Router",
+    description: "Routes input to multiple outputs simultaneously based on independent conditions.",
+    icon: "ListTree",
     accent: "group-routing",
     fields: [
         FieldBuilder.String({

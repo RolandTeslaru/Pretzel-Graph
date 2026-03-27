@@ -18,7 +18,24 @@ export class Synthesizer {
         switch (input.variant) {
             case "Message":
                 return this.coerceMessage("human", staticValue as string);
-
+            case "MessageList":
+                if(Array.isArray(staticValue)){
+                    if(staticValue.every(el => typeof el === "string")){
+                        return staticValue.map(str => this.coerceMessage("human", str));
+                    }
+                    else if(staticValue.every(el => typeof el === "object" && "content" in el && typeof el.content === "string")){
+                        return staticValue.map(msgObj => this.coerceMessage("human", msgObj as LC.BaseMessage | string));
+                    }
+                    else {
+                        throw new SystemError(
+                            SystemError.Code.CONFIG_INVALID_FIELD,
+                            `Invalid initial value for MessageList input — expected an array of strings or message objects.`
+                        );
+                    }
+                }
+                else {
+                    return [this.coerceMessage("human", staticValue as string)];
+                }
             case "Text":
                 return String(staticValue);
 
