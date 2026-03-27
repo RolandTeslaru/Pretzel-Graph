@@ -1,6 +1,6 @@
 {
-  "version": "1774620020172",
-  "generatedAt": "2026-03-27T14:00:20.172Z",
+  "version": "1774622419338",
+  "generatedAt": "2026-03-27T14:40:19.338Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -890,10 +890,62 @@
       ],
       "description": "Merges multiple inputs into a single output."
     },
+    "Core.Routing.Router": {
+      "id": "Core.Routing.Router",
+      "displayName": "Router",
+      "icon": "ListTree",
+      "accent": "group-routing",
+      "fields": [
+        {
+          "id": "condition",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Condition",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "Expression to evaluate"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "unresolvedVariant": "Unresolved",
+          "variant": "Unresolved",
+          "required": false,
+          "internal": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "true",
+          "displayName": "True",
+          "tooltip": "Output when condition is true.",
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "unresolvedVariant": "Unresolved",
+          "variant": "Unresolved"
+        },
+        {
+          "id": "false",
+          "displayName": "False",
+          "tooltip": "Output when condition is false.",
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "unresolvedVariant": "Unresolved",
+          "variant": "Unresolved"
+        }
+      ],
+      "description": "Routes input to multiple outputs simultaneously based on independent conditions."
+    },
     "Core.Routing.Switch": {
       "id": "Core.Routing.Switch",
       "displayName": "Switch",
-      "icon": "ListTree",
+      "icon": "Option",
       "accent": "group-routing",
       "fields": [
         {
