@@ -55,6 +55,10 @@ export const createExecutionSessionSDKActions = (sdk: ExecutionSessionSDKImpl) =
                 s.session = session;
             });
         },
+        clearStatus: () => sdk.setState(s => {
+            s.session.node_status = {};
+            s.session.edge_state = {};
+        }),
         prepareForRun: () => sdk.setState(s => {
             s.session.node_outputs = {}
             s.session.node_status = {}
@@ -73,6 +77,7 @@ export type ExecutionSessionSDKActions = {
     loadLocal: (session: ExecutionSession) => void,
     setNodeStatus: DropFirstArg<ExecutionSessionSDKImpl["reducers"]["setNodeStatus"]>,
     clearNodeStatus: DropFirstArg<ExecutionSessionSDKImpl["reducers"]["clearNodeStatus"]>,
+    clearStatus: () => void,
     clearAllNodeStatuses: () => void,
     prepareForRun: () => void
 }
