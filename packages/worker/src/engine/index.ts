@@ -84,6 +84,7 @@ export class AggexEngine {
 
     private resolveInputs(
         nodeId: Workflow.Node.Id,
+        incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set()
     ): Record<Foundations.Port.Input.Id, any> {
         const node = this.workflow.data.nodes[nodeId];
         const staticValues = this.workflow.data.staticValues[nodeId] ?? {};
@@ -97,6 +98,9 @@ export class AggexEngine {
             const edge = this.workflow.data.edges[edgeId];
 
             if (edge) {
+                if(incomingSignals.has(edge.source.nodeId) === false)
+                    continue;
+
                 const sourceOutputs = this.context.session.node_outputs[edge.source.nodeId];
                 if (sourceOutputs) {
                     const rawReference = sourceOutputs[edge.source.portId as string];
@@ -196,15 +200,20 @@ export class AggexEngine {
         
 
 
-    private onNodeExecuted = async (vertexId: Vertex.Id): Promise<Set<Vertex.Id> | void> => {
+    private onNodeExecuted = async (
+        vertexId: Vertex.Id, 
+        signals: Set<Workflow.Node.Id | Vertex.Id>
+    ): Promise<Set<Vertex.Id> | void> => {
+        
         const entry = this.nodeInstanceMap.get(vertexId);
         if (!entry)
             return;
-
+        
         const wfNode = entry.wfNode;
         const nodeInstance = entry.instance;
-
-        const inputs = this.resolveInputs(wfNode.id);
+        
+        const inputs = this.resolveInputs(wfNode.id, signals);
+        console.log("Executing node", vertexId, "with incoming signals", signals, "and resolved inputs", inputs);
 
         const result = await nodeInstance.run(inputs);
 
@@ -253,6 +262,7 @@ export class AggexEngine {
 
     private onNodeWaiting(
         vertexId: Vertex.Id,
+        arrivedSignals: Set<Vertex.Id>,
         dependencyResolutionMap: Record<Vertex.Id, boolean>,
         totalDeps: number
     ) {
@@ -277,7 +287,7 @@ export class AggexEngine {
             totalDeps
         });
 
-        const partialInputs = this.resolveInputs(wfNode.id);
+        const partialInputs = this.resolveInputs(wfNode.id, arrivedSignals);
         instance.wait(partialInputs, nodeDepMap);
     }
 

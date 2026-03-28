@@ -57,6 +57,7 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
                 break;
             case "node:completed":
                 this.setState(s => {
+                    s.session.node_outputs[e.nodeId] = e.output;
                     if(e.stateUpdate)
                         this.reducers.applyUpdate(s, e.stateUpdate);
                     this.reducers.setNodeStatus(s, e.nodeId, { status: "completed", completed_at: new Date().toISOString() })

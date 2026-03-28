@@ -117,7 +117,7 @@ function WorkflowLayoutComponent() {
             <ChatSidebar/>
             <NodeSidebar />
             <BottomPanel/>
-            {/* <AdminJobsPanel /> */}
+            <AdminJobsPanel />
             {/* <StackDebugPanel/> */}
             {/* <StateViewer /> */}
             <Outlet />
