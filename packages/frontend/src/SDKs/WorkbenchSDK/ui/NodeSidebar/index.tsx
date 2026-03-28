@@ -8,6 +8,8 @@ import { LazyIcon } from '@vx-agent-editor/vx-ui/icons/LazyIcon';
 import { FieldRenderer } from '../FieldRenderer';
 import { InputRenderer } from '../InputRenderer';
 import { PortBadge } from '../PortBadge';
+import JsonView from 'react18-json-view';
+import { ExecutionSessionSDK } from '@/SDKs/ExecutionSessionSDK/sdk';
 
 
 const NodeSidebar = () => {
@@ -55,6 +57,8 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
 
     const defaultOpen = useMemo(() => {
         const sections: string[] = [];
+        sections.push("output");
+
         if (fields.length > 0)
             sections.push("fields");
         if (inputs.length > 0)
@@ -69,7 +73,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
             {/* Header */}
             <div className='flex flex-row pt-2 gap-2 mb-2 px-4 relative'>
                 <LazyIcon className='text-primary my-auto h-5 w-5' name={node.icon as string} />
-                <h4 className='text-primary font-mono font-semibold text-xl'>
+                <h4 className='tracking-wider font-semibold text-xl'>
                     {node.displayName}
                 </h4>
             </div>
@@ -133,6 +137,16 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                             </Accordion.Content>
                         </Accordion.Item>
                     )} */}
+                    <Accordion.Item value='output'>
+                        <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
+                            <h4 className='text-md font-medium'>Output</h4>
+                        </Accordion.Trigger>
+                        <Accordion.Content className='flex flex-col gap-1 bg-background/50'>
+                            <div className='p-1'>
+                                <NodeOutputs nodeId={node.id}/>
+                            </div>
+                        </Accordion.Content>
+                    </Accordion.Item>
 
                 </Accordion.Root>
             </ScrollArea.Root>
@@ -146,5 +160,17 @@ const InputItem = memo(({ input, nodeId }: { input: Foundations.Port.Input, node
         <div className='px-4 py-2'>
             <InputRenderer input={input} nodeId={nodeId} />
         </div>
+    )
+})
+
+
+const NodeOutputs = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
+    const output = ExecutionSessionSDK.useStore(s => s.session.node_outputs[nodeId]);
+
+    if (!output)
+        return null;
+
+    return (
+        <JsonView src={output} className='text-xs' collapsed={3}   />
     )
 })

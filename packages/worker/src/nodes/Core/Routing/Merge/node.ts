@@ -20,7 +20,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         for (const portId of ordering) {
             const value = inputs[portId as keyof typeof inputs];
-            if (value == null) continue;
+            if (value == null) 
+                continue;
             if (Array.isArray(value)) {
                 output.push(...value);
             } else {
