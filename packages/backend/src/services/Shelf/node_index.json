@@ -1,6 +1,6 @@
 {
-  "version": "1774623769538",
-  "generatedAt": "2026-03-27T15:02:49.538Z",
+  "version": "1774705278325",
+  "generatedAt": "2026-03-28T13:41:18.325Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -722,9 +722,11 @@
           "id": "trigger",
           "displayName": "Trigger",
           "tooltip": "Optional trigger to start the sleep.",
+          "isDynamic": true,
+          "syncGroupId": "signal",
           "internal": false,
-          "variant": "Message",
-          "initialValue": "",
+          "unresolvedVariant": "Unresolved",
+          "variant": "Unresolved",
           "required": false
         }
       ],
@@ -733,7 +735,10 @@
           "id": "done",
           "displayName": "Done",
           "tooltip": "Outputs the trigger message after the sleep duration.",
-          "variant": "Message"
+          "isDynamic": true,
+          "syncGroupId": "signal",
+          "unresolvedVariant": "Unresolved",
+          "variant": "Unresolved"
         }
       ],
       "description": "Pauses execution for a specified duration."
