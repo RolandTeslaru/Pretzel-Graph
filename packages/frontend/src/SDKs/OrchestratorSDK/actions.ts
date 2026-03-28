@@ -47,7 +47,13 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                 }
             })
 
-            const { jobId } = await executionPromise;
+            const { success, jobId } = await executionPromise;
+
+            if (!success || !jobId) {
+                toast.error("No worker available — execution failed to start")
+                confirmEvent();
+                return null;
+            }
 
             sdk.setState(s => {
                 s.jobId = jobId

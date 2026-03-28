@@ -210,7 +210,8 @@ export namespace Orchestrator {
                 executionSession: ExecutionSession.Schema,
             })
             export const Response = z.object({
-                jobId: Job.Id
+                success: z.boolean(),
+                jobId: Job.Id.optional()
             })
 
             export type Request = z.infer<typeof Request>
