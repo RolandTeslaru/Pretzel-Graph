@@ -1,8 +1,9 @@
-import { memo, useId } from 'react';
+import { memo, useId, useCallback } from 'react';
 import { type EdgeProps, getBezierPath, EdgeLabelRenderer } from '@xyflow/react';
 import { WorkbenchSDK } from '../../../sdk';
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import { ExecutionSessionSDK } from '@/SDKs/ExecutionSessionSDK/sdk';
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons';
 
 const WorkflowEdge = memo(({
     source,
@@ -14,7 +15,8 @@ const WorkflowEdge = memo(({
     sourcePosition,
     targetPosition,
     style = {},
-    id
+    id,
+    selected,
 }: EdgeProps) => {
     const [edgePath, labelX, labelY] = getBezierPath({
         sourceX,
@@ -29,6 +31,12 @@ const WorkflowEdge = memo(({
 
     const sourceNode = WorkbenchSDK.useStore(s => s.workflow.data.nodes[source as Workflow.Node.Id]);
     const edgeStatus = ExecutionSessionSDK.useStore(s => s.session.edge_state[id as Workflow.Edge.Id] ?? { status: "idle", runCount: 0 });
+
+    const handleDelete = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        WorkbenchSDK.actions.edge.remove(id as Workflow.Edge.Id);
+    }, [id]);
 
     if (!sourceNode) {
         return null;
@@ -49,9 +57,11 @@ const WorkflowEdge = memo(({
         : "var(--status-waiting)"
         : defaultColor;
 
+    const displayColor = selected ? 'var(--secondary-foreground)' : statusColor;
+
     const edgeStyle: React.CSSProperties = {
         ...style,
-        stroke: statusColor,
+        stroke: displayColor,
         strokeWidth: 2.5,
         strokeDasharray: isWaiting ? "20 12" : isPreparing ? "20 12" : undefined,
     };
@@ -78,12 +88,20 @@ const WorkflowEdge = memo(({
                 >
                     <polyline
                         points="-5,-4 0,0 -5,4 -5,-4"
-                        fill={statusColor}
-                        stroke={statusColor}
-                        
+                        fill={displayColor}
+                        stroke={displayColor}
+
                     />
                 </marker>
             </defs>
+            {/* Invisible wider path for easier clicking */}
+            <path
+                d={edgePath}
+                fill="none"
+                stroke="transparent"
+                strokeWidth={20}
+                className="react-flow__edge-interaction"
+            />
             <path
                 d={edgePath}
                 fill="none"
@@ -93,8 +111,28 @@ const WorkflowEdge = memo(({
                     animation: (isWaiting || isPreparing) ? `edge-dash-flow-${CSS.escape(id)} 0.6s linear infinite` : undefined,
                 }}
             />
-            {edgeStatus.runCount > 0 && (
-                <EdgeLabelRenderer>
+            <EdgeLabelRenderer>
+                {selected && (
+                    <div
+                        style={{
+                            position: 'absolute',
+                            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+                            pointerEvents: 'all',
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            className={`flex items-center justify-center w-7 h-7 rounded-sm bg-secondary 
+                                hover:bg-destructive text-secondary-foreground hover:text-destructive-foreground 
+                                transition-colors cursor-pointer shadow-md border-2 border-secondary-foreground`}
+                            
+                                onClick={handleDelete}
+                        >
+                            <SystemIcons.Trash2 size={14} />
+                        </button>
+                    </div>
+                )}
+                {edgeStatus.runCount > 0 && !selected && (
                     <div
                         style={{
                             position: 'absolute',
@@ -112,8 +150,8 @@ const WorkflowEdge = memo(({
                     >
                         {edgeStatus.runCount}
                     </div>
-                </EdgeLabelRenderer>
-            )}
+                )}
+            </EdgeLabelRenderer>
         </g>
     );
 });
