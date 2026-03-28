@@ -139,7 +139,19 @@ export class OrchestratorService {
             throw error;
         }
 
-        return { jobId };
+        const started = await this.realtime.withEventConfirmation(
+            Orchestrator.Event.getChannel(jobId),
+            "started",
+            10_000
+        );
+
+        if (!started) {
+            await this.dbOps.job.update(supabase, { jobId, status: "failed", error: "No worker picked up the job" });
+            this.executionQueue.remove(jobId).catch(err => console.error("Failed to remove job from queue after start timeout", err));
+            return { success: false };
+        }
+
+        return { success: true, jobId };
     }
 
 

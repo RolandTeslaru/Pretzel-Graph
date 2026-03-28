@@ -30,11 +30,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private ownershipCache = new Map<string, CacheEntry>();
 
     constructor() {
-        this.redisSub.psubscribe('*', (err) => {
-            if (err) console.error('Redis psubscribe error', err);
-        });
-
-        this.redisSub.on('pmessage', (pattern, channel, serializedEvent) => {
+        this.redisSub.on('message', (channel, serializedEvent) => {
             const clients = this.wsSubscriptions.get(channel as Realtime.Channel);
             if (clients) {
                 clients.forEach(ws => {
@@ -113,6 +109,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
             clients.delete(ws);
             if (clients.size === 0) {
                 this.wsSubscriptions.delete(channel);
+                this.redisSub.unsubscribe(channel);
             }
         });
     }
@@ -197,6 +194,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
         if (!this.wsSubscriptions.has(channel)) {
             this.wsSubscriptions.set(channel, new Set());
+            this.redisSub.subscribe(channel);
         }
         this.wsSubscriptions.get(channel)!.add(ws);
     }
@@ -207,7 +205,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
         this.wsSubscriptions.get(channel)?.delete(ws);
 
-        if (this.wsSubscriptions.get(channel)?.size === 0)
+        if (this.wsSubscriptions.get(channel)?.size === 0) {
             this.wsSubscriptions.delete(channel);
+            this.redisSub.unsubscribe(channel);
+        }
     }
 }

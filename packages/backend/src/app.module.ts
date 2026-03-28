@@ -23,6 +23,10 @@ import { GlobalExceptionFilter } from './filters/global-exception.filter';
                 host: REDIS_HOST,
                 port: REDIS_PORT,
             },
+            defaultJobOptions: {
+                removeOnComplete: { count: 20 },
+                removeOnFail: { count: 50 },
+            },
         }),
         OrchestratorModule,
         ChatModule,
