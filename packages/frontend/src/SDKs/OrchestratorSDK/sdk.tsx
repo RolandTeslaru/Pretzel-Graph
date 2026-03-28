@@ -9,6 +9,7 @@ import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { toast } from "sonner";
 import { api } from "../ApiInterceptorSDK";
+import { ExecutionSessionSDK } from "../ExecutionSessionSDK/sdk";
 
 @SDK("Orchestrator")
 export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
@@ -65,6 +66,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                     s.jobId = undefined;
                     s.executionStatus = "terminated"
                 })
+                ExecutionSessionSDK.actions.clearStatus();
                 toast.error(`Workflow execution terminated`)
                 break;
             case "paused":
