@@ -144,12 +144,36 @@ export class Synthesizer {
                 );
 
             case "MessageList":
-                if (Array.isArray(rawReference) && rawReference.every(el => el instanceof LC.BaseMessage))
-                    return rawReference;
+                if(Array.isArray(rawReference)){
+                    const newMessageList: LC.BaseMessage[] = [];
+                    rawReference.forEach(el => {
+                        if(el instanceof LC.BaseMessage){
+                            newMessageList.push(el);
+                        }
+                        else if(typeof el === "string"){
+                            newMessageList.push(this.coerceMessage("human", el));
+                        }
+                        else if(typeof el === "object" && "content" in el && typeof el.content === "string"){
+                            newMessageList.push(this.coerceMessage("human", el as LC.BaseMessage | string));
+                        }
+                        else {
+                            throw new SystemError(
+                                SystemError.Code.EXECUTION_TYPE_MISMATCH,
+                                `Cannot coerce value into variant "${variant}" — expected an array of strings or message objects.`,
+                                { data: { variant, rawReference } }
+                            );
+                        }
+                    })
+                    return newMessageList;
+                }
+                else if (rawReference instanceof LC.BaseMessage)
+                    return [rawReference];
+                else if (typeof rawReference === "string")
+                    return [new HumanMessage(rawReference)];
                 throw new SystemError(
                     SystemError.Code.EXECUTION_TYPE_MISMATCH,
                     `Cannot coerce value into variant "${variant}" — expected an array of BaseMessage`,
-                    { data: { variant } }
+                    { data: { variant, rawReference } }
                 );
 
             case "DataList":

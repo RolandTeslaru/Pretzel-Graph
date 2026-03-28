@@ -16,18 +16,20 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
-        InputBuilder.Message({
+        InputBuilder.Unresolved({
             id: "trigger",
             displayName: "Trigger",
             required: false,
-            tooltip: "Optional trigger to start the sleep."
+            tooltip: "Optional trigger to start the sleep.",
+            syncGroupId: "signal"
         }),
     ],
     outputs: [
-        OutputBuilder.Message({
+        OutputBuilder.Unresolved({
             id: "done",
             displayName: "Done",
-            tooltip: "Outputs the trigger message after the sleep duration."
+            tooltip: "Outputs the trigger message after the sleep duration.",
+            syncGroupId: "signal"
         }),
     ],
 });

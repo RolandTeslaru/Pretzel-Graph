@@ -33,7 +33,7 @@ export class S2Engine {
                 ctx.accumulatedSignals.set(vertexId, new Set());
             }
 
-            this.fireVertex(startVertex.id, ctx);
+            this.fireVertex(startVertex.id, new Set(), ctx);
         })
     }
 
@@ -77,6 +77,7 @@ export class S2Engine {
     ) {
         const allDependents = ctx.graph.dependentsMap.get(vertexId)!;
         const dependents = signalSet ?? allDependents;
+        console.log("Firing dependents of vertex", vertexId, "with signal set", signalSet, "resulting in dependents", dependents);
 
         dependents.forEach(dep => {
             if (ctx.settled) return;
@@ -85,16 +86,19 @@ export class S2Engine {
             signals.add(vertexId);
             const canRun = this.canVertexRun(dep, ctx);
 
+            console.log("Checking if dependent vertex", dep, "can run with accumulated signals", signals, "->", canRun);
+            const copiedSignals = new Set(signals);
+
             if (canRun) {
                 signals.clear();
-                this.fireVertex(dep, ctx);
+                this.fireVertex(dep, copiedSignals, ctx);
             } else {
                 const allDeps = ctx.graph.dependenciesMap.get(dep)!;
                 const resolutionMap: Record<Vertex.Id, boolean> = {};
                 for (const depId of allDeps) {
                     resolutionMap[depId] = signals.has(depId);
                 }
-                ctx.hooks.onVertexWaiting?.(dep, resolutionMap, allDeps.size);
+                ctx.hooks.onVertexWaiting?.(dep, new Set(signals), resolutionMap, allDeps.size);
             }
         })
     }
@@ -103,8 +107,10 @@ export class S2Engine {
 
     private async fireVertex(
         vertexId: Vertex.Id,
+        signals: Set<Vertex.Id>,
         ctx: S2ExecutionContext
     ) {
+        console.log("Attempting to fire vertex", vertexId, "with incoming signals", signals);
         if (ctx.settled) return;
 
         ctx.activeTasks++;
@@ -112,7 +118,7 @@ export class S2Engine {
         ctx.hooks.onVertexFired?.(vertexId);
 
         try {
-            const signalSet = await ctx.hooks.onVertexExecute(vertexId);
+            const signalSet = await ctx.hooks.onVertexExecute(vertexId, signals);
 
             ctx.activeVertexes --;
 
@@ -137,6 +143,8 @@ export class S2Engine {
             ctx.activeTasks--;
 
             if (ctx.activeTasks === 0 && !ctx.settled) {
+                console.log("All tasks completed, settling with success.", "Active vertexes at settlement:", ctx.activeVertexes, "vertexId at settlement:", vertexId);
+
                 ctx.settled = true;
                 ctx.resolve("Finished");
             }
