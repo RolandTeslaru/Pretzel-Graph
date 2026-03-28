@@ -11,8 +11,8 @@ export namespace Arc {
 }
 
 export interface S2Hooks {
-    onVertexExecute(vertexId: Vertex.Id): Promise<Set<Vertex.Id> | void>;
-    onVertexWaiting?(vertexId: Vertex.Id, dependencyResolutionMap: Record<Vertex.Id, boolean>, totalDeps: number): void;
+    onVertexExecute(vertexId: Vertex.Id, signals: Set<Vertex.Id>): Promise<Set<Vertex.Id> | void>;
+    onVertexWaiting?(vertexId: Vertex.Id, arrivedSignals: Set<Vertex.Id>, dependencyResolutionMap: Record<Vertex.Id, boolean>, totalDeps: number): void;
     onVertexFired?(vertexId: Vertex.Id): void;
     onVertexCompleted?(vertexId: Vertex.Id): void | Promise<void>;
     onVertexError?(vertexId: Vertex.Id, error: unknown): void;
