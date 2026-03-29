@@ -29,7 +29,8 @@ function App() {
   const auth = AuthSDK.useStore()
 
   if (auth.isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">
+    return <div className="flex items-center justify-center min-h-screen gap-4">
+      <p>Authenticating...</p>
       <Spinner/>
     </div>
   }

@@ -37,7 +37,11 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
       return { user: parsedUser, error: null }
     },
     getSession: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession()
+      if (error) {
+        console.error("Error fetching session", error)
+        return null
+      }
       return session;
     }
   }
