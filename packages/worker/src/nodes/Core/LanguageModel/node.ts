@@ -3,6 +3,7 @@ import { Blueprint } from "./blueprint";
 import { ExecutionContext } from "src/context";
 import { RuntimeNode } from "src/node";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
+import { AIMessage } from "@langchain/core/messages";
 
 type Inputs = InferInputs<typeof Blueprint>
 type Outputs = InferOutputs<typeof Blueprint>

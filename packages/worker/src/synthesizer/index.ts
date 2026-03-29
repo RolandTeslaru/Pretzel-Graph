@@ -3,7 +3,156 @@ import { LC } from "../langchain";
 import { Foundations } from "@vx-agent-editor/shared/domain";
 import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
 
+
 export class Synthesizer {
+
+    // ─── Projection ─────────────────────────────────────────────
+    // Project an LC instance into a plain object whose shape matches
+    // the instance's property access paths.  Used for:
+    //   1. Sending node outputs to the frontend (data preview)
+    //   2. Evaluating routing expressions in IfElse / Switch nodes
+    // The original LC instance continues flowing through the graph
+    // untouched — projections are read-only snapshots.
+    // ─────────────────────────────────────────────────────────────
+
+
+    /**
+     * Project a runtime value into a plain object suitable for
+     * frontend display and expression evaluation.
+     */
+    public static project(
+        value: any,
+        variant: Foundations.Port.Variant
+    ): Foundations.Projection {
+        switch (variant) {
+            case "Message":
+                return this.projectMessage(value);
+
+            case "MessageList":
+                if (Array.isArray(value))
+                    return value.map(v => this.projectMessage(v));
+                return [this.projectMessage(value)];
+
+            case "Document":
+                return this.projectDocument(value);
+
+            case "LanguageModel":
+                return this.projectLanguageModel(value);
+
+            case "Embeddings":
+                return this.projectEmbeddings(value);
+
+            case "Tool":
+                return this.projectTool(value);
+
+            case "VectorStore":
+            case "Retriever":
+                // Opaque handles — no useful inspectable properties
+                return {};
+
+            case "Text":
+            case "Data":
+            case "DataList":
+            case "DataFrame":
+            case "Integer":
+            case "Json":
+            case "Unresolved":
+            case "UnresolvedList":
+                return value;
+
+            default:
+                return value;
+        }
+    }
+
+
+    private static projectMessage(msg: any): Foundations.Projection.Message {
+        if (!(msg instanceof LC.BaseMessage))
+            return msg;
+
+        const projected: Foundations.Projection.Message = {
+            type:              msg._getType(),
+            content:           msg.content,
+            additional_kwargs: msg.additional_kwargs,
+            response_metadata: msg.response_metadata,
+        };
+
+        if (msg.name !== undefined)              projected.name = msg.name;
+        if (msg.id !== undefined)                projected.id = msg.id;
+
+        if ("tool_calls" in msg)                 projected.tool_calls = (msg as any).tool_calls;
+        if ("invalid_tool_calls" in msg)         projected.invalid_tool_calls = (msg as any).invalid_tool_calls;
+        if ("usage_metadata" in msg)             projected.usage_metadata = (msg as any).usage_metadata;
+        if ("tool_call_id" in msg)               projected.tool_call_id = (msg as any).tool_call_id;
+
+        return projected;
+    }
+
+
+    private static projectDocument(doc: any): Foundations.Projection.Document {
+        if (!(doc instanceof LC.Document))
+            return doc;
+
+        return {
+            pageContent: doc.pageContent,
+            metadata:    doc.metadata,
+        };
+    }
+
+
+    private static projectLanguageModel(llm: any): Foundations.Projection.LanguageModel {
+        const projected: Record<string, any> = {
+            type:             llm._llmType?.() ?? "unknown",
+            model:            llm.model ?? llm.modelName,
+            temperature:      llm.temperature,
+            streaming:        llm.streaming,
+            topP:             llm.topP,
+            topK:             llm.topK,
+            maxTokens:        llm.maxTokens,
+            maxOutputTokens:  llm.maxOutputTokens,
+            stop:             llm.stop,
+            stopSequences:    llm.stopSequences,
+            frequencyPenalty: llm.frequencyPenalty,
+            presencePenalty:  llm.presencePenalty,
+            n:                llm.n,
+            modelKwargs:      llm.modelKwargs,
+        };
+
+        for (const key in projected)
+            if (projected[key] === undefined)
+                delete projected[key];
+
+        return projected as Foundations.Projection.LanguageModel;
+    }
+
+
+    private static projectEmbeddings(emb: any): Foundations.Projection.Embeddings {
+        const projected: Record<string, any> = {
+            model:         emb.model ?? emb.modelName,
+            dimensions:    emb.dimensions,
+            batchSize:     emb.batchSize,
+            stripNewLines: emb.stripNewLines,
+            maxBatchSize:  emb.maxBatchSize,
+        };
+
+        for (const key in projected)
+            if (projected[key] === undefined)
+                delete projected[key];
+
+        return projected as Foundations.Projection.Embeddings;
+    }
+
+
+    private static projectTool(t: any): Foundations.Projection.Tool {
+        return {
+            name:        t.name,
+            description: t.description,
+            returnDirect: t.returnDirect ?? false,
+        };
+    }
+
+
+    // ─── Synthesis (incoming coercion) ──────────────────────────
 
     /**
      * Create an LC class instance from a static primitive value.

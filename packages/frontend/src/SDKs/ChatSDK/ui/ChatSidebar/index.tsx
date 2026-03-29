@@ -32,8 +32,8 @@ const ChatSidebarContent = () => {
     return (
         <div className='flex flex-col h-full'>
             <div className='flex flex-row py-2 gap-2 px-4 absolute backdrop-blur-xl bg-card/70 top-0 left-0 z-10 w-full border-b border-border'>
-                <SystemIcons.MessagesSquare className='text-primary my-auto h-5 w-5' />
-                <h4 className='text-primary font-mono font-semibold text-xl'>
+                <SystemIcons.MessagesSquare className='my-auto h-5 w-5' />
+                <h4 className=' text-xl'>
                     Conversation
                 </h4>
 
