@@ -6,6 +6,7 @@ import { type BaseMessage } from "@langchain/core/messages"
 import { Realtime } from "./Realtime"
 import { Chat } from "./Chat"
 import { SystemError } from "./SystemError"
+import { Foundations } from "./Foundations"
 
 
 export namespace ExecutionSession {
@@ -43,7 +44,8 @@ export namespace ExecutionSession {
 
     export const Schema = z.object({
         id: Id.default(createId()),
-        node_outputs: z.record(Workflow.Node.Id, z.any()).default({}),
+        node_output_instances: z.record(Workflow.Node.Id, z.any()).default({}),
+        node_output_projections: z.record(Workflow.Node.Id, z.record(Foundations.Port.Output.Id, Foundations.Projection.Schema)).default({}),
         node_messages: z.record(Workflow.Node.Id, z.string()).default({}),
         node_status: z.record(Workflow.Node.Id, NodeStatus.Schema).default({}),
         edge_state: z.record(Workflow.Edge.Id, EdgeState.Schema).default({}),
@@ -56,7 +58,8 @@ export namespace ExecutionSession {
     export const createInitial = (chatId: Chat.Id) => {
         return {
             id: createId(),
-            node_outputs: {},
+            node_output_instances: {},
+            node_output_projections: {},
             node_status: {},
             node_messages: {},
             edge_state: {},
