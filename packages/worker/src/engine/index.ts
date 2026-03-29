@@ -64,6 +64,22 @@ export class AggexEngine {
     }
 
 
+    private projectOutputs(
+        result: Record<string, any>,
+        wfNode: Workflow.Node
+    ): Record<Foundations.Port.Output.Id, Foundations.Projection> {
+        const projected: Record<Foundations.Port.Output.Id, Foundations.Projection> = {};
+
+        for (const output of wfNode.outputs) {
+            const key = output.id;
+            if (key in result)
+                projected[key] = Synthesizer.project(result[key], output.variant);
+        }
+
+        return projected;
+    }
+
+
     private resolveRouterSignals(
         nodeId: Workflow.Node.Id,
         result: Record<string, any>
@@ -101,7 +117,7 @@ export class AggexEngine {
                 if(incomingSignals.has(edge.source.nodeId) === false)
                     continue;
 
-                const sourceOutputs = this.context.session.node_outputs[edge.source.nodeId];
+                const sourceOutputs = this.context.session.node_output_instances[edge.source.nodeId];
                 if (sourceOutputs) {
                     const rawReference = sourceOutputs[edge.source.portId as string];
                     resolved[input.id] = Synthesizer.ensureReference(rawReference, input.variant);
@@ -218,13 +234,12 @@ export class AggexEngine {
         const result = await nodeInstance.run(inputs);
 
         this.context.updateSession(d => {
-            d.node_outputs[wfNode.id] = result;
+            d.node_output_instances[wfNode.id] = result;
+            d.node_output_projections[wfNode.id] = this.projectOutputs(result, wfNode);
         });
             
         if ('isRouterNode' in nodeInstance)
             return this.resolveRouterSignals(wfNode.id, result);
-
-
     }
 
 
@@ -236,7 +251,7 @@ export class AggexEngine {
         if (!entry)
             return
 
-        const output = this.context.session.node_outputs[entry.wfNode.id];
+        const projectedOutput = this.context.session.node_output_projections[entry.wfNode.id];
 
         // Set all outgoing edges to waiting and increment runCount
         const outgoingEdges = this.workflowCache.outgoingEdgesMap[entry.wfNode.id];
@@ -250,7 +265,7 @@ export class AggexEngine {
             type: "node:completed",
             nodeId: entry.wfNode.id,
             channel: this.eventChannel,
-            output,
+            output: projectedOutput,
             stateUpdate: { edge_state: edgeStateUpdate },
         });
 

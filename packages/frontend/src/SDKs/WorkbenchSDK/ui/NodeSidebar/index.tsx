@@ -72,8 +72,8 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
         <>
             {/* Header */}
             <div className='flex flex-row pt-2 gap-2 mb-2 px-4 relative'>
-                <LazyIcon className='text-primary my-auto h-5 w-5' name={node.icon as string} />
-                <h4 className='tracking-wider font-semibold text-xl'>
+                <LazyIcon className='text-foreground my-auto h-5 w-5' name={node.icon as string} />
+                <h4 className=' text-xl'>
                     {node.displayName}
                 </h4>
             </div>
@@ -137,12 +137,23 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                             </Accordion.Content>
                         </Accordion.Item>
                     )} */}
+                    
+                    <Accordion.Item value='input'>
+                        <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
+                            <h4 className='text-md font-medium'>Input</h4>
+                        </Accordion.Trigger>
+                        <Accordion.Content className='flex flex-col gap-1 bg-background/50 w-0 min-w-full'>
+                            <div className='overflow-x-auto whitespace-nowrap'>
+                                <IncomingData nodeId={node.id}/>
+                            </div>
+                        </Accordion.Content>
+                    </Accordion.Item>
                     <Accordion.Item value='output'>
                         <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
                             <h4 className='text-md font-medium'>Output</h4>
                         </Accordion.Trigger>
-                        <Accordion.Content className='flex flex-col gap-1 bg-background/50'>
-                            <div className='p-1'>
+                        <Accordion.Content className='flex flex-col gap-1 bg-background/50 w-0 min-w-full'>
+                            <div className='p-1 overflow-x-auto whitespace-nowrap'>
                                 <NodeOutputs nodeId={node.id}/>
                             </div>
                         </Accordion.Content>
@@ -164,8 +175,32 @@ const InputItem = memo(({ input, nodeId }: { input: Foundations.Port.Input, node
 })
 
 
+const IncomingData = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
+    const session = ExecutionSessionSDK.useStore(s => s.session);
+    const data = WorkbenchSDK.useStore(s => {
+        const node = s.workflow.data.nodes[nodeId];
+        if (!node) return null;
+
+        const incoming: Record<string, Foundations.Projection> = {};
+        for (const input of node.inputs) {
+            const projection = WorkbenchSDK.selectors.getInputProjection(s, nodeId, input.id, session);
+            if (projection !== undefined)
+                incoming[input.id] = projection;
+        }
+
+        return Object.keys(incoming).length > 0 ? incoming : null;
+    });
+
+    if (!data)
+        return null;
+
+    return (
+        <JsonView src={data} className='text-xs' collapsed={3} />
+    )
+})
+
 const NodeOutputs = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
-    const output = ExecutionSessionSDK.useStore(s => s.session.node_outputs[nodeId]);
+    const output = ExecutionSessionSDK.useStore(s => s.session.node_output_projections[nodeId]);
 
     if (!output)
         return null;

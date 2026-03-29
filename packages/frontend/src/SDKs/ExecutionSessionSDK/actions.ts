@@ -60,7 +60,7 @@ export const createExecutionSessionSDKActions = (sdk: ExecutionSessionSDKImpl) =
             s.session.edge_state = {};
         }),
         prepareForRun: () => sdk.setState(s => {
-            s.session.node_outputs = {}
+            s.session.node_output_projections = {}
             s.session.node_status = {}
             s.session.chatId = ChatSDK.state.currentChatId;
         }),
