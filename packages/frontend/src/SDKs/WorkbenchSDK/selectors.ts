@@ -1,4 +1,4 @@
-import { Workflow, Foundations } from '@vx-agent-editor/shared/domain';
+import { Workflow, Foundations, ExecutionSession } from '@vx-agent-editor/shared/domain';
 import type { WorkbenchSDK } from './sdk';
 
 export const workbenchSelectors = {
@@ -120,6 +120,15 @@ export const workbenchSelectors = {
 
         return siblings;
     },
+    getInputProjection: (s, nodeId, inputPortId, session) => {
+        const edgeId = s.cache.inputHandlesMap[nodeId]?.[inputPortId];
+        if (!edgeId) return undefined;
+
+        const edge = s.workflow.data.edges[edgeId];
+        if (!edge) return undefined;
+
+        return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Foundations.Port.Output.Id];
+    },
     syncGroupHasEdges: (s, nodeId, syncGroupId) => {
         const node = s.workflow.data.nodes[nodeId];
         const inputHandles = s.cache.inputHandlesMap[nodeId];
@@ -158,6 +167,7 @@ export type _WorkBenchSDKSelectors = {
     doesInputhaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => boolean
     doesOutputHaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => boolean
 
+    getInputProjection: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputPortId: Foundations.Port.Input.Id, session: ExecutionSession) => Foundations.Projection | undefined
     doesWorkflowHaveIssues: (state: WorkbenchSDK.State) => boolean
     doesNodeHaveIssues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
     getDynamicPortSiblings: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Id) => Set<Foundations.Port.Input | Foundations.Port.Output>

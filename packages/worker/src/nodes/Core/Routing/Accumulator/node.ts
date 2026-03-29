@@ -16,7 +16,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const { input } = inputs;
 
         const previousState: unknown[] =
-            this.context.session.node_outputs[this.workflowNode.id]?.state ?? [];
+            this.context.session.node_output_instances[this.workflowNode.id]?.state ?? [];
 
         const incoming = Array.isArray(input) ? input.flat() : input != null ? [input] : [];
 
