@@ -137,8 +137,19 @@ const IntegerField = memo(({ field, nodeId, className }: RendererProps<'Integer'
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
             {hasSlider ?
                 <>
-                    <div className='flex flex-row'>
-                        <FieldLabel field={field} />
+                    <FieldLabel field={field} />
+                    <div className='flex flex-row gap-2'>
+                        <Slider
+                            className={`pt-1 ${issue ? "opacity-50" : ""}`}
+                            min={field.min}
+                            max={field.max}
+                            step={field.step ?? 1}
+                            value={[Number(value) || 0]}
+                            variant="accent"
+                            onValueChange={val => {
+                                WorkbenchSDK.actions.field.setValue(nodeId, field, val[0])
+                            }}
+                        />
                         <Input
                             type="number"
                             className={`ml-auto w-20 h-6 ${errorClass}`}
@@ -153,16 +164,6 @@ const IntegerField = memo(({ field, nodeId, className }: RendererProps<'Integer'
                         />
 
                     </div>
-                    <Slider
-                        className={`pt-1 ${issue ? "opacity-50" : ""}`}
-                        min={field.min}
-                        max={field.max}
-                        step={field.step ?? 1}
-                        value={[Number(value) || 0]}
-                        onValueChange={val => {
-                            WorkbenchSDK.actions.field.setValue(nodeId, field, val[0])
-                        }}
-                    />
                 </>
                 :
                 <>
@@ -201,8 +202,18 @@ const FloatField = memo(({ field, nodeId, className }: RendererProps<'Float'>) =
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
             {hasSlider ?
                 <>
-                    <div className='flex flex-row'>
-                        <FieldLabel field={field} />
+                    <FieldLabel field={field} />
+                    <div className='flex flex-row gap-2'>
+                        <Slider
+                            className={`pt-1 ${issue ? "opacity-50" : ""}`}
+                            min={field.min}
+                            max={field.max}
+                            step={field.step && field.step}
+                            value={[Number(value) || 0]}
+                            onValueChange={values => {
+                                WorkbenchSDK.actions.field.setValue(nodeId, field, values[0])
+                            }}
+                        />
                         <Input
                             type="number"
                             className={`ml-auto w-20 h-6 ${errorClass}`}
@@ -215,18 +226,7 @@ const FloatField = memo(({ field, nodeId, className }: RendererProps<'Float'>) =
                                 WorkbenchSDK.actions.field.setValue(nodeId, field, Number(val))
                             }}
                         />
-
                     </div>
-                    <Slider
-                        className={`pt-1 ${issue ? "opacity-50" : ""}`}
-                        min={field.min}
-                        max={field.max}
-                        step={field.step && field.step}
-                        value={[Number(value) || 0]}
-                        onValueChange={values => {
-                            WorkbenchSDK.actions.field.setValue(nodeId, field, values[0])
-                        }}
-                    />
                 </>
                 :
                 <>
