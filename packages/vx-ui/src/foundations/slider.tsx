@@ -10,7 +10,7 @@ export const rootVars = cva(
   {
     variants: {
       variant: {
-        default: "",
+        primary: "",
         accent: "",
       }
     }
@@ -19,14 +19,14 @@ export const rootVars = cva(
 
 export const trackVars = cva(
   `relative shadow-sm shadow-black/10 bg-input/50 grow overflow-hidden rounded-full ring-1 ring-inset ring-border
-   data-[orientation=horizontal]:h-3 
-   data-[orientation=horizontal]:w-full 
-   data-[orientation=vertical]:h-full 
+   data-[orientation=horizontal]:h-2.5
+   data-[orientation=horizontal]:w-full
+   data-[orientation=vertical]:h-full
    data-[orientation=vertical]:w-2.5`,
   {
     variants: {
       variant: {
-        default: "",
+        primary: "",
         accent: "",
       }
     }
@@ -34,31 +34,32 @@ export const trackVars = cva(
 )
 
 export const rangeVars = cva(
-  `absolute select-none bg-primary
-   data-[orientation=horizontal]:h-full 
+  `absolute select-none
+   data-[orientation=horizontal]:h-full
    data-[orientation=vertical]:w-full`,
   {
     variants: {
       variant: {
-        default: "",
+        primary: "bg-primary",
+        accent: "bg-accent",
       }
     }
   }
 )
 
 export const thumbVars = cva(
-  "cursor-pointer relative block h-3 w-3 rounded-full bg-white border border-neutral-300 shrink-0 select-none ring-offset-background transition-[color,box-shadow] after:absolute after:-inset-2 hover:ring-[3px] hover:ring-ring/50 focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-ring/50 active:ring-[3px] active:ring-ring/50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+  "cursor-pointer relative block h-2.5 w-2.5 rounded-full bg-white border border-neutral-300 shrink-0 select-none ring-offset-background transition-[color,box-shadow] after:absolute after:-inset-2 hover:ring-[3px] hover:ring-ring/50 focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-ring/50 active:ring-[3px] active:ring-ring/50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
   {
     variants: {
       variant: {
-        default: "",
+        primary: "",
         accent: "",
       }
     }
   }
 )
 
-export type SliderVariants = "default" | "accent"
+export type SliderVariants = "primary" | "accent"
 
 const THUMB_SIZE = 12 // matches w-3 (12px)
 
@@ -70,7 +71,7 @@ const Slider = ({
   max = 100,
   onDragStart,
   onDragEnd,
-  variant = "default",
+  variant = "primary",
   onValueChange,
   ...props
 }: ComponentProps<typeof SliderPrimitive.Root> & {
@@ -146,8 +147,9 @@ const Slider = ({
         <div
           ref={fillRef}
           className={cn(
-            "absolute left-0 top-0 h-full pointer-events-none select-none bg-primary",
-            variant === "accent" && "border-l border-t border-b border-primary-accent",
+            "absolute left-0 top-0 h-full pointer-events-none select-none",
+            variant === "primary" && "bg-primary",
+            variant === "accent" && "bg-accent",
           )}
           style={{ width: computeFillWidth(initialValue) }}
         />

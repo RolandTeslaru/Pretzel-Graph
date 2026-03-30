@@ -2,9 +2,11 @@ import * as React from "react"
 import { cn } from "../utils/cn"
 
 type InputSize = "default" | "sm" | "xs"
+type InputVariant = "default" | "ghost"
 
 type InputProps = Omit<React.ComponentProps<"input">, "size"> & {
   size?: InputSize
+  variant?: InputVariant
 }
 
 const inputSizeClasses: Record<InputSize, string> = {
@@ -13,22 +15,30 @@ const inputSizeClasses: Record<InputSize, string> = {
   xs: "rounded-sm! h-6 px-1.5 py-0.5 text-xs",
 }
 
-function Input({ className, type, size = "default", ...props }: InputProps) {
+const inputVariantClasses: Record<InputVariant, string> = {
+  default: `bg-input/50 border-border focus-visible:border-ring focus-visible:ring-ring/50
+        aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive
+        dark:aria-invalid:border-destructive/50 disabled:bg-input/50 dark:disabled:bg-input/80
+        border transition-colors file:h-6 file:text-sm file:font-medium
+        focus-visible:ring-[3px] aria-invalid:ring-[3px] file:text-foreground placeholder:text-muted-foreground
+        w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent
+        disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50
+        shadow-sm shadow-black/10`,
+  ghost: `bg-transparent border-transparent shadow-none
+        focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]
+        border transition-colors
+        placeholder:text-muted-foreground
+        w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent
+        disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50`,
+}
+
+function Input({ className, type, size = "default", variant = "default", ...props }: InputProps) {
   return (
     <input
       type={type}
       data-slot="input"
       className={cn(
-        `bg-input/50 border-border focus-visible:border-ring focus-visible:ring-ring/50 
-        aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive 
-        dark:aria-invalid:border-destructive/50 disabled:bg-input/50 dark:disabled:bg-input/80 
-        border transition-colors file:h-6 file:text-sm file:font-medium 
-        focus-visible:ring-[3px] aria-invalid:ring-[3px] file:text-foreground placeholder:text-muted-foreground 
-        w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent
-        disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50
-        shadow-sm shadow-black/10 
-        
-        `,
+        inputVariantClasses[variant],
         inputSizeClasses[size],
         className
       )}
