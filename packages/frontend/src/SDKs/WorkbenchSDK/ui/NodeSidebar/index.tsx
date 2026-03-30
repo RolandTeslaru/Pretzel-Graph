@@ -73,7 +73,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
             {/* Header */}
             <div className='flex flex-row pt-2 gap-2 mb-2 px-4 relative'>
                 <LazyIcon className='text-foreground my-auto h-5 w-5' name={node.icon as string} />
-                <h4 className=' text-xl'>
+                <h4 className=' text-lg'>
                     {node.displayName}
                 </h4>
             </div>
