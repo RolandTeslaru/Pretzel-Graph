@@ -195,6 +195,7 @@ export namespace Foundations {
             export namespace Rule {
                 export const Id = z.string().brand("RuleId")
                 export type Id = z.infer<typeof Id>
+                export const createId = () => Id.parse(crypto.randomUUID())
 
                 export const Schema = z.object({
                     id: Id,
@@ -208,6 +209,7 @@ export namespace Foundations {
             export namespace RuleGroup {
                 export const Id = z.string().brand("RuleGroupId")
                 export type Id = z.infer<typeof Id>
+                export const createId = () => Id.parse(crypto.randomUUID())
 
                 export const Schema = z.object({
                     id: Id,

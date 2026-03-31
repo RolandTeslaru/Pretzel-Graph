@@ -1,4 +1,5 @@
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { Foundations } from "@vx-agent-editor/shared/domain";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.IfElse",
