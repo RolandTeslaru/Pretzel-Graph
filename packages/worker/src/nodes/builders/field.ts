@@ -265,4 +265,30 @@ export namespace FieldBuilder {
             initialValue: config.initialValue ?? "",
         };
     }
+
+    export function Condition<TId extends string, TReq extends boolean = false>(config: {
+        initialValue: Foundations.Field.Condition.Value;
+    } & BaseProps<TId, TReq>): Ret<TId, "Condition", Foundations.Field.Condition, TReq, true>;
+
+    export function Condition<TId extends string, TReq extends boolean = false>(
+        config: BaseProps<TId, TReq>
+    ): Ret<TId, "Condition", Foundations.Field.Condition, TReq, false>;
+
+    export function Condition<TId extends string, TReq extends boolean = false>(config: {
+        initialValue?: Foundations.Field.Condition.Value;
+    } & BaseProps<TId, TReq>
+    ): Ret<TId, "Condition", Foundations.Field.Condition, TReq, boolean> {
+        const rootId = "root" as Foundations.Field.Condition.RuleGroup.Id;
+        return {
+            ...buildBase(config),
+            variant: "Condition",
+            initialValue: config.initialValue ?? {
+                rootId,
+                rules: {} as Record<Foundations.Field.Condition.Rule.Id, Foundations.Field.Condition.Rule>,
+                groups: {
+                    [rootId]: { id: rootId, combinator: "AND", items: [] },
+                } as Record<Foundations.Field.Condition.RuleGroup.Id, Foundations.Field.Condition.RuleGroup>,
+            },
+        };
+    }
 }

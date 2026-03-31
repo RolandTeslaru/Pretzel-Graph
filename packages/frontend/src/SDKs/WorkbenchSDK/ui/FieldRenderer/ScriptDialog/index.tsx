@@ -9,7 +9,7 @@ import type { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
 
 export const ScriptTriggerField = memo(({ field, nodeId, className }: RendererProps<'Script'>) => {
-    const [value, error] = WorkbenchSDK.useField(nodeId, field.id);
+    const [value, error] = WorkbenchSDK.useField<string>(nodeId, field.id);
 
     const onChange = (val: string) => {
         WorkbenchSDK.actions.field.setValue(nodeId, field, val)
@@ -38,7 +38,7 @@ export const ScriptTriggerField = memo(({ field, nodeId, className }: RendererPr
 })
 
 const ScriptDialogcontent = ({ field, nodeId, onChange }: { field: Foundations.Field, nodeId: Workflow.Node.Id, onChange: (val: string) => void }) => {
-    const [value, error] = WorkbenchSDK.useField(nodeId, field.id)
+    const [value, error] = WorkbenchSDK.useField<string>(nodeId, field.id)
     const [mounted, setMounted] = useState(false)
 
     useEffect(() => {

@@ -7,11 +7,9 @@ export const Blueprint = defineBlueprint({
     icon: "Option",
     accent: "group-routing",
     fields: [
-        FieldBuilder.String({
+        FieldBuilder.Condition({
             id: "condition",
             displayName: "Condition",
-            initialValue: "",
-            placeholder: "Expression to evaluate",
         }),
     ],
     inputs: [

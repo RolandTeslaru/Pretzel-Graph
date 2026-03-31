@@ -4,7 +4,10 @@ import type { WorkbenchSDK } from "../sdk";
 export const fieldReducers = {
     setValue: (s, nodeId, fieldId, value) => {
         s.isDirty = true;
-        s.workflow.data.staticValues[nodeId][fieldId] = value
+        const cur = s.workflow.data.staticValues[nodeId][fieldId]
+
+        const next = typeof value === "function" ? value(cur as any) : value
+        s.workflow.data.staticValues[nodeId][fieldId] = next
     },
     validate: (s, nodeId, field) => {
         const issue = Validation.Issue.Field.check(field, nodeId, s.workflow)
@@ -26,7 +29,7 @@ type FieldReducers = {
         state: WorkbenchSDK.State,
         nodeId: Workflow.Node.Id,
         fieldId: Foundations.Field.Id,
-        value: Foundations.Field.Value
+        next: Foundations.Field.Value | ((value: Foundations.Field.Value) => Foundations.Field.Value)
     ) => void
     validate: (
         state: WorkbenchSDK.State,
