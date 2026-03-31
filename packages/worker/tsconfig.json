@@ -13,10 +13,9 @@
         "noImplicitOverride": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "baseUrl": ".",
         "paths": {
             "src/*": [
-                "src/*"
+                "./src/*"
             ],
             "@vx-agent-editor/shared/*": [
                 "../shared/*"

@@ -30,6 +30,7 @@ export const conditionActions = {
     },
     addGroup: (nodeId: Workflow.Node.Id, field: Foundations.Field, parentGroupId: Foundations.Field.Condition.RuleGroup.Id) => {
         const newGroupId = Foundations.Field.Condition.RuleGroup.createId();
+        
         WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Foundations.Field.Condition.Value) => {
             prev.groups[newGroupId] = { id: newGroupId, combinator: "AND", children: [] }
             prev.groups[parentGroupId].children.push(newGroupId)
@@ -71,7 +72,25 @@ export const conditionActions = {
             }
 
             if (parentGroup.children.length === 0) {
+                // Remove stale reference from grandparent's children
+                for (const group of Object.values(prev.groups)) {
+                    const idx = group.children.indexOf(parentGroupId);
+                    if (idx !== -1) {
+                        group.children.splice(idx, 1);
+                        break;
+                    }
+                }
                 delete prev.groups[parentGroupId]
+            }
+
+            // Collapse single-child group nesting: if a group's only child is another group, absorb it
+            while (parentGroup.children.length === 1) {
+                const onlyChildId = parentGroup.children[0];
+                if (!(onlyChildId in prev.groups)) break;
+                const childGroup = prev.groups[onlyChildId as Foundations.Field.Condition.RuleGroup.Id];
+                parentGroup.children = childGroup.children;
+                parentGroup.combinator = childGroup.combinator;
+                delete prev.groups[onlyChildId as Foundations.Field.Condition.RuleGroup.Id];
             }
 
             return prev;
