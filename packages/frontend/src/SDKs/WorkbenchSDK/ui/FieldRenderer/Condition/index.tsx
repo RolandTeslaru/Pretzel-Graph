@@ -36,7 +36,6 @@ export const RuleGroup = ({ ruleGroupId, root, ...rest }: { ruleGroupId: Foundat
             onMouseEnter={(e) => { e.stopPropagation(); setHovered(true); }}
             onMouseLeave={(e) => { e.stopPropagation(); setHovered(false); }}
         >
-            {ruleGroup.children.length > 1 &&
                 <div className='relative w-6 border-l border-y border-border rounded-l-sm'>
                     <DropdownMenu.Root modal={false}>
                         <DropdownMenu.Trigger className='absolute top-1/2 cursor-pointer -translate-y-1/2  -translate-x-1/2'>
@@ -65,7 +64,6 @@ export const RuleGroup = ({ ruleGroupId, root, ...rest }: { ruleGroupId: Foundat
                         </DropdownMenu.Content>
                     </DropdownMenu.Root>
                 </div>
-            }
             <div className='flex flex-col gap-2 w-full'>
                 {ruleGroup.children.map((id) => {
                     if (id in root.rules)
