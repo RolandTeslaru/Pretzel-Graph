@@ -284,9 +284,11 @@ export namespace FieldBuilder {
             variant: "Condition",
             initialValue: config.initialValue ?? {
                 rootId,
-                rules: {} as Record<Foundations.Field.Condition.Rule.Id, Foundations.Field.Condition.Rule>,
+                rules: {
+                    "rule1": { id: "rule1", leftOperand: "", operator: "equals", rightOperand: "" }
+                } as Record<Foundations.Field.Condition.Rule.Id, Foundations.Field.Condition.Rule>,
                 groups: {
-                    [rootId]: { id: rootId, combinator: "AND", items: [] },
+                    [rootId]: { id: rootId, combinator: "AND", children: ["rule1"] },
                 } as Record<Foundations.Field.Condition.RuleGroup.Id, Foundations.Field.Condition.RuleGroup>,
             },
         };

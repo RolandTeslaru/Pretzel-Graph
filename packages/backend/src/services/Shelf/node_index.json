@@ -1,6 +1,6 @@
 {
-  "version": "1774969892262",
-  "generatedAt": "2026-03-31T15:11:32.262Z",
+  "version": "1774973450960",
+  "generatedAt": "2026-03-31T16:10:50.960Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -813,12 +813,21 @@
           "variant": "Condition",
           "initialValue": {
             "rootId": "root",
-            "rules": {},
+            "rules": {
+              "rule1": {
+                "id": "rule1",
+                "leftOperand": "",
+                "operator": "equals",
+                "rightOperand": ""
+              }
+            },
             "groups": {
               "root": {
                 "id": "root",
                 "combinator": "AND",
-                "items": []
+                "children": [
+                  "rule1"
+                ]
               }
             }
           }
@@ -941,12 +950,21 @@
           "variant": "Condition",
           "initialValue": {
             "rootId": "root",
-            "rules": {},
+            "rules": {
+              "rule1": {
+                "id": "rule1",
+                "leftOperand": "",
+                "operator": "equals",
+                "rightOperand": ""
+              }
+            },
             "groups": {
               "root": {
                 "id": "root",
                 "combinator": "AND",
-                "items": []
+                "children": [
+                  "rule1"
+                ]
               }
             }
           }
@@ -1001,12 +1019,21 @@
           "variant": "Condition",
           "initialValue": {
             "rootId": "root",
-            "rules": {},
+            "rules": {
+              "rule1": {
+                "id": "rule1",
+                "leftOperand": "",
+                "operator": "equals",
+                "rightOperand": ""
+              }
+            },
             "groups": {
               "root": {
                 "id": "root",
                 "combinator": "AND",
-                "items": []
+                "children": [
+                  "rule1"
+                ]
               }
             }
           }
