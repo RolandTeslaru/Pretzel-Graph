@@ -3,10 +3,9 @@
         "target": "ES2020",
         "module": "CommonJS",
         "moduleResolution": "node",
-        "baseUrl": ".",
         "paths": {
             "@/*": [
-                "src/*"
+                "./src/*"
             ],
             "@vx-agent-builder/worker": [
                 "../worker/src/index.ts"
