@@ -15,7 +15,7 @@ const switchVariants = cva(
   disabled:opacity-50 
   data-[state=checked]:bg-primary 
   data-[state=checked]:border-primary-accent 
-  data-[state=unchecked]:bg-input/60
+  data-[state=unchecked]:bg-secondary
   shadow-sm shadow-black/10
   `,
   {
@@ -33,7 +33,7 @@ const switchVariants = cva(
 )
 
 const switchThumbVariants = cva(
-  `pointer-events-none block rounded-full bg-neutral-300 shadow-lg ring-0 
+  `pointer-events-none block rounded-full bg-input shadow-lg ring-0 
    transition-transform data-[state=checked]:bg-white`,
   {
     variants: {

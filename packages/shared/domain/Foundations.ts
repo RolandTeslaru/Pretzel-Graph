@@ -43,7 +43,8 @@ export namespace Foundations {
             "File",
             "Script",
             "Json",
-            "List"
+            "List",
+            "Condition",
         ])
         export type Variant = z.infer<typeof Variant>
 
@@ -115,6 +116,139 @@ export namespace Foundations {
             initialValue: z.array(z.string()),
         })
 
+        export namespace Condition {
+
+            export const DataType = z.enum(["string", "number", "dateTime", "boolean", "array", "object"])
+            export type DataType = z.infer<typeof DataType>
+
+            export namespace Operator {
+                export const shared = ["exists", "not_exists", "is_empty", "is_not_empty"] as const
+
+                export const String = z.enum([
+                    ...shared,
+                    "equals", "not_equals",
+                    "contains", "not_contains",
+                    "starts_with", "not_starts_with",
+                    "ends_with", "not_ends_with",
+                    "matches_regex", "not_matches_regex",
+                ])
+
+                export const Number = z.enum([
+                    ...shared,
+                    "equals", "not_equals",
+                    "greater_than", "less_than",
+                    "greater_than_or_equal", "less_than_or_equal",
+                ])
+
+                export const DateTime = z.enum([
+                    ...shared,
+                    "equals", "not_equals",
+                    "after", "before",
+                    "after_or_equal", "before_or_equal",
+                ])
+
+                export const Boolean = z.enum([
+                    ...shared,
+                    "is_true", "is_false",
+                    "equals", "not_equals",
+                ])
+
+                export const Array = z.enum([
+                    ...shared,
+                    "contains", "not_contains",
+                    "length_equals", "length_not_equals",
+                    "length_greater_than", "length_less_than",
+                    "length_greater_than_or_equal", "length_less_than_or_equal",
+                ])
+
+                export const Object = z.enum([
+                    ...shared,
+                ])
+
+                export type String = z.infer<typeof String>
+                export type Number = z.infer<typeof Number>
+                export type DateTime = z.infer<typeof DateTime>
+                export type Boolean = z.infer<typeof Boolean>
+                export type Array = z.infer<typeof Array>
+                export type Object = z.infer<typeof Object>
+
+                export const Unary = z.enum([
+                    ...shared,
+                    "is_true", "is_false",
+                ])
+                export type Unary = z.infer<typeof Unary>
+
+                export const Schema = z.union([String, Number, DateTime, Boolean, Array, Object])
+
+                export const MAP = {
+                    string: String,
+                    number: Number,
+                    dateTime: DateTime,
+                    boolean: Boolean,
+                    array: Array,
+                    object: Object,
+                } as const satisfies Record<Condition.DataType, z.ZodEnum<any>>
+            }
+            export type Operator = z.infer<typeof Operator.Schema>
+
+
+            export namespace Rule {
+                export const Id = z.string().brand("RuleId")
+                export type Id = z.infer<typeof Id>
+
+                export const Schema = z.object({
+                    id: Id,
+                    leftOperand: z.string(),
+                    operator: Operator.Schema,
+                    rightOperand: z.string().optional(),
+                })
+            }
+            export type Rule = z.infer<typeof Rule.Schema>
+
+            export namespace RuleGroup {
+                export const Id = z.string().brand("RuleGroupId")
+                export type Id = z.infer<typeof Id>
+
+                export const Schema = z.object({
+                    id: Id,
+                    combinator: z.enum(["AND", "OR"]),
+                    children: z.array(z.union([Rule.Id, RuleGroup.Id])),
+                })
+            }
+            export type RuleGroup = z.infer<typeof RuleGroup.Schema>
+
+            export const Value = z.object({
+                rootId: RuleGroup.Id,
+                rules: z.record(Rule.Id, Rule.Schema),
+                groups: z.record(RuleGroup.Id, RuleGroup.Schema),
+            })
+            export type Value = z.infer<typeof Value>
+
+            export const Schema = Field.Base.extend({
+                variant: configLiteral("Condition"),
+                initialValue: Value,
+            });
+        }
+
+
+
+
+
+        // export const ConditionRule = z.object({
+        //     path: z.string(),
+        //     dataType: ConditionDataType,
+        //     operator: Operator,
+        //     value: z.string().optional(),
+        // })
+        // export type ConditionRule = z.infer<typeof ConditionRule>
+
+        // export const ConditionGroup = z.object({
+        //     combinator: z.enum(["AND", "OR"]),
+        //     conditions: z.array(ConditionRule),
+        // })
+        // export type ConditionGroup = z.infer<typeof ConditionGroup>
+
+
         export interface Integer extends z.infer<typeof Integer> { }
         export interface Float extends z.infer<typeof Float> { }
         export interface String extends z.infer<typeof String> { }
@@ -125,6 +259,7 @@ export namespace Foundations {
         export interface Script extends z.infer<typeof Script> { }
         export interface Json extends z.infer<typeof Json> { }
         export interface List extends z.infer<typeof List> { }
+        export interface Condition extends z.infer<typeof Condition.Schema> { }
 
         export const Schema = z.discriminatedUnion("variant", [
             Integer,
@@ -137,6 +272,7 @@ export namespace Foundations {
             Script,
             Json,
             List,
+            Condition.Schema,
         ]);
 
         export type Schema = z.infer<typeof Schema>;
