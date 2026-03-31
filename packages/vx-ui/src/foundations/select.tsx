@@ -10,12 +10,12 @@ namespace SelectComponents {
   export type Root = FC<ComponentProps<typeof SelectPrimitive.Root>>
   export type Group = FC<ComponentProps<typeof SelectPrimitive.Group>>
   export type Value = FC<ComponentProps<typeof SelectPrimitive.Value>>
-  export type Trigger = FC<ComponentProps<typeof SelectPrimitive.Trigger> & { size?: "sm" | "xs" }>
+  export type Trigger = FC<ComponentProps<typeof SelectPrimitive.Trigger> & { size?: "sm" | "xs"; variant?: "default" | "ghost" | "ghost-no-focus" }>
   export type ScrollUpButton = FC<ComponentProps<typeof SelectPrimitive.ScrollUpButton>>
   export type ScrollDownButton = FC<ComponentProps<typeof SelectPrimitive.ScrollDownButton>>
-  export type Content = FC<ComponentProps<typeof SelectPrimitive.Content> & { position?: "popper" | "item-aligned" }>
+  export type Content = FC<ComponentProps<typeof SelectPrimitive.Content> & { position?: "popper" | "item-aligned"; size?: "default" | "xs" }>
   export type Label = FC<ComponentProps<typeof SelectPrimitive.Label>>
-  export type Item = FC<ComponentProps<typeof SelectPrimitive.Item>>
+  export type Item = FC<ComponentProps<typeof SelectPrimitive.Item> & { size?: "default" | "xs" }>
   export type Separator = FC<ComponentProps<typeof SelectPrimitive.Separator>>
 }
 
@@ -32,28 +32,31 @@ const Value: SelectComponents.Value = (props) => (
   />
 )
 
-const Trigger: SelectComponents.Trigger = ({ className, children, size = "sm", ...props }) => {
+const triggerVariantClasses = {
+  default: `border-border bg-input/50 hover:bg-input/50 shadow-sm shadow-black/10 rounded-md border focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]`,
+  ghost: `border-transparent bg-transparent hover:bg-input/30 shadow-none rounded-md border focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]`,
+  "ghost-no-focus": `border-transparent bg-transparent shadow-none rounded-md border`,
+}
+
+const Trigger: SelectComponents.Trigger = ({ className, children, size = "sm", variant = "default", ...props }) => {
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        `border-border cursor-pointer 
-        data-[placeholder]:text-muted-foreground 
-        [&_svg:not([class*='text-'])]:text-muted-foreground 
-        focus-visible:border-ring 
-        focus-visible:ring-ring/50 
-        aria-invalid:ring-destructive/20 
-        dark:aria-invalid:ring-destructive/40 
-        aria-invalid:border-destructive 
-        bg-input/50 hover:bg-input/50 
-        flex w-full items-center 
-        justify-between gap-2 
-        rounded-md border 
-        pr-2 pl-2.5 py-2 text-sm whitespace-nowrap shadow-sm shadow-black/10
-        transition-[color,box-shadow] 
-        outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed 
-        disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4`,
+        `cursor-pointer
+        data-[placeholder]:text-muted-foreground
+        [&_svg:not([class*='text-'])]:text-muted-foreground
+        aria-invalid:ring-destructive/20
+        dark:aria-invalid:ring-destructive/40
+        aria-invalid:border-destructive
+        flex w-full items-center
+        justify-between gap-2
+        pr-2 pl-2.5 py-2 text-sm whitespace-nowrap
+        transition-[color,box-shadow]
+        outline-none disabled:cursor-not-allowed
+        disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 data-[size=xs]:h-6 data-[size=xs]:text-xs data-[size=xs]:px-1.5 data-[size=xs]:py-0.5 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4`,
+        triggerVariantClasses[variant],
         className
       )}
       {...props}
@@ -94,6 +97,7 @@ const Content: SelectComponents.Content = ({
   className,
   children,
   position = "popper",
+  size = "default",
   ...rest
 }) => {
 
@@ -134,9 +138,8 @@ const Content: SelectComponents.Content = ({
         <ScrollUpButton />
         <SelectPrimitive.Viewport
           className={cn(
-            "p-1",
             position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1"
+            " p-1 h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1"
           )}
         >
           {children}
@@ -149,31 +152,35 @@ const Content: SelectComponents.Content = ({
 
 const Label: SelectComponents.Label = ({ className, ...props }) => <SelectPrimitive.Label className={cn("py-1.5 pl-8 pr-2 text-xs font-semibold", className)} {...props} />
 
-const Item: SelectComponents.Item = ({ className, children, ...props }) => (
+const Item: SelectComponents.Item = ({ className, children, size = "default", ...props }) => (
   <SelectPrimitive.Item
     className={cn(
       `focus:bg-primary/15 focus:text-accent-foreground
        border border-transparent focus:border-primary-accent/80 dark:focus:border-primary-accent/10
-       relative flex w-full cursor-pointer items-center gap-2 
-       rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none 
-       data-[disabled]:pointer-events-none 
-       data-[disabled]:opacity-50 
-       
-       [&_svg:not([class*='text-'])]:text-muted-foreground 
-       [&_svg]:pointer-events-none 
-       [&_svg]:shrink-0 
-       [&_svg:not([class*='size-'])]:size-4 
-       *:[span]:last:flex 
-       *:[span]:last:items-center 
+       relative flex w-full cursor-pointer items-center gap-2
+       rounded-sm outline-hidden select-none
+       data-[disabled]:pointer-events-none
+       data-[disabled]:opacity-50
+
+       [&_svg:not([class*='text-'])]:text-muted-foreground
+       [&_svg]:pointer-events-none
+       [&_svg]:shrink-0
+       [&_svg:not([class*='size-'])]:size-4
+       *:[span]:last:flex
+       *:[span]:last:items-center
        *:[span]:last:gap-2
        `,
+      size === "xs" ? "py-0.5 pr-6 pl-1.5 text-xs" : "py-1.5 pr-8 pl-2 text-sm",
       className
     )}
     {...props}
   >
-    <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center text-label-primary">
+    <span className={cn(
+      "absolute flex items-center justify-center text-label-primary",
+      size === "xs" ? "right-1 h-3 w-3" : "right-2 h-3.5 w-3.5"
+    )}>
       <SelectPrimitive.ItemIndicator>
-        <SystemIcons.Check className="size-4" />
+        <SystemIcons.Check className={size === "xs" ? "size-3" : "size-4"} />
       </SelectPrimitive.ItemIndicator>
     </span>
 

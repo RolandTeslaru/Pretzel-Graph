@@ -66,12 +66,12 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         return workflow.locked;
     }
 
-    public useField(nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) {
+    public useField<T>(nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) {
         return this.useStore(s => {
             const staticVals = s.workflow.data.staticValues[nodeId]
             if (!staticVals)
-                return [null, null] as const
-            const value = staticVals[fieldId] as any
+                return [undefined, null] as const
+            const value = staticVals[fieldId] as T
             return [
                 value,
                 s.issues[nodeId]?.fields[fieldId] ?? null

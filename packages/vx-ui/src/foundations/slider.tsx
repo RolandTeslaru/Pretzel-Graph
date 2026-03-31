@@ -18,7 +18,7 @@ export const rootVars = cva(
 )
 
 export const trackVars = cva(
-  `relative shadow-sm shadow-black/10 bg-input/50 grow overflow-hidden rounded-full ring-1 ring-inset ring-border
+  `relative shadow-sm shadow-black/10 bg-secondary grow overflow-hidden rounded-full ring-1 ring-inset ring-border
    data-[orientation=horizontal]:h-2.5
    data-[orientation=horizontal]:w-full
    data-[orientation=vertical]:h-full

@@ -36,7 +36,7 @@ export const buttonVariants = cva(
           aria-expanded:bg-muted aria-expanded:text-foreground
         `,
         secondary: `
-          bg-secondary text-secondary-foreground hover:bg-secondary/80 
+          bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-none
           aria-expanded:bg-secondary aria-expanded:text-secondary-foreground
         `,
         ghost: `
@@ -44,7 +44,7 @@ export const buttonVariants = cva(
           aria-expanded:bg-muted aria-expanded:text-foreground
         `,
         destructive: `
-          bg-red-400/50 text-red-700 hover:bg-red-200 hover:border-red-400
+          bg-red-400/40 text-red-700 hover:bg-red-200 hover:border-red-400
           dark:bg-red-900/50 dark:text-red-400 dark:hover:bg-red-800 dark:hover:border-red-600
           focus-visible:ring-red-600/20 dark:focus-visible:ring-red-600/40 
           focus-visible:border-red-600/40
