@@ -86,18 +86,18 @@ code {
   --ring: theme(--color-orange-500);
 
   --secondary: var(--color-neutral-200);
-  --secondary-foreground:var(--color-neutral-500);
+  --secondary-foreground:var(--color-neutral-700);
 
   --accent: theme(--color-neutral-300);
   --accent-foreground: theme(--color-neutral-700);
 
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: theme(--color-stone-300);
+  --border: oklch(86.9% 0.005 56.366);
 
-  --muted: theme(--color-neutral-200);
+  --muted: theme(--color-neutral-100);
   --muted-foreground: theme(--color-neutral-500);
-  --input: theme(--color-neutral-50);
+  --input: theme(--color-white);
 
 
   --radius: 0.875rem;
@@ -272,7 +272,7 @@ code {
   --border: oklch(34.07% 0.00004 271.152);
 
   /* --border: theme(--color-stone-800); */
-  --input: theme(--color-stone-700);
+  --input: theme(--color-neutral-800);
   --ring: theme(--color-orange-500);
 
   /* --group-routing: theme(--color-white); */

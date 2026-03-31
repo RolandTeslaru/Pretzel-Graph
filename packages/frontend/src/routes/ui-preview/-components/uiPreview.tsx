@@ -106,6 +106,8 @@ export default function CoverExample() {
                 <InputGroupExamples />
                 <SheetExample />
                 <BadgeExamples />
+                <AllBadgesExample />
+                <BadgeOnCardExample />
                 <CustomExample />
                 <DialogExamples />
                 <InputsNoCard />
@@ -1377,6 +1379,79 @@ function BadgeExamples() {
 }
 
 
+
+function AllBadgesExample() {
+    return (
+        <Example title="All Badge Variants" className="items-center justify-center">
+            <Card.Root className="w-fit">
+                <Card.Content className="flex flex-col gap-4 pt-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="default">Default</Badge>
+                        <Badge variant="secondary">Secondary</Badge>
+                        <Badge variant="destructive">Destructive</Badge>
+                        <Badge variant="outline">Outline</Badge>
+                        <Badge variant="ghost">Ghost</Badge>
+                        <Badge variant="link">Link</Badge>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="default"><SystemIcons.Star className="size-3" />Default</Badge>
+                        <Badge variant="secondary"><SystemIcons.Star className="size-3" />Secondary</Badge>
+                        <Badge variant="destructive"><SystemIcons.AlertTriangle className="size-3" />Destructive</Badge>
+                        <Badge variant="outline"><SystemIcons.CircleCheck className="size-3" />Outline</Badge>
+                        <Badge variant="ghost"><SystemIcons.Star className="size-3" />Ghost</Badge>
+                        <Badge variant="link"><SystemIcons.Star className="size-3" />Link</Badge>
+                    </div>
+                </Card.Content>
+            </Card.Root>
+        </Example>
+    )
+}
+
+function BadgeOnCardExample() {
+    return (
+        <Example title="Badge on Card">
+            <div className="flex gap-4 flex-wrap">
+                <Card.Root className="w-64">
+                    <Card.Header>
+                        <Card.Title>Model Status</Card.Title>
+                        <Card.Action>
+                            <Badge variant="default">Active</Badge>
+                        </Card.Action>
+                        <Card.Description>GPT-4o is running and healthy.</Card.Description>
+                    </Card.Header>
+                    <Card.Content>
+                        <p className="text-muted-foreground text-xs">Last ping: 2s ago</p>
+                    </Card.Content>
+                    <Card.Footer>
+                        <Badge variant="outline">
+                            <SystemIcons.CircleCheck className="size-3" />
+                            Connected
+                        </Badge>
+                    </Card.Footer>
+                </Card.Root>
+
+                <Card.Root className="w-64">
+                    <Card.Header>
+                        <Card.Title>Pipeline Run</Card.Title>
+                        <Card.Action>
+                            <Badge variant="destructive">Failed</Badge>
+                        </Card.Action>
+                        <Card.Description>3 nodes encountered errors.</Card.Description>
+                    </Card.Header>
+                    <Card.Content>
+                        <p className="text-muted-foreground text-xs">Run ID: #ae4f2c</p>
+                    </Card.Content>
+                    <Card.Footer>
+                        <Badge variant="secondary">
+                            <Spinner data-icon="inline-start" />
+                            Retrying
+                        </Badge>
+                    </Card.Footer>
+                </Card.Root>
+            </div>
+        </Example>
+    )
+}
 
 const SHEET_SIDES = ["top", "right", "bottom", "left"] as const
 
