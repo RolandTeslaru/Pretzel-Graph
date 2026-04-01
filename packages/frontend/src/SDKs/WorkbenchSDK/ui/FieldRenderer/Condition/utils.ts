@@ -1,6 +1,22 @@
 import { Foundations } from '@vx-agent-editor/shared/domain'
 
-export const operatorLabel = (op: Foundations.Field.Condition.Operator): string => {
+const { Condition } = Foundations.Field
+type Operator = Foundations.Field.Condition.Operator
+type DataType = Foundations.Field.Condition.DataType
+
+export const dataTypeLabel = (dt: DataType): string => {
+    const labels: Record<DataType, string> = {
+        string:   "String",
+        number:   "Number",
+        dateTime: "Date & Time",
+        boolean:  "Boolean",
+        array:    "Array",
+        object:   "Object",
+    }
+    return labels[dt]
+}
+
+export const operatorLabel = (op: Operator): string => {
     const labels: Record<string, string> = {
         exists: "exists",
         not_exists: "does not exist",

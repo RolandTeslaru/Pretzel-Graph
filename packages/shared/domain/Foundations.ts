@@ -199,6 +199,7 @@ export namespace Foundations {
 
                 export const Schema = z.object({
                     id: Id,
+                    dataType: DataType,
                     leftOperand: z.string(),
                     operator: Operator.Schema,
                     rightOperand: z.string().optional(),
@@ -232,23 +233,6 @@ export namespace Foundations {
             });
         }
 
-
-
-
-
-        // export const ConditionRule = z.object({
-        //     path: z.string(),
-        //     dataType: ConditionDataType,
-        //     operator: Operator,
-        //     value: z.string().optional(),
-        // })
-        // export type ConditionRule = z.infer<typeof ConditionRule>
-
-        // export const ConditionGroup = z.object({
-        //     combinator: z.enum(["AND", "OR"]),
-        //     conditions: z.array(ConditionRule),
-        // })
-        // export type ConditionGroup = z.infer<typeof ConditionGroup>
 
 
         export interface Integer extends z.infer<typeof Integer> { }

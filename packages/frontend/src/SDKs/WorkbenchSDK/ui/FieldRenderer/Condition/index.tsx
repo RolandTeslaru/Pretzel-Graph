@@ -3,20 +3,24 @@ import { WorkbenchSDK } from '../../../sdk'
 import { FieldLabel } from '../FieldLabel'
 import type { RendererProps } from '../FieldLabel'
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain'
-import { Button, DropdownMenu, Input, Select } from '@vx-agent-editor/vx-ui/foundations'
+import { Button, DropdownMenu, Input } from '@vx-agent-editor/vx-ui/foundations'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { conditionActions } from './actions'
-import { operatorLabel } from './utils'
+import { OperatorSelector } from './OperatorSelector'
+
+type RuleId      = Foundations.Field.Condition.Rule.Id
+type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id
+type Value       = Foundations.Field.Condition.Value
 
 
 export const ConditionField = memo<RendererProps<'Condition'>>(({ field, nodeId, className }) => {
-    const [root] = WorkbenchSDK.useField<Foundations.Field.Condition.Value>(nodeId, field.id)
+    const [root] = WorkbenchSDK.useField<Value>(nodeId, field.id)
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
             <FieldLabel field={field} />
             {root ?
-                <RuleGroup ruleGroupId={"root" as Foundations.Field.Condition.RuleGroup.Id} root={root} field={field} nodeId={nodeId} />
+                <RuleGroup ruleGroupId={"root" as RuleGroupId} root={root} field={field} nodeId={nodeId} />
                 :
                 <div className='flex flex-col items-center justify-center text-sm text-neutral-500 py-4 border rounded-md border-border'>
                     No condition set
@@ -27,7 +31,7 @@ export const ConditionField = memo<RendererProps<'Condition'>>(({ field, nodeId,
 })
 
 
-export const RuleGroup = ({ ruleGroupId, root, ...rest }: { ruleGroupId: Foundations.Field.Condition.RuleGroup.Id, root: Foundations.Field.Condition.Value, field: Foundations.Field, nodeId: Workflow.Node.Id }) => {
+export const RuleGroup = ({ ruleGroupId, root, ...rest }: { ruleGroupId: RuleGroupId, root: Value, field: Foundations.Field, nodeId: Workflow.Node.Id }) => {
     const ruleGroup = root.groups[ruleGroupId];
     const [hovered, setHovered] = useState(false);
     return (
@@ -67,9 +71,9 @@ export const RuleGroup = ({ ruleGroupId, root, ...rest }: { ruleGroupId: Foundat
             <div className='flex flex-col gap-2 w-full'>
                 {ruleGroup.children.map((id) => {
                     if (id in root.rules)
-                        return <Rule key={id} parentGroupId={ruleGroupId} ruleId={id as Foundations.Field.Condition.Rule.Id} root={root} {...rest} />
+                        return <Rule key={id} parentGroupId={ruleGroupId} ruleId={id as RuleId} root={root} {...rest} />
                     else if (id in root.groups)
-                        return <RuleGroup key={id} ruleGroupId={id as Foundations.Field.Condition.RuleGroup.Id} root={root} {...rest} />
+                        return <RuleGroup key={id} ruleGroupId={id as RuleGroupId} root={root} {...rest} />
                     else
                         return null;
                 })}
@@ -78,7 +82,7 @@ export const RuleGroup = ({ ruleGroupId, root, ...rest }: { ruleGroupId: Foundat
     )
 }
 
-export const DraggableRuleItem = ({ ...rest }: { ruleId: Foundations.Field.Condition.Rule.Id, parentGroupId: Foundations.Field.Condition.RuleGroup.Id, root: Foundations.Field.Condition.Value, field: Foundations.Field, nodeId: Workflow.Node.Id }) => {
+export const DraggableRuleItem = ({ ...rest }: { ruleId: RuleId, parentGroupId: RuleGroupId, root: Value, field: Foundations.Field, nodeId: Workflow.Node.Id }) => {
     return (
         <div className='p-1 bg-secondary rounded-lg border-border border flex flex-row shadow-sm shadow-black/5 '>
             <SystemIcons.GripVertical className='cursor-move w-5 px-1 h-auto my-auto' />
@@ -87,7 +91,7 @@ export const DraggableRuleItem = ({ ...rest }: { ruleId: Foundations.Field.Condi
     )
 }
 
-export const Rule = ({ ruleId, parentGroupId, root, field, nodeId }: { ruleId: Foundations.Field.Condition.Rule.Id, root: Foundations.Field.Condition.Value, parentGroupId: Foundations.Field.Condition.RuleGroup.Id, field: Foundations.Field, nodeId: Workflow.Node.Id }) => {
+export const Rule = ({ ruleId, parentGroupId, root, field, nodeId }: { ruleId: RuleId, root: Value, parentGroupId: RuleGroupId, field: Foundations.Field, nodeId: Workflow.Node.Id }) => {
     const rule = root.rules[ruleId];
     return (
         <div className='group/rule relative flex flex-col w-full border-border bg-input/80 rounded-sm shadow-md shadow-black/5 border'>
@@ -100,23 +104,11 @@ export const Rule = ({ ruleId, parentGroupId, root, field, nodeId }: { ruleId: F
                 }}
             />
             <div className='flex flex-row w-full'>
-                <Select.Root
-                    value={rule.operator}
-                    onValueChange={(newOp) => {
-                        conditionActions.setOperator(nodeId, field, ruleId, newOp as Foundations.Field.Condition.Operator)
-                    }}
-                >
-                    <Select.Trigger className={`w-37.5! font-semibold`} variant='ghost-no-focus' size="xs">
-                        <Select.Value placeholder={"Select operator..."} />
-                    </Select.Trigger>
-                    <Select.Content size='xs'>
-                        {Foundations.Field.Condition.Operator.String.options.map((op) => (
-                            <Select.Item key={op} value={op} size="xs">
-                                {operatorLabel(op)}
-                            </Select.Item>
-                        ))}
-                    </Select.Content>
-                </Select.Root>
+                <OperatorSelector
+                    operator={rule.operator}
+                    dataType={rule.dataType}
+                    onSelect={(op, dt) => conditionActions.setOperator(nodeId, field, ruleId, op, dt)}
+                />
 
                 <div className='content-[" "] h-6 w-px bg-border' />
 
