@@ -285,7 +285,7 @@ export namespace FieldBuilder {
             initialValue: config.initialValue ?? {
                 rootId,
                 rules: {
-                    "rule1": { id: "rule1", leftOperand: "", operator: "equals", rightOperand: "" }
+                    "rule1": { id: "rule1", dataType: "string", leftOperand: "", operator: "equals", rightOperand: "" }
                 } as Record<Foundations.Field.Condition.Rule.Id, Foundations.Field.Condition.Rule>,
                 groups: {
                     [rootId]: { id: rootId, combinator: "AND", children: ["rule1"] },

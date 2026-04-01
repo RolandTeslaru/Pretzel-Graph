@@ -1,51 +1,59 @@
 import { WorkbenchSDK } from '../../../sdk'
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain'
 
+const { Condition } = Foundations.Field
+type RuleId      = Foundations.Field.Condition.Rule.Id
+type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id
+type Operator    = Foundations.Field.Condition.Operator
+type DataType    = Foundations.Field.Condition.DataType
+type Value       = Foundations.Field.Condition.Value
+
 export const conditionActions = {
-    setLeftValue: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleId: Foundations.Field.Condition.Rule.Id, value: string) => {
-        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Foundations.Field.Condition.Value) => {
+    setLeftValue: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleId: RuleId, value: string) => {
+        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Value) => {
             prev.rules[ruleId].leftOperand = value
             return prev;
         })
     },
-    setOperator: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleId: Foundations.Field.Condition.Rule.Id, value: Foundations.Field.Condition.Operator) => {
-        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Foundations.Field.Condition.Value) => {
+    setOperator: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleId: RuleId, value: Operator, dataType?: DataType) => {
+        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Value) => {
             prev.rules[ruleId].operator = value
+            if (dataType !== undefined) prev.rules[ruleId].dataType = dataType
             return prev;
         })
     },
-    setRightValue: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleId: Foundations.Field.Condition.Rule.Id, value: string) => {
-        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Foundations.Field.Condition.Value) => {
+    setRightValue: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleId: RuleId, value: string) => {
+        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Value) => {
             prev.rules[ruleId].rightOperand = value
             return prev;
         })
     },
-    addRule: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleGroupId: Foundations.Field.Condition.RuleGroup.Id) => {
-        const newRuleId = Foundations.Field.Condition.Rule.createId();
-        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Foundations.Field.Condition.Value) => {
-            prev.rules[newRuleId] = { id: newRuleId, leftOperand: "", operator: "equals", rightOperand: "" }
+    addRule: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleGroupId: RuleGroupId) => {
+        const newRuleId = Condition.Rule.createId();
+        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Value) => {
+            prev.rules[newRuleId] = { id: newRuleId, dataType: "string", leftOperand: "", operator: "equals", rightOperand: "" }
             prev.groups[ruleGroupId].children.push(newRuleId)
             return prev;
         })
     },
-    addGroup: (nodeId: Workflow.Node.Id, field: Foundations.Field, parentGroupId: Foundations.Field.Condition.RuleGroup.Id) => {
-        const newGroupId = Foundations.Field.Condition.RuleGroup.createId();
-        
-        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Foundations.Field.Condition.Value) => {
+    addGroup: (nodeId: Workflow.Node.Id, field: Foundations.Field, parentGroupId: RuleGroupId) => {
+        const newGroupId = Condition.RuleGroup.createId();
+
+        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Value) => {
             prev.groups[newGroupId] = { id: newGroupId, combinator: "AND", children: [] }
             prev.groups[parentGroupId].children.push(newGroupId)
 
-            let newRuleId = Foundations.Field.Condition.Rule.createId();
-            prev.rules[newRuleId] = { id: newRuleId, leftOperand: "", operator: "equals", rightOperand: "" }
+            let newRuleId = Condition.Rule.createId();
+            prev.rules[newRuleId] = { id: newRuleId, dataType: "string", leftOperand: "", operator: "equals", rightOperand: "" }
             prev.groups[newGroupId].children.push(newRuleId)
-            newRuleId = Foundations.Field.Condition.Rule.createId();
-            prev.rules[newRuleId] = { id: newRuleId, leftOperand: "", operator: "equals", rightOperand: "" }
+            newRuleId = Condition.Rule.createId();
+            prev.rules[newRuleId] = { id: newRuleId, dataType: "string", leftOperand: "", operator: "equals", rightOperand: "" }
             prev.groups[newGroupId].children.push(newRuleId)
             return prev;
         })
     },
-    removeRuleOrGroup: (nodeId: Workflow.Node.Id, field: Foundations.Field, id: Foundations.Field.Condition.Rule.Id | Foundations.Field.Condition.RuleGroup.Id, parentGroupId: Foundations.Field.Condition.RuleGroup.Id) => {
-        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Foundations.Field.Condition.Value) => {
+    removeRuleOrGroup: (nodeId: Workflow.Node.Id, field: Foundations.Field, id: RuleId | RuleGroupId, parentGroupId: RuleGroupId) => {
+        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Value) => {
             const parentGroup = prev.groups[parentGroupId];
 
             if (parentGroup.id === "root" && parentGroup.children.length === 1) {
@@ -55,20 +63,20 @@ export const conditionActions = {
             parentGroup.children = parentGroup.children.filter(childId => childId !== id);
 
             if (id in prev.rules) {
-                delete prev.rules[id as Foundations.Field.Condition.Rule.Id];
+                delete prev.rules[id as RuleId];
             } else if (id in prev.groups) {
-                const removeGroupAndChildren = (groupId: Foundations.Field.Condition.RuleGroup.Id) => {
+                const removeGroupAndChildren = (groupId: RuleGroupId) => {
                     const group = prev.groups[groupId];
                     group.children.forEach(childId => {
                         if (childId in prev.rules) {
-                            delete prev.rules[childId as Foundations.Field.Condition.Rule.Id];
+                            delete prev.rules[childId as RuleId];
                         } else if (childId in prev.groups) {
-                            removeGroupAndChildren(childId as Foundations.Field.Condition.RuleGroup.Id);
+                            removeGroupAndChildren(childId as RuleGroupId);
                         }
                     });
                     delete prev.groups[groupId];
                 }
-                removeGroupAndChildren(id as Foundations.Field.Condition.RuleGroup.Id);
+                removeGroupAndChildren(id as RuleGroupId);
             }
 
             if (parentGroup.children.length === 0) {
@@ -87,17 +95,17 @@ export const conditionActions = {
             while (parentGroup.children.length === 1) {
                 const onlyChildId = parentGroup.children[0];
                 if (!(onlyChildId in prev.groups)) break;
-                const childGroup = prev.groups[onlyChildId as Foundations.Field.Condition.RuleGroup.Id];
+                const childGroup = prev.groups[onlyChildId as RuleGroupId];
                 parentGroup.children = childGroup.children;
                 parentGroup.combinator = childGroup.combinator;
-                delete prev.groups[onlyChildId as Foundations.Field.Condition.RuleGroup.Id];
+                delete prev.groups[onlyChildId as RuleGroupId];
             }
 
             return prev;
         })
     },
-    changeCombinator: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleGroupId: Foundations.Field.Condition.RuleGroup.Id, combinator: "AND" | "OR") => {
-        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Foundations.Field.Condition.Value) => {
+    changeCombinator: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleGroupId: RuleGroupId, combinator: "AND" | "OR") => {
+        WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Value) => {
             prev.groups[ruleGroupId].combinator = combinator;
             return prev;
         })

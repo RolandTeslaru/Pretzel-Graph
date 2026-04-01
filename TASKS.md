@@ -14,9 +14,36 @@
 - [ ] 🟡 **Fix undo/redo** — `TEMPORAL_STACK_SIZE = 1` in WorkbenchSDK means only the last state is tracked. Raise to a sensible default (e.g. 50) and verify Zundo is working correctly.
 - [ ] 🔴 **Decide: node failure scope** — currently one node error kills the entire workflow. Decide whether errors should be branch-isolated (only kill downstream of the failed node) or keep the current fail-all behavior. Document the decision here.
 
+### Deployment Blockers
+- [ ] 🟢 **Env-ify Redis config** — `REDIS_HOST = "localhost"` and `REDIS_PORT = 6379` are hardcoded in `shared/constants.ts` with no `process.env` fallback. Will fail in any containerized or remote deployment.
+- [ ] 🟢 **Env-ify WebSocket URL** — `RealtimeSDK.connect("ws://localhost:3001")` is a hardcoded module-level call in `frontend/src/SDKs/Realtime/sdk.ts:162`. Should read from `VITE_WS_URL` or similar.
+- [ ] 🟢 **Add `.env.example` files** — no `.env.example` exists in any package. Document all required env vars for `backend`, `worker`, and `frontend`.
+
 ---
 
-## 🔧 Bucket 2 — Completion
+## 🧹 Bucket 2 — Code Quality
+> Type safety, separation of concerns, dead code. No user-facing impact but reduce future bugs.
+
+### TypeScript Type Safety _(spec: `SPECS/typescript-type-safety.md`)_
+- [ ] 🟢 **Narrow `setValue` action types** — `field.setValue` and `input.setValue` both accept `value: any`. Add generic value types so the compiler checks values against field/input variants. (`WorkbenchSDK/actions.ts:130,134`)
+- [ ] 🟢 **Remove temporal store `as any` cast** — override `useStore` in `WorkbenchSDKImpl` with the `TemporalStore` type from zundo so `.temporal` is typed without casting. (`WorkbenchSDK/actions.ts:69-70`, `sdk.ts`)
+- [ ] 🟢 **Consolidate 6 Immer discriminated union casts** — replace `(input as any).variant` and `(output as any).variant` with a single `setVariant()` helper. (`WorkbenchSDK/reducers/node.ts:215-245`)
+- [ ] 🟢 **Remove reconcile field ID `as any` casts** — type `changedFieldId` as `string` and drop the three `"provider" as any`, `"model" as any`, `"apiKey" as any` casts. (`worker/nodes/Core/LanguageModel/reconcile.ts:14-16`)
+- [ ] 🟢 **Narrow synthesizer return types** — change `synthesizeInput` and `ensureReference` return types from `any` to a proper union. (`worker/src/synthesizer/index.ts`)
+
+### Naming & Package Hygiene
+- [ ] 🟡 **Rename package identifiers to PretzelGraph** — `vx-agent-editor` and `vx-agent-builder` are used interchangeably across `package.json` files, tsconfig `paths`, and imports (e.g. `@vx-agent-builder/worker` in `backend/tsconfig.json`). Settle on a single identifier (e.g. `@pretzelgraph/`) and do a global rename. Also rename the repo directory from `vxAgentEditor` if desired.
+- [ ] 🟢 **Fix `shared/package.json` main entry** — `"main": "index.ts"` is non-standard. Should point to a compiled output or use `exports` with `ts-node`/path mappings explicitly documented.
+
+### Separation of Concerns
+- [ ] 🟢 **Deduplicate `resolveFields()`** — identical function in `worker/src/node.ts` and `worker/src/compiler/index.ts`. Extract to a shared util and import from both.
+- [ ] 🟢 **Delete debug/test panels** — remove `testPanel.tsx` (NotificationSDK), `debugPanel.tsx` (DialogSDK), and the dead `StateViewer` component + `useSDKState` hook in `workflow/$workflowid.tsx`. None are behind feature flags.
+- [ ] 🟢 **Split `Canvas/props.ts`** — file mixes static config, a utility function, and React Flow event callbacks (a controller). Split into `config.ts`, `utils.ts`, and `callbacks.ts`.
+- [ ] 🔴 **Fix `ChatSDKImpl` constructor side effects** — constructor calls `QuerySDK` and subscribes to `RealtimeSDK` directly, making initialization order implicit. Move to an explicit `init()` method or lazy subscription.
+
+---
+
+## 🔧 Bucket 3 — Completion
 > Planned and half-built features. The previous dev left scaffolding for all of these.
 
 - [ ] 🟡 **Implement Accumulator node** — blueprint + runtime. Holds previous state across iterations. Core primitive for ReAct loops. Error code `EXECUTION_ACCUMULATOR_OVERFLOW` (2007) already exists.
@@ -27,7 +54,7 @@
 
 ---
 
-## 🚀 Bucket 3 — Growth
+## 🚀 Bucket 4 — Growth
 > New capabilities. Don't touch until Bucket 1 is mostly done.
 
 - [ ] 🔴 **Design the ReAct workflow pattern** — finalize the canonical Accumulator + Merge(OR) + Router pattern. Build a template workflow users can start from.
@@ -38,7 +65,7 @@
 
 ---
 
-## 📖 Bucket 4 — Documentation
+## 📖 Bucket 5 — Documentation
 > The codebase has zero docs. This is a risk for future work.
 
 - [ ] 🟢 **Document S2 engine** — write an explanation of signal accumulation, AND/OR/XOR strategies, ignite flow, and cycle handling. Lives in `packages/worker/src/S2/README.md`.
