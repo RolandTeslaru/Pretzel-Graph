@@ -46,7 +46,7 @@ function Content({
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          `bg-neutral-100 text-black animate-in fade-in-0 zoom-in-95 
+          `bg-neutral-900 text-white dark:bg-neutral-100 dark:text-black animate-in fade-in-0 zoom-in-95
            shadow-lg shadow-black/20
            data-[state=closed]:animate-out 
            data-[state=closed]:fade-out-0 
@@ -63,7 +63,7 @@ function Content({
         {...props}
       >
         {children}
-        <TooltipPrimitive.Arrow className="bg-neutral-100 fill-neutral-100 z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" />
+        <TooltipPrimitive.Arrow className="bg-neutral-900 fill-neutral-900 dark:bg-neutral-100 dark:fill-neutral-100 z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" />
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   )
