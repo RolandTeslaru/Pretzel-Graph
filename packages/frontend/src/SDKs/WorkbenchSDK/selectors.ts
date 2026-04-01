@@ -129,6 +129,19 @@ export const workbenchSelectors = {
 
         return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Foundations.Port.Output.Id];
     },
+    getNodeIncomingData: (s, nodeId, session) => {
+        const node = s.workflow.data.nodes[nodeId];
+        if (!node) return null;
+
+        const incoming: Record<Foundations.Port.Id, Foundations.Projection> = {};
+        for (const input of node.inputs) {
+            const projection = workbenchSelectors.getInputProjection(s, nodeId, input.id, session);
+            if (projection !== undefined)
+                incoming[input.id] = projection;
+        }
+
+        return Object.keys(incoming).length > 0 ? incoming : null;
+    },
     syncGroupHasEdges: (s, nodeId, syncGroupId) => {
         const node = s.workflow.data.nodes[nodeId];
         const inputHandles = s.cache.inputHandlesMap[nodeId];
@@ -172,4 +185,5 @@ export type _WorkBenchSDKSelectors = {
     doesNodeHaveIssues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
     getDynamicPortSiblings: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Id) => Set<Foundations.Port.Input | Foundations.Port.Output>
     syncGroupHasEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => boolean
+    getNodeIncomingData: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session: ExecutionSession) => Record<Foundations.Port.Id, Foundations.Projection> | null
 }

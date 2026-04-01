@@ -177,25 +177,13 @@ const InputItem = memo(({ input, nodeId }: { input: Foundations.Port.Input, node
 
 const IncomingData = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
     const session = ExecutionSessionSDK.useStore(s => s.session);
-    const data = WorkbenchSDK.useStore(s => {
-        const node = s.workflow.data.nodes[nodeId];
-        if (!node) return null;
-
-        const incoming: Record<string, Foundations.Projection> = {};
-        for (const input of node.inputs) {
-            const projection = WorkbenchSDK.selectors.getInputProjection(s, nodeId, input.id, session);
-            if (projection !== undefined)
-                incoming[input.id] = projection;
-        }
-
-        return Object.keys(incoming).length > 0 ? incoming : null;
-    });
+    const data = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.getNodeIncomingData(s, nodeId, session));
 
     if (!data)
         return null;
 
     return (
-        <JsonView src={data} className='text-xs' collapsed={3} />
+        <JsonView src={data as Record<string, unknown>} className='text-xs' collapsed={3} />
     )
 })
 

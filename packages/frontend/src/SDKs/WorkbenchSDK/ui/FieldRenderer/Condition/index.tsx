@@ -3,7 +3,8 @@ import { WorkbenchSDK } from '../../../sdk'
 import { FieldLabel } from '../FieldLabel'
 import type { RendererProps } from '../FieldLabel'
 import { Foundations } from '@vx-agent-editor/shared/domain'
-import { Button, DropdownMenu, Input } from '@vx-agent-editor/vx-ui/foundations'
+import { Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
+import { ExpressionInput } from './ExpressionInput'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { conditionActions } from './actions'
 import { OperatorSelector } from './OperatorSelector'
@@ -101,12 +102,13 @@ const Rule = ({ ruleId, parentGroupId }: { ruleId: RuleId, parentGroupId: RuleGr
 
     return (
         <div className='group/rule relative flex flex-col w-full border-border bg-input/80 rounded-sm shadow-md shadow-black/5 border'>
-            <Input
+            <ExpressionInput
                 value={leftValue}
-                variant='ghost-no-focus' size="xs"
-                className='border-b-border rounded-none!'
-                onChange={(e) => setLeftValue(e.currentTarget.value)}
-                onBlur={() => conditionActions.setLeftValue(nodeId, field, ruleId, leftValue)}
+                side='left'
+                className='border-b border-b-border rounded-none!'
+                onChange={setLeftValue}
+                onCommit={(v) => conditionActions.setLeftValue(nodeId, field, ruleId, v)}
+                nodeId={nodeId}
             />
             <div className='flex flex-row w-full'>
                 <OperatorSelector
@@ -117,11 +119,13 @@ const Rule = ({ ruleId, parentGroupId }: { ruleId: RuleId, parentGroupId: RuleGr
 
                 <div className='content-[" "] h-6 w-px bg-border' />
 
-                <Input
+                <ExpressionInput
                     value={rightValue}
-                    placeholder='' className='rounded-none!' variant='ghost-no-focus' size="xs"
-                    onChange={(e) => setRightValue(e.currentTarget.value)}
-                    onBlur={() => conditionActions.setRightValue(nodeId, field, ruleId, rightValue)}
+                    side='right'
+                    className='rounded-none!'
+                    onChange={setRightValue}
+                    onCommit={(v) => conditionActions.setRightValue(nodeId, field, ruleId, v)}
+                    nodeId={nodeId}
                 />
             </div>
 
