@@ -1,6 +1,6 @@
 {
-  "version": "1774973450960",
-  "generatedAt": "2026-03-31T16:10:50.960Z",
+  "version": "1775033720719",
+  "generatedAt": "2026-04-01T08:55:20.719Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -816,6 +816,7 @@
             "rules": {
               "rule1": {
                 "id": "rule1",
+                "dataType": "string",
                 "leftOperand": "",
                 "operator": "equals",
                 "rightOperand": ""
@@ -953,6 +954,7 @@
             "rules": {
               "rule1": {
                 "id": "rule1",
+                "dataType": "string",
                 "leftOperand": "",
                 "operator": "equals",
                 "rightOperand": ""
@@ -1022,6 +1024,7 @@
             "rules": {
               "rule1": {
                 "id": "rule1",
+                "dataType": "string",
                 "leftOperand": "",
                 "operator": "equals",
                 "rightOperand": ""
