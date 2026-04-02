@@ -76,7 +76,7 @@ export const CORE_DRAWERS = {
     id: "utilities",
     icon: "Wand2",
     blueprintIds: [
-
+      "Core.Utils.Message.Compose",
     ],
   },
   prototypes: {

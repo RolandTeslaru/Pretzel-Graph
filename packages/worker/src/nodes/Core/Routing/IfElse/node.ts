@@ -3,6 +3,7 @@ import { Blueprint } from "./blueprint";
 import { ExecutionContext } from "src/context";
 import { RuntimeRouterNode } from "src/node";
 import { InferInputs, InferOutputs, OneOf } from "src/types";
+import { Expression, Foundations } from "@vx-agent-editor/shared/domain";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeRouterNode<typeof Blueprint> {
@@ -15,14 +16,12 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
     ): Promise<OneOf<InferOutputs<typeof Blueprint>>> {
 
         const { condition } = this.fields;
-        const { input } = inputs;
 
-        // TODO: Implement condition evaluation logic
-        const result = Boolean(condition);
+        const result = Foundations.Field.Condition.evaluate(condition, inputs);
 
         if (result)
-            return { true: input }
+            return { true: inputs.input }
         else
-            return { false: input }
+            return { false: inputs.input }
     }
 }
