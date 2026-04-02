@@ -4,7 +4,7 @@ import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
 import { Expression, Workflow } from '@vx-agent-editor/shared/domain'
 import { Input, Spinner, Tooltip } from '@vx-agent-editor/vx-ui/foundations'
 import { cn } from '@vx-agent-editor/vx-ui/utils/cn'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import JsonView from 'react18-json-view'
 
@@ -59,30 +59,52 @@ const TooltipContent = ({ nodeId, uniquePortNames, value }: { nodeId: Workflow.N
     const [result, setResult] = useState<unknown>(undefined)
     const [loading, setLoading] = useState(false)
 
+    const hasSessionData = Object.keys(session.node_output_projections).length > 0
+    const incomingData = useMemo(
+        () => WorkbenchSDK.selectors.getNodeIncomingData(WorkbenchSDK.state, nodeId, session),
+        [nodeId, session]
+    )
+
     useEffect(() => {
+        if (!incomingData) return
         let cancelled = false
         try {
-            const incomingData = WorkbenchSDK.selectors.getNodeIncomingData(WorkbenchSDK.state, nodeId, session) ?? {}
             const processedExpression = Expression.preprocess(value, incomingData)
             setLoading(true)
             SandboxSDK.run(`return ${processedExpression}`)
                 .then(r => { if (!cancelled) { setResult(r); setLoading(false) } })
-                .catch(e => { if (!cancelled) { toast.error(e.message); setLoading(false) } })
+                .catch(e => { if (!cancelled) {
+                    setResult(`Error: ${(e as Error).message}`)    
+                    setLoading(false) 
+                } })
         } catch (e) {
-            if (!cancelled) { toast.error((e as Error).message); setLoading(false) }
+            if (!cancelled) { 
+                setResult(`Error: ${(e as Error).message}`)
+                setLoading(false) 
+            }
         }
         return () => { cancelled = true }
-    }, [value, nodeId, session])
+    }, [value, incomingData])
 
     if (uniquePortNames.length === 0)
         return <p className='text-neutral-400 text-[10px]'>Plain value</p>
+
+    if (!hasSessionData)
+        return <p className='text-neutral-400 text-[10px]'>Run the workflow to preview</p>
+
+    if (!incomingData)
+        return <p className='text-neutral-400 text-[10px]'>No incoming data</p>
 
     return (
         <div className='flex flex-col gap-1.5'>
             <p className='text-neutral-400 text-[10px]'>Expression result:</p>
             {loading
                 ? <Spinner />
-                : <JsonView src={{ result } as Record<string, unknown>} className='text-xs' collapsed={3} />
+                :
+                <div>
+                    <p>Result:</p>
+                    <JsonView src={result as Record<string, unknown>} className='text-xs' collapsed={3} />
+                </div>
             }
         </div>
     )
