@@ -25,6 +25,7 @@ export namespace Workflow {
             description: z.string().nullable().optional(),
             isMinimized: z.boolean().default(false),
             isFlipped: z.boolean().optional(),
+            isDisabled: z.boolean().optional(),
             accent: z.string().optional(),
         });
 

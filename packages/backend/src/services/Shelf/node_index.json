@@ -1,6 +1,6 @@
 {
-  "version": "1775144993811",
-  "generatedAt": "2026-04-02T15:49:53.811Z",
+  "version": "1775146719610",
+  "generatedAt": "2026-04-02T16:18:39.610Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -672,32 +672,6 @@
       ],
       "description": "Makes an HTTP request."
     },
-    "Core.Developer.JsonInjector": {
-      "id": "Core.Developer.JsonInjector",
-      "displayName": "JSON Injector",
-      "icon": "Code",
-      "accent": "port-null",
-      "fields": [
-        {
-          "id": "data",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "JSON Data",
-          "variant": "Json",
-          "initialValue": {}
-        }
-      ],
-      "inputs": [],
-      "outputs": [
-        {
-          "id": "output",
-          "displayName": "Output",
-          "variant": "Data"
-        }
-      ],
-      "description": "Injects JSON data into the flow."
-    },
     "Core.Developer.Sleep": {
       "id": "Core.Developer.Sleep",
       "displayName": "Sleep",
@@ -1102,10 +1076,36 @@
       ],
       "description": "This node is a Text input"
     },
+    "Core.Utils.JsonInjector": {
+      "id": "Core.Utils.JsonInjector",
+      "displayName": "JSON Injector",
+      "icon": "Braces",
+      "accent": "utility",
+      "fields": [
+        {
+          "id": "data",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "JSON Data",
+          "variant": "Json",
+          "initialValue": {}
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "output",
+          "displayName": "Output",
+          "variant": "Data"
+        }
+      ],
+      "description": "Injects JSON data into the flow."
+    },
     "Core.Utils.Message.Compose": {
       "id": "Core.Utils.Message.Compose",
       "displayName": "Compose Message",
-      "icon": "MessageSquarePlus",
+      "icon": "Mail",
       "accent": "port-Message",
       "fields": [
         {

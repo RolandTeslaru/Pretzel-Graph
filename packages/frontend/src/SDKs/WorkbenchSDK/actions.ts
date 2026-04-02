@@ -17,6 +17,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             recreate:          withCommit((...props) => setState(s => { reducers.node.recreate(s,       ...props) })),
             remove:            withCommit((...props) => setState(s => { reducers.node.remove(s,         ...props) })),
             duplicate:         withCommit((...props) => setState(s => { reducers.node.duplicate(s,      ...props) })),
+            setDisabled:       withCommit((...props) => setState(s => { reducers.node.setDisabled(s,    ...props) })),
             setMinimized:      withCommit((...props) => setState(s => { reducers.node.setMinimized(s,   ...props) })),
             setFlipped:        withCommit((...props) => setState(s => { reducers.node.setFlipped(s,     ...props) })),
             setDisplayName:    withCommit((...props) => setState(s => { reducers.node.setDisplayName(s, ...props) })),
@@ -119,6 +120,7 @@ export interface _WorkbenchSDKActions {
         create              : DropFirstArg<WorkbenchSDK.Reducers['node']['create']>;
         recreate            : DropFirstArg<WorkbenchSDK.Reducers['node']['recreate']>;
         duplicate           : DropFirstArg<WorkbenchSDK.Reducers['node']['duplicate']>;
+        setDisabled         : DropFirstArg<WorkbenchSDK.Reducers['node']['setDisabled']>;
         setMinimized        : DropFirstArg<WorkbenchSDK.Reducers['node']['setMinimized']>;
         setFlipped          : DropFirstArg<WorkbenchSDK.Reducers['node']['setFlipped']>;
         setDisplayName      : DropFirstArg<WorkbenchSDK.Reducers['node']['setDisplayName']>;

@@ -11,20 +11,24 @@ type Value       = Foundations.Field.Condition.Value
 export const conditionActions = {
     setLeftValue: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleId: RuleId, value: string) => {
         WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Value) => {
-            prev.rules[ruleId].leftOperand = value
+            prev.rules[ruleId] = { ...prev.rules[ruleId], leftOperand: value } as Foundations.Field.Condition.Rule
             return prev;
         })
     },
     setOperator: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleId: RuleId, value: Operator, dataType?: DataType) => {
         WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Value) => {
-            prev.rules[ruleId].operator = value
-            if (dataType !== undefined) prev.rules[ruleId].dataType = dataType
+            const current = prev.rules[ruleId]
+            prev.rules[ruleId] = {
+                ...current,
+                dataType: dataType ?? current.dataType,
+                operator: value,
+            } as Foundations.Field.Condition.Rule
             return prev;
         })
     },
     setRightValue: (nodeId: Workflow.Node.Id, field: Foundations.Field, ruleId: RuleId, value: string) => {
         WorkbenchSDK.actions.field.setValue(nodeId, field, (prev: Value) => {
-            prev.rules[ruleId].rightOperand = value
+            prev.rules[ruleId] = { ...prev.rules[ruleId], rightOperand: value } as Foundations.Field.Condition.Rule
             return prev;
         })
     },
