@@ -71,6 +71,8 @@ code {
 }
 
 :root {
+  --node-accent-mix: 32%;
+  --node-accent-base: var(--card);
   --background: theme(--color-gray-200);
   --foreground: #2C1810;
   --card: #ffffff;
@@ -253,12 +255,14 @@ code {
 }
 
 .dark {
-  --background: theme(--color-stone-950);
+  --node-accent-mix: 32%;
+  --node-accent-base: theme(--color-black);
+  --background: theme(--color-neutral-950);
   --foreground: theme(--color-white);
-  --card: theme(--color-stone-800);
+  --card: theme(--color-neutral-800);
   --card-foreground: theme(--color-white);
-  --popover: theme(--color-stone-800);
-  --popover-foreground: theme(--color-stone-100);
+  --popover: theme(--color-neutral-800);
+  --popover-foreground: theme(--color-neutral-100);
 
   --primary: theme(--color-orange-500);
   --primary-foreground: theme(--color-white);
@@ -266,7 +270,7 @@ code {
 
   --secondary: theme(--color-neutral-700);
   --secondary-foreground: theme(--color-white);
-  --muted: theme(--color-stone-700);
+  --muted: theme(--color-neutral-700);
   --muted-foreground: theme(--color-neutral-400);
   --accent: theme(--color-neutral-700);
   --accent-foreground: theme(--color-white);

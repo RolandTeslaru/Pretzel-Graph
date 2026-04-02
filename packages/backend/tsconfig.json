@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
         "target": "ES2020",
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
         "paths": {
             "@/*": [
                 "./src/*"
@@ -27,6 +27,12 @@
         "skipLibCheck": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true
+    },
+    "ts-node": {
+        "compilerOptions": {
+            "module": "CommonJS",
+            "moduleResolution": "Node10"
+        }
     },
     "include": [
         "src/**/*"
