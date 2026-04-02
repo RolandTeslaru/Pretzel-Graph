@@ -68,7 +68,7 @@ class CatalogueServiceImpl {
 
         } catch (error: any) {
             // If reconcile.ts doesn't exist, try to load blueprint and return default Identity reconcile
-            if (error.code === 'MODULE_NOT_FOUND') {
+            if (error.code === 'MODULE_NOT_FOUND' || error.code === 'ERR_MODULE_NOT_FOUND') {
                 try {
                     const bpModule = await import(blueprintPath);
                     const Blueprint = bpModule.Blueprint;
