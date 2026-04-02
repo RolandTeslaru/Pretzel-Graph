@@ -1,5 +1,5 @@
 import { z } from "zod"
-
+import { evaluateRule as _evaluateRule, evaluateRuleGroup as _evaluateRuleGroup, evaluateCondition as _evaluateCondition } from "../utils";
 export namespace Foundations {
     export const ArtifactId = z.string().brand("ArtifactId")
     export type ArtifactId = z.infer<typeof ArtifactId>
@@ -197,13 +197,29 @@ export namespace Foundations {
                 export type Id = z.infer<typeof Id>
                 export const createId = () => Id.parse(crypto.randomUUID())
 
-                export const Schema = z.object({
+                const Base = z.object({
                     id: Id,
-                    dataType: DataType,
                     leftOperand: z.string(),
-                    operator: Operator.Schema,
                     rightOperand: z.string().optional(),
                 })
+
+                export const String   = Base.extend({ dataType: z.literal("string"),   operator: Operator.String })
+                export const Number   = Base.extend({ dataType: z.literal("number"),   operator: Operator.Number })
+                export const DateTime = Base.extend({ dataType: z.literal("dateTime"), operator: Operator.DateTime })
+                export const Boolean  = Base.extend({ dataType: z.literal("boolean"),  operator: Operator.Boolean })
+                export const Array    = Base.extend({ dataType: z.literal("array"),    operator: Operator.Array })
+                export const Object   = Base.extend({ dataType: z.literal("object"),   operator: Operator.Object })
+
+                export type String   = z.infer<typeof String>
+                export type Number   = z.infer<typeof Number>
+                export type DateTime = z.infer<typeof DateTime>
+                export type Boolean  = z.infer<typeof Boolean>
+                export type Array    = z.infer<typeof Array>
+                export type Object   = z.infer<typeof Object>
+
+                export const Schema = z.discriminatedUnion("dataType", [
+                    String, Number, DateTime, Boolean, Array, Object,
+                ])
             }
             export type Rule = z.infer<typeof Rule.Schema>
 
@@ -231,6 +247,11 @@ export namespace Foundations {
                 variant: configLiteral("Condition"),
                 initialValue: Value,
             });
+
+
+            export const evaluateRule = _evaluateRule;
+            export const evaluateRuleGroup = _evaluateRuleGroup;
+            export const evaluate = _evaluateCondition;
         }
 
 
