@@ -5,7 +5,7 @@
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
-        "build": "tsc",
+        "build": "tsc --build tsconfig.build.json",
         "dev": "concurrently \"npm:watch:indexes\" \"tsx watch src/server.ts\" --names \"INDEX,SERVER\" --prefix-colors \"blue,green\"",
         "start": "node dist/server.js",
         "generate-indexes": "tsx scripts/generateIndexes.ts",

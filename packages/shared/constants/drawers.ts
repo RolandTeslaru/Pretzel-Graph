@@ -22,7 +22,6 @@ export const CORE_DRAWERS = {
       "Core.Developer.Eval",
       "Core.Developer.ConsoleLog",
       "Core.Developer.Sleep",
-      "Core.Developer.JsonInjector",
       "Core.Developer.HttpRequest"
     ],
   },
@@ -74,8 +73,9 @@ export const CORE_DRAWERS = {
   utilities: {
     displayName: "Utilities",
     id: "utilities",
-    icon: "Wand2",
+    icon: "PencilRuler",
     blueprintIds: [
+      "Core.Utils.JsonInjector",
       "Core.Utils.Message.Compose",
     ],
   },

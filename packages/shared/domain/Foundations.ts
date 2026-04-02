@@ -10,15 +10,7 @@ export namespace Foundations {
         export const Id = z.string().brand("FieldId");
         export type Id = z.infer<typeof Id>;
 
-        export const Value = z.union([
-            z.string(),
-            z.number(),
-            z.boolean(),
-            z.array(z.string()),
-            z.array(z.number()),
-            z.array(z.boolean()),
-            z.record(z.string(), z.any()),
-        ]);
+        export const Value = z.json();
         export type Value = z.infer<typeof Value>
 
         export const Base = z.object({
@@ -625,5 +617,4 @@ export namespace Foundations {
 
     export type Blueprint = z.infer<typeof Blueprint.Schema>
 }
-
 

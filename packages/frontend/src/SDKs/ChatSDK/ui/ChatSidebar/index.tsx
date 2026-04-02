@@ -37,7 +37,7 @@ const ChatSidebarContent = () => {
                     Conversation
                 </h4>
 
-                <div className='flex flex-row gap-1 ml-auto my-auto h-auto'>
+                <div className='flex flex-row gap-2 ml-auto my-auto h-auto'>
                     <Button size="icon-xs" variant="ghost" className="" onClick={() => ChatSDK.actions.chat.new()}>
                         <SystemIcons.Plus className='text-secondary-foreground' />
                     </Button>

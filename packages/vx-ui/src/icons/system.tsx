@@ -669,3 +669,55 @@ export const Redo: React.FC<BaseIconProps> = (props) => (
     </BaseIcon>
 )
 Redo.displayName = "Redo"
+
+
+export const Power: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>
+    </BaseIcon>
+)
+Power.displayName = "Power"
+
+export const Hammer: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="m15 12-9.373 9.373a1 1 0 0 1-3.001-3L12 9"/>
+        <path d="m18 15 4-4"/>
+        <path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172v-.344a2 2 0 0 0-.586-1.414l-1.657-1.657A6 6 0 0 0 12.516 3H9l1.243 1.243A6 6 0 0 1 12 8.485V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5"/>
+    </BaseIcon>
+)
+Hammer.displayName = "Hammer"
+
+export const PencilRuler: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="M13 7 8.7 2.7a2.41 2.41 0 0 0-3.4 0L2.7 5.3a2.41 2.41 0 0 0 0 3.4L7 13"/>
+        <path d="m8 6 2-2"/>
+        <path d="m18 16 2-2"/>
+        <path d="m17 11 4.3 4.3c.94.94.94 2.46 0 3.4l-2.6 2.6c-.94.94-2.46.94-3.4 0L11 17"/>
+        <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>
+        <path d="m15 5 4 4"/>
+    </BaseIcon>
+)
+PencilRuler.displayName = "PencilRuler"
+
+export const Mail: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/>
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+    </BaseIcon>
+)
+Mail.displayName = "Mail"
+
+export const Wrench: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/>
+    </BaseIcon>
+)
+Wrench.displayName = "Wrench"
+
+export const Braces: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/>
+        <path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>
+    </BaseIcon>
+)
+Braces.displayName = "Braces"
