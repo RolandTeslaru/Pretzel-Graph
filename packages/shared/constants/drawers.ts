@@ -458,7 +458,7 @@ export const BUNDLE_DRAWERS = {
     displayName: "OpenRouter",
     id: "openrouter",
     icon: "OpenRouter",
-    blueprintIds: []
+    blueprintIds: ["OpenRouter.Chat"]
   },
   perplexity: {
     displayName: "Perplexity",

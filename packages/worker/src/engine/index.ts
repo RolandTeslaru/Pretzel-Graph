@@ -186,10 +186,12 @@ export class AggexEngine {
         if (incomingEdges)
             Object.assign(edgeStateUpdate, this.applyEdgeStateUpdate(incomingEdges, "completed"));
 
-        // Set all outgoing edges to preparing
-        const outgoingEdges = this.workflowCache.outgoingEdgesMap[entry.wfNode.id];
-        if (outgoingEdges)
-            Object.assign(edgeStateUpdate, this.applyEdgeStateUpdate(outgoingEdges, "preparing"));
+        // Set all outgoing edges to preparing (skip for router nodes — only the taken branch should light up)
+        if (!('isRouterNode' in entry.instance)) {
+            const outgoingEdges = this.workflowCache.outgoingEdgesMap[entry.wfNode.id];
+            if (outgoingEdges)
+                Object.assign(edgeStateUpdate, this.applyEdgeStateUpdate(outgoingEdges, "preparing"));
+        }
 
         this.activeNodes.add(nodeId)
 
@@ -244,7 +246,7 @@ export class AggexEngine {
 
 
 
-    private async onNodeCompleted(vertexId: Vertex.Id) {
+    private async onNodeCompleted(vertexId: Vertex.Id, resolvedOutSignals: Set<Vertex.Id> | void) {
         this.activeNodes.delete(vertexId);
 
         const entry = this.nodeInstanceMap.get(vertexId);
@@ -253,11 +255,23 @@ export class AggexEngine {
 
         const projectedOutput = this.context.session.node_output_projections[entry.wfNode.id];
 
-        // Set all outgoing edges to waiting and increment runCount
-        const outgoingEdges = this.workflowCache.outgoingEdgesMap[entry.wfNode.id];
-        const edgeStateUpdate: ExecutionSession["edge_state"] = outgoingEdges
-            ? this.applyEdgeStateUpdate(outgoingEdges, "waiting", s => { s.runCount += 1; })
-            : {};
+        // Set outgoing edges to waiting and increment runCount
+        // For router nodes, only update edges for the taken branches
+        const allOutgoingEdges = this.workflowCache.outgoingEdgesMap[entry.wfNode.id];
+        let edgeStateUpdate: ExecutionSession["edge_state"] = {};
+
+        if (allOutgoingEdges) {
+            if ('isRouterNode' in entry.instance && resolvedOutSignals) {
+                const takenEdges: Record<string, Workflow.Edge.Id> = {};
+                for (const [targetId, edgeId] of Object.entries(allOutgoingEdges)) {
+                    if (resolvedOutSignals.has(targetId as unknown as Vertex.Id))
+                        takenEdges[targetId] = edgeId;
+                }
+                edgeStateUpdate = this.applyEdgeStateUpdate(takenEdges, "waiting", s => { s.runCount += 1; });
+            } else {
+                edgeStateUpdate = this.applyEdgeStateUpdate(allOutgoingEdges, "waiting", s => { s.runCount += 1; });
+            }
+        }
 
         this.emit<ExecutionSession.Event.Node.Completed>({
             executionSessionId: this.context.session.id,
