@@ -1,0 +1,22 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "paths": {
+            "src/*": [
+                "./src/*"
+            ],
+            "@vx-agent-editor/shared/*": [
+                "../shared/dist/*"
+            ],
+            "@vx-agent-editor/blueprints/*": [
+                "../blueprints/src/*"
+            ],
+            "@vx-agent-editor/nodes/*": [
+                "../nodes/src/*"
+            ]
+        }
+    },
+    "references": [
+        { "path": "../shared" }
+    ]
+}
