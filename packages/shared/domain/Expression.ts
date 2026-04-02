@@ -17,9 +17,10 @@ export namespace Expression {
      * "100"                          →  "100"
      */
     export function preprocess(
-        expression: string,
+        expression: string | undefined,
         portValues: Record<string, unknown>
-    ): string {
+    ): string { 
+        if (!expression) return "";
         return expression.replace(PORT_REF_PATTERN, (match, portName: string) => {
             if (!(portName in portValues))
                 throw new ExpressionError(`Unknown port reference: $${portName}`)

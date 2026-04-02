@@ -1,6 +1,6 @@
 {
-  "version": "1775033720719",
-  "generatedAt": "2026-04-01T08:55:20.719Z",
+  "version": "1775144993811",
+  "generatedAt": "2026-04-02T15:49:53.811Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -693,7 +693,7 @@
         {
           "id": "output",
           "displayName": "Output",
-          "variant": "DataFrame"
+          "variant": "Data"
         }
       ],
       "description": "Injects JSON data into the flow."
@@ -816,10 +816,10 @@
             "rules": {
               "rule1": {
                 "id": "rule1",
-                "dataType": "string",
                 "leftOperand": "",
-                "operator": "equals",
-                "rightOperand": ""
+                "rightOperand": "",
+                "dataType": "string",
+                "operator": "equals"
               }
             },
             "groups": {
@@ -954,10 +954,10 @@
             "rules": {
               "rule1": {
                 "id": "rule1",
-                "dataType": "string",
                 "leftOperand": "",
-                "operator": "equals",
-                "rightOperand": ""
+                "rightOperand": "",
+                "dataType": "string",
+                "operator": "equals"
               }
             },
             "groups": {
@@ -1024,10 +1024,10 @@
             "rules": {
               "rule1": {
                 "id": "rule1",
-                "dataType": "string",
                 "leftOperand": "",
-                "operator": "equals",
-                "rightOperand": ""
+                "rightOperand": "",
+                "dataType": "string",
+                "operator": "equals"
               }
             },
             "groups": {
@@ -1101,6 +1101,49 @@
         }
       ],
       "description": "This node is a Text input"
+    },
+    "Core.Utils.Message.Compose": {
+      "id": "Core.Utils.Message.Compose",
+      "displayName": "Compose Message",
+      "icon": "MessageSquarePlus",
+      "accent": "port-Message",
+      "fields": [
+        {
+          "id": "role",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Role",
+          "variant": "MultiOption",
+          "initialValue": "Human",
+          "options": [
+            "Human",
+            "System",
+            "Tool"
+          ],
+          "kind": "tab"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "data",
+          "displayName": "Data",
+          "isDynamic": true,
+          "syncGroupId": "data",
+          "internal": false,
+          "unresolvedVariant": "Unresolved",
+          "variant": "Unresolved",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "message",
+          "displayName": "Message",
+          "variant": "Message"
+        }
+      ],
+      "description": "Converts any data into a Human, System, or Tool message by serializing it into the message content."
     },
     "Core.Utils.Tool.Catalog": {
       "id": "Core.Utils.Tool.Catalog",

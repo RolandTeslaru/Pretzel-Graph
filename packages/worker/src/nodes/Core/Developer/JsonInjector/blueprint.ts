@@ -15,7 +15,7 @@ export const Blueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.DataFrame({
+        OutputBuilder.Data({
             id: "output",
             displayName: "Output",
         }),
