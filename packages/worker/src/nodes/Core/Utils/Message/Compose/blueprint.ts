@@ -4,7 +4,7 @@ export const Blueprint = defineBlueprint({
     id: "Core.Utils.Message.Compose",
     displayName: "Compose Message",
     description: "Converts any data into a Human, System, or Tool message by serializing it into the message content.",
-    icon: "MessageSquarePlus",
+    icon: "Mail",
     accent: "port-Message",
     fields: [
         FieldBuilder.MultiOption({

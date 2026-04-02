@@ -30,7 +30,16 @@ export const NodeCustomToolbar: React.FC<Props> = ({ node }) => {
             >
                 <SystemIcons.ArrowLeftRight />
             </Button>
-            {/* <Button variant="success" size="xs" className='text-xs'>Simulate</Button> */}
+            <Button variant="ghost" size="icon-xs" className='text-xs'
+                onClick={() => {
+                    WorkbenchSDK.actions.node.setDisabled(node.id, !node.isDisabled)
+                }}
+            >
+                <SystemIcons.Power className={`${node.isDisabled ? 'text-red-500' : ''} stroke-2`} />
+            </Button>
+            <Button variant="ghost-success" size="icon-xs" className='text-xs'>
+                <SystemIcons.Play className='text-emerald-800/60'/>
+            </Button>
             <MoreOptionsDropdown node={node} />
         </div>
     )
@@ -40,11 +49,11 @@ export const NodeCustomToolbar: React.FC<Props> = ({ node }) => {
 const MoreOptionsDropdown: React.FC<Props> = ({ node }) => {
     return (
         <DropdownMenu.Root>
-            <Button variant="ghost" size="icon-xs" className='p-0! mt-0! ' >
-                <DropdownMenu.Trigger className='p-0!' >
-                    <SystemIcons.Ellipsis />
-                </DropdownMenu.Trigger>
-            </Button>
+            <DropdownMenu.Trigger className='p-0!' asChild >
+                <Button variant="ghost" size="icon-xs" className='p-0! mt-0! ' >
+                        <SystemIcons.Ellipsis />
+                </Button>
+            </DropdownMenu.Trigger>
             <DropdownMenu.Content align="start">
                 <DropdownMenu.Item
                     onClick={() => WorkbenchSDK.actions.clipboard.copyNode(node.id)}

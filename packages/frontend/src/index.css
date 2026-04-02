@@ -195,7 +195,7 @@ code {
   --port-Document-accent: theme(--color-lime-200);
   --port-Document-glow: theme(--color-lime-600);
 
-  --port-Data: theme(--color-red-500);
+  --port-Data: theme(--color-red-700);
   --port-Data-foreground: theme(--color-red-100);
   --port-Data-accent: theme(--color-red-400);
   --port-Data-glow: theme(--color-red-600);
@@ -228,6 +228,9 @@ code {
   --port-UnresolvedList-foreground: theme(--color-zinc-500);
   --port-UnresolvedList-accent: theme(--color-zinc-300);
   --port-UnresolvedList-glow: theme(--color-zinc-600);
+
+  --utility: theme(--color-neutral-400);
+  --utility-foreground: theme(--color-neutral-700);
 
   --group-routing: theme(--color-neutral-300);
 
@@ -302,6 +305,9 @@ code {
 
   --node-bg-mix: 20%;
   --node-border-mix: 50%;
+
+  --utility: theme(--color-neutral-500);
+  --utility-foreground: theme(--color-neutral-300);
 
   --group-routing: theme(--color-neutral-500);
 

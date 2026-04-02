@@ -1,11 +1,11 @@
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
-    id: "Core.Developer.JsonInjector",
+    id: "Core.Utils.JsonInjector",
     displayName: "JSON Injector",
     description: "Injects JSON data into the flow.",
-    icon: "Code",
-    accent: "port-null",
+    icon: "Braces",
+    accent: "utility",
     fields: [
         FieldBuilder.Json({
             id: "data",

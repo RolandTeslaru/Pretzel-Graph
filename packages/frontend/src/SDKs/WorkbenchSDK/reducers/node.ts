@@ -245,6 +245,10 @@ export const nodeReducers = {
             (output as any).variant = output.unresolvedVariant ?? "Unresolved";
         })
     },
+    setDisabled: (s, nodeId, isDisabled) => {
+        s.isDirty = true;
+        s.workflow.data.nodes[nodeId].isDisabled = isDisabled;
+    },
     setMinimized: (s, nodeId, isMinimized) => {
         s.isDirty = true;
         s.workflow.data.nodes[nodeId].isMinimized = isMinimized;
@@ -283,6 +287,7 @@ interface NodeReducers {
     recreate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
     duplicate      : (state: WorkbenchSDK.State, originalNode: Workflow.Node, position?: { x: number, y: number }) => Workflow.Node;
     reconcile      : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
+    setDisabled    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isDisabled: boolean) => void;
     setMinimized   : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void;
     setFlipped     : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isFlipped: boolean) => void;
     setDisplayName : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDisplayName: string) => void;

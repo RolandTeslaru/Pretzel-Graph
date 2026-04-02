@@ -1,6 +1,8 @@
 import { Expression, Foundations } from "./domain";
 
 export const evaluateRule = (rule: Foundations.Field.Condition.Rule, inputs: Record<string, any>): boolean => {
+    console.log("Evaluating rule:", Expression.preprocess(rule.leftOperand, inputs));
+    
     const left = JSON.parse(Expression.preprocess(rule.leftOperand, inputs));
 
     // Shared operators — present on every dataType
