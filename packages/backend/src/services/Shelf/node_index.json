@@ -1,6 +1,6 @@
 {
-  "version": "1775146719610",
-  "generatedAt": "2026-04-02T16:18:39.610Z",
+  "version": "1775158036046",
+  "generatedAt": "2026-04-02T19:27:16.046Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -1397,6 +1397,110 @@
         }
       ],
       "description": "This node talks to OpenAI's GPT chat models via the Chat Completions API"
+    },
+    "OpenRouter.Chat": {
+      "id": "OpenRouter.Chat",
+      "displayName": "OpenRouter Chat",
+      "icon": "OpenRouter",
+      "accent": "port-LanguageModel",
+      "fields": [
+        {
+          "id": "openrouterApiKey",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "OpenRouter API Key",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "provider",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Provider",
+          "tooltip": "Filter the model list by provider.",
+          "variant": "MultiOption",
+          "initialValue": "Google",
+          "options": [
+            "Anthropic",
+            "Google",
+            "OpenAI",
+            "Meta",
+            "DeepSeek",
+            "Mistral",
+            "Cohere",
+            "xAI"
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "model",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Model",
+          "variant": "MultiOption",
+          "initialValue": "google/gemini-3.1-pro-preview",
+          "options": [
+            "google/gemini-3.1-pro-preview",
+            "google/gemini-3.1-flash-lite-preview",
+            "google/gemini-3-flash-preview",
+            "google/gemma-4-31b-it"
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "temperature",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Temperature",
+          "tooltip": "Controls randomness in the output. Higher values make output more random.",
+          "variant": "Float",
+          "initialValue": 0.7,
+          "min": 0,
+          "max": 2,
+          "step": 0.1,
+          "slider": true
+        },
+        {
+          "id": "maxTokens",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Max Tokens",
+          "tooltip": "The maximum number of tokens to generate.",
+          "variant": "Integer",
+          "initialValue": 2048,
+          "min": 1,
+          "step": 1
+        },
+        {
+          "id": "topP",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Top P",
+          "tooltip": "Nucleus sampling: considers the tokens with top_p probability mass.",
+          "variant": "Float",
+          "initialValue": 1,
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "slider": true
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "languageModel",
+          "displayName": "Language Model",
+          "tooltip": "The OpenRouter language model instance.",
+          "variant": "LanguageModel"
+        }
+      ],
+      "description": "Connect to hundreds of models via OpenRouter's unified API"
     }
   }
 }
