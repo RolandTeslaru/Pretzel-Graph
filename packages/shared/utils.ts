@@ -1,9 +1,14 @@
 import { Expression, Foundations } from "./domain";
 
+// Evaluates a preprocessed JS expression string.
+// preprocess() inlines all port values as JSON literals, so the resulting
+// code is self-contained — no live references escape into the expression.
+function runExpression(code: string): unknown {
+    return new Function(`return (${code})`)()
+}
+
 export const evaluateRule = (rule: Foundations.Field.Condition.Rule, inputs: Record<string, any>): boolean => {
-    console.log("Evaluating rule:", Expression.preprocess(rule.leftOperand, inputs));
-    
-    const left = JSON.parse(Expression.preprocess(rule.leftOperand, inputs));
+    const left = runExpression(Expression.preprocess(rule.leftOperand, inputs));
 
     // Shared operators — present on every dataType
     if (rule.operator === "exists") return left !== undefined && left !== null;
@@ -12,7 +17,7 @@ export const evaluateRule = (rule: Foundations.Field.Condition.Rule, inputs: Rec
     if (rule.operator === "is_not_empty") return left !== "" && left !== null && left !== undefined && !(Array.isArray(left) && left.length === 0);
 
     const right = rule.rightOperand != null
-        ? JSON.parse(Expression.preprocess(rule.rightOperand, inputs))
+        ? runExpression(Expression.preprocess(rule.rightOperand, inputs))
         : undefined;
 
     switch (rule.dataType) {
@@ -47,8 +52,8 @@ export const evaluateRule = (rule: Foundations.Field.Condition.Rule, inputs: Rec
             throw new Error(`Unsupported operator "${rule.operator}" for number`);
         }
         case "dateTime": {
-            const l = new Date(left).getTime();
-            const r = new Date(right).getTime();
+            const l = new Date(left as string).getTime();
+            const r = new Date(right as string).getTime();
             switch (rule.operator) {
                 case "equals": return l === r;
                 case "not_equals": return l !== r;
