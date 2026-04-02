@@ -107,7 +107,7 @@ export class S2Engine {
 
     private async fireVertex(
         vertexId: Vertex.Id,
-        signals: Set<Vertex.Id>,
+        signals: Set<Vertex.Id>, // incoming signals that triggered this vertex to fire. For AND strategy, this will be the complete set of dependencies. For OR/XOR, this will be a subset of dependencies.
         ctx: S2ExecutionContext
     ) {
         console.log("Attempting to fire vertex", vertexId, "with incoming signals", signals);
@@ -125,7 +125,7 @@ export class S2Engine {
             if (ctx.settled) 
                 return;
 
-            await ctx.hooks.onVertexCompleted?.(vertexId);
+            await ctx.hooks.onVertexCompleted?.(vertexId, signalSet);
 
             // Dependents are fired without await — this is intentional.                                                                                                               
             // Parallel branches run concurrently; `activeTasks` tracks settlement.                                                                                                    
