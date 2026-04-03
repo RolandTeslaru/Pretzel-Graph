@@ -6,7 +6,7 @@ import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
 
 export const IntegerField = memo<RendererProps<'Integer'>>(({ field, nodeId, className }) => {
-    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id);
+    const [value, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field.id);
     const hasSlider = field.slider;
 
     let errorClass = ""
@@ -17,7 +17,7 @@ export const IntegerField = memo<RendererProps<'Integer'>>(({ field, nodeId, cla
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
             {hasSlider ?
                 <>
-                    <FieldLabel field={field} />
+                    <FieldLabel field={field} isReconciling={isReconciling} />
                     <div className='flex flex-row gap-2'>
                         <Slider
                             className={`pt-1 ${issue ? "opacity-50" : ""}`}
@@ -46,7 +46,7 @@ export const IntegerField = memo<RendererProps<'Integer'>>(({ field, nodeId, cla
                 </>
                 :
                 <>
-                    <FieldLabel field={field} />
+                    <FieldLabel field={field} isReconciling={isReconciling} />
                     <Input
                         type="number"
                         className={errorClass}

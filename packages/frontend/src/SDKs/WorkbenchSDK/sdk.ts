@@ -40,6 +40,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 draggedHandle: null,
                 cache: cloneDeep(Workflow.Cache.INITIAL),
                 issues: {},
+                reconcilingFields: {},
                 clipboard: {
                     nodes: new Set(),
                     edges: new Set(),
@@ -70,11 +71,15 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         return this.useStore(s => {
             const staticVals = s.workflow.data.staticValues[nodeId]
             if (!staticVals)
-                return [undefined, null] as const
+                return [undefined, null, false] as const
+
+            const isReconciling = s.reconcilingFields[nodeId]?.has(fieldId) ?? false
+
             const value = staticVals[fieldId] as T
             return [
                 value,
-                s.issues[nodeId]?.fields[fieldId] ?? null
+                s.issues[nodeId]?.fields[fieldId] ?? null,
+                isReconciling
             ] as const
         });
     }
@@ -132,6 +137,7 @@ export namespace WorkbenchSDK {
         lastSelection: OnSelectionChangeParams<NodeDriver, EdgeDriver> | null;
         clickedNodeId: Workflow.Node.Id | null;
         draggedHandle: Handle | null
+        reconcilingFields: Record<Workflow.Node.Id, Set<Foundations.Field.Id>>
         clipboard: {
             nodes: Set<Workflow.Node>
             edges: Set<Workflow.Edge>,
