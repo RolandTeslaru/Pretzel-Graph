@@ -37,6 +37,7 @@ export namespace Foundations {
             "Json",
             "List",
             "Condition",
+            "CaseList",
         ])
         export type Variant = z.infer<typeof Variant>
 
@@ -187,7 +188,7 @@ export namespace Foundations {
             export namespace Rule {
                 export const Id = z.string().brand("RuleId")
                 export type Id = z.infer<typeof Id>
-                export const createId = () => Id.parse(crypto.randomUUID())
+                export const createId = (id?: string) => Id.parse( id || crypto.randomUUID())
 
                 const Base = z.object({
                     id: Id,
@@ -218,7 +219,7 @@ export namespace Foundations {
             export namespace RuleGroup {
                 export const Id = z.string().brand("RuleGroupId")
                 export type Id = z.infer<typeof Id>
-                export const createId = () => Id.parse(crypto.randomUUID())
+                export const createId = (id?: string) => Id.parse( id || crypto.randomUUID())
 
                 export const Schema = z.object({
                     id: Id,
@@ -246,7 +247,45 @@ export namespace Foundations {
             export const evaluate = _evaluateCondition;
         }
 
+        export namespace CaseList {
+            export const Entry = z.object({
+                portId: z.string().brand("PortId").brand("OutputId"),
+                label: z.string(),
+                condition: Condition.Value,
+            });
+            export type Entry = z.infer<typeof Entry>;
 
+            export const Value = z.array(Entry);
+            export type Value = z.infer<typeof Value>;
+
+            export const Schema = Field.Base.extend({
+                variant: configLiteral("CaseList"),
+                initialValue: Value,
+            });
+
+            export const createEntry = (portId: string, label: string): Entry => {
+                const rootId = Condition.RuleGroup.createId("root");
+                return {
+                    portId: portId as Entry["portId"],
+                    label,
+                    condition: {
+                        rootId,
+                        rules: {
+                            [Condition.Rule.createId("rule1")]: {
+                                id: Condition.Rule.createId("rule1"),
+                                dataType: "string",
+                                leftOperand: "",
+                                operator: "equals",
+                                rightOperand: "",
+                            },
+                        } as Condition.Value["rules"],
+                        groups: {
+                            [rootId]: { id: rootId, combinator: "AND", children: [Condition.Rule.createId("rule1")] },
+                        } as Condition.Value["groups"],
+                    },
+                };
+            };
+        }
 
         export interface Integer extends z.infer<typeof Integer> { }
         export interface Float extends z.infer<typeof Float> { }
@@ -259,6 +298,7 @@ export namespace Foundations {
         export interface Json extends z.infer<typeof Json> { }
         export interface List extends z.infer<typeof List> { }
         export interface Condition extends z.infer<typeof Condition.Schema> { }
+        export interface CaseList extends z.infer<typeof CaseList.Schema> { }
 
         export const Schema = z.discriminatedUnion("variant", [
             Integer,
@@ -272,6 +312,7 @@ export namespace Foundations {
             Json,
             List,
             Condition.Schema,
+            CaseList.Schema,
         ]);
 
         export type Schema = z.infer<typeof Schema>;
@@ -309,7 +350,7 @@ export namespace Foundations {
         }
 
         export const Base = z.object({
-            id: z.string(),
+            id: Port.Id,
 
             displayName: z.string().optional(),
             tooltip: z.string().optional(),

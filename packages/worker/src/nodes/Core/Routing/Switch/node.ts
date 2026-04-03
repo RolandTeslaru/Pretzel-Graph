@@ -3,6 +3,7 @@ import { Blueprint } from "./blueprint";
 import { ExecutionContext } from "src/context";
 import { RuntimeNode, RuntimeRouterNode } from "src/node";
 import { InferInputs, InferOutputs, OneOf } from "src/types";
+import { Foundations } from "@vx-agent-editor/shared/domain";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeRouterNode<typeof Blueprint> {
@@ -12,17 +13,19 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
     protected override async onRun(
         context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
-    ): Promise<OneOf<InferOutputs<typeof Blueprint>>> {
+    ): Promise<Partial<InferOutputs<typeof Blueprint>>> { // we dont really know what routes will be generated, so we return partial outputs
 
-        const { condition } = this.fields;
+        const { cases } = this.fields;
         const { input } = inputs;
 
-        // TODO: Implement condition evaluation logic
-        const result = Boolean(condition);
 
-        if (result)
-            return { true: input };
-        else
-            return { false: input };
+        for (const { condition, portId } of cases) {
+            const result = Foundations.Field.Condition.evaluate(condition, inputs);
+            
+            if (result)
+                return { [portId]: input } as OneOf<InferOutputs<typeof Blueprint>>;
+        }
+        
+        return {}
     }
 }
