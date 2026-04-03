@@ -11,6 +11,7 @@ import { OtherField } from './Other'
 import { SecretField } from './Secret'
 import { ScriptField } from './Script'
 import { ConditionField } from './Condition'
+import { CaseListField } from './CaseList'
 import { JsonField } from './Json'
 
 export { FieldLabel } from './FieldLabel'
@@ -25,6 +26,7 @@ export { OtherField } from './Other'
 export { SecretField } from './Secret'
 export { ScriptField } from './Script'
 export { ConditionField } from './Condition'
+export { CaseListField } from './CaseList'
 export { JsonField } from './Json'
 
 // ── Dispatcher ──────────────────────────────────────────────
@@ -49,6 +51,7 @@ export const FIELD_RENDERER_MAP: FieldRendererMapType = {
     Script: ScriptField,
     Json: JsonField,
     Condition: ConditionField,
+    CaseList: CaseListField,
 }
 
 /** Renders the appropriate field component based on variant */
