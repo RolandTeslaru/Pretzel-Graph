@@ -597,6 +597,24 @@ export namespace Foundations {
         export const Id = z.string().brand("BlueprintId")
         export type Id = z.infer<typeof Id>
 
+        export const ReconciledId = z.string().brand("ReconciledBlueprintId")
+        export type ReconciledId = z.infer<typeof ReconciledId>
+
+        export const createReconciledId = (
+            blueprintId: Blueprint.Id,
+            fields: Foundations.Field[] | Readonly<Foundations.Field[]>,
+            values: Record<Foundations.Field.Id, Foundations.Field.Value>,
+            anticipate?: Partial<Record<Foundations.Field.Id, Foundations.Field.Value>>
+        ): Blueprint.ReconciledId => {
+            const parts = fields
+                .filter(f => f.reconcile)
+                .map(f => `${f.id}=${String(anticipate?.[f.id] ?? values[f.id] ?? f.initialValue)}`)
+                .sort()
+                .join(",");
+
+            return `${blueprintId}:${parts}` as Blueprint.ReconciledId;
+        }
+
         export namespace Meta {
             export const Schema = z.object({
                 id: Blueprint.Id,

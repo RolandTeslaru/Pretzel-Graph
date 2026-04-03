@@ -77,6 +77,26 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
                 setState(s => { sdk.reducers.searchFilter.setDataTypes(s, ...props) }),
             toggleDataType: (...props: Parameters<ShelfSDK.Reducers["searchFilter"]["toggleDataType"]> extends [any, ...infer Rest] ? Rest : never) =>
                 setState(s => { sdk.reducers.searchFilter.toggleDataType(s, ...props) }),
+        },
+
+        getReconciledBlueprint: async (blueprint, fieldId, newValue, fieldValues) => {
+            const reconciledId = Foundations.Blueprint.createReconciledId(
+                blueprint.id, blueprint.fields, fieldValues, { [fieldId]: newValue }
+            );
+
+            const cached = getState().reconciledBlueprintsCache[reconciledId];
+            // if(cached)
+            //     toast.success("Using cached reconciled blueprint");
+            //  else
+            //     toast.info("Reconciling blueprint...");
+            if (cached) return cached;
+
+            const { reconciledBlueprint } = await Shelf.API.Blueprint.reconcile(api, {
+                blueprint, fieldId, newValue
+            });
+
+            setState(s => { s.reconciledBlueprintsCache[reconciledId] = reconciledBlueprint });
+            return reconciledBlueprint;
         }
     } satisfies _ShelfActions
 }
@@ -95,4 +115,11 @@ export type _ShelfActions = {
         setDataTypes: DropFirstArg<ShelfSDK.Reducers["searchFilter"]["setDataTypes"]>;
         toggleDataType: DropFirstArg<ShelfSDK.Reducers["searchFilter"]["toggleDataType"]>;
     };
+
+    getReconciledBlueprint: (
+        blueprint: Foundations.Blueprint,
+        fieldId: Foundations.Field.Id,
+        newValue: Foundations.Field.Value,
+        fieldValues: Record<Foundations.Field.Id, Foundations.Field.Value>
+    ) => Promise<Foundations.Blueprint>;
 }
