@@ -4,6 +4,7 @@ import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { api } from '../ApiInterceptorSDK';
 import { commit, commitImmediately, withCommit, withAsyncCommit, debouncedValidateField, debouncedValidateInput } from './utils/actions';
 import { ShelfSDK } from '../ShelfSDK/sdk';
+import { toast } from 'sonner';
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
@@ -45,10 +46,18 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                         const fieldValues = sel.getFieldsStaticValues(sdk.state, nodeId);
 
                         const reconciledBlueprint = await ShelfSDK.actions.getReconciledBlueprint(
-                            blueprint, field.id, value, fieldValues
+                            blueprint, field.id, value, fieldValues,
+                            {
+                                onApiFetch: () => {
+                                    setState(s => { reducers.field.markAsReconciling(s, nodeId, field.id) })
+                                }
+                            }
                         );
 
-                        setState(s => { reducers.node.reconcile(s, nodeId, reconciledBlueprint) });
+                        setState(s => { 
+                            reducers.node.reconcile(s, nodeId, reconciledBlueprint)
+                            reducers.field.unmarkAsReconciling(s, nodeId, field.id);
+                        });
                     } catch (error) {
                         throw new Error(`Could not reconcile node ${nodeId} via field ${field.id}. ${error instanceof Error ? error.message : String(error)}`)
                     }

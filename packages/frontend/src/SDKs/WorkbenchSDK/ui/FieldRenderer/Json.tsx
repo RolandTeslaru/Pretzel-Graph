@@ -7,7 +7,7 @@ import type { RendererProps } from './FieldLabel'
 const formatJson = (value: unknown) => JSON.stringify(value, null, 2) ?? 'null'
 
 export const JsonField = memo<RendererProps<'Json'>>(({ field, nodeId, className }) => {
-    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id)
+    const [value, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field.id)
     const formattedValue = formatJson(value ?? field.initialValue)
     const [draft, setDraft] = useState(() => formattedValue)
     const [parseError, setParseError] = useState<string | null>(null)
@@ -23,7 +23,7 @@ export const JsonField = memo<RendererProps<'Json'>>(({ field, nodeId, className
 
     return (
         <div className={`${className ?? ''} w-full nodrag cursor-auto flex flex-col gap-1`}>
-            <FieldLabel field={field} />
+            <FieldLabel field={field} isReconciling={isReconciling} />
             <Textarea
                 value={draft}
                 onChange={(e) => {

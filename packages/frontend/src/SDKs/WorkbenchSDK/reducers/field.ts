@@ -20,6 +20,15 @@ export const fieldReducers = {
         delete s.issues[nodeId].fields[field.id];
 
         return false;
+    },
+    markAsReconciling: (s, nodeId, fieldId) => {
+        if (!s.reconcilingFields[nodeId])
+            s.reconcilingFields[nodeId] = new Set();
+
+        s.reconcilingFields[nodeId].add(fieldId);
+    },
+    unmarkAsReconciling: (s, nodeId, fieldId) => {
+        s.reconcilingFields[nodeId]?.delete(fieldId);
     }
 } satisfies FieldReducers
 
@@ -36,4 +45,14 @@ type FieldReducers = {
         nodeId: Workflow.Node.Id,
         field: Foundations.Field
     ) => boolean
+    markAsReconciling: (
+        state: WorkbenchSDK.State,
+        nodeId: Workflow.Node.Id,
+        fieldId: Foundations.Field.Id
+    ) => void
+    unmarkAsReconciling: (
+        state: WorkbenchSDK.State,
+        nodeId: Workflow.Node.Id,
+        fieldId: Foundations.Field.Id
+    ) => void
 }
