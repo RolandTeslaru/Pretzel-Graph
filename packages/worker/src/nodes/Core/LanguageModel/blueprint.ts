@@ -21,16 +21,16 @@ export const Blueprint = defineBlueprint({
             displayName: "Language Model",
             required: true
         }),
+        InputBuilder.Message({
+            id: "systemMessage",
+            displayName: "System Message",
+            tooltip: "A system message that helps set the behavior of the assistant"
+        }),
         InputBuilder.MessageList({
             id: "messages",
             displayName: "Messages",
             required: true,
         }),
-        InputBuilder.Message({
-            id: "systemMessage",
-            displayName: "System Message",
-            tooltip: "A system message that helps set the behavior of the assistant"
-        })
     ],
     outputs: [
         OutputBuilder.Message({

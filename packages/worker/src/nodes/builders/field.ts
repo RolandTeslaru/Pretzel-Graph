@@ -266,6 +266,18 @@ export namespace FieldBuilder {
         };
     }
 
+    export function CaseList<TId extends string, TReq extends boolean = false>(
+        config: { initialValue?: Foundations.Field.CaseList.Value } & BaseProps<TId, TReq>
+    ): Ret<TId, "CaseList", Foundations.Field.CaseList, TReq, true> {
+        return {
+            ...buildBase(config),
+            variant: "CaseList",
+            initialValue: config.initialValue ?? [],
+        };
+    }
+
+
+
     export function Condition<TId extends string, TReq extends boolean = false>(config: {
         initialValue: Foundations.Field.Condition.Value;
     } & BaseProps<TId, TReq>): Ret<TId, "Condition", Foundations.Field.Condition, TReq, true>;

@@ -1,6 +1,6 @@
 {
-  "version": "1775209605069",
-  "generatedAt": "2026-04-03T09:46:45.069Z",
+  "version": "1775231344658",
+  "generatedAt": "2026-04-03T15:49:04.658Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -127,13 +127,6 @@
           "required": true
         },
         {
-          "id": "messages",
-          "displayName": "Messages",
-          "internal": false,
-          "variant": "MessageList",
-          "required": true
-        },
-        {
           "id": "systemMessage",
           "displayName": "System Message",
           "tooltip": "A system message that helps set the behavior of the assistant",
@@ -141,6 +134,13 @@
           "variant": "Message",
           "initialValue": "",
           "required": false
+        },
+        {
+          "id": "messages",
+          "displayName": "Messages",
+          "internal": false,
+          "variant": "MessageList",
+          "required": true
         }
       ],
       "outputs": [
@@ -917,33 +917,90 @@
       "accent": "group-routing",
       "fields": [
         {
-          "id": "condition",
+          "id": "cases",
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "displayName": "Condition",
-          "variant": "Condition",
-          "initialValue": {
-            "rootId": "root",
-            "rules": {
-              "rule1": {
-                "id": "rule1",
-                "leftOperand": "",
-                "rightOperand": "",
-                "dataType": "string",
-                "operator": "equals"
+          "displayName": "Cases",
+          "tooltip": "List of cases to evaluate. All cases that evaluate to true will receive the input.",
+          "variant": "CaseList",
+          "initialValue": [
+            {
+              "portId": "case-1",
+              "label": "Case 1",
+              "condition": {
+                "rootId": "root",
+                "rules": {
+                  "rule1": {
+                    "id": "rule1",
+                    "leftOperand": "",
+                    "rightOperand": "",
+                    "dataType": "string",
+                    "operator": "equals"
+                  }
+                },
+                "groups": {
+                  "root": {
+                    "id": "root",
+                    "combinator": "AND",
+                    "children": [
+                      "rule1"
+                    ]
+                  }
+                }
               }
             },
-            "groups": {
-              "root": {
-                "id": "root",
-                "combinator": "AND",
-                "children": [
-                  "rule1"
-                ]
+            {
+              "portId": "case-2",
+              "label": "Case 2",
+              "condition": {
+                "rootId": "root",
+                "rules": {
+                  "rule1": {
+                    "id": "rule1",
+                    "leftOperand": "",
+                    "rightOperand": "",
+                    "dataType": "string",
+                    "operator": "equals"
+                  }
+                },
+                "groups": {
+                  "root": {
+                    "id": "root",
+                    "combinator": "AND",
+                    "children": [
+                      "rule1"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "portId": "case-3",
+              "label": "Case 3",
+              "condition": {
+                "rootId": "root",
+                "rules": {
+                  "rule1": {
+                    "id": "rule1",
+                    "leftOperand": "",
+                    "rightOperand": "",
+                    "dataType": "string",
+                    "operator": "equals"
+                  }
+                },
+                "groups": {
+                  "root": {
+                    "id": "root",
+                    "combinator": "AND",
+                    "children": [
+                      "rule1"
+                    ]
+                  }
+                }
               }
             }
-          }
+          ]
         }
       ],
       "inputs": [
@@ -960,25 +1017,31 @@
       ],
       "outputs": [
         {
-          "id": "true",
-          "displayName": "True",
-          "tooltip": "Output when condition is true.",
+          "id": "case-1",
+          "displayName": "Case 1",
           "isDynamic": true,
-          "syncGroupId": "data",
+          "syncGroupId": "condition",
           "unresolvedVariant": "Unresolved",
           "variant": "Unresolved"
         },
         {
-          "id": "false",
-          "displayName": "False",
-          "tooltip": "Output when condition is false.",
+          "id": "case-2",
+          "displayName": "Case 2",
           "isDynamic": true,
-          "syncGroupId": "data",
+          "syncGroupId": "condition",
+          "unresolvedVariant": "Unresolved",
+          "variant": "Unresolved"
+        },
+        {
+          "id": "case-3",
+          "displayName": "Case 3",
+          "isDynamic": true,
+          "syncGroupId": "condition",
           "unresolvedVariant": "Unresolved",
           "variant": "Unresolved"
         }
       ],
-      "description": "Routes input to multiple outputs simultaneously based on independent conditions."
+      "description": "Routes input to all outputs whose condition evaluates to true."
     },
     "Core.Routing.Switch": {
       "id": "Core.Routing.Switch",
@@ -987,33 +1050,90 @@
       "accent": "group-routing",
       "fields": [
         {
-          "id": "condition",
+          "id": "cases",
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "displayName": "Condition",
-          "variant": "Condition",
-          "initialValue": {
-            "rootId": "root",
-            "rules": {
-              "rule1": {
-                "id": "rule1",
-                "leftOperand": "",
-                "rightOperand": "",
-                "dataType": "string",
-                "operator": "equals"
+          "displayName": "Cases",
+          "tooltip": "List of cases to evaluate for routing. The first case that evaluates to true will determine the output port to route to.",
+          "variant": "CaseList",
+          "initialValue": [
+            {
+              "portId": "case-1",
+              "label": "Case 1",
+              "condition": {
+                "rootId": "root",
+                "rules": {
+                  "rule1": {
+                    "id": "rule1",
+                    "leftOperand": "",
+                    "rightOperand": "",
+                    "dataType": "string",
+                    "operator": "equals"
+                  }
+                },
+                "groups": {
+                  "root": {
+                    "id": "root",
+                    "combinator": "AND",
+                    "children": [
+                      "rule1"
+                    ]
+                  }
+                }
               }
             },
-            "groups": {
-              "root": {
-                "id": "root",
-                "combinator": "AND",
-                "children": [
-                  "rule1"
-                ]
+            {
+              "portId": "case-2",
+              "label": "Case 2",
+              "condition": {
+                "rootId": "root",
+                "rules": {
+                  "rule1": {
+                    "id": "rule1",
+                    "leftOperand": "",
+                    "rightOperand": "",
+                    "dataType": "string",
+                    "operator": "equals"
+                  }
+                },
+                "groups": {
+                  "root": {
+                    "id": "root",
+                    "combinator": "AND",
+                    "children": [
+                      "rule1"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "portId": "case-3",
+              "label": "Case 3",
+              "condition": {
+                "rootId": "root",
+                "rules": {
+                  "rule1": {
+                    "id": "rule1",
+                    "leftOperand": "",
+                    "rightOperand": "",
+                    "dataType": "string",
+                    "operator": "equals"
+                  }
+                },
+                "groups": {
+                  "root": {
+                    "id": "root",
+                    "combinator": "AND",
+                    "children": [
+                      "rule1"
+                    ]
+                  }
+                }
               }
             }
-          }
+          ]
         }
       ],
       "inputs": [
@@ -1030,11 +1150,10 @@
       ],
       "outputs": [
         {
-          "id": "true",
-          "displayName": "True",
-          "tooltip": "Output when condition is true.",
+          "id": "case-1",
+          "displayName": "Case 1",
           "isDynamic": true,
-          "syncGroupId": "data",
+          "syncGroupId": "condition",
           "unresolvedVariant": "Unresolved",
           "variant": "Unresolved"
         },
@@ -1043,7 +1162,7 @@
           "displayName": "False",
           "tooltip": "Output when condition is false.",
           "isDynamic": true,
-          "syncGroupId": "data",
+          "syncGroupId": "condition",
           "unresolvedVariant": "Unresolved",
           "variant": "Unresolved"
         }
