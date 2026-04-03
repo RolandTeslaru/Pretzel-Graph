@@ -46,7 +46,6 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
 
 
     public handleOnEvent = (e: ExecutionSession.Event) => {
-        console.log("Handle on Event ", e)
         switch(e.type){
             case "node:started":
                 this.setState(s => {
@@ -57,7 +56,7 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
                 break;
             case "node:completed":
                 this.setState(s => {
-                    s.session.node_output_projections[e.nodeId] = e.output;
+                    s.session.node_output_projections[e.nodeId] = e.output as any;
                     if(e.stateUpdate)
                         this.reducers.applyUpdate(s, e.stateUpdate);
                     this.reducers.setNodeStatus(s, e.nodeId, { status: "completed", completed_at: new Date().toISOString() })
