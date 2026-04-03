@@ -44,6 +44,21 @@ export const workbenchSelectors = {
 
         return field;
     },
+    getFieldsStaticValues: (s, nodeId) => {
+        const staticValues = s.workflow.data.staticValues[nodeId]
+        if (!staticValues)
+            return {};
+        
+        const node = s.workflow.data.nodes[nodeId]
+        if (!node) return {};
+
+        const fieldsValues: Record<Foundations.Field.Id, any> = {}
+        node.fields.forEach(field => {
+            fieldsValues[field.id] = staticValues[field.id] ?? field.initialValue;
+        })
+
+        return fieldsValues;
+    },
     getOutput: (s, nodeId, outputId) => {
         const node = s.workflow.data.nodes[nodeId]
         if (!node) return null;
@@ -156,6 +171,21 @@ export const workbenchSelectors = {
                 return true;
         }
         return false;
+    },
+    extractBlueprint: (s, nodeId) => {
+        const node = s.workflow.data.nodes[nodeId];
+        if (!node) return null;
+
+        return {
+            id: node.blueprintId,
+            displayName: node.displayName,
+            icon: node.icon ?? "",
+            accent: node.accent,
+            description: node.description ?? "",
+            fields: node.fields,
+            inputs: node.inputs,
+            outputs: node.outputs,
+        } satisfies Foundations.Blueprint
     }
 
 } satisfies _WorkBenchSDKSelectors
@@ -174,6 +204,8 @@ export type _WorkBenchSDKSelectors = {
     getField: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => Foundations.Field | null
     getOutput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => Foundations.Port.Output | null
 
+    getFieldsStaticValues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Foundations.Field.Id, any>
+
     ensureInHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Workflow.Edge.Id
     ensureOutHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => Workflow.Edge.Id
 
@@ -186,4 +218,5 @@ export type _WorkBenchSDKSelectors = {
     getDynamicPortSiblings: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Id) => Set<Foundations.Port.Input | Foundations.Port.Output>
     syncGroupHasEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => boolean
     getNodeIncomingData: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session: ExecutionSession) => Record<Foundations.Port.Id, Foundations.Projection> | null
+    extractBlueprint: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Blueprint | null
 }

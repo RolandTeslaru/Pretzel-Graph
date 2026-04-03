@@ -106,6 +106,29 @@ export namespace Shelf {
                 )
                 return data;
             }
+
+            export namespace Reconcile {
+                export const Request = z.object({
+                    blueprint: Foundations.Blueprint.Schema,
+                    fieldId: Foundations.Field.Id,
+                    newValue: Foundations.Field.Value
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({
+                    reconciledBlueprint: Foundations.Blueprint.Schema
+                })
+                export type Response = z.infer<typeof Response>
+            }
+            export async function reconcile(
+                api: AxiosInstance,
+                req: Reconcile.Request
+            ): Promise<Reconcile.Response> {
+                const { data } = await api.post<Reconcile.Response>(
+                    '/api/shelf/blueprint/reconcile', req
+                )
+                return data;
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
 import { Foundations } from "@vx-agent-editor/shared/domain";
-import { Blueprint } from "./blueprint";
 import { InferFields } from "src/types";
 import { cloneDeep } from "lodash";
 
@@ -83,20 +82,20 @@ const PROVIDER_MODELS: Record<string, ProviderEntry> = {
 };
 
 export const reconcile = (
-    changedFieldId: keyof InferFields<typeof Blueprint>,
+    blueprint: Foundations.Blueprint,
+    changedFieldId: keyof InferFields<Foundations.Blueprint>,
     newValue: Foundations.Field.Value,
 ): Foundations.Blueprint => {
-    const newBlueprint = cloneDeep(Blueprint);
-    const fields = new Map(newBlueprint.fields.map(f => [f.id, f]));
+    const fields = new Map(blueprint.fields.map(f => [f.id, f]));
 
     if (changedFieldId === "provider") {
         const modelField = fields.get("model" as any) as unknown as Foundations.Field.MultiOption;
-        if (!modelField) return newBlueprint;
+        if (!modelField) return blueprint;
 
         const providerData = PROVIDER_MODELS[newValue as string] ?? PROVIDER_MODELS["Google"];
         modelField.options = providerData.models;
         modelField.initialValue = providerData.defaultModel;
     }
 
-    return newBlueprint;
+    return blueprint;
 };
