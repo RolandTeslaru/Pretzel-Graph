@@ -282,7 +282,6 @@ code {
   --input: theme(--color-neutral-800);
   --ring: theme(--color-orange-500);
 
-  /* --group-routing: theme(--color-white); */
 
   /* Success states */
   --success-background: theme(--color-emerald-950);
@@ -313,7 +312,7 @@ code {
   --utility: theme(--color-neutral-500);
   --utility-foreground: theme(--color-neutral-300);
 
-  --group-routing: theme(--color-neutral-500);
+  --group-routing: theme(--color-neutral-300);
 
   /* Dark mode: glow uses the base port color (already vibrant on dark bg) */
   --port-Message-glow: theme(--color-blue-400);

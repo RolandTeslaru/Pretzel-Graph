@@ -14,8 +14,25 @@ export const portReducers = {
 
         node.outputs = node.outputs.filter(p => p.id !== portId) as typeof node.outputs;
     },
+    addOutput: (s, nodeId, port) => {
+        s.isDirty = true;
+        const node = s.workflow.data.nodes[nodeId];
+        if (!node) return;
+
+        node.outputs.push(port as typeof node.outputs[number]);
+    },
+    setOutputDisplayName: (s, nodeId, portId, displayName) => {
+        s.isDirty = true;
+        const node = s.workflow.data.nodes[nodeId];
+        if (!node) return;
+
+        const port = node.outputs.find(p => p.id === portId);
+        if (port) port.displayName = displayName;
+    },
 } satisfies PortReducers
 
 type PortReducers = {
-    removeOutput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Output.Id) => void;
+    removeOutput        : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Output.Id) => void;
+    addOutput           : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, port: Foundations.Port.Output) => void;
+    setOutputDisplayName: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Output.Id, displayName: string) => void;
 }

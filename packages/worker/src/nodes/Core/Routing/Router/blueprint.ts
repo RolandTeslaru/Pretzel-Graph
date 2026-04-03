@@ -23,7 +23,7 @@ export const Blueprint = defineBlueprint({
         InputBuilder.Unresolved({
             id: "input",
             displayName: "Input",
-            syncGroupId: "data"
+            syncGroupId: "condition"
         }),
     ],
     outputs: [
