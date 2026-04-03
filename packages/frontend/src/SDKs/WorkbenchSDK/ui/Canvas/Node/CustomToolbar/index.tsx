@@ -3,13 +3,13 @@ import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
 import { Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import type { Workflow } from '@vx-agent-editor/shared/domain'
-import React from 'react'
+import React, { memo } from 'react'
 
 interface Props {
     node: Workflow.Node
 }
 
-export const NodeCustomToolbar: React.FC<Props> = ({ node }) => {
+export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
     return (
         <div className='bg-card border border-border rounded-lg p-0.5 gap-1 flex flex-row shadow-md shadow-black/10'>
             <Button variant="ghost" size="icon-xs" className='h-6!'
@@ -38,12 +38,12 @@ export const NodeCustomToolbar: React.FC<Props> = ({ node }) => {
                 <SystemIcons.Power className={`${node.isDisabled ? 'text-red-500' : ''} stroke-2`} />
             </Button>
             <Button variant="ghost-success" size="icon-xs" className='text-xs'>
-                <SystemIcons.Play className='text-emerald-800/60'/>
+                <SystemIcons.Play />
             </Button>
             <MoreOptionsDropdown node={node} />
         </div>
     )
-}
+})
 
 
 const MoreOptionsDropdown: React.FC<Props> = ({ node }) => {

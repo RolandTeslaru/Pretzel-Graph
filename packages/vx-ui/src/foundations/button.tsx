@@ -44,8 +44,8 @@ export const buttonVariants = cva(
           aria-expanded:bg-muted aria-expanded:text-foreground
         `,
         "ghost-success": `
-          shadow-none text-emerald-700 dark:text-emerald-400
-          hover:bg-emerald-400/20 hover:text-emerald-800 dark:hover:bg-emerald-500/20 dark:hover:text-emerald-300
+          shadow-none text-emerald-600 dark:text-emerald-500
+          hover:bg-emerald-400/40 hover:text-emerald-800 dark:hover:text-emerald-300
           aria-expanded:bg-emerald-400/20 aria-expanded:text-emerald-800
           dark:aria-expanded:bg-emerald-500/20 dark:aria-expanded:text-emerald-300
         `,

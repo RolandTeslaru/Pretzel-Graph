@@ -119,7 +119,7 @@ function WorkflowLayoutComponent() {
             <BottomPanel/>
             {/* <AdminJobsPanel /> */}
             {/* <StackDebugPanel/> */}
-            {/* <StateViewer /> */}
+            <StateViewer />
             <Outlet />
         </div>
     )

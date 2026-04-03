@@ -1,21 +1,19 @@
 import { Foundations } from "@vx-agent-editor/shared/domain";
-import { Blueprint } from "./blueprint";
 import { InferFields } from "src/types";
-import { cloneDeep } from "lodash";
 
 export const reconcile = (
-    changedFieldId: keyof InferFields<typeof Blueprint>,
+    blueprint: Foundations.Blueprint,
+    changedFieldId: keyof InferFields<Foundations.Blueprint>,
     newValue: Foundations.Field.Value,
 ): Foundations.Blueprint => {
 
-    const newBlueprint = cloneDeep(Blueprint);
-    const fields = new Map(newBlueprint.fields.map(f => [f.id, f]));
+    const fields = new Map(blueprint.fields.map(f => [f.id, f]));
 
     if (changedFieldId === "provider" as any) {
         const modelField = fields.get("model" as any) as unknown as Foundations.Field.MultiOption;
         const apiKeyField = fields.get("apiKey" as any) as unknown as Foundations.Field.Secret;
 
-        if (!modelField || !apiKeyField) return newBlueprint;
+        if (!modelField || !apiKeyField) return blueprint;
 
         switch (newValue) {
             case "Anthropic":
@@ -54,5 +52,5 @@ export const reconcile = (
                 break;
         }
     }
-    return newBlueprint;
+    return blueprint;
 };

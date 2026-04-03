@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Vexr Agentic Graph Execution Engine based on LangGraph",
     "main": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "types": "src/index.ts",
     "scripts": {
         "build": "tsc --build tsconfig.build.json",
         "dev": "concurrently \"npm:watch:indexes\" \"tsx watch src/server.ts\" --names \"INDEX,SERVER\" --prefix-colors \"blue,green\"",
