@@ -83,6 +83,26 @@ export const nodeReducers = {
         cacheReducers.createNode(s, newNode);
         nodeReducers.validate(s, nodeId);
     },
+    disconnect: (s, nodeId) => {
+        s.isDirty = true;
+
+        const inNodes = sel.ensureInNodesCache(s, nodeId);
+        const outNodes = sel.ensureOutNodesCache(s, nodeId);
+
+        Object.entries(inNodes).forEach(([_inNodeId, edgeId]) => {
+            edgeReducers.remove(s, edgeId);
+        })
+
+        Object.entries(outNodes).forEach(([_outNodeId, edgeId]) => {
+            edgeReducers.remove(s, edgeId);
+        })
+
+        // If the node has a dynamic port group, unresolve it to restore the original variants of the dynamic ports
+        const node = s.workflow.data.nodes[nodeId];
+        if (!node) return;
+
+        
+    },
     recreate: (s, nodeId, blueprint) => {
         const node = s.workflow.data.nodes[nodeId];
         if (!node)
@@ -284,6 +304,7 @@ export const nodeReducers = {
 interface NodeReducers {
     remove         : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
     create         : (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }) => void;
+    disconnect     : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;  
     recreate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
     duplicate      : (state: WorkbenchSDK.State, originalNode: Workflow.Node, position?: { x: number, y: number }) => Workflow.Node;
     reconcile      : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;

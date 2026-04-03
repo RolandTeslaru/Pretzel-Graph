@@ -59,7 +59,6 @@ class CatalogueServiceImpl {
         // "Google.Chat.v1" -> "Google/Chat/v1"
         const relativePath = blueprintId.replace(/\./g, "/");
         const fullPath = path.join(this.nodesRoot, relativePath + "/reconcile");
-        const blueprintPath = path.join(this.nodesRoot, relativePath + "/blueprint");
 
         try {
             const module = await import(fullPath);
@@ -70,12 +69,11 @@ class CatalogueServiceImpl {
             // If reconcile.ts doesn't exist, try to load blueprint and return default Identity reconcile
             if (error.code === 'MODULE_NOT_FOUND' || error.code === 'ERR_MODULE_NOT_FOUND') {
                 try {
-                    const bpModule = await import(blueprintPath);
-                    const Blueprint = bpModule.Blueprint;
                     return (
+                        blueprint: Foundations.Blueprint,
                         _changedFieldId: Foundations.Field.Id,
                         _newValue: Foundations.Field.Value
-                    ) => Blueprint; // Default identity: return static Blueprint
+                    ) => blueprint; // Default identity: return inferred blueprint as-is
                 } catch (bpError) {
                     console.error(`[CatalogueService] Failed to load blueprint for '${blueprintId}':`, bpError);
                     return null;

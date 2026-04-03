@@ -36,4 +36,13 @@ export class ShelfController {
         const payload = Shelf.API.Blueprint.GetAllInSection.Request.parse(body);
         return this.shelfService.getAllInSection(payload);
     }
+
+    @Post('blueprint/reconcile')
+    @HttpCode(200)
+    async reconcileBlueprint(
+        @Body() body: any
+    ) {
+        const payload = Shelf.API.Blueprint.Reconcile.Request.parse(body);
+        return await this.shelfService.reconcileBlueprint(payload);
+    }
 }

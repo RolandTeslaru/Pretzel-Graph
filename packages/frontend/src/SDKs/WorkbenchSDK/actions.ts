@@ -1,13 +1,15 @@
 import { WorkbenchSDKImpl, WorkbenchSDK } from './sdk';
 import type { DropFirstArg } from '../types';
-import { Foundations, Workbench, Workflow } from '@vx-agent-editor/shared/domain';
+import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { api } from '../ApiInterceptorSDK';
 import { commit, commitImmediately, withCommit, withAsyncCommit, debouncedValidateField, debouncedValidateInput } from './utils/actions';
+import { ShelfSDK } from '../ShelfSDK/sdk';
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
     const setState = sdk.useStore.setState;
     const reducers = sdk.reducers;
+    const sel = sdk.selectors;
 
     return {
         commit:                   commit,
@@ -36,19 +38,17 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                     console.log(`Field ${field.id} requires reconciliation`)
 
                     try {
-                        const node = sdk.state.workflow.data.nodes[nodeId];
-                        if (!node)
-                            throw new Error(`Node ${nodeId} not found`);
+                        const blueprint = sdk.selectors.extractBlueprint(sdk.state, nodeId);
+                        if (!blueprint)
+                            throw new Error(`Could not extract blueprint from node ${nodeId}`);
 
-                        const { reconciledBlueprint } = await Workbench.API.Field.reconcile(api, {
-                            blueprintId: node.blueprintId,
-                            fieldId:     field.id,
-                            newValue:    value,
-                        })
+                        const fieldValues = sel.getFieldsStaticValues(sdk.state, nodeId);
 
-                        setState(s => {
-                            reducers.node.reconcile(s, nodeId, reconciledBlueprint)
-                        });
+                        const reconciledBlueprint = await ShelfSDK.actions.getReconciledBlueprint(
+                            blueprint, field.id, value, fieldValues
+                        );
+
+                        setState(s => { reducers.node.reconcile(s, nodeId, reconciledBlueprint) });
                     } catch (error) {
                         throw new Error(`Could not reconcile node ${nodeId} via field ${field.id}. ${error instanceof Error ? error.message : String(error)}`)
                     }

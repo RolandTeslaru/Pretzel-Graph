@@ -17,7 +17,7 @@
                 "../worker/src/*"
             ]
         },
-        "rootDir": ".",
+        "rootDir": "..",
         "outDir": "./dist",
         "esModuleInterop": true,
         "resolveJsonModule": true,
