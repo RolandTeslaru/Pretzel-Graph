@@ -5,11 +5,11 @@ import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
 
 export const FileField = memo<RendererProps<'File'>>(({ field, nodeId, className }) => {
-    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id);
+    const [value, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field.id);
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
-            <FieldLabel field={field} />
+            <FieldLabel field={field} isReconciling={isReconciling} />
             <div className="flex items-center gap-2">
                 <Input
                     value={value as string}

@@ -16,13 +16,13 @@ type Value       = Foundations.Field.Condition.Value
 
 
 export const ConditionField = memo<RendererProps<'Condition'>>(({ field, nodeId, className }) => {
-    const [root] = WorkbenchSDK.useField<Value>(nodeId, field.id)
+    const [root, , isReconciling] = WorkbenchSDK.useField<Value>(nodeId, field.id)
 
     const ctx = useMemo(() => ({ nodeId, field, root: root! }), [nodeId, field, root])
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
-            <FieldLabel field={field} />
+            <FieldLabel field={field} isReconciling={isReconciling} />
             {root ?
                 <ConditionContext.Provider value={ctx}>
                     <RuleGroup ruleGroupId={"root" as RuleGroupId} />
