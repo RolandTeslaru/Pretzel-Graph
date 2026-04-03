@@ -33,6 +33,11 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             create:            withCommit((conn)   => setState(s => { reducers.edge.create(s, conn) })),
             remove:            withCommit((edgeId) => setState(s => { reducers.edge.remove(s, edgeId) })),
         },
+        port: {
+            removeOutput:         withCommit((...props) => setState(s => { reducers.port.removeOutput(s,         ...props) })),
+            addOutput:            withCommit((...props) => setState(s => { reducers.port.addOutput(s,            ...props) })),
+            setOutputDisplayName: withCommit((...props) => setState(s => { reducers.port.setOutputDisplayName(s, ...props) })),
+        },
         field: {
             setValue: withAsyncCommit(async (nodeId, field, value) => {
                 if (field.reconcile) {
@@ -148,6 +153,11 @@ export interface _WorkbenchSDKActions {
     edge                    : {
         create              : DropFirstArg<WorkbenchSDK.Reducers['edge']['create']>;
         remove              : DropFirstArg<WorkbenchSDK.Reducers['edge']['remove']>;
+    };
+    port                    : {
+        removeOutput        : DropFirstArg<WorkbenchSDK.Reducers['port']['removeOutput']>;
+        addOutput           : DropFirstArg<WorkbenchSDK.Reducers['port']['addOutput']>;
+        setOutputDisplayName: DropFirstArg<WorkbenchSDK.Reducers['port']['setOutputDisplayName']>;
     };
     layout                  : {
         node                : {

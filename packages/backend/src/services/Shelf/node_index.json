@@ -1,6 +1,6 @@
 {
-  "version": "1775231344658",
-  "generatedAt": "2026-04-03T15:49:04.658Z",
+  "version": "1775236113729",
+  "generatedAt": "2026-04-03T17:08:33.729Z",
   "drawers": {},
   "blueprints": {
     "Anthropic.Chat": {
@@ -1008,7 +1008,7 @@
           "id": "input",
           "displayName": "Input",
           "isDynamic": true,
-          "syncGroupId": "data",
+          "syncGroupId": "condition",
           "internal": false,
           "unresolvedVariant": "Unresolved",
           "variant": "Unresolved",
@@ -1141,7 +1141,7 @@
           "id": "input",
           "displayName": "Input",
           "isDynamic": true,
-          "syncGroupId": "data",
+          "syncGroupId": "condition",
           "internal": false,
           "unresolvedVariant": "Unresolved",
           "variant": "Unresolved",
@@ -1158,9 +1158,16 @@
           "variant": "Unresolved"
         },
         {
-          "id": "false",
-          "displayName": "False",
-          "tooltip": "Output when condition is false.",
+          "id": "case-2",
+          "displayName": "Case 1",
+          "isDynamic": true,
+          "syncGroupId": "condition",
+          "unresolvedVariant": "Unresolved",
+          "variant": "Unresolved"
+        },
+        {
+          "id": "case-3",
+          "displayName": "Case 1",
           "isDynamic": true,
           "syncGroupId": "condition",
           "unresolvedVariant": "Unresolved",

@@ -23,7 +23,7 @@ export const Blueprint = defineBlueprint({
         InputBuilder.Unresolved({
             id: "input",
             displayName: "Input",
-            syncGroupId: "data"
+            syncGroupId: "condition"
         }),
     ],
     outputs: [
@@ -33,9 +33,13 @@ export const Blueprint = defineBlueprint({
             syncGroupId: "condition"
         }),
         OutputBuilder.Unresolved({
-            id: "false",
-            displayName: "False",
-            tooltip: "Output when condition is false.",
+            id: "case-2",
+            displayName: "Case 1",
+            syncGroupId: "condition"
+        }),
+        OutputBuilder.Unresolved({
+            id: "case-3",
+            displayName: "Case 1",
             syncGroupId: "condition"
         }),
     ],
