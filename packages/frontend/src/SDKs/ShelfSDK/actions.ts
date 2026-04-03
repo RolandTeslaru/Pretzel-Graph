@@ -79,7 +79,7 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
                 setState(s => { sdk.reducers.searchFilter.toggleDataType(s, ...props) }),
         },
 
-        getReconciledBlueprint: async (blueprint, fieldId, newValue, fieldValues) => {
+        getReconciledBlueprint: async (blueprint, fieldId, newValue, fieldValues, { onApiFetch } = {}) => {
             const reconciledId = Foundations.Blueprint.createReconciledId(
                 blueprint.id, blueprint.fields, fieldValues, { [fieldId]: newValue }
             );
@@ -90,6 +90,8 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
             //  else
             //     toast.info("Reconciling blueprint...");
             if (cached) return cached;
+
+            onApiFetch?.();
 
             const { reconciledBlueprint } = await Shelf.API.Blueprint.reconcile(api, {
                 blueprint, fieldId, newValue
@@ -120,6 +122,7 @@ export type _ShelfActions = {
         blueprint: Foundations.Blueprint,
         fieldId: Foundations.Field.Id,
         newValue: Foundations.Field.Value,
-        fieldValues: Record<Foundations.Field.Id, Foundations.Field.Value>
+        fieldValues: Record<Foundations.Field.Id, Foundations.Field.Value>,
+        callbacks?: { onApiFetch?: () => void }
     ) => Promise<Foundations.Blueprint>;
 }

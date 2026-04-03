@@ -5,7 +5,7 @@ import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
 
 export const StringField = memo<RendererProps<'String'>>(({ field, nodeId, className }) => {
-    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id)
+    const [value, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field.id)
 
     let innerClassName = ""
     if (issue)
@@ -13,7 +13,7 @@ export const StringField = memo<RendererProps<'String'>>(({ field, nodeId, class
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
-            <FieldLabel field={field} />
+            <FieldLabel field={field} isReconciling={isReconciling} />
             <Textarea
                 placeholder={field.placeholder}
                 value={value as string}

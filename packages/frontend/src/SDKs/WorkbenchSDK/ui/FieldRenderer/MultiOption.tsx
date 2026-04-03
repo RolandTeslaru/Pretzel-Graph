@@ -6,13 +6,13 @@ import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
 
 export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nodeId, className }) => {
-    const [value, issue] = WorkbenchSDK.useField(nodeId, field.id);
+    const [value, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field.id);
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
             {field.kind === "tab" ?
                 <div className=' flex flex-row'>
-                    <FieldLabel field={field} />
+                    <FieldLabel field={field} isReconciling={isReconciling} />
                     <Tabs.Root
                         value={value as string}
                         onValueChange={val => { WorkbenchSDK.actions.field.setValue(nodeId, field, val); }}
@@ -27,7 +27,7 @@ export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nod
                 </div>
                 :
                 <>
-                    <FieldLabel field={field} />
+                    <FieldLabel field={field} isReconciling={isReconciling} />
                     <Select.Root
                         value={value as string}
                         onValueChange={(value) => { WorkbenchSDK.actions.field.setValue(nodeId, field, value) }}

@@ -9,7 +9,7 @@ import type { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
 
 export const ScriptTriggerField = memo(({ field, nodeId, className }: RendererProps<'Script'>) => {
-    const [value, error] = WorkbenchSDK.useField<string>(nodeId, field.id);
+    const [value, error, isReconciling] = WorkbenchSDK.useField<string>(nodeId, field.id);
 
     const onChange = (val: string) => {
         WorkbenchSDK.actions.field.setValue(nodeId, field, val)
@@ -17,7 +17,7 @@ export const ScriptTriggerField = memo(({ field, nodeId, className }: RendererPr
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1 relative"}>
-            <FieldLabel field={field} />
+            <FieldLabel field={field} isReconciling={isReconciling} />
             <Input
                 value={value}
                 onChange={(e) => onChange(e.currentTarget.value)}
