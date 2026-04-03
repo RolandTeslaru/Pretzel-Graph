@@ -6,7 +6,7 @@ import { Foundations } from '@vx-agent-editor/shared/domain'
 import { Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
 import { ExpressionInput } from './ExpressionInput'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
-import { conditionActions } from './actions'
+import { bindConditionActions } from './actions'
 import { OperatorSelector } from './OperatorSelector'
 import { ConditionContext, useConditionContext } from './context'
 
@@ -18,7 +18,12 @@ type Value       = Foundations.Field.Condition.Value
 export const ConditionField = memo<RendererProps<'Condition'>>(({ field, nodeId, className }) => {
     const [root, , isReconciling] = WorkbenchSDK.useField<Value>(nodeId, field.id)
 
-    const ctx = useMemo(() => ({ nodeId, field, root: root! }), [nodeId, field, root])
+    const ctx = useMemo(() => ({
+        nodeId,
+        field,
+        root: root!,
+        actions: bindConditionActions(nodeId, field),
+    }), [nodeId, field, root])
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
@@ -36,9 +41,8 @@ export const ConditionField = memo<RendererProps<'Condition'>>(({ field, nodeId,
     )
 })
 
-
-const RuleGroup = ({ ruleGroupId }: { ruleGroupId: RuleGroupId }) => {
-    const { root, nodeId, field } = useConditionContext()
+export const RuleGroup = ({ ruleGroupId }: { ruleGroupId: RuleGroupId }) => {
+    const { root, actions } = useConditionContext()
     const ruleGroup = root.groups[ruleGroupId]
     return (
         <div className='flex flex-row gap-2 relative'>
@@ -50,20 +54,20 @@ const RuleGroup = ({ ruleGroupId }: { ruleGroupId: RuleGroupId }) => {
                     <DropdownMenu.Content side='left' align='start'>
                         <DropdownMenu.Group>
                             <DropdownMenu.Label>Combinator</DropdownMenu.Label>
-                            <DropdownMenu.CheckboxItem checked={ruleGroup.combinator === "AND"} onCheckedChange={() => conditionActions.changeCombinator(nodeId, field, ruleGroupId, "AND")}>
+                            <DropdownMenu.CheckboxItem checked={ruleGroup.combinator === "AND"} onCheckedChange={() => actions.changeCombinator(ruleGroupId, "AND")}>
                                 AND
                             </DropdownMenu.CheckboxItem>
-                            <DropdownMenu.CheckboxItem checked={ruleGroup.combinator === "OR"} onCheckedChange={() => conditionActions.changeCombinator(nodeId, field, ruleGroupId, "OR")}>
+                            <DropdownMenu.CheckboxItem checked={ruleGroup.combinator === "OR"} onCheckedChange={() => actions.changeCombinator(ruleGroupId, "OR")}>
                                 OR
                             </DropdownMenu.CheckboxItem>
                         </DropdownMenu.Group>
                         <DropdownMenu.Separator />
                         <DropdownMenu.Group>
                             <DropdownMenu.Label>Actions</DropdownMenu.Label>
-                            <DropdownMenu.Item onSelect={() => conditionActions.addRule(nodeId, field, ruleGroupId)}>
+                            <DropdownMenu.Item onSelect={() => actions.addRule(ruleGroupId)}>
                                 <SystemIcons.Terminal className='size-3 mr-2' /> Add Rule
                             </DropdownMenu.Item>
-                            <DropdownMenu.Item onSelect={() => conditionActions.addGroup(nodeId, field, ruleGroupId)}>
+                            <DropdownMenu.Item onSelect={() => actions.addGroup(ruleGroupId)}>
                                 <SystemIcons.Folder className='size-3 mr-2' /> Add Group
                             </DropdownMenu.Item>
                         </DropdownMenu.Group>
@@ -94,7 +98,7 @@ export const DraggableRuleItem = ({ ruleId, parentGroupId }: { ruleId: RuleId, p
 }
 
 const Rule = ({ ruleId, parentGroupId }: { ruleId: RuleId, parentGroupId: RuleGroupId }) => {
-    const { root, nodeId, field } = useConditionContext()
+    const { root, nodeId, actions } = useConditionContext()
     const rule = root.rules[ruleId]
 
     const [leftValue, setLeftValue] = useState(rule.leftOperand)
@@ -107,14 +111,14 @@ const Rule = ({ ruleId, parentGroupId }: { ruleId: RuleId, parentGroupId: RuleGr
                 side='left'
                 className='border-b border-b-border rounded-none!'
                 onChange={setLeftValue}
-                onCommit={(v) => conditionActions.setLeftValue(nodeId, field, ruleId, v)}
+                onCommit={(v) => actions.setLeftValue(ruleId, v)}
                 nodeId={nodeId}
             />
             <div className='flex flex-row w-full'>
                 <OperatorSelector
                     operator={rule.operator}
                     dataType={rule.dataType}
-                    onSelect={(op, dt) => conditionActions.setOperator(nodeId, field, ruleId, op, dt)}
+                    onSelect={(op, dt) => actions.setOperator(ruleId, op, dt)}
                 />
 
                 <div className='content-[" "] h-6 w-px bg-border' />
@@ -124,13 +128,13 @@ const Rule = ({ ruleId, parentGroupId }: { ruleId: RuleId, parentGroupId: RuleGr
                     side='right'
                     className='rounded-none!'
                     onChange={setRightValue}
-                    onCommit={(v) => conditionActions.setRightValue(nodeId, field, ruleId, v)}
+                    onCommit={(v) => actions.setRightValue(ruleId, v)}
                     nodeId={nodeId}
                 />
             </div>
 
             <Button variant="destructive" size='icon-xs' className='scale-75 absolute top-0 right-0 opacity-0 group-hover/rule:opacity-100 transition-opacity'
-                onClick={() => conditionActions.removeRuleOrGroup(nodeId, field, ruleId, parentGroupId)}
+                onClick={() => actions.removeRuleOrGroup(ruleId, parentGroupId)}
             >
                 <SystemIcons.X className='size-3' />
             </Button>
