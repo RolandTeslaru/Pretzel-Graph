@@ -39,8 +39,11 @@ const NodeInputs: React.FC<Props> = memo(({ node, isWorkflowLocked, isFlipped })
 
     const inputs = useMemo(() => node.inputs.filter(i => !i.internal), [node.inputs])
 
+    if(inputs.length === 0)
+        return null
+
     return (
-        <div className="flex flex-col relative py-1 gap-2">
+        <div className="flex flex-col relative gap-2">
             {inputs.map(input => (
                 <InputPort
                     key={input.id}

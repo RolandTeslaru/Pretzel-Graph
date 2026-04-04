@@ -65,7 +65,7 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
         <NodeHeader executionStatus={nodeStatus} node={node} isWorkflowLocked={isWorkflowLocked} />
 
         {node.isMinimized === false &&
-          <div className='pt-1 bg-card/80 border border-border/50 rounded-b-[22px] rounded-t-lg shadow-sm shadow-black/10'>
+          <div className='bg-card/80 py-2 border gap-2 flex flex-col border-border/50 rounded-b-[22px] rounded-t-lg shadow-sm shadow-black/10'>
             <NodeInputs node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped} />
             <NodeOutputs node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped} />
           </div>
