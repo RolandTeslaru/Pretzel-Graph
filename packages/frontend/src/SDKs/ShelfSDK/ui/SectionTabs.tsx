@@ -6,7 +6,7 @@ import type { Shelf } from '@vx-agent-editor/shared/domain';
 const SectionTabs = memo(() => {
     const selectedSection = ShelfSDK.useStore(s => s.selectedSection);
     return (
-        <Tabs.Root className='w-full px-2' value={selectedSection} onValueChange={(val) => {
+        <Tabs.Root className='w-full p-2' value={selectedSection} onValueChange={(val) => {
             ShelfSDK.actions.setSection(val as Shelf.Section)
         }}
 
