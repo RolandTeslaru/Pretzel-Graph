@@ -62,8 +62,9 @@ const WorkflowEdge = memo(({
     const edgeStyle: React.CSSProperties = {
         ...style,
         stroke: displayColor,
-        strokeWidth: 2,
+        strokeWidth: 1.5,
         strokeDasharray: isWaiting ? "20 12" : isPreparing ? "20 12" : undefined,
+        shapeRendering: 'geometricPrecision',
     };
 
     return (

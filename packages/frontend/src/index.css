@@ -71,7 +71,6 @@ code {
 }
 
 :root {
-  --node-accent-mix: 32%;
   --node-accent-base: var(--card);
   --background: theme(--color-gray-200);
   --foreground: #2C1810;
@@ -255,9 +254,10 @@ code {
 }
 
 .dark {
-  --node-accent-mix: 32%;
-  --node-accent-base: theme(--color-black);
+  --node-accent-base: var(--background);
   --background: theme(--color-neutral-950);
+
+
   --foreground: theme(--color-white);
   --card: theme(--color-neutral-800);
   --card-foreground: theme(--color-white);

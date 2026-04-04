@@ -23,10 +23,13 @@ export const createCaseEntry = (nodeId: Workflow.Node.Id, field: Foundations.Fie
     const portId = Foundations.Port.Output.Id.parse(crypto.randomUUID())
     const entry  = Foundations.Field.CaseList.createEntry(portId, label)
     setValue(nodeId, field, (prev: Value) => [...prev, entry])
+
+    const resolvedVariant = WorkbenchSDK.selectors.getResolvedVariantInSyncGroup(WorkbenchSDK.state, nodeId, "condition") ?? "Unresolved"
+
     WorkbenchSDK.actions.port.addOutput(nodeId, {
         id: portId,
         displayName: label,
-        variant: "Unresolved",
+        variant: resolvedVariant,
         isDynamic: true,
         syncGroupId: "condition",
         unresolvedVariant: "Unresolved",

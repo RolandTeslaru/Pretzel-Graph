@@ -186,7 +186,17 @@ export const workbenchSelectors = {
             inputs: node.inputs,
             outputs: node.outputs,
         } satisfies Foundations.Blueprint
-    }
+    },
+    getResolvedVariantInSyncGroup: (s, nodeId, syncGroupId) => {
+        const node = s.workflow.data.nodes[nodeId];
+        if (!node) return null;
+
+        const allPorts = [...node.inputs, ...node.outputs];
+        const portInSyncGroup = allPorts.find(port => port.syncGroupId === syncGroupId);
+        if (!portInSyncGroup) return null;
+
+        return portInSyncGroup.variant === "Unresolved" ? null : portInSyncGroup.variant;
+    },
 
 } satisfies _WorkBenchSDKSelectors
 
@@ -219,4 +229,5 @@ export type _WorkBenchSDKSelectors = {
     syncGroupHasEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => boolean
     getNodeIncomingData: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session: ExecutionSession) => Record<Foundations.Port.Id, Foundations.Projection> | null
     extractBlueprint: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Blueprint | null
+    getResolvedVariantInSyncGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => Foundations.Port.Variant | null
 }
