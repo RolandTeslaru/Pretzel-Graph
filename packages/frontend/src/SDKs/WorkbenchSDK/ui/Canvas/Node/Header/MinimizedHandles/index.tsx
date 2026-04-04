@@ -14,7 +14,7 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped, 
     const inputs = useMemo(() => node.inputs.filter(i => !i.internal), [node.inputs])
 
     return (
-        <div className={`flex w-full ${isFlipped ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className={`flex w-full py-2 ${isFlipped ? 'flex-row-reverse' : 'flex-row'}`}>
             <div className='flex flex-col h-auto my-auto gap-4'>
                 {inputs.map(input =>
                     <div className='h-2 relative' key={input.id}>

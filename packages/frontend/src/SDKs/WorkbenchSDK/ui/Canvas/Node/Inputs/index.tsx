@@ -16,7 +16,7 @@ const InputPort: React.FC<{
         return;
 
     return (
-        <div className="w-full relative px-3">
+        <div className="w-full relative px-3 py-0.5">
             <Port
                 type="target"
                 isWorkflowLocked={isWorkflowLocked}
