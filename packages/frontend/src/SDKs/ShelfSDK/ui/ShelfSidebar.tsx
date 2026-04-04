@@ -9,8 +9,8 @@ import type { Foundations } from '@vx-agent-editor/shared/domain'
 const ShelfSidebar = () => {
     return (
         <div className={`
-            flex flex-col gap-2 fixed z-20 left-5 top-24 bottom-24 w-[230px] bg-card/80 backdrop-blur-lg 
-            border border-border py-2 rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10`}
+            flex flex-col fixed z-20 left-5 top-24 bottom-24 w-[230px] bg-card/80 backdrop-blur-lg 
+            border border-border rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10`}
         >
             <Search />
 
@@ -18,7 +18,7 @@ const ShelfSidebar = () => {
 
             <FilterDataTypesIndicator />
 
-            <ScrollArea.Root className='mb-auto'>
+            <ScrollArea.Root className='mb-auto pt-2'>
                 <Drawers />
             </ScrollArea.Root>
 

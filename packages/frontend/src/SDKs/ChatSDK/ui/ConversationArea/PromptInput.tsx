@@ -4,6 +4,10 @@ import { useForm, Controller } from 'react-hook-form'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@vx-agent-editor/vx-ui/foundations/input-group'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { ChatSDK } from '../../sdk'
+import { DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
+import { DialogSDK } from '@/SDKs/DialogSDK'
+import AddImageDialogContent from './AddImageDialog'
+import AddFileDialogContent from './AddFileDialog'
 
 type PromptFormValues = {
     prompt: string
@@ -95,13 +99,41 @@ const SendButton = ({ disabled }: { disabled: boolean }) => {
 
 const ArtifactAddButton = () => {
     return (
-        <InputGroupButton
-            variant="default"
-            className="style-lyra:rounded-none rounded-full"
-            size="icon-xs"
-            aria-label="Add"
-        >
-            <SystemIcons.Plus />
-        </InputGroupButton>
+        <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+                <InputGroupButton
+                    variant="default"
+                    className="style-lyra:rounded-none rounded-full"
+                    size="icon-xs"
+                    aria-label="Add"
+                >
+                    <SystemIcons.Plus />
+                </InputGroupButton>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content className="min-w-40" side="top" align="start">
+                <DropdownMenu.Item onSelect={() => {
+                    DialogSDK.actions.push("add-file", (props) => (
+                        <DialogSDK.Template {...props} className="max-w-md flex flex-col gap-4">
+                            <AddFileDialogContent {...props} />
+                        </DialogSDK.Template>
+                    ))
+                }}>
+                    <SystemIcons.File className="mr-1" />
+                    Add File
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onSelect={() => {
+                    DialogSDK.actions.push("add-image", (props) => (
+                        <DialogSDK.Template {...props} className="max-w-md flex flex-col gap-4">
+                            <AddImageDialogContent {...props} />
+                        </DialogSDK.Template>
+                    ))
+                }}>
+                    <SystemIcons.Image className="mr-1" />
+                    Add Image
+                </DropdownMenu.Item>
+            </DropdownMenu.Content>
+        </DropdownMenu.Root>
     )
 }
+
+
