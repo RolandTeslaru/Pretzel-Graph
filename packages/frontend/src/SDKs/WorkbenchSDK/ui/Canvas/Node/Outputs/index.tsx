@@ -12,8 +12,8 @@ interface NodeOutputProps {
 
 const OutputPort: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFlipped }) => {
   return (
-    <div className={cn("relative w-full flex items-center h-8", isFlipped ? "justify-start pl-1" : "justify-end pr-1")}>
-      <div className={cn("text-sm font-medium text-foreground", isFlipped ? "ml-4" : "mr-4")}>
+    <div className={cn("relative w-full flex items-center px-3", isFlipped ? "justify-start" : "justify-end")}>
+      <div className={cn("text-sm font-medium text-foreground")}>
         {output.displayName ?? output.id}
       </div>
       <Port
@@ -41,8 +41,11 @@ const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped }) => 
 
   const selectedOutput = outputs[0]
 
+  if(outputs.length === 0)
+    return null
+
   return (
-    <div className="relative flex flex-col gap-1 py-1">
+    <div className="relative flex flex-col gap-1">
       {outputs.map((output) => (
         <OutputPort
           key={output.id}
