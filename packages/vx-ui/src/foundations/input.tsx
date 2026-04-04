@@ -20,12 +20,12 @@ const inputVariantClasses: Record<InputVariant, string> = {
         aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive
         dark:aria-invalid:border-destructive/50 disabled:bg-input/50 dark:disabled:bg-input/80
         border transition-colors file:h-6 file:text-sm file:font-medium
-        focus-visible:ring-[3px] aria-invalid:ring-[3px] file:text-foreground placeholder:text-muted-foreground
+        focus-visible:ring-[2px] aria-invalid:ring-[2px] file:text-foreground placeholder:text-muted-foreground
         w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent
         disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50
         shadow-sm shadow-black/10`,
   ghost: `bg-transparent border-transparent shadow-none
-        focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]
+        focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[2px]
         border transition-colors
         placeholder:text-muted-foreground
         w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent

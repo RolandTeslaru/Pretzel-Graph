@@ -12,7 +12,7 @@ interface NodeOutputProps {
 
 const OutputPort: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFlipped }) => {
   return (
-    <div className={cn("relative w-full flex items-center px-3", isFlipped ? "justify-start" : "justify-end")}>
+    <div className={cn("relative w-full flex items-center py-0.5 px-3", isFlipped ? "justify-start" : "justify-end")}>
       <div className={cn("text-sm font-medium text-foreground")}>
         {output.displayName ?? output.id}
       </div>
