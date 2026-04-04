@@ -12,32 +12,28 @@ interface Props {
 
 export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionStatus }) => {
   const isMinimized = node.isMinimized;
- 
+
   if (isMinimized)
     return (
       <MinimizedHandles node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped}>
-        <div className='flex w-full flex-col! items-center gap-1 px-4 py-1 relative'
-
-        >
+        <div className='px-4 h-fit my-auto'>
           <LazyIcon
             className={`w-10 h-10`}
             name={node.icon as string}
             style={{ color: `var(--${node.accent}-foreground)` }}
           />
-          <div className="truncate font-semibold text-foreground/80">
-            {node.displayName}
-          </div>
-          <div className='absolute top-1 right-2'>
-            <StatusIndicator executionStatus={executionStatus} nodeId={node.id}/>
-          </div>
+        </div>
+        <div className='absolute -bottom-1 -right-5'>
+          <StatusIndicator executionStatus={executionStatus} nodeId={node.id} />
+        </div>
+        <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 truncate font-semibold text-foreground/80">
+          {node.displayName}
         </div>
       </MinimizedHandles>
     )
 
   return (
-    <div
-      className="flex w-full items-center gap-3 px-4 py-1 rounded-t-xl "
-    >
+    <div className="flex w-full items-center gap-3 px-4 py-1 rounded-t-xl " >
       <LazyIcon
         className={`${isMinimized ? "w-8 h-8" : "w-5.5 h-5.5"}`}
         name={node.icon as string}

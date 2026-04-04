@@ -33,6 +33,9 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
     ]
   );
 
+  const isMinimized = node.isMinimized;
+  const isDisabled = node.isDisabled
+
   let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
 
@@ -57,8 +60,8 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
       <div className={cn(
         "animate-in fade-in-0 duration-200 ease-out p-1 transition-colors",
         "flex flex-col relative rounded-3xl shadow-lg shadow-black/20 dark:shadow-black/30",
-        node.isMinimized ? "min-w-[100px]" : "w-[250px]",
-        node.isDisabled ? "opacity-50" : "opacity-100",
+        isMinimized ? "" : "w-[250px]",
+        isDisabled ? "opacity-50" : "opacity-100",
       )}
         style={{ backgroundColor, borderColor, borderWidth: 2 }}
       >
