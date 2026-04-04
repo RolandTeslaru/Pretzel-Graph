@@ -43,7 +43,7 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
 
 
   if (node.accent) {
-    backgroundColor = `color-mix(in srgb, var(--${node.accent}) var(--node-accent-mix), var(--node-accent-base))`;
+    backgroundColor = `color-mix(in srgb, var(--${node.accent}) 30%, var(--node-accent-base))`;
     borderColor = `color-mix(in srgb, var(--${node.accent}) 50%, var(--border))`;
   }
 

@@ -50,21 +50,21 @@ export const buttonVariants = cva(
           dark:aria-expanded:bg-emerald-500/20 dark:aria-expanded:text-emerald-300
         `,
         destructive: `
-          bg-red-400/40 text-red-700 hover:bg-red-200 hover:border-red-400
-          dark:bg-red-900/50 dark:text-red-400 dark:hover:bg-red-800 dark:hover:border-red-600
+          bg-red-400/40 text-red-700 hover:bg-red-400/80 shadow-none not-dark:hover:border-red-400
+          dark:bg-red-900/50 dark:text-red-400 dark:hover:bg-red-900/80
           focus-visible:ring-red-600/20 dark:focus-visible:ring-red-600/40 
           focus-visible:border-red-600/40
         `,
         warning: `
-          bg-amber-400/50 text-amber-700 hover:bg-amber-200 hover:border-amber-400
-          dark:bg-yellow-400/60 dark:text-yellow-100 dark:hover:bg-yellow-300/60 dark:hover:border-yellow-300
+          bg-amber-400/50 text-amber-700 hover:bg-amber-200 not-dark:hover:border-amber-400
+          dark:bg-yellow-400/60 dark:text-yellow-100 dark:hover:bg-yellow-400/80
           focus-visible:ring-amber-500/20 
           dark:focus-visible:ring-amber-500/40 focus-visible:border-amber-500/40
         `,
         success: `
-          bg-emerald-400/50  text-emerald-700 hover:bg-emerald-400/80
-          dark:bg-emerald-700/50  dark:text-emerald-300 
-          dark:hover:bg-emerald-600 dark:hover:border-emerald-300 focus-visible:ring-emerald-500/20 
+          bg-emerald-400/50  text-emerald-700 hover:bg-emerald-400/80 shadow-none
+          dark:bg-emerald-700/50  dark:text-emerald-300
+          dark:hover:bg-emerald-700/80 focus-visible:ring-emerald-500/20
           dark:focus-visible:ring-emerald-500/40 focus-visible:border-emerald-500/40
         `,
         accent: `
