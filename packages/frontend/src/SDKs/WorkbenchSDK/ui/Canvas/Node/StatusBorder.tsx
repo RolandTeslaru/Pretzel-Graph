@@ -45,7 +45,7 @@ export const StatusBorder = memo(({ status, backgroundColor, isClicked }: Status
         'absolute z-[-1] rounded-4xl pointer-events-none overflow-hidden',
         status === "waiting" && "animate-pulse",
       )}
-      style={{ inset: -7 }}
+      style={{ inset: status === "completed" ? -5 : -7 }}
     >
       {/* Gradient fill / spinning beam */}
       <div
