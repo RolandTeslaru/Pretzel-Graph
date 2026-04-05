@@ -1,52 +1,13 @@
 import { Validation, Foundations, type Workflow } from "@vx-agent-editor/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { conditionTreeReducers } from "./conditionTree";
+import { workbenchSelectors } from "../selectors";
 
-type ConditionValue = Foundations.Field.Condition.Value
-type CaseListValue = Foundations.Field.CaseList.Value
 type CaseListEntry = Foundations.Field.CaseList.Entry
 type RuleId = Foundations.Field.Condition.Rule.Id
 type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id
 type Operator = Foundations.Field.Condition.Operator
 type DataType = Foundations.Field.Condition.DataType
-
-const getConditionValue = (
-    s: WorkbenchSDK.State,
-    nodeId: Workflow.Node.Id,
-    fieldId: Foundations.Field.Id
-): ConditionValue => {
-    const value = s.workflow.data.staticValues[nodeId]?.[fieldId] as ConditionValue | undefined
-    if (!value)
-        throw new Error(`Condition field ${fieldId} not found on node ${nodeId}`)
-
-    return value
-}
-
-const getCaseListValue = (
-    s: WorkbenchSDK.State,
-    nodeId: Workflow.Node.Id,
-    fieldId: Foundations.Field.Id
-): CaseListValue => {
-    const value = s.workflow.data.staticValues[nodeId]?.[fieldId] as CaseListValue | undefined
-    if (!value)
-        throw new Error(`CaseList field ${fieldId} not found on node ${nodeId}`)
-
-    return value
-}
-
-const getCaseListEntry = (
-    s: WorkbenchSDK.State,
-    nodeId: Workflow.Node.Id,
-    fieldId: Foundations.Field.Id,
-    portId: Foundations.Port.Output.Id
-): CaseListEntry => {
-    const caseList = getCaseListValue(s, nodeId, fieldId)
-    const entry = caseList.find(item => item.portId === portId)
-    if (!entry)
-        throw new Error(`CaseList entry ${portId} not found in field ${fieldId} on node ${nodeId}`)
-
-    return entry
-}
 
 const replaceCaseListEntry = (
     s: WorkbenchSDK.State,
@@ -55,7 +16,7 @@ const replaceCaseListEntry = (
     portId: Foundations.Port.Output.Id,
     entry: CaseListEntry
 ) => {
-    const caseList = getCaseListValue(s, nodeId, fieldId)
+    const caseList = workbenchSelectors.field.caseList.getValue(s, nodeId, fieldId)!
     const index = caseList.findIndex(item => item.portId === portId)
     if (index === -1)
         throw new Error(`CaseList entry ${portId} not found in field ${fieldId} on node ${nodeId}`)
@@ -73,98 +34,98 @@ export const fieldReducers = {
     },
     condition: {
         setLeftValue: (s, nodeId, fieldId, ruleId, value) => {
-            const condition = getConditionValue(s, nodeId, fieldId)
+            const condition = workbenchSelectors.field.condition.getValue(s, nodeId, fieldId)!
             conditionTreeReducers.setLeftValue(condition, ruleId, value)
             s.isDirty = true
         },
         setOperator: (s, nodeId, fieldId, ruleId, value, dataType) => {
-            const condition = getConditionValue(s, nodeId, fieldId)
+            const condition = workbenchSelectors.field.condition.getValue(s, nodeId, fieldId)!
             conditionTreeReducers.setOperator(condition, ruleId, value, dataType)
             s.isDirty = true
         },
         setRightValue: (s, nodeId, fieldId, ruleId, value) => {
-            const condition = getConditionValue(s, nodeId, fieldId)
+            const condition = workbenchSelectors.field.condition.getValue(s, nodeId, fieldId)!
             conditionTreeReducers.setRightValue(condition, ruleId, value)
             s.isDirty = true
         },
         addRule: (s, nodeId, fieldId, ruleGroupId) => {
-            const condition = getConditionValue(s, nodeId, fieldId)
+            const condition = workbenchSelectors.field.condition.getValue(s, nodeId, fieldId)!
             conditionTreeReducers.addRule(condition, ruleGroupId)
             s.isDirty = true
         },
         addGroup: (s, nodeId, fieldId, parentGroupId) => {
-            const condition = getConditionValue(s, nodeId, fieldId)
+            const condition = workbenchSelectors.field.condition.getValue(s, nodeId, fieldId)!
             conditionTreeReducers.addGroup(condition, parentGroupId)
             s.isDirty = true
         },
         removeRuleOrGroup: (s, nodeId, fieldId, id, parentGroupId) => {
-            const condition = getConditionValue(s, nodeId, fieldId)
+            const condition = workbenchSelectors.field.condition.getValue(s, nodeId, fieldId)!
             conditionTreeReducers.removeRuleOrGroup(condition, id, parentGroupId)
             s.isDirty = true
         },
         changeCombinator: (s, nodeId, fieldId, ruleGroupId, combinator) => {
-            const condition = getConditionValue(s, nodeId, fieldId)
+            const condition = workbenchSelectors.field.condition.getValue(s, nodeId, fieldId)!
             conditionTreeReducers.changeCombinator(condition, ruleGroupId, combinator)
             s.isDirty = true
         },
     },
     caseList: {
         addEntry: (s, nodeId, fieldId, entry) => {
-            const caseList = getCaseListValue(s, nodeId, fieldId)
+            const caseList = workbenchSelectors.field.caseList.getValue(s, nodeId, fieldId)!
             s.workflow.data.staticValues[nodeId][fieldId] = [...caseList, entry]
             s.isDirty = true
         },
         removeEntry: (s, nodeId, fieldId, portId) => {
-            const caseList = getCaseListValue(s, nodeId, fieldId)
+            const caseList = workbenchSelectors.field.caseList.getValue(s, nodeId, fieldId)!
             const next = caseList.filter(entry => entry.portId !== portId)
             s.workflow.data.staticValues[nodeId][fieldId] = next
             s.isDirty = true
         },
         setLabel: (s, nodeId, fieldId, portId, label) => {
-            const entry = getCaseListEntry(s, nodeId, fieldId, portId)
+            const entry = workbenchSelectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
             entry.label = label
             replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry })
             s.isDirty = true
         },
         condition: {
             setLeftValue: (s, nodeId, fieldId, portId, ruleId, value) => {
-                const entry = getCaseListEntry(s, nodeId, fieldId, portId)
+                const entry = workbenchSelectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
                 conditionTreeReducers.setLeftValue(entry.condition, ruleId, value)
                 replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry })
                 s.isDirty = true
             },
             setRightValue: (s, nodeId, fieldId, portId, ruleId, value) => {
-                const entry = getCaseListEntry(s, nodeId, fieldId, portId)
+                const entry = workbenchSelectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
                 conditionTreeReducers.setRightValue(entry.condition, ruleId, value)
                 replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry })
                 s.isDirty = true
             },
             setOperator: (s, nodeId, fieldId, portId, ruleId, value, dataType) => {
-                const entry = getCaseListEntry(s, nodeId, fieldId, portId)
+                const entry = workbenchSelectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
                 conditionTreeReducers.setOperator(entry.condition, ruleId, value, dataType)
                 replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry })
                 s.isDirty = true
             },
             addRule: (s, nodeId, fieldId, portId, ruleGroupId) => {
-                const entry = getCaseListEntry(s, nodeId, fieldId, portId)
+                const entry = workbenchSelectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
                 conditionTreeReducers.addRule(entry.condition, ruleGroupId)
                 replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry })
                 s.isDirty = true
             },
             addGroup: (s, nodeId, fieldId, portId, parentGroupId) => {
-                const entry = getCaseListEntry(s, nodeId, fieldId, portId)
+                const entry = workbenchSelectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
                 conditionTreeReducers.addGroup(entry.condition, parentGroupId)
                 replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry })
                 s.isDirty = true
             },
             removeRuleOrGroup: (s, nodeId, fieldId, portId, id, parentGroupId) => {
-                const entry = getCaseListEntry(s, nodeId, fieldId, portId)
+                const entry = workbenchSelectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
                 conditionTreeReducers.removeRuleOrGroup(entry.condition, id, parentGroupId)
                 replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry })
                 s.isDirty = true
             },
             changeCombinator: (s, nodeId, fieldId, portId, ruleGroupId, combinator) => {
-                const entry = getCaseListEntry(s, nodeId, fieldId, portId)
+                const entry = workbenchSelectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
                 conditionTreeReducers.changeCombinator(entry.condition, ruleGroupId, combinator)
                 replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry })
                 s.isDirty = true

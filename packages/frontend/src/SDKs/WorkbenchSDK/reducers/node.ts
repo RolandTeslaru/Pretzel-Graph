@@ -20,14 +20,14 @@ export const nodeReducers = {
         delete staticValues[deletedNodeId];
 
         // Delete the edges coming into the node 
-        const inNodes = sel.cache.ensureIncomingNodeEdges(s, deletedNodeId)
+        const inNodes = cacheReducers.ensureIncomingNodeEdges(s, deletedNodeId)
 
         Object.entries(inNodes).forEach(([_inNodeId, _edgeId]) => {
             edgeReducers.remove(s, _edgeId as Workflow.Edge.Id);
         })
 
         // Delete the edges going out of the nodes
-        const outNodes = sel.cache.ensureOutgoingNodeEdges(s, deletedNodeId)
+        const outNodes = cacheReducers.ensureOutgoingNodeEdges(s, deletedNodeId)
 
         Object.entries(outNodes).forEach(([_outNodeId, _edgeId]) => {
             edgeReducers.remove(s, _edgeId as Workflow.Edge.Id);
@@ -85,8 +85,8 @@ export const nodeReducers = {
     disconnect: (s, nodeId) => {
         s.isDirty = true;
 
-        const inNodes = sel.cache.ensureIncomingNodeEdges(s, nodeId);
-        const outNodes = sel.cache.ensureOutgoingNodeEdges(s, nodeId);
+        const inNodes = cacheReducers.ensureIncomingNodeEdges(s, nodeId);
+        const outNodes = cacheReducers.ensureOutgoingNodeEdges(s, nodeId);
 
         Object.entries(inNodes).forEach(([_inNodeId, edgeId]) => {
             edgeReducers.remove(s, edgeId as Workflow.Edge.Id);
@@ -112,13 +112,13 @@ export const nodeReducers = {
         s.isDirty = true;
 
         // Delete the edges coming into the node 
-        const inNodes = sel.cache.ensureIncomingNodeEdges(s, nodeId)
+        const inNodes = cacheReducers.ensureIncomingNodeEdges(s, nodeId)
         Object.entries(inNodes).forEach(([_inNodeId, _edgeId]) => {
             edgeReducers.remove(s, _edgeId as Workflow.Edge.Id);
         })
 
         // Delete the edges going out of the node
-        const outNodes = sel.cache.ensureOutgoingNodeEdges(s, nodeId)
+        const outNodes = cacheReducers.ensureOutgoingNodeEdges(s, nodeId)
         Object.entries(outNodes).forEach(([_outNodeId, _edgeId]) => {
             edgeReducers.remove(s, _edgeId as Workflow.Edge.Id);
         })

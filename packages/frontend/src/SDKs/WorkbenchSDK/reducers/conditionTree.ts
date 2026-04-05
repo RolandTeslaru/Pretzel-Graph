@@ -6,19 +6,29 @@ type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id
 type Operator = Foundations.Field.Condition.Operator
 type DataType = Foundations.Field.Condition.DataType
 
-export const conditionTreeReducers = {
-    setLeftValue: (condition: ConditionValue, ruleId: RuleId, value: string) => {
+interface ConditionTreeReducers {
+    setLeftValue(condition: ConditionValue, ruleId: RuleId, value: string): void
+    setRightValue(condition: ConditionValue, ruleId: RuleId, value: string): void
+    setOperator(condition: ConditionValue, ruleId: RuleId, value: Operator, dataType?: DataType): void
+    addRule(condition: ConditionValue, ruleGroupId: RuleGroupId): void
+    addGroup(condition: ConditionValue, parentGroupId: RuleGroupId): void
+    removeRuleOrGroup(condition: ConditionValue, id: RuleId | RuleGroupId, parentGroupId: RuleGroupId): void
+    changeCombinator(condition: ConditionValue, ruleGroupId: RuleGroupId, combinator: "AND" | "OR"): void
+}
+
+export const conditionTreeReducers: ConditionTreeReducers = {
+    setLeftValue: (condition, ruleId, value) => {
         condition.rules[ruleId].leftOperand = value
     },
-    setRightValue: (condition: ConditionValue, ruleId: RuleId, value: string) => {
+    setRightValue: (condition, ruleId, value) => {
         condition.rules[ruleId].rightOperand = value
     },
-    setOperator: (condition: ConditionValue, ruleId: RuleId, value: Operator, dataType?: DataType) => {
+    setOperator: (condition, ruleId, value, dataType) => {
         const rule = condition.rules[ruleId]
         rule.dataType = dataType ?? rule.dataType
         rule.operator = value
     },
-    addRule: (condition: ConditionValue, ruleGroupId: RuleGroupId) => {
+    addRule: (condition, ruleGroupId) => {
         const newRuleId = Foundations.Field.Condition.Rule.createId()
         condition.rules[newRuleId] = {
             id: newRuleId,
@@ -29,7 +39,7 @@ export const conditionTreeReducers = {
         } satisfies Foundations.Field.Condition.Rule
         condition.groups[ruleGroupId].children.push(newRuleId)
     },
-    addGroup: (condition: ConditionValue, parentGroupId: RuleGroupId) => {
+    addGroup: (condition, parentGroupId) => {
         const newGroupId = Foundations.Field.Condition.RuleGroup.createId()
         condition.groups[newGroupId] = {
             id: newGroupId,
@@ -41,7 +51,7 @@ export const conditionTreeReducers = {
         conditionTreeReducers.addRule(condition, newGroupId)
         conditionTreeReducers.addRule(condition, newGroupId)
     },
-    removeRuleOrGroup: (condition: ConditionValue, id: RuleId | RuleGroupId, parentGroupId: RuleGroupId) => {
+    removeRuleOrGroup: (condition, id, parentGroupId) => {
         const parentGroup = condition.groups[parentGroupId]
 
         if (parentGroup.id === "root" && parentGroup.children.length === 1)
@@ -86,7 +96,7 @@ export const conditionTreeReducers = {
             delete condition.groups[onlyChildId as RuleGroupId]
         }
     },
-    changeCombinator: (condition: ConditionValue, ruleGroupId: RuleGroupId, combinator: "AND" | "OR") => {
+    changeCombinator: (condition, ruleGroupId, combinator) => {
         condition.groups[ruleGroupId].combinator = combinator
     },
 }
