@@ -276,7 +276,7 @@ code {
   --accent-foreground: theme(--color-white);
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: rgb(54, 54, 56);
+  --border: rgb(64, 64, 66);
 
   /* --border: theme(--color-stone-800); */
   --input: theme(--color-neutral-800);
