@@ -200,7 +200,7 @@ const InputItem = memo(({ input, nodeId }: { input: Foundations.Port.Input, node
 
 const IncomingData = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
     const session = ExecutionSessionSDK.useStore(s => s.session);
-    const data = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.getNodeIncomingData(s, nodeId, session));
+    const data = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.execution.getNodeIncomingData(s, nodeId, session));
 
     if (!data)
         return null;

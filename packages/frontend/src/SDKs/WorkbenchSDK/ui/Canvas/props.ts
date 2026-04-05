@@ -210,13 +210,13 @@ export const createCanvasCallbacks = (
             let field: Foundations.Port.Input | Foundations.Port.Output | null;
 
             if (handleType === "source")
-                field = WorkbenchSDK.selectors.getOutput(
+                field = WorkbenchSDK.selectors.output.get(
                     WorkbenchSDK.state,
                     nodeId as Workflow.Node.Id,
                     handleId as Foundations.Port.Output.Id
                 )
             else
-                field = WorkbenchSDK.selectors.getInput(
+                field = WorkbenchSDK.selectors.input.get(
                     WorkbenchSDK.state,
                     nodeId as Workflow.Node.Id,
                     handleId as Foundations.Port.Input.Id

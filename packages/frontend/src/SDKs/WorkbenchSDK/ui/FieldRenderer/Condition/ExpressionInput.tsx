@@ -60,7 +60,7 @@ const TooltipContent = ({ nodeId, uniquePortNames, value }: { nodeId: Workflow.N
 
     const hasSessionData = Object.keys(session.node_output_projections).length > 0
     const incomingData = useMemo(
-        () => WorkbenchSDK.selectors.getNodeIncomingData(WorkbenchSDK.state, nodeId, session),
+        () => WorkbenchSDK.selectors.execution.getNodeIncomingData(WorkbenchSDK.state, nodeId, session),
         [nodeId, session]
     )
 

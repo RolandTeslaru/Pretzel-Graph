@@ -13,7 +13,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         nodeId: Workflow.Node.Id,
         fieldId: Foundations.Field.Id
     ) => {
-        const field = sel.getField(sdk.state, nodeId, fieldId)
+        const field = sel.field.get(sdk.state, nodeId, fieldId)
         if (!field || field.variant !== "Condition")
             throw new Error(`Condition field ${fieldId} not found on node ${nodeId}`)
 
@@ -23,7 +23,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         nodeId: Workflow.Node.Id,
         fieldId: Foundations.Field.Id
     ) => {
-        const field = sel.getField(sdk.state, nodeId, fieldId)
+        const field = sel.field.get(sdk.state, nodeId, fieldId)
         if (!field || field.variant !== "CaseList")
             throw new Error(`CaseList field ${fieldId} not found on node ${nodeId}`)
 
@@ -62,11 +62,11 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                     console.log(`Field ${field.id} requires reconciliation`)
 
                     try {
-                        const blueprint = sdk.selectors.extractBlueprint(sdk.state, nodeId);
+                        const blueprint = sdk.selectors.node.extractBlueprint(sdk.state, nodeId);
                         if (!blueprint)
                             throw new Error(`Could not extract blueprint from node ${nodeId}`);
 
-                        const fieldValues = sel.getFieldsStaticValues(sdk.state, nodeId);
+                        const fieldValues = sel.field.getValues(sdk.state, nodeId);
 
                         const reconciledBlueprint = await ShelfSDK.actions.getReconciledBlueprint(
                             blueprint, field.id, value, fieldValues,
@@ -127,7 +127,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                     setState(s => {
                         reducers.field.caseList.addEntry(s, nodeId, fieldId, entry)
 
-                        const resolvedVariant = sel.getResolvedVariantInSyncGroup(s, nodeId, "condition") ?? "Unresolved"
+                        const resolvedVariant = sel.port.getResolvedVariantInSyncGroup(s, nodeId, "condition") ?? "Unresolved"
                         reducers.port.addOutput(s, nodeId, {
                             id: portId,
                             displayName: label,

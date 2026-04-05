@@ -4,7 +4,6 @@ import { cloneDeep } from 'lodash';
 import { edgeReducers } from "./edge";
 import { cacheReducers } from "./cache";
 import { layoutReducers } from "./layout";
-import { toast } from "sonner";
 import { workbenchSelectors } from "../selectors";
 
 const sel = workbenchSelectors;
@@ -21,17 +20,17 @@ export const nodeReducers = {
         delete staticValues[deletedNodeId];
 
         // Delete the edges coming into the node 
-        const inNodes = sel.ensureInNodesCache(s, deletedNodeId)
+        const inNodes = sel.cache.ensureIncomingNodeEdges(s, deletedNodeId)
 
         Object.entries(inNodes).forEach(([_inNodeId, _edgeId]) => {
-            edgeReducers.remove(s, _edgeId);
+            edgeReducers.remove(s, _edgeId as Workflow.Edge.Id);
         })
 
         // Delete the edges going out of the nodes
-        const outNodes = sel.ensureOutNodesCache(s, deletedNodeId)
+        const outNodes = sel.cache.ensureOutgoingNodeEdges(s, deletedNodeId)
 
         Object.entries(outNodes).forEach(([_outNodeId, _edgeId]) => {
-            edgeReducers.remove(s, _edgeId);
+            edgeReducers.remove(s, _edgeId as Workflow.Edge.Id);
         })
 
         cacheReducers.deleteNode(s, deletedNodeId);
@@ -86,15 +85,15 @@ export const nodeReducers = {
     disconnect: (s, nodeId) => {
         s.isDirty = true;
 
-        const inNodes = sel.ensureInNodesCache(s, nodeId);
-        const outNodes = sel.ensureOutNodesCache(s, nodeId);
+        const inNodes = sel.cache.ensureIncomingNodeEdges(s, nodeId);
+        const outNodes = sel.cache.ensureOutgoingNodeEdges(s, nodeId);
 
         Object.entries(inNodes).forEach(([_inNodeId, edgeId]) => {
-            edgeReducers.remove(s, edgeId);
+            edgeReducers.remove(s, edgeId as Workflow.Edge.Id);
         })
 
         Object.entries(outNodes).forEach(([_outNodeId, edgeId]) => {
-            edgeReducers.remove(s, edgeId);
+            edgeReducers.remove(s, edgeId as Workflow.Edge.Id);
         })
 
         // If the node has a dynamic port group, unresolve it to restore the original variants of the dynamic ports
@@ -113,15 +112,15 @@ export const nodeReducers = {
         s.isDirty = true;
 
         // Delete the edges coming into the node 
-        const inNodes = sel.ensureInNodesCache(s, nodeId)
+        const inNodes = sel.cache.ensureIncomingNodeEdges(s, nodeId)
         Object.entries(inNodes).forEach(([_inNodeId, _edgeId]) => {
-            edgeReducers.remove(s, _edgeId);
+            edgeReducers.remove(s, _edgeId as Workflow.Edge.Id);
         })
 
         // Delete the edges going out of the node
-        const outNodes = sel.ensureOutNodesCache(s, nodeId)
+        const outNodes = sel.cache.ensureOutgoingNodeEdges(s, nodeId)
         Object.entries(outNodes).forEach(([_outNodeId, _edgeId]) => {
-            edgeReducers.remove(s, _edgeId);
+            edgeReducers.remove(s, _edgeId as Workflow.Edge.Id);
         })
 
         cacheReducers.deleteNode(s, nodeId);
