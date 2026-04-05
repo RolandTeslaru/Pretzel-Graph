@@ -5,7 +5,6 @@ import { Expression, Workflow } from '@vx-agent-editor/shared/domain'
 import { Input, Spinner, Tooltip } from '@vx-agent-editor/vx-ui/foundations'
 import { cn } from '@vx-agent-editor/vx-ui/utils/cn'
 import { useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 import JsonView from 'react18-json-view'
 
 const PORT_REF_PATTERN = /\$([a-zA-Z_][a-zA-Z0-9_]*)/g
@@ -109,4 +108,3 @@ const TooltipContent = ({ nodeId, uniquePortNames, value }: { nodeId: Workflow.N
         </div>
     )
 }
-
