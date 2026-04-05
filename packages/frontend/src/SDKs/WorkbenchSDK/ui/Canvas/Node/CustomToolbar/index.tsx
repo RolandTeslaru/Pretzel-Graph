@@ -30,13 +30,11 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
             >
                 <SystemIcons.ArrowLeftRight />
             </Button>
-            <Button variant="ghost" size="icon-xs" className='text-xs'
-                onClick={() => {
-                    WorkbenchSDK.actions.node.setDisabled(node.id, !node.isDisabled)
-                }}
-            >
-                <SystemIcons.Power className={`${node.isDisabled ? 'text-red-500' : ''} stroke-2`} />
-            </Button>
+            <Button size="icon-xs" variant="ghost" onClick={() => WorkbenchSDK.actions.node.setDisabled(node.id, !node.isDisabled)}
+                    className={`${node.isDisabled ? `bg-red-500/40`: ``}`}    
+                >
+                    <SystemIcons.Power className='stroke-2'/>
+                </Button>
             <Button variant="ghost-success" size="icon-xs" className='text-xs'>
                 <SystemIcons.Play />
             </Button>

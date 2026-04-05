@@ -49,6 +49,12 @@ export const buttonVariants = cva(
           aria-expanded:bg-emerald-400/20 aria-expanded:text-emerald-800
           dark:aria-expanded:bg-emerald-500/20 dark:aria-expanded:text-emerald-300
         `,
+        "ghost-destructive": `
+          shadow-none text-red-600 dark:text-red-500
+          hover:bg-red-400/40 hover:text-red-800 dark:hover:text-red-300
+          aria-expanded:bg-red-400/20 aria-expanded:text-red-800
+          dark:aria-expanded:bg-red-500/20 dark:aria-expanded:text-red-300
+        `,
         destructive: `
           bg-red-400/40 text-red-700 hover:bg-red-400/80 shadow-none not-dark:hover:border-red-400
           dark:bg-red-900/50 dark:text-red-400 dark:hover:bg-red-900/80
