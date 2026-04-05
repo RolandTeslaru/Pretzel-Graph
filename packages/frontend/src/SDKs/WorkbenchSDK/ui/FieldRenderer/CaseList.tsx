@@ -14,25 +14,16 @@ type PortId = Foundations.Port.Output.Id
 type RuleId = Foundations.Field.Condition.Rule.Id
 type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id
 
-const getCaseListValue = (
-    state: WorkbenchSDK.State,
-    nodeId: Workflow.Node.Id,
-    fieldId: Foundations.Field.Id
-) => state.workflow.data.staticValues[nodeId]?.[fieldId] as Value | undefined
-
 const useCaseListValue = (
     nodeId: Workflow.Node.Id,
     fieldId: Foundations.Field.Id
-) => WorkbenchSDK.useStore(s => getCaseListValue(s, nodeId, fieldId) ?? [])
+) => WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.field.caseList.getValue(s, nodeId, fieldId) ?? [])
 
 const useCaseListEntry = (
     nodeId: Workflow.Node.Id,
     fieldId: Foundations.Field.Id,
     portId: PortId
-) => WorkbenchSDK.useStore(s => {
-    const value = getCaseListValue(s, nodeId, fieldId)
-    return value?.find(entry => entry.portId === portId) ?? null
-})
+) => WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.field.caseList.getEntry(s, nodeId, fieldId, portId))
 
 export const CaseListField = memo<RendererProps<'CaseList'>>(({ field, nodeId, className }) => {
     const entries = useCaseListValue(nodeId, field.id)

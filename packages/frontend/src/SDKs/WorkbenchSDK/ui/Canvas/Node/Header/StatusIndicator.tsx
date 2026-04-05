@@ -14,7 +14,7 @@ const StatusIndicator = ({
   className?: string,
   executionStatus?: ExecutionSession.NodeStatus
 }) => {
-  const hasIssues = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.doesNodeHaveIssues(s, nodeId))
+  const hasIssues = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.hasIssues(s, nodeId))
 
 
 
