@@ -10,7 +10,7 @@ const InputPort: React.FC<{
     isWorkflowLocked: boolean
     isFlipped?: boolean
 }> = memo(({ input, nodeId, isWorkflowLocked, isFlipped }) => {
-    const hasEdge = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.doesInputhaveEdge(s, nodeId, input.id))
+    const hasEdge = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.input.hasEdge(s, nodeId, input.id))
 
     if (!input)
         return;
@@ -58,4 +58,3 @@ const NodeInputs: React.FC<Props> = memo(({ node, isWorkflowLocked, isFlipped })
 })
 
 export default NodeInputs
-

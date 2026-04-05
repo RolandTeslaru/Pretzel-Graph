@@ -22,11 +22,11 @@ export const edgeReducers = {
         if (!sourcePortId || !targetPortId || !sourceNodeId || !targetNodeId) 
             return;
        
-        const targetPort = sel.getInput(s, targetNodeId, targetPortId);
+        const targetPort = sel.input.get(s, targetNodeId, targetPortId);
         if (!targetPort) 
             return;
 
-        const sourcePort = sel.getOutput(s, sourceNodeId, sourcePortId);
+        const sourcePort = sel.output.get(s, sourceNodeId, sourcePortId);
         if (!sourcePort)
             return
 
@@ -70,8 +70,8 @@ export const edgeReducers = {
         const edge = edges[edgeId];
         if (!edge) return;
 
-        const sourcePort = sel.getOutput(s, edge.source.nodeId, edge.source.portId);
-        const targetPort = sel.getInput(s, edge.target.nodeId, edge.target.portId);
+        const sourcePort = sel.output.get(s, edge.source.nodeId, edge.source.portId);
+        const targetPort = sel.input.get(s, edge.target.nodeId, edge.target.portId);
 
         delete edges[edgeId];
 
@@ -82,11 +82,11 @@ export const edgeReducers = {
 
         // Unresolve dynamic sync groups if no edges remain
         if (targetPort?.isDynamic && targetPort.syncGroupId) {
-            if (!sel.syncGroupHasEdges(s, edge.target.nodeId, targetPort.syncGroupId))
+            if (!sel.port.syncGroupHasEdges(s, edge.target.nodeId, targetPort.syncGroupId))
                 nodeReducers.unresolveDynamicPortGroup(s, edge.target.nodeId, targetPort.syncGroupId);
         }
         if (sourcePort?.isDynamic && sourcePort.syncGroupId) {
-            if (!sel.syncGroupHasEdges(s, edge.source.nodeId, sourcePort.syncGroupId))
+            if (!sel.port.syncGroupHasEdges(s, edge.source.nodeId, sourcePort.syncGroupId))
                 nodeReducers.unresolveDynamicPortGroup(s, edge.source.nodeId, sourcePort.syncGroupId);
         }
     },
@@ -98,5 +98,4 @@ type EdgeReducers = {
     remove: (state: WorkbenchSDK.State, edgeId: Workflow.Edge.Id) => void
     createId: typeof Workflow.Edge.createId
 }
-
 
