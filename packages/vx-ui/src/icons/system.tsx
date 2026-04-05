@@ -737,3 +737,29 @@ export const Pretzel: React.FC<BaseIconProps> = (props) => (
     </BaseIcon>
 )
 Pretzel.displayName = "Pretzel"
+
+export const SquarePen: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>
+    </BaseIcon>
+)
+SquarePen.displayName = "SquarePen"
+
+export const LogIn: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="m10 17 5-5-5-5"/>
+        <path d="M15 12H3"/>
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+    </BaseIcon>
+)
+LogIn.displayName = "LogIn"
+
+export const LogOut: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="m16 17 5-5-5-5"/>
+        <path d="M21 12H9"/>
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+    </BaseIcon>
+)
+LogOut.displayName = "LogOut"
