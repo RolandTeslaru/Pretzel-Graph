@@ -16,7 +16,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     component: () => (
         <>
             <QuerySDK.Provider>
-                <div className='fixed top-5 left-5 z-50'>
+                <div className='fixed bottom-5 right-5 z-50'>
                     <ThemeSelector />
                 </div>
                 <SandboxSDK.SandboxFrame />

@@ -18,6 +18,7 @@ import WorkflowControls from '@/SDKs/OrchestratorSDK/ui/WorkflowControls'
 import { AdminJobsPanel } from '@/SDKs/OrchestratorSDK/ui/AdminJobsPanel'
 import ChatButton from '@/SDKs/ChatSDK/ui/ChatButton'
 import TemporalControls from '@/SDKs/WorkbenchSDK/ui/TemporalControls'
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -117,6 +118,7 @@ function WorkflowLayoutComponent() {
             <ChatSidebar/>
             <NodeSidebar />
             <BottomPanel/>
+            <PathPanel/>
             {/* <AdminJobsPanel /> */}
             {/* <StackDebugPanel/> */}
             {/* <StateViewer /> */}
@@ -132,6 +134,15 @@ const BottomPanel = () => {
             <TemporalControls/>
             <ChatButton/>
             <WorkflowControls/>
+        </div>
+    )
+}
+
+
+const PathPanel = () => {
+    return (
+        <div className='fixed top-5 left-5'>
+            <SystemIcons.Pretzel size={40} className='text-primary cursor-pointer '/>
         </div>
     )
 }
