@@ -21,6 +21,7 @@ export const Blueprint = defineBlueprint({
             id: "data",
             displayName: "Data",
             syncGroupId: "data",
+            required: true
         }),
     ],
     outputs: [

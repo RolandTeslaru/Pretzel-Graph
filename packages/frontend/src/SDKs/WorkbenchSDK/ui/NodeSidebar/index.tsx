@@ -11,20 +11,22 @@ import JsonView from 'react18-json-view';
 import { ExecutionSessionSDK } from '@/SDKs/ExecutionSessionSDK/sdk';
 import { NodeSidebarHeader } from './header';
 import { NodeSidebarFooter } from './footer';
+import IncomingPanel from './IncomingPanel';
 
 
 const NodeSidebar = () => {
     const clickedNode = WorkbenchSDK.useStore(s => s.clickedNodeId ? s.workflow.data.nodes[s.clickedNodeId] : null);
 
     useEffect(() => {
-        if (clickedNode)
+        if (clickedNode) {
             StackSDK.actions.push("nodeSidebar", (props) => (
                 <StackSDK.Template {...props}>
                     <Content clickedNode={clickedNode} />
                 </StackSDK.Template>
             ))
-        else
+        } else {
             StackSDK.actions.pop("nodeSidebar")
+        }
     }, [clickedNode])
 
     return null
@@ -131,47 +133,6 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                             </Accordion.Content>
                         </Accordion.Item>
                     )}
-
-                    {/* Connected Inputs */}
-                    {/* {connectedInputs.length > 0 && (
-                        <Accordion.Item value='connected' className='border-none'>
-                            <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
-                                <h4 className='text-md font-medium'>Connected</h4>
-                            </Accordion.Trigger>
-                            <Accordion.Content className='flex flex-col gap-1 bg-background/50'>
-                                {connectedInputs.map(input => (
-                                    <div key={input.id} className='px-4 py-2 flex items-center gap-2 opacity-60'>
-                                        <PortBadge portVariant={input.variant} />
-                                        <span className='text-sm font-medium'>{input.displayName}</span>
-                                        {input.required && <span className="text-red-500 text-xs">*</span>}
-                                        <span className='ml-auto text-xs text-muted-foreground'>connected</span>
-                                    </div>
-                                ))}
-                            </Accordion.Content>
-                        </Accordion.Item>
-                    )} */}
-                    
-                    <Accordion.Item value='input' className='border-none'>
-                        <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
-                            <h4 className='text-md font-medium'>Input</h4>
-                        </Accordion.Trigger>
-                        <Accordion.Content className='flex flex-col gap-1 bg-background/50 w-0 min-w-full'>
-                            <div className='overflow-x-auto whitespace-nowrap'>
-                                <IncomingData nodeId={node.id}/>
-                            </div>
-                        </Accordion.Content>
-                    </Accordion.Item>
-                    <Accordion.Item value='output' className='border-none'>
-                        <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
-                            <h4 className='text-md font-medium'>Output</h4>
-                        </Accordion.Trigger>
-                        <Accordion.Content className='flex flex-col gap-1 bg-background/50 w-0 min-w-full'>
-                            <div className='p-1 overflow-x-auto whitespace-nowrap'>
-                                <NodeOutputs nodeId={node.id}/>
-                            </div>
-                        </Accordion.Content>
-                    </Accordion.Item>
-
                 </Accordion.Root>
             </ScrollArea.Root>
         </>

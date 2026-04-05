@@ -35,6 +35,7 @@ export const nodeReducers = {
 
         cacheReducers.deleteNode(s, deletedNodeId);
         layoutReducers.node.remove(s, deletedNodeId);
+        nodeReducers.validate(s, deletedNodeId);
     },
     create: (s, blueprint, position) => {
         s.isDirty = true;
@@ -98,9 +99,7 @@ export const nodeReducers = {
 
         // If the node has a dynamic port group, unresolve it to restore the original variants of the dynamic ports
         const node = s.workflow.data.nodes[nodeId];
-        if (!node) return;
-
-        
+        if (!node) return;        
     },
     recreate: (s, nodeId, blueprint) => {
         const node = s.workflow.data.nodes[nodeId];
@@ -286,7 +285,12 @@ export const nodeReducers = {
     },
     validate: (s, nodeId) => {
         const node = s.workflow.data.nodes[nodeId];
-        if (!node) return;
+        if (!node){
+            if(nodeId in s.issues)
+                delete s.issues[nodeId];
+            return
+        }
+            
 
         const nodeIssues = Validation.Issue.Node.check(node, s.workflow, s.cache);
 

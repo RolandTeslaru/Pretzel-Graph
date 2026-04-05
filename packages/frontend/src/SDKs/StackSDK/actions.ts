@@ -24,6 +24,8 @@ export function _createStackActions_(sdk: StackSDKImpl) {
         },
         bringToFront: (...props) => { setState(s => { reducers.bringToFront(s, ...props) }) },
         sendToBack: (...props) => { setState(s => { reducers.sendToBack(s, ...props) }) },
+        pushCompanion: (...props) => { setState(s => { reducers.pushCompanion(s, ...props) }) },
+        popCompanion: (...props) => { setState(s => { reducers.popCompanion(s, ...props) }) },
     } satisfies _StackSDKActions_
 }
 
@@ -34,4 +36,6 @@ export interface _StackSDKActions_ {
     popAll: () => void
     bringToFront: DropFirstArg<StackSDK.Reducers['bringToFront']>
     sendToBack: DropFirstArg<StackSDK.Reducers['sendToBack']>
+    pushCompanion: DropFirstArg<StackSDK.Reducers['pushCompanion']>
+    popCompanion: DropFirstArg<StackSDK.Reducers['popCompanion']>
 }
