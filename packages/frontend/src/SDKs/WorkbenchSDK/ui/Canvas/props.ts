@@ -107,7 +107,7 @@ export const createCanvasCallbacks = (
                 })
             })
 
-            WorkbenchSDK.actions.commit();
+            WorkbenchSDK.actions.debouncedCommit();
 
             setNodeDrivers(prev => applyNodeChanges(changes, prev))
         },
@@ -130,7 +130,7 @@ export const createCanvasCallbacks = (
                 })
             })
 
-            WorkbenchSDK.actions.commit();
+            WorkbenchSDK.actions.debouncedCommit();
 
             setEdgeDrivers(prev => applyEdgeChanges(changes, prev))
         },
@@ -183,7 +183,7 @@ export const createCanvasCallbacks = (
                 }
             })
 
-            WorkbenchSDK.actions.commit();
+            WorkbenchSDK.actions.debouncedCommit();
         },
         onNodeContextMenu: (e, nodeDriver) => {
             e.preventDefault();
