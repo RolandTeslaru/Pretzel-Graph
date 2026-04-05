@@ -12,13 +12,16 @@ interface Props {
   messagesAreaClassname?: string
 }
 
-const MessagesArea: React.FC<Props> = ({ messagesAreaClassname}) => {
-  const messageIds = ChatSDK.useStore(s => s.messages);
-  const isLoading = ChatSDK.useStore(s => s.isLoading);
-  const lastMessageContent = ChatSDK.useStore(s => {
+const ConversationArea: React.FC<Props> = ({ messagesAreaClassname}) => {
+
+  const [messageIds, isLoading, lastMessageContent] = ChatSDK.useStore(s => {
+
     const lastId = s.messages[s.messages.length - 1];
-    return lastId ? s.messagesRecord[lastId]?.content : undefined;
-  });
+    const lastMessageContent = lastId ? s.messagesRecord[lastId]?.content : undefined;
+
+    return [s.messages, s.isLoading, lastMessageContent]
+  })
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevScrollHeightRef = useRef<number>(0);
 
@@ -75,4 +78,4 @@ const MessageItem = memo(({ id }: { id: Chat.Message.Id }) => {
   return prevProps.id === nextProps.id;
 })
 
-export default MessagesArea
+export default ConversationArea

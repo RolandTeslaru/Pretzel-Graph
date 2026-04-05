@@ -86,8 +86,8 @@ export const buttonVariants = cva(
           bg-input/60 border-border
         `,
         active: `
-          bg-sky-400/40 text-sky-700 hover:bg-sky-400/60 shadow-none
-          dark:bg-sky-800/50 dark:text-sky-400 dark:hover:bg-sky-800/80
+          bg-sky-400/20 text-sky-700 hover:bg-sky-400/30 shadow-none
+          dark:bg-sky-700/20 dark:text-sky-400 dark:hover:bg-sky-700/30
           focus-visible:ring-sky-600/20 dark:focus-visible:ring-sky-600/40
           focus-visible:border-sky-600/40
         `

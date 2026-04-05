@@ -36,13 +36,13 @@ const ControlButton = ({ loading, icon: Icon, iconClassName, label, ...rest }: {
   </Button>
 )
 
-const WorkflowControls = () => {
+const WorkflowControls = ({ canRun }: { canRun: boolean }) => {
 
   const [jobId, awaitedConfirmation, executionStatus] = OrchestratorSDK.useStore(s => [s.jobId, s.awaitedConfirmation, s.executionStatus]);
 
   if (jobId === undefined) {
     return (
-      <ControlButton loading={awaitedConfirmation.has("started")} icon={SystemIcons.Play} iconClassName="mr-auto" label="Run" variant="success" onClick={handleRun} />
+      <ControlButton disabled={!canRun} loading={awaitedConfirmation.has("started")} icon={SystemIcons.Play} iconClassName="mr-auto" label="Run" variant="success" onClick={handleRun} />
     )
   }
 

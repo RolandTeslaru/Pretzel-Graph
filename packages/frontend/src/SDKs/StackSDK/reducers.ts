@@ -3,13 +3,15 @@ import type { StackSDK } from "./sdk";
 export const stackReducers = {
     push: (s, panelId, renderer) => {
         // If already exists, delete first (brings to front on re-insert)
-        if (s.panels.has(panelId))
+        const existing = s.panels.get(panelId)
+        if (existing)
             s.panels.delete(panelId)
 
         s.panels.set(panelId, {
             panelId,
             isOpen: true,
             renderer,
+            companions: existing?.companions ?? new Map(),
         })
     },
     pop: (s, panelId) => {
@@ -22,8 +24,10 @@ export const stackReducers = {
         const entry = s.panels.get(panelId)
         if (!entry) return
 
-        s.panels.delete(panelId)
-        s.panels.set(panelId, entry)
+        const reordered = new Map<string, StackSDK.PanelEntry>()
+        s.panels.forEach((v, k) => { if (k !== panelId) reordered.set(k, v) })
+        reordered.set(panelId, entry)
+        s.panels = reordered
     },
     sendToBack: (s, panelId) => {
         const entry = s.panels.get(panelId)
@@ -40,7 +44,17 @@ export const stackReducers = {
         const entry = s.panels.get(panelId)
         if (!entry) return
         entry.isOpen = isOpen
-    }
+    },
+    pushCompanion: (s, panelId, companionId, renderer) => {
+        const entry = s.panels.get(panelId)
+        if (!entry) return
+        entry.companions.set(companionId, { companionId, renderer })
+    },
+    popCompanion: (s, panelId, companionId) => {
+        const entry = s.panels.get(panelId)
+        if (!entry) return
+        entry.companions.delete(companionId)
+    },
 } satisfies StackSDKReducers
 
 
@@ -51,4 +65,6 @@ interface StackSDKReducers {
     bringToFront: (state: StackSDK.State, panelId: string) => void
     sendToBack: (state: StackSDK.State, panelId: string) => void
     setIsOpen: (state: StackSDK.State, panelId: string, isOpen: boolean) => void
+    pushCompanion: (state: StackSDK.State, panelId: string, companionId: string, renderer: StackSDK.CompanionRenderer) => void
+    popCompanion: (state: StackSDK.State, panelId: string, companionId: string) => void
 }
