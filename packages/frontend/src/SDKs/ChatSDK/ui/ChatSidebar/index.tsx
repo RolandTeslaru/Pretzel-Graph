@@ -31,13 +31,18 @@ export default ChatSidebar
 const ChatSidebarContent = () => {
     return (
         <div className='flex flex-col h-full'>
-            <div className='flex flex-row py-2 gap-2 px-4 absolute backdrop-blur-xl bg-card/70 top-0 left-0 z-10 w-full border-b border-border'>
-                <SystemIcons.MessagesSquare className='my-auto h-5 w-5' />
-                <h4 className=' text-xl'>
-                    Conversation
-                </h4>
+            <div className='flex flex-row py-1 gap-2 px-1 absolute backdrop-blur-xl bg-card/70 top-2 w-[calc(100%-16px)] left-2 z-10 border rounded-full border-border'>
+                <div
+                    className='flex items-center gap-2 px-3 py-1 rounded-full'
+                    style={{ backgroundColor: 'color-mix(in srgb, var(--port-Message) 25%, transparent)' }}
+                >
+                    <SystemIcons.MessagesSquare className='my-auto h-4 w-4' style={{ color: 'var(--port-Message-foreground)' }} />
+                    <h4 className='text-sm font-semibold' style={{ color: 'var(--port-Message-foreground)' }}>
+                        Conversation
+                    </h4>
+                </div>
 
-                <div className='flex flex-row gap-2 ml-auto my-auto h-auto'>
+                <div className='flex flex-row gap-2 ml-auto my-auto h-auto px-1'>
                     <Button size="icon-xs" variant="ghost" className="" onClick={() => ChatSDK.actions.chat.new()}>
                         <SystemIcons.Plus className='text-secondary-foreground' />
                     </Button>

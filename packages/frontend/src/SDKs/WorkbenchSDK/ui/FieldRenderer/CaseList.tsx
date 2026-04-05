@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState, useCallback } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
@@ -77,11 +77,10 @@ export const CaseListField = memo<RendererProps<'CaseList'>>(({ field, nodeId, c
                 </Button>
             </div>
             <div className='flex flex-col gap-3 pt-2'>
-                {entries.map(entry => (
-                    <CaseEntry key={entry.portId} entry={entry} field={field} nodeId={nodeId} />
+                {entries.map((entry, index) => (
+                    <CaseEntry key={entry.portId} entry={entry} field={field} nodeId={nodeId} index={index} />
                 ))}
             </div>
-            {/* TODO: add/remove entry buttons that also call portReducers.removeOutput / add output port */}
         </div>
     )
 })
@@ -91,10 +90,16 @@ interface EntryProps {
     entry: Entry
     field: Foundations.Field
     nodeId: Workflow.Node.Id
+    index: number
 }
 
-const CaseEntry = ({ entry, field, nodeId }: EntryProps) => {
+const CaseEntry = memo(({ entry, field, nodeId, index }: EntryProps) => {
     const entryActions = useMemo(() => bindEntryActions(nodeId, field, entry.portId), [nodeId, field, entry.portId])
+
+    const [localLabel, setLocalLabel] = useState(entry.label)
+    const commitLabel = useCallback(() => {
+        if (localLabel !== entry.label) entryActions.setLabel(localLabel)
+    }, [localLabel, entry.label, entryActions])
 
     const ctx = useMemo(() => ({
         nodeId,
@@ -106,16 +111,24 @@ const CaseEntry = ({ entry, field, nodeId }: EntryProps) => {
     return (
         <div className='flex flex-col gap-2 rounded-md'>
             <div className='flex flex-row w-full'>
-                <span className='text-xs font-medium text-muted-foreground'>{entry.label}</span>
+                <span className='text-xs font-medium text-muted-foreground'>Case {index}</span>
                 <Button variant='destructive' size="xs" className='ml-auto' onClick={entryActions.remove}>
                     Delete Case
                 </Button>
             </div>
             <Label>Label</Label>
-            <Input value={entry.label} onChange={e => entryActions.setLabel(e.target.value)} />
+            <Input value={localLabel} onChange={e => setLocalLabel(e.target.value)} onBlur={commitLabel} />
             <ConditionContext.Provider value={ctx}>
                 <RuleGroup ruleGroupId={entry.condition.rootId} />
             </ConditionContext.Provider>
         </div>
     )
-}
+}, (prev, next) =>
+    prev.entry.portId === next.entry.portId &&
+    prev.entry.label === next.entry.label &&
+    prev.entry.condition === next.entry.condition &&
+    prev.index === next.index &&
+    prev.nodeId === next.nodeId &&
+    prev.field === next.field
+)
+CaseEntry.displayName = "CaseEntry"
