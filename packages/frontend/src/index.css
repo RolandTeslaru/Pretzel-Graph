@@ -254,12 +254,12 @@ code {
 }
 
 .dark {
-  --node-accent-base: var(--background);
+  --node-accent-base: var(--color-black);
   --background: theme(--color-neutral-950);
 
 
   --foreground: theme(--color-white);
-  --card: theme(--color-neutral-800);
+  --card: rgb(44, 44, 44);
   --card-foreground: theme(--color-white);
   --popover: theme(--color-neutral-800);
   --popover-foreground: theme(--color-neutral-100);
@@ -276,7 +276,7 @@ code {
   --accent-foreground: theme(--color-white);
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: oklch(34.07% 0.00004 271.152);
+  --border: rgb(54, 54, 56);
 
   /* --border: theme(--color-stone-800); */
   --input: theme(--color-neutral-800);
