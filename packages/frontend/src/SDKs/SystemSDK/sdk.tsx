@@ -19,9 +19,11 @@ class SystemSDKImpl extends BaseSDK<SystemSDK.State> {
             this.setState(s => {
                 s.theme = newTheme
                 const root = document.documentElement;
+                const resolved = newTheme === "system"
+                    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+                    : newTheme
                 root.classList.remove("dark", "light")
-                root.classList.add(newTheme)
-
+                root.classList.add(resolved)
                 localStorage.setItem("theme", newTheme)
             })
         }
@@ -29,6 +31,12 @@ class SystemSDKImpl extends BaseSDK<SystemSDK.State> {
 
     public init(){
         this.actions.setTheme(this.state.theme)
+        window.matchMedia("(prefers-color-scheme: dark)")
+            .addEventListener("change", () => {
+                if (this.state.theme === "system") {
+                    this.actions.setTheme("system")
+                }
+            })
     }
 }
 
@@ -36,7 +44,7 @@ export const SystemSDK = SDK.get<SystemSDKImpl>("System")
 
 
 export namespace SystemSDK {
-    export type Theme = "dark" | "light"
+    export type Theme = "dark" | "light" | "system"
 
     export type State = {
         theme: Theme

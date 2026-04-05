@@ -1,10 +1,5 @@
-export const getInitialPreferedTheme = () => {
+export const getInitialPreferedTheme = (): "dark" | "light" | "system" => {
     const theme = localStorage.getItem("theme")
-    if (!theme) {
-        const preferedTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-
-        localStorage.setItem("theme", preferedTheme);
-        return preferedTheme
-    }
-    return theme as "dark" | "light"
+    if (!theme) return "system"
+    return theme as "dark" | "light" | "system"
 }
