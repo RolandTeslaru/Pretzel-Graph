@@ -1,6 +1,5 @@
 import { Foundations } from '@vx-agent-editor/shared/domain'
 
-const { Condition } = Foundations.Field
 type Operator = Foundations.Field.Condition.Operator
 type DataType = Foundations.Field.Condition.DataType
 
