@@ -68,8 +68,8 @@ function Content({ className, sideOffset = 4, ...rest }: DropdownMenu.Content) {
           rounded-lg border border-border p-1 
           
           shadow-xl backdrop-blur-sm
-          dark:shadow-black/50
-          light:shadow-neutral-950/50
+          dark:shadow-black/30
+          light:shadow-neutral-950/30
 
           `,
           className
