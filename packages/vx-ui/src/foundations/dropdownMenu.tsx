@@ -114,7 +114,7 @@ function Item({ className, inset, variant = "default", ...rest }: DropdownMenu.I
           data-[inset]:pl-8 
           [&_svg]:pointer-events-none 
           [&_svg]:shrink-0
-          [&_svg]:text-accent-foreground/50
+          [&_svg]:text-accent-foreground/80
         `,
         className
       )}
