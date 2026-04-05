@@ -6,18 +6,18 @@ const sel = workbenchSelectors
 
 export const cacheReducers = {
     deleteEdge: (s, { source, target }) => {
-        const inNodes = sel.ensureInNodesCache(s, target.nodeId);
+        const inNodes = sel.cache.ensureIncomingNodeEdges(s, target.nodeId);
         delete inNodes[source.nodeId]
 
-        const outNodes = sel.ensureOutNodesCache(s, source.nodeId);
+        const outNodes = sel.cache.ensureOutgoingNodeEdges(s, source.nodeId);
         delete outNodes[target.nodeId]
 
         delete s.cache.inputHandlesMap[target.nodeId][target.portId];
         delete s.cache.outputHandlesMap[source.nodeId][source.portId]
     },
     addEdge: (s, { source, target, id: edgeId }) => {
-        sel.ensureInNodesCache(s, target.nodeId)[source.nodeId] = edgeId;
-        sel.ensureOutNodesCache(s, source.nodeId)[target.nodeId] = edgeId
+        sel.cache.ensureIncomingNodeEdges(s, target.nodeId)[source.nodeId] = edgeId;
+        sel.cache.ensureOutgoingNodeEdges(s, source.nodeId)[target.nodeId] = edgeId
 
         s.cache.inputHandlesMap[target.nodeId][target.portId] = edgeId
         s.cache.outputHandlesMap[source.nodeId][source.portId] = edgeId

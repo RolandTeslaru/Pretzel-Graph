@@ -18,7 +18,5 @@ export const workbenchReducers = {
     workflow: workflowReducers,
     layout: layoutReducers,
     clipboard: clipboardReducers,
-    createNodeId: nodeReducers.createId,
-    createEdgeId: edgeReducers.createId,
     setClickedNodeId: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id | null) => { state.clickedNodeId = nodeId; },
 }

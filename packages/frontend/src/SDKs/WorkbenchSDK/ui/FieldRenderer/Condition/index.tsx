@@ -12,40 +12,28 @@ type RuleId = Foundations.Field.Condition.Rule.Id
 type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id
 type Value = Foundations.Field.Condition.Value
 
-const getConditionValue = (
-    state: WorkbenchSDK.State,
-    nodeId: Workflow.Node.Id,
-    fieldId: Foundations.Field.Id
-) => state.workflow.data.staticValues[nodeId]?.[fieldId] as Value | undefined
-
 const useConditionValue = (
     nodeId: Workflow.Node.Id,
     fieldId: Foundations.Field.Id
-) => WorkbenchSDK.useStore(s => getConditionValue(s, nodeId, fieldId) ?? null)
+) => WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.field.condition.getValue(s, nodeId, fieldId))
 
 const useConditionGroup = (
     nodeId: Workflow.Node.Id,
     fieldId: Foundations.Field.Id,
     ruleGroupId: RuleGroupId
-) => WorkbenchSDK.useStore(s => getConditionValue(s, nodeId, fieldId)?.groups[ruleGroupId] ?? null)
+) => WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.field.condition.getGroup(s, nodeId, fieldId, ruleGroupId))
 
 const useConditionRule = (
     nodeId: Workflow.Node.Id,
     fieldId: Foundations.Field.Id,
     ruleId: RuleId
-) => WorkbenchSDK.useStore(s => getConditionValue(s, nodeId, fieldId)?.rules[ruleId] ?? null)
+) => WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.field.condition.getRule(s, nodeId, fieldId, ruleId))
 
 const useConditionChildKind = (
     nodeId: Workflow.Node.Id,
     fieldId: Foundations.Field.Id,
     id: RuleId | RuleGroupId
-) => WorkbenchSDK.useStore(s => {
-    const root = getConditionValue(s, nodeId, fieldId)
-    if (!root) return null
-    if (id in root.rules) return 'rule' as const
-    if (id in root.groups) return 'group' as const
-    return null
-})
+) => WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.field.condition.getChildKind(s, nodeId, fieldId, id))
 
 export const ConditionField = memo<RendererProps<'Condition'>>(({ field, nodeId, className }) => {
     const [root, , isReconciling] = WorkbenchSDK.useField<Value>(nodeId, field.id)

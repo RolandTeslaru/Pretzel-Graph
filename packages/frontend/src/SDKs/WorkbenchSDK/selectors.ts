@@ -1,233 +1,292 @@
 import { Workflow, Foundations, ExecutionSession } from '@vx-agent-editor/shared/domain';
 import type { WorkbenchSDK } from './sdk';
 
-export const workbenchSelectors = {
-    ensureIngoerEdgesCache: (s, nodeId, sourceId) => {
-        if (!s.cache.incomingEdgesMap[nodeId])
-            s.cache.incomingEdgesMap[nodeId] = {};
-
-        return s.cache.incomingEdgesMap[nodeId][sourceId];
-    },
-    ensureOutgoerEdgesCache: (s, nodeId, targetId) => {
-        if (!s.cache.outgoingEdgesMap[nodeId])
-            s.cache.outgoingEdgesMap[nodeId] = {};
-
-        return s.cache.outgoingEdgesMap[nodeId][targetId];
-    },
-    ensureInNodesCache: (s, nodeId) => {
-        if (!s.cache.incomingEdgesMap[nodeId])
-            s.cache.incomingEdgesMap[nodeId] = {};
-
-        return s.cache.incomingEdgesMap[nodeId];
-    },
-    ensureOutNodesCache: (s, nodeId) => {
-        if (!s.cache.outgoingEdgesMap[nodeId])
-            s.cache.outgoingEdgesMap[nodeId] = {}
-
-        return s.cache.outgoingEdgesMap[nodeId];
-    },
-    getInput: (s, nodeId, inputId) => {
-        const node = s.workflow.data.nodes[nodeId]
-        if (!node) return null;
-
-        const input = node.inputs.find(i => i.id === inputId);
-        if (!input) return null;
-
-        return input;
-    },
-    getField: (s, nodeId, fieldId) => {
-        const node = s.workflow.data.nodes[nodeId]
-        if (!node) return null;
-
-        const field = node.fields.find(f => f.id === fieldId);
-        if (!field) return null;
-
-        return field;
-    },
-    getFieldsStaticValues: (s, nodeId) => {
-        const staticValues = s.workflow.data.staticValues[nodeId]
-        if (!staticValues)
-            return {};
-        
-        const node = s.workflow.data.nodes[nodeId]
-        if (!node) return {};
-
-        const fieldsValues: Record<Foundations.Field.Id, any> = {}
-        node.fields.forEach(field => {
-            fieldsValues[field.id] = staticValues[field.id] ?? field.initialValue;
-        })
-
-        return fieldsValues;
-    },
-    getOutput: (s, nodeId, outputId) => {
-        const node = s.workflow.data.nodes[nodeId]
-        if (!node) return null;
-
-        const output = node.outputs.find(o => o.id === outputId);
-        if (!output) return null;
-
-        return output;
-    },
-    ensureInHandlesCache: (s, nodeId, inputId) => {
-        return s.cache.inputHandlesMap[nodeId][inputId];
-    },
-    ensureOutHandlesCache: (s, nodeId, outputId) => {
-        return s.cache.outputHandlesMap[nodeId][outputId];
-    },
-    doesInputhaveEdge: (s, nodeId, inputId) => {
-        const edge = s.cache.inputHandlesMap[nodeId][inputId];
-        if (edge)
-            return true
-
-        return false;
-    },
-    doesOutputHaveEdge: (s, nodeId, outputId) => {
-        const hasEdge = s.cache.outputHandlesMap[nodeId][outputId];
-        return !!hasEdge;
-    },
-    doesWorkflowHaveIssues: (s) => {
-        if (Object.entries(s.issues).length > 0)
-            return true;
-
-        else return false;
-    },
-    doesNodeHaveIssues: (s, nodeId) => {
-        const nodeIssues = s.issues[nodeId];
-        if (!nodeIssues)
-            return false;
-
-        if (
-            Object.entries(nodeIssues.fields).length > 0 ||
-            Object.entries(nodeIssues.inputs).length > 0
-        )
-            return true;
-
-        return false;
-    },
-    getDynamicPortSiblings: (s, nodeId, portId) => {
-        const node = s.workflow.data.nodes[nodeId];
-        let triggerPort;
-
-        if(node.inputs.find(port => port.id === portId))
-            triggerPort = node.inputs.find(port => port.id === portId);
-        else
-            triggerPort = node.outputs.find(port => port.id === portId);
-
-        if(!triggerPort)
-            throw new Error(`Port ${portId} not found`);
-
-        if(!triggerPort.isDynamic)
-            throw new Error(`Port ${portId} is not dynamic`);
-
-        const syncGroupId = triggerPort.syncGroupId
-
-        const siblings = new Set<Foundations.Port.Input | Foundations.Port.Output>();
-
-        node.inputs.forEach(input => {
-            if(input.isDynamic && input.syncGroupId === syncGroupId)
-                siblings.add(input);
-        })
-
-        node.outputs.forEach(output => {
-            if(output.isDynamic && output.syncGroupId === syncGroupId)
-                siblings.add(output);
-        })
-
-        return siblings;
-    },
-    getInputProjection: (s, nodeId, inputPortId, session) => {
-        const edgeId = s.cache.inputHandlesMap[nodeId]?.[inputPortId];
-        if (!edgeId) return undefined;
-
-        const edge = s.workflow.data.edges[edgeId];
-        if (!edge) return undefined;
-
-        return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Foundations.Port.Output.Id];
-    },
-    getNodeIncomingData: (s, nodeId, session) => {
-        const node = s.workflow.data.nodes[nodeId];
-        if (!node) return null;
-
-        const incoming: Record<Foundations.Port.Id, Foundations.Projection> = {};
-        for (const input of node.inputs) {
-            const projection = workbenchSelectors.getInputProjection(s, nodeId, input.id, session);
-            if (projection !== undefined)
-                incoming[input.id] = projection;
-        }
-
-        return Object.keys(incoming).length > 0 ? incoming : null;
-    },
-    syncGroupHasEdges: (s, nodeId, syncGroupId) => {
-        const node = s.workflow.data.nodes[nodeId];
-        const inputHandles = s.cache.inputHandlesMap[nodeId];
-        const outputHandles = s.cache.outputHandlesMap[nodeId];
-
-        for (const input of node.inputs) {
-            if (input.isDynamic && input.syncGroupId === syncGroupId && inputHandles[input.id])
-                return true;
-        }
-        for (const output of node.outputs) {
-            if (output.isDynamic && output.syncGroupId === syncGroupId && outputHandles[output.id])
-                return true;
-        }
-        return false;
-    },
-    extractBlueprint: (s, nodeId) => {
-        const node = s.workflow.data.nodes[nodeId];
-        if (!node) return null;
-
-        return {
-            id: node.blueprintId,
-            displayName: node.displayName,
-            icon: node.icon ?? "",
-            accent: node.accent,
-            description: node.description ?? "",
-            fields: node.fields,
-            inputs: node.inputs,
-            outputs: node.outputs,
-        } satisfies Foundations.Blueprint
-    },
-    getResolvedVariantInSyncGroup: (s, nodeId, syncGroupId) => {
-        const node = s.workflow.data.nodes[nodeId];
-        if (!node) return null;
-
-        const allPorts = [...node.inputs, ...node.outputs];
-        const portInSyncGroup = allPorts.find(port => port.syncGroupId === syncGroupId);
-        if (!portInSyncGroup) return null;
-
-        return portInSyncGroup.variant === "Unresolved" ? null : portInSyncGroup.variant;
-    },
-
-} satisfies _WorkBenchSDKSelectors
-
 type NodeId = Workflow.Node.Id
 type EdgeId = Workflow.Edge.Id
+type ConditionValue = Foundations.Field.Condition.Value
+type CaseListValue = Foundations.Field.CaseList.Value
+
+const getConditionFieldValue = (
+    s: WorkbenchSDK.State,
+    nodeId: Workflow.Node.Id,
+    fieldId: Foundations.Field.Id
+): ConditionValue | null => {
+    return (s.workflow.data.staticValues[nodeId]?.[fieldId] as ConditionValue | undefined) ?? null
+}
+
+const getCaseListFieldValue = (
+    s: WorkbenchSDK.State,
+    nodeId: Workflow.Node.Id,
+    fieldId: Foundations.Field.Id
+): CaseListValue | null => {
+    return (s.workflow.data.staticValues[nodeId]?.[fieldId] as CaseListValue | undefined) ?? null
+}
+
+export const workbenchSelectors = {
+    workflow: {
+        hasIssues: (s) => Object.entries(s.issues).length > 0,
+    },
+    node: {
+        get: (s, nodeId) => s.workflow.data.nodes[nodeId] ?? null,
+        hasIssues: (s, nodeId) => {
+            const nodeIssues = s.issues[nodeId];
+            if (!nodeIssues)
+                return false;
+
+            return (
+                Object.entries(nodeIssues.fields).length > 0 ||
+                Object.entries(nodeIssues.inputs).length > 0
+            );
+        },
+        extractBlueprint: (s, nodeId) => {
+            const node = s.workflow.data.nodes[nodeId];
+            if (!node) return null;
+
+            return {
+                id: node.blueprintId,
+                displayName: node.displayName,
+                icon: node.icon ?? "",
+                accent: node.accent,
+                description: node.description ?? "",
+                fields: node.fields,
+                inputs: node.inputs,
+                outputs: node.outputs,
+            } satisfies Foundations.Blueprint
+        },
+    },
+    field: {
+        get: (s, nodeId, fieldId) => {
+            const node = s.workflow.data.nodes[nodeId]
+            if (!node) return null;
+
+            return node.fields.find(f => f.id === fieldId) ?? null;
+        },
+        getValue: (s, nodeId, fieldId) => s.workflow.data.staticValues[nodeId]?.[fieldId] ?? null,
+        getValues: (s, nodeId) => {
+            const staticValues = s.workflow.data.staticValues[nodeId]
+            if (!staticValues)
+                return {};
+
+            const node = s.workflow.data.nodes[nodeId]
+            if (!node) return {};
+
+            const fieldsValues: Record<Foundations.Field.Id, any> = {}
+            node.fields.forEach(field => {
+                fieldsValues[field.id] = staticValues[field.id] ?? field.initialValue;
+            })
+
+            return fieldsValues;
+        },
+        condition: {
+            getValue: (s, nodeId, fieldId) => getConditionFieldValue(s, nodeId, fieldId),
+            getRule: (s, nodeId, fieldId, ruleId) => {
+                const condition = getConditionFieldValue(s, nodeId, fieldId)
+                if (!condition) return null
+                return condition.rules[ruleId] ?? null
+            },
+            getGroup: (s, nodeId, fieldId, ruleGroupId) => {
+                const condition = getConditionFieldValue(s, nodeId, fieldId)
+                if (!condition) return null
+                return condition.groups[ruleGroupId] ?? null
+            },
+            getChildKind: (s, nodeId, fieldId, id) => {
+                const condition = getConditionFieldValue(s, nodeId, fieldId)
+                if (!condition) return null
+                if (id in condition.rules) return 'rule' as const
+                if (id in condition.groups) return 'group' as const
+                return null
+            },
+        },
+        caseList: {
+            getValue: (s, nodeId, fieldId) => getCaseListFieldValue(s, nodeId, fieldId),
+            getEntry: (s, nodeId, fieldId, portId) => {
+                const caseList = getCaseListFieldValue(s, nodeId, fieldId)
+                if (!caseList) return null
+                return caseList.find((entry: Foundations.Field.CaseList.Entry) => entry.portId === portId) ?? null
+            },
+            getEntryIndex: (s, nodeId, fieldId, portId) => {
+                const caseList = getCaseListFieldValue(s, nodeId, fieldId)
+                if (!caseList) return -1
+                return caseList.findIndex((entry: Foundations.Field.CaseList.Entry) => entry.portId === portId)
+            },
+            getPortIds: (s, nodeId, fieldId) => {
+                const caseList = getCaseListFieldValue(s, nodeId, fieldId)
+                return caseList?.map((entry: Foundations.Field.CaseList.Entry) => entry.portId) ?? []
+            },
+        },
+    },
+    input: {
+        get: (s, nodeId, inputId) => {
+            const node = s.workflow.data.nodes[nodeId]
+            if (!node) return null;
+
+            return node.inputs.find(i => i.id === inputId) ?? null;
+        },
+        hasEdge: (s, nodeId, inputId) => !!s.cache.inputHandlesMap[nodeId][inputId],
+        getProjection: (s, nodeId, inputPortId, session) => {
+            const edgeId = s.cache.inputHandlesMap[nodeId]?.[inputPortId];
+            if (!edgeId) return undefined;
+
+            const edge = s.workflow.data.edges[edgeId];
+            if (!edge) return undefined;
+
+            return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Foundations.Port.Output.Id];
+        },
+    },
+    output: {
+        get: (s, nodeId, outputId) => {
+            const node = s.workflow.data.nodes[nodeId]
+            if (!node) return null;
+
+            return node.outputs.find(o => o.id === outputId) ?? null;
+        },
+        hasEdge: (s, nodeId, outputId) => !!s.cache.outputHandlesMap[nodeId][outputId],
+    },
+    port: {
+        getDynamicSiblings: (s, nodeId, portId) => {
+            const node = s.workflow.data.nodes[nodeId];
+            let triggerPort;
+
+            if (node.inputs.find(port => port.id === portId))
+                triggerPort = node.inputs.find(port => port.id === portId);
+            else
+                triggerPort = node.outputs.find(port => port.id === portId);
+
+            if (!triggerPort)
+                throw new Error(`Port ${portId} not found`);
+
+            if (!triggerPort.isDynamic)
+                throw new Error(`Port ${portId} is not dynamic`);
+
+            const syncGroupId = triggerPort.syncGroupId
+            const siblings = new Set<Foundations.Port.Input | Foundations.Port.Output>();
+
+            node.inputs.forEach(input => {
+                if (input.isDynamic && input.syncGroupId === syncGroupId)
+                    siblings.add(input);
+            })
+
+            node.outputs.forEach(output => {
+                if (output.isDynamic && output.syncGroupId === syncGroupId)
+                    siblings.add(output);
+            })
+
+            return siblings;
+        },
+        getResolvedVariantInSyncGroup: (s, nodeId, syncGroupId) => {
+            const node = s.workflow.data.nodes[nodeId];
+            if (!node) return null;
+
+            const allPorts = [...node.inputs, ...node.outputs];
+            const portInSyncGroup = allPorts.find(port => port.syncGroupId === syncGroupId);
+            if (!portInSyncGroup) return null;
+
+            return portInSyncGroup.variant === "Unresolved" ? null : portInSyncGroup.variant;
+        },
+        syncGroupHasEdges: (s, nodeId, syncGroupId) => {
+            const node = s.workflow.data.nodes[nodeId];
+            const inputHandles = s.cache.inputHandlesMap[nodeId];
+            const outputHandles = s.cache.outputHandlesMap[nodeId];
+
+            for (const input of node.inputs) {
+                if (input.isDynamic && input.syncGroupId === syncGroupId && inputHandles[input.id])
+                    return true;
+            }
+            for (const output of node.outputs) {
+                if (output.isDynamic && output.syncGroupId === syncGroupId && outputHandles[output.id])
+                    return true;
+            }
+            return false;
+        },
+    },
+    cache: {
+        ensureIncomingNodeEdges: (s, nodeId) => {
+            if (!s.cache.incomingEdgesMap[nodeId])
+                s.cache.incomingEdgesMap[nodeId] = {};
+
+            return s.cache.incomingEdgesMap[nodeId];
+        },
+        ensureOutgoingNodeEdges: (s, nodeId) => {
+            if (!s.cache.outgoingEdgesMap[nodeId])
+                s.cache.outgoingEdgesMap[nodeId] = {};
+
+            return s.cache.outgoingEdgesMap[nodeId];
+        },
+        getInputHandleEdge: (s, nodeId, inputId) => s.cache.inputHandlesMap[nodeId][inputId],
+        getOutputHandleEdge: (s, nodeId, outputId) => s.cache.outputHandlesMap[nodeId][outputId],
+    },
+    execution: {
+        getNodeIncomingData: (s, nodeId, session) => {
+            const node = s.workflow.data.nodes[nodeId];
+            if (!node) return null;
+
+            const incoming: Record<Foundations.Port.Id, Foundations.Projection> = {};
+            for (const input of node.inputs) {
+                const projection = s.cache.inputHandlesMap[nodeId]?.[input.id]
+                    ? (() => {
+                        const edgeId = s.cache.inputHandlesMap[nodeId]?.[input.id];
+                        if (!edgeId) return undefined;
+                        const edge = s.workflow.data.edges[edgeId];
+                        if (!edge) return undefined;
+                        return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Foundations.Port.Output.Id];
+                    })()
+                    : undefined
+                if (projection !== undefined)
+                    incoming[input.id] = projection;
+            }
+
+            return Object.keys(incoming).length > 0 ? incoming : null;
+        },
+    },
+} satisfies _WorkBenchSDKSelectors
 
 export type _WorkBenchSDKSelectors = {
-    ensureIngoerEdgesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, sourceId: Workflow.Node.Id) => Workflow.Edge.Id;
-    ensureOutgoerEdgesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, targetId: Workflow.Node.Id) => Workflow.Edge.Id;
-
-    ensureInNodesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<NodeId, EdgeId>
-    ensureOutNodesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<NodeId, EdgeId>
-
-    getInput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Foundations.Port.Input | null
-    getField: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => Foundations.Field | null
-    getOutput: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => Foundations.Port.Output | null
-
-    getFieldsStaticValues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Foundations.Field.Id, any>
-
-    ensureInHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Workflow.Edge.Id
-    ensureOutHandlesCache: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => Workflow.Edge.Id
-
-    doesInputhaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => boolean
-    doesOutputHaveEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => boolean
-
-    getInputProjection: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputPortId: Foundations.Port.Input.Id, session: ExecutionSession) => Foundations.Projection | undefined
-    doesWorkflowHaveIssues: (state: WorkbenchSDK.State) => boolean
-    doesNodeHaveIssues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
-    getDynamicPortSiblings: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Id) => Set<Foundations.Port.Input | Foundations.Port.Output>
-    syncGroupHasEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => boolean
-    getNodeIncomingData: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session: ExecutionSession) => Record<Foundations.Port.Id, Foundations.Projection> | null
-    extractBlueprint: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Blueprint | null
-    getResolvedVariantInSyncGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => Foundations.Port.Variant | null
+    workflow: {
+        hasIssues: (state: WorkbenchSDK.State) => boolean
+    }
+    node: {
+        get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node | null
+        hasIssues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
+        extractBlueprint: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Blueprint | null
+    }
+    field: {
+        get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => Foundations.Field | null
+        getValue: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => Foundations.Field.Value | null
+        getValues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Foundations.Field.Id, any>
+        condition: {
+            getValue: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => ConditionValue | null
+            getRule: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, ruleId: Foundations.Field.Condition.Rule.Id) => Foundations.Field.Condition.Rule | null
+            getGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, ruleGroupId: Foundations.Field.Condition.RuleGroup.Id) => Foundations.Field.Condition.RuleGroup | null
+            getChildKind: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, id: Foundations.Field.Condition.Rule.Id | Foundations.Field.Condition.RuleGroup.Id) => 'rule' | 'group' | null
+        }
+        caseList: {
+            getValue: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => CaseListValue | null
+            getEntry: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, portId: Foundations.Port.Output.Id) => Foundations.Field.CaseList.Entry | null
+            getEntryIndex: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, portId: Foundations.Port.Output.Id) => number
+            getPortIds: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => Foundations.Port.Output.Id[]
+        }
+    }
+    input: {
+        get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Foundations.Port.Input | null
+        hasEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => boolean
+        getProjection: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputPortId: Foundations.Port.Input.Id, session: ExecutionSession) => Foundations.Projection | undefined
+    }
+    output: {
+        get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => Foundations.Port.Output | null
+        hasEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => boolean
+    }
+    port: {
+        getDynamicSiblings: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Id) => Set<Foundations.Port.Input | Foundations.Port.Output>
+        getResolvedVariantInSyncGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => Foundations.Port.Variant | null
+        syncGroupHasEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => boolean
+    }
+    cache: {
+        ensureIncomingNodeEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<NodeId, EdgeId>
+        ensureOutgoingNodeEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<NodeId, EdgeId>
+        getInputHandleEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Workflow.Edge.Id
+        getOutputHandleEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => Workflow.Edge.Id
+    }
+    execution: {
+        getNodeIncomingData: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session: ExecutionSession) => Record<Foundations.Port.Id, Foundations.Projection> | null
+    }
 }
