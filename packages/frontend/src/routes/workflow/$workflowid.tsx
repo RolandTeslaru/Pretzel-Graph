@@ -41,7 +41,7 @@ export const Route = createFileRoute('/workflow/$workflowid')({
         return null;
     },
     onLeave: () => {
-        WorkbenchSDK.actions.commitImmediately();
+        WorkbenchSDK.actions.commit();
         QuerySDK.client.clear();
     },
     component: WorkflowLayoutComponent,
@@ -101,7 +101,7 @@ function WorkflowLayoutComponent() {
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (WorkbenchSDK.state.isDirty) {
-                WorkbenchSDK.actions.commitImmediately();
+                WorkbenchSDK.actions.commit();
                 // This triggers the browser's generic "Leave Site? Changes you made may not be saved." dialog.
                 e.preventDefault();
                 e.returnValue = ''; // Chrome requires returnValue to be set

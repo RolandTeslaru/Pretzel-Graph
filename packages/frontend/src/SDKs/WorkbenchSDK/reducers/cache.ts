@@ -1,23 +1,32 @@
 import type { Workflow } from "@vx-agent-editor/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
-import { workbenchSelectors } from "../selectors";
-
-const sel = workbenchSelectors
 
 export const cacheReducers = {
+    ensureIncomingNodeEdges: (s, nodeId) => {
+        if (!s.cache.incomingEdgesMap[nodeId])
+            s.cache.incomingEdgesMap[nodeId] = {};
+
+        return s.cache.incomingEdgesMap[nodeId];
+    },
+    ensureOutgoingNodeEdges: (s, nodeId) => {
+        if (!s.cache.outgoingEdgesMap[nodeId])
+            s.cache.outgoingEdgesMap[nodeId] = {};
+
+        return s.cache.outgoingEdgesMap[nodeId];
+    },
     deleteEdge: (s, { source, target }) => {
-        const inNodes = sel.cache.ensureIncomingNodeEdges(s, target.nodeId);
+        const inNodes = cacheReducers.ensureIncomingNodeEdges(s, target.nodeId);
         delete inNodes[source.nodeId]
 
-        const outNodes = sel.cache.ensureOutgoingNodeEdges(s, source.nodeId);
+        const outNodes = cacheReducers.ensureOutgoingNodeEdges(s, source.nodeId);
         delete outNodes[target.nodeId]
 
         delete s.cache.inputHandlesMap[target.nodeId][target.portId];
         delete s.cache.outputHandlesMap[source.nodeId][source.portId]
     },
     addEdge: (s, { source, target, id: edgeId }) => {
-        sel.cache.ensureIncomingNodeEdges(s, target.nodeId)[source.nodeId] = edgeId;
-        sel.cache.ensureOutgoingNodeEdges(s, source.nodeId)[target.nodeId] = edgeId
+        cacheReducers.ensureIncomingNodeEdges(s, target.nodeId)[source.nodeId] = edgeId;
+        cacheReducers.ensureOutgoingNodeEdges(s, source.nodeId)[target.nodeId] = edgeId
 
         s.cache.inputHandlesMap[target.nodeId][target.portId] = edgeId
         s.cache.outputHandlesMap[source.nodeId][source.portId] = edgeId
@@ -43,6 +52,8 @@ export const cacheReducers = {
 } satisfies INTERNAL_CacheReducers
 
 type INTERNAL_CacheReducers = {
+    ensureIncomingNodeEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Workflow.Node.Id, Workflow.Edge.Id>
+    ensureOutgoingNodeEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Workflow.Node.Id, Workflow.Edge.Id>
     deleteEdge: (state: WorkbenchSDK.State, edge: Workflow.Edge) => void
     addEdge: (state: WorkbenchSDK.State, newEdge: Workflow.Edge) => void
     deleteNode: (state: WorkbenchSDK.State, deletedNodeId: Workflow.Node.Id) => void

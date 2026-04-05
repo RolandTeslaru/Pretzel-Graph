@@ -6,21 +6,46 @@ type EdgeId = Workflow.Edge.Id
 type ConditionValue = Foundations.Field.Condition.Value
 type CaseListValue = Foundations.Field.CaseList.Value
 
-const getConditionFieldValue = (
-    s: WorkbenchSDK.State,
-    nodeId: Workflow.Node.Id,
-    fieldId: Foundations.Field.Id
-): ConditionValue | null => {
-    return (s.workflow.data.staticValues[nodeId]?.[fieldId] as ConditionValue | undefined) ?? null
-}
+const conditionSelectors = {
+    getValue: (s, nodeId, fieldId) =>
+        (s.workflow.data.staticValues[nodeId]?.[fieldId] as ConditionValue | undefined) ?? null,
+    getRule: (s, nodeId, fieldId, ruleId) => {
+        const condition = conditionSelectors.getValue(s, nodeId, fieldId)
+        if (!condition) return null
+        return condition.rules[ruleId] ?? null
+    },
+    getGroup: (s, nodeId, fieldId, ruleGroupId) => {
+        const condition = conditionSelectors.getValue(s, nodeId, fieldId)
+        if (!condition) return null
+        return condition.groups[ruleGroupId] ?? null
+    },
+    getChildKind: (s, nodeId, fieldId, id) => {
+        const condition = conditionSelectors.getValue(s, nodeId, fieldId)
+        if (!condition) return null
+        if (id in condition.rules) return 'rule' as const
+        if (id in condition.groups) return 'group' as const
+        return null
+    },
+} as ConditionSelectors
 
-const getCaseListFieldValue = (
-    s: WorkbenchSDK.State,
-    nodeId: Workflow.Node.Id,
-    fieldId: Foundations.Field.Id
-): CaseListValue | null => {
-    return (s.workflow.data.staticValues[nodeId]?.[fieldId] as CaseListValue | undefined) ?? null
-}
+const caseListSelectors = {
+    getValue: (s, nodeId, fieldId) =>
+        (s.workflow.data.staticValues[nodeId]?.[fieldId] as CaseListValue | undefined) ?? null,
+    getEntry: (s, nodeId, fieldId, portId) => {
+        const caseList = caseListSelectors.getValue(s, nodeId, fieldId)
+        if (!caseList) return null
+        return caseList.find((entry: Foundations.Field.CaseList.Entry) => entry.portId === portId) ?? null
+    },
+    getEntryIndex: (s, nodeId, fieldId, portId) => {
+        const caseList = caseListSelectors.getValue(s, nodeId, fieldId)
+        if (!caseList) return -1
+        return caseList.findIndex((entry: Foundations.Field.CaseList.Entry) => entry.portId === portId)
+    },
+    getPortIds: (s, nodeId, fieldId) => {
+        const caseList = caseListSelectors.getValue(s, nodeId, fieldId)
+        return caseList?.map((entry: Foundations.Field.CaseList.Entry) => entry.portId) ?? []
+    },
+} as CaseListSelectors
 
 export const workbenchSelectors = {
     workflow: {
@@ -77,43 +102,8 @@ export const workbenchSelectors = {
 
             return fieldsValues;
         },
-        condition: {
-            getValue: (s, nodeId, fieldId) => getConditionFieldValue(s, nodeId, fieldId),
-            getRule: (s, nodeId, fieldId, ruleId) => {
-                const condition = getConditionFieldValue(s, nodeId, fieldId)
-                if (!condition) return null
-                return condition.rules[ruleId] ?? null
-            },
-            getGroup: (s, nodeId, fieldId, ruleGroupId) => {
-                const condition = getConditionFieldValue(s, nodeId, fieldId)
-                if (!condition) return null
-                return condition.groups[ruleGroupId] ?? null
-            },
-            getChildKind: (s, nodeId, fieldId, id) => {
-                const condition = getConditionFieldValue(s, nodeId, fieldId)
-                if (!condition) return null
-                if (id in condition.rules) return 'rule' as const
-                if (id in condition.groups) return 'group' as const
-                return null
-            },
-        },
-        caseList: {
-            getValue: (s, nodeId, fieldId) => getCaseListFieldValue(s, nodeId, fieldId),
-            getEntry: (s, nodeId, fieldId, portId) => {
-                const caseList = getCaseListFieldValue(s, nodeId, fieldId)
-                if (!caseList) return null
-                return caseList.find((entry: Foundations.Field.CaseList.Entry) => entry.portId === portId) ?? null
-            },
-            getEntryIndex: (s, nodeId, fieldId, portId) => {
-                const caseList = getCaseListFieldValue(s, nodeId, fieldId)
-                if (!caseList) return -1
-                return caseList.findIndex((entry: Foundations.Field.CaseList.Entry) => entry.portId === portId)
-            },
-            getPortIds: (s, nodeId, fieldId) => {
-                const caseList = getCaseListFieldValue(s, nodeId, fieldId)
-                return caseList?.map((entry: Foundations.Field.CaseList.Entry) => entry.portId) ?? []
-            },
-        },
+        condition: conditionSelectors,
+        caseList: caseListSelectors,
     },
     input: {
         get: (s, nodeId, inputId) => {
@@ -200,18 +190,6 @@ export const workbenchSelectors = {
         },
     },
     cache: {
-        ensureIncomingNodeEdges: (s, nodeId) => {
-            if (!s.cache.incomingEdgesMap[nodeId])
-                s.cache.incomingEdgesMap[nodeId] = {};
-
-            return s.cache.incomingEdgesMap[nodeId];
-        },
-        ensureOutgoingNodeEdges: (s, nodeId) => {
-            if (!s.cache.outgoingEdgesMap[nodeId])
-                s.cache.outgoingEdgesMap[nodeId] = {};
-
-            return s.cache.outgoingEdgesMap[nodeId];
-        },
         getInputHandleEdge: (s, nodeId, inputId) => s.cache.inputHandlesMap[nodeId][inputId],
         getOutputHandleEdge: (s, nodeId, outputId) => s.cache.outputHandlesMap[nodeId][outputId],
     },
@@ -240,6 +218,20 @@ export const workbenchSelectors = {
     },
 } satisfies _WorkBenchSDKSelectors
 
+type ConditionSelectors = {
+    getValue: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id) => ConditionValue | null
+    getRule: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id, ruleId: Foundations.Field.Condition.Rule.Id) => Foundations.Field.Condition.Rule | null
+    getGroup: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id, ruleGroupId: Foundations.Field.Condition.RuleGroup.Id) => Foundations.Field.Condition.RuleGroup | null
+    getChildKind: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id, id: Foundations.Field.Condition.Rule.Id | Foundations.Field.Condition.RuleGroup.Id) => 'rule' | 'group' | null
+}
+
+type CaseListSelectors = {
+    getValue: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id) => CaseListValue | null
+    getEntry: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id, portId: Foundations.Port.Output.Id) => Foundations.Field.CaseList.Entry | null
+    getEntryIndex: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id, portId: Foundations.Port.Output.Id) => number
+    getPortIds: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id) => Foundations.Port.Output.Id[]
+}
+
 export type _WorkBenchSDKSelectors = {
     workflow: {
         hasIssues: (state: WorkbenchSDK.State) => boolean
@@ -253,18 +245,8 @@ export type _WorkBenchSDKSelectors = {
         get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => Foundations.Field | null
         getValue: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => Foundations.Field.Value | null
         getValues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Foundations.Field.Id, any>
-        condition: {
-            getValue: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => ConditionValue | null
-            getRule: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, ruleId: Foundations.Field.Condition.Rule.Id) => Foundations.Field.Condition.Rule | null
-            getGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, ruleGroupId: Foundations.Field.Condition.RuleGroup.Id) => Foundations.Field.Condition.RuleGroup | null
-            getChildKind: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, id: Foundations.Field.Condition.Rule.Id | Foundations.Field.Condition.RuleGroup.Id) => 'rule' | 'group' | null
-        }
-        caseList: {
-            getValue: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => CaseListValue | null
-            getEntry: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, portId: Foundations.Port.Output.Id) => Foundations.Field.CaseList.Entry | null
-            getEntryIndex: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, portId: Foundations.Port.Output.Id) => number
-            getPortIds: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => Foundations.Port.Output.Id[]
-        }
+        condition: ConditionSelectors
+        caseList: CaseListSelectors
     }
     input: {
         get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Foundations.Port.Input | null
@@ -281,8 +263,6 @@ export type _WorkBenchSDKSelectors = {
         syncGroupHasEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => boolean
     }
     cache: {
-        ensureIncomingNodeEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<NodeId, EdgeId>
-        ensureOutgoingNodeEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<NodeId, EdgeId>
         getInputHandleEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Workflow.Edge.Id
         getOutputHandleEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => Workflow.Edge.Id
     }
