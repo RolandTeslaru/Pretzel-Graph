@@ -6,7 +6,7 @@ import { S2ExecutionContext, S2Hooks } from "./types";
 
 // S² Engine (Super Solenoid Engine from Neon Genesis Evangelion)
 
-// or Super Signal Engine ( simmilar to super steps in Pregel)
+// or Super Signal Engine ( sounds simmilar to super steps in Pregel)
 
 export class S2Engine {
     constructor() { }
@@ -77,7 +77,7 @@ export class S2Engine {
     ) {
         const allDependents = ctx.graph.dependentsMap.get(vertexId)!;
         const dependents = signalSet ?? allDependents;
-        console.log("Firing dependents of vertex", vertexId, "with signal set", signalSet, "resulting in dependents", dependents);
+        // console.log("Firing dependents of vertex", vertexId, "with signal set", signalSet, "resulting in dependents", dependents);
 
         dependents.forEach(dep => {
             if (ctx.settled) return;
@@ -86,7 +86,7 @@ export class S2Engine {
             signals.add(vertexId);
             const canRun = this.canVertexRun(dep, ctx);
 
-            console.log("Checking if dependent vertex", dep, "can run with accumulated signals", signals, "->", canRun);
+            // console.log("Checking if dependent vertex", dep, "can run with accumulated signals", signals, "->", canRun);
             const copiedSignals = new Set(signals);
 
             if (canRun) {
@@ -110,7 +110,7 @@ export class S2Engine {
         signals: Set<Vertex.Id>, // incoming signals that triggered this vertex to fire. For AND strategy, this will be the complete set of dependencies. For OR/XOR, this will be a subset of dependencies.
         ctx: S2ExecutionContext
     ) {
-        console.log("Attempting to fire vertex", vertexId, "with incoming signals", signals);
+        // console.log("Attempting to fire vertex", vertexId, "with incoming signals", signals);
         if (ctx.settled) return;
 
         ctx.activeTasks++;
@@ -143,7 +143,7 @@ export class S2Engine {
             ctx.activeTasks--;
 
             if (ctx.activeTasks === 0 && !ctx.settled) {
-                console.log("All tasks completed, settling with success.", "Active vertexes at settlement:", ctx.activeVertexes, "vertexId at settlement:", vertexId);
+                // console.log("All tasks completed, settling with success.", "Active vertexes at settlement:", ctx.activeVertexes, "vertexId at settlement:", vertexId);
 
                 ctx.settled = true;
                 ctx.resolve("Finished");

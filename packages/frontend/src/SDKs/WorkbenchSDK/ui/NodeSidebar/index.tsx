@@ -1,4 +1,4 @@
-import { ScrollArea, Spinner } from '@vx-agent-editor/vx-ui/foundations'
+import { Button, ScrollArea, Spinner } from '@vx-agent-editor/vx-ui/foundations'
 import { useMemo, memo, useEffect } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { StackSDK } from '@/SDKs/StackSDK'
@@ -10,6 +10,7 @@ import { InputRenderer } from '../InputRenderer';
 import { PortBadge } from '../PortBadge';
 import JsonView from 'react18-json-view';
 import { ExecutionSessionSDK } from '@/SDKs/ExecutionSessionSDK/sdk';
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons';
 
 
 const NodeSidebar = () => {
@@ -71,14 +72,36 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
     return (
         <>
             {/* Header */}
-            <div className='flex flex-row pt-2 gap-2 mb-2 px-4 relative'>
-                <LazyIcon className='text-foreground my-auto h-5 w-5' name={node.icon as string} />
-                <h4 className=' text-lg'>
-                    {node.displayName}
-                </h4>
+            <div className='absolute top-2 left-2 flex flex-row bg-card w-[calc(100%-16px)] p-1 rounded-full border border-border shadow-sm shadow-black/10'>
+                <div
+                    className='flex items-center gap-2 px-3 py-1 rounded-full'
+                    style={{
+                        backgroundColor: node.accent ? `color-mix(in srgb, var(--${node.accent}) 25%, transparent)` : 'var(--muted)',
+                    }}
+                >
+                    <LazyIcon
+                        className='my-auto h-4 w-4'
+                        name={node.icon as string}
+                        style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
+                    />
+                    <h4
+                        className='text-sm font-semibold'
+                        style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
+                    >
+                        {node.displayName}
+                    </h4>
+                </div>
+                <div className='flex flex-row gap-2 ml-auto my-auto h-auto px-1'>
+                    <Button size="icon-xs" variant="ghost" >
+                        <SystemIcons.Wrench className='text-secondary-foreground' />
+                    </Button>
+                    <Button size="icon-xs" variant="ghost" >
+                        <SystemIcons.Ellipsis className='text-secondary-foreground' />
+                    </Button>
+                </div>
             </div>
             {node.description && (
-                <div className='border-t border-b border-border py-2 px-4'>
+                <div className=' py-2 px-2 pt-14'>
                     <p className='text-muted-foreground text-xs'>
                         {node.description}
                     </p>
@@ -92,7 +115,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                     defaultValue={defaultOpen}
                 >
                     {inputs.length > 0 && (
-                        <Accordion.Item value='inputs'>
+                        <Accordion.Item value='inputs' className='border-none'>
                             <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
                                 <h4 className='text-md font-medium'>Inputs</h4>
                             </Accordion.Trigger>
@@ -105,7 +128,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                     )}
                     {/* Fields */}
                     {fields.length > 0 && (
-                        <Accordion.Item value='fields'>
+                        <Accordion.Item value='fields' className='border-none'>
                             <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
                                 <h4 className='text-md font-medium'>Fields</h4>
                             </Accordion.Trigger>
@@ -121,7 +144,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
 
                     {/* Connected Inputs */}
                     {/* {connectedInputs.length > 0 && (
-                        <Accordion.Item value='connected'>
+                        <Accordion.Item value='connected' className='border-none'>
                             <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
                                 <h4 className='text-md font-medium'>Connected</h4>
                             </Accordion.Trigger>
@@ -138,7 +161,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                         </Accordion.Item>
                     )} */}
                     
-                    <Accordion.Item value='input'>
+                    <Accordion.Item value='input' className='border-none'>
                         <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
                             <h4 className='text-md font-medium'>Input</h4>
                         </Accordion.Trigger>
@@ -148,7 +171,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                             </div>
                         </Accordion.Content>
                     </Accordion.Item>
-                    <Accordion.Item value='output'>
+                    <Accordion.Item value='output' className='border-none'>
                         <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
                             <h4 className='text-md font-medium'>Output</h4>
                         </Accordion.Trigger>
