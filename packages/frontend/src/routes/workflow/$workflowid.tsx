@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react'
 import JsonView from 'react18-json-view'
 import 'react18-json-view/src/style.css'
 import 'react18-json-view/src/dark.css'
-import { Button, Select } from '@vx-agent-editor/vx-ui/foundations'
+import { Button, DropdownMenu, Select } from '@vx-agent-editor/vx-ui/foundations'
 import NodeSidebar from '@/SDKs/WorkbenchSDK/ui/NodeSidebar'
 import ChatSidebar from '@/SDKs/ChatSDK/ui/ChatSidebar'
 import WorkflowControls from '@/SDKs/OrchestratorSDK/ui/WorkflowControls'
@@ -19,6 +19,7 @@ import { AdminJobsPanel } from '@/SDKs/OrchestratorSDK/ui/AdminJobsPanel'
 import ChatButton from '@/SDKs/ChatSDK/ui/ChatButton'
 import TemporalControls from '@/SDKs/WorkbenchSDK/ui/TemporalControls'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -143,9 +144,61 @@ const BottomPanel = () => {
 
 
 const PathPanel = () => {
+    const workflowName = WorkbenchSDK.useStore(s => s.workflow?.display_name) || "Untitled Workflow";
     return (
-        <div className='fixed top-5 left-5'>
-            <SystemIcons.Pretzel size={40} className='text-primary cursor-pointer '/>
+        <div className='fixed top-5 left-5 flex gap-2 text-sm font-medium'>
+            <PretzelLogoDropwdown/>
+            <div className='flex flex-row gap-2 h-auto my-auto text-foreground/70'>
+                <p>/</p>
+                <p>PretzelHQ</p>
+                <p>/</p>
+                <p>Demos</p>
+                <p>/</p>
+                <p>{workflowName}</p>
+            </div>
         </div>
+    )
+}
+
+const PretzelLogoDropwdown = () => {
+    const theme = SystemSDK.useStore(s => s.theme);
+    
+    return (
+        <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+                <SystemIcons.Pretzel size={30} className='text-primary cursor-pointer '/>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content align='start' >
+                <h4 className='px-2 py-1 text-md font-medium text-primary'>
+                    PretzelGraph.ai
+                </h4>
+                <DropdownMenu.Item>
+                    <SystemIcons.User/>
+                    Account
+                </DropdownMenu.Item>
+                <DropdownMenu.Item>
+                    <SystemIcons.Settings/>
+                    Settings
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator/>
+                <DropdownMenu.RadioGroup value={theme} onValueChange={(value) => SystemSDK.actions.setTheme(value as "light" | "dark")}>
+                    <p className='px-2 py-1 text-sm text-muted-foreground'>
+                        Theme
+                    </p>
+                    <DropdownMenu.RadioItem value="light">
+                        <SystemIcons.Sun/>
+                        Light
+                    </DropdownMenu.RadioItem>
+                    <DropdownMenu.RadioItem value="dark">
+                        <SystemIcons.Moon/>
+                        Dark
+                    </DropdownMenu.RadioItem>
+                    <DropdownMenu.RadioItem value="system">
+                        <SystemIcons.Monitor/>
+                        System
+                    </DropdownMenu.RadioItem>
+                </DropdownMenu.RadioGroup>
+            </DropdownMenu.Content>
+        </DropdownMenu.Root>
     )
 }

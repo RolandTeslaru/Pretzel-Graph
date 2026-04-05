@@ -763,3 +763,33 @@ export const LogOut: React.FC<BaseIconProps> = (props) => (
     </BaseIcon>
 )
 LogOut.displayName = "LogOut"
+
+export const User: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+    </BaseIcon>
+)
+User.displayName = "User"
+
+export const Settings: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/>
+        <circle cx="12" cy="12" r="3"/>
+    </BaseIcon>
+)
+Settings.displayName = "Settings"
+
+export const TableOfContents: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="M16 5H3"/>
+        <path d="M16 12H3"/>
+        <path d="M16 19H3"/>
+        <path d="M21 5h.01"/>
+        <path d="M21 12h.01"/>
+        <path d="M21 19h.01"/>
+    </BaseIcon>
+)
+TableOfContents.displayName = "TableOfContents"
+
+LogOut.displayName = "LogOut"
