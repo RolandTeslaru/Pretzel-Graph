@@ -7,6 +7,8 @@ import { QuerySDK } from "../QuerySDK/sdk";
 import { createChatSDKActions, type ChatSDKActions } from "./actions";
 import { RealtimeSDK } from "../Realtime/sdk";
 import { DialogSDK } from "../DialogSDK";
+import { createWithEqualityFn } from "zustand/traditional";
+import { shallow } from "zustand/shallow";
 
 @SDK("Chat")
 export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
@@ -31,7 +33,7 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
     }
 
 
-    public readonly useStore: BaseSDK.Store<ChatSDK.State> = create(
+    public readonly useStore: BaseSDK.Store<ChatSDK.State> = createWithEqualityFn(
         immer<ChatSDK.State>(() => ({
             currentChatId: Chat.createId(),
             messages: [],
@@ -39,7 +41,8 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
             isLoading: false,
             isSidebarVisible: false,
             chats: {},
-        }))
+        })),
+        shallow
     )
 
 
