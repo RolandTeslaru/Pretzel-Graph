@@ -3,7 +3,7 @@ import { Blueprint } from "./blueprint";
 import { ExecutionContext } from "src/context";
 import { RuntimeNode } from "src/node";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
-import { AIMessage } from "@langchain/core/messages";
+import { LC } from "src/langchain";
 
 type Inputs = InferInputs<typeof Blueprint>
 type Outputs = InferOutputs<typeof Blueprint>
@@ -20,9 +20,15 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const isStreaming = this.fields.stream;
 
+        const { systemMessage } = inputs;
+
+        const languageModel = inputs.tools?.length && inputs.languageModel.bindTools
+            ? inputs.languageModel.bindTools(inputs.tools)
+            : inputs.languageModel;
+
         if (isStreaming) {
-            const messages = [inputs.systemMessage, ...inputs.messages].filter(Boolean);
-            const stream = await inputs.languageModel.stream(messages, {
+            const messages = [systemMessage, ...inputs.messages].filter(Boolean);
+            const stream = await languageModel.stream(messages, {
                 signal: context.abortController.signal,
             });
 
@@ -42,8 +48,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
             return { response };
         } else {
-            const messages = [inputs.systemMessage, ...inputs.messages].filter(Boolean);
-            const response = await inputs.languageModel.invoke(messages, {
+            const messages = [systemMessage, ...inputs.messages].filter(Boolean);
+            const response = await languageModel.invoke(messages, {
                 signal: context.abortController.signal,
             });
             return { response };
