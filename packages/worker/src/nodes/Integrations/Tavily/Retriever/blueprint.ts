@@ -1,0 +1,43 @@
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "src/nodes/builders";
+
+export const Blueprint = defineBlueprint({
+    id: "Integrations.Tavily.Retriever",
+    displayName: "Tavily Retriever",
+    description: "Configures a Tavily search retriever. Connect its output to a Search node or an agent.",
+    icon: "Tavily",
+    accent: "port-Retriever",
+    fields: [
+        FieldBuilder.Secret({
+            id: "apiKey",
+            displayName: "API Key",
+            tooltip: "Your Tavily API key. Falls back to TAVILY_API_KEY environment variable.",
+        }),
+        FieldBuilder.Integer({
+            id: "maxResults",
+            displayName: "Max Results",
+            initialValue: 5,
+            min: 1,
+            max: 20,
+        }),
+        FieldBuilder.MultiOption({
+            id: "searchDepth",
+            displayName: "Search Depth",
+            options: ["basic", "advanced"],
+            initialValue: "basic",
+            tooltip: "Advanced costs more Tavily credits but returns richer results.",
+        }),
+        FieldBuilder.Boolean({
+            id: "includeAnswer",
+            displayName: "Include Answer",
+            initialValue: false,
+            tooltip: "Tavily pre-summarizes an answer from the search results.",
+        }),
+    ],
+    inputs: [],
+    outputs: [
+        OutputBuilder.Retriever({
+            id: "retriever",
+            displayName: "Retriever",
+        }),
+    ],
+});

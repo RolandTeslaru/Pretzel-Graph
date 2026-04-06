@@ -78,7 +78,7 @@ export const Port: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, is
 
     const centerColor = isNullHandle ? "transparent" : `var(--port-${port.variant}-accent)`;
     const borderColor = isNullHandle ? "var(--border)" : `var(--port-${port.variant})`;
-    const glowColor = `var(--port-${port.variant})`;
+    const glowColor = `var(--port-${port.variant}-glow)`;
 
     return (
         <Tooltip.Root>

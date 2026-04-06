@@ -21,6 +21,8 @@ export namespace Workflow {
             inputs: z.array(Foundations.Port.Input.Schema),
             outputs: z.array(Foundations.Port.Output.Schema),
 
+            toolCompatible: z.boolean().optional(),
+            
             icon: z.string().nullable().optional(),
             description: z.string().nullable().optional(),
             isMinimized: z.boolean().default(false),

@@ -54,7 +54,7 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                     <StatusIndicator nodeId={node.id} executionStatus={nodeStatus} />
                 </div>
             </div>
-            <div className='absolute z-10 top-2 right-2 flex flex-row bg-card w-fit p-0.5 rounded-xl border border-border shadow-sm shadow-black/10'>
+            <div className='absolute z-10 top-2 right-2 flex flex-row bg-card-float w-fit p-0.5 rounded-xl border border-border shadow-sm shadow-black/10'>
 
                 {isEditing ? (
                     <div className='flex flex-row gap-2 ml-auto my-auto h-auto'>

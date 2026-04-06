@@ -53,7 +53,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
         });
 
         return {
-            fields: node.fields,
+            fields: node.fields.filter(f => !f.hidden),
             inputs,
             connectedInputs,
         };
