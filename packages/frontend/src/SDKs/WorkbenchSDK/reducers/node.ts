@@ -53,6 +53,8 @@ export const nodeReducers = {
             isMinimized : false,
             isFlipped   : false,
             accent      : blueprint.accent ? blueprint.accent : undefined,
+
+            toolCompatible: blueprint.toolCompatible,
         } satisfies Workflow.Node
 
         const result = Workflow.Node.Schema.safeParse(newNode)
@@ -137,6 +139,8 @@ export const nodeReducers = {
             isMinimized : isMinimized,
             isFlipped   : isFlipped,
             accent      : blueprint.accent ? `var(--${blueprint.accent})` : undefined,
+
+            toolCompatible: blueprint.toolCompatible,
         } satisfies Workflow.Node
 
         const result = Workflow.Node.Schema.safeParse(newNode)
@@ -170,6 +174,7 @@ export const nodeReducers = {
             isMinimized  : originalNode.isMinimized,
             isFlipped    : originalNode.isFlipped,
             accent       : originalNode.accent,
+            toolCompatible: originalNode.toolCompatible,
         } satisfies Workflow.Node
 
         s.workflow.data.nodes[newNodeId] = newNode;
@@ -190,6 +195,33 @@ export const nodeReducers = {
         if (node.blueprintId !== blueprint.id)
             throw new Error(`Node ${nodeId} is not of type ${blueprint.id}`);
 
+        // --- Diff inputs: remove edges for removed/variant-changed inputs ---
+        const newInputsById = new Map(blueprint.inputs.map(i => [i.id, i]));
+        const inputHandles = s.cache.inputHandlesMap[nodeId] ?? {};
+
+        for (const oldInput of node.inputs) {
+            const newInput = newInputsById.get(oldInput.id);
+            const edgeId = inputHandles[oldInput.id];
+
+            if (edgeId && (!newInput || newInput.variant !== oldInput.variant)) {
+                edgeReducers.remove(s, edgeId);
+            }
+        }
+
+        // --- Diff outputs: remove edges for removed/variant-changed outputs ---
+        const newOutputsById = new Map(blueprint.outputs.map(o => [o.id, o]));
+        const outputHandles = s.cache.outputHandlesMap[nodeId] ?? {};
+
+        for (const oldOutput of node.outputs) {
+            const newOutput = newOutputsById.get(oldOutput.id);
+            const edgeId = outputHandles[oldOutput.id];
+
+            if (edgeId && (!newOutput || newOutput.variant !== oldOutput.variant)) {
+                edgeReducers.remove(s, edgeId);
+            }
+        }
+
+        // --- Apply reconciled blueprint ---
         node.fields = blueprint.fields as Workflow.Node['fields']
         node.inputs = blueprint.inputs as Workflow.Node['inputs']
         node.outputs = blueprint.outputs as Workflow.Node['outputs']

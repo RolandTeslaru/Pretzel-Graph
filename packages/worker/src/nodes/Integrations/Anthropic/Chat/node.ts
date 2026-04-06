@@ -1,11 +1,10 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
-import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import { Workflow } from "@vx-agent-editor/shared/domain";
 import { ChatAnthropic } from "@langchain/anthropic";
-import { Synthesizer } from "src/synthesizer";
 import { RuntimeNode } from "src/node";
 import { ExecutionContext } from "src/context";
-import { InferFields, InferInputs, InferOutputs } from "src/types";
+import { InferInputs, InferOutputs } from "src/types";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -23,10 +22,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-
         return {
             languageModel: this.llm
         };
     }
-
 }

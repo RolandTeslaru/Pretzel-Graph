@@ -1,7 +1,7 @@
-import { FieldBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { FieldBuilder, defineBlueprint, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
-    id: "Anthropic.Chat",
+    id: "Integrations.Anthropic.Chat",
     displayName: "Anthropic Chat",
     description: "This node talks to Anthropic Claude models",
     icon: "Anthropic",

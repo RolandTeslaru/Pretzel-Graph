@@ -1,6 +1,5 @@
 import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk'
-import { Popover, Tooltip } from '@vx-agent-editor/vx-ui/foundations'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { Tooltip } from '@vx-agent-editor/vx-ui/foundations'
 import type { ExecutionSession, Validation, Workflow } from '@vx-agent-editor/shared/domain'
 import { GlowingAlertTriangle, GlowingCompletedCheck, GlowingFailedX, GlowingRunningSpinner, GlowingWaitingClock } from './icons'
 

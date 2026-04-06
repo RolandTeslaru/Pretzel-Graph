@@ -1,111 +1,14 @@
 {
-  "version": "1775405758245",
-  "generatedAt": "2026-04-05T16:15:58.245Z",
+  "version": "1775512213022",
+  "generatedAt": "2026-04-06T21:50:13.022Z",
   "drawers": {},
   "blueprints": {
-    "Anthropic.Chat": {
-      "id": "Anthropic.Chat",
-      "displayName": "Anthropic Chat",
-      "icon": "Anthropic",
-      "accent": "port-LanguageModel",
-      "fields": [
-        {
-          "id": "apiKey",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "API Key",
-          "variant": "Secret",
-          "initialValue": ""
-        },
-        {
-          "id": "model",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Model",
-          "variant": "MultiOption",
-          "initialValue": "claude-3-5-sonnet-20240620",
-          "options": [
-            "claude-3-5-sonnet-20240620",
-            "claude-3-opus-20240229",
-            "claude-3-haiku-20240307",
-            "claude-2.1",
-            "claude-2.0",
-            "claude-instant-1.2"
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "temperature",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Temperature",
-          "tooltip": "Controls randomness in the output. Higher values are more creative.",
-          "variant": "Float",
-          "initialValue": 0.7,
-          "min": 0,
-          "max": 1,
-          "step": 0.1,
-          "slider": true
-        },
-        {
-          "id": "maxTokens",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Max Tokens",
-          "tooltip": "Maximum number of tokens to generate.",
-          "variant": "Integer",
-          "initialValue": 2048,
-          "min": 1,
-          "step": 1
-        },
-        {
-          "id": "topP",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Top P",
-          "tooltip": "Nucleus sampling probability.",
-          "variant": "Float",
-          "initialValue": 0.95,
-          "min": 0,
-          "max": 1,
-          "step": 0.01,
-          "slider": true
-        },
-        {
-          "id": "topK",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Top K",
-          "tooltip": "Top-K sampling parameter.",
-          "variant": "Integer",
-          "initialValue": 64,
-          "min": 1,
-          "step": 1,
-          "slider": true
-        }
-      ],
-      "inputs": [],
-      "outputs": [
-        {
-          "id": "languageModel",
-          "displayName": "Language Model",
-          "tooltip": "The language model instance used for this response, useful for chaining calls with the same model and settings.",
-          "variant": "LanguageModel"
-        }
-      ],
-      "description": "This node talks to Anthropic Claude models"
-    },
     "Core.LanguageModel": {
       "id": "Core.LanguageModel",
       "displayName": "Language Model",
       "icon": "BrainCircuit",
       "accent": "port-LanguageModel",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "stream",
@@ -158,6 +61,7 @@
       "displayName": "Chat History",
       "icon": "History",
       "accent": "port-Message",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "maxTokensPercentage",
@@ -198,6 +102,7 @@
       "displayName": "Chat Input",
       "icon": "MessagesSquare",
       "accent": "port-Message",
+      "toolCompatible": false,
       "fields": [],
       "inputs": [
         {
@@ -224,6 +129,7 @@
       "displayName": "Chat Output",
       "icon": "MessagesSquare",
       "accent": "port-Message",
+      "toolCompatible": false,
       "fields": [],
       "inputs": [
         {
@@ -243,6 +149,7 @@
       "displayName": "All Builders",
       "icon": "Rocket",
       "accent": "port-null",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "stringField",
@@ -511,6 +418,7 @@
       "id": "Core.Developer.ConsoleLog",
       "displayName": "Console Log",
       "icon": "SquareTerminal",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "level",
@@ -565,6 +473,7 @@
       "displayName": "Runtime Node Eval",
       "icon": "SquareTerminal",
       "accent": "port-null",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "code",
@@ -600,6 +509,7 @@
       "displayName": "HTTP Request",
       "icon": "Globe",
       "accent": "port-null",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "method",
@@ -677,6 +587,7 @@
       "displayName": "Sleep",
       "icon": "Clock",
       "accent": "port-null",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "duration",
@@ -722,6 +633,7 @@
       "displayName": "Accumulator",
       "icon": "GitPullRequestArrow",
       "accent": "group-routing",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "strategy",
@@ -777,6 +689,7 @@
       "displayName": "If Else",
       "icon": "Split",
       "accent": "group-routing",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "condition",
@@ -847,6 +760,7 @@
       "displayName": "Merge",
       "icon": "Merge",
       "accent": "group-routing",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "strategy",
@@ -915,6 +829,7 @@
       "displayName": "Router",
       "icon": "ListTree",
       "accent": "group-routing",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "cases",
@@ -1048,6 +963,7 @@
       "displayName": "Switch",
       "icon": "Option",
       "accent": "group-routing",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "cases",
@@ -1181,6 +1097,7 @@
       "displayName": "Text Input",
       "icon": "Type",
       "accent": "port-Text",
+      "toolCompatible": false,
       "fields": [],
       "inputs": [
         {
@@ -1207,6 +1124,7 @@
       "displayName": "JSON Injector",
       "icon": "Braces",
       "accent": "utility",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "data",
@@ -1233,6 +1151,7 @@
       "displayName": "Compose Message",
       "icon": "Mail",
       "accent": "port-Message",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "role",
@@ -1276,6 +1195,7 @@
       "displayName": "Tool Catalog",
       "icon": "Settings",
       "accent": "port-Tool",
+      "toolCompatible": false,
       "fields": [],
       "inputs": [],
       "outputs": [],
@@ -1286,6 +1206,7 @@
       "displayName": "Tool Runner",
       "icon": "Play",
       "accent": "port-Tool",
+      "toolCompatible": false,
       "fields": [],
       "inputs": [
         {
@@ -1314,11 +1235,111 @@
       ],
       "description": "Executes a tool with the provided input and returns the result."
     },
-    "Google.GenerativeAI": {
-      "id": "Google.GenerativeAI",
+    "Integrations.Anthropic.Chat": {
+      "id": "Integrations.Anthropic.Chat",
+      "displayName": "Anthropic Chat",
+      "icon": "Anthropic",
+      "accent": "port-LanguageModel",
+      "toolCompatible": false,
+      "fields": [
+        {
+          "id": "apiKey",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "API Key",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "model",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Model",
+          "variant": "MultiOption",
+          "initialValue": "claude-3-5-sonnet-20240620",
+          "options": [
+            "claude-3-5-sonnet-20240620",
+            "claude-3-opus-20240229",
+            "claude-3-haiku-20240307",
+            "claude-2.1",
+            "claude-2.0",
+            "claude-instant-1.2"
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "temperature",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Temperature",
+          "tooltip": "Controls randomness in the output. Higher values are more creative.",
+          "variant": "Float",
+          "initialValue": 0.7,
+          "min": 0,
+          "max": 1,
+          "step": 0.1,
+          "slider": true
+        },
+        {
+          "id": "maxTokens",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Max Tokens",
+          "tooltip": "Maximum number of tokens to generate.",
+          "variant": "Integer",
+          "initialValue": 2048,
+          "min": 1,
+          "step": 1
+        },
+        {
+          "id": "topP",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Top P",
+          "tooltip": "Nucleus sampling probability.",
+          "variant": "Float",
+          "initialValue": 0.95,
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "slider": true
+        },
+        {
+          "id": "topK",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Top K",
+          "tooltip": "Top-K sampling parameter.",
+          "variant": "Integer",
+          "initialValue": 64,
+          "min": 1,
+          "step": 1,
+          "slider": true
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "languageModel",
+          "displayName": "Language Model",
+          "tooltip": "The language model instance used for this response, useful for chaining calls with the same model and settings.",
+          "variant": "LanguageModel"
+        }
+      ],
+      "description": "This node talks to Anthropic Claude models"
+    },
+    "Integrations.Google.GenerativeAI": {
+      "id": "Integrations.Google.GenerativeAI",
       "displayName": "Google Gen AI",
       "icon": "Google",
       "accent": "port-LanguageModel",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "apiKey",
@@ -1411,11 +1432,12 @@
       ],
       "description": "This node talks to google generative ai api"
     },
-    "OpenAI.Chat": {
-      "id": "OpenAI.Chat",
+    "Integrations.OpenAI.Chat": {
+      "id": "Integrations.OpenAI.Chat",
       "displayName": "OpenAI Chat",
       "icon": "OpenAI",
       "accent": "port-LanguageModel",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "apiKey",
@@ -1524,11 +1546,12 @@
       ],
       "description": "This node talks to OpenAI's GPT chat models via the Chat Completions API"
     },
-    "OpenRouter.Chat": {
-      "id": "OpenRouter.Chat",
+    "Integrations.OpenRouter.Chat": {
+      "id": "Integrations.OpenRouter.Chat",
       "displayName": "OpenRouter Chat",
       "icon": "OpenRouter",
       "accent": "port-LanguageModel",
+      "toolCompatible": false,
       "fields": [
         {
           "id": "openrouterApiKey",
@@ -1627,6 +1650,156 @@
         }
       ],
       "description": "Connect to hundreds of models via OpenRouter's unified API"
+    },
+    "Integrations.Tavily.Retriever": {
+      "id": "Integrations.Tavily.Retriever",
+      "displayName": "Tavily Retriever",
+      "icon": "Tavily",
+      "accent": "port-Retriever",
+      "toolCompatible": false,
+      "fields": [
+        {
+          "id": "apiKey",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "API Key",
+          "tooltip": "Your Tavily API key. Falls back to TAVILY_API_KEY environment variable.",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "maxResults",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Max Results",
+          "variant": "Integer",
+          "initialValue": 5,
+          "min": 1,
+          "max": 20,
+          "step": 1
+        },
+        {
+          "id": "searchDepth",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Search Depth",
+          "tooltip": "Advanced costs more Tavily credits but returns richer results.",
+          "variant": "MultiOption",
+          "initialValue": "basic",
+          "options": [
+            "basic",
+            "advanced"
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "includeAnswer",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Include Answer",
+          "tooltip": "Tavily pre-summarizes an answer from the search results.",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "retriever",
+          "displayName": "Retriever",
+          "variant": "Retriever"
+        }
+      ],
+      "description": "Configures a Tavily search retriever. Connect its output to a Search node or an agent."
+    },
+    "Integrations.Tavily.Search": {
+      "id": "Integrations.Tavily.Search",
+      "displayName": "Tavily Search",
+      "icon": "Tavily",
+      "accent": "port-Retriever",
+      "toolCompatible": true,
+      "fields": [
+        {
+          "id": "apiKey",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "API Key",
+          "tooltip": "Your Tavily API key. Falls back to TAVILY_API_KEY environment variable.",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "maxResults",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Max Results",
+          "variant": "Integer",
+          "initialValue": 5,
+          "min": 1,
+          "max": 20,
+          "step": 1
+        },
+        {
+          "id": "searchDepth",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Search Depth",
+          "tooltip": "Advanced costs more Tavily credits but returns richer results.",
+          "variant": "MultiOption",
+          "initialValue": "basic",
+          "options": [
+            "basic",
+            "advanced"
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "includeAnswer",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Include Answer",
+          "tooltip": "Tavily pre-summarizes an answer from the search results.",
+          "variant": "Boolean",
+          "initialValue": false
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "query",
+          "displayName": "Query",
+          "internal": false,
+          "variant": "Text",
+          "initialValue": "",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "documents",
+          "displayName": "Documents",
+          "tooltip": "Search results as Document objects (pageContent + metadata).",
+          "variant": "DataList"
+        }
+      ],
+      "description": "Searches the web using Tavily and returns the results as documents."
     }
   }
 }

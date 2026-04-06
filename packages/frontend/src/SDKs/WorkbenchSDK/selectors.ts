@@ -63,6 +63,9 @@ export const workbenchSelectors = {
                 Object.entries(nodeIssues.inputs).length > 0
             );
         },
+        isTool: (s, nodeId) => {
+            return s.workflow.data.staticValues[nodeId]?.["isConvertedToTool" as Foundations.Field.Id] === true;
+        },
         extractBlueprint: (s, nodeId) => {
             const node = s.workflow.data.nodes[nodeId];
             if (!node) return null;
@@ -76,6 +79,7 @@ export const workbenchSelectors = {
                 fields: node.fields,
                 inputs: node.inputs,
                 outputs: node.outputs,
+                toolCompatible: node.toolCompatible ?? false,
             } satisfies Foundations.Blueprint
         },
     },
@@ -239,6 +243,7 @@ export type _WorkBenchSDKSelectors = {
     node: {
         get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node | null
         hasIssues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
+        isTool: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
         extractBlueprint: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Blueprint | null
     }
     field: {

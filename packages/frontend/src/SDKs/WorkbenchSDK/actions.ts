@@ -20,34 +20,24 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         debouncedValidateField(nodeId, field)
     }
 
-    return {
-        commit:                   commit,
-        debouncedCommit:          debouncedCommit,
-        node: {
-            create:            withCommit((...props) => setState(s => { reducers.node.create(s,         ...props) })),
-            recreate:          withCommit((...props) => setState(s => { reducers.node.recreate(s,       ...props) })),
-            remove:            withCommit((...props) => setState(s => { reducers.node.remove(s,         ...props) })),
-            duplicate:         withCommit((...props) => setState(s => { reducers.node.duplicate(s,      ...props) })),
-            setDisabled:       withCommit((...props) => setState(s => { reducers.node.setDisabled(s,    ...props) })),
-            setMinimized:      withCommit((...props) => setState(s => { reducers.node.setMinimized(s,   ...props) })),
-            setFlipped:        withCommit((...props) => setState(s => { reducers.node.setFlipped(s,     ...props) })),
-            setDisplayName:    withCommit((...props) => setState(s => { reducers.node.setDisplayName(s, ...props) })),
-            setDescription:    withCommit((...props) => setState(s => { reducers.node.setDescription(s, ...props) })),
 
-            validate:          (...props) => { setState(s => { reducers.node.validate(s,       ...props) }) },
-            clearIssues:       (...props) => { setState(s => { reducers.node.clearIssues(s,    ...props) }) },
-        },
-        edge: {
-            create:            withCommit((conn)   => setState(s => { reducers.edge.create(s, conn) })),
-            remove:            withCommit((edgeId) => setState(s => { reducers.edge.remove(s, edgeId) })),
-        },
-        port: {
-            removeOutput:         withCommit((...props) => setState(s => { reducers.port.removeOutput(s,         ...props) })),
-            addOutput:            withCommit((...props) => setState(s => { reducers.port.addOutput(s,            ...props) })),
-            setOutputDisplayName: withCommit((...props) => setState(s => { reducers.port.setOutputDisplayName(s, ...props) })),
-        },
-        field: {
-            setValue: withAsyncCommit(async (nodeId, field, value) => {
+    const nodeActions = {
+        create:            withCommit((...props) => setState(s => { reducers.node.create(s,         ...props) })),
+        recreate:          withCommit((...props) => setState(s => { reducers.node.recreate(s,       ...props) })),
+        remove:            withCommit((...props) => setState(s => { reducers.node.remove(s,         ...props) })),
+        duplicate:         withCommit((...props) => setState(s => { reducers.node.duplicate(s,      ...props) })),
+        setDisabled:       withCommit((...props) => setState(s => { reducers.node.setDisabled(s,    ...props) })),
+        setMinimized:      withCommit((...props) => setState(s => { reducers.node.setMinimized(s,   ...props) })),
+        setFlipped:        withCommit((...props) => setState(s => { reducers.node.setFlipped(s,     ...props) })),
+        setDisplayName:    withCommit((...props) => setState(s => { reducers.node.setDisplayName(s, ...props) })),
+        setDescription:    withCommit((...props) => setState(s => { reducers.node.setDescription(s, ...props) })),
+    
+        validate:          (...props) => { setState(s => { reducers.node.validate(s,       ...props) }) },
+        clearIssues:       (...props) => { setState(s => { reducers.node.clearIssues(s,    ...props) }) },
+    } satisfies _WorkbenchSDKActions["node"]
+
+    const fieldActions = {
+        setValue: withAsyncCommit(async (nodeId, field, value) => {
                 if (field.reconcile) {
                     console.log(`Field ${field.id} requires reconciliation`)
 
@@ -79,118 +69,153 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                 setState(s => { reducers.field.setValue(s, nodeId, field.id, value) });
                 debouncedValidateField(nodeId, field);
             }),
+        condition: {
+            setLeftValue: withCommit((...props) => {
+                const [nodeId, fieldId] = props
+                setState(s => { reducers.field.condition.setLeftValue(s, ...props) })
+                validateFieldById(nodeId, fieldId)
+            }),
+            setRightValue: withCommit((...props) => {
+                const [nodeId, fieldId] = props
+                setState(s => { reducers.field.condition.setRightValue(s, ...props) })
+                validateFieldById(nodeId, fieldId)
+            }),
+            setOperator: withCommit((...props) => {
+                const [nodeId, fieldId] = props
+                setState(s => { reducers.field.condition.setOperator(s, ...props) })
+                validateFieldById(nodeId, fieldId)
+            }),
+            addRule: withCommit((...props) => {
+                const [nodeId, fieldId] = props
+                setState(s => { reducers.field.condition.addRule(s, ...props) })
+                validateFieldById(nodeId, fieldId)
+            }),
+            addGroup: withCommit((...props) => {
+                const [nodeId, fieldId] = props
+                setState(s => { reducers.field.condition.addGroup(s, ...props) })
+                validateFieldById(nodeId, fieldId)
+            }),
+            removeRuleOrGroup: withCommit((...props) => {
+                const [nodeId, fieldId] = props
+                setState(s => { reducers.field.condition.removeRuleOrGroup(s, ...props) })
+                validateFieldById(nodeId, fieldId)
+            }),
+            changeCombinator: withCommit((...props) => {
+                const [nodeId, fieldId] = props
+                setState(s => { reducers.field.condition.changeCombinator(s, ...props) })
+                validateFieldById(nodeId, fieldId)
+            }),
+        },
+        caseList: {
+            addEntry: withCommit((nodeId, fieldId, label) => {
+                const portId = Foundations.Port.Output.Id.parse(crypto.randomUUID())
+                const entry = Foundations.Field.CaseList.createEntry(portId, label)
+
+                setState(s => {
+                    reducers.field.caseList.addEntry(s, nodeId, fieldId, entry)
+
+                    const resolvedVariant = sel.port.getResolvedVariantInSyncGroup(s, nodeId, "condition") ?? "Unresolved"
+                    reducers.port.addOutput(s, nodeId, {
+                        id: portId,
+                        displayName: label,
+                        variant: resolvedVariant,
+                        isDynamic: true,
+                        syncGroupId: "condition",
+                        unresolvedVariant: "Unresolved",
+                    })
+                })
+
+                validateFieldById(nodeId, fieldId)
+            }),
+            removeEntry: withCommit((nodeId, fieldId, portId) => {
+                setState(s => {
+                    reducers.field.caseList.removeEntry(s, nodeId, fieldId, portId)
+                    reducers.port.removeOutput(s, nodeId, portId)
+                })
+                validateFieldById(nodeId, fieldId)
+            }),
+            setLabel: withCommit((nodeId, fieldId, portId, label) => {
+                setState(s => {
+                    reducers.field.caseList.setLabel(s, nodeId, fieldId, portId, label)
+                    reducers.port.setOutputDisplayName(s, nodeId, portId, label)
+                })
+                validateFieldById(nodeId, fieldId)
+            }),
             condition: {
                 setLeftValue: withCommit((...props) => {
                     const [nodeId, fieldId] = props
-                    setState(s => { reducers.field.condition.setLeftValue(s, ...props) })
+                    setState(s => { reducers.field.caseList.condition.setLeftValue(s, ...props) })
                     validateFieldById(nodeId, fieldId)
                 }),
                 setRightValue: withCommit((...props) => {
                     const [nodeId, fieldId] = props
-                    setState(s => { reducers.field.condition.setRightValue(s, ...props) })
+                    setState(s => { reducers.field.caseList.condition.setRightValue(s, ...props) })
                     validateFieldById(nodeId, fieldId)
                 }),
                 setOperator: withCommit((...props) => {
                     const [nodeId, fieldId] = props
-                    setState(s => { reducers.field.condition.setOperator(s, ...props) })
+                    setState(s => { reducers.field.caseList.condition.setOperator(s, ...props) })
                     validateFieldById(nodeId, fieldId)
                 }),
                 addRule: withCommit((...props) => {
                     const [nodeId, fieldId] = props
-                    setState(s => { reducers.field.condition.addRule(s, ...props) })
+                    setState(s => { reducers.field.caseList.condition.addRule(s, ...props) })
                     validateFieldById(nodeId, fieldId)
                 }),
                 addGroup: withCommit((...props) => {
                     const [nodeId, fieldId] = props
-                    setState(s => { reducers.field.condition.addGroup(s, ...props) })
+                    setState(s => { reducers.field.caseList.condition.addGroup(s, ...props) })
                     validateFieldById(nodeId, fieldId)
                 }),
                 removeRuleOrGroup: withCommit((...props) => {
                     const [nodeId, fieldId] = props
-                    setState(s => { reducers.field.condition.removeRuleOrGroup(s, ...props) })
+                    setState(s => { reducers.field.caseList.condition.removeRuleOrGroup(s, ...props) })
                     validateFieldById(nodeId, fieldId)
                 }),
                 changeCombinator: withCommit((...props) => {
                     const [nodeId, fieldId] = props
-                    setState(s => { reducers.field.condition.changeCombinator(s, ...props) })
+                    setState(s => { reducers.field.caseList.condition.changeCombinator(s, ...props) })
                     validateFieldById(nodeId, fieldId)
                 }),
             },
-            caseList: {
-                addEntry: withCommit((nodeId, fieldId, label) => {
-                    const portId = Foundations.Port.Output.Id.parse(crypto.randomUUID())
-                    const entry = Foundations.Field.CaseList.createEntry(portId, label)
-
-                    setState(s => {
-                        reducers.field.caseList.addEntry(s, nodeId, fieldId, entry)
-
-                        const resolvedVariant = sel.port.getResolvedVariantInSyncGroup(s, nodeId, "condition") ?? "Unresolved"
-                        reducers.port.addOutput(s, nodeId, {
-                            id: portId,
-                            displayName: label,
-                            variant: resolvedVariant,
-                            isDynamic: true,
-                            syncGroupId: "condition",
-                            unresolvedVariant: "Unresolved",
-                        })
-                    })
-
-                    validateFieldById(nodeId, fieldId)
-                }),
-                removeEntry: withCommit((nodeId, fieldId, portId) => {
-                    setState(s => {
-                        reducers.field.caseList.removeEntry(s, nodeId, fieldId, portId)
-                        reducers.port.removeOutput(s, nodeId, portId)
-                    })
-                    validateFieldById(nodeId, fieldId)
-                }),
-                setLabel: withCommit((nodeId, fieldId, portId, label) => {
-                    setState(s => {
-                        reducers.field.caseList.setLabel(s, nodeId, fieldId, portId, label)
-                        reducers.port.setOutputDisplayName(s, nodeId, portId, label)
-                    })
-                    validateFieldById(nodeId, fieldId)
-                }),
-                condition: {
-                    setLeftValue: withCommit((...props) => {
-                        const [nodeId, fieldId] = props
-                        setState(s => { reducers.field.caseList.condition.setLeftValue(s, ...props) })
-                        validateFieldById(nodeId, fieldId)
-                    }),
-                    setRightValue: withCommit((...props) => {
-                        const [nodeId, fieldId] = props
-                        setState(s => { reducers.field.caseList.condition.setRightValue(s, ...props) })
-                        validateFieldById(nodeId, fieldId)
-                    }),
-                    setOperator: withCommit((...props) => {
-                        const [nodeId, fieldId] = props
-                        setState(s => { reducers.field.caseList.condition.setOperator(s, ...props) })
-                        validateFieldById(nodeId, fieldId)
-                    }),
-                    addRule: withCommit((...props) => {
-                        const [nodeId, fieldId] = props
-                        setState(s => { reducers.field.caseList.condition.addRule(s, ...props) })
-                        validateFieldById(nodeId, fieldId)
-                    }),
-                    addGroup: withCommit((...props) => {
-                        const [nodeId, fieldId] = props
-                        setState(s => { reducers.field.caseList.condition.addGroup(s, ...props) })
-                        validateFieldById(nodeId, fieldId)
-                    }),
-                    removeRuleOrGroup: withCommit((...props) => {
-                        const [nodeId, fieldId] = props
-                        setState(s => { reducers.field.caseList.condition.removeRuleOrGroup(s, ...props) })
-                        validateFieldById(nodeId, fieldId)
-                    }),
-                    changeCombinator: withCommit((...props) => {
-                        const [nodeId, fieldId] = props
-                        setState(s => { reducers.field.caseList.condition.changeCombinator(s, ...props) })
-                        validateFieldById(nodeId, fieldId)
-                    }),
-                },
-            },
-            validate:          (...props) => { setState(s => { reducers.field.validate(s,      ...props) }) },
         },
+        validate:          (...props) => { setState(s => { reducers.field.validate(s,      ...props) }) },
+    } satisfies _WorkbenchSDKActions["field"]
+
+    return {
+        commit:                   commit,
+        debouncedCommit:          debouncedCommit,
+        node: nodeActions,
+        tool: {
+            convert: async (nodeId) => {
+                try {
+                    const field = sel.field.get(sdk.state, nodeId, "isConvertedToTool" as Foundations.Field.Id);
+                    if (!field) throw new Error(`Node does not have an isConvertedToTool field — is it toolCompatible?`);
+                    await fieldActions.setValue(nodeId, field, true);
+                } catch (error) {
+                    throw new Error(`Could not convert node ${nodeId} to tool. ${error instanceof Error ? error.message : String(error)}`);
+                }
+            },
+            revert: async (nodeId) => {
+                try {
+                    const field = sel.field.get(sdk.state, nodeId, "isConvertedToTool" as Foundations.Field.Id);
+                    if (!field) throw new Error(`Node does not have an isConvertedToTool field — is it toolCompatible?`);
+                    await fieldActions.setValue(nodeId, field, false);
+                } catch (error) {
+                    throw new Error(`Could not revert node ${nodeId} from tool. ${error instanceof Error ? error.message : String(error)}`);
+                }
+            },
+        },
+        edge: {
+            create:            withCommit((conn)   => setState(s => { reducers.edge.create(s, conn) })),
+            remove:            withCommit((edgeId) => setState(s => { reducers.edge.remove(s, edgeId) })),
+        },
+        port: {
+            removeOutput:         withCommit((...props) => setState(s => { reducers.port.removeOutput(s,         ...props) })),
+            addOutput:            withCommit((...props) => setState(s => { reducers.port.addOutput(s,            ...props) })),
+            setOutputDisplayName: withCommit((...props) => setState(s => { reducers.port.setOutputDisplayName(s, ...props) })),
+        },
+        field: fieldActions,
         input: {
             setValue: withCommit((nodeId, input, value) => {
                 setState(s => { reducers.input.setValue(s, nodeId, input.id, value) });
@@ -259,6 +284,10 @@ export interface _WorkbenchSDKActions {
         setDescription      : DropFirstArg<WorkbenchSDK.Reducers['node']['setDescription']>;
         validate            : DropFirstArg<WorkbenchSDK.Reducers['node']['validate']>;
         clearIssues         : DropFirstArg<WorkbenchSDK.Reducers['node']['clearIssues']>;
+    };
+    tool                    : {
+        convert             : (nodeId: Workflow.Node.Id) => void;
+        revert              : (nodeId: Workflow.Node.Id) => void;
     };
     field                   : {
         setValue            : (nodeId: Workflow.Node.Id, field: Foundations.Field, value: any) => void;

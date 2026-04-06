@@ -1,7 +1,7 @@
-import { FieldBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { FieldBuilder, defineBlueprint, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
-    id: "Google.GenerativeAI",
+    id: "Integrations.Google.GenerativeAI",
     displayName: "Google Gen AI",
     description: "This node talks to google generative ai api",
     icon: "Google",
