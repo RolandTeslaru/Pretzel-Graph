@@ -84,7 +84,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
             <NodeSidebarFooter />
 
             {/* Sections */}
-            <ScrollArea.Root>
+            <ScrollArea.Root className='mask-[linear-gradient(to_bottom,transparent,black_48px,black_calc(100%-48px),transparent)]'>
                 {(node.description || isEditing) && (
                     <div className='py-2 px-2 pt-14'>
                         {isEditing ? (
