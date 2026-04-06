@@ -54,7 +54,7 @@ export namespace OutputBuilder {
 
     export function LanguageModel<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "LanguageModel", Foundations.Port.Variants.LanguageModel, LC.BaseLanguageModel> {
+    ): LiteralOutput<TId, "LanguageModel", Foundations.Port.Variants.LanguageModel, LC.BaseChatModel> {
         return {
             ...buildBase(config),
             variant: "LanguageModel" as const,
@@ -103,6 +103,15 @@ export namespace OutputBuilder {
         return {
             ...buildBase(config),
             variant: "Tool" as const,
+        };
+    }
+
+    export function ToolList<TId extends string>(
+        config: BaseProps<TId>
+    ): LiteralOutput<TId, "ToolList", Foundations.Port.Variants.ToolList, LC.Tool[]> {
+        return {
+            ...buildBase(config),
+            variant: "ToolList" as const,
         };
     }
 

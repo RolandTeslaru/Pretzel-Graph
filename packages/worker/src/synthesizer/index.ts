@@ -45,6 +45,11 @@ export class Synthesizer {
             case "Tool":
                 return this.projectTool(value);
 
+            case "ToolList":
+                if (Array.isArray(value))
+                    return value.map(v => this.projectTool(v));
+                return [this.projectTool(value)];
+
             case "VectorStore":
             case "Retriever":
                 // Opaque handles — no useful inspectable properties
@@ -196,6 +201,7 @@ export class Synthesizer {
             case "VectorStore":
             case "Retriever":
             case "Tool":
+            case "ToolList":
                 throw new Error(
                     `AGGEX Synthesizer: Cannot synthesize variant "${input.variant}" ` +
                     `from a static value — it requires an incoming edge connection.`
@@ -290,6 +296,24 @@ export class Synthesizer {
                     SystemError.Code.EXECUTION_TYPE_MISMATCH,
                     `Cannot coerce value of type "${typeof rawReference}" into variant "${variant}"`,
                     { data: { variant } }
+                );
+
+            case "ToolList":
+                if (Array.isArray(rawReference)) {
+                    if (rawReference.every(el => el instanceof LC.Tool))
+                        return rawReference;
+                    throw new SystemError(
+                        SystemError.Code.EXECUTION_TYPE_MISMATCH,
+                        `Cannot coerce value into variant "${variant}" — expected an array of Tool instances.`,
+                        { data: { variant, rawReference } }
+                    );
+                }
+                if (rawReference instanceof LC.Tool)
+                    return [rawReference];
+                throw new SystemError(
+                    SystemError.Code.EXECUTION_TYPE_MISMATCH,
+                    `Cannot coerce value into variant "${variant}" — expected a Tool or array of Tools.`,
+                    { data: { variant, rawReference } }
                 );
 
             case "MessageList":

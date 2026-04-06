@@ -16,6 +16,10 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
+        InputBuilder.ToolList({
+            id: "tools",
+            displayName: "Tools",
+        }),
         InputBuilder.LanguageModel({
             id: "languageModel",
             displayName: "Language Model",
