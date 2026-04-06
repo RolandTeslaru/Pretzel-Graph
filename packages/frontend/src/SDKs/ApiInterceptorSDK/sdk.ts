@@ -1,38 +1,27 @@
 import axios from "axios";
-import { supabase } from "@/libs/supabase"; // You need to create this!
-import { SDK } from "../SDKManager";
+import { supabase } from "@/libs/supabase";
 
-@SDK("ApiInterceptor")
-export class ApiInterceptorSDKImpl {
-    constructor() {
-        this.init();
+export const api = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+});
+
+// REQUEST INTERCEPTOR: Inject Token
+api.interceptors.request.use(async (config) => {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
-    public readonly api = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
-    });
-    public init() {
-        // REQUEST INTERCEPTOR: Inject Token
-        this.api.interceptors.request.use(async (config) => {
-            // All requests are for the new backend now
-            const { data } = await supabase.auth.getSession();
-            const token = data.session?.access_token;
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
-            return config;
-        });
-        // RESPONSE INTERCEPTOR: Global Error Handling (Optional)
-        this.api.interceptors.response.use(
-            (response) => response,
-            (error) => {
-                // If 401, Supabase client likely handles it, but good to debug
-                if (error.response?.status === 401) {
-                    console.warn("Backend rejected token.");
-                }
-                return Promise.reject(error);
-            }
-        );
+    return config;
+});
+
+// RESPONSE INTERCEPTOR: Global Error Handling
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            console.warn("Backend rejected token.");
+        }
+        return Promise.reject(error);
     }
-}
-export const ApiInterceptorSDK = SDK.get<ApiInterceptorSDKImpl>("ApiInterceptor");
-export const api = ApiInterceptorSDK.api;
+);

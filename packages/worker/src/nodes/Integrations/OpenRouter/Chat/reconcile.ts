@@ -1,6 +1,5 @@
 import { Foundations } from "@vx-agent-editor/shared/domain";
 import { InferFields } from "src/types";
-import { cloneDeep } from "lodash";
 
 type ProviderEntry = {
     models: string[];

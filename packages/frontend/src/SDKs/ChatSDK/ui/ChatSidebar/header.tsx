@@ -8,7 +8,7 @@ const ChatSidebarHeader = () => {
     const currentChatName = ChatSDK.useStore(s => s.chats[s.currentChatId]?.name)
 
     return (
-        <div className='flex flex-row py-1 gap-2 px-1 absolute backdrop-blur-xl bg-card/70 top-2 w-[calc(100%-16px)] left-2 z-10 border rounded-full border-border'>
+        <div className='flex flex-row py-1 gap-2 px-1 absolute bg-card-float top-2 w-[calc(100%-16px)] left-2 z-10 border rounded-full border-border shadow-sm shadow-black/10'>
             <div
                 className='flex items-center gap-2 p-1.5 rounded-full'
                 style={{ backgroundColor: 'color-mix(in srgb, var(--port-Message) 25%, transparent)' }}

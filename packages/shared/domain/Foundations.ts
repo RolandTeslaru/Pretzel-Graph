@@ -18,6 +18,7 @@ export namespace Foundations {
             advanced: z.boolean(),
             required: z.boolean(),
             reconcile: z.boolean(),
+            hidden: z.boolean().optional(),
 
             displayName: z.string(),
             description: z.string().optional(),
@@ -661,7 +662,8 @@ export namespace Foundations {
                 id: Blueprint.Id,
                 displayName: z.string(),
                 icon: z.string(),
-                accent: z.string().optional()
+                accent: z.string().optional(),
+                toolCompatible: z.boolean(),
             })
         }
         export type Meta = z.infer<typeof Meta.Schema>

@@ -1,7 +1,7 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { Workflow } from "@vx-agent-editor/shared/domain";
-import { ChatOpenRouter } from "@langchain/openrouter";
+import { ChatOpenAI } from "@langchain/openai";
 import { RuntimeNode } from "src/node";
 import { ExecutionContext } from "src/context";
 import { InferInputs, InferOutputs } from "src/types";
@@ -9,15 +9,13 @@ import { InferInputs, InferOutputs } from "src/types";
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-
-    
     public static readonly Blueprint = Blueprint;
 
-    private readonly llm: ChatOpenRouter;
+    private readonly llm: ChatOpenAI;
 
     constructor(workflowNode: Workflow.Node, context: ExecutionContext) {
         super(workflowNode, context);
-        this.llm = new ChatOpenRouter(this.fields as any);
+        this.llm = new ChatOpenAI(this.fields);
     }
 
     protected override async onRun(

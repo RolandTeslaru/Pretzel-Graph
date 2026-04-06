@@ -101,6 +101,8 @@ When the user says "let's spec out [feature]", read the relevant codebase and pr
 
 - **Dialogs/Confirmations**: Always use `DialogSDK.actions.push()` with `DialogSDK.Template` or `DialogSDK.AlertTemplate` to open dialogs. Do not use inline `AlertDialog.Root`/`Trigger`/`Content` patterns. See `VaultSDK/ui/VaultPanel.tsx` for examples.
 
+- **Adding a new node**: When creating a new node (`blueprint.ts` + `node.ts` under `packages/worker/src/nodes/`), always also register its blueprint ID in the appropriate drawer in `packages/shared/constants/drawers.ts`. The drawer key should match the node's provider (e.g. `tavily`, `openai`, `anthropic`). For core nodes, use the relevant `CORE_DRAWERS` entry.
+
 ## Key File Locations
 
 | Concern | Path |

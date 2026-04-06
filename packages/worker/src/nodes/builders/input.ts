@@ -41,8 +41,6 @@ export namespace InputBuilder {
         } satisfies { id: TId & Foundations.Port.Input.Id } & Omit<Foundations.Port.Input.Base, "id">;
     }
 
-
-
     // ---- Port Inputs (runtime object references) ----
     // These receive LangChain class instances at runtime.
     // Explicit return types ensure phantom properties (__literalId, __reference) are

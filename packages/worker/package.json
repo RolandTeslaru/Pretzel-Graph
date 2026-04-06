@@ -13,6 +13,7 @@
         "test": "jest"
     },
     "dependencies": {
+        "@langchain/community": "^1.1.27",
         "@vx-agent-editor/shared": "*",
         "axios": "^1.13.6",
         "bullmq": "^5.67.2",
