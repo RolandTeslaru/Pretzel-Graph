@@ -3,6 +3,8 @@ import { LazyIcon } from '@vx-agent-editor/vx-ui/icons/LazyIcon'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { Workflow } from '@vx-agent-editor/shared/domain'
 import { WorkbenchSDK } from '../../sdk'
+import { ExecutionSessionSDK } from '@/SDKs/ExecutionSessionSDK/sdk'
+import StatusIndicator from '../Canvas/Node/Header/StatusIndicator'
 
 interface HeaderProps {
     node: Workflow.Node
@@ -11,60 +13,76 @@ interface HeaderProps {
     onEditFinish: () => void
 }
 
-export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }: HeaderProps) => (
-    <div className='absolute z-10 top-2 left-2 flex flex-row bg-card w-[calc(100%-16px)] p-1 rounded-full border border-border shadow-sm shadow-black/10'>
-        <div
-            className='flex items-center gap-2 px-3 py-1 rounded-full'
-            style={{
-                backgroundColor: node.accent ? `color-mix(in srgb, var(--${node.accent}) 25%, transparent)` : 'var(--muted)',
-            }}
-        >
-            <LazyIcon
-                className='my-auto h-4 w-4'
-                name={node.icon as string}
-                style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
-            />
-            {isEditing ? (
-                <Input
-                    className='h-6 text-sm font-semibold bg-transparent shadow-none w-fit! focus-visible:ring-0 truncate'
-                    defaultValue={node.displayName}
-                    autoFocus
-                    onBlur={e => WorkbenchSDK.actions.node.setDisplayName(node.id, e.target.value)}
-                    style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
-                />
-            ) : (
-                <h4
-                    className='text-sm font-semibold truncate'
-                    style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
-                >
-                    {node.displayName}
-                </h4>
-            )}
-        </div>
+export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }: HeaderProps) => {
 
-        {isEditing ? (
-            <div className='flex flex-row gap-2 ml-auto my-auto h-auto px-1'>
-                <Button size="xs" variant="success" onClick={onEditFinish}>
-                    Finish
-                </Button>
-            </div>
-        ) : (
-            <div className='flex flex-row gap-2 ml-auto my-auto h-auto px-1'>
-                <Button size="icon-xs" variant="ghost" onClick={() => WorkbenchSDK.actions.node.setDisabled(node.id, !node.isDisabled)}
-                    className={`${node.isDisabled ? `bg-red-500/40`: ``}`}    
-                >
-                    <SystemIcons.Power className='stroke-2'/>
-                </Button>
-                <Button size="icon-xs" variant="ghost-success">
-                    <SystemIcons.Play />
-                </Button>
-                <HeaderOptionsDropdown node={node} onEditStart={onEditStart} />
-            </div>
-        )}
-    </div>
-)
+    const nodeStatus = ExecutionSessionSDK.useStore(s => {
+        return s.session.node_status[node.id]
+    });
 
-const HeaderOptionsDropdown = ({ node, onEditStart }: { node: Workflow.Node; onEditStart: () => void }) => (
+    return (
+        <>
+            <div className='absolute z-10 top-2 left-2 flex flex-row gap-2'>
+                <div
+                    className='flex items-center gap-2 px-3 py-1 rounded-full backdrop-blur-md'
+                    style={{
+                        backgroundColor: node.accent ? `color-mix(in srgb, var(--${node.accent}) 25%, transparent)` : 'var(--muted)',
+                    }}
+                >
+                    <LazyIcon
+                        className='my-auto h-4 w-4'
+                        name={node.icon as string}
+                        style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
+                    />
+                    {isEditing ? (
+                        <Input
+                            className='h-6 text-sm font-semibold bg-transparent shadow-none w-fit! focus-visible:ring-0 truncate'
+                            defaultValue={node.displayName}
+                            autoFocus
+                            onBlur={e => WorkbenchSDK.actions.node.setDisplayName(node.id, e.target.value)}
+                            style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
+                        />
+                    ) : (
+                        <h4
+                            className='text-sm font-semibold truncate'
+                            style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
+                        >
+                            {node.displayName}
+                        </h4>
+                    )}
+                </div>
+                <div className='h-auto my-auto'>
+                    <StatusIndicator nodeId={node.id} executionStatus={nodeStatus} />
+                </div>
+            </div>
+            <div className='absolute z-10 top-2 right-2 flex flex-row bg-card w-fit p-0.5 rounded-xl border border-border shadow-sm shadow-black/10'>
+
+                {isEditing ? (
+                    <div className='flex flex-row gap-2 ml-auto my-auto h-auto'>
+                        <Button size="xs" className='rounded-full' variant="success" onClick={onEditFinish}>
+                            Finish
+                        </Button>
+                    </div>
+                ) : (
+                    <div className='flex flex-row gap-2 ml-auto my-auto h-auto'>
+                        <Button size="icon-xs" variant="ghost" onClick={onEditStart}>
+                            <SystemIcons.SquarePen />
+                        </Button>
+                        <Button size="icon-xs" variant="ghost" onClick={() => WorkbenchSDK.actions.node.setDisabled(node.id, !node.isDisabled)}
+                            className={`${node.isDisabled ? `bg-red-500/40` : ``}`}
+                        >
+                            <SystemIcons.Power className='stroke-2' />
+                        </Button>
+                        <Button size="icon-xs" variant="ghost-success">
+                            <SystemIcons.Play />
+                        </Button>
+                        <HeaderOptionsDropdown node={node} />
+                    </div>
+                )}
+            </div>
+        </>
+    )
+}
+const HeaderOptionsDropdown = ({ node }: { node: Workflow.Node }) => (
     <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
             <Button size="icon-xs" variant="ghost">
@@ -72,10 +90,6 @@ const HeaderOptionsDropdown = ({ node, onEditStart }: { node: Workflow.Node; onE
             </Button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Content align="end">
-            <DropdownMenu.Item onClick={onEditStart}>
-                <SystemIcons.SquarePen />
-                Edit
-            </DropdownMenu.Item>
             <DropdownMenu.Item variant="destructive">
                 <SystemIcons.Trash2 />
                 Delete
