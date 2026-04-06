@@ -153,6 +153,9 @@ export namespace Validation {
             return true;
         if (sourcePort.variant === "Data" && targetPort.variant === "DataList")
             return true;
+        if (sourcePort.variant === "Tool" && targetPort.variant === "ToolList")
+            return true;
+
 
         return false
     }

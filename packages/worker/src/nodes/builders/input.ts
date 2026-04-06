@@ -69,7 +69,7 @@ export namespace InputBuilder {
 
     export function LanguageModel<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralInput<TId, "LanguageModel", Foundations.Port.Variants.LanguageModel, LC.BaseLanguageModel> {
+    ): LiteralInput<TId, "LanguageModel", Foundations.Port.Variants.LanguageModel, LC.BaseChatModel> {
         return {
             ...buildBase(config),
             variant: "LanguageModel" as const,
@@ -118,6 +118,15 @@ export namespace InputBuilder {
         return {
             ...buildBase(config),
             variant: "Tool" as const,
+        };
+    }
+
+    export function ToolList<TId extends string>(
+        config: BaseProps<TId>
+    ): LiteralInput<TId, "ToolList", Foundations.Port.Variants.ToolList, LC.Tool[]> {
+        return {
+            ...buildBase(config),
+            variant: "ToolList" as const,
         };
     }
 
