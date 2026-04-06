@@ -335,6 +335,7 @@ export namespace Foundations {
             "VectorStore",
             "Retriever",
             "Tool",
+            "ToolList",
             "DataFrame",
             "Integer",
             "Json",
@@ -415,6 +416,10 @@ export namespace Foundations {
                 variant: portLiteral("Tool"),
             })
 
+            export const ToolList = Base.extend({
+                variant: portLiteral("ToolList"),
+            })
+
             export const DataFrame = Base.extend({
                 variant: portLiteral("DataFrame"),
             })
@@ -447,6 +452,7 @@ export namespace Foundations {
                 Embeddings,
                 VectorStore,
                 Tool,
+                ToolList,
                 DataFrame,
                 Integer,
                 Json,
@@ -465,6 +471,7 @@ export namespace Foundations {
             export type Embeddings = z.infer<typeof Embeddings>
             export type VectorStore = z.infer<typeof VectorStore>
             export type Tool = z.infer<typeof Tool>
+            export type ToolList = z.infer<typeof ToolList>
             export type DataFrame = z.infer<typeof DataFrame>
             export type Integer = z.infer<typeof Integer>
             export type Json = z.infer<typeof Json>
@@ -496,6 +503,7 @@ export namespace Foundations {
             export const Embeddings = Port.Variants.Embeddings.extend(inputFields);
             export const VectorStore = Port.Variants.VectorStore.extend(inputFields);
             export const Tool = Port.Variants.Tool.extend(inputFields);
+            export const ToolList = Port.Variants.ToolList.extend(inputFields);
             export const Integer = Port.Variants.Integer.extend(inputFields);
 
             export const Json = Port.Variants.Json.extend(inputFields);
@@ -504,7 +512,7 @@ export namespace Foundations {
 
             export const Schema = z.discriminatedUnion("variant", [
                 Message, MessageList, Data, DataList, Text, LanguageModel, Document, Retriever,
-                Embeddings, VectorStore, Tool, Integer, Json, Unresolved, UnresolvedList
+                Embeddings, VectorStore, Tool, ToolList, Integer, Json, Unresolved, UnresolvedList
             ]);
         }
         export type Input = z.infer<typeof Input.Schema>
@@ -532,6 +540,7 @@ export namespace Foundations {
             export const Embeddings = Port.Variants.Embeddings.extend(outputFields);
             export const VectorStore = Port.Variants.VectorStore.extend(outputFields);
             export const Tool = Port.Variants.Tool.extend(outputFields);
+            export const ToolList = Port.Variants.ToolList.extend(outputFields);
             export const DataFrame = Port.Variants.DataFrame.extend(outputFields);
             export const Integer = Port.Variants.Integer.extend(outputFields);
             export const Json = Port.Variants.Json.extend(outputFields);
@@ -540,7 +549,7 @@ export namespace Foundations {
 
             export const Schema = z.discriminatedUnion("variant", [
                 Message, MessageList, Data, DataList, Text, LanguageModel, Document, Retriever, Embeddings,
-                VectorStore, Tool, DataFrame, Integer, Json, Unresolved, UnresolvedList
+                VectorStore, Tool, ToolList, DataFrame, Integer, Json, Unresolved, UnresolvedList
             ]);
         }
         export type Output = z.infer<typeof Output.Schema>
@@ -591,6 +600,9 @@ export namespace Foundations {
         })
         export type Tool = z.infer<typeof Tool>
 
+        export const ToolList = z.array(Tool)
+        export type ToolList = z.infer<typeof ToolList>
+
         export const LanguageModel = z.object({
             type:             z.string(),
             model:            z.string(),
@@ -624,6 +636,7 @@ export namespace Foundations {
             Retriever,
             Document,
             Tool,
+            ToolList,
             LanguageModel,
             Embeddings,
         ])

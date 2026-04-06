@@ -162,6 +162,11 @@ code {
   --port-Tool-accent: theme(--color-cyan-200);
   --port-Tool-glow: theme(--color-cyan-600);
 
+  --port-ToolList: theme(--color-teal-400);
+  --port-ToolList-foreground: theme(--color-teal-400);
+  --port-ToolList-accent: theme(--color-teal-200);
+  --port-ToolList-glow: theme(--color-teal-600);
+
   --port-Embeddings: theme(--color-emerald-400);
   --port-Embeddings-foreground: theme(--color-emerald-300);
   --port-Embeddings-accent: theme(--color-emerald-200);
@@ -323,6 +328,7 @@ code {
   --port-DataList-glow: theme(--color-rose-300);
   --port-LanguageModel-glow: theme(--color-fuchsia-300);
   --port-Tool-glow: theme(--color-cyan-300);
+  --port-ToolList-glow: theme(--color-teal-300);
   --port-Embeddings-glow: theme(--color-emerald-300);
   --port-DataFrame-glow: theme(--color-red-300);
   --port-Text-glow: theme(--color-slate-300);
