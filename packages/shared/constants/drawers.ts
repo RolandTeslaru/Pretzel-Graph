@@ -134,7 +134,7 @@ export const BUNDLE_DRAWERS = {
     displayName: "Anthropic",
     id: "anthropic",
     icon: "Anthropic",
-    blueprintIds: ["Anthropic.Chat"]
+    blueprintIds: ["Integrations.Anthropic.Chat"]
   },
   apify: {
     displayName: "Apify",
@@ -314,7 +314,7 @@ export const BUNDLE_DRAWERS = {
     displayName: "Google",
     id: "google",
     icon: "Google",
-    blueprintIds: ["Google.GenerativeAI"]
+    blueprintIds: ["Integrations.Google.GenerativeAI"]
   },
   groq: {
     displayName: "Groq",
@@ -452,13 +452,13 @@ export const BUNDLE_DRAWERS = {
     displayName: "OpenAI",
     id: "openai",
     icon: "OpenAI",
-    blueprintIds: ["OpenAI.Chat"]
+    blueprintIds: ["Integrations.OpenAI.Chat"]
   },
   openrouter: {
     displayName: "OpenRouter",
     id: "openrouter",
     icon: "OpenRouter",
-    blueprintIds: ["OpenRouter.Chat"]
+    blueprintIds: ["Integrations.OpenRouter.Chat"]
   },
   perplexity: {
     displayName: "Perplexity",
@@ -529,8 +529,8 @@ export const BUNDLE_DRAWERS = {
   tavily: {
     displayName: "Tavily",
     id: "tavily",
-    icon: "TavilyIcon",
-    blueprintIds: []
+    icon: "Tavily",
+    blueprintIds: ["Integrations.Tavily.Retriever", "Integrations.Tavily.Search"]
   },
   twelvelabs: {
     displayName: "TwelveLabs",

@@ -23,6 +23,7 @@ export namespace FieldBuilder {
         id: TId;
         required?: TReq;
         advanced?: boolean;
+        hidden?: boolean;
         displayName: string;
         tooltip?: string;
         reconcile?: boolean;
@@ -42,6 +43,7 @@ export namespace FieldBuilder {
             required: props.required ?? false,
             advanced: props.advanced ?? false,
             reconcile: props.reconcile ?? false,
+            hidden: props.hidden,
         } satisfies { id: TId & Foundations.Field.Id } & OmitId<Foundations.Field.Base>
     }
 

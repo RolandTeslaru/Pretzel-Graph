@@ -1,7 +1,7 @@
 import { FieldBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
-    id: "OpenAI.Chat",
+    id: "Integrations.OpenAI.Chat",
     displayName: "OpenAI Chat",
     description: "This node talks to OpenAI's GPT chat models via the Chat Completions API",
     icon: "OpenAI",
@@ -84,4 +84,3 @@ export const Blueprint = defineBlueprint({
         })
     ]
 })
-

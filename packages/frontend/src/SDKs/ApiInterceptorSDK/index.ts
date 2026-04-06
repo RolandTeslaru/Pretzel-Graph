@@ -1,1 +1,1 @@
-export { ApiInterceptorSDK, api } from "./sdk"
+export { api } from "./sdk"

@@ -1,27 +1,26 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
-import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { RuntimeNode } from "src/node";
 import { ExecutionContext } from "src/context";
-import { InferFields, InferInputs, InferOutputs } from "src/types";
-import { Synthesizer } from "src/synthesizer";
+import { InferInputs, InferOutputs } from "src/types";
+import { Workflow } from "@vx-agent-editor/shared/domain";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;
 
-    private readonly llm: ChatOpenAI;
+    private readonly llm: ChatGoogleGenerativeAI;
 
     constructor(workflowNode: Workflow.Node, context: ExecutionContext) {
         super(workflowNode, context);
-        this.llm = new ChatOpenAI(this.fields);
+        this.llm = new ChatGoogleGenerativeAI(this.fields);
     }
 
     protected override async onRun(
         context: ExecutionContext,
-        inputs: InferInputs<typeof Blueprint>
+        inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         return {
             languageModel: this.llm

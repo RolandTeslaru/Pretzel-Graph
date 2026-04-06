@@ -30,19 +30,38 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
             >
                 <SystemIcons.ArrowLeftRight />
             </Button>
-            <Button size="icon-xs" variant="ghost" onClick={() => WorkbenchSDK.actions.node.setDisabled(node.id, !node.isDisabled)}
-                    className={`${node.isDisabled ? `bg-red-500/40`: ``}`}    
-                >
-                    <SystemIcons.Power className='stroke-2'/>
-                </Button>
+            <Button size="icon-xs" variant="ghost" 
+                onClick={() => WorkbenchSDK.actions.node.setDisabled(node.id, !node.isDisabled)}
+                className={`${node.isDisabled ? `bg-red-500/40`: ``}`}    
+            >
+                <SystemIcons.Power className='stroke-2'/>
+            </Button>
             <Button variant="ghost-success" size="icon-xs" className='text-xs'>
                 <SystemIcons.Play />
             </Button>
+            {node.toolCompatible && (
+                <ToolButton node={node} />
+            )}
             <MoreOptionsDropdown node={node} />
         </div>
     )
 })
 
+
+const ToolButton: React.FC<Props> = memo(({ node }) => {
+    const isTool = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.isTool(s, node.id));
+
+    return (
+        <Button variant="ghost" size="icon-xs" className={`h-6! ${isTool ? 'bg-cyan-500/40 text-cyan-300! ' : ''}`}
+            onClick={() => {
+                if (isTool) WorkbenchSDK.actions.tool.revert(node.id);
+                else WorkbenchSDK.actions.tool.convert(node.id);
+            }}
+        >
+            <SystemIcons.Hammer />
+        </Button>
+    );
+});
 
 const MoreOptionsDropdown: React.FC<Props> = ({ node }) => {
     return (

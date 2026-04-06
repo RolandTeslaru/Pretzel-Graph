@@ -1,69 +1,14 @@
 const Tavily = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    fillRule="evenodd"
     width="1em"
     height="1em"
-    viewBox="0 0 375 375"
     {...props}
   >
-    <defs>
-      <clipPath id="a">
-        <path d="M109.379 231.133h37.105v37.105H109.38Zm0 0" />
-      </clipPath>
-      <clipPath id="b">
-        <path d="M127.934 231.133c-10.246 0-18.555 8.304-18.555 18.554 0 10.247 8.308 18.551 18.555 18.551 10.246 0 18.55-8.304 18.55-18.55 0-10.25-8.304-18.555-18.55-18.555Zm0 0" />
-      </clipPath>
-    </defs>
-    <path
-      fill="none"
-      stroke="#f25022"
-      strokeLinecap="round"
-      strokeWidth={28.360419999999998}
-      d="M127.926 239.96V50.165"
-    />
-    <path
-      fill="none"
-      stroke="#f25022"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={28.360419999999998}
-      d="m85.387 99.793 42.539-56.719 42.539 56.719"
-    />
-    <path
-      fill="none"
-      stroke="#ffb901"
-      strokeLinecap="round"
-      strokeWidth={28.360419999999998}
-      d="m141.012 254.168 172.476-.02"
-    />
-    <path
-      fill="none"
-      stroke="#ffb901"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={28.360419999999998}
-      d="m263.855 211.613 56.723 42.535-56.715 42.547"
-    />
-    <path
-      fill="none"
-      stroke="#04a3ec"
-      strokeLinecap="round"
-      strokeWidth={23.20398}
-      d="m117.852 259.344-57.446 66.015"
-    />
-    <path
-      fill="none"
-      stroke="#04a3ec"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={23.20398}
-      d="m113.32 317.574-56.718 12.16 4.207-57.859"
-    />
-    <g clipPath="url(#a)">
-      <g clipPath="url(#b)">
-        <path fill="#32b37f" d="M109.379 231.133h37.105v37.105H109.38Zm0 0" />
-      </g>
-    </g>
+    <path d="M8.033 14.273a1.612 1.612 0 011.139.47l.04.042.044.043a1.61 1.61 0 010 2.277l-3.073 3.073.816.816c.6.6.303 1.627-.525 1.814l-5.159 1.165a1.07 1.07 0 01-.897-.2l-.102-.09a1.07 1.07 0 01-.289-1l1.164-5.158A1.079 1.079 0 013.006 17l.816.817 3.074-3.074a1.612 1.612 0 011.137-.47zM17.042 13.246c0-.85.935-1.366 1.653-.912l4.47 2.824c.336.212.503.562.503.911 0 .35-.167.7-.501.913l-4.472 2.824a1.079 1.079 0 01-1.654-.912v-1.155h-7.027c.37-.4.605-.902.677-1.438l.022-.232a2.65 2.65 0 00-.492-1.669h6.821v-1.154zM8.188 0c.35 0 .7.168.913.503l2.823 4.47a1.079 1.079 0 01-.911 1.655H9.857v6.692h-1.67a2.633 2.633 0 00-1.668.48V6.629H5.365c-.849 0-1.366-.936-.912-1.654L7.276.503A1.072 1.072 0 018.188 0z" />
   </svg>
 );
 export default Tavily;

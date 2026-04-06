@@ -351,6 +351,7 @@ const config: Config = {
                 },
                 card: {
                     DEFAULT: "var(--card)",
+                    float: "var(--card-float)",
                     foreground: "var(--card-foreground)",
                 },
                 tooltip: {

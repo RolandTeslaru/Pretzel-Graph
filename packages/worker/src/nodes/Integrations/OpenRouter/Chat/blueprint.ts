@@ -1,7 +1,7 @@
-import { FieldBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { FieldBuilder, defineBlueprint, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
-    id: "OpenRouter.Chat",
+    id: "Integrations.OpenRouter.Chat",
     displayName: "OpenRouter Chat",
     description: "Connect to hundreds of models via OpenRouter's unified API",
     icon: "OpenRouter",
