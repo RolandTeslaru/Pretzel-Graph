@@ -106,7 +106,7 @@ function Item({ className, inset, variant = "default", ...rest }: DropdownMenu.I
           data-[variant=destructive]:*:[svg]:text-destructive 
           data-[variant=destructive]:focus:border-destructive/20
           not-data-[variant=destructive]:focus:**:text-accent-foreground 
-          gap-1.5 rounded-sm px-1.5 py-1 text-sm 
+          gap-1.5 rounded-sm px-1.5 py-0.5 text-sm 
           [&_svg:not([class*='size-'])]:size-4 group/dropdown-menu-item 
           relative flex items-center outline-hidden select-none 
           data-[disabled]:pointer-events-none 

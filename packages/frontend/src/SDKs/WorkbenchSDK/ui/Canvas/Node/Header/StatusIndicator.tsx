@@ -46,8 +46,10 @@ const StatusIndicator = ({
   else if (executionStatus.status === "failed")
     return (
       <Tooltip.Root>
-        <Tooltip.Trigger>
-          <GlowingFailedX />
+        <Tooltip.Trigger asChild>
+          <div className={className}>
+            <GlowingFailedX />
+          </div>
         </Tooltip.Trigger>
         <Tooltip.Content align="center" side="right" sideOffset={10}>
           <FailedTooltipContent error={executionStatus.error} />

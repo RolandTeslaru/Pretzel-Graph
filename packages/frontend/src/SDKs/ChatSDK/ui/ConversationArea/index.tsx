@@ -40,19 +40,21 @@ const ConversationArea: React.FC<Props> = ({ messagesAreaClassname}) => {
   }, [isLoading]);
 
   return (
-    <ScrollArea.Root className="flex-1 overflow-hidden h-full relative" ref={scrollRef} onScroll={handleScroll}>
-      <PromptInput className='absolute bottom-2 left-1/2 -translate-x-1/2 w-[calc(100%-16px)] backdrop-blur-md bg-input/80 shadow-md! '/>
-      <div className={"flex flex-col gap-4 py-2 px-2 mt-auto pb-[116px] " + messagesAreaClassname }>
-        {isLoading && (
-          <div className="flex justify-center py-2">
-            <Spinner/>
-          </div>
-        )}
-        {messageIds.map((id) => (
-          <MessageItem key={id} id={id} />
-        ))}
-      </div>
-    </ScrollArea.Root>
+    <>
+      <PromptInput className='absolute z-10 bottom-2 left-1/2 -translate-x-1/2 w-[calc(100%-16px)] backdrop-blur-md bg-input/80 shadow-md! '/>
+      <ScrollArea.Root className="flex-1 overflow-hidden h-full relative mask-[linear-gradient(to_bottom,transparent,black_48px,black_calc(100%-48px),transparent)]" ref={scrollRef} onScroll={handleScroll}>
+        <div className={"flex flex-col gap-4 py-2 px-2 mt-auto pb-[116px] " + messagesAreaClassname }>
+          {isLoading && (
+            <div className="flex justify-center py-2">
+              <Spinner/>
+            </div>
+          )}
+          {messageIds.map((id) => (
+            <MessageItem key={id} id={id} />
+          ))}
+        </div>
+      </ScrollArea.Root>
+    </>
   )
 }
 
