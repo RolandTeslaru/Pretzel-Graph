@@ -1,17 +1,8 @@
 import { Expression, Foundations } from "./domain";
 
-// Evaluates a preprocessed JS expression string.
-// preprocess() inlines all port values as JSON literals, so the resulting
-// code is self-contained — no live references escape into the expression.
-function runExpression(code: string): unknown {
-    return new Function(`return (${code})`)()
-}
-
 export const evaluateRule = (rule: Foundations.Field.Condition.Rule, inputs: Record<string, any>): boolean => {
 
-    const preprocessedLeftOperand = Expression.preprocess(rule.leftOperand, inputs);
-
-    const left = runExpression(preprocessedLeftOperand);
+    const left = Expression.evaluate(rule.leftOperand, inputs);
 
     // Shared operators — present on every dataType
     if (rule.operator === "exists") return left !== undefined && left !== null;
@@ -20,7 +11,7 @@ export const evaluateRule = (rule: Foundations.Field.Condition.Rule, inputs: Rec
     if (rule.operator === "is_not_empty") return left !== "" && left !== null && left !== undefined && !(Array.isArray(left) && left.length === 0);
 
     const right = rule.rightOperand != null
-        ? runExpression(Expression.preprocess(rule.rightOperand, inputs))
+        ? Expression.evaluate(rule.rightOperand, inputs)
         : undefined;
 
     switch (rule.dataType) {

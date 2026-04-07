@@ -51,7 +51,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
                     return documents;
                 },
                 {
-                    name: Blueprint.id,
+                    name: "tavily_search",
                     description: `Searches the web using Tavily Search API.`,
                     schema: z.object({
                         query: z.string().describe("The search query to run against the Tavily Search API."),

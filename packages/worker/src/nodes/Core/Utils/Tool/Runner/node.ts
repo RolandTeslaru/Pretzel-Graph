@@ -29,12 +29,23 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 const tool = toolsMap.get(call.name);
 
                 if (tool) {
-                    const result = tool?.invoke(call.args);
-
-                    return new LC.ToolMessage({
-                        content: result ? JSON.stringify(result) : "",
-                        tool_call_id: call.id ?? crypto.randomUUID(),
-                    });
+                    try {
+                        const result = await tool.invoke(
+                            call, 
+                            {
+                                signal: context.abortController.signal,
+                            }) as LC.ToolMessage;
+                        return result;
+                    } catch (error) {
+                        console.error("Error occurred while invoking tool:", error);
+                        
+                        return new LC.ToolMessage({
+                            content: `Error occurred while invoking tool ${call.name}: ${error instanceof Error ? error.message : String(error)}`,
+                            tool_call_id: call.id ?? crypto.randomUUID(),
+                            name: call.name,
+                            status: "error",
+                        });
+                    }
                 } else {
                     return new LC.ToolMessage({
                         content: "Could not find tool with name " + call.name,
