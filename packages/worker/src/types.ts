@@ -5,7 +5,8 @@
  * Uses __literalId phantom for literal key names.
  * Maps each config field to its initialValue type.
  */
-export type InferFields<D> = D extends { fields: infer T }
+export type InferFields<D> = 0 extends (1 & D) ? any
+    : D extends { fields: infer T }
     ? T extends readonly { id: string }[]
     ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
         ? Id
@@ -39,7 +40,8 @@ export type InferFieldsWithInitial<D> = D extends { fields: infer T }
  * Uses __reference phantom if present (set by InputBuilder.Message → BaseMessage, etc.)
  * Falls back to initialValue type, then `any`.
  */
-export type InferInputs<D> = D extends { inputs: infer T }
+export type InferInputs<D> = 0 extends (1 & D) ? any
+    : D extends { inputs: infer T }
     ? T extends readonly { id: string }[]
     ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
         ? Id
@@ -69,7 +71,8 @@ export type OneOf<T> = {
     [K in keyof T]: Pick<T, K> & Partial<Record<Exclude<keyof T, K>, never>>;
 }[keyof T];
 
-export type InferOutputs<D> = D extends { outputs: infer T }
+export type InferOutputs<D> = 0 extends (1 & D) ? any
+    : D extends { outputs: infer T }
     ? T extends readonly { id: string }[]
     ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
         ? Id
