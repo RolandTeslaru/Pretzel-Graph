@@ -233,7 +233,13 @@ export class AggexEngine {
         const inputs = this.resolveInputs(wfNode.id, signals);
         console.log("Executing node", vertexId, "with incoming signals", signals, "and resolved inputs", inputs);
 
-        const result = await nodeInstance.run(inputs);
+        const isTool = nodeInstance.fields["isConvertedToTool" as Foundations.Field.Id] === true;
+
+        let result;
+        if(isTool)
+            result = await nodeInstance.buildTool(inputs);
+        else
+            result = await nodeInstance.run(inputs);
 
         this.context.updateSession(d => {
             d.node_output_instances[wfNode.id] = result;
