@@ -9,11 +9,7 @@ function runExpression(code: string): unknown {
 
 export const evaluateRule = (rule: Foundations.Field.Condition.Rule, inputs: Record<string, any>): boolean => {
 
-    console.log("Evaluating rule", rule, "with inputs", inputs);
-
     const preprocessedLeftOperand = Expression.preprocess(rule.leftOperand, inputs);
-
-    console.log("Preprocessed left operand:", preprocessedLeftOperand);
 
     const left = runExpression(preprocessedLeftOperand);
 

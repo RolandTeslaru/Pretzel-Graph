@@ -91,6 +91,12 @@ export class WorkflowCompiler {
 
         // Add Edges. Might also get ran multiple times because nodes can have multiple edges between them because of ports.
         for (const edge of Object.values(edges)) {
+            const sourceNode = nodes[edge.source.nodeId];
+            const targetNode = nodes[edge.target.nodeId];
+
+            if(sourceNode.isDisabled || targetNode.isDisabled)
+                continue;
+
             graph.addDependency(
                 edge.source.nodeId,
                 edge.target.nodeId
