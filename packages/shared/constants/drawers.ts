@@ -11,7 +11,13 @@ export const CORE_DRAWERS = {
     displayName: "Input & Output",
     id: "input_output",
     icon: "Cable",
-    blueprintIds: ["Core.Chat.Input", "Core.Chat.Output", "Core.Text.Input", "Core.Text.Output", "Core.Chat.History"],
+    blueprintIds: [
+      "Core.Chat.Input", 
+      "Core.Chat.Output", 
+      "Core.Text.Input", 
+      "Core.Text.Output", 
+      "Core.Chat.History",
+    ],
   },
   developer: {
     displayName: "DEVELOPER",
@@ -77,6 +83,7 @@ export const CORE_DRAWERS = {
     blueprintIds: [
       "Core.Utils.JsonInjector",
       "Core.Utils.Message.Compose",
+      "Core.Utils.Tool.Runner"
     ],
   },
   prototypes: {

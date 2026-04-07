@@ -225,6 +225,7 @@ export const nodeReducers = {
         node.fields = blueprint.fields as Workflow.Node['fields']
         node.inputs = blueprint.inputs as Workflow.Node['inputs']
         node.outputs = blueprint.outputs as Workflow.Node['outputs']
+        node.accent = blueprint.accent;
 
         const initialStaticValues: Record<Foundations.Field.Id | Foundations.Port.Input.Id, any> = {};
 
