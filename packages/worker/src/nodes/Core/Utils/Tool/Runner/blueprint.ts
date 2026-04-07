@@ -4,24 +4,26 @@ export const Blueprint = defineBlueprint({
     id: "Core.Utils.Tool.Runner",
     displayName: "Tool Runner",
     description: "Executes a tool with the provided input and returns the result.",
-    icon: "Play",
+    icon: "Hammer",
     accent: "port-Tool",
     fields: [],
     inputs: [
-        InputBuilder.Tool({
-            id: "tool",
-            displayName: "Tool",
+        InputBuilder.ToolList({
+            id: "tools",
+            displayName: "Tools",
         }),
         InputBuilder.Message({
             id: "input",
-            displayName: "Input",
+            displayName: "AIMessage Input",
         }),
     ],
     outputs: [
-        OutputBuilder.Message({
-            id: "output",
-            displayName: "Output",
+        OutputBuilder.MessageList({
+            id: "toolOutputs",
+            displayName: "Tool Outputs",
             tooltip: "The result of the tool execution.",
         }),
     ],
 });
+
+
