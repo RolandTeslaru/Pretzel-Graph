@@ -52,7 +52,7 @@ const ToolButton: React.FC<Props> = memo(({ node }) => {
     const isTool = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.isTool(s, node.id));
 
     return (
-        <Button variant="ghost" size="icon-xs" className={`h-6! ${isTool ? 'bg-cyan-500/40 text-cyan-700 dark:text-cyan-300! ' : ''}`}
+        <Button variant="ghost" size="icon-xs" className={`h-6! ${isTool ? 'bg-(--port-Tool)/40 text-(--port-Tool) ' : ''}`}
             onClick={() => {
                 if (isTool) WorkbenchSDK.actions.tool.revert(node.id);
                 else WorkbenchSDK.actions.tool.convert(node.id);

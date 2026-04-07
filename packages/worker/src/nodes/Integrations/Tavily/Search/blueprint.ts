@@ -60,7 +60,7 @@ export const ToolBlueprint = defineBlueprint({
     displayName: "Tavily Search",
     description: "Searches the web using Tavily and returns the results as documents.",
     icon: "Tavily",
-    accent: "port-Retriever",
+    accent: "port-Tool",
     toolCompatible: true,
     fields: [
         FieldBuilder.Secret({
