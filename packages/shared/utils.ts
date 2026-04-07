@@ -8,7 +8,14 @@ function runExpression(code: string): unknown {
 }
 
 export const evaluateRule = (rule: Foundations.Field.Condition.Rule, inputs: Record<string, any>): boolean => {
-    const left = runExpression(Expression.preprocess(rule.leftOperand, inputs));
+
+    console.log("Evaluating rule", rule, "with inputs", inputs);
+
+    const preprocessedLeftOperand = Expression.preprocess(rule.leftOperand, inputs);
+
+    console.log("Preprocessed left operand:", preprocessedLeftOperand);
+
+    const left = runExpression(preprocessedLeftOperand);
 
     // Shared operators — present on every dataType
     if (rule.operator === "exists") return left !== undefined && left !== null;
