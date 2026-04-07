@@ -3,7 +3,7 @@ import { BaseLanguageModel as CoreBaseLanguageModel } from "@langchain/core/lang
 import { BaseChatModel as CoreBaseChatModel } from "@langchain/core/language_models/chat_models";
 import { Embeddings as CoreEmbeddings } from "@langchain/core/embeddings";
 import { VectorStore as CoreVectorStore } from "@langchain/core/vectorstores";
-import { Tool as CoreTool } from "@langchain/core/tools";
+import { StructuredTool as CoreTool } from "@langchain/core/tools";
 import { Document as CoreDocument } from "@langchain/core/documents";
 import { BaseRetriever as CoreBaseRetriever } from "@langchain/core/retrievers";
 

@@ -9,6 +9,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
     const setState = sdk.useStore.setState;
     const reducers = sdk.reducers;
     const sel = sdk.selectors;
+
     const validateFieldById = (
         nodeId: Workflow.Node.Id,
         fieldId: Foundations.Field.Id
@@ -38,37 +39,39 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
     const fieldActions = {
         setValue: withAsyncCommit(async (nodeId, field, value) => {
-                if (field.reconcile) {
-                    console.log(`Field ${field.id} requires reconciliation`)
+            if (field.reconcile) {
+                console.log(`Field ${field.id} requires reconciliation`)
 
-                    try {
-                        const blueprint = sdk.selectors.node.extractBlueprint(sdk.state, nodeId);
-                        if (!blueprint)
-                            throw new Error(`Could not extract blueprint from node ${nodeId}`);
+                try {
+                    const blueprint = sdk.selectors.node.extractBlueprint(sdk.state, nodeId);
+                    if (!blueprint)
+                        throw new Error(`Could not extract blueprint from node ${nodeId}`);
 
-                        const fieldValues = sel.field.getValues(sdk.state, nodeId);
+                    const fieldValues = sel.field.getValues(sdk.state, nodeId);
 
-                        const reconciledBlueprint = await ShelfSDK.actions.getReconciledBlueprint(
-                            blueprint, field.id, value, fieldValues,
-                            {
-                                onApiFetch: () => {
-                                    setState(s => { reducers.field.markAsReconciling(s, nodeId, field.id) })
-                                }
+                    const reconciledBlueprint = await ShelfSDK.actions.getReconciledBlueprint(
+                        blueprint, field.id, value, fieldValues,
+                        {
+                            onApiFetch: () => {
+                                setState(s => { reducers.field.markAsReconciling(s, nodeId, field.id) })
                             }
-                        );
+                        }
+                    );
 
-                        setState(s => { 
-                            reducers.node.reconcile(s, nodeId, reconciledBlueprint)
-                            reducers.field.unmarkAsReconciling(s, nodeId, field.id);
-                        });
-                    } catch (error) {
-                        throw new Error(`Could not reconcile node ${nodeId} via field ${field.id}. ${error instanceof Error ? error.message : String(error)}`)
-                    }
+                    setState(s => { 
+                        reducers.node.reconcile(s, nodeId, reconciledBlueprint)
+                        reducers.field.unmarkAsReconciling(s, nodeId, field.id);
+                        reducers.node.validate(s, nodeId);
+                    });
+                } catch (error) {
+                    throw new Error(`Could not reconcile node ${nodeId} via field ${field.id}. ${error instanceof Error ? error.message : String(error)}`)
                 }
+            }
 
-                setState(s => { reducers.field.setValue(s, nodeId, field.id, value) });
-                debouncedValidateField(nodeId, field);
-            }),
+            setState(s => { reducers.field.setValue(s, nodeId, field.id, value) });
+            
+            debouncedValidateField(nodeId, field);
+        }),
         condition: {
             setLeftValue: withCommit((...props) => {
                 const [nodeId, fieldId] = props

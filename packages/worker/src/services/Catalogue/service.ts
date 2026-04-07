@@ -7,7 +7,7 @@ export type NodeConstructor = {
     new(
         workflowNode: Workflow.Node,
         context: ExecutionContext
-    ): RuntimeNode<Foundations.Blueprint>;
+    ): RuntimeNode<any, any>;
 }
 
 @singleton()
@@ -95,8 +95,8 @@ export function RegisterNode(
     blueprintId: Foundations.Blueprint.Id
 ) {
 
-    return function (constructor: NodeConstructor) {
-        CatalogueServiceImpl.register(blueprintId, constructor);
+    return function (constructor: new (...args: any[]) => RuntimeNode<any, any>) {
+        CatalogueServiceImpl.register(blueprintId, constructor as NodeConstructor);
     };
 
 }

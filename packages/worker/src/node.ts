@@ -3,7 +3,7 @@ import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "
 import { ExecutionContext } from "./context";
 import { Emitter } from "./event/emitter"
 
-export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
+export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_ToolBlueprint extends Foundations.Blueprint = any> {
 
     public readonly emit: Emitter;
     public fields: InferFields<T_Blueprint>
@@ -26,7 +26,16 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
         inputs: InferInputs<T_Blueprint>
     ): Promise<Partial<InferOutputs<T_Blueprint>>> {
         this.isWaiting = false;
+
         return this.onRun(this.context, inputs);
+    }
+
+
+    public async buildTool(
+        inputs: InferInputs<T_ToolBlueprint>
+    ): Promise<InferOutputs<T_ToolBlueprint>> {
+        this.isWaiting = false;
+        return this.onBuildTool(this.context, inputs);
     }
 
     public async wait(
@@ -48,7 +57,15 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint> {
     protected onWait(
         context: ExecutionContext,
         inputs: InferInputs<T_Blueprint>
-    ): Promise<void> | void { }
+    ): Promise<void> | void {}
+
+
+    protected onBuildTool(
+        context: ExecutionContext,
+        inputs: InferInputs<T_ToolBlueprint>
+    ): Promise<InferOutputs<T_ToolBlueprint>> {
+        throw new Error("This node cannot be converted to a tool");
+    }
 
     public init(
         context: ExecutionContext

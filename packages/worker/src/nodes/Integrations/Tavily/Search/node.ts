@@ -1,30 +1,63 @@
 import { RegisterNode } from "src/services/Catalogue/service";
-import { Blueprint } from "./blueprint";
+import { Blueprint, ToolBlueprint } from "./blueprint";
 import { ExecutionContext } from "src/context";
 import { RuntimeNode } from "src/node";
 import { InferInputs, InferOutputs } from "src/types";
 import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
+import { tool } from "@langchain/core/tools";
+import { Workflow } from "@vx-agent-editor/shared/domain";
+import { z } from "zod/v3";
+
 
 @RegisterNode(Blueprint.id)
-export class Node extends RuntimeNode<typeof Blueprint> {
+export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
     public readonly Blueprint = Blueprint;
 
-    protected override async onRun(
-        context: ExecutionContext,
-        inputs: InferInputs<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
-        const { apiKey, maxResults, searchDepth, includeAnswer } = this.fields;
+    private retriever: TavilySearchAPIRetriever;
 
-        const retriever = new TavilySearchAPIRetriever({
+    constructor(workflowNode: Workflow.Node, context: ExecutionContext) {
+        super(workflowNode, context);
+        const { apiKey, maxResults, searchDepth, includeAnswer } = this.fields;
+    
+        this.retriever = new TavilySearchAPIRetriever({
             apiKey: apiKey || process.env.TAVILY_API_KEY,
             k: maxResults,
             searchDepth: searchDepth as "basic" | "advanced",
             includeGeneratedAnswer: includeAnswer,
         });
+    }
 
-        const documents = await retriever._getRelevantDocuments(inputs.query);
+
+    protected override async onRun(
+        context: ExecutionContext,
+        inputs: InferInputs<typeof Blueprint>,
+    ): Promise<InferOutputs<typeof Blueprint>> {
+
+        const documents = await this.retriever._getRelevantDocuments(inputs.query);
 
         return { documents };
+    }
+
+
+    protected override async onBuildTool(
+        context: ExecutionContext,
+        inputs: InferInputs<typeof ToolBlueprint>,
+    ): Promise<InferOutputs<typeof ToolBlueprint>> {
+        return { 
+            tool: tool(
+                async ({ query }) => {
+                    const documents = await this.retriever._getRelevantDocuments(query);
+                    return documents;
+                },
+                {
+                    name: Blueprint.id,
+                    description: `Searches the web using Tavily Search API.`,
+                    schema: z.object({
+                        query: z.string().describe("The search query to run against the Tavily Search API."),
+                    })
+                }
+            )
+        };
     }
 }

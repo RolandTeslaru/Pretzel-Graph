@@ -122,7 +122,7 @@ function WorkflowLayoutComponent() {
             <PathPanel/>
             {/* <AdminJobsPanel /> */}
             {/* <StackDebugPanel/> */}
-            {/* <StateViewer /> */}
+            <StateViewer />
             <Outlet />
         </div>
     )
