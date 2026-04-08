@@ -40,7 +40,7 @@ export const rangeVars = cva(
   {
     variants: {
       variant: {
-        default: "bg-muted-foreground/60",
+        default: "bg-muted-foreground/40",
         primary: "bg-primary",
       }
     }
@@ -149,7 +149,7 @@ const Slider = ({
           className={cn(
             "absolute left-0 top-0 h-full pointer-events-none select-none",
             variant === "primary" && "bg-primary",
-            variant === "default" && "bg-muted-foreground/60",
+            variant === "default" && "bg-muted-foreground/40",
           )}
           style={{ width: computeFillWidth(initialValue) }}
         />

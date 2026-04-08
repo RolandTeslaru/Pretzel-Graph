@@ -169,7 +169,7 @@ const PathPanel = () => {
                 <p>/</p>
                 <p>Demos</p>
                 <p>/</p>
-                <p>{workflowName}</p>
+                <p>Basic Agent Loop Test</p>
             </div>
         </div>
     )

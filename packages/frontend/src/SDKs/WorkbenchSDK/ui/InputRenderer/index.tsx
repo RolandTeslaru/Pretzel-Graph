@@ -3,7 +3,7 @@ import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { WorkbenchSDK } from '../../sdk'
 import { Textarea } from '@vx-agent-editor/vx-ui/foundations'
 import { HighlightedTextarea } from './HighlightedTextarea'
-import { InputLabel } from './label';
+import { InputLabel, type InputLabelVariant, type InputLabelSize } from './label';
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons';
 
 
@@ -13,17 +13,19 @@ type RendererProps<K extends Foundations.Port.Input['variant']> = {
     className?: string
     showTypeBadge?: boolean
     isFlipped?: boolean
+    labelVariant?: InputLabelVariant
+    labelSize?: InputLabelSize
 }
 
 
 // ── Variant Renderers ────────────────────────────────────────
 
-const MessageInput = memo(({ input, nodeId, className, isFlipped }: RendererProps<'Message'>) => {
+const MessageInput = memo(({ input, nodeId, className, isFlipped, labelVariant, labelSize }: RendererProps<'Message'>) => {
     const [value, issue] = WorkbenchSDK.useInput(nodeId, input.id);
 
     return (
         <div className={className + " w-full flex flex-col gap-1"}>
-            <InputLabel input={input} isFlipped={isFlipped} />
+            <InputLabel input={input} isFlipped={isFlipped} variant={labelVariant} size={labelSize} />
             <HighlightedTextarea
                 input={input}
                 nodeId={nodeId}
@@ -38,7 +40,7 @@ const MessageInput = memo(({ input, nodeId, className, isFlipped }: RendererProp
 MessageInput.displayName = "MessageInput"
 
 
-const TextInput = memo(({ input, nodeId, className, isFlipped }: RendererProps<'Text'>) => {
+const TextInput = memo(({ input, nodeId, className, isFlipped, labelVariant, labelSize }: RendererProps<'Text'>) => {
     const [value, issue] = WorkbenchSDK.useInput(nodeId, input.id);
 
     let innerClassName = ""
@@ -47,7 +49,7 @@ const TextInput = memo(({ input, nodeId, className, isFlipped }: RendererProps<'
 
     return (
         <div className={className + " w-full flex flex-col gap-1"}>
-            <InputLabel input={input} isFlipped={isFlipped} />
+            <InputLabel input={input} isFlipped={isFlipped} variant={labelVariant} size={labelSize} />
             <Textarea
                 value={value as string}
                 onChange={(e) => WorkbenchSDK.actions.input.setValue(nodeId, input, e.target.value)}
@@ -69,6 +71,8 @@ type InputRendererMapType = {
         nodeId: Workflow.Node.Id
         className?: string
         isFlipped?: boolean
+        labelVariant?: InputLabelVariant
+        labelSize?: InputLabelSize
     }>
 }
 
