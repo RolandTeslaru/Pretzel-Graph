@@ -70,7 +70,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
     }, [connectedPorts, node.inputs, node.fields]);
 
     const defaultOpen = useMemo(() => {
-        const sections: string[] = [];
+        const sections: string[] = ["execution-strategy"];
         sections.push("output");
 
         if (fields.length > 0)
