@@ -20,19 +20,19 @@ export const IntegerField = memo<RendererProps<'Integer'>>(({ field, nodeId, cla
                     <FieldLabel field={field} isReconciling={isReconciling} />
                     <div className='flex flex-row gap-2'>
                         <Slider
-                            className={`pt-1 ${issue ? "opacity-50" : ""}`}
+                            className={`my-auto ${issue ? "opacity-50" : ""}`}
                             min={field.min}
                             max={field.max}
                             step={field.step ?? 1}
                             value={[Number(value) || 0]}
-                            variant="accent"
                             onValueChange={val => {
                                 WorkbenchSDK.actions.field.setValue(nodeId, field, val[0])
                             }}
                         />
                         <Input
                             type="number"
-                            className={`ml-auto w-20 h-6 ${errorClass}`}
+                            size="xs"
+                            className={`ml-auto w-20 ${errorClass}`}
                             value={value as string}
                             step={field.step ?? 1}
                             min={field.min}
@@ -49,6 +49,7 @@ export const IntegerField = memo<RendererProps<'Integer'>>(({ field, nodeId, cla
                     <FieldLabel field={field} isReconciling={isReconciling} />
                     <Input
                         type="number"
+                        size="sm"
                         className={errorClass}
                         step={field.step ?? 1}
                         min={field.min}

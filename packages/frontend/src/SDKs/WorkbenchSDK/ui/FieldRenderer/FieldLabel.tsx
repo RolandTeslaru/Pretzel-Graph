@@ -9,9 +9,8 @@ interface LabelProps {
 
 export const FieldLabel = ({ field, isReconciling }: LabelProps) => {
     return (
-        <Label className="text-sm font-medium flex items-center">
+        <Label className="flex items-center" required={field.required}>
             {field.displayName}
-            {field.required && <span className="text-red-500 ml-1">*</span>}
             {isReconciling && <Spinner className='h-4 pl-2'/>}
         </Label>
     )
