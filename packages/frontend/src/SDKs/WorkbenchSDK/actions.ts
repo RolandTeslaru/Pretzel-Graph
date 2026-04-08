@@ -23,22 +23,29 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
 
     const nodeActions = {
-        create:            withCommit((...props) => setState(s => { reducers.node.create(s,         ...props) })),
-        recreate:          withCommit((...props) => setState(s => { reducers.node.recreate(s,       ...props) })),
-        remove:            withCommit((...props) => setState(s => { reducers.node.remove(s,         ...props) })),
-        duplicate:         withCommit((...props) => setState(s => { reducers.node.duplicate(s,      ...props) })),
-        setDisabled:       withCommit((...props) => setState(s => { reducers.node.setDisabled(s,    ...props) })),
-        setMinimized:      withCommit((...props) => setState(s => { reducers.node.setMinimized(s,   ...props) })),
-        setFlipped:        withCommit((...props) => setState(s => { reducers.node.setFlipped(s,     ...props) })),
-        setDisplayName:    withCommit((...props) => setState(s => { reducers.node.setDisplayName(s, ...props) })),
-        setDescription:    withCommit((...props) => setState(s => { reducers.node.setDescription(s, ...props) })),
-    
+        create:            withCommit((...props) => setState(s => { reducers.node.create(s,            ...props) })),
+        recreate:          withCommit((...props) => setState(s => { reducers.node.recreate(s,          ...props) })),
+        remove:            withCommit((...props) => setState(s => { reducers.node.remove(s,            ...props) })),
+        duplicate:         withCommit((...props) => setState(s => { reducers.node.duplicate(s,         ...props) })),
+        setDisabled:       withCommit((...props) => setState(s => { reducers.node.setDisabled(s,       ...props) })),
+        setMinimized:      withCommit((...props) => setState(s => { reducers.node.setMinimized(s,      ...props) })),
+        setFlipped:        withCommit((...props) => setState(s => { reducers.node.setFlipped(s,        ...props) })),
+        setDisplayName:    withCommit((...props) => setState(s => { reducers.node.setDisplayName(s,    ...props) })),
+        setDescription:    withCommit((...props) => setState(s => { reducers.node.setDescription(s,    ...props) })),
+        setSignalStrategy: withCommit((...props) => setState(s => { reducers.node.setSignalStrategy(s, ...props) })),
+        
         validate:          (...props) => { setState(s => { reducers.node.validate(s,       ...props) }) },
         clearIssues:       (...props) => { setState(s => { reducers.node.clearIssues(s,    ...props) }) },
     } satisfies _WorkbenchSDKActions["node"]
 
     const fieldActions = {
         setValue: withAsyncCommit(async (nodeId, field, value) => {
+            // Core execution-strategy fields: handled locally, no API round-trip.
+            if (field.id === "signalDependency") {
+                nodeActions.setSignalStrategy(nodeId, value);
+                return;
+            }
+
             if (field.reconcile) {
                 console.log(`Field ${field.id} requires reconciliation`)
 
@@ -280,6 +287,7 @@ export interface _WorkbenchSDKActions {
         create              : DropFirstArg<WorkbenchSDK.Reducers['node']['create']>;
         recreate            : DropFirstArg<WorkbenchSDK.Reducers['node']['recreate']>;
         duplicate           : DropFirstArg<WorkbenchSDK.Reducers['node']['duplicate']>;
+        setSignalStrategy   : DropFirstArg<WorkbenchSDK.Reducers['node']['setSignalStrategy']>;
         setDisabled         : DropFirstArg<WorkbenchSDK.Reducers['node']['setDisabled']>;
         setMinimized        : DropFirstArg<WorkbenchSDK.Reducers['node']['setMinimized']>;
         setFlipped          : DropFirstArg<WorkbenchSDK.Reducers['node']['setFlipped']>;
