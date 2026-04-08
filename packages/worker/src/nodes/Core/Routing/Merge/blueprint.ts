@@ -7,17 +7,6 @@ export const Blueprint = defineBlueprint({
     icon: "Merge",
     accent: "group-routing",
     fields: [
-        FieldBuilder.MultiOption({
-            id: "strategy",
-            displayName: "Strategy",
-            options: [
-                { value: "AND" },
-                { value: "OR" },
-                { value: "XOR" },
-            ],
-            initialValue: "AND",
-            variant: "tab",
-        }),
         FieldBuilder.List({
             id: "ordering",
             displayName: "Input Ordering",

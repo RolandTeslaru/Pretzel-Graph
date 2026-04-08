@@ -4,6 +4,7 @@ import { cloneDeep } from 'lodash';
 import { edgeReducers } from "./edge";
 import { cacheReducers } from "./cache";
 import { layoutReducers } from "./layout";
+import { fieldReducers } from "./field";
 import { workbenchSelectors } from "../selectors";
 
 const sel = workbenchSelectors;
@@ -227,23 +228,23 @@ export const nodeReducers = {
         node.outputs = blueprint.outputs as Workflow.Node['outputs']
         node.accent = blueprint.accent;
 
-        const initialStaticValues: Record<Foundations.Field.Id | Foundations.Port.Input.Id, any> = {};
+        // Seed from existing values, then fill gaps with initialValue
+        const existing = s.workflow.data.staticValues[nodeId] ?? {};
+        const next: Record<Foundations.Field.Id | Foundations.Port.Input.Id, any> = { ...existing };
 
-        // Populate default values from fields
         for (const field of blueprint.fields) {
-            if ('initialValue' in field && field.initialValue !== undefined) {
-                initialStaticValues[field.id] = field.initialValue;
-            }
+            if (field.id in next) continue;
+            if ('initialValue' in field && field.initialValue !== undefined)
+                next[field.id] = field.initialValue;
         }
 
-        // Populate default values from inputs
         for (const input of blueprint.inputs) {
-            if ('initialValue' in input && input.initialValue !== undefined) {
-                initialStaticValues[input.id] = input.initialValue;
-            }
+            if (input.id in next) continue;
+            if ('initialValue' in input && input.initialValue !== undefined)
+                next[input.id] = input.initialValue;
         }
 
-        s.workflow.data.staticValues[nodeId] = initialStaticValues;
+        s.workflow.data.staticValues[nodeId] = next;
     },
     resolveDynamicPortGroup: (s, nodeId, triggerPort, resolvedVariant) => {
         const node = s.workflow.data.nodes[nodeId];
@@ -296,6 +297,19 @@ export const nodeReducers = {
             (output as any).variant = output.unresolvedVariant ?? "Unresolved";
         })
     },
+    setSignalStrategy: (s, nodeId, strategy) => {
+        s.isDirty = true;
+        const node = s.workflow.data.nodes[nodeId];
+        if (!node) return;
+
+        fieldReducers.setValue(s, nodeId, "signalDependency" as Foundations.Field.Id, strategy);
+
+        // When signals are AND-joined, every incoming signal must fire —
+        // which implies all data is present. The dataDependency field is
+        // meaningless in that case, so hide it from the inspector.
+        const dataDep = node.fields.find(f => f.id === "dataDependency" as Foundations.Field.Id);
+        if (dataDep) dataDep.hidden = strategy === "AND";
+    },
     setDisabled: (s, nodeId, isDisabled) => {
         s.isDirty = true;
         s.workflow.data.nodes[nodeId].isDisabled = isDisabled;
@@ -344,6 +358,7 @@ interface NodeReducers {
     recreate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
     duplicate      : (state: WorkbenchSDK.State, originalNode: Workflow.Node, position?: { x: number, y: number }) => Workflow.Node;
     reconcile      : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
+    setSignalStrategy : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, strategy: "AND" | "OR" | "XOR") => void;
     setDisabled    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isDisabled: boolean) => void;
     setMinimized   : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void;
     setFlipped     : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isFlipped: boolean) => void;

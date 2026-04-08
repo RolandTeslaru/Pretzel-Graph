@@ -41,7 +41,7 @@ const hiddenToolField = FieldBuilder.Boolean({
 
 
 
-const signalDependencyStrategyField = FieldBuilder.MultiOption({
+export const signalDependencyStrategyField = FieldBuilder.MultiOption({
     id: "signalDependency",
     displayName: "Signal Dependency",
     options: [
@@ -49,12 +49,11 @@ const signalDependencyStrategyField = FieldBuilder.MultiOption({
         { value: "OR", displayName: "(OR) At least one signal required" },
         { value: "XOR", displayName: "(XOR) Exactly one signal required" },
     ],
-    initialValue: "AND",
-    hidden: true,
+    initialValue: "OR",
     tooltip: "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
 })
 
-const dataDependencyStrategyField = FieldBuilder.MultiOption({
+export const dataDependencyStrategyField = FieldBuilder.MultiOption({
     id: "dataDependency",
     displayName: "Data Dependency",
     options: [
@@ -62,7 +61,6 @@ const dataDependencyStrategyField = FieldBuilder.MultiOption({
         { value: "OR", displayName: "(OR) At least one data dependency ready" },
     ],
     initialValue: "AND",
-    hidden: true,
     tooltip: "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
 })
 
