@@ -3,7 +3,7 @@ import { WorkbenchSDK } from '../../../../sdk'
 import { Workflow, Foundations } from '@vx-agent-editor/shared/domain';
 import { Port } from '../Port'
 import { INPUT_RENDERER_MAP } from '../../../InputRenderer';
-import { InputLabel } from '../../../InputRenderer/label';
+import { InputLabel, type InputLabelSize, type InputLabelVariant } from '../../../InputRenderer/label';
 
 const Item: React.FC<{
     input: Foundations.Port.Input
@@ -19,6 +19,8 @@ const Item: React.FC<{
     const Component = INPUT_RENDERER_MAP[input.variant] as React.ComponentType<{
         input: Foundations.Port.Input
         nodeId: Workflow.Node.Id
+        labelVariant?: InputLabelVariant
+        labelSize?: InputLabelSize
         className?: string
         isFlipped?: boolean
     }> | undefined
@@ -33,10 +35,10 @@ const Item: React.FC<{
                 isFlipped={isFlipped}
             />
             {(Component && hasEdge === false) ? (
-                <Component input={input} nodeId={nodeId} isFlipped={isFlipped} />
+                <Component labelVariant="inline" labelSize="md" input={input} nodeId={nodeId} isFlipped={isFlipped} />
             ) : (
                 <div className={" w-full flex flex-col relative gap-1 "}>
-                    <InputLabel input={input} isFlipped={isFlipped} />
+                    <InputLabel input={input} isFlipped={isFlipped} variant="inline" size="md" />
                 </div>
             )}
         </div>
