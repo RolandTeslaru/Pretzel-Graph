@@ -18,34 +18,34 @@ export const reconcile = (
         switch (newValue) {
             case "Anthropic":
                 modelField.options = [
-                    "claude-opus-4-6",
-                    "claude-sonnet-4-5-20250929",
-                    "claude-haiku-4-5-20251001"
+                    { value: "claude-opus-4-6", displayName: "Claude Opus 4.6" },
+                    { value: "claude-sonnet-4-5-20250929", displayName: "Claude Sonnet 4.5" },
+                    { value: "claude-haiku-4-5-20251001", displayName: "Claude Haiku 4.5" },
                 ];
                 modelField.initialValue = "claude-opus-4-6";
                 apiKeyField.displayName = "Anthropic API Key";
                 break;
             case "Google":
                 modelField.options = [
-                    "gemini-3-pro-preview",
-                    "gemini-2.5-pro",
-                    "gemini-3-flash-preview",
-                    "gemini-2.5-flash",
-                    "gemini-2.5-flash-lite",
+                    { value: "gemini-3-pro-preview", displayName: "Gemini 3 Pro Preview" },
+                    { value: "gemini-2.5-pro", displayName: "Gemini 2.5 Pro" },
+                    { value: "gemini-3-flash-preview", displayName: "Gemini 3 Flash Preview" },
+                    { value: "gemini-2.5-flash", displayName: "Gemini 2.5 Flash" },
+                    { value: "gemini-2.5-flash-lite", displayName: "Gemini 2.5 Flash Lite" },
                 ];
                 modelField.initialValue = "gemini-3-pro-preview";
                 apiKeyField.displayName = "Google Generative API Key";
                 break;
             case "OpenAI":
                 modelField.options = [
-                    "gpt-4.5-preview",
-                    "gpt-4o",
-                    "gpt-4o-mini",
-                    "o1",
-                    "o1-mini",
-                    "o3-mini",
-                    "gpt-4-turbo",
-                    "gpt-3.5-turbo"
+                    { value: "gpt-4.5-preview", displayName: "GPT-4.5 Preview" },
+                    { value: "gpt-4o", displayName: "GPT-4o" },
+                    { value: "gpt-4o-mini", displayName: "GPT-4o Mini" },
+                    { value: "o1", displayName: "o1" },
+                    { value: "o1-mini", displayName: "o1-mini" },
+                    { value: "o3-mini", displayName: "o3-mini" },
+                    { value: "gpt-4-turbo", displayName: "GPT-4 Turbo" },
+                    { value: "gpt-3.5-turbo", displayName: "GPT-3.5 Turbo" },
                 ];
                 modelField.initialValue = "gpt-4o";
                 apiKeyField.displayName = "OpenAI API Key";

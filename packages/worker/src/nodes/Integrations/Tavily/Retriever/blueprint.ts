@@ -22,7 +22,10 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.MultiOption({
             id: "searchDepth",
             displayName: "Search Depth",
-            options: ["basic", "advanced"],
+            options: [
+                { value: "basic", displayName: "Basic" },
+                { value: "advanced", displayName: "Advanced" },
+            ],
             initialValue: "basic",
             tooltip: "Advanced costs more Tavily credits but returns richer results.",
         }),
