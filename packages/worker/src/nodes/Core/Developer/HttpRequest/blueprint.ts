@@ -10,7 +10,13 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.MultiOption({
             id: "method",
             displayName: "Method",
-            options: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+            options: [
+                { value: "GET" },
+                { value: "POST" },
+                { value: "PUT" },
+                { value: "DELETE" },
+                { value: "PATCH" },
+            ],
             initialValue: "GET",
             variant: "select"
         }),

@@ -20,7 +20,7 @@ export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nod
                     >
                         <Tabs.List size="sm">
                             {field.options.map((opt) => (
-                                <Tabs.Trigger key={opt} value={opt}>{opt}</Tabs.Trigger>
+                                <Tabs.Trigger key={opt.value} value={opt.value}>{opt.displayName ?? opt.value}</Tabs.Trigger>
                             ))}
                         </Tabs.List>
                     </Tabs.Root>
@@ -37,7 +37,7 @@ export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nod
                         </Select.Trigger>
                         <Select.Content>
                             {field.options.map((opt) => (
-                                <Select.Item key={opt} value={opt}>{opt}</Select.Item>
+                                <Select.Item key={opt.value} value={opt.value}>{opt.displayName ?? opt.value}</Select.Item>
                             ))}
                         </Select.Content>
                     </Select.Root>

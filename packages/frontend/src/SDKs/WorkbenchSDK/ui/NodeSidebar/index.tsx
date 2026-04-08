@@ -41,7 +41,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
     const [isEditing, setIsEditing] = useState(false)
     const connectedPorts = WorkbenchSDK.useStore(s => s.cache.inputHandlesMap[node.id] || EMPTY_OBJECT)
 
-    const { fields, inputs, connectedInputs } = useMemo(() => {
+    const [ fields, executionStrategyFields, inputs, connectedInputs ] = useMemo(() => {
         const connectedInputs: Foundations.Port.Input[] = [];
         const inputs: Foundations.Port.Input[] = [];
 
@@ -52,11 +52,23 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                 inputs.push(input);
         });
 
-        return {
-            fields: node.fields.filter(f => !f.hidden),
+        const fields: Foundations.Field[] = []
+        const executionStrategyFields: Foundations.Field[] = []
+
+        node.fields.forEach(field => {
+            if(!field.hidden)
+                fields.push(field)
+            else if (field.id === "signalDependency" || field.id === "dataDependency")
+                executionStrategyFields.push(field)
+        })
+
+
+        return [
+            fields,
+            executionStrategyFields,
             inputs,
             connectedInputs,
-        };
+        ];
     }, [connectedPorts, node.inputs, node.fields]);
 
     const defaultOpen = useMemo(() => {
@@ -133,6 +145,18 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                             </Accordion.Content>
                         </Accordion.Item>
                     )}
+                    <Accordion.Item value='execution-strategy' className='border-none'>
+                        <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
+                            <h4 className='text-md font-medium'>Execution Strategy</h4>
+                        </Accordion.Trigger>
+                        <Accordion.Content className='flex flex-col gap-1 bg-background/60'>
+                            {executionStrategyFields.map(field => (
+                                <div key={field.id} className='px-4 py-2'>
+                                    <FieldRenderer field={field} nodeId={node.id} />
+                                </div>
+                            ))}
+                        </Accordion.Content>
+                    </Accordion.Item>
                 </Accordion.Root>
             </ScrollArea.Root>
         </>

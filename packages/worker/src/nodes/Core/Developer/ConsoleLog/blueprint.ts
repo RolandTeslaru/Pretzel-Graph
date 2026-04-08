@@ -9,7 +9,12 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.MultiOption({
             id: "level",
             displayName: "Level",
-            options: ["log", "info", "warn", "error"],
+            options: [
+                { value: "log", displayName: "Log" },
+                { value: "info", displayName: "Info" },
+                { value: "warn", displayName: "Warn" },
+                { value: "error", displayName: "Error" },
+            ],
             initialValue: "log",
             variant: "select"
         }),

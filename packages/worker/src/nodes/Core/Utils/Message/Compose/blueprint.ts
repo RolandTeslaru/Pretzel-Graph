@@ -10,7 +10,11 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.MultiOption({
             id: "role",
             displayName: "Role",
-            options: ["Human", "System", "Tool"] as const,
+            options: [
+                { value: "Human" },
+                { value: "System" },
+                { value: "Tool" },
+            ],
             initialValue: "Human",
             variant: "tab",
             reconcile: true,
