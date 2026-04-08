@@ -10,7 +10,7 @@ interface NodeOutputProps {
   isFlipped?: boolean
 }
 
-const OutputPort: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFlipped }) => {
+const Item: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFlipped }) => {
   return (
     <div className={cn("relative w-full flex items-center py-0.5 px-3", isFlipped ? "justify-start" : "justify-end")}>
       <div className={cn("text-sm font-medium text-foreground")}>
@@ -47,7 +47,7 @@ const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped }) => 
   return (
     <div className="relative flex flex-col gap-1">
       {outputs.map((output) => (
-        <OutputPort
+        <Item
           key={output.id}
           node={node}
           isWorkflowLocked={isWorkflowLocked}

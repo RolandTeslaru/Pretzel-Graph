@@ -190,6 +190,11 @@ export const GlowingAlertTriangle = () => {
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
+        <mask id="alert-mark-cutout" maskUnits="userSpaceOnUse">
+          <rect width="24" height="24" fill="white" />
+          <rect x="10.25" y="7" width="3.5" height="7.5" rx="1.75" fill="black" />
+          <circle cx="12" cy="17.5" r="1.85" fill="black" />
+        </mask>
       </defs>
       <style>{`
         @keyframes alertGlowPulse {
@@ -203,31 +208,23 @@ export const GlowingAlertTriangle = () => {
       `}</style>
       {/* Ping layer: expands outward and fades */}
       <g style={{ animation: 'alertPing 1.2s cubic-bezier(0, 0, 0.2, 1) infinite', transformOrigin: '12px 14px' }}>
-        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="#f59e0b" />
       </g>
-      {/* Triangle path + exclamation mark (Lucide alert-triangle) */}
+      {/* Triangle path + exclamation mark (filled alert-triangle) */}
       {/* Layer 1: far amber glow */}
       <g filter="url(#alert-glow-far)" style={{ animation: 'alertGlowPulse 1.2s ease-in-out infinite' }}>
-        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        <line x1="12" y1="9" x2="12" y2="13" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="12" cy="17" r="0.5" fill="#f59e0b" stroke="#f59e0b" strokeWidth="1" />
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="#f59e0b" />
       </g>
       {/* Layer 2: mid glow */}
       <g filter="url(#alert-glow-mid)">
-        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        <line x1="12" y1="9" x2="12" y2="13" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="12" cy="17" r="0.5" fill="#fbbf24" stroke="#fbbf24" strokeWidth="1" />
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="#fbbf24" />
       </g>
       {/* Layer 3: tight glow */}
       <g filter="url(#alert-glow-tight)">
-        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#fde68a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        <line x1="12" y1="9" x2="12" y2="13" stroke="#fde68a" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="12" cy="17" r="0.5" fill="#fde68a" stroke="#fde68a" strokeWidth="1" />
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="#fde68a" />
       </g>
       {/* Layer 4: crisp core */}
-      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#fef3c7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      <line x1="12" y1="9" x2="12" y2="13" stroke="#fef3c7" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="12" cy="17" r="0.5" fill="#fef3c7" stroke="#fef3c7" strokeWidth="1" />
+      <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="#fef3c7" />
     </svg>
   )
 }

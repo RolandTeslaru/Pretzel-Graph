@@ -3,19 +3,22 @@
 import * as SelectPrimitive from "@radix-ui/react-select"
 
 import { cn } from "../utils/cn"
-import type { ComponentProps, FC } from "react"
+import { createContext, useContext, type ComponentProps, type FC } from "react"
 import { SystemIcons } from "../icons"
+
+type SelectSize = "default" | "sm" | "xs"
+const SelectSizeContext = createContext<SelectSize>("default")
 
 namespace SelectComponents {
   export type Root = FC<ComponentProps<typeof SelectPrimitive.Root>>
   export type Group = FC<ComponentProps<typeof SelectPrimitive.Group>>
   export type Value = FC<ComponentProps<typeof SelectPrimitive.Value>>
-  export type Trigger = FC<ComponentProps<typeof SelectPrimitive.Trigger> & { size?: "sm" | "xs"; variant?: "default" | "ghost" | "ghost-no-focus" }>
+  export type Trigger = FC<ComponentProps<typeof SelectPrimitive.Trigger> & { size?: "default" | "sm" | "xs"; variant?: "default" | "ghost" | "ghost-no-focus" }>
   export type ScrollUpButton = FC<ComponentProps<typeof SelectPrimitive.ScrollUpButton>>
   export type ScrollDownButton = FC<ComponentProps<typeof SelectPrimitive.ScrollDownButton>>
-  export type Content = FC<ComponentProps<typeof SelectPrimitive.Content> & { position?: "popper" | "item-aligned"; size?: "default" | "xs" }>
+  export type Content = FC<ComponentProps<typeof SelectPrimitive.Content> & { position?: "popper" | "item-aligned"; size?: "default" | "sm" | "xs" }>
   export type Label = FC<ComponentProps<typeof SelectPrimitive.Label>>
-  export type Item = FC<ComponentProps<typeof SelectPrimitive.Item> & { size?: "default" | "xs" }>
+  export type Item = FC<ComponentProps<typeof SelectPrimitive.Item> & { size?: "default" | "sm" | "xs" }>
   export type Separator = FC<ComponentProps<typeof SelectPrimitive.Separator>>
 }
 
@@ -50,12 +53,16 @@ const Trigger: SelectComponents.Trigger = ({ className, children, size = "sm", v
         aria-invalid:ring-destructive/20
         dark:aria-invalid:ring-destructive/40
         aria-invalid:border-destructive
-        flex w-full items-center
+        flex w-full min-w-0 items-center
         justify-between gap-2
-        pr-2 pl-2.5 py-2 text-sm whitespace-nowrap
+        whitespace-nowrap
         transition-[color,box-shadow]
         outline-none disabled:cursor-not-allowed
-        disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 data-[size=xs]:h-6 data-[size=xs]:text-xs data-[size=xs]:px-1.5 data-[size=xs]:py-0.5 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4`,
+        disabled:opacity-50
+        data-[size=default]:h-8 data-[size=default]:px-2.5 data-[size=default]:py-1 data-[size=default]:text-sm
+        data-[size=sm]:h-7 data-[size=sm]:px-2 data-[size=sm]:py-0.5 data-[size=sm]:text-sm
+        data-[size=xs]:h-6 data-[size=xs]:px-1.5 data-[size=xs]:py-0.5 data-[size=xs]:text-xs
+        *:data-[slot=select-value]:truncate *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:block [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4`,
         triggerVariantClasses[variant],
         className
       )}
@@ -103,6 +110,7 @@ const Content: SelectComponents.Content = ({
 
   return (
     <SelectPrimitive.Portal>
+      <SelectSizeContext.Provider value={size}>
       <SelectPrimitive.Content
         className={cn(
           `bg-popover/60 backdrop-blur-sm text-popover-foreground min-w-[8rem] 
@@ -146,13 +154,29 @@ const Content: SelectComponents.Content = ({
         </SelectPrimitive.Viewport>
         <ScrollDownButton />
       </SelectPrimitive.Content>
+      </SelectSizeContext.Provider>
     </SelectPrimitive.Portal>
   )
 }
 
 const Label: SelectComponents.Label = ({ className, ...props }) => <SelectPrimitive.Label className={cn("py-1.5 pl-8 pr-2 text-xs font-semibold", className)} {...props} />
 
-const Item: SelectComponents.Item = ({ className, children, size = "default", ...props }) => (
+const itemSizeClasses: Record<"default" | "sm" | "xs", string> = {
+  default: "py-1.5 pr-8 pl-2 text-sm",
+  sm: "py-1 pr-7 pl-2 text-sm",
+  xs: "py-0.5 pr-6 pl-1.5 text-xs",
+}
+
+const itemIndicatorClasses: Record<"default" | "sm" | "xs", string> = {
+  default: "right-2 h-3.5 w-3.5",
+  sm: "right-1.5 h-3.5 w-3.5",
+  xs: "right-1 h-3 w-3",
+}
+
+const Item: SelectComponents.Item = ({ className, children, size, ...props }) => {
+  const contextSize = useContext(SelectSizeContext)
+  const resolvedSize = size ?? contextSize
+  return (
   <SelectPrimitive.Item
     className={cn(
       `focus:bg-primary/15 focus:text-accent-foreground
@@ -170,17 +194,17 @@ const Item: SelectComponents.Item = ({ className, children, size = "default", ..
        *:[span]:last:items-center
        *:[span]:last:gap-2
        `,
-      size === "xs" ? "py-0.5 pr-6 pl-1.5 text-xs" : "py-1.5 pr-8 pl-2 text-sm",
+      itemSizeClasses[resolvedSize],
       className
     )}
     {...props}
   >
     <span className={cn(
       "absolute flex items-center justify-center text-label-primary",
-      size === "xs" ? "right-1 h-3 w-3" : "right-2 h-3.5 w-3.5"
+      itemIndicatorClasses[resolvedSize]
     )}>
       <SelectPrimitive.ItemIndicator>
-        <SystemIcons.Check className={size === "xs" ? "size-3" : "size-4"} />
+        <SystemIcons.Check className={resolvedSize === "xs" ? "size-3" : "size-4"} />
       </SelectPrimitive.ItemIndicator>
     </span>
 
@@ -188,7 +212,8 @@ const Item: SelectComponents.Item = ({ className, children, size = "default", ..
       <span>{children}</span>
     </SelectPrimitive.ItemText>
   </SelectPrimitive.Item>
-)
+  )
+}
 
 const Separator: SelectComponents.Separator = ({ className, ...props }) => <SelectPrimitive.Separator className={cn("-mx-1 my-1 h-px bg-neutral-400/20", className)} {...props} />
 

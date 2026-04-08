@@ -25,6 +25,7 @@ export const JsonField = memo<RendererProps<'Json'>>(({ field, nodeId, className
         <div className={`${className ?? ''} w-full nodrag cursor-auto flex flex-col gap-1`}>
             <FieldLabel field={field} isReconciling={isReconciling} />
             <Textarea
+                size="sm"
                 value={draft}
                 onChange={(e) => {
                     const nextDraft = e.target.value
