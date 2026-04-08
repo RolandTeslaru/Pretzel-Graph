@@ -1,6 +1,6 @@
 {
-  "version": "1775640567096",
-  "generatedAt": "2026-04-08T09:29:27.096Z",
+  "version": "1775676250503",
+  "generatedAt": "2026-04-08T19:24:10.503Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -25,11 +25,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -51,7 +50,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -137,11 +135,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -163,7 +160,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -212,11 +208,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -238,7 +233,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -288,11 +282,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -314,7 +307,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -528,11 +520,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -554,7 +545,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -723,11 +713,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -749,7 +738,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -808,11 +796,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -834,7 +821,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -939,11 +925,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -965,7 +950,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -1031,11 +1015,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -1057,7 +1040,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -1134,11 +1116,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -1160,7 +1141,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -1252,11 +1232,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -1278,7 +1257,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -1338,27 +1316,6 @@
       "toolCompatible": false,
       "fields": [
         {
-          "id": "strategy",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Strategy",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND"
-            },
-            {
-              "value": "OR"
-            },
-            {
-              "value": "XOR"
-            }
-          ],
-          "kind": "tab"
-        },
-        {
           "id": "ordering",
           "advanced": false,
           "required": false,
@@ -1375,11 +1332,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -1401,7 +1357,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -1551,11 +1506,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -1577,7 +1531,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -1733,11 +1686,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -1759,7 +1711,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -1829,11 +1780,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -1855,7 +1805,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -1914,11 +1863,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -1940,7 +1888,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -2001,11 +1948,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -2027,7 +1973,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -2078,11 +2023,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -2104,7 +2048,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -2138,11 +2081,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -2164,7 +2106,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -2319,11 +2260,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -2345,7 +2285,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -2480,11 +2419,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -2506,7 +2444,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -2666,11 +2603,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -2692,7 +2628,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -2847,11 +2782,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -2873,7 +2807,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -2967,11 +2900,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -2993,7 +2925,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",
@@ -3086,11 +3017,10 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Signal Dependency",
           "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
           "variant": "MultiOption",
-          "initialValue": "AND",
+          "initialValue": "OR",
           "options": [
             {
               "value": "AND",
@@ -3112,7 +3042,6 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "hidden": true,
           "displayName": "Data Dependency",
           "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
           "variant": "MultiOption",

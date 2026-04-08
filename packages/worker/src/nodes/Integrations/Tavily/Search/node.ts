@@ -44,18 +44,26 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         context: ExecutionContext,
         inputs: InferInputs<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
-        return { 
+        return {
             tool: tool(
                 async ({ query }) => {
                     const documents = await this.retriever._getRelevantDocuments(query);
-                    return documents;
+                    const content = documents
+                        .map((d, i) => {
+                            const title = d.metadata?.title ?? "";
+                            const source = d.metadata?.source ?? "";
+                            return `[${i + 1}] ${title}\n${source}\n${d.pageContent}`;
+                        })
+                        .join("\n\n");
+                    return [content, documents];
                 },
                 {
                     name: "tavily_search",
                     description: `Searches the web using Tavily Search API.`,
                     schema: z.object({
                         query: z.string().describe("The search query to run against the Tavily Search API."),
-                    })
+                    }),
+                    responseFormat: "content_and_artifact",
                 }
             )
         };

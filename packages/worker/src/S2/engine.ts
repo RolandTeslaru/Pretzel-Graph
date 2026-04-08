@@ -49,23 +49,33 @@ export class S2Engine {
 
         const receivedSignals = ctx.accumulatedSignals.get(vertexId)!;
 
+        let assesment: boolean = false;
+
         switch (vertex.getStrategy()) {
             case "OR":
-                return receivedSignals.size > 0;
+                if(receivedSignals.size > 0)
+                    assesment = true;
+                break;
 
             case "XOR":
                 if (receivedSignals.size > 1) {
                     ctx.reject(new S2EngineXORCollisionError(Array.from(receivedSignals), vertexId));
-                    return false;
+                    assesment = false;
                 }
-                return receivedSignals.size === 1;
+                assesment = receivedSignals.size === 1;
+                break;
 
             case "AND":
-                return receivedSignals.size === dependencies.size;
-
+                assesment = receivedSignals.size === dependencies.size;
+                break;
             default:
-                throw new S2EngineError(`Vertex ${vertexId} has an unknown execution strategy: ${vertex.getStrategy()}`)
+                throw new S2EngineError(`Vertex ${vertexId} has an unknown signal execution strategy: ${vertex.getStrategy()}`)        
         }
+
+        if(ctx.hooks.canVertexRun)
+            assesment = assesment && ctx.hooks.canVertexRun(vertexId, new Set(receivedSignals), assesment);
+        
+        return assesment
     }
 
 

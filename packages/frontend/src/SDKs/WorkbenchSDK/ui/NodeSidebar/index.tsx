@@ -52,10 +52,12 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
         const executionStrategyFields: Foundations.Field[] = []
 
         node.fields.forEach(field => {
-            if(!field.hidden)
-                fields.push(field)
-            else if (field.id === "signalDependency" || field.id === "dataDependency")
+            if (field.id === "signalDependency" || field.id === "dataDependency"){
                 executionStrategyFields.push(field)
+                return
+            }
+                
+            fields.push(field)
         })
 
 
@@ -133,7 +135,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                                 <h4 className='text-sm font-semibold text-foreground tracking-tight'>Fields</h4>
                             </Accordion.Trigger>
                             <Accordion.Content className='flex flex-col gap-1 bg-background/60'>
-                                {fields.map(field => (
+                                {fields.map(field => field.hidden ? null : (
                                     <div key={field.id} className='px-4 py-1 min-w-0'>
                                         <FieldRenderer field={field} nodeId={node.id} />
                                     </div>
@@ -146,7 +148,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                             <h4 className='text-sm font-semibold text-foreground tracking-tight'>Execution Strategy</h4>
                         </Accordion.Trigger>
                         <Accordion.Content className='flex flex-col gap-1 bg-background/60'>
-                            {executionStrategyFields.map(field => (
+                            {executionStrategyFields.map(field => field.hidden ? null : (
                                 <div key={field.id} className='px-4 py-2'>
                                     <FieldRenderer field={field} nodeId={node.id} />
                                 </div>
