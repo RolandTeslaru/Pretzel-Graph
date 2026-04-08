@@ -18,14 +18,15 @@ export interface AggexHooks {
 export class AggexEngine {
     private s2Engine: S2Engine | null = null;
 
+    private emit: Emitter;
     private context: ExecutionContext;
     private nodeInstanceMap: CompilationResult['nodeInstanceMap'];
     private compiledGraph: CompilationResult['compiledGraph'];
     private eventChannel: ExecutionSession.Event.Channel;
+
     private readonly workflow: Workflow;
     private readonly workflowCache: Workflow.Cache;
 
-    private emit: Emitter;
 
     private pausePromise: Promise<void> | null = null;
     private pauseResolve: (() => void) | null = null;
@@ -100,7 +101,8 @@ export class AggexEngine {
 
     private resolveInputs(
         nodeId: Workflow.Node.Id,
-        incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set()
+        incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set(),
+        keepMissingPorts = false
     ): Record<Foundations.Port.Input.Id, any> {
         const node = this.workflow.data.nodes[nodeId];
         const staticValues = this.workflow.data.staticValues[nodeId] ?? {};
@@ -114,13 +116,19 @@ export class AggexEngine {
             const edge = this.workflow.data.edges[edgeId];
 
             if (edge) {
-                if(incomingSignals.has(edge.source.nodeId) === false)
+                if(incomingSignals.has(edge.source.nodeId) === false){
+                    if(keepMissingPorts)
+                        resolved[input.id] = undefined;
                     continue;
+                }
 
                 const sourceOutputs = this.context.session.node_output_instances[edge.source.nodeId];
                 if (sourceOutputs) {
                     const rawReference = sourceOutputs[edge.source.portId as string];
                     resolved[input.id] = Synthesizer.ensureReference(rawReference, input.variant);
+                }
+                else {
+                    resolved[input.id] = undefined;
                 }
             } else {
                 const staticValue = staticValues[input.id];
@@ -129,6 +137,9 @@ export class AggexEngine {
 
                 if (raw !== undefined) {
                     resolved[input.id] = raw as Foundations.Field.Value;
+                }
+                else {
+                    resolved[input.id] = undefined;
                 }
             }
         }
@@ -229,8 +240,12 @@ export class AggexEngine {
         
         const wfNode = entry.wfNode;
         const nodeInstance = entry.instance;
+
+        const allDependencies = this.compiledGraph.dependenciesMap.get(vertexId)!; 
+
+        const dataDependency = entry.instance.fields["dataDependency" as Foundations.Field.Id];
         
-        const inputs = this.resolveInputs(wfNode.id, signals);
+        const inputs = this.resolveInputs(wfNode.id, dataDependency === "AND" ? allDependencies : signals);
 
         const isTool = nodeInstance.fields["isConvertedToTool" as Foundations.Field.Id] === true;
 
@@ -328,7 +343,7 @@ export class AggexEngine {
 
 
 
-    private onVertexError(vertexId: Vertex.Id, error: unknown) {
+    private onNodeError(vertexId: Vertex.Id, error: unknown) {
         console.error(`Error during node execution, ${vertexId}:`, error)
 
         // If the node already threw a SystemError (or subclass), preserve it.
@@ -351,6 +366,47 @@ export class AggexEngine {
     }
 
 
+    private canNodeRun(
+        vertexId: Vertex.Id,
+        receivedSignals: Set<Vertex.Id>,
+    ): boolean {
+        const entry = this.nodeInstanceMap.get(vertexId);
+        if (!entry)
+            return true;
+
+        const { instance, wfNode } = entry;
+
+        const signalDepField = instance.fields["signalDependency" as Foundations.Field.Id];
+        const dataDepField = instance.fields["dataDependency" as Foundations.Field.Id];
+
+        // if(!signalDepField || !dataDepField)
+        //     return true;
+
+        // If it is set to strict AND, the S2 engine assessment is sufficient to determine if the node can run
+        // Because its expected that the data will be provided on time
+        if(signalDepField === "AND")
+            return true;
+        else{
+            if(dataDepField === "AND"){
+                // In non-AND signal dependency mode, we need to check if all data dependencies are resolved before allowing the node to run
+                const dependencies = this.compiledGraph.dependenciesMap.get(vertexId)!;
+
+                const incomingInputs = this.resolveInputs(wfNode.id, dependencies, true);
+
+                // If we find a undefined port, it means that not all data dependencies are resolved, and the node cannot run yet
+                for(const portId in incomingInputs){
+                    if(incomingInputs[portId as Foundations.Port.Input.Id] === undefined)
+                        return false;
+                }
+                return true;
+            }
+            else {
+                return true;
+            }
+        }
+    }
+
+
 
     public async run() {
         this.s2Engine = new S2Engine();
@@ -362,7 +418,8 @@ export class AggexEngine {
             onVertexFired: this.onNodeFired.bind(this),
             onVertexCompleted: this.onNodeCompleted.bind(this),
             onVertexWaiting: this.onNodeWaiting.bind(this),
-            onVertexError: this.onVertexError.bind(this),
+            onVertexError: this.onNodeError.bind(this),
+            canVertexRun: this.canNodeRun.bind(this)
         } as const
 
         await this.s2Engine.ignite(this.compiledGraph, hooks);

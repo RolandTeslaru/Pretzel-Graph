@@ -81,11 +81,11 @@ export class WorkflowCompiler {
 
             const fieldValues = resolveFields(wfNode.id, workflow);
 
-            if (Object.hasOwn(fieldValues, "strategy"))
+            // Set vertex execution strategy based on node fields. Default is "AND"
+            if (Object.hasOwn(fieldValues, "signalDependency"))
                 graph.setVertexStrategy(
                     vertexId,
-                    // @ts-expect-error
-                    fieldValues.strategy
+                    fieldValues["signalDependency" as Foundations.Field.Id] as Vertex.STRATEGY
                 );
         }
 
