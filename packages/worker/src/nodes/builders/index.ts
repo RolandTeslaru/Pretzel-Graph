@@ -23,7 +23,9 @@ type DefineBlueprintReturn<
     readonly description: string;
     readonly icon: string;
     readonly accent?: string;
-    readonly fields: TToolCompatible extends true ? readonly [...TFields, typeof hiddenToolField] : TFields;
+    readonly fields: TToolCompatible extends true
+        ? readonly [...TFields, ...typeof executionStrategyFields, typeof hiddenToolField]
+        : readonly [...TFields, ...typeof executionStrategyFields];
     readonly inputs: TInputs;
     readonly outputs: TOutputs;
     readonly toolCompatible: TToolCompatible;
@@ -36,6 +38,36 @@ const hiddenToolField = FieldBuilder.Boolean({
     reconcile: true,
     initialValue: false,
 });
+
+
+
+const signalDependencyStrategyField = FieldBuilder.MultiOption({
+    id: "signalDependency",
+    displayName: "Signal Dependency",
+    options: [
+        { value: "AND", displayName: "(AND) All signals required" },
+        { value: "OR", displayName: "(OR) At least one signal required" },
+        { value: "XOR", displayName: "(XOR) Exactly one signal required" },
+    ],
+    initialValue: "AND",
+    hidden: true,
+    tooltip: "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+})
+
+const dataDependencyStrategyField = FieldBuilder.MultiOption({
+    id: "dataDependency",
+    displayName: "Data Dependency",
+    options: [
+        { value: "AND", displayName: "(AND) All data dependencies must be ready" },
+        { value: "OR", displayName: "(OR) At least one data dependency ready" },
+    ],
+    initialValue: "AND",
+    hidden: true,
+    tooltip: "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+})
+
+export const executionStrategyFields = [signalDependencyStrategyField, dataDependencyStrategyField] as const;
+
 
 export function defineBlueprint<
     const TId extends string,
@@ -54,9 +86,16 @@ export function defineBlueprint<
     outputs: TOutputs;
     toolCompatible?: TToolCompatible
 }): DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TToolCompatible> {
-    const fields = (config.toolCompatible
-        ? [...config.fields, hiddenToolField]
-        : config.fields) as DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TToolCompatible>["fields"];
+
+    const baseFields = [
+        ...config.fields,
+        ...executionStrategyFields
+    ] as const;
+
+    const fields = (
+        config.toolCompatible
+        ? [...baseFields, hiddenToolField]
+        : baseFields) as DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TToolCompatible>["fields"];
 
     return {
         id: config.id as TId & Foundations.Blueprint.Id,

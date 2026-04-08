@@ -85,7 +85,12 @@ export namespace Foundations {
             variant: configLiteral("MultiOption"),
             initialValue: z.string(),
             placeholder: z.string().optional(),
-            options: z.array(z.string()),
+            options: z.array(
+                z.object({
+                    value: z.string(),
+                    displayName: z.string().optional(),
+                })
+            ),
             kind: z.enum(["select", "tab"]).default("select"),
         })
 

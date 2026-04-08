@@ -15,12 +15,12 @@ export const Blueprint = defineBlueprint({
             id: "model",
             displayName: "Model",
             options: [
-                "claude-3-5-sonnet-20240620",
-                "claude-3-opus-20240229",
-                "claude-3-haiku-20240307",
-                "claude-2.1",
-                "claude-2.0",
-                "claude-instant-1.2"
+                { value: "claude-3-5-sonnet-20240620", displayName: "Claude 3.5 Sonnet" },
+                { value: "claude-3-opus-20240229", displayName: "Claude 3 Opus" },
+                { value: "claude-3-haiku-20240307", displayName: "Claude 3 Haiku" },
+                { value: "claude-2.1", displayName: "Claude 2.1" },
+                { value: "claude-2.0", displayName: "Claude 2.0" },
+                { value: "claude-instant-1.2", displayName: "Claude Instant 1.2" },
             ],
             initialValue: "claude-3-5-sonnet-20240620",
         }),

@@ -60,6 +60,9 @@ export const FieldRenderer = memo(({ field, nodeId, className }: {
     nodeId: Workflow.Node.Id
     className?: string
 }) => {
+    if(!field)
+        return null;
+    
     const Component = FIELD_RENDERER_MAP[field.variant] as React.ComponentType<{
         field: Foundations.Field
         nodeId: Workflow.Node.Id

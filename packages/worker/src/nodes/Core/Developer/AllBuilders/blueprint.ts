@@ -54,13 +54,20 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.MultiOption({
             id: "multiOptionSelectField",
             displayName: "MultiOption Select",
-            options: ["Option A", "Option B", "Option C"],
+            options: [
+                { value: "Option A" },
+                { value: "Option B" },
+                { value: "Option C" },
+            ],
             initialValue: "Option A",
         }),
         FieldBuilder.MultiOption({
             id: "multiOptionTabField",
             displayName: "MultiOption Tab",
-            options: ["Tab 1", "Tab 2"],
+            options: [
+                { value: "Tab 1" },
+                { value: "Tab 2" },
+            ],
             initialValue: "Tab 1",
             variant: "tab",
         }),
