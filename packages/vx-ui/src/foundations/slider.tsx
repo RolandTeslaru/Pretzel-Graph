@@ -10,8 +10,8 @@ export const rootVars = cva(
   {
     variants: {
       variant: {
+        default: "",
         primary: "",
-        accent: "",
       }
     }
   }
@@ -26,8 +26,8 @@ export const trackVars = cva(
   {
     variants: {
       variant: {
+        default: "",
         primary: "",
-        accent: "",
       }
     }
   }
@@ -40,8 +40,8 @@ export const rangeVars = cva(
   {
     variants: {
       variant: {
+        default: "bg-muted-foreground/60",
         primary: "bg-primary",
-        accent: "bg-accent",
       }
     }
   }
@@ -52,14 +52,14 @@ export const thumbVars = cva(
   {
     variants: {
       variant: {
+        default: "",
         primary: "",
-        accent: "",
       }
     }
   }
 )
 
-export type SliderVariants = "primary" | "accent"
+export type SliderVariants = "default" | "primary"
 
 const THUMB_SIZE = 12 // matches w-3 (12px)
 
@@ -71,7 +71,7 @@ const Slider = ({
   max = 100,
   onDragStart,
   onDragEnd,
-  variant = "primary",
+  variant = "default",
   onValueChange,
   ...props
 }: ComponentProps<typeof SliderPrimitive.Root> & {
@@ -149,7 +149,7 @@ const Slider = ({
           className={cn(
             "absolute left-0 top-0 h-full pointer-events-none select-none",
             variant === "primary" && "bg-primary",
-            variant === "accent" && "bg-accent",
+            variant === "default" && "bg-muted-foreground/60",
           )}
           style={{ width: computeFillWidth(initialValue) }}
         />

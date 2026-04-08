@@ -33,9 +33,9 @@ export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nod
                         onValueChange={(value) => { WorkbenchSDK.actions.field.setValue(nodeId, field, value) }}
                     >
                         <Select.Trigger className={`w-full ${issue ? "border-2 border-destructive animate-border-ping ring-1 ring-destructive/50" : ""}`}>
-                            <Select.Value placeholder={field.placeholder} />
+                            <Select.Value placeholder={field.placeholder}/>
                         </Select.Trigger>
-                        <Select.Content>
+                        <Select.Content size="sm">
                             {field.options.map((opt) => (
                                 <Select.Item key={opt.value} value={opt.value}>{opt.displayName ?? opt.value}</Select.Item>
                             ))}

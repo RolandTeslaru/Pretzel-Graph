@@ -2,9 +2,10 @@ import React, { memo, useMemo } from 'react'
 import { WorkbenchSDK } from '../../../../sdk'
 import { Workflow, Foundations } from '@vx-agent-editor/shared/domain';
 import { Port } from '../Port'
-import { InputRenderer } from '../../../InputRenderer';
+import { INPUT_RENDERER_MAP } from '../../../InputRenderer';
+import { InputLabel } from '../../../InputRenderer/label';
 
-const InputPort: React.FC<{
+const Item: React.FC<{
     input: Foundations.Port.Input
     nodeId: Workflow.Node.Id
     isWorkflowLocked: boolean
@@ -15,6 +16,13 @@ const InputPort: React.FC<{
     if (!input)
         return;
 
+    const Component = INPUT_RENDERER_MAP[input.variant] as React.ComponentType<{
+        input: Foundations.Port.Input
+        nodeId: Workflow.Node.Id
+        className?: string
+        isFlipped?: boolean
+    }> | undefined
+
     return (
         <div className="w-full relative px-3 py-0.5">
             <Port
@@ -24,7 +32,13 @@ const InputPort: React.FC<{
                 nodeId={nodeId}
                 isFlipped={isFlipped}
             />
-            <InputRenderer input={input} nodeId={nodeId} hideInnerComponent={hasEdge} showTypeBadge={false} isFlipped={isFlipped} />
+            {(Component && hasEdge === false) ? (
+                <Component input={input} nodeId={nodeId} isFlipped={isFlipped} />
+            ) : (
+                <div className={" w-full flex flex-col relative gap-1 "}>
+                    <InputLabel input={input} isFlipped={isFlipped} />
+                </div>
+            )}
         </div>
     )
 })
@@ -45,7 +59,7 @@ const NodeInputs: React.FC<Props> = memo(({ node, isWorkflowLocked, isFlipped })
     return (
         <div className="flex flex-col relative gap-2">
             {inputs.map(input => (
-                <InputPort
+                <Item
                     key={input.id}
                     input={input}
                     nodeId={node.id}

@@ -20,7 +20,7 @@ export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, classNa
                     <FieldLabel field={field} isReconciling={isReconciling} />
                     <div className='flex flex-row gap-2'>
                         <Slider
-                            className={`pt-1 ${issue ? "opacity-50" : ""}`}
+                            className={`my-auto ${issue ? "opacity-50" : ""}`}
                             min={field.min}
                             max={field.max}
                             step={field.step && field.step}
@@ -31,7 +31,8 @@ export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, classNa
                         />
                         <Input
                             type="number"
-                            className={`ml-auto w-20 h-6 ${errorClass}`}
+                            size="xs"
+                            className={`ml-auto w-20 ${errorClass}`}
                             value={value as string}
                             step={field.step && field.step}
                             min={field.min}
@@ -48,6 +49,7 @@ export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, classNa
                     <FieldLabel field={field} isReconciling={isReconciling} />
                     <Input
                         type="number"
+                        size="sm"
                         className={errorClass}
                         value={value as string}
                         step={field.step && field.step}
