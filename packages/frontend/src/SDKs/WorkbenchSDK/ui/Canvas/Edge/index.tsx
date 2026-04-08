@@ -52,7 +52,7 @@ const WorkflowEdge = memo(({
     const isPreparing = edgeStatus.status === "preparing";
 
     const statusColor = isActive
-        ? edgeStatus.status === "completed" ? "var(--status-success)"
+        ? edgeStatus.status === "completed" ? defaultColor
         : isPreparing ? defaultColor
         : "var(--status-waiting)"
         : defaultColor;

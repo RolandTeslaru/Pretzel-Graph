@@ -150,24 +150,33 @@ export namespace FieldBuilder {
 
 
 
+    export type MultiOptionItem<V extends string = string> = {
+        value: V;
+        displayName?: string;
+    }
+
     export function MultiOption<
         TId extends string,
         TReq extends boolean = false,
-        const TOptions extends readonly string[] = readonly string[]
+        const TOptions extends readonly MultiOptionItem[] = readonly MultiOptionItem[]
     >(config: {
-        initialValue: TOptions[number];
+        initialValue: TOptions[number]["value"];
         options: TOptions;
         variant?: "select" | "tab";
     } & BaseProps<TId, TReq>
     ): Ret<TId, "MultiOption", Foundations.Field.MultiOption, TReq, true> & {
-        initialValue: TOptions[number];
+        initialValue: TOptions[number]["value"];
+        options: TOptions;
     } {
         return {
             ...buildBase(config),
             variant: "MultiOption",
             initialValue: config.initialValue,
-            options: config.options as unknown as string[],
+            options: config.options as unknown as Foundations.Field.MultiOption["options"],
             kind: config.variant ?? "select",
+        } as Ret<TId, "MultiOption", Foundations.Field.MultiOption, TReq, true> & {
+            initialValue: TOptions[number]["value"];
+            options: TOptions;
         };
     }
 

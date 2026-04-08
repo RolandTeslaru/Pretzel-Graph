@@ -10,7 +10,11 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.MultiOption({
             id: "strategy",
             displayName: "Strategy",
-            options: ["AND", "OR", "XOR"],
+            options: [
+                { value: "AND" },
+                { value: "OR" },
+                { value: "XOR" },
+            ],
             initialValue: "OR",
             variant: "tab",
         }),
