@@ -5,13 +5,9 @@ import { StackSDK } from '@/SDKs/StackSDK'
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { Accordion } from '@vx-agent-editor/vx-ui/foundations/accordion';
 import { FieldRenderer } from '../FieldRenderer';
-import { InputRenderer } from '../InputRenderer';
-import { PortBadge } from '../PortBadge';
-import JsonView from 'react18-json-view';
-import { ExecutionSessionSDK } from '@/SDKs/ExecutionSessionSDK/sdk';
+import { INPUT_RENDERER_MAP } from '../InputRenderer';
 import { NodeSidebarHeader } from './header';
 import { NodeSidebarFooter } from './footer';
-import IncomingPanel from './IncomingPanel';
 
 
 const NodeSidebar = () => {
@@ -120,10 +116,10 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                 >
                     {inputs.length > 0 && (
                         <Accordion.Item value='inputs' className='border-none'>
-                            <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
-                                <h4 className='text-md font-medium'>Inputs</h4>
+                            <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
+                                <h4 className='text-sm font-semibold text-foreground tracking-tight'>Inputs</h4>
                             </Accordion.Trigger>
-                            <Accordion.Content className='flex flex-col gap-1 bg-background/50'>
+                            <Accordion.Content className='flex flex-col gap-1 bg-background/50 py-2'>
                                 {inputs.map(input => (
                                     <InputItem key={input.id} input={input} nodeId={node.id} />
                                 ))}
@@ -133,12 +129,12 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                     {/* Fields */}
                     {fields.length > 0 && (
                         <Accordion.Item value='fields' className='border-none'>
-                            <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
-                                <h4 className='text-md font-medium'>Fields</h4>
+                            <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
+                                <h4 className='text-sm font-semibold text-foreground tracking-tight'>Fields</h4>
                             </Accordion.Trigger>
                             <Accordion.Content className='flex flex-col gap-1 bg-background/60'>
                                 {fields.map(field => (
-                                    <div key={field.id} className='px-4 py-2'>
+                                    <div key={field.id} className='px-4 py-1 min-w-0'>
                                         <FieldRenderer field={field} nodeId={node.id} />
                                     </div>
                                 ))}
@@ -146,8 +142,8 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                         </Accordion.Item>
                     )}
                     <Accordion.Item value='execution-strategy' className='border-none'>
-                        <Accordion.Trigger className='px-4 cursor-pointer hover:no-underline'>
-                            <h4 className='text-md font-medium'>Execution Strategy</h4>
+                        <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
+                            <h4 className='text-sm font-semibold text-foreground tracking-tight'>Execution Strategy</h4>
                         </Accordion.Trigger>
                         <Accordion.Content className='flex flex-col gap-1 bg-background/60'>
                             {executionStrategyFields.map(field => (
@@ -165,33 +161,20 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
 
 
 const InputItem = memo(({ input, nodeId }: { input: Foundations.Port.Input, nodeId: Workflow.Node.Id }) => {
-    return (
-        <div className='px-4 py-2'>
-            <InputRenderer input={input} nodeId={nodeId} />
-        </div>
-    )
-})
+    
+    const Component = INPUT_RENDERER_MAP[input.variant] as React.ComponentType<{
+        input: Foundations.Port.Input
+        nodeId: Workflow.Node.Id
+        className?: string
+        isFlipped?: boolean
+    }> | undefined
+    
+    if(Component)
+        return (
+            <div className='px-4'>
+                <Component input={input} nodeId={nodeId} />
+            </div>
+        )
 
-
-const IncomingData = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
-    const session = ExecutionSessionSDK.useStore(s => s.session);
-    const data = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.execution.getNodeIncomingData(s, nodeId, session));
-
-    if (!data)
-        return null;
-
-    return (
-        <JsonView src={data as Record<string, unknown>} className='text-xs' collapsed={3} />
-    )
-})
-
-const NodeOutputs = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
-    const output = ExecutionSessionSDK.useStore(s => s.session.node_output_projections[nodeId]);
-
-    if (!output)
-        return null;
-
-    return (
-        <JsonView src={output} className='text-xs' collapsed={3}   />
-    )
+    return null
 })

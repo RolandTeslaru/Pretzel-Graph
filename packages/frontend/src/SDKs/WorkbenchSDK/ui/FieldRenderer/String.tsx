@@ -15,6 +15,7 @@ export const StringField = memo<RendererProps<'String'>>(({ field, nodeId, class
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
             <FieldLabel field={field} isReconciling={isReconciling} />
             <Textarea
+                size="sm"
                 placeholder={field.placeholder}
                 value={value as string}
                 onChange={(e) => WorkbenchSDK.actions.field.setValue(nodeId, field, e.target.value)}
