@@ -50,6 +50,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     return new LC.ToolMessage({
                         content: "Could not find tool with name " + call.name,
                         tool_call_id: call.id ?? crypto.randomUUID(),
+                        name: call.name,
+                        status: "error"
                     });
                 }
             })

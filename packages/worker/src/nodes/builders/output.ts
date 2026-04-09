@@ -1,13 +1,13 @@
-import { Foundations } from "@vx-agent-editor/shared/domain";
+import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
 import { LC } from "src/langchain";
 
 export type LiteralOutput<
     T_Id extends string,
-    T_Variant extends Foundations.Port.Variant,
-    T_Output extends Foundations.Port.Base,
+    T_Variant extends Port.Variant,
+    T_Output extends Port.Base,
     T_Reference = never,
 > = {
-    id: T_Id & Foundations.Port.Output.Id;
+    id: T_Id & Port.Output.Id;
     readonly __literalId?: T_Id;
     readonly __variant?: T_Variant;
     readonly __reference?: T_Reference;
@@ -26,16 +26,16 @@ export namespace OutputBuilder {
 
     function buildBase<TId extends string>(config: BaseProps<TId>) {
         return {
-            id: config.id as TId & Foundations.Port.Output.Id,
+            id: config.id as TId & Port.Output.Id,
             displayName: config.displayName,
             tooltip: config.tooltip,
             internal: config.internal,
-        } satisfies { id: TId & Foundations.Port.Output.Id } & Omit<Foundations.Port.Output.Base, "id">;
+        } satisfies { id: TId & Port.Output.Id } & Omit<Port.Output.Base, "id">;
     }
 
     export function Message<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "Message", Foundations.Port.Variants.Message, LC.BaseMessage> {
+    ): LiteralOutput<TId, "Message", Port.Variants.Message, LC.BaseMessage> {
         return {
             ...buildBase(config),
             variant: "Message" as const,
@@ -45,7 +45,7 @@ export namespace OutputBuilder {
 
     export function Text<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "Text", Foundations.Port.Variants.Text, string> {
+    ): LiteralOutput<TId, "Text", Port.Variants.Text, string> {
         return {
             ...buildBase(config),
             variant: "Text" as const,
@@ -54,7 +54,7 @@ export namespace OutputBuilder {
 
     export function LanguageModel<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "LanguageModel", Foundations.Port.Variants.LanguageModel, LC.BaseChatModel> {
+    ): LiteralOutput<TId, "LanguageModel", Port.Variants.LanguageModel, LC.BaseChatModel> {
         return {
             ...buildBase(config),
             variant: "LanguageModel" as const,
@@ -63,7 +63,7 @@ export namespace OutputBuilder {
 
     export function Document<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "Document", Foundations.Port.Variants.Document, LC.Document> {
+    ): LiteralOutput<TId, "Document", Port.Variants.Document, LC.Document> {
         return {
             ...buildBase(config),
             variant: "Document" as const,
@@ -72,7 +72,7 @@ export namespace OutputBuilder {
 
     export function Retriever<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "Retriever", Foundations.Port.Variants.Retriever, LC.BaseRetriever> {
+    ): LiteralOutput<TId, "Retriever", Port.Variants.Retriever, LC.BaseRetriever> {
         return {
             ...buildBase(config),
             variant: "Retriever" as const,
@@ -81,7 +81,7 @@ export namespace OutputBuilder {
 
     export function Embeddings<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "Embeddings", Foundations.Port.Variants.Embeddings, LC.Embeddings> {
+    ): LiteralOutput<TId, "Embeddings", Port.Variants.Embeddings, LC.Embeddings> {
         return {
             ...buildBase(config),
             variant: "Embeddings" as const,
@@ -90,7 +90,7 @@ export namespace OutputBuilder {
 
     export function VectorStore<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "VectorStore", Foundations.Port.Variants.VectorStore, LC.VectorStore> {
+    ): LiteralOutput<TId, "VectorStore", Port.Variants.VectorStore, LC.VectorStore> {
         return {
             ...buildBase(config),
             variant: "VectorStore" as const,
@@ -99,7 +99,7 @@ export namespace OutputBuilder {
 
     export function Tool<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "Tool", Foundations.Port.Variants.Tool, LC.Tool> {
+    ): LiteralOutput<TId, "Tool", Port.Variants.Tool, LC.Tool> {
         return {
             ...buildBase(config),
             variant: "Tool" as const,
@@ -108,7 +108,7 @@ export namespace OutputBuilder {
 
     export function ToolList<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "ToolList", Foundations.Port.Variants.ToolList, LC.Tool[]> {
+    ): LiteralOutput<TId, "ToolList", Port.Variants.ToolList, LC.Tool[]> {
         return {
             ...buildBase(config),
             variant: "ToolList" as const,
@@ -117,7 +117,7 @@ export namespace OutputBuilder {
 
     export function Integer<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "Integer", Foundations.Port.Variants.Integer, number> {
+    ): LiteralOutput<TId, "Integer", Port.Variants.Integer, number> {
         return {
             ...buildBase(config),
             variant: "Integer" as const,
@@ -126,7 +126,7 @@ export namespace OutputBuilder {
 
     export function Json<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "Json", Foundations.Port.Variants.Json, any> {
+    ): LiteralOutput<TId, "Json", Port.Variants.Json, any> {
         return {
             ...buildBase(config),
             variant: "Json" as const,
@@ -135,7 +135,7 @@ export namespace OutputBuilder {
 
     export function DataFrame<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "DataFrame", Foundations.Port.Variants.DataFrame, any> {
+    ): LiteralOutput<TId, "DataFrame", Port.Variants.DataFrame, any> {
         return {
             ...buildBase(config),
             variant: "DataFrame" as const,
@@ -144,7 +144,7 @@ export namespace OutputBuilder {
 
     export function MessageList<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "MessageList", Foundations.Port.Variants.MessageList, LC.BaseMessage[]> {
+    ): LiteralOutput<TId, "MessageList", Port.Variants.MessageList, LC.BaseMessage[]> {
         return {
             ...buildBase(config),
             variant: "MessageList" as const,
@@ -153,7 +153,7 @@ export namespace OutputBuilder {
 
     export function Data<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "Data", Foundations.Port.Variants.Data, any> {
+    ): LiteralOutput<TId, "Data", Port.Variants.Data, any> {
         return {
             ...buildBase(config),
             variant: "Data" as const,
@@ -162,7 +162,7 @@ export namespace OutputBuilder {
 
     export function DataList<TId extends string>(
         config: BaseProps<TId>
-    ): LiteralOutput<TId, "DataList", Foundations.Port.Variants.DataList, any[]> {
+    ): LiteralOutput<TId, "DataList", Port.Variants.DataList, any[]> {
         return {
             ...buildBase(config),
             variant: "DataList" as const,
@@ -171,27 +171,34 @@ export namespace OutputBuilder {
 
     export function Unresolved<TId extends string, TSyncGroup extends string>(
         config: { syncGroupId: TSyncGroup } & BaseProps<TId>
-    ): LiteralOutput<TId, "Unresolved", Foundations.Port.Variants.Unresolved, any> & { readonly __syncGroup?: TSyncGroup } {
+    ): LiteralOutput<TId, "Unresolved", Port.Variants.Unresolved, any> & { readonly __syncGroup?: TSyncGroup } {
         return {
             ...buildBase(config),
             variant: "Unresolved" as const,
-            isDynamic: true,
             syncGroupId: config.syncGroupId,
-            // Stores the blueprint variant so the port can be restored correctly on disconnection
-            unresolvedVariant: "Unresolved" as const,
+            originalVariant: "Unresolved" as const,
+        };
+    }
+
+    export function UnresolvedScalar<TId extends string, TSyncGroup extends string>(
+        config: { syncGroupId: TSyncGroup } & BaseProps<TId>
+    ): LiteralOutput<TId, "UnresolvedScalar", Port.Variants.UnresolvedScalar, any> & { readonly __syncGroup?: TSyncGroup } {
+        return {
+            ...buildBase(config),
+            variant: "UnresolvedScalar" as const,
+            syncGroupId: config.syncGroupId,
+            originalVariant: "UnresolvedScalar" as const,
         };
     }
 
     export function UnresolvedList<TId extends string, TSyncGroup extends string>(
         config: { syncGroupId: TSyncGroup } & BaseProps<TId>
-    ): LiteralOutput<TId, "UnresolvedList", Foundations.Port.Variants.UnresolvedList, any> & { readonly __syncGroup?: TSyncGroup } {
+    ): LiteralOutput<TId, "UnresolvedList", Port.Variants.UnresolvedList, any> & { readonly __syncGroup?: TSyncGroup } {
         return {
             ...buildBase(config),
             variant: "UnresolvedList" as const,
-            isDynamic: true,
             syncGroupId: config.syncGroupId,
-            // Stores the blueprint variant so the port can be restored correctly on disconnection
-            unresolvedVariant: "UnresolvedList" as const,
+            originalVariant: "UnresolvedList" as const,
         };
     }
 }

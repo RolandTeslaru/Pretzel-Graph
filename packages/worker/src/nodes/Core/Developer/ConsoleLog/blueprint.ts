@@ -5,6 +5,7 @@ export const Blueprint = defineBlueprint({
     displayName: "Console Log",
     description: "Logs input data to the console with a specified log level.",
     icon: "SquareTerminal",
+    accent: "utility",
     fields: [
         FieldBuilder.MultiOption({
             id: "level",

@@ -1,6 +1,6 @@
 {
-  "version": "1775676250503",
-  "generatedAt": "2026-04-08T19:24:10.503Z",
+  "version": "1775754497625",
+  "generatedAt": "2026-04-09T17:08:17.625Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -341,7 +341,7 @@
       "id": "Core.Developer.AllBuilders",
       "displayName": "All Builders",
       "icon": "Rocket",
-      "accent": "port-null",
+      "accent": "utility",
       "toolCompatible": false,
       "fields": [
         {
@@ -612,6 +612,61 @@
           "internal": false,
           "variant": "Tool",
           "required": false
+        },
+        {
+          "id": "unresolvedInput",
+          "displayName": "Unresolved Input",
+          "syncGroupId": "unresolvedGroup",
+          "internal": false,
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved",
+          "required": false
+        },
+        {
+          "id": "unresolvedScalarInput",
+          "displayName": "Unresolved Scalar Input",
+          "syncGroupId": "unresolvedScalarGroup",
+          "internal": false,
+          "variant": "UnresolvedScalar",
+          "originalVariant": "UnresolvedScalar",
+          "required": false
+        },
+        {
+          "id": "unresolvedListInput",
+          "displayName": "Unresolved List Input",
+          "syncGroupId": "unresolvedListGroup",
+          "internal": false,
+          "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList",
+          "required": false
+        },
+        {
+          "id": "toolListInput",
+          "displayName": "Tool List Input",
+          "internal": false,
+          "variant": "ToolList",
+          "required": false
+        },
+        {
+          "id": "messageListInput",
+          "displayName": "Message List Input",
+          "internal": false,
+          "variant": "MessageList",
+          "required": false
+        },
+        {
+          "id": "dataInput",
+          "displayName": "Data Input",
+          "internal": false,
+          "variant": "Data",
+          "required": false
+        },
+        {
+          "id": "dataListInput",
+          "displayName": "Data List Input",
+          "internal": false,
+          "variant": "DataList",
+          "required": false
         }
       ],
       "outputs": [
@@ -659,6 +714,47 @@
           "id": "dataFrameOutput",
           "displayName": "DataFrame Output",
           "variant": "DataFrame"
+        },
+        {
+          "id": "unresolvedOutput",
+          "displayName": "Unresolved Output",
+          "syncGroupId": "unresolvedGroup",
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
+        },
+        {
+          "id": "unresolvedScalarOutput",
+          "displayName": "Unresolved Scalar Output",
+          "syncGroupId": "unresolvedScalarGroup",
+          "variant": "UnresolvedScalar",
+          "originalVariant": "UnresolvedScalar"
+        },
+        {
+          "id": "unresolvedListOutput",
+          "displayName": "Unresolved List Output",
+          "syncGroupId": "unresolvedListGroup",
+          "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList"
+        },
+        {
+          "id": "toolListOutput",
+          "displayName": "Tool List Output",
+          "variant": "ToolList"
+        },
+        {
+          "id": "messageListOutput",
+          "displayName": "Message List Output",
+          "variant": "MessageList"
+        },
+        {
+          "id": "dataOutput",
+          "displayName": "Data Output",
+          "variant": "Data"
+        },
+        {
+          "id": "dataListOutput",
+          "displayName": "Data List Output",
+          "variant": "DataList"
         }
       ],
       "description": "A developer node showcasing all available field, input, and output builders."
@@ -667,6 +763,7 @@
       "id": "Core.Developer.ConsoleLog",
       "displayName": "Console Log",
       "icon": "SquareTerminal",
+      "accent": "utility",
       "toolCompatible": false,
       "fields": [
         {
@@ -779,7 +876,7 @@
       "id": "Core.Developer.Eval",
       "displayName": "Runtime Node Eval",
       "icon": "SquareTerminal",
-      "accent": "port-null",
+      "accent": "utility",
       "toolCompatible": false,
       "fields": [
         {
@@ -861,7 +958,7 @@
       "id": "Core.Developer.HttpRequest",
       "displayName": "HTTP Request",
       "icon": "Globe",
-      "accent": "port-null",
+      "accent": "utility",
       "toolCompatible": false,
       "fields": [
         {
@@ -995,7 +1092,7 @@
       "id": "Core.Developer.Sleep",
       "displayName": "Sleep",
       "icon": "Clock",
-      "accent": "port-null",
+      "accent": "utility",
       "toolCompatible": false,
       "fields": [
         {
@@ -1062,11 +1159,10 @@
           "id": "trigger",
           "displayName": "Trigger",
           "tooltip": "Optional trigger to start the sleep.",
-          "isDynamic": true,
           "syncGroupId": "signal",
           "internal": false,
-          "unresolvedVariant": "Unresolved",
           "variant": "Unresolved",
+          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -1075,10 +1171,9 @@
           "id": "done",
           "displayName": "Done",
           "tooltip": "Outputs the trigger message after the sleep duration.",
-          "isDynamic": true,
           "syncGroupId": "signal",
-          "unresolvedVariant": "Unresolved",
-          "variant": "Unresolved"
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
         }
       ],
       "description": "Pauses execution for a specified duration."
@@ -1162,11 +1257,10 @@
         {
           "id": "input",
           "displayName": "Input",
-          "isDynamic": true,
           "syncGroupId": "data",
           "internal": false,
-          "unresolvedVariant": "UnresolvedList",
           "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList",
           "required": false
         }
       ],
@@ -1175,18 +1269,16 @@
           "id": "output",
           "displayName": "Output",
           "tooltip": "The accumulated result.",
-          "isDynamic": true,
           "syncGroupId": "data",
-          "unresolvedVariant": "UnresolvedList",
-          "variant": "UnresolvedList"
+          "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList"
         },
         {
           "id": "state",
           "displayName": "State",
-          "isDynamic": true,
           "syncGroupId": "data",
-          "unresolvedVariant": "UnresolvedList",
-          "variant": "UnresolvedList"
+          "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList"
         }
       ],
       "description": "Collects inputs over multiple executions and emits the accumulated result."
@@ -1278,11 +1370,10 @@
         {
           "id": "input",
           "displayName": "Input",
-          "isDynamic": true,
           "syncGroupId": "data",
           "internal": false,
-          "unresolvedVariant": "Unresolved",
           "variant": "Unresolved",
+          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -1291,19 +1382,17 @@
           "id": "true",
           "displayName": "True",
           "tooltip": "Output when condition is true.",
-          "isDynamic": true,
           "syncGroupId": "data",
-          "unresolvedVariant": "Unresolved",
-          "variant": "Unresolved"
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
         },
         {
           "id": "false",
           "displayName": "False",
           "tooltip": "Output when condition is false.",
-          "isDynamic": true,
           "syncGroupId": "data",
-          "unresolvedVariant": "Unresolved",
-          "variant": "Unresolved"
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
         }
       ],
       "description": "Routes input to one of multiple outputs based on a condition."
@@ -1378,21 +1467,19 @@
         {
           "id": "input_1",
           "displayName": "Input 1",
-          "isDynamic": true,
           "syncGroupId": "data",
           "internal": false,
-          "unresolvedVariant": "UnresolvedList",
           "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList",
           "required": false
         },
         {
           "id": "input_2",
           "displayName": "Input 2",
-          "isDynamic": true,
           "syncGroupId": "data",
           "internal": false,
-          "unresolvedVariant": "UnresolvedList",
           "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList",
           "required": false
         }
       ],
@@ -1400,10 +1487,9 @@
         {
           "id": "output",
           "displayName": "Output",
-          "isDynamic": true,
           "syncGroupId": "data",
-          "unresolvedVariant": "UnresolvedList",
-          "variant": "UnresolvedList"
+          "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList"
         }
       ],
       "description": "Merges multiple inputs into a single output."
@@ -1552,11 +1638,10 @@
         {
           "id": "input",
           "displayName": "Input",
-          "isDynamic": true,
           "syncGroupId": "condition",
           "internal": false,
-          "unresolvedVariant": "Unresolved",
           "variant": "Unresolved",
+          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -1564,26 +1649,23 @@
         {
           "id": "case-1",
           "displayName": "Case 1",
-          "isDynamic": true,
           "syncGroupId": "condition",
-          "unresolvedVariant": "Unresolved",
-          "variant": "Unresolved"
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
         },
         {
           "id": "case-2",
           "displayName": "Case 2",
-          "isDynamic": true,
           "syncGroupId": "condition",
-          "unresolvedVariant": "Unresolved",
-          "variant": "Unresolved"
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
         },
         {
           "id": "case-3",
           "displayName": "Case 3",
-          "isDynamic": true,
           "syncGroupId": "condition",
-          "unresolvedVariant": "Unresolved",
-          "variant": "Unresolved"
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
         }
       ],
       "description": "Routes input to all outputs whose condition evaluates to true."
@@ -1732,11 +1814,10 @@
         {
           "id": "input",
           "displayName": "Input",
-          "isDynamic": true,
           "syncGroupId": "condition",
           "internal": false,
-          "unresolvedVariant": "Unresolved",
           "variant": "Unresolved",
+          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -1744,26 +1825,23 @@
         {
           "id": "case-1",
           "displayName": "Case 1",
-          "isDynamic": true,
           "syncGroupId": "condition",
-          "unresolvedVariant": "Unresolved",
-          "variant": "Unresolved"
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
         },
         {
           "id": "case-2",
           "displayName": "Case 1",
-          "isDynamic": true,
           "syncGroupId": "condition",
-          "unresolvedVariant": "Unresolved",
-          "variant": "Unresolved"
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
         },
         {
           "id": "case-3",
           "displayName": "Case 1",
-          "isDynamic": true,
           "syncGroupId": "condition",
-          "unresolvedVariant": "Unresolved",
-          "variant": "Unresolved"
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
         }
       ],
       "description": "Routes input to one of multiple outputs based on a condition."
@@ -1915,6 +1993,114 @@
       ],
       "description": "Injects JSON data into the flow."
     },
+    "Core.Utils.List.Select": {
+      "id": "Core.Utils.List.Select",
+      "displayName": "Select Element",
+      "icon": "ListPlus",
+      "accent": "utility",
+      "toolCompatible": false,
+      "fields": [
+        {
+          "id": "strategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Strategy",
+          "variant": "MultiOption",
+          "initialValue": "first",
+          "options": [
+            {
+              "value": "first"
+            },
+            {
+              "value": "last"
+            },
+            {
+              "value": "at_index"
+            }
+          ],
+          "kind": "tab"
+        },
+        {
+          "id": "index",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Index",
+          "tooltip": "Index of the element to select. Negative values count from the end.",
+          "variant": "Integer",
+          "initialValue": 0,
+          "step": 1
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "list",
+          "displayName": "List",
+          "syncGroupId": "data",
+          "internal": false,
+          "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "element",
+          "displayName": "Element",
+          "syncGroupId": "data",
+          "variant": "UnresolvedScalar",
+          "originalVariant": "UnresolvedScalar"
+        }
+      ],
+      "description": "Selects a single element from a list input."
+    },
     "Core.Utils.Message.Compose": {
       "id": "Core.Utils.Message.Compose",
       "displayName": "Compose Message",
@@ -1994,11 +2180,10 @@
         {
           "id": "data",
           "displayName": "Data",
-          "isDynamic": true,
           "syncGroupId": "data",
           "internal": false,
-          "unresolvedVariant": "Unresolved",
           "variant": "Unresolved",
+          "originalVariant": "Unresolved",
           "required": true
         }
       ],
@@ -2471,6 +2656,256 @@
         }
       ],
       "description": "This node talks to google generative ai api"
+    },
+    "Integrations.HyperLiquid.Account": {
+      "id": "Integrations.HyperLiquid.Account",
+      "displayName": "HyperLiquid Account",
+      "icon": "HyperLiquid",
+      "accent": "port-Json",
+      "toolCompatible": true,
+      "fields": [
+        {
+          "id": "defaultAddress",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Default Wallet Address",
+          "tooltip": "Optional fallback wallet address. Used when the 'address' input port is empty.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "0x..."
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "address",
+          "displayName": "Wallet Address",
+          "tooltip": "Public EVM wallet address. Read-only — no signing or private key involved. Falls back to the Default Wallet Address field if empty.",
+          "internal": false,
+          "variant": "Text",
+          "initialValue": "",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "state",
+          "displayName": "Clearinghouse State",
+          "tooltip": "Full clearinghouseState response: margin summary, asset positions, withdrawable, etc.",
+          "variant": "Json"
+        },
+        {
+          "id": "positions",
+          "displayName": "Positions",
+          "tooltip": "Array of open positions extracted from clearinghouseState.assetPositions.",
+          "variant": "DataList"
+        },
+        {
+          "id": "openOrders",
+          "displayName": "Open Orders",
+          "tooltip": "Array of currently resting orders for the address.",
+          "variant": "DataList"
+        }
+      ],
+      "description": "Reads HyperLiquid account state for a wallet address: positions, balance, open orders, fills. Public read-only — only a wallet address is required, never a private key."
+    },
+    "Integrations.HyperLiquid.Market": {
+      "id": "Integrations.HyperLiquid.Market",
+      "displayName": "HyperLiquid Market",
+      "icon": "HyperLiquid",
+      "accent": "port-DataList",
+      "toolCompatible": true,
+      "fields": [
+        {
+          "id": "interval",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Interval",
+          "tooltip": "Candle interval. Used in direct mode and as the default for the getCandles tool.",
+          "variant": "MultiOption",
+          "initialValue": "1h",
+          "options": [
+            {
+              "value": "1m",
+              "displayName": "1 minute"
+            },
+            {
+              "value": "5m",
+              "displayName": "5 minutes"
+            },
+            {
+              "value": "15m",
+              "displayName": "15 minutes"
+            },
+            {
+              "value": "1h",
+              "displayName": "1 hour"
+            },
+            {
+              "value": "4h",
+              "displayName": "4 hours"
+            },
+            {
+              "value": "1d",
+              "displayName": "1 day"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "lookbackHours",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Lookback (hours)",
+          "tooltip": "How far back to fetch candles, in hours. The end time is always 'now'.",
+          "variant": "Integer",
+          "initialValue": 24,
+          "min": 1,
+          "max": 8760,
+          "step": 1
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "coin",
+          "displayName": "Coin",
+          "tooltip": "HyperLiquid coin symbol (e.g. BTC, ETH, SOL).",
+          "internal": false,
+          "variant": "Text",
+          "initialValue": "",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "candles",
+          "displayName": "Candles",
+          "tooltip": "Array of OHLCV candles: { t, T, s, i, o, c, h, l, v, n }.",
+          "variant": "DataList"
+        },
+        {
+          "id": "summary",
+          "displayName": "Summary",
+          "tooltip": "Convenience summary: { coin, interval, count, firstClose, lastClose, change, changePct }.",
+          "variant": "Json"
+        }
+      ],
+      "description": "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata. No API key required."
     },
     "Integrations.OpenAI.Chat": {
       "id": "Integrations.OpenAI.Chat",

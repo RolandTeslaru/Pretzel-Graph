@@ -20,21 +20,21 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
     });
 
     return (
-        <div className='absolute z-10 top-2 left-2 w-[calc(100%-1rem)] flex flex-row gap-2'>
+        <div className='absolute z-10 top-2 left-2 right-2 flex flex-row gap-2'>
             <div
-                className='flex items-center gap-2 px-3 py-1 rounded-full backdrop-blur-md'
+                className='flex items-center gap-2 px-3 py-1 rounded-full backdrop-blur-md min-w-0 max-w-xs'
                 style={{
                     backgroundColor: node.accent ? `color-mix(in srgb, var(--${node.accent}) 25%, transparent)` : 'var(--muted)',
                 }}
             >
                 <LazyIcon
-                    className='my-auto h-4 w-4'
+                    className='my-auto h-4 w-4 shrink-0'
                     name={node.icon as string}
                     style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
                 />
                 {isEditing ? (
                     <Input
-                        className='h-5 text-sm font-semibold bg-transparent shadow-none w-fit! focus-visible:ring-0 truncate'
+                        className='h-5 text-sm font-semibold bg-transparent shadow-none w-full min-w-0 focus-visible:ring-0 truncate'
                         defaultValue={node.displayName}
                         autoFocus
                         onBlur={e => WorkbenchSDK.actions.node.setDisplayName(node.id, e.target.value)}
@@ -42,7 +42,7 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                     />
                 ) : (
                     <h4
-                        className='text-sm font-semibold truncate'
+                        className='text-sm font-semibold truncate min-w-0'
                         style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
                     >
                         {node.displayName}
@@ -52,7 +52,7 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
 
             <StatusIndicator nodeId={node.id} executionStatus={nodeStatus} className='mb-0 mt-auto'/>
                         
-            <div className='ml-auto z-10 flex flex-row bg-card-float w-fit p-0.5 rounded-xl border border-border shadow-sm shadow-black/10'>
+            <div className='ml-auto z-10 flex flex-row bg-card-float w-fit p-0.5 rounded-xl border border-border shadow-md shadow-black/10'>
 
                 {isEditing ? (
                     <div className='flex flex-row gap-2 ml-auto my-auto h-auto'>
