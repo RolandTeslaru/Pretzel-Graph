@@ -196,6 +196,8 @@ export const lazyIconsMapping = {
     import("./BRAND_ICONS/HomeAssistant"),
   HuggingFace: () =>
     import("./BRAND_ICONS/HuggingFace"),
+  HyperLiquid: () =>
+    import("./BRAND_ICONS/HyperLiquid"),
   Icosa: () =>
     import("./BRAND_ICONS/Icosa"),
   IFixIt: () =>

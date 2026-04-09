@@ -1,11 +1,12 @@
 import { Workflow } from "./Workflow"
-import { Foundations } from "./Foundations"
+import { Port } from "./Foundations/Port"
+import { Foundations } from "./Foundations";
 
 type Connection = {
     source: Workflow.Node.Id;
     target: Workflow.Node.Id;
-    sourceHandle: Foundations.Port.Output.Id | null;
-    targetHandle: Foundations.Port.Input.Id | null;
+    sourceHandle: Port.Output.Id | null;
+    targetHandle: Port.Input.Id | null;
 }
 
 export namespace Validation {
@@ -34,12 +35,12 @@ export namespace Validation {
 
 
         export interface Input {
-            input: Foundations.Port.Input
+            input: Port.Input
             type: "missing_connection" | "missing_value_or_connection"
         }
         export namespace Input {
             export function check(
-                input: Foundations.Port.Input,
+                input: Port.Input,
                 nodeId: Workflow.Node.Id,
                 workflow: Workflow,
                 cache: Workflow.Cache,
@@ -71,7 +72,7 @@ export namespace Validation {
 
         export interface Node {
             fields: Record<Foundations.Field.Id, Issue.Field>;
-            inputs: Record<Foundations.Port.Input.Id, Issue.Input>;
+            inputs: Record<Port.Input.Id, Issue.Input>;
         }
         export namespace Node {
             export function check(node: Workflow.Node, workflow: Workflow, cache: Workflow.Cache) {
@@ -120,49 +121,62 @@ export namespace Validation {
 
     export function arePortsCompatible(
         sourceNode: Workflow.Node,
-        sourcePortId: Foundations.Port.Output.Id,
+        sourcePortId: Port.Output.Id,
         targetNode: Workflow.Node,
-        targetPortId: Foundations.Port.Input.Id
+        targetPortId: Port.Input.Id
     ) {
         const sourcePort = sourceNode.outputs.find(o => o.id === sourcePortId);
         const targetPort = targetNode.inputs.find(i => i.id === targetPortId);
 
+        // Edge compatibility policy:
+        //   - Promotion (scalar → list) is allowed implicitly via LIST_PROMOTION_MAP.
+        //   - Demotion (list → scalar) is NEVER allowed at the edge level — use a                                                 
+        //     Select node to make element-picking explicit.                                                                       
+        //   - Two polymorphic ports cannot connect (no transitive type propagation).                                              
+        //   - UnresolvedScalar is strictly scalar-on-both-sides; UnresolvedList accepts                                           
+        //     scalar sources via promotion, list sources directly.  
+
         if (!sourcePort || !targetPort)
             return false
 
-        const isUnresolvedLike = (v: string) => v === "Unresolved" || v === "UnresolvedList";
 
         // Unresolved ↔ any non-unresolved variant
-        if (sourcePort.variant === "Unresolved" && !isUnresolvedLike(targetPort.variant))
+        if (sourcePort.variant === "Unresolved" && !Port.isUnresolvedLike(targetPort.variant))
             return true;
-        if (targetPort.variant === "Unresolved" && !isUnresolvedLike(sourcePort.variant))
-            return true;
-
-        // UnresolvedList only accepts Message and Data — the two variants it can list-promote
-        const unresolvedListCompatible = new Set(["Message", "MessageList", "Data", "DataList"]);
-        if (sourcePort.variant === "UnresolvedList" && unresolvedListCompatible.has(targetPort.variant))
-            return true;
-        if (targetPort.variant === "UnresolvedList" && unresolvedListCompatible.has(sourcePort.variant))
+        if (targetPort.variant === "Unresolved" && !Port.isUnresolvedLike(sourcePort.variant))
             return true;
 
-        if (sourcePort.variant === targetPort.variant)
+        
+        // 2 Unresoled ports are not compatible
+        if(Port.isUnresolvedLike(sourcePort.variant) && Port.isUnresolvedLike(targetPort.variant))
+            return false
+
+        if(sourcePort.variant === "UnresolvedList" &&  Port.isListLike(targetPort.variant))
             return true
 
-        // One-way list promotions
-        if (sourcePort.variant === "Message" && targetPort.variant === "MessageList")
-            return true;
-        if (sourcePort.variant === "Data" && targetPort.variant === "DataList")
-            return true;
-        if (sourcePort.variant === "Tool" && targetPort.variant === "ToolList")
-            return true;
+        if(targetPort.variant === "UnresolvedList" && (Port.isScalarLike(sourcePort.variant) || Port.isListLike(sourcePort.variant)))
+            return true
 
+
+        if(sourcePort.variant === "UnresolvedScalar" && Port.isScalarLike(targetPort.variant))
+            return true
+        
+        if(targetPort.variant === "UnresolvedScalar" &&  Port.isScalarLike(sourcePort.variant))
+            return true
+
+
+        if(sourcePort.variant === targetPort.variant)
+            return true
+
+        if(Port.isScalarLike(sourcePort.variant) && (targetPort.variant === Port.LIST_PROMOTION_MAP[sourcePort.variant]))
+            return true;
 
         return false
     }
 
     export function isTargetPortAlreadyConnected(
         targetNodeId: Workflow.Node.Id,
-        targetHandleId: Foundations.Port.Input.Id,
+        targetHandleId: Port.Input.Id,
         cache: Workflow.Cache
     ) {
         const edgeId = cache.inputHandlesMap[targetNodeId][targetHandleId]
@@ -243,9 +257,9 @@ export namespace Validation {
 function doesEdgeAlreadyExist(
     workflow: Workflow,
     sourceNodeId: Workflow.Node.Id,
-    sourceHandleId: Foundations.Port.Output.Id,
+    sourceHandleId: Port.Output.Id,
     targetNodeId: Workflow.Node.Id,
-    targetHandleId: Foundations.Port.Input.Id
+    targetHandleId: Port.Input.Id
 ) {
     const edgeId = Workflow.Edge.createId(sourceNodeId, sourceHandleId, targetNodeId, targetHandleId);
     return !!workflow.data.edges[edgeId]

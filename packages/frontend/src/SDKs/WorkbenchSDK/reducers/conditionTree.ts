@@ -1,10 +1,10 @@
-import { Foundations } from "@vx-agent-editor/shared/domain";
+import { Field } from '@vx-agent-editor/shared/domain/Foundations/Field';
 
-type ConditionValue = Foundations.Field.Condition.Value
-type RuleId = Foundations.Field.Condition.Rule.Id
-type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id
-type Operator = Foundations.Field.Condition.Operator
-type DataType = Foundations.Field.Condition.DataType
+type ConditionValue = Field.Condition.Value
+type RuleId = Field.Condition.Rule.Id
+type RuleGroupId = Field.Condition.RuleGroup.Id
+type Operator = Field.Condition.Operator
+type DataType = Field.Condition.DataType
 
 interface ConditionTreeReducers {
     setLeftValue(condition: ConditionValue, ruleId: RuleId, value: string): void
@@ -29,23 +29,23 @@ export const conditionTreeReducers: ConditionTreeReducers = {
         rule.operator = value
     },
     addRule: (condition, ruleGroupId) => {
-        const newRuleId = Foundations.Field.Condition.Rule.createId()
+        const newRuleId = Field.Condition.Rule.createId()
         condition.rules[newRuleId] = {
             id: newRuleId,
             dataType: "string",
             leftOperand: "",
             operator: "equals",
             rightOperand: ""
-        } satisfies Foundations.Field.Condition.Rule
+        } satisfies Field.Condition.Rule
         condition.groups[ruleGroupId].children.push(newRuleId)
     },
     addGroup: (condition, parentGroupId) => {
-        const newGroupId = Foundations.Field.Condition.RuleGroup.createId()
+        const newGroupId = Field.Condition.RuleGroup.createId()
         condition.groups[newGroupId] = {
             id: newGroupId,
             combinator: "AND",
             children: []
-        } satisfies Foundations.Field.Condition.RuleGroup
+        } satisfies Field.Condition.RuleGroup
         condition.groups[parentGroupId].children.push(newGroupId)
 
         conditionTreeReducers.addRule(condition, newGroupId)

@@ -1,10 +1,12 @@
 import { Workflow, Foundations, ExecutionSession } from '@vx-agent-editor/shared/domain';
+import { Port } from '@vx-agent-editor/shared/domain/Foundations/Port';
+import { Field } from '@vx-agent-editor/shared/domain/Foundations/Field';
 import type { WorkbenchSDK } from './sdk';
 
 type NodeId = Workflow.Node.Id
 type EdgeId = Workflow.Edge.Id
-type ConditionValue = Foundations.Field.Condition.Value
-type CaseListValue = Foundations.Field.CaseList.Value
+type ConditionValue = Field.Condition.Value
+type CaseListValue = Field.CaseList.Value
 
 const conditionSelectors = {
     getValue: (s, nodeId, fieldId) =>
@@ -34,16 +36,16 @@ const caseListSelectors = {
     getEntry: (s, nodeId, fieldId, portId) => {
         const caseList = caseListSelectors.getValue(s, nodeId, fieldId)
         if (!caseList) return null
-        return caseList.find((entry: Foundations.Field.CaseList.Entry) => entry.portId === portId) ?? null
+        return caseList.find((entry: Field.CaseList.Entry) => entry.portId === portId) ?? null
     },
     getEntryIndex: (s, nodeId, fieldId, portId) => {
         const caseList = caseListSelectors.getValue(s, nodeId, fieldId)
         if (!caseList) return -1
-        return caseList.findIndex((entry: Foundations.Field.CaseList.Entry) => entry.portId === portId)
+        return caseList.findIndex((entry: Field.CaseList.Entry) => entry.portId === portId)
     },
     getPortIds: (s, nodeId, fieldId) => {
         const caseList = caseListSelectors.getValue(s, nodeId, fieldId)
-        return caseList?.map((entry: Foundations.Field.CaseList.Entry) => entry.portId) ?? []
+        return caseList?.map((entry: Field.CaseList.Entry) => entry.portId) ?? []
     },
 } as CaseListSelectors
 
@@ -64,7 +66,7 @@ export const workbenchSelectors = {
             );
         },
         isTool: (s, nodeId) => {
-            return s.workflow.data.staticValues[nodeId]?.["isConvertedToTool" as Foundations.Field.Id] === true;
+            return s.workflow.data.staticValues[nodeId]?.["isConvertedToTool" as Field.Id] === true;
         },
         extractBlueprint: (s, nodeId) => {
             const node = s.workflow.data.nodes[nodeId];
@@ -99,7 +101,7 @@ export const workbenchSelectors = {
             const node = s.workflow.data.nodes[nodeId]
             if (!node) return {};
 
-            const fieldsValues: Record<Foundations.Field.Id, any> = {}
+            const fieldsValues: Record<Field.Id, any> = {}
             node.fields.forEach(field => {
                 fieldsValues[field.id] = staticValues[field.id] ?? field.initialValue;
             })
@@ -124,7 +126,7 @@ export const workbenchSelectors = {
             const edge = s.workflow.data.edges[edgeId];
             if (!edge) return undefined;
 
-            return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Foundations.Port.Output.Id];
+            return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Port.Output.Id];
         },
     },
     output: {
@@ -149,19 +151,19 @@ export const workbenchSelectors = {
             if (!triggerPort)
                 throw new Error(`Port ${portId} not found`);
 
-            if (!triggerPort.isDynamic)
+            if (!Port.isPolymorphic(triggerPort))
                 throw new Error(`Port ${portId} is not dynamic`);
 
             const syncGroupId = triggerPort.syncGroupId
-            const siblings = new Set<Foundations.Port.Input | Foundations.Port.Output>();
+            const siblings = new Set<Port.Input | Port.Output>();
 
             node.inputs.forEach(input => {
-                if (input.isDynamic && input.syncGroupId === syncGroupId)
+                if (Port.isPolymorphic(input) && input.syncGroupId === syncGroupId)
                     siblings.add(input);
             })
 
             node.outputs.forEach(output => {
-                if (output.isDynamic && output.syncGroupId === syncGroupId)
+                if (Port.isPolymorphic(output) && output.syncGroupId === syncGroupId)
                     siblings.add(output);
             })
 
@@ -183,11 +185,11 @@ export const workbenchSelectors = {
             const outputHandles = s.cache.outputHandlesMap[nodeId];
 
             for (const input of node.inputs) {
-                if (input.isDynamic && input.syncGroupId === syncGroupId && inputHandles[input.id])
+                if (Port.isPolymorphic(input) && input.syncGroupId === syncGroupId && inputHandles[input.id])
                     return true;
             }
             for (const output of node.outputs) {
-                if (output.isDynamic && output.syncGroupId === syncGroupId && outputHandles[output.id])
+                if (Port.isPolymorphic(output) && output.syncGroupId === syncGroupId && outputHandles[output.id])
                     return true;
             }
             return false;
@@ -202,7 +204,7 @@ export const workbenchSelectors = {
             const node = s.workflow.data.nodes[nodeId];
             if (!node) return null;
 
-            const incoming: Record<Foundations.Port.Id, Foundations.Projection> = {};
+            const incoming: Record<Port.Id, Foundations.Projection> = {};
             for (const input of node.inputs) {
                 const projection = s.cache.inputHandlesMap[nodeId]?.[input.id]
                     ? (() => {
@@ -210,7 +212,7 @@ export const workbenchSelectors = {
                         if (!edgeId) return undefined;
                         const edge = s.workflow.data.edges[edgeId];
                         if (!edge) return undefined;
-                        return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Foundations.Port.Output.Id];
+                        return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Port.Output.Id];
                     })()
                     : undefined
                 if (projection !== undefined)
@@ -223,17 +225,17 @@ export const workbenchSelectors = {
 } satisfies _WorkBenchSDKSelectors
 
 type ConditionSelectors = {
-    getValue: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id) => ConditionValue | null
-    getRule: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id, ruleId: Foundations.Field.Condition.Rule.Id) => Foundations.Field.Condition.Rule | null
-    getGroup: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id, ruleGroupId: Foundations.Field.Condition.RuleGroup.Id) => Foundations.Field.Condition.RuleGroup | null
-    getChildKind: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id, id: Foundations.Field.Condition.Rule.Id | Foundations.Field.Condition.RuleGroup.Id) => 'rule' | 'group' | null
+    getValue: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id) => ConditionValue | null
+    getRule: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id, ruleId: Field.Condition.Rule.Id) => Field.Condition.Rule | null
+    getGroup: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id, ruleGroupId: Field.Condition.RuleGroup.Id) => Field.Condition.RuleGroup | null
+    getChildKind: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id, id: Field.Condition.Rule.Id | Field.Condition.RuleGroup.Id) => 'rule' | 'group' | null
 }
 
 type CaseListSelectors = {
-    getValue: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id) => CaseListValue | null
-    getEntry: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id, portId: Foundations.Port.Output.Id) => Foundations.Field.CaseList.Entry | null
-    getEntryIndex: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id, portId: Foundations.Port.Output.Id) => number
-    getPortIds: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Foundations.Field.Id) => Foundations.Port.Output.Id[]
+    getValue: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id) => CaseListValue | null
+    getEntry: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id, portId: Port.Output.Id) => Field.CaseList.Entry | null
+    getEntryIndex: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id, portId: Port.Output.Id) => number
+    getPortIds: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id) => Port.Output.Id[]
 }
 
 export type _WorkBenchSDKSelectors = {
@@ -247,31 +249,31 @@ export type _WorkBenchSDKSelectors = {
         extractBlueprint: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Blueprint | null
     }
     field: {
-        get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => Foundations.Field | null
-        getValue: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => Foundations.Field.Value | null
-        getValues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Foundations.Field.Id, any>
+        get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Field | null
+        getValue: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Field.Value | null
+        getValues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Field.Id, any>
         condition: ConditionSelectors
         caseList: CaseListSelectors
     }
     input: {
-        get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Foundations.Port.Input | null
-        hasEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => boolean
-        getProjection: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputPortId: Foundations.Port.Input.Id, session: ExecutionSession) => Foundations.Projection | undefined
+        get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => Port.Input | null
+        hasEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => boolean
+        getProjection: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputPortId: Port.Input.Id, session: ExecutionSession) => Foundations.Projection | undefined
     }
     output: {
-        get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => Foundations.Port.Output | null
-        hasEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => boolean
+        get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Port.Output.Id) => Port.Output | null
+        hasEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Port.Output.Id) => boolean
     }
     port: {
-        getDynamicSiblings: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Id) => Set<Foundations.Port.Input | Foundations.Port.Output>
-        getResolvedVariantInSyncGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => Foundations.Port.Variant | null
+        getDynamicSiblings: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Port.Id) => Set<Port.Input | Port.Output>
+        getResolvedVariantInSyncGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => Port.Variant | null
         syncGroupHasEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => boolean
     }
     cache: {
-        getInputHandleEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => Workflow.Edge.Id
-        getOutputHandleEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Foundations.Port.Output.Id) => Workflow.Edge.Id
+        getInputHandleEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => Workflow.Edge.Id
+        getOutputHandleEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Port.Output.Id) => Workflow.Edge.Id
     }
     execution: {
-        getNodeIncomingData: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session: ExecutionSession) => Record<Foundations.Port.Id, Foundations.Projection> | null
+        getNodeIncomingData: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session: ExecutionSession) => Record<Port.Id, Foundations.Projection> | null
     }
 }

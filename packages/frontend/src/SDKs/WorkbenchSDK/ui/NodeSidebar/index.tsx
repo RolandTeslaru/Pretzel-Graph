@@ -121,7 +121,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                             <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
                                 <h4 className='text-sm font-semibold text-foreground tracking-tight'>Inputs</h4>
                             </Accordion.Trigger>
-                            <Accordion.Content className='flex flex-col gap-1 bg-background/50 py-2'>
+                            <Accordion.Content className='flex flex-col gap-1 bg-background/60 py-2'>
                                 {inputs.map(input => (
                                     <InputItem key={input.id} input={input} nodeId={node.id} />
                                 ))}
@@ -134,7 +134,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                             <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
                                 <h4 className='text-sm font-semibold text-foreground tracking-tight'>Fields</h4>
                             </Accordion.Trigger>
-                            <Accordion.Content className='flex flex-col gap-1 bg-background/60'>
+                            <Accordion.Content className='flex flex-col gap-1 bg-background/60 py-2'>
                                 {fields.map(field => field.hidden ? null : (
                                     <div key={field.id} className='px-4 py-1 min-w-0'>
                                         <FieldRenderer field={field} nodeId={node.id} />
@@ -147,7 +147,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                         <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
                             <h4 className='text-sm font-semibold text-foreground tracking-tight'>Execution Strategy</h4>
                         </Accordion.Trigger>
-                        <Accordion.Content className='flex flex-col gap-1 bg-background/60'>
+                        <Accordion.Content className='flex flex-col gap-1 bg-background/60 py-2'>
                             {executionStrategyFields.map(field => field.hidden ? null : (
                                 <div key={field.id} className='px-4 py-2'>
                                     <FieldRenderer field={field} nodeId={node.id} />
