@@ -1,4 +1,4 @@
-import { Validation, Workflow, type Foundations } from "@vx-agent-editor/shared/domain";
+import { Foundations, Validation, Workflow } from "@vx-agent-editor/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { cloneDeep } from 'lodash';
 import { edgeReducers } from "./edge";
@@ -6,6 +6,7 @@ import { cacheReducers } from "./cache";
 import { layoutReducers } from "./layout";
 import { fieldReducers } from "./field";
 import { workbenchSelectors } from "../selectors";
+import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
 
 const sel = workbenchSelectors;
 
@@ -58,9 +59,12 @@ export const nodeReducers = {
             toolCompatible: blueprint.toolCompatible,
         } satisfies Workflow.Node
 
-        const result = Workflow.Node.Schema.safeParse(newNode)
-        if (!result.success)
-            throw new Error(`Node schema validation failed. Could not create node from blueprint id ${blueprint.id}`)
+        try {
+            Workflow.Node.Schema.parse(newNode)
+        } catch (error) {
+            console.error(error);
+            throw new Error(`Node schema validation failed. Could not create node from blueprint id ${blueprint.id}.`)
+        }
 
         s.workflow.data.nodes[nodeId] = newNode;
 
@@ -246,55 +250,50 @@ export const nodeReducers = {
 
         s.workflow.data.staticValues[nodeId] = next;
     },
-    resolveDynamicPortGroup: (s, nodeId, triggerPort, resolvedVariant) => {
+    resolvePolymorphicPortGroup: (s, nodeId, triggerPort, resolvedVariant) => {
         const node = s.workflow.data.nodes[nodeId];
 
-        if(!triggerPort.isDynamic || !triggerPort.syncGroupId)
-            throw new Error(`Port ${triggerPort.id} is not dynamic`);
+        if(!Port.isPolymorphic(triggerPort) || !triggerPort.syncGroupId)
+            throw new Error(`Port ${triggerPort.id} is not polymorphic or does not have a polymorphicGroupId`);
 
-        const syncGroupId = triggerPort.syncGroupId;
+        const polymorphicGroupId = triggerPort.syncGroupId;
         const triggerIsInput = 'required' in triggerPort;
 
-        const listPromotion: Partial<Record<Foundations.Port.Variant, Foundations.Port.Variant>> = {
-            Message: "MessageList",
-            Data: "DataList",
-        };
+        const inputs = node.inputs.filter(i => Port.isPolymorphic(i) && i.syncGroupId === polymorphicGroupId)
+        const outputs = node.outputs.filter(o => Port.isPolymorphic(o) && o.syncGroupId === polymorphicGroupId)
 
-        node.inputs.forEach(input => {
-            if(!input.isDynamic || input.syncGroupId !== syncGroupId) return;
-            if (input.variant === "UnresolvedList") {
-                if (!triggerIsInput) return;
-                (input as any).variant = listPromotion[resolvedVariant] ?? resolvedVariant;
+        inputs.forEach(i => {
+            if (i.variant === "UnresolvedList") {
+                (i as any).variant = Port.LIST_PROMOTION_MAP[resolvedVariant] ?? resolvedVariant;
+            } else if (i.variant === "UnresolvedScalar") {
+                (i as any).variant = Port.LIST_DEMOTION_MAP[resolvedVariant] ?? resolvedVariant;
             } else {
-                (input as any).variant = resolvedVariant;
+                (i as any).variant = resolvedVariant;
             }
         })
 
-        node.outputs.forEach(output => {
-            if(!output.isDynamic || output.syncGroupId !== syncGroupId) return;
-            if (output.variant === "UnresolvedList") {
-                if (!triggerIsInput) return;
-                (output as any).variant = listPromotion[resolvedVariant] ?? resolvedVariant;
+        outputs.forEach(o => {
+            if (o.variant === "UnresolvedList") {
+                (o as any).variant = Port.LIST_PROMOTION_MAP[resolvedVariant] ?? resolvedVariant;
+            } else if (o.variant === "UnresolvedScalar") {
+                (o as any).variant = Port.LIST_DEMOTION_MAP[resolvedVariant] ?? resolvedVariant;
             } else {
-                (output as any).variant = resolvedVariant;
+                (o as any).variant = resolvedVariant;
             }
         })
     },
-    unresolveDynamicPortGroup: (s, nodeId, syncGroupId) => {
+    unresolvePolymorphicPortGroup: (s, nodeId, syncGroupId) => {
         const node = s.workflow.data.nodes[nodeId];
 
-        node.inputs.forEach(input => {
-            if(!input.isDynamic || input.syncGroupId !== syncGroupId) return;
-            // Restore to the original blueprint variant ("Unresolved" or "UnresolvedList"),
-            // not always "Unresolved", so UnresolvedList ports stay as UnresolvedList after disconnection.
-            (input as any).variant = input.unresolvedVariant ?? "Unresolved";
+        const inputs = node.inputs.filter(i => Foundations.Port.isPolymorphic(i) && i.syncGroupId === syncGroupId) as Foundations.Port.Variants.UnresolvedLike[];
+        const outputs = node.outputs.filter(o => Foundations.Port.isPolymorphic(o) && o.syncGroupId === syncGroupId) as Foundations.Port.Variants.UnresolvedLike[];
+
+        inputs.forEach(input => {
+            input.variant = input.originalVariant;
         })
 
-        node.outputs.forEach(output => {
-            if(!output.isDynamic || output.syncGroupId !== syncGroupId) return;
-            // Restore to the original blueprint variant ("Unresolved" or "UnresolvedList"),
-            // not always "Unresolved", so UnresolvedList ports stay as UnresolvedList after disconnection.
-            (output as any).variant = output.unresolvedVariant ?? "Unresolved";
+        outputs.forEach(output => {
+            output.variant = output.originalVariant;
         })
     },
     setSignalStrategy: (s, nodeId, strategy) => {
@@ -367,6 +366,6 @@ interface NodeReducers {
     validate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
     clearIssues    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
 
-    resolveDynamicPortGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, triggerPort: Foundations.Port.Input | Foundations.Port.Output, resolvedVariant: Foundations.Port.Variant) => void
-    unresolveDynamicPortGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => void
+    resolvePolymorphicPortGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, triggerPort: Foundations.Port.Input | Foundations.Port.Output, resolvedVariant: Foundations.Port.Variant) => void
+    unresolvePolymorphicPortGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, syncGroupId: string) => void
 }

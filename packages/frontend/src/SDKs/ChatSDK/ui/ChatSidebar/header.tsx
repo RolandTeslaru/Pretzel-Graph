@@ -8,15 +8,15 @@ const ChatSidebarHeader = () => {
     const currentChatName = ChatSDK.useStore(s => s.chats[s.currentChatId]?.name)
 
     return (
-        <div className='flex flex-row py-1 gap-2 px-1 absolute bg-card-float top-2 w-[calc(100%-16px)] left-2 z-10 border rounded-full border-border shadow-sm shadow-black/10'>
+        <div className='flex flex-row gap-2 absolute top-2 w-[calc(100%-16px)] left-2 z-10 '>
             <div
                 className='flex items-center gap-2 p-1.5 rounded-full'
                 style={{ backgroundColor: 'color-mix(in srgb, var(--port-Message) 25%, transparent)' }}
             >
-                <SystemIcons.MessagesSquare className='my-auto h-4 w-4' style={{ color: 'var(--port-Message-foreground)' }} />
+                <SystemIcons.MessagesSquare className='my-auto h-5 w-5' style={{ color: 'var(--port-Message-foreground)' }} />
             </div>
             <p className='text-xs h-auto my-auto truncate'>{currentChatName}</p>
-            <div className='flex flex-row gap-2 ml-auto my-auto h-auto px-1'>
+            <div className='flex flex-row gap-2 border border-border bg-card-float rounded-full ml-auto my-auto h-auto p-0.5 shadow-md shadow-black/10'>
                 <Button size="icon-xs" variant="ghost" className="" onClick={() => ChatSDK.actions.chat.new()}>
                     <SystemIcons.Plus className='text-secondary-foreground' />
                 </Button>

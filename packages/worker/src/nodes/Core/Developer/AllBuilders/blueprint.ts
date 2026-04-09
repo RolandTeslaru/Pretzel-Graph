@@ -5,7 +5,7 @@ export const Blueprint = defineBlueprint({
     displayName: "All Builders",
     description: "A developer node showcasing all available field, input, and output builders.",
     icon: "Rocket",
-    accent: "port-null",
+    accent: "utility",
     fields: [
         FieldBuilder.String({
             id: "stringField",
@@ -125,6 +125,37 @@ export const Blueprint = defineBlueprint({
             id: "toolInput",
             displayName: "Tool Input",
         }),
+        InputBuilder.Unresolved({
+            id: "unresolvedInput",
+            displayName: "Unresolved Input",
+            syncGroupId: "unresolvedGroup",
+        }),
+        InputBuilder.UnresolvedScalar({
+            id: "unresolvedScalarInput",
+            displayName: "Unresolved Scalar Input",
+            syncGroupId: "unresolvedScalarGroup",
+        }),
+        InputBuilder.UnresolvedList({
+            id: "unresolvedListInput",
+            displayName: "Unresolved List Input",
+            syncGroupId: "unresolvedListGroup",
+        }),
+        InputBuilder.ToolList({
+            id: "toolListInput",
+            displayName: "Tool List Input",
+        }),
+        InputBuilder.MessageList({
+            id: "messageListInput",
+            displayName: "Message List Input",
+        }),
+        InputBuilder.Data({
+            id: "dataInput",
+            displayName: "Data Input",
+        }),
+        InputBuilder.DataList({
+            id: "dataListInput",
+            displayName: "Data List Input",
+        }),
     ],
     outputs: [
         OutputBuilder.Message({
@@ -162,6 +193,37 @@ export const Blueprint = defineBlueprint({
         OutputBuilder.DataFrame({
             id: "dataFrameOutput",
             displayName: "DataFrame Output",
+        }),
+        OutputBuilder.Unresolved({
+            id: "unresolvedOutput",
+            displayName: "Unresolved Output",
+            syncGroupId: "unresolvedGroup",
+        }),
+        OutputBuilder.UnresolvedScalar({
+            id: "unresolvedScalarOutput",
+            displayName: "Unresolved Scalar Output",
+            syncGroupId: "unresolvedScalarGroup",
+        }),
+        OutputBuilder.UnresolvedList({
+            id: "unresolvedListOutput",
+            displayName: "Unresolved List Output",
+            syncGroupId: "unresolvedListGroup",
+        }),
+        OutputBuilder.ToolList({
+            id: "toolListOutput",
+            displayName: "Tool List Output",
+        }),
+        OutputBuilder.MessageList({
+            id: "messageListOutput",
+            displayName: "Message List Output",
+        }),
+        OutputBuilder.Data({
+            id: "dataOutput",
+            displayName: "Data Output",
+        }),
+        OutputBuilder.DataList({
+            id: "dataListOutput",
+            displayName: "Data List Output",
         }),
     ],
 });

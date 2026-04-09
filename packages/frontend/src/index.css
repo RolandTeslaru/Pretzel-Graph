@@ -193,7 +193,7 @@ code {
   --port-File-glow: theme(--color-lime-600);
 
   --port-Json: theme(--color-amber-500);
-  --port-Json-foreground: theme(--color-amber-100);
+  --port-Json-foreground: theme(--color-amber-500);
   --port-Json-accent: theme(--color-amber-400);
   --port-Json-glow: theme(--color-amber-600);
 
@@ -239,7 +239,7 @@ code {
   --utility: theme(--color-neutral-400);
   --utility-foreground: theme(--color-neutral-700);
 
-  --group-routing: theme(--color-neutral-300);
+  --group-routing: theme(--color-neutral-400);
 
 
   --radius-xs: calc(var(--radius) - 6px);

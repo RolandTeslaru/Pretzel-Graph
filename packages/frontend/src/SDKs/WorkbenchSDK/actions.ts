@@ -1,6 +1,8 @@
 import { WorkbenchSDKImpl, WorkbenchSDK } from './sdk';
 import type { DropFirstArg } from '../types';
-import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
+import { Workflow } from '@vx-agent-editor/shared/domain';
+import { Port } from '@vx-agent-editor/shared/domain/Foundations/Port';
+import { Field } from '@vx-agent-editor/shared/domain/Foundations/Field';
 import { commit, debouncedCommit, withCommit, withAsyncCommit, debouncedValidateField, debouncedValidateInput } from './utils/actions';
 import { ShelfSDK } from '../ShelfSDK/sdk';
 
@@ -12,7 +14,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
     const validateFieldById = (
         nodeId: Workflow.Node.Id,
-        fieldId: Foundations.Field.Id
+        fieldId: Field.Id
     ) => {
         const field = sel.field.get(sdk.state, nodeId, fieldId)
         if (!field)
@@ -118,8 +120,8 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         },
         caseList: {
             addEntry: withCommit((nodeId, fieldId, label) => {
-                const portId = Foundations.Port.Output.Id.parse(crypto.randomUUID())
-                const entry = Foundations.Field.CaseList.createEntry(portId, label)
+                const portId = Port.Output.Id.parse(crypto.randomUUID())
+                const entry = Field.CaseList.createEntry(portId, label)
 
                 setState(s => {
                     reducers.field.caseList.addEntry(s, nodeId, fieldId, entry)
@@ -129,9 +131,8 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                         id: portId,
                         displayName: label,
                         variant: resolvedVariant,
-                        isDynamic: true,
                         syncGroupId: "condition",
-                        unresolvedVariant: "Unresolved",
+                        originalVariant: "Unresolved",
                     })
                 })
 
@@ -199,7 +200,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         tool: {
             convert: async (nodeId) => {
                 try {
-                    const field = sel.field.get(sdk.state, nodeId, "isConvertedToTool" as Foundations.Field.Id);
+                    const field = sel.field.get(sdk.state, nodeId, "isConvertedToTool" as Field.Id);
                     if (!field) throw new Error(`Node does not have an isConvertedToTool field — is it toolCompatible?`);
                     await fieldActions.setValue(nodeId, field, true);
                 } catch (error) {
@@ -208,7 +209,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             },
             revert: async (nodeId) => {
                 try {
-                    const field = sel.field.get(sdk.state, nodeId, "isConvertedToTool" as Foundations.Field.Id);
+                    const field = sel.field.get(sdk.state, nodeId, "isConvertedToTool" as Field.Id);
                     if (!field) throw new Error(`Node does not have an isConvertedToTool field — is it toolCompatible?`);
                     await fieldActions.setValue(nodeId, field, false);
                 } catch (error) {
@@ -301,114 +302,114 @@ export interface _WorkbenchSDKActions {
         revert              : (nodeId: Workflow.Node.Id) => void;
     };
     field                   : {
-        setValue            : (nodeId: Workflow.Node.Id, field: Foundations.Field, value: any) => void;
+        setValue            : (nodeId: Workflow.Node.Id, field: Field, value: any) => void;
         condition           : {
             setLeftValue    : (
                 nodeId: Workflow.Node.Id,
-                fieldId: Foundations.Field.Id,
-                ruleId: Foundations.Field.Condition.Rule.Id,
+                fieldId: Field.Id,
+                ruleId: Field.Condition.Rule.Id,
                 value: string
             ) => void;
             setRightValue   : (
                 nodeId: Workflow.Node.Id,
-                fieldId: Foundations.Field.Id,
-                ruleId: Foundations.Field.Condition.Rule.Id,
+                fieldId: Field.Id,
+                ruleId: Field.Condition.Rule.Id,
                 value: string
             ) => void;
             setOperator     : (
                 nodeId: Workflow.Node.Id,
-                fieldId: Foundations.Field.Id,
-                ruleId: Foundations.Field.Condition.Rule.Id,
-                value: Foundations.Field.Condition.Operator,
-                dataType?: Foundations.Field.Condition.DataType
+                fieldId: Field.Id,
+                ruleId: Field.Condition.Rule.Id,
+                value: Field.Condition.Operator,
+                dataType?: Field.Condition.DataType
             ) => void;
             addRule         : (
                 nodeId: Workflow.Node.Id,
-                fieldId: Foundations.Field.Id,
-                ruleGroupId: Foundations.Field.Condition.RuleGroup.Id
+                fieldId: Field.Id,
+                ruleGroupId: Field.Condition.RuleGroup.Id
             ) => void;
             addGroup        : (
                 nodeId: Workflow.Node.Id,
-                fieldId: Foundations.Field.Id,
-                parentGroupId: Foundations.Field.Condition.RuleGroup.Id
+                fieldId: Field.Id,
+                parentGroupId: Field.Condition.RuleGroup.Id
             ) => void;
             removeRuleOrGroup: (
                 nodeId: Workflow.Node.Id,
-                fieldId: Foundations.Field.Id,
-                id: Foundations.Field.Condition.Rule.Id | Foundations.Field.Condition.RuleGroup.Id,
-                parentGroupId: Foundations.Field.Condition.RuleGroup.Id
+                fieldId: Field.Id,
+                id: Field.Condition.Rule.Id | Field.Condition.RuleGroup.Id,
+                parentGroupId: Field.Condition.RuleGroup.Id
             ) => void;
             changeCombinator: (
                 nodeId: Workflow.Node.Id,
-                fieldId: Foundations.Field.Id,
-                ruleGroupId: Foundations.Field.Condition.RuleGroup.Id,
+                fieldId: Field.Id,
+                ruleGroupId: Field.Condition.RuleGroup.Id,
                 combinator: "AND" | "OR"
             ) => void;
         };
         caseList            : {
             addEntry        : (
                 nodeId: Workflow.Node.Id,
-                fieldId: Foundations.Field.Id,
+                fieldId: Field.Id,
                 label: string
             ) => void;
             removeEntry     : (
                 nodeId: Workflow.Node.Id,
-                fieldId: Foundations.Field.Id,
-                portId: Foundations.Port.Output.Id
+                fieldId: Field.Id,
+                portId: Port.Output.Id
             ) => void;
             setLabel        : (
                 nodeId: Workflow.Node.Id,
-                fieldId: Foundations.Field.Id,
-                portId: Foundations.Port.Output.Id,
+                fieldId: Field.Id,
+                portId: Port.Output.Id,
                 label: string
             ) => void;
             condition       : {
                 setLeftValue: (
                     nodeId: Workflow.Node.Id,
-                    fieldId: Foundations.Field.Id,
-                    portId: Foundations.Port.Output.Id,
-                    ruleId: Foundations.Field.Condition.Rule.Id,
+                    fieldId: Field.Id,
+                    portId: Port.Output.Id,
+                    ruleId: Field.Condition.Rule.Id,
                     value: string
                 ) => void;
                 setRightValue: (
                     nodeId: Workflow.Node.Id,
-                    fieldId: Foundations.Field.Id,
-                    portId: Foundations.Port.Output.Id,
-                    ruleId: Foundations.Field.Condition.Rule.Id,
+                    fieldId: Field.Id,
+                    portId: Port.Output.Id,
+                    ruleId: Field.Condition.Rule.Id,
                     value: string
                 ) => void;
                 setOperator: (
                     nodeId: Workflow.Node.Id,
-                    fieldId: Foundations.Field.Id,
-                    portId: Foundations.Port.Output.Id,
-                    ruleId: Foundations.Field.Condition.Rule.Id,
-                    value: Foundations.Field.Condition.Operator,
-                    dataType?: Foundations.Field.Condition.DataType
+                    fieldId: Field.Id,
+                    portId: Port.Output.Id,
+                    ruleId: Field.Condition.Rule.Id,
+                    value: Field.Condition.Operator,
+                    dataType?: Field.Condition.DataType
                 ) => void;
                 addRule: (
                     nodeId: Workflow.Node.Id,
-                    fieldId: Foundations.Field.Id,
-                    portId: Foundations.Port.Output.Id,
-                    ruleGroupId: Foundations.Field.Condition.RuleGroup.Id
+                    fieldId: Field.Id,
+                    portId: Port.Output.Id,
+                    ruleGroupId: Field.Condition.RuleGroup.Id
                 ) => void;
                 addGroup: (
                     nodeId: Workflow.Node.Id,
-                    fieldId: Foundations.Field.Id,
-                    portId: Foundations.Port.Output.Id,
-                    parentGroupId: Foundations.Field.Condition.RuleGroup.Id
+                    fieldId: Field.Id,
+                    portId: Port.Output.Id,
+                    parentGroupId: Field.Condition.RuleGroup.Id
                 ) => void;
                 removeRuleOrGroup: (
                     nodeId: Workflow.Node.Id,
-                    fieldId: Foundations.Field.Id,
-                    portId: Foundations.Port.Output.Id,
-                    id: Foundations.Field.Condition.Rule.Id | Foundations.Field.Condition.RuleGroup.Id,
-                    parentGroupId: Foundations.Field.Condition.RuleGroup.Id
+                    fieldId: Field.Id,
+                    portId: Port.Output.Id,
+                    id: Field.Condition.Rule.Id | Field.Condition.RuleGroup.Id,
+                    parentGroupId: Field.Condition.RuleGroup.Id
                 ) => void;
                 changeCombinator: (
                     nodeId: Workflow.Node.Id,
-                    fieldId: Foundations.Field.Id,
-                    portId: Foundations.Port.Output.Id,
-                    ruleGroupId: Foundations.Field.Condition.RuleGroup.Id,
+                    fieldId: Field.Id,
+                    portId: Port.Output.Id,
+                    ruleGroupId: Field.Condition.RuleGroup.Id,
                     combinator: "AND" | "OR"
                 ) => void;
             };
@@ -416,7 +417,7 @@ export interface _WorkbenchSDKActions {
         validate            : DropFirstArg<WorkbenchSDK.Reducers['field']['validate']>;
     };
     input                   : {
-        setValue            : (nodeId: Workflow.Node.Id, input: Foundations.Port.Input, value: any) => void;
+        setValue            : (nodeId: Workflow.Node.Id, input: Port.Input, value: any) => void;
         validate            : DropFirstArg<WorkbenchSDK.Reducers['input']['validate']>;
     };
     edge                    : {

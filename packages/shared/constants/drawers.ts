@@ -83,7 +83,8 @@ export const CORE_DRAWERS = {
     blueprintIds: [
       "Core.Utils.JsonInjector",
       "Core.Utils.Message.Compose",
-      "Core.Utils.Tool.Runner"
+      "Core.Utils.Tool.Runner",
+      "Core.Utils.List.Select"
     ],
   },
   prototypes: {
@@ -340,6 +341,12 @@ export const BUNDLE_DRAWERS = {
     id: "huggingface",
     icon: "HuggingFace",
     blueprintIds: []
+  },
+  hyperliquid: {
+    displayName: "HyperLiquid",
+    id: "hyperliquid",
+    icon: "HyperLiquid",
+    blueprintIds: ["Integrations.HyperLiquid.Market", "Integrations.HyperLiquid.Account"]
   },
   ibm: {
     displayName: "IBM",

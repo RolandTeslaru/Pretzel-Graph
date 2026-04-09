@@ -32,7 +32,7 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
             </Button>
             <Button size="icon-xs" variant="ghost" 
                 onClick={() => WorkbenchSDK.actions.node.setDisabled(node.id, !node.isDisabled)}
-                className={`${node.isDisabled ? `bg-red-500/40`: ``}`}    
+                className={`${node.isDisabled ? `bg-red-500/40 text-red-700`: ``}`}    
             >
                 <SystemIcons.Power className='stroke-2'/>
             </Button>
@@ -52,7 +52,7 @@ const ToolButton: React.FC<Props> = memo(({ node }) => {
     const isTool = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.isTool(s, node.id));
 
     return (
-        <Button variant="ghost" size="icon-xs" className={`h-6! ${isTool ? 'bg-(--port-Tool)/40 text-(--port-Tool) ' : ''}`}
+        <Button variant="ghost" size="icon-xs" className={`h-6! ${isTool ? 'bg-(--port-Tool)/20 text-(--port-Tool) ' : ''}`}
             onClick={() => {
                 if (isTool) WorkbenchSDK.actions.tool.revert(node.id);
                 else WorkbenchSDK.actions.tool.convert(node.id);
