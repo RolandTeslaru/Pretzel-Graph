@@ -131,7 +131,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                         id: portId,
                         displayName: label,
                         variant: resolvedVariant,
-                        syncGroupId: "condition",
+                        polymorphicGroupId: "condition",
                         originalVariant: "Unresolved",
                     })
                 })

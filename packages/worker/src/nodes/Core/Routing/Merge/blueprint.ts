@@ -17,19 +17,19 @@ export const Blueprint = defineBlueprint({
         InputBuilder.UnresolvedList({
             id: "input_1",
             displayName: "Input 1",
-            syncGroupId: "data"
+            polymorphicGroupId: "data"
         }),
         InputBuilder.UnresolvedList({
             id: "input_2",
             displayName: "Input 2",
-            syncGroupId: "data"
+            polymorphicGroupId: "data"
         }),
     ],
     outputs: [
         OutputBuilder.UnresolvedList({
             id: "output",
             displayName: "Output",
-            syncGroupId: "data"
+            polymorphicGroupId: "data"
         }),
     ],
 });

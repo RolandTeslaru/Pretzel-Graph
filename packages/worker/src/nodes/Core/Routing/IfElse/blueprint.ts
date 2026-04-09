@@ -17,7 +17,7 @@ export const Blueprint = defineBlueprint({
         InputBuilder.Unresolved({
             id: "input",
             displayName: "Input",
-            syncGroupId: "data"
+            polymorphicGroupId: "data"
         }),
     ],
     outputs: [
@@ -25,13 +25,13 @@ export const Blueprint = defineBlueprint({
             id: "true",
             displayName: "True",
             tooltip: "Output when condition is true.",
-            syncGroupId: "data"
+            polymorphicGroupId: "data"
         }),
         OutputBuilder.Unresolved({
             id: "false",
             displayName: "False",
             tooltip: "Output when condition is false.",
-            syncGroupId: "data"
+            polymorphicGroupId: "data"
         }),
     ],
 });

@@ -128,17 +128,17 @@ export const Blueprint = defineBlueprint({
         InputBuilder.Unresolved({
             id: "unresolvedInput",
             displayName: "Unresolved Input",
-            syncGroupId: "unresolvedGroup",
+            polymorphicGroupId: "unresolvedGroup",
         }),
         InputBuilder.UnresolvedScalar({
             id: "unresolvedScalarInput",
             displayName: "Unresolved Scalar Input",
-            syncGroupId: "unresolvedScalarGroup",
+            polymorphicGroupId: "unresolvedScalarGroup",
         }),
         InputBuilder.UnresolvedList({
             id: "unresolvedListInput",
             displayName: "Unresolved List Input",
-            syncGroupId: "unresolvedListGroup",
+            polymorphicGroupId: "unresolvedListGroup",
         }),
         InputBuilder.ToolList({
             id: "toolListInput",
@@ -197,17 +197,17 @@ export const Blueprint = defineBlueprint({
         OutputBuilder.Unresolved({
             id: "unresolvedOutput",
             displayName: "Unresolved Output",
-            syncGroupId: "unresolvedGroup",
+            polymorphicGroupId: "unresolvedGroup",
         }),
         OutputBuilder.UnresolvedScalar({
             id: "unresolvedScalarOutput",
             displayName: "Unresolved Scalar Output",
-            syncGroupId: "unresolvedScalarGroup",
+            polymorphicGroupId: "unresolvedScalarGroup",
         }),
         OutputBuilder.UnresolvedList({
             id: "unresolvedListOutput",
             displayName: "Unresolved List Output",
-            syncGroupId: "unresolvedListGroup",
+            polymorphicGroupId: "unresolvedListGroup",
         }),
         OutputBuilder.ToolList({
             id: "toolListOutput",

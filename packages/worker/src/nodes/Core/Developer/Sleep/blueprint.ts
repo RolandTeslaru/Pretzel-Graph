@@ -21,7 +21,7 @@ export const Blueprint = defineBlueprint({
             displayName: "Trigger",
             required: false,
             tooltip: "Optional trigger to start the sleep.",
-            syncGroupId: "signal"
+            polymorphicGroupId: "signal"
         }),
     ],
     outputs: [
@@ -29,7 +29,7 @@ export const Blueprint = defineBlueprint({
             id: "done",
             displayName: "Done",
             tooltip: "Outputs the trigger message after the sleep duration.",
-            syncGroupId: "signal"
+            polymorphicGroupId: "signal"
         }),
     ],
 });
