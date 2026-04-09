@@ -170,34 +170,34 @@ export namespace OutputBuilder {
     }
 
     export function Unresolved<TId extends string, TSyncGroup extends string>(
-        config: { syncGroupId: TSyncGroup } & BaseProps<TId>
+        config: { polymorphicGroupId: TSyncGroup } & BaseProps<TId>
     ): LiteralOutput<TId, "Unresolved", Port.Variants.Unresolved, any> & { readonly __syncGroup?: TSyncGroup } {
         return {
             ...buildBase(config),
             variant: "Unresolved" as const,
-            syncGroupId: config.syncGroupId,
+            polymorphicGroupId: config.polymorphicGroupId,
             originalVariant: "Unresolved" as const,
         };
     }
 
     export function UnresolvedScalar<TId extends string, TSyncGroup extends string>(
-        config: { syncGroupId: TSyncGroup } & BaseProps<TId>
+        config: { polymorphicGroupId: TSyncGroup } & BaseProps<TId>
     ): LiteralOutput<TId, "UnresolvedScalar", Port.Variants.UnresolvedScalar, any> & { readonly __syncGroup?: TSyncGroup } {
         return {
             ...buildBase(config),
             variant: "UnresolvedScalar" as const,
-            syncGroupId: config.syncGroupId,
+            polymorphicGroupId: config.polymorphicGroupId,
             originalVariant: "UnresolvedScalar" as const,
         };
     }
 
     export function UnresolvedList<TId extends string, TSyncGroup extends string>(
-        config: { syncGroupId: TSyncGroup } & BaseProps<TId>
+        config: { polymorphicGroupId: TSyncGroup } & BaseProps<TId>
     ): LiteralOutput<TId, "UnresolvedList", Port.Variants.UnresolvedList, any> & { readonly __syncGroup?: TSyncGroup } {
         return {
             ...buildBase(config),
             variant: "UnresolvedList" as const,
-            syncGroupId: config.syncGroupId,
+            polymorphicGroupId: config.polymorphicGroupId,
             originalVariant: "UnresolvedList" as const,
         };
     }

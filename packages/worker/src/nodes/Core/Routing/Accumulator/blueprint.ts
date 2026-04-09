@@ -23,7 +23,7 @@ export const Blueprint = defineBlueprint({
         InputBuilder.UnresolvedList({
             id: "input",
             displayName: "Input",
-            syncGroupId: "data"
+            polymorphicGroupId: "data"
         }),
     ],
     outputs: [
@@ -31,12 +31,12 @@ export const Blueprint = defineBlueprint({
             id: "output",
             displayName: "Output",
             tooltip: "The accumulated result.",
-            syncGroupId: "data"
+            polymorphicGroupId: "data"
         }),
         OutputBuilder.UnresolvedList({
             id: "state",
             displayName: "State",
-            syncGroupId: "data"
+            polymorphicGroupId: "data"
         }),
     ],
 });
