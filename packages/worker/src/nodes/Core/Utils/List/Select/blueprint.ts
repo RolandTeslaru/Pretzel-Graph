@@ -30,14 +30,14 @@ export const Blueprint = defineBlueprint({
             id: "list",
             displayName: "List",
             required: true,
-            syncGroupId: "data"
+            polymorphicGroupId: "data"
         }),
     ],
     outputs: [
         OutputBuilder.UnresolvedScalar({
             id: "element",
             displayName: "Element",
-            syncGroupId: "data"
+            polymorphicGroupId: "data"
         }),
     ],
 });

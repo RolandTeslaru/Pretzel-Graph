@@ -87,13 +87,13 @@ export const edgeReducers = {
             inputReducers.validate(s, edge.target.nodeId, targetPort);
 
         // Unresolve dynamic sync groups if no edges remain
-        if (Port.isPolymorphic(targetPort) && targetPort.syncGroupId) {
-            if (!sel.port.syncGroupHasEdges(s, edge.target.nodeId, targetPort.syncGroupId))
-                nodeReducers.unresolvePolymorphicPortGroup(s, edge.target.nodeId, targetPort.syncGroupId);
+        if (Port.isPolymorphic(targetPort) && targetPort.polymorphicGroupId) {
+            if (!sel.port.syncGroupHasEdges(s, edge.target.nodeId, targetPort.polymorphicGroupId))
+                nodeReducers.unresolvePolymorphicPortGroup(s, edge.target.nodeId, targetPort.polymorphicGroupId);
         }
-        if (Port.isPolymorphic(sourcePort) && sourcePort.syncGroupId) {
-            if (!sel.port.syncGroupHasEdges(s, edge.source.nodeId, sourcePort.syncGroupId))
-                nodeReducers.unresolvePolymorphicPortGroup(s, edge.source.nodeId, sourcePort.syncGroupId);
+        if (Port.isPolymorphic(sourcePort) && sourcePort.polymorphicGroupId) {
+            if (!sel.port.syncGroupHasEdges(s, edge.source.nodeId, sourcePort.polymorphicGroupId))
+                nodeReducers.unresolvePolymorphicPortGroup(s, edge.source.nodeId, sourcePort.polymorphicGroupId);
         }
     },
     createId: Workflow.Edge.createId
