@@ -23,24 +23,24 @@ export const Blueprint = defineBlueprint({
         InputBuilder.Unresolved({
             id: "input",
             displayName: "Input",
-            syncGroupId: "condition"
+            polymorphicGroupId: "condition"
         }),
     ],
     outputs: [
         OutputBuilder.Unresolved({
             id: "case-1",
             displayName: "Case 1",
-            syncGroupId: "condition"
+            polymorphicGroupId: "condition"
         }),
         OutputBuilder.Unresolved({
             id: "case-2",
             displayName: "Case 2",
-            syncGroupId: "condition"
+            polymorphicGroupId: "condition"
         }),
         OutputBuilder.Unresolved({
             id: "case-3",
             displayName: "Case 3",
-            syncGroupId: "condition"
+            polymorphicGroupId: "condition"
         }),
     ],
 });

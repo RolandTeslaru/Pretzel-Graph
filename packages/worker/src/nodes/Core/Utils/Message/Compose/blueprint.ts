@@ -24,7 +24,7 @@ export const Blueprint = defineBlueprint({
         InputBuilder.Unresolved({
             id: "data",
             displayName: "Data",
-            syncGroupId: "data",
+            polymorphicGroupId: "data",
             required: true
         }),
     ],
