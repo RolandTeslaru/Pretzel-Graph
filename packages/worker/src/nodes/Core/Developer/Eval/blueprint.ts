@@ -5,7 +5,7 @@ export const Blueprint = defineBlueprint({
     displayName: "Runtime Node Eval",
     description: "Dangerously executes a JavaScript script at node runtime.",
     icon: "SquareTerminal",
-    accent: "port-null",
+    accent: "utility",
     fields: [
         FieldBuilder.Script({
             id: "code",

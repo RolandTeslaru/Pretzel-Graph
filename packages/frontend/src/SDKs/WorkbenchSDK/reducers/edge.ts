@@ -4,6 +4,7 @@ import { cacheReducers } from "./cache";
 import { inputReducers } from "./input";
 import { workbenchSelectors } from "../selectors"
 import { nodeReducers } from "./node";
+import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
 
 const sel = workbenchSelectors
 
@@ -55,12 +56,12 @@ export const edgeReducers = {
 
         inputReducers.validate(s, targetNodeId, targetPort);
 
-        if (targetPort.isDynamic && (targetPort.variant === "Unresolved" || targetPort.variant === "UnresolvedList")) {
-            nodeReducers.resolveDynamicPortGroup(s, targetNodeId, targetPort, sourcePort.variant);
-        }
-        else if (sourcePort.isDynamic && (sourcePort.variant === "Unresolved" || sourcePort.variant === "UnresolvedList")) {
-            nodeReducers.resolveDynamicPortGroup(s, sourceNodeId, sourcePort, targetPort.variant);
-        }
+        if (Port.isPolymorphic(targetPort))
+            nodeReducers.resolvePolymorphicPortGroup(s, targetNodeId, targetPort, sourcePort.variant);
+
+        else if (Port.isPolymorphic(sourcePort))
+            nodeReducers.resolvePolymorphicPortGroup(s, sourceNodeId, sourcePort, targetPort.variant);
+
         return newEdge
     },
     remove: (s, edgeId) => {
@@ -73,6 +74,11 @@ export const edgeReducers = {
         const sourcePort = sel.output.get(s, edge.source.nodeId, edge.source.portId);
         const targetPort = sel.input.get(s, edge.target.nodeId, edge.target.portId);
 
+        if(!sourcePort || !targetPort){
+            throw new Error(`Ports for edge ${edgeId} not found. Source port: ${edge.source.nodeId}:${edge.source.portId}, Target port: ${edge.target.nodeId}:${edge.target.portId}`)
+            return
+        }
+
         delete edges[edgeId];
 
         cacheReducers.deleteEdge(s, edge);
@@ -81,13 +87,13 @@ export const edgeReducers = {
             inputReducers.validate(s, edge.target.nodeId, targetPort);
 
         // Unresolve dynamic sync groups if no edges remain
-        if (targetPort?.isDynamic && targetPort.syncGroupId) {
+        if (Port.isPolymorphic(targetPort) && targetPort.syncGroupId) {
             if (!sel.port.syncGroupHasEdges(s, edge.target.nodeId, targetPort.syncGroupId))
-                nodeReducers.unresolveDynamicPortGroup(s, edge.target.nodeId, targetPort.syncGroupId);
+                nodeReducers.unresolvePolymorphicPortGroup(s, edge.target.nodeId, targetPort.syncGroupId);
         }
-        if (sourcePort?.isDynamic && sourcePort.syncGroupId) {
+        if (Port.isPolymorphic(sourcePort) && sourcePort.syncGroupId) {
             if (!sel.port.syncGroupHasEdges(s, edge.source.nodeId, sourcePort.syncGroupId))
-                nodeReducers.unresolveDynamicPortGroup(s, edge.source.nodeId, sourcePort.syncGroupId);
+                nodeReducers.unresolvePolymorphicPortGroup(s, edge.source.nodeId, sourcePort.syncGroupId);
         }
     },
     createId: Workflow.Edge.createId

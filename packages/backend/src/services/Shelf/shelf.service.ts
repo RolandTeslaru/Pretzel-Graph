@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Foundations, Shelf } from '@vx-agent-editor/shared/domain';
+import { Shelf } from '@vx-agent-editor/shared/domain';
 import * as indexJson from './node_index.json';
 import { ALL_DRAWERS, SECTIONS } from '@vx-agent-editor/shared/constants/drawers';
 import { CatalogueService as AGGEXCatalogueService } from '@vx-agent-builder/worker';
+import { Blueprint } from '@vx-agent-editor/shared/domain/Foundations/Blueprint';
 
 const INDEX = indexJson as Shelf.Index;
 
@@ -10,7 +11,7 @@ const INDEX = indexJson as Shelf.Index;
 export class ShelfService {
     getBlueprint(
         payload: Shelf.API.Blueprint.Get.Request
-    ): { blueprint: Foundations.Blueprint } {
+    ): { blueprint: Blueprint } {
         const { blueprintId } = payload;
         const blueprint = INDEX.blueprints[blueprintId];
 
@@ -23,14 +24,14 @@ export class ShelfService {
 
     getBatchBlueprints(
         payload: Shelf.API.Blueprint.GetBatch.Request
-    ): { blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint> } {
+    ): { blueprints: Record<Blueprint.Id, Blueprint> } {
         const { blueprintIds } = payload;
-        const blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint> = {};
+        const blueprints: Record<Blueprint.Id, Blueprint> = {};
 
         blueprintIds.forEach(blueprintId => {
-            const blueprint = INDEX.blueprints[blueprintId as Foundations.Blueprint.Id];
+            const blueprint = INDEX.blueprints[blueprintId as Blueprint.Id];
             if (blueprint)
-                blueprints[blueprintId as Foundations.Blueprint.Id] = blueprint;
+                blueprints[blueprintId as Blueprint.Id] = blueprint;
         });
 
         return { blueprints };
@@ -39,20 +40,20 @@ export class ShelfService {
 
     getAllInSection(
         payload: Shelf.API.Blueprint.GetAllInSection.Request
-    ): { blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint> } {
+    ): { blueprints: Record<Blueprint.Id, Blueprint> } {
         const { section } = payload;
         // @ts-expect-error
         const drawerIds = SECTIONS[section] as Shelf.Drawer.Id[];
-        const blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint> = {};
+        const blueprints: Record<Blueprint.Id, Blueprint> = {};
 
         drawerIds.forEach(drawerId => {
             const drawer = ALL_DRAWERS[drawerId];
             if (!drawer)
                 return;
             drawer.blueprintIds.forEach(blueprintId => {
-                const blueprint = INDEX.blueprints[blueprintId as Foundations.Blueprint.Id];
+                const blueprint = INDEX.blueprints[blueprintId as Blueprint.Id];
                 if (blueprint)
-                    blueprints[blueprintId as Foundations.Blueprint.Id] = blueprint;
+                    blueprints[blueprintId as Blueprint.Id] = blueprint;
             });
         });
 
