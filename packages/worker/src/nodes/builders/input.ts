@@ -24,6 +24,7 @@ export namespace InputBuilder {
         displayName: string;
         tooltip?: string;
         placeholder?: string;
+        groupId?: string;
     } & (
             | { internal?: false | undefined; required?: boolean }
             | { internal: true; required?: false }
@@ -38,6 +39,7 @@ export namespace InputBuilder {
             internal: props.internal ?? false,
             displayName: props.displayName,
             tooltip: props.tooltip,
+            groupId: props.groupId as Port.Base["groupId"],
         } satisfies { id: TId & Port.Input.Id } & Omit<Port.Input.Base, "id">;
     }
 

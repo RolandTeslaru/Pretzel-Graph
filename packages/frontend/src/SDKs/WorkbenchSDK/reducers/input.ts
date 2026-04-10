@@ -44,6 +44,13 @@ export const inputReducers = {
         delete s.issues[nodeId]?.inputs[input.id];
 
         return false;
+    },
+    add: (s, nodeId, input) => {
+        s.isDirty = true;
+        const node = s.workflow.data.nodes[nodeId];
+        if (!node) return;
+
+        node.inputs.push(input);
     }
 } satisfies InputReducers
 
@@ -66,4 +73,9 @@ type InputReducers = {
         nodeId: Workflow.Node.Id,
         input: Foundations.Port.Input
     ) => boolean
+    add: (
+        state: WorkbenchSDK.State,
+        nodeId: Workflow.Node.Id,
+        input: Foundations.Port.Input
+     ) => void
 }
