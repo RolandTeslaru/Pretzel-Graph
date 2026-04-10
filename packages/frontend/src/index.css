@@ -51,18 +51,18 @@ code {
 
 
 *::-webkit-scrollbar {
-  width: 8px !important;
-  height: 8px !important;
+  width: 4px !important;
+  height: 4px !important;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background-color: var(--muted) !important;
+  background-color: transparent !important;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--input) !important;
+  background-color: var(--border) !important;
   border-radius: 999px !important;
 }
 

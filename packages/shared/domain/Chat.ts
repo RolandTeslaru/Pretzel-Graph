@@ -136,7 +136,7 @@ export namespace Chat {
             export namespace Created {
                 export const Schema = Base.extend({
                     type: z.literal("response:created"),
-                    responseMessage: Message.AI
+                    responseMessage: Chat.Message.AI
                 })
             }
             export type Created = z.infer<typeof Created.Schema>
@@ -145,7 +145,7 @@ export namespace Chat {
                 export const Schema = Base.extend({
                     type: z.literal("response:chunk"),
                     content: z.string(),
-                    responseMessageId: Message.Id,
+                    responseMessageId: Chat.Message.Id,
                 })
             }
             export type Chunk = z.infer<typeof Chunk.Schema>
@@ -153,7 +153,7 @@ export namespace Chat {
             export namespace Finished {
                 export const Schema = Base.extend({
                     type: z.literal("response:finished"),
-                    responseMessageId: Message.Id,
+                    responseMessageId: Chat.Message.Id,
                     finalContent: z.string(),
                 })
             }
@@ -162,11 +162,37 @@ export namespace Chat {
             export namespace Failed {
                 export const Schema = Base.extend({
                     type: z.literal("response:failed"),
-                    responseMessageId: Message.Id,
+                    responseMessageId: Chat.Message.Id,
                     error: SystemError.Schema,
                 })
             }
             export type Failed = z.infer<typeof Failed.Schema>
+        }
+
+        export namespace Message {
+            export namespace Added {
+                export const Schema = Base.extend({
+                    type: z.literal("message:added"),
+                    messages: z.array(Chat.Message.Schema),
+                })
+            }
+            export type Added = z.infer<typeof Schema>
+
+            export namespace Updated {
+                export const Schema = Base.extend({
+                    type: z.literal("message:updated"),
+                    message: Chat.Message,
+                })
+            }
+            export type Updated = z.infer<typeof Schema>
+
+            export namespace Erased {
+                export const Schema = Base.extend({
+                    type: z.literal("message:erased"),
+                    messageId: Chat.Message.Id,
+                })
+            }
+            export type Erased = z.infer<typeof Schema>
         }
 
 
@@ -174,6 +200,9 @@ export namespace Chat {
             Response.Created.Schema,
             Response.Chunk.Schema,
             Response.Finished.Schema,
+            Message.Added.Schema,
+            Message.Updated.Schema,
+            Message.Erased.Schema,
         ])
     }
     export type Event = z.infer<typeof Event.Schema>
@@ -182,7 +211,7 @@ export namespace Chat {
         export namespace Message {
             export namespace Add {
                 export const Request = z.lazy(() => z.object({
-                    message: Chat.Message.Schema,
+                    messages: z.array(Chat.Message.Schema),
                 }))
                 export type Request = z.infer<typeof Request>
 

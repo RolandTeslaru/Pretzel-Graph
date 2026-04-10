@@ -135,11 +135,11 @@ export class ChatService {
         message: {
             add: withSupabaseAssert('message.add', async (
                 supabase: SupabaseClient,
-                message: Chat.Message
+                messages: Chat.Message[]
             ) => {
                 await supabase
                     .from('chat_messages')
-                    .insert({
+                    .insert(messages.map(message => ({
                         id: message.id,
                         chat_id: message.chat_id,
                         role: message.role,
@@ -147,7 +147,7 @@ export class ChatService {
                         data: message.data ?? {},
                         attachments: message.attachments ?? null,
                         created_at: new Date(),
-                    })
+                    })))
                     .throwOnError();
             }),
             erase: withSupabaseAssert('message.erase', async (
@@ -234,8 +234,8 @@ export class ChatService {
             payload: Chat.API.Message.Add.Request
         ): Promise<Chat.API.Message.Add.Response> => {
             const supabase = createAuthenticatedClient(token);
-            const { message } = payload;
-            await this.dbOps.message.add(supabase, message);
+            const { messages } = payload;
+            await this.dbOps.message.add(supabase, messages);
             return {};
         },
 
