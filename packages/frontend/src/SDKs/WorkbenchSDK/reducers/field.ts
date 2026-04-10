@@ -152,14 +152,6 @@ export const fieldReducers = {
                 s.isDirty = true
             },
         },
-    },
-    variadic: {
-        add: (s, nodeId, fieldId) => {
-
-        },
-        remove: (s, nodeId, fieldId) => {
-
-        }
     }
 } satisfies FieldReducers
 
@@ -313,9 +305,5 @@ type FieldReducers = {
                 combinator: "AND" | "OR"
             ) => void
         }
-    }
-    variadic: {
-        add: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => void
-        remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => void
     }
 }

@@ -1,6 +1,6 @@
 {
-  "version": "1775844678887",
-  "generatedAt": "2026-04-10T18:11:18.887Z",
+  "version": "1775853191394",
+  "generatedAt": "2026-04-10T20:33:11.394Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -2101,7 +2101,7 @@
     "Core.Utils.List.Select": {
       "id": "Core.Utils.List.Select",
       "displayName": "Select Element",
-      "icon": "ListPlus",
+      "icon": "Brackets",
       "accent": "utility",
       "toolCompatible": false,
       "fields": [
@@ -2304,10 +2304,20 @@
     "Core.Utils.Tool.Catalog": {
       "id": "Core.Utils.Tool.Catalog",
       "displayName": "Tool Catalog",
-      "icon": "Settings",
+      "icon": "SwatchBook",
       "accent": "port-Tool",
       "toolCompatible": false,
       "fields": [
+        {
+          "id": "tools_num",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Tools",
+          "groupId": "tools_group",
+          "variant": "Variadic",
+          "initialValue": []
+        },
         {
           "id": "signalDependency",
           "advanced": false,
@@ -2355,8 +2365,39 @@
           "kind": "select"
         }
       ],
-      "inputs": [],
-      "outputs": [],
+      "inputs": [
+        {
+          "id": "tool_1",
+          "displayName": "Tool 1",
+          "groupId": "tools_group",
+          "internal": false,
+          "variant": "ToolList",
+          "required": false
+        },
+        {
+          "id": "tool_2",
+          "displayName": "Tool 2",
+          "groupId": "tools_group",
+          "internal": false,
+          "variant": "ToolList",
+          "required": false
+        },
+        {
+          "id": "tool_3",
+          "displayName": "Tool 3",
+          "groupId": "tools_group",
+          "internal": false,
+          "variant": "ToolList",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "tool_list",
+          "displayName": "Tool List",
+          "variant": "ToolList"
+        }
+      ],
       "description": "Utility node for managing a catalog of tools."
     },
     "Core.Utils.Tool.Runner": {

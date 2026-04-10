@@ -108,7 +108,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                         newInput.polymorphicGroupId = newInput.polymorphicGroupId?.replace(/_[^_]+$/, newIndexSufix) as string;
 
                         newInput.id = newInput.id.replace(/_[^_]+$/, newIndexSufix) as Port.Input.Id;
-                        newInput.displayName = `Input ${lastIndex + 1}`
+                        newInput.displayName = newInput.displayName?.replace(/\d+$/, String(lastIndex + 1))
 
                         // If polymorphicGroupId changed, this port is in a new independent group — reset to unresolved
                         if (oldPolyGroupId !== newInput.polymorphicGroupId && "originalVariant" in newInput && newInput.originalVariant) {
@@ -128,7 +128,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                         newOutput.polymorphicGroupId = newOutput.polymorphicGroupId?.replace(/_[^_]+$/, newIndexSufix) as string;
 
                         newOutput.id = newOutput.id.replace(/_[^_]+$/, newIndexSufix) as Port.Output.Id;
-                        newOutput.displayName = `Output ${lastIndex + 1}`
+                        newOutput.displayName = newOutput.displayName?.replace(/\d+$/, String(lastIndex + 1))
 
                         // If polymorphicGroupId changed, this port is in a new independent group — reset to unresolved
                         if (oldPolyGroupId !== newOutput.polymorphicGroupId && "originalVariant" in newOutput && newOutput.originalVariant) {
