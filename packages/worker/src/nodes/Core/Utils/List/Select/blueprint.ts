@@ -4,7 +4,7 @@ export const Blueprint = defineBlueprint({
     id: "Core.Utils.List.Select",
     displayName: "Select Element",
     description: "Selects a single element from a list input.",
-    icon: "ListPlus",
+    icon: "Brackets",
     accent: "utility",
     fields: [
         FieldBuilder.MultiOption({

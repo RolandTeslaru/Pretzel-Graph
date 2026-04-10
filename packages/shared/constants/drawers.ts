@@ -85,7 +85,8 @@ export const CORE_DRAWERS = {
       "Core.Utils.JsonInjector",
       "Core.Utils.Message.Compose",
       "Core.Utils.Tool.Runner",
-      "Core.Utils.List.Select"
+      "Core.Utils.List.Select",
+      "Core.Utils.Tool.Catalog"
     ],
   },
   prototypes: {

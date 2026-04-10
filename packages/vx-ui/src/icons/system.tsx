@@ -714,6 +714,27 @@ export const PencilRuler: React.FC<BaseIconProps> = (props) => (
 )
 PencilRuler.displayName = "PencilRuler"
 
+export const SwatchBook: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M11 17a4 4 0 0 1-8 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z"/>
+        <path d="M16.7 13H19a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7"/>
+        <path d="M7 17h.01"/>
+        <path d="m11 8 2.3-2.3a2.4 2.4 0 0 1 3.404.004L18.6 7.6a2.4 2.4 0 0 1 .026 3.434L9.9 19.8"/>
+    </BaseIcon>
+)
+SwatchBook.displayName = "SwatchBook"
+
+export const Toolbox: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M16 12v4"/>
+        <path d="M16 6a2 2 0 0 1 1.414.586l4 4A2 2 0 0 1 22 12v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 .586-1.414l4-4A2 2 0 0 1 8 6z"/>
+        <path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+        <path d="M2 14h20"/>
+        <path d="M8 12v4"/>
+    </BaseIcon>
+)
+Toolbox.displayName = "Toolbox"
+
 export const Mail: React.FC<BaseIconProps> = (props) => (
     <BaseIcon {...props}>
         <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/>
@@ -728,6 +749,14 @@ export const Wrench: React.FC<BaseIconProps> = (props) => (
     </BaseIcon>
 )
 Wrench.displayName = "Wrench"
+
+export const Brackets: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M16 3h3a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-3"/>
+        <path d="M8 21H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h3"/>
+    </BaseIcon>
+)
+Brackets.displayName = "Brackets"
 
 export const Braces: React.FC<BaseIconProps> = (props) => (
     <BaseIcon {...props}>
