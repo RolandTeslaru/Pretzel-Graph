@@ -71,7 +71,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                 }
 
                 try {
-                    await Chat.API.Message.add(api, { message })
+                    await Chat.API.Message.add(api, { messages: [message] })
 
                     sdk.actions.message.upsert(message)
 
@@ -217,6 +217,10 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     sdk.actions.ui.setSidebarVisibility(false);
                 }, 500)
             },
+            closeFullscreen: () => {
+                DialogSDK.actions.pop("fullscreen-chat");
+                sdk.actions.ui.setSidebarVisibility(true);
+            },
         },
     } satisfies ChatSDKActions
 }
@@ -242,5 +246,6 @@ export interface ChatSDKActions {
     ui: {
         setSidebarVisibility: (show: boolean) => void
         openFullscreen: () => void
+        closeFullscreen: () => void
     }
 }

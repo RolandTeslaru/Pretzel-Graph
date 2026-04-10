@@ -4,6 +4,7 @@ import { Foundations } from "@vx-agent-editor/shared/domain";
 import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
 
 
+
 export class Synthesizer {
 
     // ─── Projection ─────────────────────────────────────────────
