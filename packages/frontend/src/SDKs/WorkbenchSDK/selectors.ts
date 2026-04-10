@@ -243,7 +243,7 @@ export type _WorkBenchSDKSelectors = {
         hasIssues: (state: WorkbenchSDK.State) => boolean
     }
     node: {
-        get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node | null
+        get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node
         hasIssues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
         isTool: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
         extractBlueprint: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Blueprint | null

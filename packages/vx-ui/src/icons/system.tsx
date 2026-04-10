@@ -662,6 +662,14 @@ export const ArrowLeftRight: React.FC<BaseIconProps> = (props) => (
 )
 ArrowLeftRight.displayName = "ArrowLeftRight"
 
+// Arrow right right — two parallel arrows both pointing right
+export const ArrowRightRight: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="m16 3 4 4-4 4"/><path d="M4 7h16"/><path d="m16 13 4 4-4 4"/><path d="M4 17h16"/>
+    </BaseIcon>
+)
+ArrowRightRight.displayName = "ArrowRightRight"
+
 export const Undo: React.FC<BaseIconProps> = (props) => (
     <BaseIcon {...props}>
         <path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/>

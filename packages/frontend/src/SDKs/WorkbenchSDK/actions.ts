@@ -5,6 +5,7 @@ import { Port } from '@vx-agent-editor/shared/domain/Foundations/Port';
 import { Field } from '@vx-agent-editor/shared/domain/Foundations/Field';
 import { commit, debouncedCommit, withCommit, withAsyncCommit, debouncedValidateField, debouncedValidateInput } from './utils/actions';
 import { ShelfSDK } from '../ShelfSDK/sdk';
+import { cloneDeep } from 'lodash';
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
@@ -81,6 +82,93 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             
             debouncedValidateField(nodeId, field);
         }),
+        validate:          (...props) => { setState(s => { reducers.field.validate(s,      ...props) }) },
+        variadic: {
+            add: withCommit((nodeId, fieldId) => {
+                const field = sel.field.get(sdk.state, nodeId, fieldId);
+                if (!field || field.groupId === undefined)
+                    throw new Error(`Field ${fieldId} not found on node ${nodeId} or is not variadic`)
+
+                const groupId = field.groupId;
+                
+                setState(s => {
+                    s.isDirty = true;
+                    const node = sel.node.get(s, nodeId);
+                    const inputs = node.inputs.filter(i => i.groupId === groupId);
+                    const outsputs = node.outputs.filter(o => o.groupId === groupId);
+                    
+                    if(inputs.length > 0){
+                        const newInput = cloneDeep(inputs[inputs.length - 1]);
+                        const oldInputId = newInput.id;
+                        const oldPolyGroupId = newInput.polymorphicGroupId;
+
+                        const lastIndex = Number(oldInputId.split("_").slice(-1)[0]);
+                        const newIndexSufix = "_" + (lastIndex + 1)
+
+                        newInput.polymorphicGroupId = newInput.polymorphicGroupId?.replace(/_[^_]+$/, newIndexSufix) as string;
+
+                        newInput.id = newInput.id.replace(/_[^_]+$/, newIndexSufix) as Port.Input.Id;
+                        newInput.displayName = `Input ${lastIndex + 1}`
+
+                        // If polymorphicGroupId changed, this port is in a new independent group — reset to unresolved
+                        if (oldPolyGroupId !== newInput.polymorphicGroupId && "originalVariant" in newInput && newInput.originalVariant) {
+                            (newInput as any).variant = newInput.originalVariant;
+                        }
+
+                        node.inputs.push(newInput);
+                    }
+                    if(outsputs.length > 0){
+                        const newOutput = cloneDeep(outsputs[outsputs.length - 1]);
+                        const oldOutputId = newOutput.id;
+                        const oldPolyGroupId = newOutput.polymorphicGroupId;
+
+                        const lastIndex = Number(oldOutputId.split("_").slice(-1)[0]);
+                        const newIndexSufix = "_" + (lastIndex + 1)
+
+                        newOutput.polymorphicGroupId = newOutput.polymorphicGroupId?.replace(/_[^_]+$/, newIndexSufix) as string;
+
+                        newOutput.id = newOutput.id.replace(/_[^_]+$/, newIndexSufix) as Port.Output.Id;
+                        newOutput.displayName = `Output ${lastIndex + 1}`
+
+                        // If polymorphicGroupId changed, this port is in a new independent group — reset to unresolved
+                        if (oldPolyGroupId !== newOutput.polymorphicGroupId && "originalVariant" in newOutput && newOutput.originalVariant) {
+                            (newOutput as any).variant = newOutput.originalVariant;
+                        }
+
+                        node.outputs.push(newOutput);
+                    }
+                })
+            }),
+            remove: withCommit((nodeId, fieldId) => {
+                const field = sel.field.get(sdk.state, nodeId, fieldId);
+                if (!field || field.groupId === undefined)
+                    throw new Error(`Field ${fieldId} not found on node ${nodeId} or is not variadic`)
+
+                const groupId = field.groupId;
+                
+                setState(s => {
+                    s.isDirty = true;
+                    const node = sel.node.get(s, nodeId);
+                    const inputs = node.inputs.filter(i => i.groupId === groupId);
+                    const outputs = node.outputs.filter(o => o.groupId === groupId);
+
+                    if(inputs.length > 1){
+                        const lastInput = inputs[inputs.length - 1];
+                        reducers.input.remove(s, nodeId, lastInput.id);
+                    }
+                    if(outputs.length > 1){
+                        const lastOutput = outputs[outputs.length - 1];
+                        // Remove any edges sourcing from this output
+                        const edgeId = s.cache.outputHandlesMap[nodeId]?.[lastOutput.id];
+                        if (edgeId)
+                            reducers.edge.remove(s, edgeId);
+                        const idx = node.outputs.findIndex(o => o.id === lastOutput.id);
+                        if (idx !== -1)
+                            node.outputs.splice(idx, 1);
+                    }
+                })
+            })
+        },
         condition: {
             setLeftValue: withCommit((...props) => {
                 const [nodeId, fieldId] = props
@@ -190,7 +278,6 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                 }),
             },
         },
-        validate:          (...props) => { setState(s => { reducers.field.validate(s,      ...props) }) },
     } satisfies _WorkbenchSDKActions["field"]
 
     return {
@@ -303,6 +390,11 @@ export interface _WorkbenchSDKActions {
     };
     field                   : {
         setValue            : (nodeId: Workflow.Node.Id, field: Field, value: any) => void;
+        validate            : DropFirstArg<WorkbenchSDK.Reducers['field']['validate']>;
+        variadic: {
+            add: (nodeId: Workflow.Node.Id, fieldId: Field.Id) => void
+            remove: (nodeId: Workflow.Node.Id, fieldId: Field.Id) => void
+        }
         condition           : {
             setLeftValue    : (
                 nodeId: Workflow.Node.Id,
@@ -414,7 +506,6 @@ export interface _WorkbenchSDKActions {
                 ) => void;
             };
         };
-        validate            : DropFirstArg<WorkbenchSDK.Reducers['field']['validate']>;
     };
     input                   : {
         setValue            : (nodeId: Workflow.Node.Id, input: Port.Input, value: any) => void;

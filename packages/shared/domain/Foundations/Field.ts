@@ -18,6 +18,7 @@ export namespace Field {
         displayName: z.string(),
         description: z.string().optional(),
         tooltip: z.string().optional(),
+        groupId: z.string().brand("GroupId").optional(),
     })
     export type Base = z.infer<typeof Base>
 
@@ -34,6 +35,7 @@ export namespace Field {
         "List",
         "Condition",
         "CaseList",
+        "Variadic",
     ])
     export type Variant = z.infer<typeof Variant>
 
@@ -108,6 +110,12 @@ export namespace Field {
     export const List = Field.Base.extend({
         variant: configLiteral("List"),
         initialValue: z.array(z.string()),
+    })
+
+    export const Variadic = Field.Base.extend({
+        variant: configLiteral("Variadic"),
+        initialValue: z.array(z.string()),
+        groupId: z.string().brand("GroupId"),
     })
 
     export namespace Condition {
@@ -300,6 +308,7 @@ export namespace Field {
     export interface List extends z.infer<typeof List> { }
     export interface Condition extends z.infer<typeof Condition.Schema> { }
     export interface CaseList extends z.infer<typeof CaseList.Schema> { }
+    export interface Variadic extends z.infer<typeof Variadic> { }
 
     export const Schema = z.discriminatedUnion("variant", [
         Integer,
@@ -314,6 +323,7 @@ export namespace Field {
         List,
         Condition.Schema,
         CaseList.Schema,
+        Variadic,
     ]);
 
     export type Schema = z.infer<typeof Schema>;

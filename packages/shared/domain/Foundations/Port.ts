@@ -36,6 +36,7 @@ export namespace Port {
         displayName: z.string().optional(),
         tooltip: z.string().optional(),
         polymorphicGroupId: z.string().optional(),
+        groupId: z.string().brand("GroupId").optional(),
         internal: z.boolean().optional(),
     })
     export interface Base extends z.infer<typeof Base> { }

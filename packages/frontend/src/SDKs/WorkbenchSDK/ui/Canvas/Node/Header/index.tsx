@@ -12,13 +12,13 @@ interface Props {
 
 export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionStatus }) => {
   const isMinimized = node.isMinimized;
-
+  const isFlipped = node.isFlipped;
   if (isMinimized)
     return (
       <MinimizedHandles node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped}>
         <div className='px-4 h-fit my-auto'>
           <LazyIcon
-            className={`w-10 h-10`}
+            className={`w-10 h-10 ${isFlipped ? "scale-x-[-1]" : ""}`}
             name={node.icon as string}
             style={{ color: `var(--${node.accent}-foreground)` }}
           />
@@ -35,7 +35,7 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionS
   return (
     <div className="flex w-full items-center gap-3 px-4 py-1 rounded-t-xl " >
       <LazyIcon
-        className={`${isMinimized ? "w-8 h-8" : "w-5.5 h-5.5"}`}
+        className={`${isMinimized ? "w-8 h-8" : "w-5.5 h-5.5"} ${isFlipped ? "scale-x-[-1]" : ""}`}
         name={node.icon as string}
         style={{ color: `var(--${node.accent}-foreground)` }}
       />
