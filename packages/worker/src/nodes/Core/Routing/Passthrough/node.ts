@@ -14,8 +14,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const output: unknown[] = Object.values(inputs).flatMap(value => value ?? []);
+        const result: Record<string, unknown> = {};
 
-        return { output };
+        for (const [key, value] of Object.entries(inputs)) {
+            const index = key.replace("input_", "");
+            result[`output_${index}`] = value;
+        }
+
+        return result as InferOutputs<typeof Blueprint>;
     }
 }

@@ -74,6 +74,7 @@ export const CORE_DRAWERS = {
       "Core.Routing.Router",
       "Core.Routing.Merge",
       "Core.Routing.Accumulator",
+      "Core.Routing.Passthrough",
     ],
   },
   utilities: {

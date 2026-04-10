@@ -289,6 +289,17 @@ export namespace FieldBuilder {
 
 
 
+    export function Variadic<TId extends string>(
+        config: { groupId: string } & BaseProps<TId>
+    ): Ret<TId, "Variadic", Foundations.Field.Variadic, false, false> {
+        return {
+            ...buildBase(config),
+            variant: "Variadic",
+            initialValue: [],
+            groupId: config.groupId as Foundations.Field.Variadic["groupId"],
+        };
+    }
+
     export function Condition<TId extends string, TReq extends boolean = false>(config: {
         initialValue: Foundations.Field.Condition.Value;
     } & BaseProps<TId, TReq>): Ret<TId, "Condition", Foundations.Field.Condition, TReq, true>;
