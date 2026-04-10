@@ -22,6 +22,7 @@ export namespace OutputBuilder {
         displayName: string;
         tooltip?: string;
         internal?: boolean;
+        groupId?: string;
     }
 
     function buildBase<TId extends string>(config: BaseProps<TId>) {
@@ -30,6 +31,7 @@ export namespace OutputBuilder {
             displayName: config.displayName,
             tooltip: config.tooltip,
             internal: config.internal,
+            groupId: config.groupId as Port.Base["groupId"],
         } satisfies { id: TId & Port.Output.Id } & Omit<Port.Output.Base, "id">;
     }
 

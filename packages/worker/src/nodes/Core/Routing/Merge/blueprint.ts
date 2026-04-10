@@ -7,22 +7,24 @@ export const Blueprint = defineBlueprint({
     icon: "Merge",
     accent: "group-routing",
     fields: [
-        FieldBuilder.List({
-            id: "ordering",
-            displayName: "Input Ordering",
-            initialValue: ["input_1", "input_2"],
+        FieldBuilder.Variadic({
+            id: "inputPorts",
+            displayName: "Input Ports",
+            groupId: "variadic_inputs_1",
         }),
     ],
     inputs: [
         InputBuilder.UnresolvedList({
             id: "input_1",
             displayName: "Input 1",
-            polymorphicGroupId: "data"
+            polymorphicGroupId: "data",
+            groupId: "variadic_inputs_1",
         }),
         InputBuilder.UnresolvedList({
             id: "input_2",
             displayName: "Input 2",
-            polymorphicGroupId: "data"
+            polymorphicGroupId: "data",
+            groupId: "variadic_inputs_1",
         }),
     ],
     outputs: [

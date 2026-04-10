@@ -1,6 +1,6 @@
 {
-  "version": "1775832713890",
-  "generatedAt": "2026-04-10T14:51:53.890Z",
+  "version": "1775844678887",
+  "generatedAt": "2026-04-10T18:11:18.887Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -1404,16 +1404,14 @@
       "toolCompatible": false,
       "fields": [
         {
-          "id": "ordering",
+          "id": "inputPorts",
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "displayName": "Input Ordering",
-          "variant": "List",
-          "initialValue": [
-            "input_1",
-            "input_2"
-          ]
+          "displayName": "Input Ports",
+          "groupId": "variadic_inputs_1",
+          "variant": "Variadic",
+          "initialValue": []
         },
         {
           "id": "signalDependency",
@@ -1467,6 +1465,7 @@
           "id": "input_1",
           "displayName": "Input 1",
           "polymorphicGroupId": "data",
+          "groupId": "variadic_inputs_1",
           "internal": false,
           "variant": "UnresolvedList",
           "originalVariant": "UnresolvedList",
@@ -1476,6 +1475,7 @@
           "id": "input_2",
           "displayName": "Input 2",
           "polymorphicGroupId": "data",
+          "groupId": "variadic_inputs_1",
           "internal": false,
           "variant": "UnresolvedList",
           "originalVariant": "UnresolvedList",
@@ -1492,6 +1492,112 @@
         }
       ],
       "description": "Merges multiple inputs into a single output."
+    },
+    "Core.Routing.Passthrough": {
+      "id": "Core.Routing.Passthrough",
+      "displayName": "Passthrough",
+      "icon": "ArrowRightRight",
+      "accent": "group-routing",
+      "toolCompatible": false,
+      "fields": [
+        {
+          "id": "ports",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Ports",
+          "groupId": "passthrough",
+          "variant": "Variadic",
+          "initialValue": []
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input_0",
+          "displayName": "Input 0",
+          "polymorphicGroupId": "passthrough_0",
+          "groupId": "passthrough",
+          "internal": false,
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved",
+          "required": false
+        },
+        {
+          "id": "input_1",
+          "displayName": "Input 1",
+          "polymorphicGroupId": "passthrough_1",
+          "groupId": "passthrough",
+          "internal": false,
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "output_0",
+          "displayName": "Output 0",
+          "polymorphicGroupId": "passthrough_0",
+          "groupId": "passthrough",
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
+        },
+        {
+          "id": "output_1",
+          "displayName": "Output 1",
+          "polymorphicGroupId": "passthrough_1",
+          "groupId": "passthrough",
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
+        }
+      ],
+      "description": "Forwards each input directly to the output at the same index."
     },
     "Core.Routing.Router": {
       "id": "Core.Routing.Router",
