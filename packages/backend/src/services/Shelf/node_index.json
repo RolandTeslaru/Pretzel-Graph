@@ -1,6 +1,6 @@
 {
-  "version": "1775765499050",
-  "generatedAt": "2026-04-09T20:11:39.050Z",
+  "version": "1775832713890",
+  "generatedAt": "2026-04-10T14:51:53.890Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -326,11 +326,10 @@
       ],
       "inputs": [
         {
-          "id": "input",
-          "displayName": "Input",
+          "id": "messages",
+          "displayName": "Messages",
           "internal": false,
-          "variant": "Message",
-          "initialValue": "",
+          "variant": "MessageList",
           "required": true
         }
       ],

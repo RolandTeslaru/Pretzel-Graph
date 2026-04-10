@@ -8,9 +8,9 @@ export const Blueprint = defineBlueprint({
     accent: "port-Message",
     fields: [],
     inputs: [
-        InputBuilder.Message({
-            id: "input",
-            displayName: "Input",
+        InputBuilder.MessageList({
+            id: "messages",
+            displayName: "Messages",
             required: true
         })
     ],
