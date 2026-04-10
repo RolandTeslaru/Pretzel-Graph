@@ -12,11 +12,11 @@ export class InternalChatController {
     async addMessage(@Body() body: any) {
         const payload = Chat.API.Message.Add.Request.parse(body);
         const supabase = createServiceClient();
-        const { message } = payload;
+        const { messages } = payload;
 
         await supabase
             .from('chat_messages')
-            .insert({
+            .insert(messages.map(message => ({
                 id: message.id,
                 chat_id: message.chat_id,
                 role: message.role,
@@ -24,7 +24,7 @@ export class InternalChatController {
                 data: message.data ?? {},
                 attachments: message.attachments ?? null,
                 created_at: new Date(),
-            })
+            })))
             .throwOnError();
 
         return {};

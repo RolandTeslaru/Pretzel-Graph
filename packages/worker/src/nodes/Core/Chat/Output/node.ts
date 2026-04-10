@@ -7,6 +7,7 @@ import { InferFields, InferInputs, InferOutputs } from "src/types";
 
 import { Chat } from "@vx-agent-editor/shared/domain";
 import { AxiosService } from "src/axios";
+import { LC } from "src/langchain";
 
 const InternalChatAPI = {
     messageAdd: (payload: Chat.API.Message.Add.Request) =>
@@ -31,54 +32,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const incomingEdges = context.workflowCache.incomingEdgesMap[this.workflowNode.id];
         const upstreamNodeId = Object.keys(incomingEdges)[0] as Workflow.Node.Id | undefined;
 
-        if (upstreamNodeId) {
-            const chatId = context.session.chatId;
+        const chatId = context.session.chatId;
 
-            if (!chatId)
-                return;
+        if (!chatId)
+            return;
 
-            this.chatId = chatId;
-
-            // Create the response message
-            const responseMessage = {
-                id: Chat.Message.createId(),
-                role: "ai",
-                content: "",
-                job_id: context.jobId,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                chat_id: chatId!,
-                data: {
-                    isProcessing: true,
-                    tool_calls: []
-                }
-            } satisfies Chat.Message.AI
-
-            this.responseMessageId = responseMessage.id;
-
-            await InternalChatAPI.messageAdd({ message: responseMessage })
-            console.log("Created response message with id ", responseMessage.id, " for chat ", chatId)
-
-
-            this.emit<Chat.Event.Response.Created>({
-                type: "response:created",
-                channel: Chat.Event.getChannel(chatId),
-                responseMessage,
-                chatId
-            })
-
-
-            // Listen and emit chunks as they come from the LLM
-            context.streamController.onLlmChunk(upstreamNodeId, (content) => {
-                this.emit<Chat.Event.Response.Chunk>({
-                    type: "response:chunk",
-                    channel: Chat.Event.getChannel(chatId),
-                    chatId,
-                    responseMessageId: responseMessage.id,
-                    content
-                })
-            })
-        }
+        this.chatId = chatId;
     }
 
     protected override async onRun(
@@ -86,34 +45,107 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { input } = inputs;
+        const { messages: lcMessages } = inputs
 
         context.updateSession(d => {
-            d.messages.push(input);
+            lcMessages.forEach(msg => {
+                d.messages.push(msg);
+            })
         });
 
-        const rawContent = input.content;
-        const content = typeof rawContent === "string"
-            ? rawContent
-            : rawContent
-                .map((b: any) => typeof b === "string" ? b : ("text" in b ? b.text : ""))
-                .join("");
+        if (!this.chatId)
+            return {};
+
+        let error = null;
+
+        const messages: Chat.Message[] = lcMessages.map(_lcMsg => {
+            if (_lcMsg.type === "ai") {
+                const lcMsg = _lcMsg as LC.AIMessage;
+                return {
+                    id: Chat.Message.createId(),
+                    role: "ai",
+                    content: lcMsg.text,
+                    chat_id: this.chatId!,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    job_id: context.jobId,
+                    data: {
+                        isProcessing: false,
+                        tool_calls: (lcMsg.tool_calls ?? []).map(tc => ({
+                            id: Chat.ToolCall.Id.parse(tc.id ?? crypto.randomUUID()),
+                            name: tc.name,
+                            arguments: tc.args,
+                        })),
+                    },
+                } satisfies Chat.Message.AI;
+            }
+
+            if (_lcMsg.type === "human") {
+                return {
+                    id: Chat.Message.createId(),
+                    role: "human",
+                    content: _lcMsg.text,
+                    chat_id: this.chatId!,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    job_id: context.jobId,
+                } satisfies Chat.Message.Human;
+            }
+
+            if (_lcMsg.type === "tool") {
+                const lcMsg = _lcMsg as LC.ToolMessage;
+                return {
+                    id: Chat.Message.createId(),
+                    role: "tool",
+                    content: lcMsg.text,
+                    chat_id: this.chatId!,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    job_id: context.jobId,
+                    data: {
+                        tool_call_id: Chat.ToolCall.Id.parse(lcMsg.tool_call_id),
+                        tool_name: lcMsg.name ?? "",
+                        status: "success" as const,
+                    },
+                } satisfies Chat.Message.Tool;
+            }
+
+            if (_lcMsg.type === "system") {
+                return {
+                    id: Chat.Message.createId(),
+                    role: "system",
+                    content: _lcMsg.text,
+                    chat_id: this.chatId!,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    job_id: context.jobId,
+                } satisfies Chat.Message.System;
+            }
+
+            error = new Error(`Unsupported LangChain message type "${_lcMsg.type}"`);
+            return null as never;
+        });
 
 
-        if (this.responseMessageId && this.chatId) {
-            this.emit<Chat.Event.Response.Finished>({
-                type: "response:finished",
-                channel: Chat.Event.getChannel(this.chatId!),
-                responseMessageId: this.responseMessageId!,
-                finalContent: content,
-                chatId: this.chatId!,
-            })
+        this.emit<Chat.Event.Message.Added>({
+            type: "message:added",
+            channel: Chat.Event.getChannel(this.chatId),
+            chatId: this.chatId,
+            messages
+        });
 
-            await InternalChatAPI.messageUpdate({
-                messageId: this.responseMessageId!,
-                content
-            })
-        }
+        // this.emit<Chat.Event.Response.Finished>({
+        //     type: "response:finished",
+        //     channel: Chat.Event.getChannel(this.chatId),
+        //     responseMessageId: this.responseMessageId!,
+        //     finalContent: content,
+        //     chatId: this.chatId,
+        // });
+
+        await InternalChatAPI.messageAdd({ messages });
+
+        if(error)
+            throw error;
 
         return {};
     }

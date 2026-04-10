@@ -66,7 +66,7 @@ function ScrollBar({
     >
       <ScrollAreaPrimitive.ScrollAreaThumb 
         className={classNames(
-          "relative flex-1 rounded-full bg-neutral-500",
+          "relative flex-1 rounded-full bg-border",
           scrollBarThumbClassName
         )} />
     </ScrollAreaPrimitive.ScrollAreaScrollbar>

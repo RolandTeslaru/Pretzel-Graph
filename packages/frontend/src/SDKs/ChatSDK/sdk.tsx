@@ -51,6 +51,7 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
             s.messagesRecord[messageId].job_id = jobId;
         },
         upsertMessage: (s, message) => {
+            // If its not in the messages record then its not in the msessage stack aswell, so push it.
             if (!s.messagesRecord[message.id]) {
                 s.messages.push(message.id);
             }
@@ -68,21 +69,31 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
     public readonly selectors: ChatSDK.Selectors = {}
 
 
-    public handleOnEvent = (event: Chat.Event) => {
-        switch (event.type) {
+    public handleOnEvent = (e: Chat.Event) => {
+        switch (e.type) {
+            case "message:added":
+                this.useStore.setState(s => {
+                    e.messages.forEach(m => {
+                        this.reducers.upsertMessage(s, m);
+
+                        if (DialogSDK.state.dialogs.has("fullscreen-chat") === false)
+                            s.isSidebarVisible = true;
+                    })
+                })
+                break;
             case "response:created":
                 this.useStore.setState(s => {
-                    this.reducers.upsertMessage(s, event.responseMessage);
+                    this.reducers.upsertMessage(s, e.responseMessage);
 
                     if (DialogSDK.state.dialogs.has("fullscreen-chat") === false)
                         s.isSidebarVisible = true;
                 })
                 break;
             case "response:chunk":
-                this.actions.message.appendContent(event.responseMessageId, event.content);
+                this.actions.message.appendContent(e.responseMessageId, e.content);
                 break;
             case "response:finished":
-                this.actions.message.setContent(event.responseMessageId, event.finalContent);
+                this.actions.message.setContent(e.responseMessageId, e.finalContent);
                 break;
         }
     }
