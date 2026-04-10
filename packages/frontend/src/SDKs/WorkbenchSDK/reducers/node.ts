@@ -251,6 +251,7 @@ export const nodeReducers = {
         s.workflow.data.staticValues[nodeId] = next;
     },
     resolvePolymorphicPortGroup: (s, nodeId, triggerPort, resolvedVariant) => {
+        console.log("Resolving polymorphic group", { nodeId, triggerPort, resolvedVariant })
         const node = s.workflow.data.nodes[nodeId];
 
         if(!Port.isPolymorphic(triggerPort) || !triggerPort.polymorphicGroupId)
@@ -262,6 +263,8 @@ export const nodeReducers = {
         const outputs = node.outputs.filter(o => Port.isPolymorphic(o) && o.polymorphicGroupId === polymorphicGroupId)
 
         inputs.forEach(i => {
+            if(!Port.isUnresolvedLike(i.variant))
+                return
             if (i.variant === "UnresolvedList") {
                 (i as any).variant = Port.LIST_PROMOTION_MAP[resolvedVariant] ?? resolvedVariant;
             } else if (i.variant === "UnresolvedScalar") {
@@ -272,6 +275,9 @@ export const nodeReducers = {
         })
 
         outputs.forEach(o => {
+            if(!Port.isUnresolvedLike(o.variant))
+                return
+
             if (o.variant === "UnresolvedList") {
                 (o as any).variant = Port.LIST_PROMOTION_MAP[resolvedVariant] ?? resolvedVariant;
             } else if (o.variant === "UnresolvedScalar") {
