@@ -1,6 +1,6 @@
 {
-  "version": "1775853191394",
-  "generatedAt": "2026-04-10T20:33:11.394Z",
+  "version": "1775865175346",
+  "generatedAt": "2026-04-10T23:52:55.346Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -2644,6 +2644,295 @@
       ],
       "description": "This node talks to Anthropic Claude models"
     },
+    "Integrations.Coinbase.Market": {
+      "id": "Integrations.Coinbase.Market",
+      "displayName": "DeFi Market Data",
+      "icon": "Coinbase",
+      "accent": "port-Json",
+      "toolCompatible": true,
+      "fields": [
+        {
+          "id": "dataSource",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Source",
+          "tooltip": "Pyth returns live price data for crypto assets. DeFiLlama returns TVL and chain breakdown for DeFi protocols.",
+          "variant": "MultiOption",
+          "initialValue": "pyth",
+          "options": [
+            {
+              "value": "pyth",
+              "displayName": "Pyth — Asset Price"
+            },
+            {
+              "value": "defillama",
+              "displayName": "DeFiLlama — Protocol TVL"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "query",
+          "displayName": "Query",
+          "tooltip": "For Pyth: a coin symbol (e.g. BTC, ETH, SOL). For DeFiLlama: a protocol slug (e.g. uniswap, aave, curve).",
+          "internal": false,
+          "variant": "Text",
+          "initialValue": "",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "price",
+          "displayName": "Price (USD)",
+          "tooltip": "Numeric USD price. Only populated when Data Source is Pyth.",
+          "variant": "Data"
+        },
+        {
+          "id": "data",
+          "displayName": "Full Data",
+          "tooltip": "Complete parsed response from the selected data source.",
+          "variant": "Json"
+        }
+      ],
+      "description": "Fetches live DeFi market data. Pyth for real-time asset prices, DeFiLlama for protocol TVL and analytics. No API key required."
+    },
+    "Integrations.Coinbase.Token": {
+      "id": "Integrations.Coinbase.Token",
+      "displayName": "ERC-20 Token",
+      "icon": "Coinbase",
+      "accent": "port-Json",
+      "toolCompatible": true,
+      "fields": [
+        {
+          "id": "cdpKeyId",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "CDP Key ID",
+          "tooltip": "Coinbase Developer Platform API key ID. Not sensitive on its own.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "your-cdp-key-id"
+        },
+        {
+          "id": "cdpKeySecret",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "CDP Key Secret",
+          "tooltip": "Coinbase Developer Platform API key secret.",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "walletSecret",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Wallet Secret",
+          "tooltip": "CDP wallet encryption secret. Together with the key ID and secret, this identifies your managed wallet.",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "networkId",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Network",
+          "tooltip": "The EVM network your wallet operates on.",
+          "variant": "MultiOption",
+          "initialValue": "base-mainnet",
+          "options": [
+            {
+              "value": "base-mainnet",
+              "displayName": "Base"
+            },
+            {
+              "value": "ethereum-mainnet",
+              "displayName": "Ethereum"
+            },
+            {
+              "value": "polygon-mainnet",
+              "displayName": "Polygon"
+            },
+            {
+              "value": "arbitrum-mainnet",
+              "displayName": "Arbitrum"
+            },
+            {
+              "value": "base-sepolia",
+              "displayName": "Base Sepolia (testnet)"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "walletAddress",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Wallet Address",
+          "tooltip": "Optional. Load an existing CDP wallet by its EVM address. If empty, a new wallet is created.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "0x... (leave empty to create a new wallet)"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "tokenAddress",
+          "displayName": "Token Address",
+          "tooltip": "ERC-20 contract address. Leave empty to query native ETH/MATIC balance.",
+          "internal": false,
+          "variant": "Text",
+          "initialValue": "",
+          "required": false
+        },
+        {
+          "id": "targetAddress",
+          "displayName": "Target Address",
+          "tooltip": "Address to check the balance for. Defaults to the node's own wallet address.",
+          "internal": false,
+          "variant": "Text",
+          "initialValue": "",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "balance",
+          "displayName": "Balance",
+          "tooltip": "Token balance as a number.",
+          "variant": "Data"
+        },
+        {
+          "id": "data",
+          "displayName": "Full Response",
+          "tooltip": "Complete balance response including token metadata.",
+          "variant": "Json"
+        }
+      ],
+      "description": "Read ERC-20 token balances and allowances, or transfer and approve tokens using a Coinbase-managed CDP wallet. No private key — Coinbase handles signing."
+    },
     "Integrations.Google.GenerativeAI": {
       "id": "Integrations.Google.GenerativeAI",
       "displayName": "Google Gen AI",
@@ -3669,6 +3958,144 @@
         }
       ],
       "description": "Searches the web using Tavily and returns the results as documents."
+    },
+    "Integrations.Uniswap.Swap": {
+      "id": "Integrations.Uniswap.Swap",
+      "displayName": "Uniswap",
+      "icon": "Uniswap",
+      "accent": "port-ToolList",
+      "toolCompatible": false,
+      "fields": [
+        {
+          "id": "uniswapApiKey",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Uniswap API Key",
+          "tooltip": "API key for the Uniswap Trading API.",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "privateKey",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "EVM Private Key",
+          "tooltip": "Private key used to sign approvals and swap transactions. Never stored outside the workflow vault.",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "chain",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Chain",
+          "tooltip": "The EVM chain to operate on.",
+          "variant": "MultiOption",
+          "initialValue": "1",
+          "options": [
+            {
+              "value": "1",
+              "displayName": "Ethereum"
+            },
+            {
+              "value": "137",
+              "displayName": "Polygon"
+            },
+            {
+              "value": "42161",
+              "displayName": "Arbitrum"
+            },
+            {
+              "value": "8453",
+              "displayName": "Base"
+            },
+            {
+              "value": "10",
+              "displayName": "Optimism"
+            },
+            {
+              "value": "43114",
+              "displayName": "Avalanche"
+            },
+            {
+              "value": "42220",
+              "displayName": "Celo"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "rpcUrl",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "RPC URL",
+          "tooltip": "Custom RPC endpoint. If empty, uses the default public transport for the selected chain.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "tools",
+          "displayName": "Uniswap Tools",
+          "tooltip": "3 tools: uniswap_check_approval, uniswap_get_quote, uniswap_swap_tokens.",
+          "variant": "ToolList"
+        }
+      ],
+      "description": "Provides Uniswap tools for token swapping on EVM chains. Exposes check_approval, get_quote and swap_tokens as a tool list for agents. Requires a Uniswap API key and an EVM private key for signing transactions."
     }
   }
 }

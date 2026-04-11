@@ -95,6 +95,8 @@ export const lazyIconsMapping = {
     import("./BRAND_ICONS/Cassandra"),
   Chroma: () =>
     import("./BRAND_ICONS/ChromaIcon"),
+  Coinbase: () =>
+    import("./BRAND_ICONS/Coinbase"),
   Cleanlab: () =>
     import("./BRAND_ICONS/Cleanlab"),
   Clickhouse: () =>
@@ -319,6 +321,8 @@ export const lazyIconsMapping = {
     import("./BRAND_ICONS/TwelveLabs"),
   TwitterX: () =>
     import("./BRAND_ICONS/Twitter X"),
+  Uniswap: () =>
+    import("./BRAND_ICONS/Uniswap"),
   Unstructured: () =>
     import("./BRAND_ICONS/Unstructured"),
   Upstash: () =>
