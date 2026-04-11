@@ -66,7 +66,14 @@ export namespace Workflow {
 
 
 
+    export namespace Arc {
+        export const Id = z.string().brand("ArcId")
+        export type Id = z.infer<typeof Id>
 
+        export function getId(sourceNodeId: Node.Id, targetNodeId: Node.Id){
+            return `${sourceNodeId}-${targetNodeId}` as Arc.Id
+        }
+    }
 
 
 
@@ -213,9 +220,9 @@ export namespace Workflow {
             >
         >,
         outgoingEdgesMap: Record<
-            Workflow.Node.Id,     // the node where the edges are going out from
+            Workflow.Node.Id,     // (source node id) the node where the edges are going out from
             Record<
-                Workflow.Node.Id,
+                Workflow.Node.Id, // (target node id) 
                 Workflow.Edge.Id
             >
         >,
@@ -238,9 +245,12 @@ export namespace Workflow {
             Record<Workflow.Node.Id, Workflow.Edge.Id[]>
         >,
         dependentsMap: Record<
-            Workflow.Node.Id,
-            Record<Workflow.Node.Id, Workflow.Edge.Id[]>
-        >
+            Workflow.Node.Id,       // Source Noe
+            Record<
+                Workflow.Node.Id,   // Target Node
+                Workflow.Edge.Id[]
+            >
+        >,
     }
 
     export namespace Cache {
@@ -291,7 +301,6 @@ export namespace Workflow {
 
             cache.outputHandlesMap[sourceNodeId][sourceHandleId] = edge.id
 
-
             // dependenciesMap
             if (!cache.dependenciesMap[targetNodeId][sourceNodeId]) {
                 cache.dependenciesMap[targetNodeId][sourceNodeId] = [];
@@ -305,6 +314,36 @@ export namespace Workflow {
         })
 
         return cache
+    }
+
+    export function deriveArcs(cache: Cache) {
+        const arcMap: Record<
+            Workflow.Node.Id,       // Source node id
+            Set<
+                Workflow.Node.Id    // Target Node id
+                >
+        > = {} 
+
+        for (const [src, targets] of Object.entries(cache.outgoingEdgesMap)){
+            arcMap[src as Workflow.Node.Id] = new Set(Object.keys(targets) as Workflow.Node.Id[])
+        }
+
+        return arcMap
+    }
+
+    export function deriveReversedArcs(cache: Cache) {
+        const reversedArcMap: Record<
+            Workflow.Node.Id,       // Target node id
+            Set<
+                Workflow.Node.Id    // Source Node id
+                >
+        > = {} 
+
+        for (const [tgt, sources] of Object.entries(cache.incomingEdgesMap)){
+            reversedArcMap[tgt as Workflow.Node.Id] = new Set(Object.keys(sources) as Workflow.Node.Id[])
+        }
+
+        return reversedArcMap
     }
 }
 export type Workflow = z.infer<typeof Workflow.Schema> 
