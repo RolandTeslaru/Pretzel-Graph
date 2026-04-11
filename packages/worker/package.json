@@ -13,6 +13,8 @@
         "test": "jest"
     },
     "dependencies": {
+        "@coinbase/agentkit": "^0.10.4",
+        "@coinbase/cdp-sdk": "^1.47.0",
         "@langchain/community": "^1.1.27",
         "@vx-agent-editor/shared": "*",
         "axios": "^1.13.6",
@@ -24,6 +26,7 @@
         "reflect-metadata": "^0.2.2",
         "tsyringe": "^4.10.0",
         "uuid": "^13.0.0",
+        "viem": "^2.47.12",
         "zod": "^4.3.6"
     },
     "devDependencies": {
