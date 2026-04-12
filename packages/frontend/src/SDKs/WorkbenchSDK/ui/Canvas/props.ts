@@ -7,6 +7,7 @@ import { ProblematicCycleSelectionNode } from './extraNodes'
 import { nodeColorsName } from '@/utils/styleUtils'
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
 import { Workflow, Foundations, Validation } from "@vx-agent-editor/shared/domain"
+import { withCyclesRecompute } from '../../utils/actions'
 
 type NodeDriver = WorkbenchSDK.NodeDriver | WorkbenchSDK.CycleSelectionNodeDriver
 type EdgeDriver = WorkbenchSDK.EdgeDriver
@@ -92,7 +93,7 @@ export const createCanvasCallbacks = (
         },
 
         onNodesChange: (changes) => {
-            WorkbenchSDK.useStore.setState(s => {
+            WorkbenchSDK.useStore.setState(withCyclesRecompute(s => {
                 changes.forEach(change => {
                     switch (change.type) {
                         // case "position" is handled in onNodeDragStop
@@ -107,7 +108,7 @@ export const createCanvasCallbacks = (
                             break;
                     }
                 })
-            })
+            }))
 
             WorkbenchSDK.actions.debouncedCommit();
 
@@ -115,7 +116,7 @@ export const createCanvasCallbacks = (
         },
 
         onEdgesChange: (changes) => {
-            WorkbenchSDK.setState(s => {
+            WorkbenchSDK.setState(withCyclesRecompute(s => {
                 changes.forEach(change => {
                     switch (change.type) {
                         case "add":
@@ -130,7 +131,7 @@ export const createCanvasCallbacks = (
                             break;
                     }
                 })
-            })
+            }))
 
             WorkbenchSDK.actions.debouncedCommit();
 
