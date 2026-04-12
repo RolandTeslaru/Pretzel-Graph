@@ -50,7 +50,7 @@ export function createCycleSelectionDrivers(
 ): WorkbenchSDK.CycleSelectionNodeDriver[] {
     return cycleIssues.map((issue, i) => {
 
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        let minX, minY, maxX, maxY;
 
         for (const nodeId of issue.nodes) {
             const pos = wf.data.ui.layout[nodeId] ?? { x: 0, y: 0 };
@@ -58,19 +58,19 @@ export function createCycleSelectionDrivers(
             const w = el?.offsetWidth ?? 250;
             const h = el?.offsetHeight ?? 150;
 
-            minX = Math.min(minX, pos.x);
-            minY = Math.min(minY, pos.y);
-            maxX = Math.max(maxX, pos.x + w);
-            maxY = Math.max(maxY, pos.y + h);
+            minX = !minX ? pos.x : Math.min(minX, pos.x);
+            minY = !minY ? pos.y : Math.min(minY, pos.y);
+            maxX = !maxX ? pos.x + w : Math.max(maxX, pos.x + w);
+            maxY = !maxY ? pos.y + h : Math.max(maxY, pos.y + h);
         }
 
         return {
             id: `cycle-selection-${i}`,
             type: "cycleSelectionNode" as const,
-            position: { x: minX - PADDING, y: minY - PADDING },
+            position: { x: minX! - PADDING, y: minY! - PADDING },
             data: {
-                width: (maxX - minX) + PADDING * 2,
-                height: (maxY - minY) + PADDING * 2,
+                width: (maxX! - minX!) + PADDING * 2,
+                height: (maxY! - minY!) + PADDING * 2,
                 nodeIds: issue.nodes,
                 issue,
             },
