@@ -13,24 +13,25 @@ export const nodeReducers = {
         const nodes = s.workflow.data.nodes
         const staticValues = s.workflow.data.staticValues
 
-        if (nodes[deletedNodeId])
-            delete nodes[deletedNodeId];
+        // IMPORTANT: remove incident edges BEFORE deleting the node.
+        // Edge removal relies on node/port lookups for validation and cache cleanup.
 
-        delete staticValues[deletedNodeId];
-
-        // Delete the edges coming into the node 
+        // Delete the edges coming into the node
         const inNodes = cacheReducers.ensureIncomingNodeEdges(s, deletedNodeId)
-
         Object.entries(inNodes).forEach(([_inNodeId, _edgeId]) => {
             edgeReducers.remove(s, _edgeId as Workflow.Edge.Id);
         })
 
-        // Delete the edges going out of the nodes
+        // Delete the edges going out of the node
         const outNodes = cacheReducers.ensureOutgoingNodeEdges(s, deletedNodeId)
-
         Object.entries(outNodes).forEach(([_outNodeId, _edgeId]) => {
             edgeReducers.remove(s, _edgeId as Workflow.Edge.Id);
         })
+
+        if (nodes[deletedNodeId])
+            delete nodes[deletedNodeId];
+
+        delete staticValues[deletedNodeId];
 
         cacheReducers.deleteNode(s, deletedNodeId);
         layoutReducers.node.remove(s, deletedNodeId);
