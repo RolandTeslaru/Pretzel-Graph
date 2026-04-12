@@ -39,8 +39,14 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 clickedNodeId: null,
                 draggedHandle: null,
                 cache: cloneDeep(Workflow.Cache.INITIAL),
-                issues: {},
+                issues: {
+                    nodes: {},
+                    cycles: []
+                },
+                cycles: [],
+                cyclesDirty: false,
                 reconcilingFields: {},
+                stronglyConnectedComponents: [],
                 clipboard: {
                     nodes: new Set(),
                     edges: new Set(),
@@ -51,6 +57,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
             partialize: (s) => ({
                 isDirty: true,
                 workflow: s.workflow,
+                cyclesDirty: s.cyclesDirty,
             })
         }
         ),
@@ -78,7 +85,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
             const value = staticVals[fieldId] as T
             return [
                 value,
-                s.issues[nodeId]?.fields[fieldId] ?? null,
+                s.issues.nodes[nodeId]?.fields[fieldId] ?? null,
                 isReconciling
             ] as const
         });
@@ -92,7 +99,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
             const value = staticVals[inputId] as any
             return [
                 value,
-                s.issues[nodeId]?.inputs[inputId] ?? null
+                s.issues.nodes[nodeId]?.inputs[inputId] ?? null
             ] as const
         });
     }
@@ -144,7 +151,10 @@ export namespace WorkbenchSDK {
             layout: Record<Workflow.Node.Id, { x: number, y: number }>
         }
         cache: Workflow.Cache
-        issues: Record<Workflow.Node.Id, Validation.Issue.Node>
+        cyclesDirty: boolean
+        issues: Validation.Issue.Workflow_
+        cycles: Workflow.Node.Id[][]
+        stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>
     }
 
     export interface Handle {
