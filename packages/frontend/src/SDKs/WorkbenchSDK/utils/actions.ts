@@ -3,6 +3,7 @@ import { debounce } from '../../../decorators/debounce';
 import { toast } from 'sonner';
 import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
 import { supabase } from '@/libs/supabase';
+import { workflowReducers } from '../reducers/workflow';
 
 export const commit = async () => {
     if (WorkbenchSDK.state.isDirty === false) return;
@@ -30,6 +31,16 @@ export const withCommit = <TArgs extends any[]>(fn: (...args: TArgs) => void, me
         }
     };
 };
+
+export const withCyclesRecompute = (fn: (s: WorkbenchSDK.State) => void): ((s: WorkbenchSDK.State) => void) => {
+    return (s: WorkbenchSDK.State) => {
+        fn(s);
+        if(s.cyclesDirty){
+            workflowReducers.recomputeAllCycles(s);
+            s.cyclesDirty = false
+        }
+    }
+}
 
 export const withAsyncCommit = <TArgs extends any[]>(fn: (...args: TArgs) => Promise<void>, message?: string): ((...args: TArgs) => Promise<void>) => {
     return async (...args) => {
