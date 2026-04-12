@@ -67,7 +67,7 @@ const StatusIndicator = ({
 export default StatusIndicator
 
 const IssuesTooltipContent = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
-  const issues = WorkbenchSDK.useStore(s => s.issues[nodeId])
+  const issues = WorkbenchSDK.useStore(s => s.issues.nodes[nodeId])
   if (!issues)
     return null;
 

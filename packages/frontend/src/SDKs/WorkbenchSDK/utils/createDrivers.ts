@@ -1,4 +1,4 @@
-import type { Foundations, Workflow } from "@vx-agent-editor/shared/domain"
+import type { Foundations, Validation, Workflow } from "@vx-agent-editor/shared/domain"
 import type { WorkbenchSDK } from "../sdk"
 import { MarkerType } from "@xyflow/react";
 
@@ -40,4 +40,43 @@ export function createDrivers(wf: Workflow) {
     })
 
     return { nodeDrivers, edgeDrivers }
+}
+
+const PADDING = 16;
+
+export function createCycleSelectionDrivers(
+    cycleIssues: Validation.Issue.Cycle[],
+    wf: Workflow
+): WorkbenchSDK.CycleSelectionNodeDriver[] {
+    return cycleIssues.map((issue, i) => {
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+        for (const nodeId of issue.nodes) {
+            const pos = wf.data.ui.layout[nodeId] ?? { x: 0, y: 0 };
+            const el = document.querySelector<HTMLElement>(`[data-id="${nodeId}"]`);
+            const w = el?.offsetWidth ?? 250;
+            const h = el?.offsetHeight ?? 150;
+
+            minX = Math.min(minX, pos.x);
+            minY = Math.min(minY, pos.y);
+            maxX = Math.max(maxX, pos.x + w);
+            maxY = Math.max(maxY, pos.y + h);
+        }
+
+        return {
+            id: `cycle-selection-${i}`,
+            type: "cycleSelectionNode" as const,
+            position: { x: minX - PADDING, y: minY - PADDING },
+            data: {
+                width: (maxX - minX) + PADDING * 2,
+                height: (maxY - minY) + PADDING * 2,
+                nodeIds: issue.nodes,
+                issue,
+            },
+            zIndex: -1,
+            selectable: false,
+            draggable: false,
+        }
+    });
 }
