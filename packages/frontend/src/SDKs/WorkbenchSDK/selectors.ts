@@ -4,7 +4,6 @@ import { Field } from '@vx-agent-editor/shared/domain/Foundations/Field';
 import type { WorkbenchSDK } from './sdk';
 
 type NodeId = Workflow.Node.Id
-type EdgeId = Workflow.Edge.Id
 type ConditionValue = Field.Condition.Value
 type CaseListValue = Field.CaseList.Value
 
@@ -51,7 +50,15 @@ const caseListSelectors = {
 
 export const workbenchSelectors = {
     workflow: {
-        hasIssues: (s) => Object.entries(s.issues).length > 0,
+        hasIssues: (s) => {
+            if (s.issues.cycles.length > 0)
+                return true;
+
+            return Object.values(s.issues.nodes).some(nodeIssues => 
+                Object.entries(nodeIssues.fields).length > 0 ||
+                Object.entries(nodeIssues.inputs).length > 0
+            );
+        }
     },
     node: {
         get: (s, nodeId) => s.workflow.data.nodes[nodeId] ?? null,
@@ -250,6 +257,13 @@ export const workbenchSelectors = {
             return Object.keys(incoming).length > 0 ? incoming : null;
         },
     },
+    graph: {
+        hasArcBetween: (s, sourceNodeId, targetNodeId) => {
+            const outgoingEdges = s.cache.outgoingEdgesMap[sourceNodeId];
+            if (!outgoingEdges) return false;
+            return !!outgoingEdges[targetNodeId];
+        }
+    }
 } satisfies _WorkBenchSDKSelectors
 
 type ConditionSelectors = {
@@ -308,5 +322,8 @@ export type _WorkBenchSDKSelectors = {
     }
     execution: {
         getNodeIncomingData: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session: ExecutionSession) => Record<Port.Id, Foundations.Projection> | null
+    }
+    graph: {
+        hasArcBetween: (state: WorkbenchSDK.State, sourceNodeId: Workflow.Node.Id, targetNodeId: Workflow.Node.Id) => boolean
     }
 }
