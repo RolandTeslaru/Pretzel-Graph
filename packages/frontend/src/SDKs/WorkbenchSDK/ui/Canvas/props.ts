@@ -1,13 +1,14 @@
 import { addEdge, applyEdgeChanges, applyNodeChanges, reconnectEdge, MarkerType, SelectionMode } from '@xyflow/react'
-import type { ReactFlowProps } from "@xyflow/react"
+import type { ReactFlowProps, OnSelectionChangeParams } from "@xyflow/react"
 import { WorkbenchSDK } from "../../sdk"
 import WorkflowEdge from './Edge'
 import WorkbenchNode from './Node'
+import { ProblematicCycleSelectionNode } from './extraNodes'
 import { nodeColorsName } from '@/utils/styleUtils'
 import { ShelfSDK } from '@/SDKs/ShelfSDK/sdk'
 import { Workflow, Foundations, Validation } from "@vx-agent-editor/shared/domain"
 
-type NodeDriver = WorkbenchSDK.NodeDriver
+type NodeDriver = WorkbenchSDK.NodeDriver | WorkbenchSDK.CycleSelectionNodeDriver
 type EdgeDriver = WorkbenchSDK.EdgeDriver
 
 const setState = WorkbenchSDK.useStore.setState;
@@ -32,6 +33,7 @@ export const canvasProps = Object.freeze({
     },
     nodeTypes: {
         workflowNode: WorkbenchNode,
+        cycleSelectionNode: ProblematicCycleSelectionNode,
     }
 } satisfies ReactFlowProps<NodeDriver, EdgeDriver>)
 
@@ -59,7 +61,7 @@ export const convertMousePositionToCanvas = (mousePosX: number, mousePosY: numbe
 }
 
 export const createCanvasCallbacks = (
-    setNodeDrivers: React.Dispatch<React.SetStateAction<WorkbenchSDK.NodeDriver[]>>,
+    setNodeDrivers: React.Dispatch<React.SetStateAction<NodeDriver[]>>,
     setEdgeDrivers: React.Dispatch<React.SetStateAction<WorkbenchSDK.EdgeDriver[]>>
 ) => {
     return {
@@ -279,7 +281,7 @@ export const createCanvasCallbacks = (
 
         onSelectionChange: (selection) => {
             setState(s => {
-                s.lastSelection = selection
+                s.lastSelection = selection as OnSelectionChangeParams<WorkbenchSDK.NodeDriver, WorkbenchSDK.EdgeDriver>
 
                 // if (selection.nodes && (selection.nodes.length === 0 || selection.nodes.length > 1)) {
                 //     WorkbenchSDK.reducers

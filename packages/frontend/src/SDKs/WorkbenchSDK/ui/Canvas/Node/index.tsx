@@ -58,12 +58,13 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
       </NodeToolbar>
 
       <div className={cn(
-        "animate-in fade-in-0 duration-200 ease-out p-1 transition-colors",
-        "flex flex-col relative rounded-3xl shadow-lg shadow-black/20 dark:shadow-black/30",
-        isMinimized ? "" : "w-[250px]",
-        isDisabled ? "opacity-50" : "opacity-100",
-      )}
+          "animate-in fade-in-0 duration-200 ease-out p-1 transition-colors",
+          "flex flex-col relative rounded-3xl shadow-lg shadow-black/20 dark:shadow-black/30",
+          isMinimized ? "" : "w-[250px]",
+          isDisabled ? "opacity-50" : "opacity-100",
+        )}
         style={{ backgroundColor, borderColor, borderWidth: 2 }}
+        id={node.id}
       >
         <NodeHeader executionStatus={nodeStatus} node={node} isWorkflowLocked={isWorkflowLocked} />
 

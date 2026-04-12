@@ -25,7 +25,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     // Mutatable non reactive state
     public readonly runtime = {
         isReconnectionSuccessful: true,
-        canvasDriver: null as ReactFlowInstance<WorkbenchSDK.NodeDriver, WorkbenchSDK.EdgeDriver> | null,
+        canvasDriver: null as ReactFlowInstance<WorkbenchSDK.NodeDriver | WorkbenchSDK.CycleSelectionNodeDriver, WorkbenchSDK.EdgeDriver> | null,
         lastMousePosition: { x: 0, y: 0 }
     }
 
@@ -169,6 +169,7 @@ export namespace WorkbenchSDK {
 
     export type NodeDriver = RF_Node<{}, "workflowNode">;
     export type EdgeDriver = RF_Edge<{}, "workflowEdge">;
+    export type CycleSelectionNodeDriver = RF_Node<{ width: number, height: number, nodeIds: Workflow.Node.Id[], issue: Validation.Issue.Cycle }, "cycleSelectionNode">;
 
     export interface DriverConnection {
         source: Workflow.Node.Id
