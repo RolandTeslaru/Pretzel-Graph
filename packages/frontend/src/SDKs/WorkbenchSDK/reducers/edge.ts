@@ -5,8 +5,6 @@ import { inputReducers } from "./input";
 import { workbenchSelectors } from "../selectors"
 import { nodeReducers } from "./node";
 import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
-import { Algorithms } from "@vx-agent-editor/shared/domain/Algorithms";
-import { workflowReducers } from "./workflow";
 
 const sel = workbenchSelectors
 
@@ -31,11 +29,14 @@ export const edgeReducers = {
         const sourcePort = sourceNode.outputs.find(o => o.id === sourcePortId);
         const targetPort = targetNode.inputs.find(i => i.id === targetPortId);
 
+        
         if (!sourcePort || !targetPort)
             throw new Error(`Cannot create edge, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
+        
+        const isFirstArcBetweenNodes = sel.graph.hasArcBetween(s, sourceNodeId, targetNodeId) === false; 
 
         const edgeId = edgeReducers.createId(sourceNodeId, sourcePortId, targetNodeId, targetPortId)
-
+        
         const edges = s.workflow.data.edges
 
         if (edges[edgeId])
@@ -61,9 +62,11 @@ export const edgeReducers = {
 
         if(
             sel.node.isSourceNode(s, sourceNodeId) === false && 
-            sel.node.isSinkNode(s, targetNodeId) === false
+            sel.node.isSinkNode(s, targetNodeId) === false &&
+            isFirstArcBetweenNodes
         )
-            s.cyclesDirty = true;
+            if(doesCycleExistBetweenNodes(sourceNodeId, targetNodeId, s.cache))
+                s.cyclesDirty = true;
 
         if (Port.isPolymorphic(targetPort))
             nodeReducers.polymorphism.resolveGroup(s, targetNodeId, targetPort, sourcePort.variant);
@@ -81,36 +84,45 @@ export const edgeReducers = {
         if (!edge)
             throw new Error(`Cannot remove edge ${edgeId}, edge not found.`)
 
-        const sourceNode = s.workflow.data.nodes[edge.source.nodeId];
-        const targetNode = s.workflow.data.nodes[edge.target.nodeId];
+        const didCycleExist = doesCycleExistBetweenNodes(edge.source.nodeId, edge.target.nodeId, s.cache)
 
-        const sourcePort = sourceNode.outputs.find(o => o.id === edge.source.portId);
-        const targetPort = targetNode.inputs.find(i => i.id === edge.target.portId);
 
-        if(!sourcePort || !targetPort)
-            throw new Error(`Ports for edge ${edgeId} not found. Source port: ${edge.source.nodeId}:${edge.source.portId}, Target port: ${edge.target.nodeId}:${edge.target.portId}`)
-
+        // Always remove the edge + cache references first. Port/node lookups can
+        // fail (e.g. during node deletion/recreate/reconcile), but cache must stay consistent.
         delete edges[edgeId];
-
         cacheReducers.deleteEdge(s, edge);
 
-        inputReducers.validate(s, edge.target.nodeId, targetPort);
+        const sourceNodeId = edge.source.nodeId;
+        const sourcePortId = edge.source.portId;
+        const targetNodeId = edge.target.nodeId;
+        const targetPortId = edge.target.portId;
+
+        const sourceNode = s.workflow.data.nodes[sourceNodeId];
+        const targetNode = s.workflow.data.nodes[targetNodeId];
+
+        const sourcePort = sourceNode?.outputs.find(o => o.id === sourcePortId);
+        const targetPort = targetNode?.inputs.find(i => i.id === targetPortId);
+
+        if (targetNode && targetPort)
+            inputReducers.validate(s, targetNodeId, targetPort);
 
         // Connecting two leafs, recompute and validate cycles
         if(
-            sel.node.isSourceNode(s, edge.source.nodeId) === false && 
-            sel.node.isSinkNode(s, edge.target.nodeId) === false
+            sel.node.isSourceNode(s, sourceNodeId) === false && 
+            sel.node.isSinkNode(s, targetNodeId) === false &&
+            sel.graph.hasArcBetween(s, sourceNodeId, targetNodeId) === false
         )
-            s.cyclesDirty = true;
+            if(didCycleExist)
+                s.cyclesDirty = true;
 
         // Unresolve polymorphic groups if no edges remain
-        if (Port.isPolymorphic(targetPort) && targetPort.polymorphicGroupId)
-            if (!sel.port.polymorphism.groupHasEdges(s, edge.target.nodeId, targetPort.polymorphicGroupId))
-                nodeReducers.polymorphism.unresolveGroup(s, edge.target.nodeId, targetPort.polymorphicGroupId);
+        if (targetPort && Port.isPolymorphic(targetPort) && targetPort.polymorphicGroupId)
+            if (!sel.port.polymorphism.groupHasEdges(s, targetNodeId, targetPort.polymorphicGroupId))
+                nodeReducers.polymorphism.unresolveGroup(s, targetNodeId, targetPort.polymorphicGroupId);
 
-        if (Port.isPolymorphic(sourcePort) && sourcePort.polymorphicGroupId)
-            if (!sel.port.polymorphism.groupHasEdges(s, edge.source.nodeId, sourcePort.polymorphicGroupId))
-                nodeReducers.polymorphism.unresolveGroup(s, edge.source.nodeId, sourcePort.polymorphicGroupId);
+        if (sourcePort && Port.isPolymorphic(sourcePort) && sourcePort.polymorphicGroupId)
+            if (!sel.port.polymorphism.groupHasEdges(s, sourceNodeId, sourcePort.polymorphicGroupId))
+                nodeReducers.polymorphism.unresolveGroup(s, sourceNodeId, sourcePort.polymorphicGroupId);
     },
     createId: Workflow.Edge.createId
 } satisfies EdgeReducers;
@@ -119,5 +131,36 @@ type EdgeReducers = {
     create: (state: WorkbenchSDK.State, conn: WorkbenchSDK.DriverConnection) => Workflow.Edge | undefined
     remove: (state: WorkbenchSDK.State, edgeId: Workflow.Edge.Id) => void
     createId: typeof Workflow.Edge.createId
+}
+
+
+function doesCycleExistBetweenNodes(sourceNodeId: Workflow.Node.Id, targetNodeId: Workflow.Node.Id, cache: Workflow.Cache){
+    const visited = new Set<Workflow.Node.Id>()
+
+    const queue: Workflow.Node.Id[] = [targetNodeId]
+    visited.add(targetNodeId)
+
+    let head = 0;
+
+    while(head < queue.length){
+        const nodeId = queue[head ++];
+
+        const outgoindNodesMap = cache.outgoingEdgesMap[nodeId]
+        
+        for (const _nextId in outgoindNodesMap){
+            const nextId = _nextId as Workflow.Node.Id
+            
+            if(nextId === sourceNodeId)
+                return true;
+
+            if(visited.has(nextId))
+                continue;
+            
+            visited.add(nextId);
+            queue.push(nextId);
+        }   
+    }
+
+    return false;
 }
 
