@@ -18,6 +18,7 @@ import WorkflowControls from '@/SDKs/OrchestratorSDK/ui/WorkflowControls'
 import { AdminJobsPanel } from '@/SDKs/OrchestratorSDK/ui/AdminJobsPanel'
 import ChatButton from '@/SDKs/ChatSDK/ui/ChatButton'
 import TemporalControls from '@/SDKs/WorkbenchSDK/ui/TemporalControls'
+import SpotlightSearch from '@/SDKs/WorkbenchSDK/ui/SpotlightSearch'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
 
@@ -67,7 +68,7 @@ function useSDKState(selected: SDKOption) {
 
 function StateViewer() {
     const [selected, setSelected] = useState<SDKOption>('WorkbenchSDK');
-    const [minimized, setMinimized] = useState(false);
+    const [minimized, setMinimized] = useState(true);
     const state = useSDKState(selected);
 
     return (
@@ -138,6 +139,7 @@ function WorkflowLayoutComponent() {
             {/* <AdminJobsPanel /> */}
             {/* <StackDebugPanel/> */}
             <StateViewer />
+            <SpotlightSearch />
             <Outlet />
         </div>
     )
