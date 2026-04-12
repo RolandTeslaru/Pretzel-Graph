@@ -36,11 +36,11 @@ export const fieldReducers = {
         const issue = Validation.Issue.Field.check(field, nodeId, s.workflow)
 
         if (issue) {
-            s.issues[nodeId].fields[field.id] = issue;
+            s.issues.nodes[nodeId].fields[field.id] = issue;
             return true;
         }
 
-        delete s.issues[nodeId].fields[field.id];
+        delete s.issues.nodes[nodeId].fields[field.id];
 
         return false;
     },

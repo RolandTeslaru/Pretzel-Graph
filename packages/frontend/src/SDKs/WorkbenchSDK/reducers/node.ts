@@ -5,10 +5,7 @@ import { edgeReducers } from "./edge";
 import { cacheReducers } from "./cache";
 import { layoutReducers } from "./layout";
 import { fieldReducers } from "./field";
-import { workbenchSelectors } from "../selectors";
 import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
-
-const sel = workbenchSelectors;
 
 export const nodeReducers = {
     remove: (s, deletedNodeId) => {
@@ -104,7 +101,7 @@ export const nodeReducers = {
             edgeReducers.remove(s, edgeId as Workflow.Edge.Id);
         })
 
-        // If the node has a dynamic port group, unresolve it to restore the original variants of the dynamic ports
+        // If the node has a polymorphic port group, unresolve it to restore the original variants of the polymorphic ports
         const node = s.workflow.data.nodes[nodeId];
         if (!node) return;        
     },
@@ -149,10 +146,8 @@ export const nodeReducers = {
         } satisfies Workflow.Node
 
         const result = Workflow.Node.Schema.safeParse(newNode)
-        if (!result.success) {
+        if (!result.success)
             throw new Error(`Node schema validation failed. Could not recreate node from blueprint id ${blueprint.id}`)
-            return;
-        }
 
         s.workflow.data.nodes[nodeId] = newNode;
         cacheReducers.createNode(s, newNode);
@@ -221,9 +216,8 @@ export const nodeReducers = {
             const newOutput = newOutputsById.get(oldOutput.id);
             const edgeId = outputHandles[oldOutput.id];
 
-            if (edgeId && (!newOutput || newOutput.variant !== oldOutput.variant)) {
+            if (edgeId && (!newOutput || newOutput.variant !== oldOutput.variant))
                 edgeReducers.remove(s, edgeId);
-            }
         }
 
         // --- Apply reconciled blueprint ---
@@ -250,56 +244,58 @@ export const nodeReducers = {
 
         s.workflow.data.staticValues[nodeId] = next;
     },
-    resolvePolymorphicPortGroup: (s, nodeId, triggerPort, resolvedVariant) => {
-        console.log("Resolving polymorphic group", { nodeId, triggerPort, resolvedVariant })
-        const node = s.workflow.data.nodes[nodeId];
-
-        if(!Port.isPolymorphic(triggerPort) || !triggerPort.polymorphicGroupId)
-            throw new Error(`Port ${triggerPort.id} is not polymorphic or does not have a polymorphicGroupId`);
-
-        const polymorphicGroupId = triggerPort.polymorphicGroupId;
-
-        const inputs = node.inputs.filter(i => Port.isPolymorphic(i) && i.polymorphicGroupId === polymorphicGroupId)
-        const outputs = node.outputs.filter(o => Port.isPolymorphic(o) && o.polymorphicGroupId === polymorphicGroupId)
-
-        inputs.forEach(i => {
-            if(!Port.isUnresolvedLike(i.variant))
-                return
-            if (i.variant === "UnresolvedList") {
-                (i as any).variant = Port.LIST_PROMOTION_MAP[resolvedVariant] ?? resolvedVariant;
-            } else if (i.variant === "UnresolvedScalar") {
-                (i as any).variant = Port.LIST_DEMOTION_MAP[resolvedVariant] ?? resolvedVariant;
-            } else {
-                (i as any).variant = resolvedVariant; // Normal Unresolved type
-            }
-        })
-
-        outputs.forEach(o => {
-            if(!Port.isUnresolvedLike(o.variant))
-                return
-
-            if (o.variant === "UnresolvedList") {
-                (o as any).variant = Port.LIST_PROMOTION_MAP[resolvedVariant] ?? resolvedVariant;
-            } else if (o.variant === "UnresolvedScalar") {
-                (o as any).variant = Port.LIST_DEMOTION_MAP[resolvedVariant] ?? resolvedVariant;
-            } else {
-                (o as any).variant = resolvedVariant;
-            }
-        })
-    },
-    unresolvePolymorphicPortGroup: (s, nodeId, polymorphicGroupId) => {
-        const node = s.workflow.data.nodes[nodeId];
-
-        const inputs = node.inputs.filter(i => Foundations.Port.isPolymorphic(i) && i.polymorphicGroupId === polymorphicGroupId) as Foundations.Port.Variants.UnresolvedLike[];
-        const outputs = node.outputs.filter(o => Foundations.Port.isPolymorphic(o) && o.polymorphicGroupId === polymorphicGroupId) as Foundations.Port.Variants.UnresolvedLike[];
-
-        inputs.forEach(input => {
-            input.variant = input.originalVariant;
-        })
-
-        outputs.forEach(output => {
-            output.variant = output.originalVariant;
-        })
+    polymorphism: {
+        resolveGroup: (s, nodeId, triggerPort, resolvedVariant) => {
+            console.log("Resolving polymorphic group", { nodeId, triggerPort, resolvedVariant })
+            const node = s.workflow.data.nodes[nodeId];
+    
+            if(!Port.isPolymorphic(triggerPort) || !triggerPort.polymorphicGroupId)
+                throw new Error(`Port ${triggerPort.id} is not polymorphic or does not have a polymorphicGroupId`);
+    
+            const polymorphicGroupId = triggerPort.polymorphicGroupId;
+    
+            const inputs = node.inputs.filter(i => Port.isPolymorphic(i) && i.polymorphicGroupId === polymorphicGroupId)
+            const outputs = node.outputs.filter(o => Port.isPolymorphic(o) && o.polymorphicGroupId === polymorphicGroupId)
+    
+            inputs.forEach(i => {
+                if(!Port.isUnresolvedLike(i.variant))
+                    return
+                if (i.variant === "UnresolvedList") {
+                    (i as any).variant = Port.LIST_PROMOTION_MAP[resolvedVariant] ?? resolvedVariant;
+                } else if (i.variant === "UnresolvedScalar") {
+                    (i as any).variant = Port.LIST_DEMOTION_MAP[resolvedVariant] ?? resolvedVariant;
+                } else {
+                    (i as any).variant = resolvedVariant; // Normal Unresolved type
+                }
+            })
+    
+            outputs.forEach(o => {
+                if(!Port.isUnresolvedLike(o.variant))
+                    return
+    
+                if (o.variant === "UnresolvedList") {
+                    (o as any).variant = Port.LIST_PROMOTION_MAP[resolvedVariant] ?? resolvedVariant;
+                } else if (o.variant === "UnresolvedScalar") {
+                    (o as any).variant = Port.LIST_DEMOTION_MAP[resolvedVariant] ?? resolvedVariant;
+                } else {
+                    (o as any).variant = resolvedVariant;
+                }
+            })
+        },
+        unresolveGroup: (s, nodeId, polymorphicGroupId) => {
+            const node = s.workflow.data.nodes[nodeId];
+    
+            const inputs = node.inputs.filter(i => Foundations.Port.isPolymorphic(i) && i.polymorphicGroupId === polymorphicGroupId) as Foundations.Port.Variants.UnresolvedLike[];
+            const outputs = node.outputs.filter(o => Foundations.Port.isPolymorphic(o) && o.polymorphicGroupId === polymorphicGroupId) as Foundations.Port.Variants.UnresolvedLike[];
+    
+            inputs.forEach(input => {
+                input.variant = input.originalVariant;
+            })
+    
+            outputs.forEach(output => {
+                output.variant = output.originalVariant;
+            })
+        },
     },
     setSignalStrategy: (s, nodeId, strategy) => {
         s.isDirty = true;
@@ -338,7 +334,7 @@ export const nodeReducers = {
         const node = s.workflow.data.nodes[nodeId];
         if (!node){
             if(nodeId in s.issues)
-                delete s.issues[nodeId];
+                delete s.issues.nodes[nodeId];
             return
         }
             
@@ -346,12 +342,12 @@ export const nodeReducers = {
         const nodeIssues = Validation.Issue.Node.check(node, s.workflow, s.cache);
 
         if(!nodeIssues)
-            delete s.issues[nodeId];
+            delete s.issues.nodes[nodeId];
         else
-            s.issues[nodeId] = nodeIssues;
+            s.issues.nodes[nodeId] = nodeIssues;
     },
     clearIssues: (s, nodeId) => {
-        delete s.issues[nodeId];
+        delete s.issues.nodes[nodeId];
     }
 } satisfies NodeReducers
 
@@ -371,6 +367,8 @@ interface NodeReducers {
     validate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
     clearIssues    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
 
-    resolvePolymorphicPortGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, triggerPort: Foundations.Port.Input | Foundations.Port.Output, resolvedVariant: Foundations.Port.Variant) => void
-    unresolvePolymorphicPortGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => void
+    polymorphism: {
+        resolveGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, triggerPort: Foundations.Port.Input | Foundations.Port.Output, resolvedVariant: Foundations.Port.Variant) => void
+        unresolveGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => void
+    }
 }

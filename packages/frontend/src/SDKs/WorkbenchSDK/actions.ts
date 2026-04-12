@@ -3,7 +3,7 @@ import type { DropFirstArg } from '../types';
 import { Workflow } from '@vx-agent-editor/shared/domain';
 import { Port } from '@vx-agent-editor/shared/domain/Foundations/Port';
 import { Field } from '@vx-agent-editor/shared/domain/Foundations/Field';
-import { commit, debouncedCommit, withCommit, withAsyncCommit, debouncedValidateField, debouncedValidateInput } from './utils/actions';
+import { commit, debouncedCommit, withCommit, withAsyncCommit, debouncedValidateField, debouncedValidateInput, withCyclesRecompute } from './utils/actions';
 import { ShelfSDK } from '../ShelfSDK/sdk';
 import { cloneDeep } from 'lodash';
 
@@ -26,9 +26,10 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
 
     const nodeActions = {
+        recreate:          withCommit((...props) => setState(withCyclesRecompute(s => { reducers.node.recreate(s,          ...props) }))),
+        remove:            withCommit((...props) => setState(withCyclesRecompute(s => { reducers.node.remove(s,            ...props) }))),
+
         create:            withCommit((...props) => setState(s => { reducers.node.create(s,            ...props) })),
-        recreate:          withCommit((...props) => setState(s => { reducers.node.recreate(s,          ...props) })),
-        remove:            withCommit((...props) => setState(s => { reducers.node.remove(s,            ...props) })),
         duplicate:         withCommit((...props) => setState(s => { reducers.node.duplicate(s,         ...props) })),
         setDisabled:       withCommit((...props) => setState(s => { reducers.node.setDisabled(s,       ...props) })),
         setMinimized:      withCommit((...props) => setState(s => { reducers.node.setMinimized(s,      ...props) })),
@@ -68,11 +69,11 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                         }
                     );
 
-                    setState(s => { 
+                    setState(withCyclesRecompute(s => { 
                         reducers.node.reconcile(s, nodeId, reconciledBlueprint)
                         reducers.field.unmarkAsReconciling(s, nodeId, field.id);
                         reducers.node.validate(s, nodeId);
-                    });
+                    }));
                 } catch (error) {
                     throw new Error(`Could not reconcile node ${nodeId} via field ${field.id}. ${error instanceof Error ? error.message : String(error)}`)
                 }
@@ -214,7 +215,8 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                 setState(s => {
                     reducers.field.caseList.addEntry(s, nodeId, fieldId, entry)
 
-                    const resolvedVariant = sel.port.getResolvedVariantInSyncGroup(s, nodeId, "condition") ?? "Unresolved"
+                    const resolvedVariant = sel.port.polymorphism.getResolvedVariantInGroup(s, nodeId, "condition") ?? "Unresolved"
+                    
                     reducers.port.addOutput(s, nodeId, {
                         id: portId,
                         displayName: label,
@@ -305,11 +307,11 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             },
         },
         edge: {
-            create:            withCommit((conn)   => setState(s => { reducers.edge.create(s, conn) })),
-            remove:            withCommit((edgeId) => setState(s => { reducers.edge.remove(s, edgeId) })),
+            create:            withCommit((conn)   => setState(withCyclesRecompute(s => { reducers.edge.create(s, conn) }))),
+            remove:            withCommit((edgeId) => setState(withCyclesRecompute(s => { reducers.edge.remove(s, edgeId) }))),
         },
         port: {
-            removeOutput:         withCommit((...props) => setState(s => { reducers.port.removeOutput(s,         ...props) })),
+            removeOutput:         withCommit((...props) => setState(withCyclesRecompute(s => { reducers.port.removeOutput(s,         ...props) }))),
             addOutput:            withCommit((...props) => setState(s => { reducers.port.addOutput(s,            ...props) })),
             setOutputDisplayName: withCommit((...props) => setState(s => { reducers.port.setOutputDisplayName(s, ...props) })),
         },
@@ -356,7 +358,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             copy:           (...props) => { setState(s => { reducers.clipboard.copy(s,     ...props) }) },
             copyNode:       (...props) => { setState(s => { reducers.clipboard.copyNode(s, ...props) }) },
             clear:          () => { setState(s => { reducers.clipboard.clear(s) }) },
-            paste:          withCommit((...props) => setState(s => { reducers.clipboard.paste(s, ...props) })),
+            paste:          withCommit((...props) => setState(withCyclesRecompute(s => { reducers.clipboard.paste(s, ...props) }))),
         }
     } satisfies _WorkbenchSDKActions
 }
