@@ -37,11 +37,11 @@ export const inputReducers = {
         const issue = Validation.Issue.Input.check(input, nodeId, s.workflow, s.cache);
 
         if (issue){
-            s.issues[nodeId] ??= { fields: {}, inputs: {} };
-            s.issues[nodeId].inputs[input.id] = issue;
+            s.issues.nodes[nodeId] ??= { fields: {}, inputs: {} };
+            s.issues.nodes[nodeId].inputs[input.id] = issue;
             return true;
         }
-        delete s.issues[nodeId]?.inputs[input.id];
+        delete s.issues.nodes[nodeId]?.inputs[input.id];
 
         return false;
     },

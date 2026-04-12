@@ -5,6 +5,8 @@ import { inputReducers } from "./input";
 import { workbenchSelectors } from "../selectors"
 import { nodeReducers } from "./node";
 import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
+import { Algorithms } from "@vx-agent-editor/shared/domain/Algorithms";
+import { workflowReducers } from "./workflow";
 
 const sel = workbenchSelectors
 
@@ -21,22 +23,23 @@ export const edgeReducers = {
         } = conn
         
         if (!sourcePortId || !targetPortId || !sourceNodeId || !targetNodeId) 
-            return;
-       
-        const targetPort = sel.input.get(s, targetNodeId, targetPortId);
-        if (!targetPort) 
-            return;
+            throw new Error(`Invalid edge connection. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`);
 
-        const sourcePort = sel.output.get(s, sourceNodeId, sourcePortId);
-        if (!sourcePort)
-            return
+        const sourceNode = s.workflow.data.nodes[sourceNodeId];
+        const targetNode = s.workflow.data.nodes[targetNodeId];
+        
+        const sourcePort = sourceNode.outputs.find(o => o.id === sourcePortId);
+        const targetPort = targetNode.inputs.find(i => i.id === targetPortId);
+
+        if (!sourcePort || !targetPort)
+            throw new Error(`Cannot create edge, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
 
         const edgeId = edgeReducers.createId(sourceNodeId, sourcePortId, targetNodeId, targetPortId)
 
         const edges = s.workflow.data.edges
 
         if (edges[edgeId])
-            return
+            throw new Error(`Edge ${edgeId} already exists. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
 
         const newEdge: Workflow.Edge = {
             id: edgeId,
@@ -56,11 +59,17 @@ export const edgeReducers = {
 
         inputReducers.validate(s, targetNodeId, targetPort);
 
+        if(
+            sel.node.isSourceNode(s, sourceNodeId) === false && 
+            sel.node.isSinkNode(s, targetNodeId) === false
+        )
+            s.cyclesDirty = true;
+
         if (Port.isPolymorphic(targetPort))
-            nodeReducers.resolvePolymorphicPortGroup(s, targetNodeId, targetPort, sourcePort.variant);
+            nodeReducers.polymorphism.resolveGroup(s, targetNodeId, targetPort, sourcePort.variant);
 
         else if (Port.isPolymorphic(sourcePort))
-            nodeReducers.resolvePolymorphicPortGroup(s, sourceNodeId, sourcePort, targetPort.variant);
+            nodeReducers.polymorphism.resolveGroup(s, sourceNodeId, sourcePort, targetPort.variant);
 
         return newEdge
     },
@@ -69,32 +78,39 @@ export const edgeReducers = {
         const edges = s.workflow.data.edges
 
         const edge = edges[edgeId];
-        if (!edge) return;
+        if (!edge)
+            throw new Error(`Cannot remove edge ${edgeId}, edge not found.`)
 
-        const sourcePort = sel.output.get(s, edge.source.nodeId, edge.source.portId);
-        const targetPort = sel.input.get(s, edge.target.nodeId, edge.target.portId);
+        const sourceNode = s.workflow.data.nodes[edge.source.nodeId];
+        const targetNode = s.workflow.data.nodes[edge.target.nodeId];
 
-        if(!sourcePort || !targetPort){
+        const sourcePort = sourceNode.outputs.find(o => o.id === edge.source.portId);
+        const targetPort = targetNode.inputs.find(i => i.id === edge.target.portId);
+
+        if(!sourcePort || !targetPort)
             throw new Error(`Ports for edge ${edgeId} not found. Source port: ${edge.source.nodeId}:${edge.source.portId}, Target port: ${edge.target.nodeId}:${edge.target.portId}`)
-            return
-        }
 
         delete edges[edgeId];
 
         cacheReducers.deleteEdge(s, edge);
 
-        if (targetPort)
-            inputReducers.validate(s, edge.target.nodeId, targetPort);
+        inputReducers.validate(s, edge.target.nodeId, targetPort);
 
-        // Unresolve dynamic sync groups if no edges remain
-        if (Port.isPolymorphic(targetPort) && targetPort.polymorphicGroupId) {
-            if (!sel.port.syncGroupHasEdges(s, edge.target.nodeId, targetPort.polymorphicGroupId))
-                nodeReducers.unresolvePolymorphicPortGroup(s, edge.target.nodeId, targetPort.polymorphicGroupId);
-        }
-        if (Port.isPolymorphic(sourcePort) && sourcePort.polymorphicGroupId) {
-            if (!sel.port.syncGroupHasEdges(s, edge.source.nodeId, sourcePort.polymorphicGroupId))
-                nodeReducers.unresolvePolymorphicPortGroup(s, edge.source.nodeId, sourcePort.polymorphicGroupId);
-        }
+        // Connecting two leafs, recompute and validate cycles
+        if(
+            sel.node.isSourceNode(s, edge.source.nodeId) === false && 
+            sel.node.isSinkNode(s, edge.target.nodeId) === false
+        )
+            s.cyclesDirty = true;
+
+        // Unresolve polymorphic groups if no edges remain
+        if (Port.isPolymorphic(targetPort) && targetPort.polymorphicGroupId)
+            if (!sel.port.polymorphism.groupHasEdges(s, edge.target.nodeId, targetPort.polymorphicGroupId))
+                nodeReducers.polymorphism.unresolveGroup(s, edge.target.nodeId, targetPort.polymorphicGroupId);
+
+        if (Port.isPolymorphic(sourcePort) && sourcePort.polymorphicGroupId)
+            if (!sel.port.polymorphism.groupHasEdges(s, edge.source.nodeId, sourcePort.polymorphicGroupId))
+                nodeReducers.polymorphism.unresolveGroup(s, edge.source.nodeId, sourcePort.polymorphicGroupId);
     },
     createId: Workflow.Edge.createId
 } satisfies EdgeReducers;

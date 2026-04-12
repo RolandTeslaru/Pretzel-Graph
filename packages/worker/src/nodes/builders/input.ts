@@ -159,9 +159,9 @@ export namespace InputBuilder {
         };
     }
 
-    export function Unresolved<TId extends string, TSyncGroup extends string>(
-        config: { polymorphicGroupId: TSyncGroup } & BaseProps<TId>
-    ): LiteralInput<TId, "Unresolved", Port.Variants.Unresolved, any> & { readonly __syncGroup?: TSyncGroup } {
+    export function Unresolved<TId extends string, TPolymorphicGroup extends string>(
+        config: { polymorphicGroupId: TPolymorphicGroup } & BaseProps<TId>
+    ): LiteralInput<TId, "Unresolved", Port.Variants.Unresolved, any> & { readonly __polymorphicGroup?: TPolymorphicGroup } {
         return {
             ...buildBase(config),
             variant: "Unresolved" as const,
@@ -171,9 +171,9 @@ export namespace InputBuilder {
         };
     }
 
-    export function UnresolvedScalar<TId extends string, TSyncGroup extends string>(
-        config: { polymorphicGroupId: TSyncGroup } & BaseProps<TId>
-    ): LiteralInput<TId, "UnresolvedScalar", Port.Variants.UnresolvedScalar, any> & { readonly __syncGroup?: TSyncGroup } {
+    export function UnresolvedScalar<TId extends string, TPolymorphicGroup extends string>(
+        config: { polymorphicGroupId: TPolymorphicGroup } & BaseProps<TId>
+    ): LiteralInput<TId, "UnresolvedScalar", Port.Variants.UnresolvedScalar, any> & { readonly __polymorphicGroup?: TPolymorphicGroup } {
         return {
             ...buildBase(config),
             variant: "UnresolvedScalar" as const,
@@ -182,9 +182,9 @@ export namespace InputBuilder {
         };
     }
 
-    export function UnresolvedList<TId extends string, TSyncGroup extends string>(
-        config: { polymorphicGroupId: TSyncGroup } & BaseProps<TId>
-    ): LiteralInput<TId, "UnresolvedList", Port.Variants.UnresolvedList, any> & { readonly __syncGroup?: TSyncGroup } {
+    export function UnresolvedList<TId extends string, TPolymorphicGroup extends string>(
+        config: { polymorphicGroupId: TPolymorphicGroup } & BaseProps<TId>
+    ): LiteralInput<TId, "UnresolvedList", Port.Variants.UnresolvedList, any> & { readonly __polymorphicGroup?: TPolymorphicGroup } {
         return {
             ...buildBase(config),
             variant: "UnresolvedList" as const,

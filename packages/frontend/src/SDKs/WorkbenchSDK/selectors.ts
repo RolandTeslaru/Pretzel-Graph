@@ -56,7 +56,7 @@ export const workbenchSelectors = {
     node: {
         get: (s, nodeId) => s.workflow.data.nodes[nodeId] ?? null,
         hasIssues: (s, nodeId) => {
-            const nodeIssues = s.issues[nodeId];
+            const nodeIssues = s.issues.nodes[nodeId];
             if (!nodeIssues)
                 return false;
 
@@ -83,6 +83,32 @@ export const workbenchSelectors = {
                 outputs: node.outputs,
                 toolCompatible: node.toolCompatible ?? false,
             } satisfies Foundations.Blueprint
+        },
+        /**
+         * Returns true when a node has no incoming edges.
+         */
+        isSourceNode: (s, nodeId) => {
+            const incomingEdges = s.cache.incomingEdgesMap[nodeId];
+            return incomingEdges ? Object.keys(incomingEdges).length === 0 : true;
+        },
+        /**
+         * Returns true when a node has no outgoing edges.
+         */
+        isSinkNode: (s, nodeId) => {
+            const outgoingEdges = s.cache.outgoingEdgesMap[nodeId];
+            return outgoingEdges ? Object.keys(outgoingEdges).length === 0 : true;
+        },
+        /**
+         * Returns true when a node has neither incoming nor outgoing edges.
+         */
+        isIsolatedNode: (s, nodeId) => {
+            const incomingEdges = s.cache.incomingEdgesMap[nodeId];
+            const outgoingEdges = s.cache.outgoingEdgesMap[nodeId];
+
+            const hasNoIncoming = incomingEdges ? Object.keys(incomingEdges).length === 0 : true;
+            const hasNoOutgoing = outgoingEdges ? Object.keys(outgoingEdges).length === 0 : true;
+
+            return hasNoIncoming && hasNoOutgoing;
         },
     },
     field: {
@@ -139,61 +165,63 @@ export const workbenchSelectors = {
         hasEdge: (s, nodeId, outputId) => !!s.cache.outputHandlesMap[nodeId][outputId],
     },
     port: {
-        getDynamicSiblings: (s, nodeId, portId) => {
-            const node = s.workflow.data.nodes[nodeId];
-            let triggerPort;
-
-            if (node.inputs.find(port => port.id === portId))
-                triggerPort = node.inputs.find(port => port.id === portId);
-            else
-                triggerPort = node.outputs.find(port => port.id === portId);
-
-            if (!triggerPort)
-                throw new Error(`Port ${portId} not found`);
-
-            if (!Port.isPolymorphic(triggerPort))
-                throw new Error(`Port ${portId} is not dynamic`);
-
-            const polymorphicGroupId = triggerPort.polymorphicGroupId
-            const siblings = new Set<Port.Input | Port.Output>();
-
-            node.inputs.forEach(input => {
-                if (Port.isPolymorphic(input) && input.polymorphicGroupId === polymorphicGroupId)
-                    siblings.add(input);
-            })
-
-            node.outputs.forEach(output => {
-                if (Port.isPolymorphic(output) && output.polymorphicGroupId === polymorphicGroupId)
-                    siblings.add(output);
-            })
-
-            return siblings;
-        },
-        getResolvedVariantInSyncGroup: (s, nodeId, polymorphicGroupId) => {
-            const node = s.workflow.data.nodes[nodeId];
-            if (!node) return null;
-
-            const allPorts = [...node.inputs, ...node.outputs];
-            const portInSyncGroup = allPorts.find(port => port.polymorphicGroupId === polymorphicGroupId);
-            if (!portInSyncGroup) return null;
-
-            return portInSyncGroup.variant === "Unresolved" ? null : portInSyncGroup.variant;
-        },
-        syncGroupHasEdges: (s, nodeId, polymorphicGroupId) => {
-            const node = s.workflow.data.nodes[nodeId];
-            const inputHandles = s.cache.inputHandlesMap[nodeId];
-            const outputHandles = s.cache.outputHandlesMap[nodeId];
-
-            for (const input of node.inputs) {
-                if (Port.isPolymorphic(input) && input.polymorphicGroupId === polymorphicGroupId && inputHandles[input.id])
-                    return true;
-            }
-            for (const output of node.outputs) {
-                if (Port.isPolymorphic(output) && output.polymorphicGroupId === polymorphicGroupId && outputHandles[output.id])
-                    return true;
-            }
-            return false;
-        },
+        polymorphism: {
+            getSiblings: (s, nodeId, portId) => {
+                const node = s.workflow.data.nodes[nodeId];
+                let triggerPort;
+    
+                if (node.inputs.find(port => port.id === portId))
+                    triggerPort = node.inputs.find(port => port.id === portId);
+                else
+                    triggerPort = node.outputs.find(port => port.id === portId);
+    
+                if (!triggerPort)
+                    throw new Error(`Port ${portId} not found`);
+    
+                if (!Port.isPolymorphic(triggerPort))
+                    throw new Error(`Port ${portId} is not dynamic`);
+    
+                const polymorphicGroupId = triggerPort.polymorphicGroupId
+                const siblings = new Set<Port.Input | Port.Output>();
+    
+                node.inputs.forEach(input => {
+                    if (Port.isPolymorphic(input) && input.polymorphicGroupId === polymorphicGroupId)
+                        siblings.add(input);
+                })
+    
+                node.outputs.forEach(output => {
+                    if (Port.isPolymorphic(output) && output.polymorphicGroupId === polymorphicGroupId)
+                        siblings.add(output);
+                })
+    
+                return siblings;
+            },
+            getResolvedVariantInGroup: (s, nodeId, polymorphicGroupId) => {
+                const node = s.workflow.data.nodes[nodeId];
+                if (!node) return null;
+    
+                const allPorts = [...node.inputs, ...node.outputs];
+                const port = allPorts.find(port => port.polymorphicGroupId === polymorphicGroupId);
+                if (!port) return null;
+    
+                return port.variant === "Unresolved" ? null : port.variant;
+            },
+            groupHasEdges: (s, nodeId, polymorphicGroupId) => {
+                const node = s.workflow.data.nodes[nodeId];
+                const inputHandles = s.cache.inputHandlesMap[nodeId];
+                const outputHandles = s.cache.outputHandlesMap[nodeId];
+    
+                for (const input of node.inputs) {
+                    if (Port.isPolymorphic(input) && input.polymorphicGroupId === polymorphicGroupId && inputHandles[input.id])
+                        return true;
+                }
+                for (const output of node.outputs) {
+                    if (Port.isPolymorphic(output) && output.polymorphicGroupId === polymorphicGroupId && outputHandles[output.id])
+                        return true;
+                }
+                return false;
+            },
+        }
     },
     cache: {
         getInputHandleEdge: (s, nodeId, inputId) => s.cache.inputHandlesMap[nodeId][inputId],
@@ -247,6 +275,9 @@ export type _WorkBenchSDKSelectors = {
         hasIssues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
         isTool: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
         extractBlueprint: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Blueprint | null
+        isSourceNode: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
+        isSinkNode: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
+        isIsolatedNode: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
     }
     field: {
         get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Field | null
@@ -265,9 +296,11 @@ export type _WorkBenchSDKSelectors = {
         hasEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Port.Output.Id) => boolean
     }
     port: {
-        getDynamicSiblings: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Port.Id) => Set<Port.Input | Port.Output>
-        getResolvedVariantInSyncGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => Port.Variant | null
-        syncGroupHasEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => boolean
+        polymorphism: {
+            getSiblings: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Port.Id) => Set<Port.Input | Port.Output>
+            getResolvedVariantInGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => Port.Variant | null
+            groupHasEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => boolean
+        }
     }
     cache: {
         getInputHandleEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => Workflow.Edge.Id

@@ -12,6 +12,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { ChatService } from '../Chat/chat.service';
 import { withSupabaseAssert } from '@vx-agent-editor/shared/errors/supabase';
+import { Algorithms } from '@vx-agent-editor/shared/domain/Algorithms';
 
 @Injectable()
 export class OrchestratorService {
@@ -96,13 +97,18 @@ export class OrchestratorService {
 
         const wfCache = Workflow.createCache(workflow);
 
-        const workflowIssues = Validation.Issue.checkWorkflow(workflow, wfCache);
+        const arcsMap = Workflow.deriveArcs(wfCache);
+        const sccs = Algorithms.Tarjan.deriveSCCs(workflow.data.nodes, arcsMap)[3]
+        
+        const cycles = Algorithms.Johnson.getAllCycles(arcsMap, sccs);
 
-        if (Object.entries(workflowIssues).length > 0)
+        const issues = Validation.Issue.checkWorkflow(workflow, cycles, wfCache);
+
+        if (Object.entries(issues).length > 0)
             throw new SystemError(
                 SystemError.Code.CONFIG_INVALID_FIELD,
                 "Workflow has nodes with missing fields or inputs — fix them before running",
-                { data: { issues: workflowIssues } }
+                { data: { issues } }
             );
 
         const supabase = createAuthenticatedClient(token);
