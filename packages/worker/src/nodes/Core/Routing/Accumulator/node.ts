@@ -13,18 +13,18 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const { input } = inputs;
+        const { append, overwrite } = inputs;
 
         const previousState: unknown[] =
             this.context.session.node_output_instances[this.workflowNode.id]?.state ?? [];
 
-        const incoming = Array.isArray(input) ? input.flat() : input != null ? [input] : [];
+        const incoming = Array.isArray(append) ? append.flat() : append != null ? [append] : [];
 
-        const accumulated = [...previousState, ...incoming];
+        const newState = [...previousState, ...incoming];
 
         return {
-            output: accumulated,
-            state: accumulated,
+            state: newState,
+            prevState: previousState,
         };
     }
 }

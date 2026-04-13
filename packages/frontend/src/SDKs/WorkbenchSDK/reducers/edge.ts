@@ -68,10 +68,10 @@ export const edgeReducers = {
             if(doesCycleExistBetweenNodes(sourceNodeId, targetNodeId, s.cache))
                 s.cyclesDirty = true;
 
-        if (Port.isPolymorphic(targetPort))
+        if (Port.isPolymorphic(targetPort) && !Port.isUnresolvedLike(sourcePort.variant))
             nodeReducers.polymorphism.resolveGroup(s, targetNodeId, targetPort, sourcePort.variant);
 
-        else if (Port.isPolymorphic(sourcePort))
+        else if (Port.isPolymorphic(sourcePort) && !Port.isUnresolvedLike(targetPort.variant))
             nodeReducers.polymorphism.resolveGroup(s, sourceNodeId, sourcePort, targetPort.variant);
 
         return newEdge
@@ -97,11 +97,14 @@ export const edgeReducers = {
         const targetNodeId = edge.target.nodeId;
         const targetPortId = edge.target.portId;
 
-        const sourceNode = s.workflow.data.nodes[sourceNodeId];
-        const targetNode = s.workflow.data.nodes[targetNodeId];
+        const sourceNode = s.workflow.data.nodes[sourceNodeId]!;
+        const targetNode = s.workflow.data.nodes[targetNodeId]!;
 
         const sourcePort = sourceNode?.outputs.find(o => o.id === sourcePortId);
         const targetPort = targetNode?.inputs.find(i => i.id === targetPortId);
+
+        if(!sourcePort || !targetPort)
+            throw new Error(`Cannot remove edge ${edgeId}, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
 
         if (targetNode && targetPort)
             inputReducers.validate(s, targetNodeId, targetPort);
@@ -116,11 +119,11 @@ export const edgeReducers = {
                 s.cyclesDirty = true;
 
         // Unresolve polymorphic groups if no edges remain
-        if (targetPort && Port.isPolymorphic(targetPort) && targetPort.polymorphicGroupId)
+        if (Port.isPolymorphic(targetPort) && targetPort.polymorphicGroupId)
             if (!sel.port.polymorphism.groupHasEdges(s, targetNodeId, targetPort.polymorphicGroupId))
                 nodeReducers.polymorphism.unresolveGroup(s, targetNodeId, targetPort.polymorphicGroupId);
 
-        if (sourcePort && Port.isPolymorphic(sourcePort) && sourcePort.polymorphicGroupId)
+        if (Port.isPolymorphic(sourcePort) && sourcePort.polymorphicGroupId)
             if (!sel.port.polymorphism.groupHasEdges(s, sourceNodeId, sourcePort.polymorphicGroupId))
                 nodeReducers.polymorphism.unresolveGroup(s, sourceNodeId, sourcePort.polymorphicGroupId);
     },

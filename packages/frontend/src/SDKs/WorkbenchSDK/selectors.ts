@@ -49,17 +49,6 @@ const caseListSelectors = {
 } as CaseListSelectors
 
 export const workbenchSelectors = {
-    workflow: {
-        hasIssues: (s) => {
-            if (s.issues.cycles.length > 0)
-                return true;
-
-            return Object.values(s.issues.nodes).some(nodeIssues => 
-                Object.entries(nodeIssues.fields).length > 0 ||
-                Object.entries(nodeIssues.inputs).length > 0
-            );
-        }
-    },
     node: {
         get: (s, nodeId) => s.workflow.data.nodes[nodeId] ?? null,
         hasIssues: (s, nodeId) => {
@@ -281,9 +270,6 @@ type CaseListSelectors = {
 }
 
 export type _WorkBenchSDKSelectors = {
-    workflow: {
-        hasIssues: (state: WorkbenchSDK.State) => boolean
-    }
     node: {
         get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node
         hasIssues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean

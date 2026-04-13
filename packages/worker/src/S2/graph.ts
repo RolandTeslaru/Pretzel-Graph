@@ -68,9 +68,8 @@ export class S2Graph {
     public setVertexStrategy(vertexId: Vertex.Id, strategy: Vertex.STRATEGY){
         const vertex = this.vertices.get(vertexId);
 
-        if (!vertex) {
+        if (!vertex)
             throw new S2EngineError("Vertex not found");
-        }
 
         vertex.setStrategy(strategy);
     }
@@ -82,9 +81,8 @@ export class S2Graph {
         const sourceVertex = this.vertices.get(sourceVertexId as Vertex.Id)
         const targetVertex = this.vertices.get(targetVertexId as Vertex.Id)
 
-        if (!sourceVertex || !targetVertex) {
+        if (!sourceVertex || !targetVertex)
             throw new S2EngineError("Vertex not found");
-        }
 
         const arcs = this.arcs.get(sourceVertex.id)!;
         arcs.add(targetVertex.id);

@@ -7,35 +7,30 @@ export const Blueprint = defineBlueprint({
     icon: "GitPullRequestArrow",
     accent: "group-routing",
     fields: [
-        FieldBuilder.MultiOption({
-            id: "strategy",
-            displayName: "Strategy",
-            options: [
-                { value: "AND" },
-                { value: "OR" },
-                { value: "XOR" },
-            ],
-            initialValue: "OR",
-            variant: "tab",
-        }),
     ],
     inputs: [
         InputBuilder.UnresolvedList({
-            id: "input",
-            displayName: "Input",
+            id: "overwrite",
+            displayName: "Overwrite",
+            polymorphicGroupId: "data"
+        }),
+        InputBuilder.UnresolvedList({
+            id: "append",
+            displayName: "Append",
             polymorphicGroupId: "data"
         }),
     ],
     outputs: [
         OutputBuilder.UnresolvedList({
-            id: "output",
-            displayName: "Output",
-            tooltip: "The accumulated result.",
+            id: "state",
+            displayName: "State",
+            tooltip: "The accumulated state.",
             polymorphicGroupId: "data"
         }),
         OutputBuilder.UnresolvedList({
-            id: "state",
-            displayName: "State",
+            id: "prevState",
+            displayName: "Previous State",
+            tooltip: "The previous accumulated state.",
             polymorphicGroupId: "data"
         }),
     ],

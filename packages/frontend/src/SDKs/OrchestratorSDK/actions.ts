@@ -21,11 +21,11 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                 return sdk.state.jobId
             }
 
+            WorkbenchSDK.actions.workflow.validate()
+
             const workflow = WorkbenchSDK.state.workflow;
 
-            // Check if the workflow has issues
-            const workflowIssues = Validation.Issue.checkWorkflow(workflow, WorkbenchSDK.state.cache);
-            if (Object.entries(workflowIssues).length > 0) {
+            if (Validation.workflowHasIssues(WorkbenchSDK.state.issues)) {
                 toast.error("Workflow has nodes with missing fields or inputs. Please fix them before running.")
                 confirmEvent();
                 return null
@@ -47,21 +47,26 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                 }
             })
 
-            const { success, jobId } = await executionPromise;
+            try {
+                const { success, jobId } = await executionPromise;
 
-            if (!success || !jobId) {
-                toast.error("No worker available — execution failed to start")
+                if (!success || !jobId) {
+                    toast.error("No worker available — execution failed to start")
+                    confirmEvent();
+                    return null;
+                }
+
+                sdk.setState(s => {
+                    s.jobId = jobId
+                    s.executionStatus = "running"
+                })
+
+                confirmEvent();
+                return jobId;
+            } catch {
                 confirmEvent();
                 return null;
             }
-
-            sdk.setState(s => {
-                s.jobId = jobId
-                s.executionStatus = "running"
-            })
-
-            confirmEvent();
-            return jobId;
         },
         addAwaitedConfirmation: (event) => {
             sdk.setState(s => {
