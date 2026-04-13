@@ -274,6 +274,16 @@ export namespace Validation {
             return true;
         }
     }
+
+    export function workflowHasIssues(issues: Issue.Workflow_) {
+
+        if(issues.cycles.length > 0)
+            return true;
+
+        return Object.values(issues.nodes).some(nodeIssue => {
+            return Object.values(nodeIssue.fields).length > 0 || Object.values(nodeIssue.inputs).length > 0
+        })
+    }
 }
 
 

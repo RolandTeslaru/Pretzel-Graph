@@ -1,6 +1,6 @@
 {
-  "version": "1775982527813",
-  "generatedAt": "2026-04-12T08:28:47.813Z",
+  "version": "1776077118999",
+  "generatedAt": "2026-04-13T10:45:18.999Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -1185,27 +1185,6 @@
       "toolCompatible": false,
       "fields": [
         {
-          "id": "strategy",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Strategy",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND"
-            },
-            {
-              "value": "OR"
-            },
-            {
-              "value": "XOR"
-            }
-          ],
-          "kind": "tab"
-        },
-        {
           "id": "signalDependency",
           "advanced": false,
           "required": false,
@@ -1254,8 +1233,17 @@
       ],
       "inputs": [
         {
-          "id": "input",
-          "displayName": "Input",
+          "id": "overwrite",
+          "displayName": "Overwrite",
+          "polymorphicGroupId": "data",
+          "internal": false,
+          "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList",
+          "required": false
+        },
+        {
+          "id": "append",
+          "displayName": "Append",
           "polymorphicGroupId": "data",
           "internal": false,
           "variant": "UnresolvedList",
@@ -1265,16 +1253,17 @@
       ],
       "outputs": [
         {
-          "id": "output",
-          "displayName": "Output",
-          "tooltip": "The accumulated result.",
+          "id": "state",
+          "displayName": "State",
+          "tooltip": "The accumulated state.",
           "polymorphicGroupId": "data",
           "variant": "UnresolvedList",
           "originalVariant": "UnresolvedList"
         },
         {
-          "id": "state",
-          "displayName": "State",
+          "id": "prevState",
+          "displayName": "Previous State",
+          "tooltip": "The previous accumulated state.",
           "polymorphicGroupId": "data",
           "variant": "UnresolvedList",
           "originalVariant": "UnresolvedList"

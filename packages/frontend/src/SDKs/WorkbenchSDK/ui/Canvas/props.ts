@@ -271,7 +271,7 @@ export const createCanvasCallbacks = (
             if (!output) return;
             const selectedAccentColor = nodeColorsName[output.variant[0]] ?? "cyan";
             WorkbenchSDK.canvasWrapper.current?.style.setProperty("--selected", `var(--datatype-${selectedAccentColor})`);
-        },
+        }, 
         onNodeClick: (event, node) => {
             event.stopPropagation();
 

@@ -104,7 +104,7 @@ export class OrchestratorService {
 
         const issues = Validation.Issue.checkWorkflow(workflow, cycles, wfCache);
 
-        if (Object.entries(issues).length > 0)
+        if (Validation.workflowHasIssues(issues) )
             throw new SystemError(
                 SystemError.Code.CONFIG_INVALID_FIELD,
                 "Workflow has nodes with missing fields or inputs — fix them before running",

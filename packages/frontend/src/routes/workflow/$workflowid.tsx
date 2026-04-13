@@ -21,6 +21,7 @@ import TemporalControls from '@/SDKs/WorkbenchSDK/ui/TemporalControls'
 import SpotlightSearch from '@/SDKs/WorkbenchSDK/ui/SpotlightSearch'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
+import { Validation } from '@vx-agent-editor/shared/domain'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -52,18 +53,34 @@ export const Route = createFileRoute('/workflow/$workflowid')({
 const SDK_OPTIONS = ['WorkbenchSDK', 'ExecutionSessionSDK', 'OrchestratorSDK', 'ChatSDK'] as const
 type SDKOption = typeof SDK_OPTIONS[number]
 
+function setsToArrays(value: unknown): unknown {
+    if (value instanceof Set) return [...value];
+    if (value instanceof Map) return Object.fromEntries([...value.entries()].map(([k, v]) => [k, setsToArrays(v)]));
+    if (Array.isArray(value)) return value.map(setsToArrays);
+    if (value !== null && typeof value === 'object') {
+        const out: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(value)) out[k] = setsToArrays(v);
+        return out;
+    }
+    return value;
+}
+
 function useSDKState(selected: SDKOption) {
     const workbench = WorkbenchSDK.useStore(s => s);
     const execution = ExecutionSessionSDK.useStore(s => s);
     const orchestrator = OrchestratorSDK.useStore(s => s);
     const chat = ChatSDK.useStore(s => s);
 
-    switch (selected) {
-        case 'WorkbenchSDK': return workbench;
-        case 'ExecutionSessionSDK': return execution;
-        case 'OrchestratorSDK': return orchestrator;
-        case 'ChatSDK': return chat;
-    }
+    const raw = (() => {
+        switch (selected) {
+            case 'WorkbenchSDK': return workbench;
+            case 'ExecutionSessionSDK': return execution;
+            case 'OrchestratorSDK': return orchestrator;
+            case 'ChatSDK': return chat;
+        }
+    })();
+
+    return setsToArrays(raw);
 }
 
 function StateViewer() {
@@ -148,7 +165,7 @@ function WorkflowLayoutComponent() {
 
 const BottomPanel = () => {
 
-    const hasIssues = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.workflow.hasIssues(s));
+    const hasIssues = WorkbenchSDK.useStore(s => Validation.workflowHasIssues(s.issues));
 
     return (
         <div className='flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 -translate-x-1/2 z-10'>
