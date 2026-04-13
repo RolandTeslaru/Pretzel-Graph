@@ -20,13 +20,3 @@ export interface S2Hooks {
     onKilled?(): void;
 }
 
-export interface S2ExecutionContext {
-    graph: S2Graph;
-    accumulatedSignals: Map<Vertex.Id, Set<Vertex.Id>>;
-    activeTasks: number;
-    activeVertexes: number;
-    settled: boolean;
-    resolve: (value: unknown) => void;
-    reject: (reason?: any) => void;
-    hooks: S2Hooks;
-}

@@ -1,6 +1,6 @@
-import { S2EngineError, S2EngineKilledError, S2EngineXORCollisionError } from "./errors";
+import { S2EngineShortCircuitError, S2EngineError, S2EngineKilledError, S2EngineXORCollisionError } from "./errors";
 import { S2Graph, Vertex } from "./graph";
-import { S2ExecutionContext, S2Hooks } from "./types";
+import { S2Hooks } from "./types";
 
 // Bulk Asynchronous Parallel Directed Cyclical Signal based Graph Engine
 
@@ -9,21 +9,26 @@ import { S2ExecutionContext, S2Hooks } from "./types";
 // or Super Signal Engine ( sounds simmilar to super steps in Pregel)
 
 export class S2Engine {
+
+    public static readonly MAX_VERTEX_EXECUTION_DELTA = 1;
+    public static readonly MAX_VERTEX_RUN_COUNT = 5;
+
     constructor() { }
 
-    public async ignite(graph: S2Graph, hooks: S2Hooks): Promise<any> {
-        return new Promise((resolve, reject) => {
+    public async ignite(graph: S2Graph, hooks: S2Hooks): Promise<S2Engine.ExecutionResult> {
+        return new Promise<S2Engine.ExecutionResult>((resolve, reject) => {
             const startVertex = graph.vertices.get("__START__" as Vertex.Id);
 
             if (!startVertex)
                 throw new S2EngineError("Engine ignited without a __START__ vertex");
 
-            const ctx: S2ExecutionContext = {
+            const ctx: S2Engine.ExecutionContext = {
                 graph,
                 accumulatedSignals: new Map(),
                 activeTasks: 0,
                 activeVertexes: 0,
                 settled: false,
+                startTime: performance.now(),
                 resolve,
                 reject,
                 hooks
@@ -39,7 +44,7 @@ export class S2Engine {
 
     private canVertexRun(
         vertexId: Vertex.Id,
-        ctx: S2ExecutionContext
+        ctx: S2Engine.ExecutionContext
     ): boolean {
         const dependencies = ctx.graph.dependenciesMap.get(vertexId)!;
         const vertex = ctx.graph.vertices.get(vertexId);
@@ -83,7 +88,7 @@ export class S2Engine {
     private fireVertexDependents(
         vertexId: Vertex.Id,
         signalSet: Set<Vertex.Id> | void,
-        ctx: S2ExecutionContext
+        ctx: S2Engine.ExecutionContext
     ) {
         const allDependents = ctx.graph.dependentsMap.get(vertexId)!;
         const dependents = signalSet ?? allDependents;
@@ -118,7 +123,7 @@ export class S2Engine {
     private async fireVertex(
         vertexId: Vertex.Id,
         signals: Set<Vertex.Id>, // incoming signals that triggered this vertex to fire. For AND strategy, this will be the complete set of dependencies. For OR/XOR, this will be a subset of dependencies.
-        ctx: S2ExecutionContext
+        ctx: S2Engine.ExecutionContext
     ) {
         // console.log("Attempting to fire vertex", vertexId, "with incoming signals", signals);
         if (ctx.settled) return;
@@ -126,6 +131,23 @@ export class S2Engine {
         ctx.activeTasks++;
         ctx.activeVertexes ++;
         ctx.hooks.onVertexFired?.(vertexId);
+
+        const vertex = ctx.graph.vertices.get(vertexId);
+        if (!vertex)
+            throw new S2EngineError(`Attempted to fire non-existent vertex ${vertexId}.`);
+
+        vertex.track();
+
+        if(
+            vertex.deltaExecution < S2Engine.MAX_VERTEX_EXECUTION_DELTA && 
+            vertex.getRunCount() > S2Engine.MAX_VERTEX_RUN_COUNT
+        ) {
+            ctx.settled = true;
+            const err = new S2EngineShortCircuitError(vertexId, vertex.getRunCount());
+            ctx.hooks.onVertexError?.(vertexId, err);
+            ctx.reject(err);
+            return;
+        }
 
         try {
             const signalSet = await ctx.hooks.onVertexExecute(vertexId, signals);
@@ -153,11 +175,26 @@ export class S2Engine {
             ctx.activeTasks--;
 
             if (ctx.activeTasks === 0 && !ctx.settled) {
-                // console.log("All tasks completed, settling with success.", "Active vertexes at settlement:", ctx.activeVertexes, "vertexId at settlement:", vertexId);
-
                 ctx.settled = true;
-                ctx.resolve("Finished");
+                ctx.resolve("completed");
             }
         }
+    }
+}
+
+export namespace S2Engine {
+    export type ExecutionResult = "completed"
+
+
+    export interface ExecutionContext {
+        graph: S2Graph;
+        accumulatedSignals: Map<Vertex.Id, Set<Vertex.Id>>;
+        activeTasks: number;
+        activeVertexes: number;
+        settled: boolean;
+        startTime: number;
+        resolve: (value: ExecutionResult) => void;
+        reject: (err: unknown) => void;
+        hooks: S2Hooks;
     }
 }

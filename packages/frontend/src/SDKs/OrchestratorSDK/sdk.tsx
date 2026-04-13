@@ -40,6 +40,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
 
 
     public handleOnEvent = (event: Orchestrator.Event) => {
+        console.log("Orchestrator Event Received:", event.type)
         switch (event.type) {
             case "started":
                 this.setState(s => {
@@ -48,6 +49,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                 })
                 break;
             case "completed":
+                this.unsubscribe();
                 this.setState(s => {
                     s.jobId = undefined;
                     s.executionStatus = "completed";
@@ -55,6 +57,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                 toast.success(`Workflow completed successfully`)
                 break;
             case "failed":
+                this.unsubscribe();
                 this.setState(s => {
                     s.jobId = undefined;
                     s.executionStatus = "failed";
@@ -62,6 +65,7 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                 toast.error(`Workflow execution failed: ${event.error.message} [${event.error.code}]`)
                 break;
             case "terminated":
+                this.unsubscribe();
                 this.setState(s => {
                     s.jobId = undefined;
                     s.executionStatus = "terminated"
@@ -83,25 +87,45 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
                 break;
         }
     }
+
+    public unsubscribe(){
+        this.runtime.unsubscribeFromJobChannel?.();
+    }
+
+    public subscribeToJob(jobId: Orchestrator.Job.Id) {
+        this.unsubscribe();
+
+        console.log("Orchestrator Subscribing to job channel for jobId", jobId)
+        
+        this.runtime.unsubscribeFromJobChannel = RealtimeSDK.subscribeToChannel(
+            Orchestrator.Event.getChannel(jobId),
+            this.handleOnEvent
+        );
+    }
+
+    
+
 }
 
 export const OrchestratorSDK = SDK.get<OrchestratorSDKImpl>("Orchestrator")
 
 
-OrchestratorSDK.useStore.subscribe((state, prevState) => {
-    if (state.jobId === prevState.jobId)
-        return;
+// OrchestratorSDK.useStore.subscribe((state, prevState) => {
+//     if (state.jobId === prevState.jobId)
+//         return;
 
-    if (!state.jobId) {
-        OrchestratorSDK.runtime.unsubscribeFromJobChannel?.();
-        return;
-    }
+//     if (!state.jobId) {
+//         OrchestratorSDK.runtime.unsubscribeFromJobChannel?.();
+//         return;
+//     }
 
-    OrchestratorSDK.runtime.unsubscribeFromJobChannel = RealtimeSDK.subscribeToChannel(
-        Orchestrator.Event.getChannel(state.jobId),
-        OrchestratorSDK.handleOnEvent
-    )
-})
+//     // console.log("Orchestrator Subscribing to job channel for jobId", state.jobId)
+
+//     // OrchestratorSDK.runtime.unsubscribeFromJobChannel = RealtimeSDK.subscribeToChannel(
+//     //     Orchestrator.Event.getChannel(state.jobId),
+//     //     OrchestratorSDK.handleOnEvent
+//     // )
+// })
 
 
 // Heartbeat: while paused, send a heartbeat every 2 minutes on mouse activity

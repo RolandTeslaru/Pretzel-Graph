@@ -422,6 +422,34 @@ export class AggexEngine {
             canVertexRun: this.canNodeRun.bind(this)
         } as const
 
-        await this.s2Engine.ignite(this.compiledGraph, hooks);
+        const start = performance.now();
+
+        const result =  await Promise.race<AggexEngine.ExecutionResult>([
+
+            this.s2Engine.ignite(this.compiledGraph, hooks).then(
+                () => ({ 
+                    status: "completed" as const, 
+                    duration: (performance.now() - start) / 1000 
+                })
+            ),
+
+            new Promise((resolve, reject) => {
+                this.context.abortController.signal.addEventListener("abort", () => {
+                    resolve({
+                        status: "terminated" as const,
+                        duration: (performance.now() - start) / 1000
+                });
+                }, { once: true })
+            })
+        ])
+
+        return result;
+    }
+}
+
+export namespace AggexEngine {
+    export type ExecutionResult = {
+        status: "completed" | "terminated";
+        duration: number;
     }
 }

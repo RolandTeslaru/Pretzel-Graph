@@ -28,6 +28,7 @@ export const CORE_DRAWERS = {
       "Core.Developer.Eval",
       "Core.Developer.ConsoleLog",
       "Core.Developer.Sleep",
+      "Core.Developer.ErrorThrower",
       "Core.Developer.HttpRequest"
     ],
   },

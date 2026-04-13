@@ -78,7 +78,7 @@ code {
   --card-float: #ffffff;
   --card-foreground: theme(--color-stone-600);
 
-  --popover: theme(--color-stone-50);
+  --popover: theme(--color-white);
   --popover-foreground: theme(--color-black);
 
   --primary: theme(--color-orange-500);
