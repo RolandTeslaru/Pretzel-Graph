@@ -1,0 +1,17 @@
+{
+  "commands": [
+    {
+      "command": "workbench.action.terminal.sendSequence",
+      "title": "cdsp",
+      "args": {
+        "text": "cd \"${fileDirname}\" && cdsp\n"
+      }
+    },
+    {
+      "command": "commands.refresh",
+      "text": "$(sync)",
+      "tooltip": "Refresh commands",
+      "color": "#FFCC00"
+    }
+  ]
+}

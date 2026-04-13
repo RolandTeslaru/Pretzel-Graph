@@ -56,6 +56,8 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                     return null;
                 }
 
+                sdk.subscribeToJob(jobId);
+
                 sdk.setState(s => {
                     s.jobId = jobId
                     s.executionStatus = "running"

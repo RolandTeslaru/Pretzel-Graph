@@ -104,6 +104,7 @@ export class AggexWorkerImpl {
             this.pauseTimeoutResetters.delete(jobId);
         };
 
+        console.log(`[Worker] Emitting 'started' for job ${jobId} at ${Date.now()}`);
         this.emit<Orchestrator.Event.Started>({
             jobId,
             workflowId: workflow.id,
@@ -151,43 +152,27 @@ export class AggexWorkerImpl {
             this.runningEngines.set(jobId, engine);
             this.runningExecutionContexts.set(jobId, context);
 
-            let engineError: Error | null = null;
-
-            const enginePromise = engine.run().catch((err) => {
-                engineError = err instanceof Error ? err : new Error(String(err));
-            });
-
-            const result = await Promise.race([
-                enginePromise.then(() => 'completed' as const),
-                new Promise<'terminated'>((resolve) => {
-                    context.abortController.signal.addEventListener('abort', () => resolve('terminated'), { once: true });
-                })
-            ]);
+            const result = await engine.run();
 
             context.streamController.disposeAll();
 
-            if (result === 'terminated') {
+            if (result.status === 'terminated')
                 this.emit<Orchestrator.Event.Terminated>({
                     jobId,
                     workflowId: workflow.id,
                     type: "terminated",
                     channel: eventChannel,
                 });
-                return { status: 'terminated' };
-            }
+            else if (result.status === "completed" )
+                this.emit<Orchestrator.Event.Completed>({
+                    jobId,
+                    workflowId: workflow.id,
+                    type: "completed",
+                    channel: eventChannel,
+                    result: "Workflow execution completed successfully"
+                });
 
-            if (engineError) {
-                throw engineError;
-            }
-
-            this.emit<Orchestrator.Event.Completed>({
-                jobId,
-                workflowId: workflow.id,
-                type: "completed",
-                channel: eventChannel,
-                result: "Workflow execution completed successfully"
-            });
-            return { status: 'completed' };
+            return { status: result.status };
 
         } catch (err: unknown) {
             const systemError = SystemError.fromUnknown(err)
@@ -201,6 +186,7 @@ export class AggexWorkerImpl {
                 channel: eventChannel,
                 error: systemError.toJSON()
             });
+            
             return { status: 'failed', error: systemError.toJSON() };
 
         } finally {

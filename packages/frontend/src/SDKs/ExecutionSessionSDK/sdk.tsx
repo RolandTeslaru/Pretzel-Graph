@@ -46,6 +46,7 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
 
 
     public handleOnEvent = (e: ExecutionSession.Event) => {
+        console.log("Execution Session Event Received:", e.type)
         switch(e.type){
             case "node:started":
                 this.setState(s => {
