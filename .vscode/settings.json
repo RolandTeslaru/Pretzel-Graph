@@ -1,0 +1,12 @@
+{
+  "commands.commands": [
+    
+    {
+      "command": "workbench.action.terminal.sendSequence",
+      "title": "cdsp",
+      "args": {
+        "text": "cd \"${fileDirname}\" && cdsp\n"
+      }
+    }
+  ]
+}

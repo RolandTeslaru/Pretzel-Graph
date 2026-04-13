@@ -1,6 +1,6 @@
 {
-  "version": "1776077118999",
-  "generatedAt": "2026-04-13T10:45:18.999Z",
+  "version": "1776107360800",
+  "generatedAt": "2026-04-13T19:09:20.800Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -870,6 +870,86 @@
         }
       ],
       "description": "Logs input data to the console with a specified log level."
+    },
+    "Core.Developer.ErrorThrower": {
+      "id": "Core.Developer.ErrorThrower",
+      "displayName": "Error Thrower",
+      "icon": "Bug",
+      "accent": "utility",
+      "toolCompatible": false,
+      "fields": [
+        {
+          "id": "error",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Error",
+          "variant": "String",
+          "initialValue": "Intentional error",
+          "multiline": true,
+          "placeholder": "Enter the error message to throw"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "trigger",
+          "displayName": "Trigger",
+          "tooltip": "Optional trigger to execute this node and throw an error.",
+          "polymorphicGroupId": "signal",
+          "internal": false,
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "description": "Throws a configured error when the node is executed."
     },
     "Core.Developer.Eval": {
       "id": "Core.Developer.Eval",
