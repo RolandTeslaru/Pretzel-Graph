@@ -35,7 +35,7 @@ export const nodeReducers = {
 
         cacheReducers.deleteNode(s, deletedNodeId);
         layoutReducers.node.remove(s, deletedNodeId);
-        nodeReducers.validate(s, deletedNodeId);
+        nodeReducers.clearIssues(s, deletedNodeId);
     },
     create: (s, blueprint, position) => {
         s.isDirty = true;

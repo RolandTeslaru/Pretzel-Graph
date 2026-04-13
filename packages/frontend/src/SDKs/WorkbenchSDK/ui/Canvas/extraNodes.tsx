@@ -21,7 +21,7 @@ export const ProblematicCycleSelectionNode = memo(({ data }: NodeProps<Workbench
             
             <Tooltip.Root>
                 <Tooltip.Trigger asChild>
-                    <SystemIcons.Info className='absolute top-3 right-3 text-destructive animate-pulse' size={40}/>
+                    <SystemIcons.Info className='absolute top-2 right-2 text-destructive animate-pulse' size={40}/>
                 </Tooltip.Trigger>
                 <Tooltip.Content>
                     <TooltipContent issue={data.issue} />
