@@ -6,6 +6,12 @@ import { S2EngineError } from "./errors";
 export class Vertex {
     private strategy: Vertex.STRATEGY = "AND";
 
+    private runCount: number = 0;
+    private lastExecutionTime: number  = 0;
+    public deltaExecution: number = Infinity
+
+    public static readonly MAX_RUN_COUNT = 100;
+
     constructor(
         public readonly id: Vertex.Id,
         strategy: Vertex.STRATEGY = "AND"
@@ -21,6 +27,21 @@ export class Vertex {
     public getStrategy(): Vertex.STRATEGY {
         return this.strategy;
     }
+
+    public track() {
+        this.runCount++;
+        if(this.runCount > Vertex.MAX_RUN_COUNT)
+            throw new S2EngineError(`Vertex ${this.id} has exceeded the maximum run count.`);
+
+        const now = performance.now();
+
+        this.deltaExecution = ( now - this.lastExecutionTime ) / 1000;
+        this.lastExecutionTime = now;
+    }
+
+    public getRunCount(): number {
+        return this.runCount;
+    }
 }
 
 export class RouterVertex extends Vertex{
@@ -31,11 +52,6 @@ export class RouterVertex extends Vertex{
 export namespace Vertex {
     export const Id = z.string().brand("VertexId");
     export type Id = z.infer<typeof Vertex.Id>;
-
-    export interface ComputeContext {
-        superstepTurn: number;
-        superstepSiblings: Set<Vertex.Id>;
-    }
     
     export type STRATEGY = "AND" | "OR" | "XOR";
 }

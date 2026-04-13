@@ -153,7 +153,7 @@ function WorkflowLayoutComponent() {
             <NodeSidebar />
             <BottomPanel/>
             <PathPanel/>
-            {/* <AdminJobsPanel /> */}
+            <AdminJobsPanel />
             {/* <StackDebugPanel/> */}
             <StateViewer />
             <SpotlightSearch />

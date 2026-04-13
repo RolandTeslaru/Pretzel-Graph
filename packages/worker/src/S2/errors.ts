@@ -26,3 +26,13 @@ export class S2EngineXORCollisionError extends S2EngineError {
         this.name = this.constructor.name;
     }
 }
+
+
+export class S2EngineShortCircuitError extends S2EngineError {
+    constructor(vertexId: Vertex.Id, runCount: number) {
+        super(`Short circuit detected: vertex ${vertexId} fired ${runCount} times in rapid succession`);
+
+        Object.setPrototypeOf(this, S2EngineShortCircuitError.prototype);
+        this.name = this.constructor.name;
+    }
+}

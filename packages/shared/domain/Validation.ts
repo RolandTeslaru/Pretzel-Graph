@@ -276,7 +276,6 @@ export namespace Validation {
     }
 
     export function workflowHasIssues(issues: Issue.Workflow_) {
-
         if(issues.cycles.length > 0)
             return true;
 

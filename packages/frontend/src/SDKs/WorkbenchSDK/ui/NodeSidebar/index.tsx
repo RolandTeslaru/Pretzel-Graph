@@ -44,7 +44,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
         node.inputs.filter(inp => !inp.internal).forEach(input => {
             if (connectedPorts[input.id])
                 connectedInputs.push(input);
-            else
+            else if(input.variant in INPUT_RENDERER_MAP)
                 inputs.push(input);
         });
 
