@@ -181,22 +181,19 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
             return;
         }
 
-        console.log(`[Realtime] subscribe request for channel: ${channel}`);
         const authorized = await this.verifyChannelOwnership(identity.userId, channel);
-        console.log(`[Realtime] channel ${channel} authorized: ${authorized}`);
         if (!authorized) {
             ws.send(JSON.stringify(
-                { 
-                    channel, 
-                    type: "forbidden", 
-                    message: "You are not authorized to subscribe to this channel" 
+                {
+                    channel,
+                    type: "forbidden",
+                    message: "You are not authorized to subscribe to this channel"
                 } as Realtime.Event.Forbidden));
             return;
         }
 
         if (!this.wsSubscriptions.has(channel)) {
             this.wsSubscriptions.set(channel, new Set());
-            console.log(`[Realtime] Redis subscribing to ${channel} at ${Date.now()}`);
             this.redisSub.subscribe(channel);
         }
         this.wsSubscriptions.get(channel)!.add(ws);

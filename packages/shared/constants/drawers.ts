@@ -16,7 +16,7 @@ export const CORE_DRAWERS = {
       "Core.Chat.Output", 
       "Core.Text.Input", 
       "Core.Text.Output", 
-      "Core.Chat.History",
+      "Core.Chat.SessionMessages",
     ],
   },
   developer: {
@@ -66,7 +66,7 @@ export const CORE_DRAWERS = {
     blueprintIds: [],
   },
   routing: {
-    displayName: "Routing",
+    displayName: "Routing & Flow",
     id: "routing",
     icon: "ChevronsLeftRightEllipsis",
     blueprintIds: [

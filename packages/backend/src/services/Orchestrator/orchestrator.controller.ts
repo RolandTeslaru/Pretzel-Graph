@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Req, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, HttpCode, Get, Param } from '@nestjs/common';
 import { OrchestratorService } from './orchestrator.service';
 import { Auth, Orchestrator } from '@vx-agent-editor/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
@@ -17,6 +17,19 @@ export class OrchestratorController {
     ) {
         const payload = Orchestrator.API.Run.Request.parse(body);
         return await this.orchestratorService.run(req.token, req.user.id as Auth.User.Id, payload);
+    }
+
+
+    @Get('await-result/:jobId')
+    async awaitResult(
+        @Req() req: AuthenticatedRequest,
+        @Param('jobId') jobId: string
+    ) {
+        return await this.orchestratorService.awaitResult(
+            req.token,
+            req.user.id as Auth.User.Id,
+            { jobId: jobId as Orchestrator.Job.Id }
+        );
     }
 
 

@@ -1,4 +1,4 @@
-import { Button, Spinner } from '@vx-agent-editor/vx-ui/foundations'
+import { Button, Spinner, Tooltip } from '@vx-agent-editor/vx-ui/foundations'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { OrchestratorSDK } from '../sdk'
 
@@ -30,7 +30,7 @@ const handleSuspend = () => {
   OrchestratorSDK.actions.suspend(currentJobId);
 }
 
-const ControlButton = ({ loading, icon: Icon, iconClassName, label, ...rest }: { loading: boolean; icon: React.FC<{ className?: string }>; iconClassName?: string; label: string } & React.ComponentProps<typeof Button>) => (
+const ControlButton = ({ loading, icon: Icon, iconClassName, label, ...rest }: { loading: boolean; icon: React.FC<{ className?: string }>; iconClassName?: string; label?: string } & React.ComponentProps<typeof Button>) => (
   <Button disabled={loading} className='my-auto' {...rest}>
     {loading ? <Spinner /> : <><Icon className={iconClassName} />{label}</>}
   </Button>
@@ -48,12 +48,33 @@ const WorkflowControls = ({ canRun }: { canRun: boolean }) => {
 
   return (
     <>
-      <ControlButton loading={awaitedConfirmation.has("terminated")} icon={SystemIcons.X} iconClassName="size-4" label="Terminate" variant="destructive" onClick={handleTerminate} />
       {executionStatus === "paused"
         ? <ControlButton loading={awaitedConfirmation.has("resumed")} icon={SystemIcons.Play} label="Resume" variant="warning" onClick={handleResume} />
-        : <ControlButton loading={awaitedConfirmation.has("paused")} icon={SystemIcons.PauseFill} label="Pause" variant="warning" onClick={handlePause} />
+        : <Tooltip.Root>
+            <Tooltip.Trigger>
+              <ControlButton loading={awaitedConfirmation.has("paused")} icon={SystemIcons.PauseFill} variant="warning" onClick={handlePause} />
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              <p>Pause</p>
+            </Tooltip.Content>
+          </Tooltip.Root>
       }
-      <ControlButton loading={awaitedConfirmation.has("suspended")} icon={SystemIcons.Square} iconClassName="size-4" label="Suspend" variant="warning" onClick={handleSuspend} />
+      <Tooltip.Root>
+        <Tooltip.Trigger>
+          <ControlButton loading={awaitedConfirmation.has("suspended")} icon={SystemIcons.SquareFill} iconClassName="size-4" variant="warning" onClick={handleSuspend} />
+        </Tooltip.Trigger>
+        <Tooltip.Content>
+          <p>Suspend</p>
+        </Tooltip.Content>
+      </Tooltip.Root>
+      <Tooltip.Root>
+        <Tooltip.Trigger>
+          <ControlButton loading={awaitedConfirmation.has("terminated")} icon={SystemIcons.X} iconClassName="size-4" variant="destructive" onClick={handleTerminate} />
+        </Tooltip.Trigger>
+        <Tooltip.Content>
+          <p>Terminate</p>
+        </Tooltip.Content>
+      </Tooltip.Root>
     </>
   )
 }

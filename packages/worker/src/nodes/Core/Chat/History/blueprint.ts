@@ -1,36 +1,29 @@
-import { FieldBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
+import { defineBlueprint, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
-    id: "Core.Chat.History",
-    displayName: "Chat History",
-    description: "Stores and retrieves conversation history for chat sessions",
+    id: "Core.Chat.SessionMessages",
+    displayName: "Session Messages",
+    description: "Outputs the message history accumulated in the current execution session",
     icon: "History",
     accent: "port-Message",
-    fields: [
-        FieldBuilder.Integer({
-            id: "maxTokensPercentage",
-            displayName: "Max Tokens Percentage",
-            required: false,
-            initialValue: 80,
-            min: 10,
-            max: 90,
-            step: 1,
-            slider: true,
-            tooltip: "Percentage at whitch the context window gets summerized"
-        }),
-    ],
+    fields: [],
     inputs: [
-        InputBuilder.LanguageModel({
-            id: "summerizationLLM",
-            displayName: "Summerization LLM",
-            required: true
-        })
+        InputBuilder.MessageList({
+            id: "overwrite",
+            displayName: "Overwrite",
+            required: false,
+        }),
+        InputBuilder.MessageList({
+            id: "append",
+            displayName: "Append",
+            required: false,
+        }),
     ],
     outputs: [
         OutputBuilder.MessageList({
-            id: "messages",
-            displayName: "Messages",
-            tooltip: "The conversation history from memory",
+            id: "history",
+            displayName: "History",
+            tooltip: "The message history from the current execution session",
         }),
     ],
 });

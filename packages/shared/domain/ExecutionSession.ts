@@ -46,7 +46,6 @@ export namespace ExecutionSession {
         id: Id.default(createId()),
         node_output_instances: z.record(Workflow.Node.Id, z.any()).default({}),
         node_output_projections: z.record(Workflow.Node.Id, z.record(Foundations.Port.Output.Id, Foundations.Projection.Schema)).default({}),
-        node_messages: z.record(Workflow.Node.Id, z.string()).default({}),
         node_status: z.record(Workflow.Node.Id, NodeStatus.Schema).default({}),
         edge_state: z.record(Workflow.Edge.Id, EdgeState.Schema).default({}),
         messages: z.array(z.custom<BaseMessage>((v) => v !== null && typeof v === 'object')).default([]),
