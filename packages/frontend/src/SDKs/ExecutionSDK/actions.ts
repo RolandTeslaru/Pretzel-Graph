@@ -1,11 +1,11 @@
 import { ExecutionSession, Workflow } from "@vx-agent-editor/shared/domain";
 import { api } from "../ApiInterceptorSDK";
-import { type ExecutionSessionSDKImpl } from "./sdk"
+import { type ExecutionSDKImpl } from "./sdk"
 import { toast } from "sonner";
 import type { DropFirstArg } from "../types";
 import { ChatSDK } from "../ChatSDK/sdk";
 
-export const createExecutionSessionSDKActions = (sdk: ExecutionSessionSDKImpl) => {
+export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
     return {
         create: async (workflowId) => {
             try {
@@ -68,16 +68,16 @@ export const createExecutionSessionSDKActions = (sdk: ExecutionSessionSDKImpl) =
         setNodeStatus: (...args) => sdk.setState(s => sdk.reducers.setNodeStatus(s, ...args)),
         clearNodeStatus: (...args) => sdk.setState(s => sdk.reducers.clearNodeStatus(s, ...args)),
         clearAllNodeStatuses: () => sdk.setState(s => sdk.reducers.clearAllNodeStatuses(s)),
-    } satisfies ExecutionSessionSDKActions
+    } satisfies ExecutionSDKActions
 }
 
-export type ExecutionSessionSDKActions = {
+export type ExecutionSDKActions = {
     create: (workflowId: Workflow.Id) => Promise<ExecutionSession>,
     get: (id: ExecutionSession.Id) => Promise<ExecutionSession>,
     update: (id: ExecutionSession.Id, session: ExecutionSession.Update) => Promise<ExecutionSession>,
     loadLocal: (session: ExecutionSession) => void,
-    setNodeStatus: DropFirstArg<ExecutionSessionSDKImpl["reducers"]["setNodeStatus"]>,
-    clearNodeStatus: DropFirstArg<ExecutionSessionSDKImpl["reducers"]["clearNodeStatus"]>,
+    setNodeStatus: DropFirstArg<ExecutionSDKImpl["reducers"]["setNodeStatus"]>,
+    clearNodeStatus: DropFirstArg<ExecutionSDKImpl["reducers"]["clearNodeStatus"]>,
     clearStatus: () => void,
     clearAllNodeStatuses: () => void,
     prepareForRun: () => void
