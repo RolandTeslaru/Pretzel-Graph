@@ -32,8 +32,6 @@ export namespace Library {
             is_root: z.boolean(),
             display_name: z.string(),
             description: z.string().nullable(),
-            workflow_ids: z.array(DomainWorkflow.Id),
-            child_folder_ids: z.array(Folder.Id),
             created_at: z.string(),
             updated_at: z.string(),
         })
@@ -65,7 +63,13 @@ export namespace Library {
                 export type Response = Library.Project;
             }
             export namespace List {
-                export const ResponseSchema = z.array(Library.Project.Schema);
+                // Each project's root folder id is inlined so the frontend
+                // can prefetch folder contents without a second round-trip.
+                export const ResponseSchema = z.array(
+                    Library.Project.Schema.extend({
+                        root_folder_id: Library.Folder.Id.nullable(),
+                    }),
+                );
                 export type Response = z.infer<typeof ResponseSchema>;
             }
             export namespace Delete {
@@ -98,12 +102,29 @@ export namespace Library {
                 export type Request = z.infer<typeof Request>;
                 export type Response = { ok: true };
             }
+
+            // One-level-deep contents of a folder:
+            // the folder itself + its immediate child folders + workflows.
+            export namespace GetContents {
+                export const Request = z.object({ id: Library.Folder.Id });
+                export type Request = z.infer<typeof Request>;
+                export const ResponseSchema = z.object({
+                    folder: Library.Folder.Schema,
+                    child_folders: z.array(Library.Folder.Schema),
+                    workflows: z.array(Library.WorkflowMeta.Schema),
+                });
+                export type Response = z.infer<typeof ResponseSchema>;
+            }
         }
 
         // ── Workflows ─────────────────────────────────────────
         export namespace Workflow {
             export namespace Create {
-                export const Request = DomainWorkflow.Schema;
+                export const Request = z.object({
+                    folder_id: Library.Folder.Id,
+                    display_name: z.string().min(1),
+                    description: z.string().nullable().optional(),
+                });
                 export type Request = z.infer<typeof Request>;
                 export type Response = DomainWorkflow;
             }
