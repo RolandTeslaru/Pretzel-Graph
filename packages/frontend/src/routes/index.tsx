@@ -1,29 +1,23 @@
-import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
-import { Button } from '@vx-agent-editor/vx-ui/foundations'
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 
 
 export const Route = createFileRoute('/')({
-    beforeLoad: ({ context }) => {
-        if (!context.auth.isAuthenticated) {
-            throw redirect({ to: '/auth' })
-        }
-    },
-    component: Index,
+    component: Landing,
 })
 
-function Index() {
+function Landing() {
     return (
-        <div className="p-2">
-            <Button
-                onClick={() => {
-                    AuthSDK.actions.logout();
-                }}
-            >
-                Log Out
-            </Button>
-            <h3 className="text-2xl font-bold">Welcome to vxAgentEditor!</h3>
-            <p className="mt-4">Start building your agent flows.</p>
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+                <h1 className="text-3xl font-bold">PretzelGraph</h1>
+                <p className="mt-2 text-sm opacity-70">Visual agent workflow editor.</p>
+                <Link
+                    to="/home"
+                    className="inline-block mt-6 px-4 py-2 rounded border hover:bg-muted"
+                >
+                    Go to Home →
+                </Link>
+            </div>
         </div>
     )
 }

@@ -9,13 +9,27 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UiPreviewIndexRouteImport } from './routes/ui-preview/index'
 import { Route as IconsPreviewIndexRouteImport } from './routes/icons-preview/index'
+import { Route as HomeIndexRouteImport } from './routes/home/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as WorkflowWorkflowidRouteImport } from './routes/workflow/$workflowid'
+import { Route as HomeUsageRouteImport } from './routes/home/usage'
+import { Route as HomeTemplatesRouteImport } from './routes/home/templates'
+import { Route as HomeSettingsRouteImport } from './routes/home/settings'
+import { Route as HomeExecutionsRouteImport } from './routes/home/executions'
+import { Route as HomeCredentialsRouteImport } from './routes/home/credentials'
 import { Route as WorkflowWorkflowidIndexRouteImport } from './routes/workflow/$workflowid/index'
+import { Route as HomeProjectsIndexRouteImport } from './routes/home/projects/index'
+import { Route as HomeProjectsFolderIdRouteImport } from './routes/home/projects/$folderId'
 
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,6 +45,11 @@ const IconsPreviewIndexRoute = IconsPreviewIndexRouteImport.update({
   path: '/icons-preview/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeIndexRoute = HomeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => HomeRoute,
+} as any)
 const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/auth/',
   path: '/auth/',
@@ -41,59 +60,152 @@ const WorkflowWorkflowidRoute = WorkflowWorkflowidRouteImport.update({
   path: '/workflow/$workflowid',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeUsageRoute = HomeUsageRouteImport.update({
+  id: '/usage',
+  path: '/usage',
+  getParentRoute: () => HomeRoute,
+} as any)
+const HomeTemplatesRoute = HomeTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => HomeRoute,
+} as any)
+const HomeSettingsRoute = HomeSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => HomeRoute,
+} as any)
+const HomeExecutionsRoute = HomeExecutionsRouteImport.update({
+  id: '/executions',
+  path: '/executions',
+  getParentRoute: () => HomeRoute,
+} as any)
+const HomeCredentialsRoute = HomeCredentialsRouteImport.update({
+  id: '/credentials',
+  path: '/credentials',
+  getParentRoute: () => HomeRoute,
+} as any)
 const WorkflowWorkflowidIndexRoute = WorkflowWorkflowidIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => WorkflowWorkflowidRoute,
 } as any)
+const HomeProjectsIndexRoute = HomeProjectsIndexRouteImport.update({
+  id: '/projects/',
+  path: '/projects/',
+  getParentRoute: () => HomeRoute,
+} as any)
+const HomeProjectsFolderIdRoute = HomeProjectsFolderIdRouteImport.update({
+  id: '/projects/$folderId',
+  path: '/projects/$folderId',
+  getParentRoute: () => HomeRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/home': typeof HomeRouteWithChildren
+  '/home/credentials': typeof HomeCredentialsRoute
+  '/home/executions': typeof HomeExecutionsRoute
+  '/home/settings': typeof HomeSettingsRoute
+  '/home/templates': typeof HomeTemplatesRoute
+  '/home/usage': typeof HomeUsageRoute
   '/workflow/$workflowid': typeof WorkflowWorkflowidRouteWithChildren
   '/auth/': typeof AuthIndexRoute
+  '/home/': typeof HomeIndexRoute
   '/icons-preview/': typeof IconsPreviewIndexRoute
   '/ui-preview/': typeof UiPreviewIndexRoute
+  '/home/projects/$folderId': typeof HomeProjectsFolderIdRoute
+  '/home/projects/': typeof HomeProjectsIndexRoute
   '/workflow/$workflowid/': typeof WorkflowWorkflowidIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/home/credentials': typeof HomeCredentialsRoute
+  '/home/executions': typeof HomeExecutionsRoute
+  '/home/settings': typeof HomeSettingsRoute
+  '/home/templates': typeof HomeTemplatesRoute
+  '/home/usage': typeof HomeUsageRoute
   '/auth': typeof AuthIndexRoute
+  '/home': typeof HomeIndexRoute
   '/icons-preview': typeof IconsPreviewIndexRoute
   '/ui-preview': typeof UiPreviewIndexRoute
+  '/home/projects/$folderId': typeof HomeProjectsFolderIdRoute
+  '/home/projects': typeof HomeProjectsIndexRoute
   '/workflow/$workflowid': typeof WorkflowWorkflowidIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/home': typeof HomeRouteWithChildren
+  '/home/credentials': typeof HomeCredentialsRoute
+  '/home/executions': typeof HomeExecutionsRoute
+  '/home/settings': typeof HomeSettingsRoute
+  '/home/templates': typeof HomeTemplatesRoute
+  '/home/usage': typeof HomeUsageRoute
   '/workflow/$workflowid': typeof WorkflowWorkflowidRouteWithChildren
   '/auth/': typeof AuthIndexRoute
+  '/home/': typeof HomeIndexRoute
   '/icons-preview/': typeof IconsPreviewIndexRoute
   '/ui-preview/': typeof UiPreviewIndexRoute
+  '/home/projects/$folderId': typeof HomeProjectsFolderIdRoute
+  '/home/projects/': typeof HomeProjectsIndexRoute
   '/workflow/$workflowid/': typeof WorkflowWorkflowidIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/home'
+    | '/home/credentials'
+    | '/home/executions'
+    | '/home/settings'
+    | '/home/templates'
+    | '/home/usage'
     | '/workflow/$workflowid'
     | '/auth/'
+    | '/home/'
     | '/icons-preview/'
     | '/ui-preview/'
+    | '/home/projects/$folderId'
+    | '/home/projects/'
     | '/workflow/$workflowid/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/icons-preview' | '/ui-preview' | '/workflow/$workflowid'
+  to:
+    | '/'
+    | '/home/credentials'
+    | '/home/executions'
+    | '/home/settings'
+    | '/home/templates'
+    | '/home/usage'
+    | '/auth'
+    | '/home'
+    | '/icons-preview'
+    | '/ui-preview'
+    | '/home/projects/$folderId'
+    | '/home/projects'
+    | '/workflow/$workflowid'
   id:
     | '__root__'
     | '/'
+    | '/home'
+    | '/home/credentials'
+    | '/home/executions'
+    | '/home/settings'
+    | '/home/templates'
+    | '/home/usage'
     | '/workflow/$workflowid'
     | '/auth/'
+    | '/home/'
     | '/icons-preview/'
     | '/ui-preview/'
+    | '/home/projects/$folderId'
+    | '/home/projects/'
     | '/workflow/$workflowid/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HomeRoute: typeof HomeRouteWithChildren
   WorkflowWorkflowidRoute: typeof WorkflowWorkflowidRouteWithChildren
   AuthIndexRoute: typeof AuthIndexRoute
   IconsPreviewIndexRoute: typeof IconsPreviewIndexRoute
@@ -102,6 +214,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -123,6 +242,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IconsPreviewIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/home/': {
+      id: '/home/'
+      path: '/'
+      fullPath: '/home/'
+      preLoaderRoute: typeof HomeIndexRouteImport
+      parentRoute: typeof HomeRoute
+    }
     '/auth/': {
       id: '/auth/'
       path: '/auth'
@@ -137,6 +263,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkflowWorkflowidRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/home/usage': {
+      id: '/home/usage'
+      path: '/usage'
+      fullPath: '/home/usage'
+      preLoaderRoute: typeof HomeUsageRouteImport
+      parentRoute: typeof HomeRoute
+    }
+    '/home/templates': {
+      id: '/home/templates'
+      path: '/templates'
+      fullPath: '/home/templates'
+      preLoaderRoute: typeof HomeTemplatesRouteImport
+      parentRoute: typeof HomeRoute
+    }
+    '/home/settings': {
+      id: '/home/settings'
+      path: '/settings'
+      fullPath: '/home/settings'
+      preLoaderRoute: typeof HomeSettingsRouteImport
+      parentRoute: typeof HomeRoute
+    }
+    '/home/executions': {
+      id: '/home/executions'
+      path: '/executions'
+      fullPath: '/home/executions'
+      preLoaderRoute: typeof HomeExecutionsRouteImport
+      parentRoute: typeof HomeRoute
+    }
+    '/home/credentials': {
+      id: '/home/credentials'
+      path: '/credentials'
+      fullPath: '/home/credentials'
+      preLoaderRoute: typeof HomeCredentialsRouteImport
+      parentRoute: typeof HomeRoute
+    }
     '/workflow/$workflowid/': {
       id: '/workflow/$workflowid/'
       path: '/'
@@ -144,8 +305,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkflowWorkflowidIndexRouteImport
       parentRoute: typeof WorkflowWorkflowidRoute
     }
+    '/home/projects/': {
+      id: '/home/projects/'
+      path: '/projects'
+      fullPath: '/home/projects/'
+      preLoaderRoute: typeof HomeProjectsIndexRouteImport
+      parentRoute: typeof HomeRoute
+    }
+    '/home/projects/$folderId': {
+      id: '/home/projects/$folderId'
+      path: '/projects/$folderId'
+      fullPath: '/home/projects/$folderId'
+      preLoaderRoute: typeof HomeProjectsFolderIdRouteImport
+      parentRoute: typeof HomeRoute
+    }
   }
 }
+
+interface HomeRouteChildren {
+  HomeCredentialsRoute: typeof HomeCredentialsRoute
+  HomeExecutionsRoute: typeof HomeExecutionsRoute
+  HomeSettingsRoute: typeof HomeSettingsRoute
+  HomeTemplatesRoute: typeof HomeTemplatesRoute
+  HomeUsageRoute: typeof HomeUsageRoute
+  HomeIndexRoute: typeof HomeIndexRoute
+  HomeProjectsFolderIdRoute: typeof HomeProjectsFolderIdRoute
+  HomeProjectsIndexRoute: typeof HomeProjectsIndexRoute
+}
+
+const HomeRouteChildren: HomeRouteChildren = {
+  HomeCredentialsRoute: HomeCredentialsRoute,
+  HomeExecutionsRoute: HomeExecutionsRoute,
+  HomeSettingsRoute: HomeSettingsRoute,
+  HomeTemplatesRoute: HomeTemplatesRoute,
+  HomeUsageRoute: HomeUsageRoute,
+  HomeIndexRoute: HomeIndexRoute,
+  HomeProjectsFolderIdRoute: HomeProjectsFolderIdRoute,
+  HomeProjectsIndexRoute: HomeProjectsIndexRoute,
+}
+
+const HomeRouteWithChildren = HomeRoute._addFileChildren(HomeRouteChildren)
 
 interface WorkflowWorkflowidRouteChildren {
   WorkflowWorkflowidIndexRoute: typeof WorkflowWorkflowidIndexRoute
@@ -160,6 +359,7 @@ const WorkflowWorkflowidRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HomeRoute: HomeRouteWithChildren,
   WorkflowWorkflowidRoute: WorkflowWorkflowidRouteWithChildren,
   AuthIndexRoute: AuthIndexRoute,
   IconsPreviewIndexRoute: IconsPreviewIndexRoute,
