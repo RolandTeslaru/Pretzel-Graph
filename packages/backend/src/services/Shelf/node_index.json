@@ -1,6 +1,6 @@
 {
-  "version": "1776107360800",
-  "generatedAt": "2026-04-13T19:09:20.800Z",
+  "version": "1776163989043",
+  "generatedAt": "2026-04-14T10:53:09.043Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -109,27 +109,13 @@
       ],
       "description": "Runs a language model given a specified provider."
     },
-    "Core.Chat.History": {
-      "id": "Core.Chat.History",
-      "displayName": "Chat History",
+    "Core.Chat.SessionMessages": {
+      "id": "Core.Chat.SessionMessages",
+      "displayName": "Session Messages",
       "icon": "History",
       "accent": "port-Message",
       "toolCompatible": false,
       "fields": [
-        {
-          "id": "maxTokensPercentage",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Max Tokens Percentage",
-          "tooltip": "Percentage at whitch the context window gets summerized",
-          "variant": "Integer",
-          "initialValue": 80,
-          "min": 10,
-          "max": 90,
-          "step": 1,
-          "slider": true
-        },
         {
           "id": "signalDependency",
           "advanced": false,
@@ -179,22 +165,29 @@
       ],
       "inputs": [
         {
-          "id": "summerizationLLM",
-          "displayName": "Summerization LLM",
+          "id": "overwrite",
+          "displayName": "Overwrite",
           "internal": false,
-          "variant": "LanguageModel",
-          "required": true
+          "variant": "MessageList",
+          "required": false
+        },
+        {
+          "id": "append",
+          "displayName": "Append",
+          "internal": false,
+          "variant": "MessageList",
+          "required": false
         }
       ],
       "outputs": [
         {
-          "id": "messages",
-          "displayName": "Messages",
-          "tooltip": "The conversation history from memory",
+          "id": "history",
+          "displayName": "History",
+          "tooltip": "The message history from the current execution session",
           "variant": "MessageList"
         }
       ],
-      "description": "Stores and retrieves conversation history for chat sessions"
+      "description": "Outputs the message history accumulated in the current execution session"
     },
     "Core.Chat.Input": {
       "id": "Core.Chat.Input",

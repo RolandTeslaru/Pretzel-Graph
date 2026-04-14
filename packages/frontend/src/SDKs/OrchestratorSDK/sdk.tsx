@@ -38,54 +38,14 @@ export class OrchestratorSDKImpl extends BaseSDK<OrchestratorSDK.State> {
 
     public readonly selectors: OrchestratorSDK.Selectors = {}
 
+    public useAwaitConfirmation = (event: OrchestratorSDK.AwaitedConfirmation): () => void => {
+        this.actions.addAwaitedConfirmation(event);
+        return () => { this.actions.removeAwaitedConfirmation(event); };
+    }
+
 
     public handleOnEvent = (event: Orchestrator.Event) => {
         console.log("Orchestrator Event Received:", event.type)
-        switch (event.type) {
-            case "started":
-                this.setState(s => {
-                    s.jobId = event.jobId;
-                    s.executionStatus = "running";
-                })
-                break;
-            case "completed":
-                this.unsubscribe();
-                this.setState(s => {
-                    s.jobId = undefined;
-                    s.executionStatus = "completed";
-                })
-                toast.success(`Workflow completed successfully`)
-                break;
-            case "failed":
-                this.unsubscribe();
-                this.setState(s => {
-                    s.jobId = undefined;
-                    s.executionStatus = "failed";
-                })
-                toast.error(`Workflow execution failed: ${event.error.message} [${event.error.code}]`)
-                break;
-            case "terminated":
-                this.unsubscribe();
-                this.setState(s => {
-                    s.jobId = undefined;
-                    s.executionStatus = "terminated"
-                })
-                ExecutionSessionSDK.actions.clearStatus();
-                toast.error(`Workflow execution terminated`)
-                break;
-            case "paused":
-                this.setState(s => {
-                    s.executionStatus = "paused"
-                })
-                toast.info(`Workflow execution paused`)
-                break;
-            case "resumed":
-                this.setState(s => {
-                    s.executionStatus = "running"
-                })
-                toast.info(`Workflow execution resumed`)
-                break;
-        }
     }
 
     public unsubscribe(){

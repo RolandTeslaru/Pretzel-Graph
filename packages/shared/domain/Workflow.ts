@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { Foundations } from "./Foundations";
 import { type SupabaseClient } from "@supabase/supabase-js";
+import { Auth } from "./Auth";
 
 export namespace Workflow {
     export const Id = z.string().brand("WorkflowId");
@@ -105,12 +106,15 @@ export namespace Workflow {
 
     export const Schema = z.object({
         id: Workflow.Id,
-        display_name: z.string().optional(),
+        display_name: z.string(),
         locked: z.boolean(),
         description: z.string().optional(),
 
         created_at: z.coerce.date(),
         updated_at: z.coerce.date(),
+
+        folder_id: z.string().brand("FolderId"),
+        user_id: Auth.User.Id,
 
         data: z.object({
             nodes: z.record(Node.Id, Node.Schema),
@@ -135,6 +139,8 @@ export namespace Workflow {
 
     export const INITIAL = {
         id: "" as Workflow.Id,
+        folder_id: "" as z.infer<typeof Schema>["folder_id"],
+        user_id: "" as Auth.User.Id,
         locked: false,
         display_name: "",
         description: "",

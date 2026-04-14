@@ -9,19 +9,23 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;
 
-
-
     protected override async onRun(
         context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
+        const { overwrite, append } = inputs;
 
-        const { maxTokensPercentage } = this.fields;
-
-        const { summerizationLLM } = inputs;
+        context.updateSession(d => {
+            if (overwrite !== undefined) {
+                d.messages = [...overwrite];
+            }
+            if (append !== undefined) {
+                d.messages = [...d.messages, ...append];
+            }
+        });
 
         return {
-            messages: [],
+            history: context.session.messages,
         };
     }
 }

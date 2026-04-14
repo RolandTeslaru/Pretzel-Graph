@@ -400,6 +400,29 @@ export namespace Orchestrator {
             return data;
         }
 
+        export namespace AwaitResult {
+            export const Request = z.object({
+                jobId: Job.Id
+            })
+            export const Response = z.object({
+                status: z.enum(['completed', 'failed', 'terminated']),
+                error: SystemError.Schema.optional()
+            })
+
+            export type Request = z.infer<typeof Request>
+            export type Response = z.infer<typeof Response>
+        }
+        export async function awaitResult(
+            api: AxiosInstance,
+            req: AwaitResult.Request
+        ): Promise<AwaitResult.Response> {
+            const { data } = await api.get<AwaitResult.Response>(
+                `/api/orchestrator/await-result/${req.jobId}`,
+                { timeout: 11 * 60_000 }
+            );
+            return data;
+        }
+
         export namespace Schedule {
             export namespace Create {
                 export const Request = z.object({

@@ -104,7 +104,6 @@ export class AggexWorkerImpl {
             this.pauseTimeoutResetters.delete(jobId);
         };
 
-        console.log(`[Worker] Emitting 'started' for job ${jobId} at ${Date.now()}`);
         this.emit<Orchestrator.Event.Started>({
             jobId,
             workflowId: workflow.id,

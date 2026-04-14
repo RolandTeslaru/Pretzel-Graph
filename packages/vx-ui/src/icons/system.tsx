@@ -143,6 +143,11 @@ export const Square: React.FC<BaseIconProps> = (props) => (
 )
 Square.displayName = "Square"
 
+export const SquareFill: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon fill="currentColor" stroke="none" {...props}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect></BaseIcon>
+)
+SquareFill.displayName = "SquareFill"
+
 
 export const Info: React.FC<BaseIconProps> = (props) => (
     <BaseIcon {...props}><circle cx="12" cy="12" r="10" fill=""></circle><path stroke="" d="M12 16v-4M12 8h.01"></path></BaseIcon>

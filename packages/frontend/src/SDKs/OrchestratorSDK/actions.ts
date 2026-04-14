@@ -8,29 +8,23 @@ import { ExecutionSessionSDK } from "../ExecutionSessionSDK/sdk";
 export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
     return {
         run: async () => {
-            sdk.actions.addAwaitedConfirmation("started")
-
-
-            const confirmEvent = () => {
-                sdk.actions.removeAwaitedConfirmation("started")
-            }
-
+            const confirmEvent = sdk.useAwaitConfirmation("started")
+            
             if (sdk.state.jobId) {
-                toast.warning("Workflow is already running")
+                toast.warning("A workflow is already running")
                 confirmEvent();
                 return sdk.state.jobId
             }
 
+            // Pre checls before running the workflow
             WorkbenchSDK.actions.workflow.validate()
-
-            const workflow = WorkbenchSDK.state.workflow;
-
             if (Validation.workflowHasIssues(WorkbenchSDK.state.issues)) {
                 toast.error("Workflow has nodes with missing fields or inputs. Please fix them before running.")
                 confirmEvent();
                 return null
             }
-
+            
+            const workflow = WorkbenchSDK.state.workflow;
             ExecutionSessionSDK.actions.prepareForRun()
 
             const executionPromise = Orchestrator.API.run(api, {
@@ -56,14 +50,26 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
                     return null;
                 }
 
-                sdk.subscribeToJob(jobId);
-
                 sdk.setState(s => {
                     s.jobId = jobId
                     s.executionStatus = "running"
                 })
 
                 confirmEvent();
+
+                Orchestrator.API.awaitResult(api, { jobId }).then(({ status, error }) => {
+                    sdk.setState(s => {
+                        s.jobId = undefined;
+                        s.executionStatus = status;
+                    })
+                    if (status === 'completed') toast.success('Workflow completed successfully')
+                    else if (status === 'failed') toast.error(`Workflow execution failed: ${error?.message} [${error?.code}]`)
+                    else if (status === 'terminated') toast.error('Workflow execution terminated')
+                }).catch(() => {
+                    sdk.setState(s => { s.executionStatus = "failed" })
+                    toast.error('Lost connection to workflow execution')
+                })
+
                 return jobId;
             } catch {
                 confirmEvent();
@@ -81,43 +87,51 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
             })
         },
         pause: async (jobId) => {
-            sdk.actions.addAwaitedConfirmation("paused")
+            const confirmEvent = sdk.useAwaitConfirmation("paused")
 
             const { success } = await Orchestrator.API.pause(api, { jobId });
-            if (!success)
+            if (success) {
+                sdk.setState(s => { s.executionStatus = "paused" })
+                toast.info('Workflow execution paused')
+            } else {
                 toast.error("Failed to pause workflow")
+            }
 
-            sdk.actions.removeAwaitedConfirmation("paused")
+            confirmEvent()
             return success;
         },
         terminate: async (jobId) => {
-            sdk.actions.addAwaitedConfirmation("terminated")
+            const confirmEvent = sdk.useAwaitConfirmation("terminated")
             const { success } = await Orchestrator.API.terminate(api, { jobId });
             if (success)
                 sdk.setState(s => s.jobId = undefined)
             else
                 toast.error("Failed to terminate workflow")
-            sdk.actions.removeAwaitedConfirmation("terminated")
+            confirmEvent()
             return success;
         },
         resume: async (jobId: Orchestrator.Job.Id) => {
-            sdk.actions.addAwaitedConfirmation("resumed")
+            const confirmEvent = sdk.useAwaitConfirmation("resumed")
 
             const { success } = await Orchestrator.API.resume(api, { jobId });
-            if (!success)
+            if (success) {
+                sdk.setState(s => { s.executionStatus = "running" })
+                toast.info('Workflow execution resumed')
+            } else {
                 toast.error("Failed to resume workflow")
+            }
 
-            sdk.actions.removeAwaitedConfirmation("resumed")
+            confirmEvent()
             return success;
         },
         suspend: async (jobId: Orchestrator.Job.Id) => {
-            sdk.actions.addAwaitedConfirmation("suspended")
+            const confirmEvent = sdk.useAwaitConfirmation("suspended")
 
             const { success } = await Orchestrator.API.suspend(api, { jobId });
             if (!success)
                 toast.error("Failed to suspend workflow")
 
-            sdk.actions.removeAwaitedConfirmation("suspended")
+            confirmEvent()
             return success;
         }
     } satisfies OrchestratorSDKActions
