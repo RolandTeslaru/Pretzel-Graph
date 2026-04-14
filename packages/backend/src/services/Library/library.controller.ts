@@ -48,6 +48,11 @@ export class LibraryController {
         return await this.libraryService.deleteFolder(req.token, id);
     }
 
+    @Get('folders/:id/contents')
+    async getFolderContents(@Req() req: AuthenticatedRequest, @Param('id') id: Library.Folder.Id) {
+        return await this.libraryService.getFolderContents(req.token, id);
+    }
+
 
     // ── Workflows ─────────────────────────────────────────
     @Post('workflows')

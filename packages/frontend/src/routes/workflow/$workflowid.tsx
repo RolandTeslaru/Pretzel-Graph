@@ -22,6 +22,7 @@ import SpotlightSearch from '@/SDKs/WorkbenchSDK/ui/SpotlightSearch'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
 import { Validation } from '@vx-agent-editor/shared/domain'
+import { StackSDK } from '@/SDKs/StackSDK/sdk'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -157,6 +158,7 @@ function WorkflowLayoutComponent() {
             {/* <StackDebugPanel/> */}
             <StateViewer />
             <SpotlightSearch />
+            <StackSDK.UIOverlay />  
             <Outlet />
         </div>
     )
