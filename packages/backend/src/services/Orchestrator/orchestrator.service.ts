@@ -161,6 +161,41 @@ export class OrchestratorService {
     }
 
 
+    async awaitResult(
+        token: string,
+        userId: Auth.User.Id,
+        { jobId }: Orchestrator.API.AwaitResult.Request
+    ): Promise<Orchestrator.API.AwaitResult.Response> {
+        const supabase = createAuthenticatedClient(token);
+        const { data } = await supabase
+            .from('jobs')
+            .select('user_id, status')
+            .eq('id', jobId)
+            .single();
+
+        if (!data || data.user_id !== userId)
+            throw new SystemError(SystemError.Code.INFRA_UNKNOWN, 'Job not found or not authorized');
+
+        if (data.status === 'completed' || data.status === 'failed' || data.status === 'terminated')
+            return { status: data.status as Orchestrator.API.AwaitResult.Response['status'] };
+
+        const event = await this.realtime.withTerminalEvent(
+            Orchestrator.Event.getChannel(jobId)
+        );
+
+        if (!event)
+            return { status: 'failed', error: { code: SystemError.Code.EXECUTION_TIMEOUT, message: 'Execution timed out waiting for a terminal event' } };
+
+        if (event.type === 'failed')
+            return { status: 'failed', error: event.error };
+
+        if (event.type === 'terminated')
+            return { status: 'terminated' };
+
+        return { status: 'completed' };
+    }
+
+
     async pause(
         token: string,
         payload: Orchestrator.API.Pause.Request
