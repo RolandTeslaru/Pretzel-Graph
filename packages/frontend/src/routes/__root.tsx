@@ -19,7 +19,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
                 <SandboxSDK.SandboxFrame />
                 <NotificationSDK.UIOverlay />
                 <DialogSDK.UIOverlay />
-                <StackSDK.UIOverlay />
+                
                 <Outlet />
             </QuerySDK.Provider>
 
