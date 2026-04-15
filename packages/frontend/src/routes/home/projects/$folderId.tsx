@@ -1,10 +1,11 @@
-import { createFileRoute, Link, notFound } from '@tanstack/react-router'
-import { DialogSDK } from '@/SDKs/DialogSDK/sdk'
+import { createFileRoute, notFound } from '@tanstack/react-router'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
-import { AlertDialog, Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
+import { Button } from '@vx-agent-editor/vx-ui/foundations'
 import { openCreateFolderDialog, openCreateWorkflowDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
+import { FolderCard } from './-components/FolderCard'
+import { WorkflowCard } from './-components/WorkflowCard'
 import type { Library } from '@vx-agent-editor/shared/domain'
 
 
@@ -51,38 +52,6 @@ function FolderRoute() {
         </div>
     )
 }
-
-
-function Breadcrumb({ folder, projectRootFolderId }: { folder: Library.Folder; projectRootFolderId: Library.Folder.Id | undefined }) {
-    return (
-        <nav className="flex items-center gap-1.5 text-sm mb-6">
-            <Link
-                to="/home/projects"
-                className="opacity-60 hover:opacity-100 transition-opacity"
-            >
-                Projects
-            </Link>
-            <SystemIcons.ChevronRight size={14} className="opacity-40" />
-            {folder.is_root ? (
-                <span className="font-medium">{folder.display_name}</span>
-            ) : (
-                <>
-                    <Link
-                        to="/home/projects/$folderId"
-                        params={{ folderId: projectRootFolderId! }}
-                        disabled={!projectRootFolderId}
-                        className="opacity-60 hover:opacity-100 transition-opacity"
-                    >
-                        {folder.display_name}
-                    </Link>
-                    <SystemIcons.ChevronRight size={14} className="opacity-40" />
-                    <span className="font-medium">{folder.display_name}</span>
-                </>
-            )}
-        </nav>
-    )
-}
-
 
 function FolderView({ folderId }: { folderId: Library.Folder.Id }) {
 
@@ -132,142 +101,6 @@ function FolderView({ folderId }: { folderId: Library.Folder.Id }) {
         </>
     )
 }
-
-
-function FolderCard({ folder }: { folder: Library.Folder }) {
-    return (
-        <div className="relative rounded-xl border hover:bg-muted/40 transition-colors">
-            <div className="absolute top-2 right-2 z-10">
-                <DropdownMenu.Root>
-                    <DropdownMenu.Trigger asChild>
-                        <Button variant="ghost" size="icon-xs" className="p-0!">
-                            <SystemIcons.Ellipsis />
-                        </Button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content align="end">
-                        <DropdownMenu.Item
-                            variant="destructive"
-                            onClick={() => openDeleteFolderDialog(folder)}
-                        >
-                            <SystemIcons.Trash2 />
-                            Delete folder
-                        </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                </DropdownMenu.Root>
-            </div>
-
-            <Link
-                to="/home/projects/$folderId"
-                params={{ folderId: folder.id }}
-                className="block p-4 pr-11"
-            >
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted shrink-0">
-                        <SystemIcons.Folder size={16} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <div className="font-medium truncate">{folder.display_name}</div>
-                        {folder.description && (
-                            <p className="text-xs opacity-60 truncate mt-0.5">{folder.description}</p>
-                        )}
-                    </div>
-                </div>
-            </Link>
-        </div>
-    )
-}
-
-function openDeleteFolderDialog(folder: Library.Folder) {
-    const dialogId = `delete-folder-${folder.id}`
-
-    DialogSDK.actions.push(dialogId, (props) => (
-        <DialogSDK.AlertTemplate
-            {...props}
-            type="danger"
-            onApprove={async () => {
-                await LibrarySDK.actions.folder.delete(folder.id)
-                DialogSDK.actions.pop(dialogId)
-            }}
-            onCancel={() => DialogSDK.actions.pop(dialogId)}
-        >
-            <AlertDialog.Title>
-                Delete folder?
-            </AlertDialog.Title>
-            <AlertDialog.Description>
-                This action is irreversible. Deleting <span className="font-semibold text-destructive">{folder.display_name}</span> will also delete all nested folders and workflows inside it.
-            </AlertDialog.Description>
-        </DialogSDK.AlertTemplate>
-    ))
-}
-
-
-function WorkflowCard({ workflow }: { workflow: Library.WorkflowMeta }) {
-    return (
-        <div className="relative rounded-xl border hover:bg-muted/40 transition-colors">
-            <div className="absolute top-2 right-2 z-10">
-                <DropdownMenu.Root>
-                    <DropdownMenu.Trigger asChild>
-                        <Button variant="ghost" size="icon-xs" className="p-0!">
-                            <SystemIcons.Ellipsis />
-                        </Button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content align="end">
-                        <DropdownMenu.Item
-                            variant="destructive"
-                            onClick={() => openDeleteWorkflowDialog(workflow)}
-                        >
-                            <SystemIcons.Trash2 />
-                            Delete workflow
-                        </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                </DropdownMenu.Root>
-            </div>
-
-            <Link
-                to="/workflow/$workflowid"
-                params={{ workflowid: workflow.id }}
-                className="block p-4 pr-11"
-            >
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted shrink-0">
-                        <SystemIcons.FileCode size={16} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <div className="font-medium truncate">{workflow.display_name || 'Untitled'}</div>
-                        {workflow.description && (
-                            <p className="text-xs opacity-60 truncate mt-0.5">{workflow.description}</p>
-                        )}
-                    </div>
-                </div>
-            </Link>
-        </div>
-    )
-}
-
-function openDeleteWorkflowDialog(workflow: Library.WorkflowMeta) {
-    const dialogId = `delete-workflow-${workflow.id}`
-
-    DialogSDK.actions.push(dialogId, (props) => (
-        <DialogSDK.AlertTemplate
-            {...props}
-            type="danger"
-            onApprove={async () => {
-                await LibrarySDK.actions.workflow.delete(workflow.id)
-                DialogSDK.actions.pop(dialogId)
-            }}
-            onCancel={() => DialogSDK.actions.pop(dialogId)}
-        >
-            <AlertDialog.Title>
-                Delete workflow?
-            </AlertDialog.Title>
-            <AlertDialog.Description>
-                This action is irreversible. Deleting <span className="font-semibold text-destructive">{workflow.display_name || 'Untitled'}</span> cannot be undone.
-            </AlertDialog.Description>
-        </DialogSDK.AlertTemplate>
-    ))
-}
-
-
 function EmptyFolder() {
     return (
         <div className="flex flex-col items-center justify-center py-20 text-center opacity-70">
