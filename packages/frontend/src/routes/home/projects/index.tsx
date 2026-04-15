@@ -9,21 +9,11 @@ import { ProjectCard } from './-components/ProjectCard'
 
 export const Route = createFileRoute('/home/projects/')({
     loader: async () => {
-        // Depth 1: projects. Await so we know each project's root_folder_id.
-        const projects = await QuerySDK.client.fetchQuery({
-            queryKey: ['projects'],
-            queryFn: () => LibrarySDK.actions.project.list(),
+        await QuerySDK.client.fetchQuery({
+            queryKey: ['library', 'bootstrap'],
+            queryFn: () => LibrarySDK.actions.bootstrap.get(),
             staleTime: 60_000,
         })
-
-        // Depth 2: fire-and-forget prefetch of each project's contents
-        for (const p of projects) {
-            QuerySDK.client.prefetchQuery({
-                queryKey: ['folders', p.id, 'contents'],
-                queryFn: () => LibrarySDK.actions.folder.getContents(p.id),
-                staleTime: 60_000,
-            })
-        }
 
         return null
     },
@@ -33,7 +23,7 @@ export const Route = createFileRoute('/home/projects/')({
 
 function ProjectsRoute() {
     // The loader already kicked off the fetch; useQuery just subscribes + handles refetch.
-    QuerySDK.useQuery(['projects'], () => LibrarySDK.actions.project.list(), {
+    QuerySDK.useQuery(['library', 'bootstrap'], () => LibrarySDK.actions.bootstrap.get(), {
         staleTime: 60_000,
     })
 

@@ -3,6 +3,9 @@ import { api } from '../ApiInterceptorSDK';
 import type { LibrarySDKImpl } from './sdk';
 
 export type _LibrarySDKActions = {
+    bootstrap: {
+        get: () => Promise<Library.API.Bootstrap.Get.Response>;
+    };
     project: {
         list: () => Promise<Library.API.Project.List.Response>;
         create: (payload: Library.API.Project.Create.Request) => Promise<Library.API.Project.Create.Response>;
@@ -23,6 +26,17 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
     const setState = sdk.useStore.setState;
 
     return {
+        bootstrap: {
+            get: async () => {
+                const data = await Library.API.Bootstrap.get(api);
+                setState((s) => {
+                    s.folders = Object.fromEntries(data.folders.map((f) => [f.id, f])) as typeof s.folders;
+                    s.workflowMetas = Object.fromEntries(data.workflow_metas.map((w) => [w.id, w])) as typeof s.workflowMetas;
+                });
+                return data;
+            },
+        },
+
         project: {
             list: async () => {
                 const data = await Library.API.Project.list(api);
