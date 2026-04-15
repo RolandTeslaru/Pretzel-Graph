@@ -1,4 +1,4 @@
-import { WorkbenchSDK } from '@/SDKs/WorkbenchSDK/sdk';
+import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk';
 import { Spinner } from '@vx-agent-editor/vx-ui/foundations';
 import { createFileRoute } from '@tanstack/react-router'
 import type { Workflow } from '@vx-agent-editor/shared/domain';
