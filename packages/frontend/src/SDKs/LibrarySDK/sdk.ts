@@ -17,7 +17,6 @@ export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
         immer(() => ({
             folders: {},
             workflowMetas: {},
-            rootFolderByProject: {},
         })),
         shallow
     )

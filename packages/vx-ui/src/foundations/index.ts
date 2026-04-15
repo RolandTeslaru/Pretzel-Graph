@@ -67,6 +67,7 @@ export {
 
 export { Tooltip } from "./Tooltip"
 export * from "./dropdownMenu"
+export * from "./breadcrumb"
 export * from "./separator"
 export * from "./calendar"
 export * from "./form"

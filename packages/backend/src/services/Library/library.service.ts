@@ -8,6 +8,38 @@ import { withSupabaseAssert } from '@vx-agent-editor/shared/errors/supabase';
 export class LibraryService {
 
     private readonly dbOps = {
+        bootstrap: {
+            get: withSupabaseAssert('bootstrap.get', async (
+                supabase: SupabaseClient,
+            ) => {
+                const [projectsRes, foldersRes, workflowMetasRes] = await Promise.all([
+                    supabase
+                        .from('folders')
+                        .select('*')
+                        .eq('is_root', true)
+                        .is('parent_folder_id', null)
+                        .order('created_at', { ascending: false })
+                        .throwOnError(),
+                    supabase
+                        .from('folders')
+                        .select('*')
+                        .order('created_at', { ascending: false })
+                        .throwOnError(),
+                    supabase
+                        .from('workflows')
+                        .select('id, folder_id, display_name, description, locked, mcp_enabled, created_at, updated_at')
+                        .order('created_at', { ascending: false })
+                        .throwOnError(),
+                ]);
+
+                return {
+                    projects: (projectsRes.data ?? []).map((row) => Library.Folder.Schema.parse(row)),
+                    folders: (foldersRes.data ?? []).map((row) => Library.Folder.Schema.parse(row)),
+                    workflow_metas: (workflowMetasRes.data ?? []).map((row) => Library.WorkflowMeta.Schema.parse(row)),
+                };
+            }),
+        },
+
         project: {
             create: withSupabaseAssert('project.create', async (
                 supabase: SupabaseClient,
@@ -136,6 +168,15 @@ export class LibraryService {
     // ─────────────────────────────────────────────────────────
     // Public API
     // ─────────────────────────────────────────────────────────
+
+    public readonly bootstrap = {
+        get: async (
+            token: string,
+        ): Promise<Library.API.Bootstrap.Get.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            return await this.dbOps.bootstrap.get(supabase);
+        },
+    };
 
     public readonly project = {
         create: async (

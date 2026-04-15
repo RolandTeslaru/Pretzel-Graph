@@ -8,6 +8,12 @@ import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-aut
 export class LibraryController {
     constructor(private readonly libraryService: LibraryService) { }
 
+    // ── Bootstrap ─────────────────────────────────────────
+    @Get('bootstrap')
+    async getBootstrap(@Req() req: AuthenticatedRequest) {
+        return await this.libraryService.bootstrap.get(req.token);
+    }
+
     // ── Projects ──────────────────────────────────────────
     @Post('projects')
     @HttpCode(200)
