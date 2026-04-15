@@ -1,5 +1,5 @@
 import { DialogSDK } from '@/SDKs/DialogSDK'
-import { StackSDK } from '@/SDKs/StackSDK'
+import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { NotificationSDK } from '@/SDKs/NotificationSDK'
