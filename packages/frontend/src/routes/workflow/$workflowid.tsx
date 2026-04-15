@@ -15,8 +15,10 @@ import TemporalControls from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/TemporalCo
 import SpotlightSearch from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/SpotlightSearch'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
-import { Validation } from '@vx-agent-editor/shared/domain'
+import { Validation, Workflow } from '@vx-agent-editor/shared/domain'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK/sdk'
+import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
+import Breadcrumbs from '../home/projects/-components/Breadcrumbs'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -25,6 +27,13 @@ export const Route = createFileRoute('/workflow/$workflowid')({
         }
     },
     loader: async () => {
+        await QuerySDK.client.fetchQuery({
+            queryKey: ['library', 'bootstrap'],
+            queryFn: () => LibrarySDK.actions.bootstrap.get(),
+            staleTime: 60_000,
+        })
+
+        // Fire and forget
         QuerySDK.client.prefetchQuery({
             queryKey: ["core-blueprints"],
             queryFn: () => ShelfSDK.actions.loadSection("core"),
@@ -40,7 +49,8 @@ export const Route = createFileRoute('/workflow/$workflowid')({
     },
     onLeave: () => {
         WorkbenchSDK.actions.commit();
-        QuerySDK.client.clear();
+        QuerySDK.client.removeQueries({ queryKey: ['core-blueprints'] });
+        QuerySDK.client.removeQueries({ queryKey: ['bundle-blueprints'] });
     },
     component: WorkflowLayoutComponent,
 })
@@ -93,18 +103,17 @@ const BottomPanel = () => {
 
 
 const PathPanel = () => {
-    const workflowName = WorkbenchSDK.useStore(s => s.workflow?.display_name) || "Untitled Workflow";
+
+    const [folder_id, display_name] = WorkbenchSDK.useStore(s => [s.workflow.folder_id, s.workflow.display_name])
+
+    const breadCrumbs = LibrarySDK.useStore(s => {
+        return LibrarySDK.selectors.getBreadcrumbs(s, folder_id);
+    });    
+    
     return (
-        <div className='fixed top-5 left-5 flex gap-2 text-sm font-medium'>
+        <div className='fixed top-5 left-5 flex gap-3 text-sm font-medium'>
             <PretzelLogoDropwdown/>
-            <div className='flex flex-row gap-2 h-auto my-auto text-foreground/70'>
-                <p>/</p>
-                <p>PretzelHQ</p>
-                <p>/</p>
-                <p>Demos</p>
-                <p>/</p>
-                <p>Basic Agent Loop Test</p>
-            </div>
+            <Breadcrumbs className='my-auto' cwd={breadCrumbs} finalFileName={display_name}/>
         </div>
     )
 }
