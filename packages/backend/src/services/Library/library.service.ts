@@ -109,6 +109,7 @@ export class LibraryService {
                     supabase.from('folders').select('*').eq('parent_folder_id', id).throwOnError(), // child folders
                     supabase
                         .from('workflows')
+                        // select workflow meta fields only
                         .select('id, folder_id, display_name, description, locked, mcp_enabled, created_at, updated_at')
                         .eq('folder_id', id)
                         .throwOnError(),
@@ -144,6 +145,25 @@ export class LibraryService {
 
                 const wf = Workflow.Schema.parse(row);
                 return wf;
+            }),
+
+            update: withSupabaseAssert('workflow.update', async (
+                supabase: SupabaseClient,
+                payload: Library.API.Workflow.Update.Request,
+            ) => {
+                const { data: row } = await supabase
+                    .from('workflows')
+                    .update({
+                        display_name: payload.display_name,
+                        description: payload.description ?? null,
+                    })
+                    .eq('id', payload.id)
+                    // select workflow meta fields only
+                    .select('id, folder_id, display_name, description, locked, mcp_enabled, created_at, updated_at')
+                    .single()
+                    .throwOnError();
+
+                return Library.WorkflowMeta.Schema.parse(row);
             }),
 
             get: withSupabaseAssert('workflow.get', async (supabase: SupabaseClient, workflowId: Workflow.Id) => {
@@ -237,6 +257,14 @@ export class LibraryService {
         ): Promise<Library.API.Workflow.Get.Response> => {
             const supabase = createAuthenticatedClient(token);
             return await this.dbOps.workflow.get(supabase, workflowId);
+        },
+
+        update: async (
+            token: string,
+            payload: Library.API.Workflow.Update.Request,
+        ): Promise<Library.API.Workflow.Update.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            return await this.dbOps.workflow.update(supabase, payload);
         },
 
         delete: async (
