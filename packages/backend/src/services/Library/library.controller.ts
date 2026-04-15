@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Delete, Body, Param, Query, UseGuards, Req, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Body, Param, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { LibraryService } from './library.service';
 import { Library, Workflow } from '@vx-agent-editor/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
@@ -13,17 +13,12 @@ export class LibraryController {
     @HttpCode(200)
     async createProject(@Req() req: AuthenticatedRequest, @Body() body: any) {
         const payload = Library.API.Project.Create.Request.parse(body);
-        return await this.libraryService.createProject(req.token, payload);
+        return await this.libraryService.project.create(req.token, payload);
     }
 
     @Get('projects')
     async listProjects(@Req() req: AuthenticatedRequest) {
-        return await this.libraryService.listProjects(req.token);
-    }
-
-    @Delete('projects/:id')
-    async deleteProject(@Req() req: AuthenticatedRequest, @Param('id') id: Library.Project.Id) {
-        return await this.libraryService.deleteProject(req.token, id);
+        return await this.libraryService.project.list(req.token);
     }
 
 
@@ -32,25 +27,17 @@ export class LibraryController {
     @HttpCode(200)
     async createFolder(@Req() req: AuthenticatedRequest, @Body() body: any) {
         const payload = Library.API.Folder.Create.Request.parse(body);
-        return await this.libraryService.createFolder(req.token, payload);
-    }
-
-    @Get('folders')
-    async listFolders(
-        @Req() req: AuthenticatedRequest,
-        @Query('projectId') projectId?: Library.Project.Id,
-    ) {
-        return await this.libraryService.listFolders(req.token, projectId);
+        return await this.libraryService.folder.create(req.token, payload);
     }
 
     @Delete('folders/:id')
     async deleteFolder(@Req() req: AuthenticatedRequest, @Param('id') id: Library.Folder.Id) {
-        return await this.libraryService.deleteFolder(req.token, id);
+        return await this.libraryService.folder.delete(req.token, id);
     }
 
     @Get('folders/:id/contents')
     async getFolderContents(@Req() req: AuthenticatedRequest, @Param('id') id: Library.Folder.Id) {
-        return await this.libraryService.getFolderContents(req.token, id);
+        return await this.libraryService.folder.getContents(req.token, id);
     }
 
 
@@ -59,24 +46,16 @@ export class LibraryController {
     @HttpCode(200)
     async createWorkflow(@Req() req: AuthenticatedRequest, @Body() body: any) {
         const payload = Library.API.Workflow.Create.Request.parse(body);
-        return await this.libraryService.createWorkflow(req.token, payload);
+        return await this.libraryService.workflow.create(req.token, payload);
     }
 
     @Get('workflows/:id')
     async getWorkflow(@Req() req: AuthenticatedRequest, @Param('id') id: Workflow.Id) {
-        return await this.libraryService.getWorkflow(req.token, id);
-    }
-
-    @Get('workflows')
-    async listWorkflows(
-        @Req() req: AuthenticatedRequest,
-        @Query('folderId') folderId?: Library.Folder.Id,
-    ) {
-        return await this.libraryService.listWorkflows(req.token, folderId);
+        return await this.libraryService.workflow.get(req.token, id);
     }
 
     @Delete('workflows/:id')
     async deleteWorkflow(@Req() req: AuthenticatedRequest, @Param('id') id: Workflow.Id) {
-        return await this.libraryService.deleteWorkflow(req.token, id);
+        return await this.libraryService.workflow.delete(req.token, id);
     }
 }
