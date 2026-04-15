@@ -34,6 +34,15 @@ export function openCreateProjectDialog() {
     ))
 }
 
+export function openEditProjectDialog(args: { project: Library.Folder }) {
+    const id = `edit-project-${args.project.id}`
+    DialogSDK.actions.push(id, (props) => (
+        <DialogSDK.Template {...props} className={DIALOG_CLASSNAME}>
+            <EditProjectContent dialogId={id} project={args.project} />
+        </DialogSDK.Template>
+    ))
+}
+
 function CreateProjectContent({ dialogId }: { dialogId: string }) {
     const form = useForm<MetaValues>({
         resolver: zodResolver(MetaSchema),
@@ -66,6 +75,49 @@ function CreateProjectContent({ dialogId }: { dialogId: string }) {
     )
 }
 
+function EditProjectContent({
+    dialogId,
+    project,
+}: {
+    dialogId: string
+    project: Library.Folder
+}) {
+    const form = useForm<MetaValues>({
+        resolver: zodResolver(MetaSchema),
+        defaultValues: {
+            display_name: project.display_name || '',
+            description: project.description || '',
+        },
+    })
+
+    const onSubmit = async (values: MetaValues) => {
+        try {
+            await LibrarySDK.actions.project.update({
+                id: project.id,
+                display_name: values.display_name,
+                description: values.description || null,
+            })
+            await QuerySDK.client.invalidateQueries({ queryKey: ['library', 'bootstrap'] })
+            DialogSDK.actions.pop(dialogId)
+        } catch (err) {
+            console.error('Failed to update project', err)
+            toast.error('Failed to update project')
+        }
+    }
+
+    return (
+        <MetaFormShell
+            title="Edit project"
+            description="Update project metadata."
+            namePlaceholder="My project"
+            dialogId={dialogId}
+            form={form}
+            onSubmit={onSubmit}
+            submitLabel="Save"
+        />
+    )
+}
+
 
 // ─────────────────────────────────────────────────────────────
 // New folder
@@ -77,6 +129,15 @@ export function openCreateFolderDialog(args: {
     DialogSDK.actions.push(id, (props) => (
         <DialogSDK.Template {...props} className={DIALOG_CLASSNAME}>
             <CreateFolderContent dialogId={id} {...args} />
+        </DialogSDK.Template>
+    ))
+}
+
+export function openEditFolderDialog(args: { folder: Library.Folder }) {
+    const id = `edit-folder-${args.folder.id}`
+    DialogSDK.actions.push(id, (props) => (
+        <DialogSDK.Template {...props} className={DIALOG_CLASSNAME}>
+            <EditFolderContent dialogId={id} folder={args.folder} />
         </DialogSDK.Template>
     ))
 }
@@ -116,6 +177,49 @@ function CreateFolderContent({
             dialogId={dialogId}
             form={form}
             onSubmit={onSubmit}
+        />
+    )
+}
+
+function EditFolderContent({
+    dialogId,
+    folder,
+}: {
+    dialogId: string
+    folder: Library.Folder
+}) {
+    const form = useForm<MetaValues>({
+        resolver: zodResolver(MetaSchema),
+        defaultValues: {
+            display_name: folder.display_name || '',
+            description: folder.description || '',
+        },
+    })
+
+    const onSubmit = async (values: MetaValues) => {
+        try {
+            await LibrarySDK.actions.folder.update({
+                id: folder.id,
+                display_name: values.display_name,
+                description: values.description || null,
+            })
+            await QuerySDK.client.invalidateQueries({ queryKey: ['library', 'bootstrap'] })
+            DialogSDK.actions.pop(dialogId)
+        } catch (err) {
+            console.error('Failed to update folder', err)
+            toast.error('Failed to update folder')
+        }
+    }
+
+    return (
+        <MetaFormShell
+            title="Edit folder"
+            description="Update folder metadata."
+            namePlaceholder="My folder"
+            dialogId={dialogId}
+            form={form}
+            onSubmit={onSubmit}
+            submitLabel="Save"
         />
     )
 }
