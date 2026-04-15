@@ -45,6 +45,30 @@ export namespace Library {
     // ─────────────────────────────────────────────────────────────
     export namespace API {
 
+        // ── Bootstrap ────────────────────────────────────────
+        export namespace Bootstrap {
+            export namespace Get {
+                export const Request = z.object({});
+                export type Request = z.infer<typeof Request>;
+                export const ResponseSchema = z.object({
+                    projects: z.array(Library.Folder.Schema),
+                    folders: z.array(Library.Folder.Schema),
+                    workflow_metas: z.array(Library.WorkflowMeta.Schema),
+                });
+                export type Response = z.infer<typeof ResponseSchema>;
+            }
+
+            export async function get(
+                api: AxiosInstance,
+                req: Get.Request = {},
+            ): Promise<Get.Response> {
+                const { data } = await api.get<Get.Response>('/api/library/bootstrap', {
+                    params: req,
+                });
+                return data;
+            }
+        }
+
         // ── Projects ──────────────────────────────────────────
         export namespace Project {
             export namespace Create {

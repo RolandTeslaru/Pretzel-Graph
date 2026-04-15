@@ -7,26 +7,21 @@ import { openCreateFolderDialog, openCreateWorkflowDialog } from '@/SDKs/Library
 import { FolderCard } from './-components/FolderCard'
 import { WorkflowCard } from './-components/WorkflowCard'
 import type { Library } from '@vx-agent-editor/shared/domain'
+import Breadcrumbs from './-components/Breadcrumbs'
 
 
 export const Route = createFileRoute('/home/projects/$folderId')({
     loader: async ({ params }) => {
         const folderId = params.folderId as Library.Folder.Id
 
-        const contents = await QuerySDK.client.fetchQuery({
-            queryKey: ['folders', folderId, 'contents'],
-            queryFn: () => LibrarySDK.actions.folder.getContents(folderId),
+        const bootstrap = await QuerySDK.client.fetchQuery({
+            queryKey: ['library', 'bootstrap'],
+            queryFn: () => LibrarySDK.actions.bootstrap.get(),
             staleTime: 60_000,
         })
 
-        if (!contents?.folder) throw notFound()
-
-        // Ensure the owning project is cached so the breadcrumb has a name.
-        await QuerySDK.client.fetchQuery({
-            queryKey: ['projects'],
-            queryFn: () => LibrarySDK.actions.project.list(),
-            staleTime: 60_000,
-        })
+        const hasFolder = bootstrap.folders.some((f) => f.id === folderId)
+        if (!hasFolder) throw notFound()
 
         return null
     },
@@ -62,8 +57,11 @@ function FolderView({ folderId }: { folderId: Library.Folder.Id }) {
 
     const isEmpty = childFolders.length === 0 && workflows.length === 0
 
+    const breadCrumbs = LibrarySDK.selectors.getBreadcrumbs(LibrarySDK.state, folderId);
+
     return (
         <>
+            <Breadcrumbs cwd={breadCrumbs}/>
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2 text-sm opacity-70">
                     <span>{childFolders.length} folder{childFolders.length === 1 ? '' : 's'}</span>
