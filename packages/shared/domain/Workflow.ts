@@ -113,6 +113,8 @@ export namespace Workflow {
         created_at: z.coerce.date(),
         updated_at: z.coerce.date(),
 
+        folder_id: z.string().brand("FolderId"),
+
         data: z.object({
             nodes: z.record(Node.Id, Node.Schema),
             edges: z.record(Edge.Id, Edge.Schema),
@@ -139,6 +141,7 @@ export namespace Workflow {
         locked: false,
         display_name: "",
         description: "",
+        folder_id: "" as Workflow["folder_id"],
         created_at: new Date(),
         updated_at: new Date(),
         data: {
@@ -159,7 +162,6 @@ export namespace Workflow {
         export namespace Row {
             export const Schema = Workflow.Schema.extend({
                 user_id: Auth.User.Id,
-                folder_id: z.string().brand("FolderId"),
             })
         }
         export type Row = z.infer<typeof Row.Schema>
