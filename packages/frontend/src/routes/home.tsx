@@ -4,6 +4,8 @@ import type { ComponentType } from 'react'
 import type { BaseIconProps } from '@vx-agent-editor/vx-ui/icons/baseIcon'
 import { DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
 import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
+import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 // import { Preview } from 'shaders/react'
 
 
@@ -12,6 +14,15 @@ export const Route = createFileRoute('/home')({
         if (!context.auth.isAuthenticated) {
             throw redirect({ to: '/auth' })
         }
+    },
+    loader: async () => {
+        await QuerySDK.client.fetchQuery({
+            queryKey: ['library', 'bootstrap'],
+            queryFn: () => LibrarySDK.actions.bootstrap.get(),
+            staleTime: 60_000,
+        })
+
+        return null
     },
     component: HomeLayout,
 })
@@ -41,7 +52,7 @@ function HomeLayout() {
     return (
         <div className="flex min-h-screen relative">
             <Sidebar />
-            <main className="flex-1 bg-card/80 backdrop-blur-md m-2 rounded-2xl overflow-auto border border-border shadow-md shadow-black/5">
+            <main className="flex-1 bg-card/80 backdrop-blur-md mt-4 mr-2 rounded-2xl overflow-auto border border-border shadow-md shadow-black/5">
                 <Outlet />
             </main>
         </div>
