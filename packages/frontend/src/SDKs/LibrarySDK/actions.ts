@@ -17,6 +17,7 @@ export type _LibrarySDKActions = {
     };
     workflow: {
         create: (payload: Library.API.Workflow.Create.Request) => Promise<Library.API.Workflow.Create.Response>;
+        update: (payload: Library.API.Workflow.Update.Request) => Promise<Library.API.Workflow.Update.Response>;
         delete: (id: Workflow.Id) => Promise<Library.API.Workflow.Remove.Response>;
     };
 };
@@ -90,6 +91,12 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
                 // Full Workflow returned; cache the meta projection (omit data).
                 const { data: _data, ...meta } = data;
                 setState((s) => { s.workflowMetas[data.id] = meta as Library.WorkflowMeta; });
+                return data;
+            },
+
+            update: async (payload) => {
+                const data = await Library.API.Workflow.update(api, payload);
+                setState((s) => { s.workflowMetas[data.id] = data; });
                 return data;
             },
 

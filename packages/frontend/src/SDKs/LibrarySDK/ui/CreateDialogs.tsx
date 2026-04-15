@@ -1,4 +1,3 @@
-import React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -134,6 +133,58 @@ export function openCreateWorkflowDialog(args: { folder_id: Library.Folder.Id })
     ))
 }
 
+export function openEditWorkflowDialog(args: { workflow: Library.WorkflowMeta }) {
+    const id = `edit-workflow-${args.workflow.id}`
+    DialogSDK.actions.push(id, (props) => (
+        <DialogSDK.Template {...props} className={DIALOG_CLASSNAME}>
+            <EditWorkflowContent dialogId={id} workflow={args.workflow} />
+        </DialogSDK.Template>
+    ))
+}
+
+function EditWorkflowContent({
+    dialogId,
+    workflow,
+}: {
+    dialogId: string
+    workflow: Library.WorkflowMeta
+}) {
+    const form = useForm<MetaValues>({
+        resolver: zodResolver(MetaSchema),
+        defaultValues: {
+            display_name: workflow.display_name || '',
+            description: workflow.description || '',
+        },
+    })
+
+    const onSubmit = async (values: MetaValues) => {
+        try {
+            await LibrarySDK.actions.workflow.update({
+                id: workflow.id,
+                display_name: values.display_name,
+                description: values.description || null,
+            })
+            await QuerySDK.client.invalidateQueries({ queryKey: ['library', 'bootstrap'] })
+            DialogSDK.actions.pop(dialogId)
+        } catch (err) {
+            console.error('Failed to update workflow', err)
+            toast.error('Failed to update workflow')
+        }
+    }
+
+    return (
+        <MetaFormShell
+            title="Edit workflow"
+            description="Update workflow metadata."
+            namePlaceholder="Untitled workflow"
+            dialogId={dialogId}
+            form={form}
+            onSubmit={onSubmit}
+            submitLabel="Save"
+        />
+    )
+}
+
 function CreateWorkflowContent({
     dialogId,
     folder_id,
@@ -184,6 +235,7 @@ function MetaFormShell({
     dialogId,
     form,
     onSubmit,
+    submitLabel = 'Create',
 }: {
     title: string
     description: string
@@ -191,6 +243,7 @@ function MetaFormShell({
     dialogId: string
     form: ReturnType<typeof useForm<MetaValues>>
     onSubmit: (values: MetaValues) => Promise<void>
+    submitLabel?: string
 }) {
     return (
         <div className="p-3 flex flex-col gap-4">
@@ -236,7 +289,7 @@ function MetaFormShell({
                         </Button>
                         <Button type="submit" disabled={form.formState.isSubmitting}>
                             {form.formState.isSubmitting && <Spinner className="mr-2 h-4 w-4" />}
-                            Create
+                            {submitLabel}
                         </Button>
                     </Dialog.Footer>
                 </form>
