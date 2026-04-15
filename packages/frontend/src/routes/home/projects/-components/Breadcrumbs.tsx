@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Breadcrumb } from '@vx-agent-editor/vx-ui/foundations'
+import { Fragment } from 'react'
 
 interface Props {
   cwd: {
@@ -14,37 +15,27 @@ const Breadcrumbs = ({ cwd, finalFileName, className }: Props) => {
   return (
     <Breadcrumb.Root className={className}>
       <Breadcrumb.List>
-        {cwd.map((item, index) => {
-
-          if (index !== cwd.length - 1) {
-            return (
-              <Breadcrumb.Item>
-                <Breadcrumb.Link key={item.key} asChild>
-                  <Link to={`/home/projects/$folderId`} params={{ folderId: item.key }}>
-                    {item.name}
-                  </Link>
-                </Breadcrumb.Link>
-                <Breadcrumb.Separator />
-              </Breadcrumb.Item>
-            )
-          }
-          return (
+        {cwd.map((item, index) => (
+          <Fragment key={item.key}>
             <Breadcrumb.Item>
-              <Breadcrumb.Link key={item.key} asChild>
-                <Link to={`/home/projects/$folderId`} params={{ folderId: item.key }}>
+              <Breadcrumb.Link asChild>
+                <Link to="/home/projects/$folderId" params={{ folderId: item.key }}>
                   {item.name}
                 </Link>
               </Breadcrumb.Link>
             </Breadcrumb.Item>
-          )
-        })}
+            {index !== cwd.length - 1 && <Breadcrumb.Separator />}
+          </Fragment>
+        ))}
         {finalFileName && (
-          <Breadcrumb.Item>
+          <Fragment>
             <Breadcrumb.Separator />
-            <Breadcrumb.Link>
-              {finalFileName}
-            </Breadcrumb.Link>
-          </Breadcrumb.Item>
+            <Breadcrumb.Item>
+              <Breadcrumb.Page className="text-muted-foreground">
+                {finalFileName}
+              </Breadcrumb.Page>
+            </Breadcrumb.Item>
+          </Fragment>
         )}
       </Breadcrumb.List>
     </Breadcrumb.Root>

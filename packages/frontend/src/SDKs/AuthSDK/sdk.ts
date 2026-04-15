@@ -30,7 +30,7 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
       if (error)
         return { user: null, error }
 
-      console.log("Fetched User", data)
+      // console.log("Fetched User", data)
 
       const parsedUser = Auth.User.Schema.parse(data)
 
