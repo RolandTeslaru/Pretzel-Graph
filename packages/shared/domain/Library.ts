@@ -80,6 +80,16 @@ export namespace Library {
                 export type Response = Library.Folder;
             }
 
+            export namespace Update {
+                export const Request = z.object({
+                    id: Library.Folder.Id,
+                    display_name: z.string().min(1),
+                    description: z.string().nullable().optional(),
+                });
+                export type Request = z.infer<typeof Request>;
+                export type Response = Library.Folder;
+            }
+
             export namespace List {
                 export const Request = z.object({});
                 export type Request = z.infer<typeof Request>;
@@ -102,6 +112,15 @@ export namespace Library {
                 const { data } = await api.get<List.Response>("/api/library/projects", {
                     params: req,
                 });
+                return data;
+            }
+
+            export async function update(
+                api: AxiosInstance,
+                req: Update.Request,
+            ): Promise<Update.Response> {
+                const { id, ...payload } = req;
+                const { data } = await api.patch<Update.Response>(`/api/library/projects/${id}`, payload);
                 return data;
             }
 
@@ -130,6 +149,15 @@ export namespace Library {
                 export type Request = z.infer<typeof Request>;
                 export type Response = Library.Folder;
             }
+            export namespace Update {
+                export const Request = z.object({
+                    id: Library.Folder.Id,
+                    display_name: z.string().min(1),
+                    description: z.string().nullable().optional(),
+                });
+                export type Request = z.infer<typeof Request>;
+                export type Response = Library.Folder;
+            }
             export namespace Remove {
                 export const Request = z.object({ id: Library.Folder.Id });
                 export type Request = z.infer<typeof Request>;
@@ -154,6 +182,15 @@ export namespace Library {
                 req: Create.Request,
             ): Promise<Create.Response> {
                 const { data } = await api.post<Create.Response>("/api/library/folders", req);
+                return data;
+            }
+
+            export async function update(
+                api: AxiosInstance,
+                req: Update.Request,
+            ): Promise<Update.Response> {
+                const { id, ...payload } = req;
+                const { data } = await api.patch<Update.Response>(`/api/library/folders/${id}`, payload);
                 return data;
             }
 

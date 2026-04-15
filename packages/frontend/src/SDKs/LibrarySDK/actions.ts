@@ -9,10 +9,12 @@ export type _LibrarySDKActions = {
     project: {
         list: () => Promise<Library.API.Project.List.Response>;
         create: (payload: Library.API.Project.Create.Request) => Promise<Library.API.Project.Create.Response>;
+        update: (payload: Library.API.Project.Update.Request) => Promise<Library.API.Project.Update.Response>;
     };
     folder: {
         getContents: (id: Library.Folder.Id) => Promise<Library.API.Folder.GetContents.Response>;
         create: (payload: Library.API.Folder.Create.Request) => Promise<Library.API.Folder.Create.Response>;
+        update: (payload: Library.API.Folder.Update.Request) => Promise<Library.API.Folder.Update.Response>;
         delete: (id: Library.Folder.Id) => Promise<Library.API.Folder.Remove.Response>;
     };
     workflow: {
@@ -54,6 +56,12 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
                 setState((s) => { s.folders[data.id] = data; });
                 return data;
             },
+
+            update: async (payload) => {
+                const data = await Library.API.Project.update(api, payload);
+                setState((s) => { s.folders[data.id] = data; });
+                return data;
+            },
         },
 
         folder: {
@@ -69,6 +77,12 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
 
             create: async (payload) => {
                 const data = await Library.API.Folder.create(api, payload);
+                setState((s) => { s.folders[data.id] = data; });
+                return data;
+            },
+
+            update: async (payload) => {
+                const data = await Library.API.Folder.update(api, payload);
                 setState((s) => { s.folders[data.id] = data; });
                 return data;
             },

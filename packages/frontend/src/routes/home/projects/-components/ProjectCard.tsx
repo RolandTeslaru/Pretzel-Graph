@@ -4,6 +4,7 @@ import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { AlertDialog, Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
 import type { Library } from '@vx-agent-editor/shared/domain'
+import { openEditProjectDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
 
 interface ProjectCardProps {
     project: Library.Folder
@@ -25,6 +26,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
                         </Button>
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content align="end">
+                        <DropdownMenu.Item onClick={() => openEditProjectDialog({ project })}>
+                            Edit project
+                        </DropdownMenu.Item>
                         <DropdownMenu.Item
                             variant="destructive"
                             onClick={() => openDeleteProjectDialog(project)}

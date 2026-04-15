@@ -4,6 +4,7 @@ import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { AlertDialog, Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
 import type { Library } from '@vx-agent-editor/shared/domain'
+import { openEditFolderDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
 
 interface FolderCardProps {
     folder: Library.Folder
@@ -20,6 +21,9 @@ export function FolderCard({ folder }: FolderCardProps) {
                         </Button>
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content align="end">
+                        <DropdownMenu.Item onClick={() => openEditFolderDialog({ folder })}>
+                            Edit folder
+                        </DropdownMenu.Item>
                         <DropdownMenu.Item
                             variant="destructive"
                             onClick={() => openDeleteFolderDialog(folder)}
