@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Auth } from '@vx-agent-editor/shared/domain';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -29,5 +30,5 @@ export const createServiceClient = () => {
 
 export const getUserId = async (supabase: SupabaseClient) => {
     const { data: { user } } = await supabase.auth.getUser();
-    return user?.id;
+    return user?.id as Auth.User.Id;
 }
