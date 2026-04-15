@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { DialogSDK } from '@/SDKs/DialogSDK/sdk'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
-import { Button } from '@vx-agent-editor/vx-ui/foundations'
+import { AlertDialog, Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
 import { openCreateProjectDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
-import { useShallow } from 'zustand/react/shallow'
 import type { Library } from '@vx-agent-editor/shared/domain'
 
 
@@ -17,12 +17,11 @@ export const Route = createFileRoute('/home/projects/')({
             staleTime: 60_000,
         })
 
-        // Depth 2: fire-and-forget prefetch of each project's root folder contents.
+        // Depth 2: fire-and-forget prefetch of each project's contents
         for (const p of projects) {
-            if (!p.root_folder_id) continue
             QuerySDK.client.prefetchQuery({
-                queryKey: ['folders', p.root_folder_id, 'contents'],
-                queryFn: () => LibrarySDK.actions.folder.getContents(p.root_folder_id!),
+                queryKey: ['folders', p.id, 'contents'],
+                queryFn: () => LibrarySDK.actions.folder.getContents(p.id),
                 staleTime: 60_000,
             })
         }
@@ -39,10 +38,10 @@ function ProjectsRoute() {
         staleTime: 60_000,
     })
 
-    const projects = LibrarySDK.useStore(
-        useShallow((s) => Object.values(s.projects).sort(
+    const projects = LibrarySDK.useStore((s) => 
+        Object.values(s.folders).filter((f) => f.is_root).sort(
             (a, b) => b.created_at.localeCompare(a.created_at),
-        )),
+        )
     )
 
     return (
@@ -67,48 +66,82 @@ function ProjectsRoute() {
 }
 
 
-function ProjectCard({ project }: { project: Library.Project }) {
-    const rootFolderId = LibrarySDK.useStore((s) => s.rootFolderByProject[project.id])
-
+function ProjectCard({ project }: { project: Library.Folder }) {
     // Once the depth-2 prefetch lands, the action writes the folder rows into Zustand.
     // These selectors re-render when that happens.
-    const childCount = LibrarySDK.useStore(
-        useShallow((s) => rootFolderId
-            ? Object.values(s.folders).filter((f) => f.parent_folder_id === rootFolderId).length
-            : 0,
-        ),
-    )
-    const workflowCount = LibrarySDK.useStore(
-        useShallow((s) => rootFolderId
-            ? Object.values(s.workflowMetas).filter((w) => w.folder_id === rootFolderId).length
-            : 0,
-        ),
-    )
+    const [childCount, workflowCount] = LibrarySDK.useStore(s => [
+        Object.values(s.folders).filter((f) => f.parent_folder_id === project.id).length,
+        Object.values(s.workflowMetas).filter((w) => w.folder_id === project.id).length
+    ])
 
     return (
-        <Link
-            to="/home/projects/$folderId"
-            params={{ folderId: rootFolderId! }}
-            disabled={!rootFolderId}
-            className="block p-4 rounded-xl border hover:bg-muted/40 transition-colors aria-disabled:pointer-events-none aria-disabled:opacity-50"
-        >
-            <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-muted shrink-0">
-                    <SystemIcons.Folder size={18} />
-                </div>
-                <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">{project.display_name}</div>
-                    {project.description && (
-                        <p className="text-sm opacity-60 truncate mt-0.5">{project.description}</p>
-                    )}
-                    <div className="text-xs opacity-50 mt-2 flex items-center gap-3">
-                        <span>{childCount} folder{childCount === 1 ? '' : 's'}</span>
-                        <span>{workflowCount} workflow{workflowCount === 1 ? '' : 's'}</span>
+        <div className="relative rounded-xl border hover:bg-muted/40 transition-colors">
+            <div className="absolute top-2 right-2 z-10">
+                <DropdownMenu.Root>
+                    <DropdownMenu.Trigger asChild>
+                        <Button variant="ghost" size="icon-xs" className="p-0!">
+                            <SystemIcons.Ellipsis />
+                        </Button>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Content align="end">
+                        <DropdownMenu.Item
+                            variant="destructive"
+                            onClick={() => openDeleteProjectDialog(project)}
+                        >
+                            <SystemIcons.Trash2 />
+                            Delete project
+                        </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                </DropdownMenu.Root>
+            </div>
+
+            <Link
+                to="/home/projects/$folderId"
+                params={{ folderId: project.id }}
+                disabled={!project.id}
+                className="block p-4 pr-11 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+            >
+                <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-muted shrink-0">
+                        <SystemIcons.Folder size={18} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="font-medium truncate">{project.display_name}</div>
+                        {project.description && (
+                            <p className="text-sm opacity-60 truncate mt-0.5">{project.description}</p>
+                        )}
+                        <div className="text-xs opacity-50 mt-2 flex items-center gap-3">
+                            <span>{childCount} folder{childCount === 1 ? '' : 's'}</span>
+                            <span>{workflowCount} workflow{workflowCount === 1 ? '' : 's'}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </Link>
+            </Link>
+        </div>
     )
+}
+
+function openDeleteProjectDialog(project: Library.Folder) {
+    const dialogId = `delete-project-${project.id}`
+
+    DialogSDK.actions.push(dialogId, (props) => (
+        <DialogSDK.AlertTemplate
+            {...props}
+            type="danger"
+            onApprove={async () => {
+                await LibrarySDK.actions.folder.delete(project.id)
+                DialogSDK.actions.pop(dialogId)
+            }}
+            onCancel={() => DialogSDK.actions.pop(dialogId)}
+        >
+            <AlertDialog.Title>
+                Delete project?
+            </AlertDialog.Title>
+            <AlertDialog.Description>
+                This action is irreversible. Deleting <span className="font-semibold text-destructive">{project.display_name}</span> will also delete all folders and workflows inside it.
+            </AlertDialog.Description>
+        </DialogSDK.AlertTemplate>
+    ))
 }
 
 

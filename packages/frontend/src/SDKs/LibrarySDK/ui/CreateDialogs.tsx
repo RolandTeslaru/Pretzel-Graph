@@ -72,7 +72,6 @@ function CreateProjectContent({ dialogId }: { dialogId: string }) {
 // New folder
 // ─────────────────────────────────────────────────────────────
 export function openCreateFolderDialog(args: {
-    project_id: Library.Project.Id
     parent_folder_id: Library.Folder.Id
 }) {
     const id = `create-folder-${args.parent_folder_id}`
@@ -85,11 +84,9 @@ export function openCreateFolderDialog(args: {
 
 function CreateFolderContent({
     dialogId,
-    project_id,
     parent_folder_id,
 }: {
     dialogId: string
-    project_id: Library.Project.Id
     parent_folder_id: Library.Folder.Id
 }) {
     const form = useForm<MetaValues>({
@@ -100,7 +97,6 @@ function CreateFolderContent({
     const onSubmit = async (values: MetaValues) => {
         try {
             await LibrarySDK.actions.folder.create({
-                project_id,
                 parent_folder_id,
                 display_name: values.display_name,
                 description: values.description || null,

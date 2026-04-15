@@ -14,6 +14,7 @@ export function withSupabaseAssert<TArgs extends any[], TReturn>(
             return await fn(...args);
         } catch (err) {
             const detail = err instanceof Error ? err.message : String(err);
+            console.error(`Database error during ${operation}:`, err);
             throw new DatabaseError(
                 SystemError.Code.INFRA_DATABASE_ERROR,
                 "Something went wrong",

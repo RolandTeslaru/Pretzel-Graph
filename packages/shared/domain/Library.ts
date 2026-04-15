@@ -1,24 +1,8 @@
 import { z } from "zod"
+import type { AxiosInstance } from "axios"
 import { Workflow as DomainWorkflow } from "./Workflow"
-import { Auth } from "./Auth"
 
 export namespace Library {
-
-    export namespace Project {
-        export const Id = z.string().brand("ProjectId")
-        export type Id = z.infer<typeof Project.Id>
-
-        export const Schema = z.object({
-            id: Project.Id,
-            user_id: Auth.User.Id,
-            display_name: z.string(),
-            description: z.string().nullable(),
-            created_at: z.string(),
-            updated_at: z.string(),
-        })
-    }
-    export type Project = z.infer<typeof Project.Schema>
-
 
     export namespace Folder {
         export const Id = z.string().brand("FolderId")
@@ -26,8 +10,6 @@ export namespace Library {
 
         export const Schema = z.object({
             id: Folder.Id,
-            project_id: Project.Id,
-            user_id: Auth.User.Id,
             parent_folder_id: Folder.Id.nullable(),
             is_root: z.boolean(),
             display_name: z.string(),
@@ -40,10 +22,21 @@ export namespace Library {
 
 
     export namespace WorkflowMeta {
-        export const Schema = DomainWorkflow.Schema.omit({ data: true })
+        export const Schema = DomainWorkflow.Database.Row.Schema.omit({ 
+            data: true,
+            user_id: true
+         })
     }
     export type WorkflowMeta = z.infer<typeof WorkflowMeta.Schema>
 
+    export namespace Database {
+        export namespace FolderRow {
+            export const Schema = Folder.Schema.extend({
+                user_id: z.string().brand("UserId"),
+            })
+        }
+        export type FolderRow = z.infer<typeof Database.FolderRow.Schema>
+    }
 
     // ─────────────────────────────────────────────────────────────
     // API request/response shapes
@@ -60,22 +53,45 @@ export namespace Library {
                     description: z.string().nullable().optional(),
                 })
                 export type Request = z.infer<typeof Request>;
-                export type Response = Library.Project;
+                export type Response = Library.Folder;
             }
+
             export namespace List {
-                // Each project's root folder id is inlined so the frontend
-                // can prefetch folder contents without a second round-trip.
-                export const ResponseSchema = z.array(
-                    Library.Project.Schema.extend({
-                        root_folder_id: Library.Folder.Id.nullable(),
-                    }),
-                );
+                export const Request = z.object({});
+                export type Request = z.infer<typeof Request>;
+                export const ResponseSchema = z.array(Library.Folder.Schema);
                 export type Response = z.infer<typeof ResponseSchema>;
             }
-            export namespace Delete {
-                export const Request = z.object({ id: Library.Project.Id });
+
+            export async function create(
+                api: AxiosInstance,
+                req: Create.Request,
+            ): Promise<Create.Response> {
+                const { data } = await api.post<Create.Response>("/api/library/projects", req);
+                return data;
+            }
+
+            export async function list(
+                api: AxiosInstance,
+                req: List.Request = {},
+            ): Promise<List.Response> {
+                const { data } = await api.get<List.Response>("/api/library/projects", {
+                    params: req,
+                });
+                return data;
+            }
+
+            export namespace Remove {
+                export const Request = z.object({ id: Library.Folder.Id });
                 export type Request = z.infer<typeof Request>;
                 export type Response = { ok: true };
+            }
+            export async function remove(
+                api: AxiosInstance,
+                req: Remove.Request,
+            ): Promise<Remove.Response> {
+                const { data } = await api.delete<Remove.Response>(`/api/library/projects/${req.id}`);
+                return data;
             }
         }
 
@@ -83,7 +99,6 @@ export namespace Library {
         export namespace Folder {
             export namespace Create {
                 export const Request = z.object({
-                    project_id: Library.Project.Id,
                     parent_folder_id: Library.Folder.Id,
                     display_name: z.string().min(1),
                     description: z.string().nullable().optional(),
@@ -91,13 +106,7 @@ export namespace Library {
                 export type Request = z.infer<typeof Request>;
                 export type Response = Library.Folder;
             }
-            export namespace List {
-                export const Request = z.object({ project_id: Library.Project.Id.optional() });
-                export type Request = z.infer<typeof Request>;
-                export const ResponseSchema = z.array(Library.Folder.Schema);
-                export type Response = z.infer<typeof ResponseSchema>;
-            }
-            export namespace Delete {
+            export namespace Remove {
                 export const Request = z.object({ id: Library.Folder.Id });
                 export type Request = z.infer<typeof Request>;
                 export type Response = { ok: true };
@@ -114,6 +123,30 @@ export namespace Library {
                     workflows: z.array(Library.WorkflowMeta.Schema),
                 });
                 export type Response = z.infer<typeof ResponseSchema>;
+            }
+
+            export async function create(
+                api: AxiosInstance,
+                req: Create.Request,
+            ): Promise<Create.Response> {
+                const { data } = await api.post<Create.Response>("/api/library/folders", req);
+                return data;
+            }
+
+            export async function remove(
+                api: AxiosInstance,
+                req: Remove.Request,
+            ): Promise<Remove.Response> {
+                const { data } = await api.delete<Remove.Response>(`/api/library/folders/${req.id}`);
+                return data;
+            }
+
+            export async function getContents(
+                api: AxiosInstance,
+                req: GetContents.Request,
+            ): Promise<GetContents.Response> {
+                const { data } = await api.get<GetContents.Response>(`/api/library/folders/${req.id}/contents`);
+                return data;
             }
         }
 
@@ -138,16 +171,26 @@ export namespace Library {
                 export type Request = z.infer<typeof Request>;
                 export type Response = DomainWorkflow;
             }
-            export namespace List {
-                export const Request = z.object({ folder_id: Library.Folder.Id.optional() });
-                export type Request = z.infer<typeof Request>;
-                export const ResponseSchema = z.array(Library.WorkflowMeta.Schema);
-                export type Response = z.infer<typeof ResponseSchema>;
-            }
-            export namespace Delete {
+            export namespace Remove {
                 export const Request = z.object({ id: DomainWorkflow.Id });
                 export type Request = z.infer<typeof Request>;
                 export type Response = { ok: true };
+            }
+
+            export async function create(
+                api: AxiosInstance,
+                req: Create.Request,
+            ): Promise<Create.Response> {
+                const { data } = await api.post<Create.Response>("/api/library/workflows", req);
+                return data;
+            }
+
+            export async function remove(
+                api: AxiosInstance,
+                req: Remove.Request,
+            ): Promise<Remove.Response> {
+                const { data } = await api.delete<Remove.Response>(`/api/library/workflows/${req.id}`);
+                return data;
             }
         }
     }

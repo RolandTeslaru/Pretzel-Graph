@@ -13,72 +13,58 @@ export class LibraryService {
                 supabase: SupabaseClient,
                 payload: Library.API.Project.Create.Request,
             ) => {
-                const { data } = await supabase
-                    .from('projects')
-                    .insert(payload)
+                const user_id = await getUserId(supabase);
+                if (!user_id) throw new Error('Unauthenticated');
+
+                const { data: row } = await supabase
+                    .from('folders')
+                    .insert({
+                        ...payload,
+                        is_root: true,
+                        user_id
+                    })
                     .select()
-                    .single()
+                    .single<Library.Database.FolderRow>()
                     .throwOnError();
-                return data as Library.Project;
+
+                return Library.Folder.Schema.parse(row);
             }),
 
-            list: withSupabaseAssert('project.list', async (supabase: SupabaseClient) => {
-                // Fetch projects + their root folder ids in parallel,
-                // then join in-memory.
-                const [projectsResult, rootsResult] = await Promise.all([
-                    supabase
-                        .from('projects')
-                        .select('*')
-                        .order('created_at', { ascending: false })
-                        .throwOnError(),
-                    supabase
-                        .from('folders')
-                        .select('id, project_id')
-                        .eq('is_root', true)
-                        .throwOnError(),
-                ]);
+            list: withSupabaseAssert('project.list', async (
+                supabase: SupabaseClient,
+            ) => {
+                const { data: rows } = await supabase
+                    .from('folders')
+                    .select('*')
+                    .eq('is_root', true)
+                    .is('parent_folder_id', null)
+                    .order('created_at', { ascending: false })
+                    .throwOnError();
 
-                const rootByProject = new Map<string, Library.Folder.Id>();
-                for (const r of rootsResult.data ?? []) {
-                    rootByProject.set(r.project_id, r.id as Library.Folder.Id);
-                }
-
-                return (projectsResult.data ?? []).map((p) => ({
-                    ...(p as Library.Project),
-                    root_folder_id: rootByProject.get(p.id) ?? null,
-                }));
-            }),
-
-            delete: withSupabaseAssert('project.delete', async (supabase: SupabaseClient, id: Library.Project.Id) => {
-                await supabase.from('projects').delete().eq('id', id).throwOnError();
-            }),
+                return (rows ?? []).map((row) => Library.Folder.Schema.parse(row));
+            })
         },
 
         folder: {
             create: withSupabaseAssert('folder.create', async (
                 supabase: SupabaseClient,
                 payload: {
-                    project_id: Library.Project.Id;
-                    parent_folder_id: Library.Folder.Id | null;
-                    is_root: boolean;
+                    parent_folder_id: Library.Folder.Id,
                     display_name: string;
                     description?: string | null;
                 },
             ) => {
-                const { data } = await supabase
-                    .from('folders')
-                    .insert(payload)
-                    .select()
-                    .single()
-                    .throwOnError();
-                return data as Library.Folder;
-            }),
+                const user_id = await getUserId(supabase);
+                if (!user_id) throw new Error('Unauthenticated');
 
-            list: withSupabaseAssert('folder.list', async (supabase: SupabaseClient, projectId?: Library.Project.Id) => {
-                let q = supabase.from('folders').select('*');
-                if (projectId) q = q.eq('project_id', projectId);
-                const { data } = await q.throwOnError();
-                return (data ?? []) as Library.Folder[];
+                const { data: row } = await supabase
+                    .from('folders')
+                    .insert({ ...payload, user_id })
+                    .select()
+                    .single<Library.Database.FolderRow>()
+                    .throwOnError();
+
+                return Library.Folder.Schema.parse(row);
             }),
 
             delete: withSupabaseAssert('folder.delete', async (supabase: SupabaseClient, id: Library.Folder.Id) => {
@@ -86,12 +72,12 @@ export class LibraryService {
             }),
 
             getContents: withSupabaseAssert('folder.getContents', async (supabase: SupabaseClient, id: Library.Folder.Id) => {
-                const [folderRes, childFoldersRes, workflowsRes] = await Promise.all([
-                    supabase.from('folders').select('*').eq('id', id).single().throwOnError(),
-                    supabase.from('folders').select('*').eq('parent_folder_id', id).throwOnError(),
+                const [folderRes, childFoldersRes, workflowMetasRes] = await Promise.all([
+                    supabase.from('folders').select('*').eq('id', id).single().throwOnError(),       // folder itself
+                    supabase.from('folders').select('*').eq('parent_folder_id', id).throwOnError(), // child folders
                     supabase
                         .from('workflows')
-                        .select('id, user_id, folder_id, display_name, description, locked, mcp_enabled, created_at, updated_at')
+                        .select('id, folder_id, display_name, description, locked, mcp_enabled, created_at, updated_at')
                         .eq('folder_id', id)
                         .throwOnError(),
                 ]);
@@ -99,7 +85,7 @@ export class LibraryService {
                 return {
                     folder: folderRes.data as Library.Folder,
                     child_folders: (childFoldersRes.data ?? []) as Library.Folder[],
-                    workflows: (workflowsRes.data ?? []) as Library.WorkflowMeta[],
+                    workflows: (workflowMetasRes.data ?? []) as Library.WorkflowMeta[],
                 };
             }),
         },
@@ -107,39 +93,37 @@ export class LibraryService {
         workflow: {
             create: withSupabaseAssert('workflow.create', async (
                 supabase: SupabaseClient,
-                payload: Library.API.Workflow.Create.Request & { user_id: string },
+                payload: Library.API.Workflow.Create.Request,
             ) => {
-                const row = {
-                    ...payload,
-                    locked: false,
-                    data: Workflow.INITIAL.data,
-                };
-                const { data } = await supabase
+                const user_id = await getUserId(supabase);
+                if (!user_id) throw new Error('Unauthenticated');
+                
+                const { data: row } = await supabase
                     .from('workflows')
-                    .insert(row)
+                    .insert({
+                        ...payload,
+                        user_id,
+                        locked: false,
+                        data: Workflow.INITIAL.data,
+                    })
                     .select()
-                    .single()
+                    .single<Workflow.Database.Row>()
                     .throwOnError();
-                return data!;
+
+                const wf = Workflow.Schema.parse(row);
+                return wf;
             }),
 
             get: withSupabaseAssert('workflow.get', async (supabase: SupabaseClient, workflowId: Workflow.Id) => {
-                const { data } = await supabase
+                const { data: row } = await supabase
                     .from('workflows')
                     .select('*')
                     .eq('id', workflowId)
-                    .single()
+                    .single<Workflow.Database.Row>()
                     .throwOnError();
-                return data!;
-            }),
 
-            list: withSupabaseAssert('workflow.list', async (supabase: SupabaseClient, folderId?: Library.Folder.Id) => {
-                let q = supabase
-                    .from('workflows')
-                    .select('id, user_id, folder_id, display_name, description, locked, mcp_enabled, created_at, updated_at');
-                if (folderId) q = q.eq('folder_id', folderId);
-                const { data } = await q.throwOnError();
-                return data ?? [];
+                const wf = Workflow.Schema.parse(row);
+                return wf;
             }),
 
             delete: withSupabaseAssert('workflow.delete', async (supabase: SupabaseClient, id: Workflow.Id) => {
@@ -153,102 +137,74 @@ export class LibraryService {
     // Public API
     // ─────────────────────────────────────────────────────────
 
-    async createProject(
-        token: string,
-        payload: Library.API.Project.Create.Request,
-    ): Promise<Library.API.Project.Create.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const project = await this.dbOps.project.create(supabase, payload);
+    public readonly project = {
+        create: async (
+            token: string,
+            payload: Library.API.Project.Create.Request,
+        ): Promise<Library.API.Project.Create.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            return await this.dbOps.project.create(supabase, payload);
+        },
 
-        // Bootstrap project's root folder. Roll back project on failure.
-        try {
-            await this.dbOps.folder.create(supabase, {
-                project_id: project.id,
-                parent_folder_id: null,
-                is_root: true,
-                display_name: project.display_name,
-                description: null,
-            });
-        } catch (err) {
-            await this.dbOps.project.delete(supabase, project.id).catch(() => { });
-            throw err;
+        list: async (
+            token: string,
+        ): Promise<Library.API.Project.List.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            return await this.dbOps.project.list(supabase);
         }
+    };
 
-        return project;
-    }
+    public readonly folder = {
+        create: async (
+            token: string,
+            payload: Library.API.Folder.Create.Request,
+        ): Promise<Library.API.Folder.Create.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            return await this.dbOps.folder.create(supabase, payload);
+        },
 
-    async listProjects(token: string): Promise<Library.API.Project.List.Response> {
-        const supabase = createAuthenticatedClient(token);
-        return await this.dbOps.project.list(supabase);
-    }
+        delete: async (
+            token: string,
+            id: Library.Folder.Id,
+        ): Promise<Library.API.Folder.Remove.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            await this.dbOps.folder.delete(supabase, id);
+            return { ok: true };
+        },
 
-    async deleteProject(token: string, id: Library.Project.Id): Promise<Library.API.Project.Delete.Response> {
-        const supabase = createAuthenticatedClient(token);
-        await this.dbOps.project.delete(supabase, id);
-        return { ok: true };
-    }
+        getContents: async (
+            token: string,
+            id: Library.Folder.Id,
+        ): Promise<Library.API.Folder.GetContents.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            return await this.dbOps.folder.getContents(supabase, id);
+        }
+    };
 
+    public readonly workflow = {
+        create: async (
+            token: string,
+            payload: Library.API.Workflow.Create.Request,
+        ): Promise<Library.API.Workflow.Create.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            return await this.dbOps.workflow.create(supabase, payload);
+        },
 
-    async createFolder(
-        token: string,
-        payload: Library.API.Folder.Create.Request,
-    ): Promise<Library.API.Folder.Create.Response> {
-        const supabase = createAuthenticatedClient(token);
-        return await this.dbOps.folder.create(supabase, {
-            ...payload,
-            is_root: false,
-        });
-    }
+        get: async (
+            token: string,
+            workflowId: Workflow.Id,
+        ): Promise<Library.API.Workflow.Get.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            return await this.dbOps.workflow.get(supabase, workflowId);
+        },
 
-    async listFolders(
-        token: string,
-        projectId?: Library.Project.Id,
-    ): Promise<Library.API.Folder.List.Response> {
-        const supabase = createAuthenticatedClient(token);
-        return await this.dbOps.folder.list(supabase, projectId);
-    }
-
-    async deleteFolder(token: string, id: Library.Folder.Id): Promise<Library.API.Folder.Delete.Response> {
-        const supabase = createAuthenticatedClient(token);
-        await this.dbOps.folder.delete(supabase, id);
-        return { ok: true };
-    }
-
-    async getFolderContents(
-        token: string,
-        id: Library.Folder.Id,
-    ): Promise<Library.API.Folder.GetContents.Response> {
-        const supabase = createAuthenticatedClient(token);
-        return await this.dbOps.folder.getContents(supabase, id);
-    }
-
-
-    async createWorkflow(
-        token: string,
-        payload: Library.API.Workflow.Create.Request,
-    ): Promise<Library.API.Workflow.Create.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const user_id = await getUserId(supabase);
-        if (!user_id) throw new Error('Unauthenticated');
-        return await this.dbOps.workflow.create(supabase, { ...payload, user_id });
-    }
-
-    async getWorkflow(token: string, workflowId: Workflow.Id): Promise<Library.API.Workflow.Get.Response> {
-        const supabase = createAuthenticatedClient(token);
-        return await this.dbOps.workflow.get(supabase, workflowId);
-    }
-
-    async listWorkflows(
-        token: string,
-        folderId?: Library.Folder.Id,
-    ): Promise<Library.API.Workflow.List.Response> {
-        const supabase = createAuthenticatedClient(token);
-        return await this.dbOps.workflow.list(supabase, folderId);
-    }
-
-    async deleteWorkflow(token: string, id: Workflow.Id): Promise<Library.API.Workflow.Delete.Response> {
-        const supabase = createAuthenticatedClient(token);
-        await this.dbOps.workflow.delete(supabase, id);
-        return { ok: true };
-    }
+        delete: async (
+            token: string,
+            id: Workflow.Id,
+        ): Promise<Library.API.Workflow.Remove.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            await this.dbOps.workflow.delete(supabase, id);
+            return { ok: true };
+        }
+    };
 }

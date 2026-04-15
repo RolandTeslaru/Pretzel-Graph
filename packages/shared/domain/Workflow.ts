@@ -108,13 +108,10 @@ export namespace Workflow {
         id: Workflow.Id,
         display_name: z.string(),
         locked: z.boolean(),
-        description: z.string().optional(),
+        description: z.string().optional().nullable(),
 
         created_at: z.coerce.date(),
         updated_at: z.coerce.date(),
-
-        folder_id: z.string().brand("FolderId"),
-        user_id: Auth.User.Id,
 
         data: z.object({
             nodes: z.record(Node.Id, Node.Schema),
@@ -139,8 +136,6 @@ export namespace Workflow {
 
     export const INITIAL = {
         id: "" as Workflow.Id,
-        folder_id: "" as z.infer<typeof Schema>["folder_id"],
-        user_id: "" as Auth.User.Id,
         locked: false,
         display_name: "",
         description: "",
@@ -158,6 +153,17 @@ export namespace Workflow {
             }
         }
     } as const satisfies z.infer<typeof Schema>
+
+
+    export namespace Database {
+        export namespace Row {
+            export const Schema = Workflow.Schema.extend({
+                user_id: Auth.User.Id,
+                folder_id: z.string().brand("FolderId"),
+            })
+        }
+        export type Row = z.infer<typeof Row.Schema>
+    }
 
 
 
