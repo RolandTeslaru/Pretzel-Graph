@@ -62,6 +62,25 @@ export class LibraryService {
                 return Library.Folder.Schema.parse(row);
             }),
 
+            update: withSupabaseAssert('project.update', async (
+                supabase: SupabaseClient,
+                payload: Library.API.Project.Update.Request,
+            ) => {
+                const { data: row } = await supabase
+                    .from('folders')
+                    .update({
+                        display_name: payload.display_name,
+                        description: payload.description ?? null,
+                    })
+                    .eq('id', payload.id)
+                    .eq('is_root', true)
+                    .select('*')
+                    .single<Library.Database.FolderRow>()
+                    .throwOnError();
+
+                return Library.Folder.Schema.parse(row);
+            }),
+
             list: withSupabaseAssert('project.list', async (
                 supabase: SupabaseClient,
             ) => {
@@ -93,6 +112,24 @@ export class LibraryService {
                     .from('folders')
                     .insert({ ...payload, user_id })
                     .select()
+                    .single<Library.Database.FolderRow>()
+                    .throwOnError();
+
+                return Library.Folder.Schema.parse(row);
+            }),
+
+            update: withSupabaseAssert('folder.update', async (
+                supabase: SupabaseClient,
+                payload: Library.API.Folder.Update.Request,
+            ) => {
+                const { data: row } = await supabase
+                    .from('folders')
+                    .update({
+                        display_name: payload.display_name,
+                        description: payload.description ?? null,
+                    })
+                    .eq('id', payload.id)
+                    .select('*')
                     .single<Library.Database.FolderRow>()
                     .throwOnError();
 
@@ -207,6 +244,14 @@ export class LibraryService {
             return await this.dbOps.project.create(supabase, payload);
         },
 
+        update: async (
+            token: string,
+            payload: Library.API.Project.Update.Request,
+        ): Promise<Library.API.Project.Update.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            return await this.dbOps.project.update(supabase, payload);
+        },
+
         list: async (
             token: string,
         ): Promise<Library.API.Project.List.Response> => {
@@ -222,6 +267,14 @@ export class LibraryService {
         ): Promise<Library.API.Folder.Create.Response> => {
             const supabase = createAuthenticatedClient(token);
             return await this.dbOps.folder.create(supabase, payload);
+        },
+
+        update: async (
+            token: string,
+            payload: Library.API.Folder.Update.Request,
+        ): Promise<Library.API.Folder.Update.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            return await this.dbOps.folder.update(supabase, payload);
         },
 
         delete: async (
