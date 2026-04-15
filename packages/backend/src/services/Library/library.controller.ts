@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Delete, Body, Param, UseGuards, Req, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Body, Param, UseGuards, Req, HttpCode, Patch } from '@nestjs/common';
 import { LibraryService } from './library.service';
 import { Library, Workflow } from '@vx-agent-editor/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
@@ -58,6 +58,12 @@ export class LibraryController {
     @Get('workflows/:id')
     async getWorkflow(@Req() req: AuthenticatedRequest, @Param('id') id: Workflow.Id) {
         return await this.libraryService.workflow.get(req.token, id);
+    }
+
+    @Patch('workflows/:id')
+    async updateWorkflow(@Req() req: AuthenticatedRequest, @Param('id') id: Workflow.Id, @Body() body: any) {
+        const payload = Library.API.Workflow.Update.Request.parse({ ...body, id });
+        return await this.libraryService.workflow.update(req.token, payload);
     }
 
     @Delete('workflows/:id')

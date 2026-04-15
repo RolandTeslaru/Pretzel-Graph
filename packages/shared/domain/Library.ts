@@ -186,9 +186,13 @@ export namespace Library {
                 export type Response = DomainWorkflow;
             }
             export namespace Update {
-                export const Request = DomainWorkflow.Schema;
+                export const Request = z.object({
+                    id: DomainWorkflow.Id,
+                    display_name: z.string().min(1),
+                    description: z.string().nullable().optional(),
+                });
                 export type Request = z.infer<typeof Request>;
-                export type Response = DomainWorkflow;
+                export type Response = Library.WorkflowMeta;
             }
             export namespace Get {
                 export const Request = z.object({ id: DomainWorkflow.Id });
@@ -206,6 +210,15 @@ export namespace Library {
                 req: Create.Request,
             ): Promise<Create.Response> {
                 const { data } = await api.post<Create.Response>("/api/library/workflows", req);
+                return data;
+            }
+
+            export async function update(
+                api: AxiosInstance,
+                req: Update.Request,
+            ): Promise<Update.Response> {
+                const { id, ...payload } = req;
+                const { data } = await api.patch<Update.Response>(`/api/library/workflows/${id}`, payload);
                 return data;
             }
 

@@ -4,6 +4,7 @@ import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { AlertDialog, Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
 import type { Library } from '@vx-agent-editor/shared/domain'
+import { openEditWorkflowDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
 
 interface WorkflowCardProps {
     workflow: Library.WorkflowMeta
@@ -20,12 +21,15 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
                         </Button>
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content align="end">
+                        <DropdownMenu.Item onClick={() => openEditWorkflowDialog({ workflow })}>
+                            Edit
+                        </DropdownMenu.Item>
                         <DropdownMenu.Item
                             variant="destructive"
                             onClick={() => openDeleteWorkflowDialog(workflow)}
                         >
                             <SystemIcons.Trash2 />
-                            Delete workflow
+                            Delete
                         </DropdownMenu.Item>
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
