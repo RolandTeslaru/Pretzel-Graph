@@ -5,13 +5,13 @@ import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFl
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
 import { workbenchSelectors, type _WorkBenchSDKSelectors } from "./selectors";
 import React from "react";
-import { Foundations, Validation, Workflow } from "@vx-agent-editor/shared/domain"
+import { Foundations, Validation, Workbench, Workflow } from "@vx-agent-editor/shared/domain"
 import { temporal } from 'zundo';
 import { cloneDeep } from "lodash";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
 import { toast } from "sonner";
-import { supabase } from "@/libs/supabase";
+import { api } from '@/SDKs/ApiInterceptorSDK';
 import { workbenchReducers } from "./reducers";
 import { createDrivers } from "./utils/createDrivers";
 
@@ -110,7 +110,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
     public async loadWorkflow(workflowId: Workflow.Id) {
         try {
-            const { workflow } = await Workflow.API.get(supabase, { workflowId })
+            const { workflow } = await Workbench.API.Workflow.get(api, { workflowId })
             if (!workflow)
                 throw new Error("Workflow not found")
 

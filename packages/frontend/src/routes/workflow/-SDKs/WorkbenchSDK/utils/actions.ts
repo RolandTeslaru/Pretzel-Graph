@@ -1,19 +1,19 @@
 import { WorkbenchSDK } from '../sdk';
 import { debounce } from '@/decorators/debounce';
 import { toast } from 'sonner';
-import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
-import { supabase } from '@/libs/supabase';
+import { Foundations, Workbench, Workflow } from '@vx-agent-editor/shared/domain';
+import { api } from '@/SDKs/ApiInterceptorSDK';
 import { workflowReducers } from '../reducers/workflow';
 
 export const commit = async () => {
     if (WorkbenchSDK.state.isDirty === false) return;
     try {
         console.log("Committing")
-        await Workflow.API.commit(supabase, { workflow: WorkbenchSDK.state.workflow })
+        await Workbench.API.Workflow.commit(api, { workflow: WorkbenchSDK.state.workflow })
+        WorkbenchSDK.actions.setDirty(false);
     } catch (error) {
         toast.error("Could not save to cloud")
     }
-    WorkbenchSDK.actions.setDirty(false);
 };
 
 export const debouncedCommit: () => void = debounce(async () => {
