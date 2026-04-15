@@ -27,6 +27,12 @@ export class LibraryController {
         return await this.libraryService.project.list(req.token);
     }
 
+    @Patch('projects/:id')
+    async updateProject(@Req() req: AuthenticatedRequest, @Param('id') id: Library.Folder.Id, @Body() body: any) {
+        const payload = Library.API.Project.Update.Request.parse({ ...body, id });
+        return await this.libraryService.project.update(req.token, payload);
+    }
+
 
     // ── Folders ───────────────────────────────────────────
     @Post('folders')
@@ -34,6 +40,12 @@ export class LibraryController {
     async createFolder(@Req() req: AuthenticatedRequest, @Body() body: any) {
         const payload = Library.API.Folder.Create.Request.parse(body);
         return await this.libraryService.folder.create(req.token, payload);
+    }
+
+    @Patch('folders/:id')
+    async updateFolder(@Req() req: AuthenticatedRequest, @Param('id') id: Library.Folder.Id, @Body() body: any) {
+        const payload = Library.API.Folder.Update.Request.parse({ ...body, id });
+        return await this.libraryService.folder.update(req.token, payload);
     }
 
     @Delete('folders/:id')
