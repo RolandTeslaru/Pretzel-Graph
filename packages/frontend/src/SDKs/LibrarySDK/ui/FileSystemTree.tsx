@@ -5,6 +5,7 @@ import { ContextMenu } from '@vx-agent-editor/vx-ui/foundations'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { LibrarySDK } from '../sdk'
 import type { Library, Workflow } from '@vx-agent-editor/shared/domain'
+import { openEditFolderDialog, openEditProjectDialog, openEditWorkflowDialog } from './CreateDialogs'
 import { openDeleteFolderDialog } from '@/routes/home/projects/-components/FolderCard'
 import { openDeleteProjectDialog } from '@/routes/home/projects/-components/ProjectCard'
 import { openDeleteWorkflowDialog } from '@/routes/home/projects/-components/WorkflowCard'
@@ -173,15 +174,43 @@ export function FileSystemTree({
                     }
                 }
 
+                const handleEdit = () => {
+                    if (item.id.startsWith('folder:')) {
+                        const folderId = item.id.slice('folder:'.length) as Library.Folder.Id
+                        const folder = folders[folderId]
+                        if (!folder) return
+
+                        if (folder.is_root) {
+                            openEditProjectDialog({ project: folder })
+                        } else {
+                            openEditFolderDialog({ folder })
+                        }
+                        return
+                    }
+
+                    if (item.id.startsWith('workflow:')) {
+                        const workflowId = item.id.slice('workflow:'.length) as Workflow.Id
+                        const workflow = workflowMetas[workflowId]
+                        if (!workflow) return
+                        openEditWorkflowDialog({ workflow })
+                    }
+                }
+
                 return (
                     <ContextMenu.Root>
                         <ContextMenu.Trigger asChild>
-                            <div className='flex min-w-0 items-center'>
+                            <div className='flex w-full min-w-0 items-center'>
                                 {Icon ? <Icon className='mr-2 h-4 w-4 shrink-0' /> : null}
                                 <span className='truncate text-sm'>{item.name}</span>
                             </div>
                         </ContextMenu.Trigger>
                         <ContextMenu.Content>
+                            <ContextMenu.Item
+                                icon={<SystemIcons.SquarePen className='size-4' />}
+                                onClick={handleEdit}
+                            >
+                                Edit
+                            </ContextMenu.Item>
                             <ContextMenu.Item
                                 variant='destructive'
                                 icon={<SystemIcons.Trash2 className='size-4' />}
