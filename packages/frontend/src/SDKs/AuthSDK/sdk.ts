@@ -4,8 +4,9 @@ import { immer } from "zustand/middleware/immer";
 import { supabase } from "@/libs/supabase";
 import { SDK } from "../SDKManager";
 import { Auth } from "@vx-agent-editor/shared/domain";
-import type { PostgrestError, Session } from "@supabase/supabase-js"
+import type { Session } from "@supabase/supabase-js"
 import { _createAuthActions_ } from "./actions";
+import { api } from '@/SDKs/ApiInterceptorSDK';
 
 @SDK("Auth")
 export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
@@ -20,21 +21,14 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
   )
 
   public readonly db: AuthSDK.Db = {
-    getUser: async (userId: Auth.User.Id) => {
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (error)
+    getUser: async (_userId: Auth.User.Id) => {
+      try {
+        const { user } = await Auth.API.Me.get(api)
+        return { user, error: null }
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Failed to fetch user')
         return { user: null, error }
-
-      // console.log("Fetched User", data)
-
-      const parsedUser = Auth.User.Schema.parse(data)
-
-      return { user: parsedUser, error: null }
+      }
     },
     getSession: async () => {
       const { data: { session }, error } = await supabase.auth.getSession()
@@ -85,7 +79,7 @@ export namespace AuthSDK {
   }
 
   export type Db = {
-    getUser: (userId: Auth.User.Id) => Promise<{ user: Auth.User | null, error: PostgrestError | null }>
+    getUser: (userId: Auth.User.Id) => Promise<{ user: Auth.User | null, error: Error | null }>
     getSession: () => Promise<Session | null>
   }
 
