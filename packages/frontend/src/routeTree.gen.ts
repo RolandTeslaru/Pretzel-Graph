@@ -19,6 +19,7 @@ import { Route as WorkflowWorkflowidRouteImport } from './routes/workflow/$workf
 import { Route as HomeUsageRouteImport } from './routes/home/usage'
 import { Route as HomeTemplatesRouteImport } from './routes/home/templates'
 import { Route as HomeSettingsRouteImport } from './routes/home/settings'
+import { Route as HomeProjectsRouteImport } from './routes/home/projects'
 import { Route as HomeExecutionsRouteImport } from './routes/home/executions'
 import { Route as HomeCredentialsRouteImport } from './routes/home/credentials'
 import { Route as WorkflowWorkflowidIndexRouteImport } from './routes/workflow/$workflowid/index'
@@ -75,6 +76,11 @@ const HomeSettingsRoute = HomeSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => HomeRoute,
 } as any)
+const HomeProjectsRoute = HomeProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => HomeRoute,
+} as any)
 const HomeExecutionsRoute = HomeExecutionsRouteImport.update({
   id: '/executions',
   path: '/executions',
@@ -91,14 +97,14 @@ const WorkflowWorkflowidIndexRoute = WorkflowWorkflowidIndexRouteImport.update({
   getParentRoute: () => WorkflowWorkflowidRoute,
 } as any)
 const HomeProjectsIndexRoute = HomeProjectsIndexRouteImport.update({
-  id: '/projects/',
-  path: '/projects/',
-  getParentRoute: () => HomeRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => HomeProjectsRoute,
 } as any)
 const HomeProjectsFolderIdRoute = HomeProjectsFolderIdRouteImport.update({
-  id: '/projects/$folderId',
-  path: '/projects/$folderId',
-  getParentRoute: () => HomeRoute,
+  id: '/$folderId',
+  path: '/$folderId',
+  getParentRoute: () => HomeProjectsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRouteWithChildren
   '/home/credentials': typeof HomeCredentialsRoute
   '/home/executions': typeof HomeExecutionsRoute
+  '/home/projects': typeof HomeProjectsRouteWithChildren
   '/home/settings': typeof HomeSettingsRoute
   '/home/templates': typeof HomeTemplatesRoute
   '/home/usage': typeof HomeUsageRoute
@@ -139,6 +146,7 @@ export interface FileRoutesById {
   '/home': typeof HomeRouteWithChildren
   '/home/credentials': typeof HomeCredentialsRoute
   '/home/executions': typeof HomeExecutionsRoute
+  '/home/projects': typeof HomeProjectsRouteWithChildren
   '/home/settings': typeof HomeSettingsRoute
   '/home/templates': typeof HomeTemplatesRoute
   '/home/usage': typeof HomeUsageRoute
@@ -158,6 +166,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/home/credentials'
     | '/home/executions'
+    | '/home/projects'
     | '/home/settings'
     | '/home/templates'
     | '/home/usage'
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/home/credentials'
     | '/home/executions'
+    | '/home/projects'
     | '/home/settings'
     | '/home/templates'
     | '/home/usage'
@@ -284,6 +294,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeSettingsRouteImport
       parentRoute: typeof HomeRoute
     }
+    '/home/projects': {
+      id: '/home/projects'
+      path: '/projects'
+      fullPath: '/home/projects'
+      preLoaderRoute: typeof HomeProjectsRouteImport
+      parentRoute: typeof HomeRoute
+    }
     '/home/executions': {
       id: '/home/executions'
       path: '/executions'
@@ -307,41 +324,53 @@ declare module '@tanstack/react-router' {
     }
     '/home/projects/': {
       id: '/home/projects/'
-      path: '/projects'
+      path: '/'
       fullPath: '/home/projects/'
       preLoaderRoute: typeof HomeProjectsIndexRouteImport
-      parentRoute: typeof HomeRoute
+      parentRoute: typeof HomeProjectsRoute
     }
     '/home/projects/$folderId': {
       id: '/home/projects/$folderId'
-      path: '/projects/$folderId'
+      path: '/$folderId'
       fullPath: '/home/projects/$folderId'
       preLoaderRoute: typeof HomeProjectsFolderIdRouteImport
-      parentRoute: typeof HomeRoute
+      parentRoute: typeof HomeProjectsRoute
     }
   }
 }
 
+interface HomeProjectsRouteChildren {
+  HomeProjectsFolderIdRoute: typeof HomeProjectsFolderIdRoute
+  HomeProjectsIndexRoute: typeof HomeProjectsIndexRoute
+}
+
+const HomeProjectsRouteChildren: HomeProjectsRouteChildren = {
+  HomeProjectsFolderIdRoute: HomeProjectsFolderIdRoute,
+  HomeProjectsIndexRoute: HomeProjectsIndexRoute,
+}
+
+const HomeProjectsRouteWithChildren = HomeProjectsRoute._addFileChildren(
+  HomeProjectsRouteChildren,
+)
+
 interface HomeRouteChildren {
   HomeCredentialsRoute: typeof HomeCredentialsRoute
   HomeExecutionsRoute: typeof HomeExecutionsRoute
+  HomeProjectsRoute: typeof HomeProjectsRouteWithChildren
   HomeSettingsRoute: typeof HomeSettingsRoute
   HomeTemplatesRoute: typeof HomeTemplatesRoute
   HomeUsageRoute: typeof HomeUsageRoute
   HomeIndexRoute: typeof HomeIndexRoute
-  HomeProjectsFolderIdRoute: typeof HomeProjectsFolderIdRoute
-  HomeProjectsIndexRoute: typeof HomeProjectsIndexRoute
 }
 
 const HomeRouteChildren: HomeRouteChildren = {
   HomeCredentialsRoute: HomeCredentialsRoute,
   HomeExecutionsRoute: HomeExecutionsRoute,
+  HomeProjectsRoute: HomeProjectsRouteWithChildren,
   HomeSettingsRoute: HomeSettingsRoute,
   HomeTemplatesRoute: HomeTemplatesRoute,
   HomeUsageRoute: HomeUsageRoute,
   HomeIndexRoute: HomeIndexRoute,
-  HomeProjectsFolderIdRoute: HomeProjectsFolderIdRoute,
-  HomeProjectsIndexRoute: HomeProjectsIndexRoute,
 }
 
 const HomeRouteWithChildren = HomeRoute._addFileChildren(HomeRouteChildren)

@@ -66,7 +66,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     )
 }
 
-function openDeleteProjectDialog(project: Library.Folder) {
+export function openDeleteProjectDialog(project: Library.Folder) {
     const dialogId = `delete-project-${project.id}`
 
     DialogSDK.actions.push(dialogId, (props) => (
