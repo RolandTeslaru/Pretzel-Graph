@@ -8,6 +8,7 @@ export interface ExecutionContext {
     session: ExecutionSession,
     workflow: Readonly<Workflow>,
     workflowCache: Readonly<Workflow.Cache>,
+    subWorkflows: Record<Workflow.Node.Id, Readonly<Workflow>>,
     streamController: StreamController,
     abortController: AbortController
     emit: Emitter,
