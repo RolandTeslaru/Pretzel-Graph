@@ -18,11 +18,19 @@ const Breadcrumbs = ({ cwd, finalFileName, className }: Props) => {
         {cwd.map((item, index) => (
           <Fragment key={item.key}>
             <Breadcrumb.Item>
-              <Breadcrumb.Link asChild>
-                <Link to="/home/projects/$folderId" params={{ folderId: item.key }}>
-                  {item.name}
-                </Link>
-              </Breadcrumb.Link>
+              {item.key ? (
+                <Breadcrumb.Link asChild>
+                  <Link to="/home/projects/$folderId" params={{ folderId: item.key }}>
+                    {item.name}
+                  </Link>
+                </Breadcrumb.Link>
+              ) : (
+                <Breadcrumb.Link asChild>
+                  <Link to="/home/projects">
+                    {item.name}
+                  </Link>
+                </Breadcrumb.Link>
+              )}
             </Breadcrumb.Item>
             {index !== cwd.length - 1 && <Breadcrumb.Separator />}
           </Fragment>

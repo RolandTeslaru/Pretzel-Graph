@@ -56,7 +56,7 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
     )
 }
 
-function openDeleteWorkflowDialog(workflow: Library.WorkflowMeta) {
+export function openDeleteWorkflowDialog(workflow: Library.WorkflowMeta) {
     const dialogId = `delete-workflow-${workflow.id}`
 
     DialogSDK.actions.push(dialogId, (props) => (
