@@ -1,7 +1,9 @@
+import React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button, Dialog, Form, Input, Spinner } from '@vx-agent-editor/vx-ui/foundations'
+import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { LibrarySDK } from '../sdk'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
@@ -55,7 +57,6 @@ function CreateProjectContent({ dialogId }: { dialogId: string }) {
                 display_name: values.display_name,
                 description: values.description || null,
             })
-            await QuerySDK.client.invalidateQueries({ queryKey: ['projects'] })
             DialogSDK.actions.pop(dialogId)
         } catch (err) {
             console.error('Failed to create project', err)
@@ -68,6 +69,7 @@ function CreateProjectContent({ dialogId }: { dialogId: string }) {
             title="New project"
             description="Projects hold folders and workflows."
             namePlaceholder="My project"
+            icon={<SystemIcons.FolderOpen />}
             dialogId={dialogId}
             form={form}
             onSubmit={onSubmit}
@@ -97,7 +99,6 @@ function EditProjectContent({
                 display_name: values.display_name,
                 description: values.description || null,
             })
-            await QuerySDK.client.invalidateQueries({ queryKey: ['library', 'bootstrap'] })
             DialogSDK.actions.pop(dialogId)
         } catch (err) {
             console.error('Failed to update project', err)
@@ -110,6 +111,7 @@ function EditProjectContent({
             title="Edit project"
             description="Update project metadata."
             namePlaceholder="My project"
+            icon={<SystemIcons.FolderOpen />}
             dialogId={dialogId}
             form={form}
             onSubmit={onSubmit}
@@ -161,7 +163,6 @@ function CreateFolderContent({
                 display_name: values.display_name,
                 description: values.description || null,
             })
-            await QuerySDK.client.invalidateQueries({ queryKey: ['folders', parent_folder_id, 'contents'] })
             DialogSDK.actions.pop(dialogId)
         } catch (err) {
             console.error('Failed to create folder', err)
@@ -174,6 +175,7 @@ function CreateFolderContent({
             title="New folder"
             description="Create a subfolder inside the current folder."
             namePlaceholder="My folder"
+            icon={<SystemIcons.Folder />}
             dialogId={dialogId}
             form={form}
             onSubmit={onSubmit}
@@ -203,7 +205,7 @@ function EditFolderContent({
                 display_name: values.display_name,
                 description: values.description || null,
             })
-            await QuerySDK.client.invalidateQueries({ queryKey: ['library', 'bootstrap'] })
+            await QuerySDK.client.invalidateQueries({ queryKey: ['folders', folder.id, 'contents'] })
             DialogSDK.actions.pop(dialogId)
         } catch (err) {
             console.error('Failed to update folder', err)
@@ -216,6 +218,7 @@ function EditFolderContent({
             title="Edit folder"
             description="Update folder metadata."
             namePlaceholder="My folder"
+            icon={<SystemIcons.Folder />}
             dialogId={dialogId}
             form={form}
             onSubmit={onSubmit}
@@ -268,7 +271,7 @@ function EditWorkflowContent({
                 display_name: values.display_name,
                 description: values.description || null,
             })
-            await QuerySDK.client.invalidateQueries({ queryKey: ['library', 'bootstrap'] })
+            await QuerySDK.client.invalidateQueries({ queryKey: ['folders', workflow.folder_id, 'contents'] })
             DialogSDK.actions.pop(dialogId)
         } catch (err) {
             console.error('Failed to update workflow', err)
@@ -281,6 +284,7 @@ function EditWorkflowContent({
             title="Edit workflow"
             description="Update workflow metadata."
             namePlaceholder="Untitled workflow"
+            icon={<SystemIcons.Graph />}
             dialogId={dialogId}
             form={form}
             onSubmit={onSubmit}
@@ -308,7 +312,6 @@ function CreateWorkflowContent({
                 display_name: values.display_name,
                 description: values.description || null,
             })
-            await QuerySDK.client.invalidateQueries({ queryKey: ['folders', folder_id, 'contents'] })
             DialogSDK.actions.pop(dialogId)
         } catch (err) {
             console.error('Failed to create workflow', err)
@@ -321,6 +324,7 @@ function CreateWorkflowContent({
             title="New workflow"
             description="Start a new workflow in this folder."
             namePlaceholder="Untitled workflow"
+            icon={<SystemIcons.Graph />}
             dialogId={dialogId}
             form={form}
             onSubmit={onSubmit}
@@ -336,6 +340,7 @@ function MetaFormShell({
     title,
     description,
     namePlaceholder,
+    icon,
     dialogId,
     form,
     onSubmit,
@@ -344,6 +349,7 @@ function MetaFormShell({
     title: string
     description: string
     namePlaceholder: string
+    icon?: React.ReactNode
     dialogId: string
     form: ReturnType<typeof useForm<MetaValues>>
     onSubmit: (values: MetaValues) => Promise<void>
@@ -352,7 +358,10 @@ function MetaFormShell({
     return (
         <div className="p-3 flex flex-col gap-4">
             <Dialog.Header className="my-1">
-                <Dialog.Title>{title}</Dialog.Title>
+                <Dialog.Title className="flex items-center gap-2">
+                    {icon}
+                    {title}
+                </Dialog.Title>
                 <Dialog.Description className="text-muted-foreground">
                     {description}
                 </Dialog.Description>
