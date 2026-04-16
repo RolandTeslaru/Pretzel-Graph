@@ -87,7 +87,8 @@ export const CORE_DRAWERS = {
       "Core.Utils.Message.Compose",
       "Core.Utils.Tool.Runner",
       "Core.Utils.List.Select",
-      "Core.Utils.Tool.Catalog"
+      "Core.Utils.Tool.Catalog",
+      "Core.Utils.ExecuteSubWorkflow"
     ],
   },
   prototypes: {

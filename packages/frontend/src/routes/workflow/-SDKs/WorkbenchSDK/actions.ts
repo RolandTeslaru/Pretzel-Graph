@@ -1,6 +1,6 @@
 import { WorkbenchSDKImpl, WorkbenchSDK } from './sdk';
 import type { DropFirstArg } from '@/SDKs/types';
-import { Workbench, Workflow } from '@vx-agent-editor/shared/domain';
+import { Foundations, Workbench, Workflow } from '@vx-agent-editor/shared/domain';
 import { Port } from '@vx-agent-editor/shared/domain/Foundations/Port';
 import { Field } from '@vx-agent-editor/shared/domain/Foundations/Field';
 import { commit, debouncedCommit, withCommit, withAsyncCommit, debouncedValidateField, debouncedValidateInput, withCyclesRecompute } from './utils/actions';
@@ -368,7 +368,12 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             delete:    withCommit(() => setState(withCyclesRecompute(s => { reducers.selection.delete(s) }))),
             disable:   withCommit((...props) => setState(s => { reducers.selection.disable(s, ...props) })),
         },
-        createSubWorkflow: async (nodeIds, edgeIds, displayName) => {
+        createSubWorkflow: withAsyncCommit(async (nodeIds, edgeIds, displayName) => {
+            if(nodeIds.length === 0){
+                toast.error("No nodes selected to create sub-workflow");
+                return;
+            }
+
             const state = sdk.state;
             const masterWorkflow = state.workflow;
             const subflow = cloneDeep(Workflow.INITIAL) as Workflow;
@@ -376,13 +381,23 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             subflow.display_name = displayName;
             subflow.folder_id = masterWorkflow.folder_id;
 
+            const newNodePos = { x: 0, y: 0 };
+
             nodeIds.forEach(nodeId => {
                 const node = sel.node.get(state, nodeId);
                 subflow.data.nodes[nodeId] = node;
 
                 subflow.data.staticValues[nodeId] = masterWorkflow.data.staticValues[nodeId];
-                subflow.data.ui.layout[nodeId] = masterWorkflow.data.ui.layout[nodeId];
+                const pos = masterWorkflow.data.ui.layout[nodeId];
+                subflow.data.ui.layout[nodeId] = pos;
+
+                newNodePos.x += pos.x;
+                newNodePos.y += pos.y;
             })
+
+            newNodePos.x /= nodeIds.length;
+            newNodePos.y /= nodeIds.length;
+
 
             edgeIds.forEach(edgeId => {
                 const edge = state.workflow.data.edges[edgeId];
@@ -393,15 +408,39 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                     subflow.data.edges[edgeId] = edge;
             })
 
+            let workflowId: Workflow.Id | Foundations.Field.Id;
+
             try {
-                const { workflow_id } = await Workbench.API.Workflow.create(api, { workflow: subflow });
-                return workflow_id;
+                const response = await Workbench.API.Workflow.create(api, { workflow: subflow });
+                workflowId = response.workflow_id;
+
             } catch (error) {
                 console.error(error);
                 toast.error("Could not create sub-workflow");
                 throw error;
             }
-        }
+
+            const blueprint = ShelfSDK.state.blueprints["Core.Utils.ExecuteSubWorkflow" as Foundations.Blueprint.Id];
+            if (!blueprint) {
+                toast.error("ExecuteSubWorkflow blueprint not loaded — open the node shelf first");
+                return;
+            }
+
+            setState(withCyclesRecompute(s => {
+                // node.remove already cleans up all incident edges, so remove nodes first
+                nodeIds.forEach(nodeId => {
+                    reducers.node.remove(s, nodeId)
+                })
+
+                // only remove edges whose both endpoints were outside the selection (not already gone)
+                edgeIds.forEach(edgeId => {
+                    if (s.workflow.data.edges[edgeId])
+                        reducers.edge.remove(s, edgeId)
+                })
+
+                reducers.node.create(s, blueprint, newNodePos, { ["workflowId" as Foundations.Field.Id]: workflowId })
+            }))
+        })
     } satisfies _WorkbenchSDKActions
 }
 
@@ -596,5 +635,5 @@ export interface _WorkbenchSDKActions {
         delete    : () => void;
         disable   : (isDisabled: boolean) => void;
     }
-    createSubWorkflow: (nodeIds: Workflow.Node.Id[], edgeIds: Workflow.Edge.Id[], displayName: string) => Promise<Workflow.Id>;
+    createSubWorkflow: (nodeIds: Workflow.Node.Id[], edgeIds: Workflow.Edge.Id[], displayName: string) => Promise<void>;
 }

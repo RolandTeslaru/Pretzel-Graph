@@ -45,6 +45,8 @@ export class WorkflowCompiler {
         );
         const hydratedSession = { ...session, messages: reconstructedMessages };
 
+        const subWorkflows: ExecutionContext["subWorkflows"] = {};
+
         const context = createExecutionContext({
             workflow,
             workflowCache,
@@ -52,7 +54,8 @@ export class WorkflowCompiler {
             jobId,
             session: hydratedSession,
             streamController: new StreamController(),
-            abortController: new AbortController()
+            abortController: new AbortController(),
+            subWorkflows
         });
 
         const nodeInstanceMap = new Map<Vertex.Id, { wfNode: Workflow.Node; instance: RuntimeNode<Foundations.Blueprint> }>();
