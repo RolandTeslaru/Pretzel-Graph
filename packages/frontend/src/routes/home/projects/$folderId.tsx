@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from '@tanstack/react-router'
+import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
@@ -9,29 +9,63 @@ import { WorkflowCard } from './-components/WorkflowCard'
 import type { Library } from '@vx-agent-editor/shared/domain'
 import Breadcrumbs from './-components/Breadcrumbs'
 
+const BOOTSTRAP_STALE_TIME = 60_000
+const FOLDER_CONTENTS_STALE_TIME = 60_000
+
+
 
 export const Route = createFileRoute('/home/projects/$folderId')({
     loader: async ({ params }) => {
         const folderId = params.folderId as Library.Folder.Id
 
-        const bootstrap = await QuerySDK.client.fetchQuery({
+        QuerySDK.client.fetchQuery({
             queryKey: ['library', 'bootstrap'],
             queryFn: () => LibrarySDK.actions.bootstrap.get(),
-            staleTime: 60_000,
+            staleTime: BOOTSTRAP_STALE_TIME,
         })
 
-        const hasFolder = bootstrap.folders.some((f) => f.id === folderId)
+        const folders = LibrarySDK.state.folders;
+
+        const hasFolder = folderId in folders;
         if (!hasFolder) throw notFound()
 
         return null
     },
+    notFoundComponent: FolderNotFound,
     component: FolderRoute,
 })
+
+
+function FolderNotFound() {
+    const { folderId } = Route.useParams()
+
+    return (
+        <div className="p-6 max-w-6xl">
+            <Breadcrumbs
+                cwd={[{ key: '', name: 'Projects' }]}
+                finalFileName={folderId}
+                className="mb-6"
+            />
+            <div className="flex flex-col items-center justify-center py-20 text-center opacity-80">
+                <SystemIcons.FolderOpen size={34} className="mb-3" />
+                <p className="text-base font-medium">Folder not found</p>
+                <p className="text-sm opacity-70 mt-1">This folder may have been deleted or the link is invalid.</p>
+                <Link to="/home/projects" className="mt-5 text-sm underline underline-offset-4 hover:opacity-80">
+                    Back to Projects
+                </Link>
+            </div>
+        </div>
+    )
+}
 
 
 function FolderRoute() {
     const { folderId } = Route.useParams()
     const id = folderId as Library.Folder.Id
+
+    QuerySDK.useQuery(['library', 'bootstrap'], () => LibrarySDK.actions.bootstrap.get(), {
+        staleTime: BOOTSTRAP_STALE_TIME,
+    })
 
     const folder = LibrarySDK.useStore((s) => s.folders[id])
 
@@ -74,7 +108,7 @@ function FolderView({ folderId }: { folderId: Library.Folder.Id }) {
                         size="sm"
                         onClick={() => openCreateFolderDialog({ parent_folder_id: folderId })}
                     >
-                        <SystemIcons.Plus />
+                        <SystemIcons.Folder />
                         New folder
                     </Button>
                     <Button
@@ -82,7 +116,7 @@ function FolderView({ folderId }: { folderId: Library.Folder.Id }) {
                         size="sm"
                         onClick={() => openCreateWorkflowDialog({ folder_id: folderId })}
                     >
-                        <SystemIcons.Plus />
+                        <SystemIcons.Graph />
                         New workflow
                     </Button>
                 </div>
