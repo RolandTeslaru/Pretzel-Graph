@@ -6,6 +6,7 @@ import { Workflow, Library } from "@vx-agent-editor/shared/domain";
 import { SDK } from "../SDKManager";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
+import type { TreeDataItem } from '@vx-agent-editor/vx-ui/components/Tree/tree-view';
 
 @SDK("Library")
 export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
@@ -17,6 +18,7 @@ export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
             folders: {},
             workflowMetas: {},
             treeExpandedByFolderId: {},
+            treeData: [],
         })),
         shallow
     )
@@ -37,6 +39,7 @@ export namespace LibrarySDK {
         folders: Record<Library.Folder.Id, Library.Folder>;
         workflowMetas: Record<Workflow.Id, Library.WorkflowMeta>;
         treeExpandedByFolderId: Record<Library.Folder.Id, boolean>;
+        treeData: TreeDataItem[];
     }
 
     export type Selectors = _LibrarySDKSelectors
