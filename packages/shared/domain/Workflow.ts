@@ -7,6 +7,10 @@ export namespace Workflow {
     export const Id = z.string().brand("WorkflowId");
     export type Id = z.infer<typeof Id>;
 
+    export function createId() {
+        return crypto.randomUUID() as Workflow.Id
+    }
+
 
     export namespace Node {
         export const Id = z.string().brand("NodeId");

@@ -8,6 +8,7 @@ import { portReducers } from "./port";
 import { workflowReducers } from "./workflow";
 import type { WorkbenchSDK } from "../sdk";
 import { clipboardReducers } from "./clipboard";
+import { selectionReducers } from "./selection";
 
 export const workbenchReducers = {
     field: fieldReducers,
@@ -18,5 +19,7 @@ export const workbenchReducers = {
     workflow: workflowReducers,
     layout: layoutReducers,
     clipboard: clipboardReducers,
+    selection: selectionReducers,
     setClickedNodeId: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id | null) => { state.clickedNodeId = nodeId; },
+    setSelectionContextMenu: (state: WorkbenchSDK.State, pos: { x: number, y: number } | null) => { state.selectionContextMenu = pos; },
 }
