@@ -441,6 +441,13 @@ function Node({
                     onDragOver={onDragOver}
                     onDragLeave={onDragLeave}
                     onDrop={onDrop}
+                    onContextMenu={() => {
+                        if (item.disabled) {
+                            return
+                        }
+
+                        actions.handleSelectChange(item)
+                    }}
                 >
                     {renderItem ? (
                         renderItem({
@@ -555,6 +562,13 @@ const Leaf = forwardRef<HTMLDivElement, TreeComponents.Leaf>(
                 onDragOver={onDragOver}
                 onDragLeave={onDragLeave}
                 onDrop={onDrop}
+                onContextMenu={() => {
+                    if (item.disabled) {
+                        return
+                    }
+
+                    actions.handleSelectChange(item)
+                }}
                 {...props}
             >
                 {renderItem ? (
