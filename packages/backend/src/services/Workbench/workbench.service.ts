@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { createAuthenticatedClient } from '@/utils/supabase';
+import { createAuthenticatedClient, getUserId } from '@/utils/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { withSupabaseAssert } from '@vx-agent-editor/shared/errors/supabase';
 import { Workflow, Workbench } from '@vx-agent-editor/shared/domain';
@@ -13,6 +13,8 @@ export class WorkbenchService {
 				payload: Workbench.API.Workflow.Create.Request,
 			) => {
 				const workflow = payload.workflow;
+				const user_id = await getUserId(supabase);
+				if (!user_id) throw new Error('Unauthenticated');
 
 				const { data: row } = await supabase
 					.from('workflows')
@@ -23,6 +25,7 @@ export class WorkbenchService {
 						locked: workflow.locked,
 						mcp_enabled: false,
 						data: workflow.data,
+						user_id: user_id,
 					})
 					.select('id')
 					.single<{ id: Workflow.Id }>()
