@@ -9,7 +9,6 @@ import { DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
 import NodeSidebar from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/NodeSidebar'
 import ChatSidebar from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatSidebar'
 import WorkflowControls from '@/routes/workflow/-SDKs/OrchestratorSDK/ui/WorkflowControls'
-import { AdminJobsPanel } from '@/routes/workflow/-SDKs/OrchestratorSDK/ui/AdminJobsPanel'
 import ChatButton from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatButton'
 import TemporalControls from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/TemporalControls'
 import SpotlightSearch from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/SpotlightSearch'
@@ -78,7 +77,7 @@ function WorkflowLayoutComponent() {
             <NodeSidebar />
             <BottomPanel/>
             <PathPanel/>
-            <AdminJobsPanel />
+            {/* <AdminJobsPanel /> */}
             {/* <StackDebugPanel/> */}
             <SpotlightSearch />
             <StackSDK.UIOverlay />  
