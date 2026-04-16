@@ -1,11 +1,13 @@
 import { WorkbenchSDKImpl, WorkbenchSDK } from './sdk';
 import type { DropFirstArg } from '@/SDKs/types';
-import { Workflow } from '@vx-agent-editor/shared/domain';
+import { Workbench, Workflow } from '@vx-agent-editor/shared/domain';
 import { Port } from '@vx-agent-editor/shared/domain/Foundations/Port';
 import { Field } from '@vx-agent-editor/shared/domain/Foundations/Field';
 import { commit, debouncedCommit, withCommit, withAsyncCommit, debouncedValidateField, debouncedValidateInput, withCyclesRecompute } from './utils/actions';
 import { ShelfSDK } from '../ShelfSDK/sdk';
 import { cloneDeep } from 'lodash';
+import { api } from '@/SDKs/ApiInterceptorSDK';
+import { toast } from 'sonner';
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
@@ -345,7 +347,8 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             open:              (...props) => setState(s => { reducers.workflow.open(s,        ...props) }),
             validate:          (...props) => setState(s => { reducers.workflow.validate(s,    ...props) }),
         },
-        setClickedNodeId:     (nodeId) => setState(s => { reducers.setClickedNodeId(s, nodeId) }),
+        setClickedNodeId:          (nodeId) => setState(s => { reducers.setClickedNodeId(s, nodeId) }),
+        setSelectionContextMenu:   (pos) => setState(s => { reducers.setSelectionContextMenu(s, pos) }),
         setDirty:             (value) => setState(s => {
             if (s.isDirty !== value)
                 s.isDirty = value;
@@ -359,6 +362,45 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             copyNode:       (...props) => { setState(s => { reducers.clipboard.copyNode(s, ...props) }) },
             clear:          () => { setState(s => { reducers.clipboard.clear(s) }) },
             paste:          withCommit((...props) => setState(withCyclesRecompute(s => { reducers.clipboard.paste(s, ...props) }))),
+        },
+        selection: {
+            duplicate: withCommit(() => setState(withCyclesRecompute(s => { reducers.selection.duplicate(s) }))),
+            delete:    withCommit(() => setState(withCyclesRecompute(s => { reducers.selection.delete(s) }))),
+            disable:   withCommit((...props) => setState(s => { reducers.selection.disable(s, ...props) })),
+        },
+        createSubWorkflow: async (nodeIds, edgeIds, displayName) => {
+            const state = sdk.state;
+            const masterWorkflow = state.workflow;
+            const subflow = cloneDeep(Workflow.INITIAL) as Workflow;
+            
+            subflow.display_name = displayName;
+            subflow.folder_id = masterWorkflow.folder_id;
+
+            nodeIds.forEach(nodeId => {
+                const node = sel.node.get(state, nodeId);
+                subflow.data.nodes[nodeId] = node;
+
+                subflow.data.staticValues[nodeId] = masterWorkflow.data.staticValues[nodeId];
+                subflow.data.ui.layout[nodeId] = masterWorkflow.data.ui.layout[nodeId];
+            })
+
+            edgeIds.forEach(edgeId => {
+                const edge = state.workflow.data.edges[edgeId];
+                const hasSourceNode = nodeIds.includes(edge.source.nodeId);
+                const hasTargetNode = nodeIds.includes(edge.target.nodeId);
+
+                if(hasSourceNode && hasTargetNode)
+                    subflow.data.edges[edgeId] = edge;
+            })
+
+            try {
+                const { workflow_id } = await Workbench.API.Workflow.create(api, { workflow: subflow });
+                return workflow_id;
+            } catch (error) {
+                console.error(error);
+                toast.error("Could not create sub-workflow");
+                throw error;
+            }
         }
     } satisfies _WorkbenchSDKActions
 }
@@ -534,7 +576,8 @@ export interface _WorkbenchSDKActions {
             set             : DropFirstArg<WorkbenchSDK.Reducers['layout']['viewport']['set']>;
         };
     };
-    setClickedNodeId        : DropFirstArg<WorkbenchSDK.Reducers['setClickedNodeId']>;
+    setClickedNodeId             : DropFirstArg<WorkbenchSDK.Reducers['setClickedNodeId']>;
+    setSelectionContextMenu      : DropFirstArg<WorkbenchSDK.Reducers['setSelectionContextMenu']>;
     setCurrentDraggedHandle : (handle: WorkbenchSDK.Handle | null) => void;
     setDirty                : (dirty: boolean) => void;
     takeSnapshot            : (p: { force?: boolean }) => void;
@@ -548,4 +591,10 @@ export interface _WorkbenchSDKActions {
         undo                : () => void;
         redo                : () => void;
     };
+    selection: {
+        duplicate : () => void;
+        delete    : () => void;
+        disable   : (isDisabled: boolean) => void;
+    }
+    createSubWorkflow: (nodeIds: Workflow.Node.Id[], edgeIds: Workflow.Edge.Id[], displayName: string) => Promise<Workflow.Id>;
 }

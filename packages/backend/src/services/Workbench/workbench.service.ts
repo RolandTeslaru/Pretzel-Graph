@@ -8,6 +8,29 @@ import { Workflow, Workbench } from '@vx-agent-editor/shared/domain';
 export class WorkbenchService {
 	private readonly dbOps = {
 		workflow: {
+			create: withSupabaseAssert('workbench.workflow.create', async (
+				supabase: SupabaseClient,
+				payload: Workbench.API.Workflow.Create.Request,
+			) => {
+				const workflow = payload.workflow;
+
+				const { data: row } = await supabase
+					.from('workflows')
+					.insert({
+						folder_id: workflow.folder_id,
+						display_name: workflow.display_name,
+						description: workflow.description,
+						locked: workflow.locked,
+						mcp_enabled: false,
+						data: workflow.data,
+					})
+					.select('id')
+					.single<{ id: Workflow.Id }>()
+					.throwOnError();
+
+				return row.id;
+			}),
+
 			get: withSupabaseAssert('workbench.workflow.get', async (
 				supabase: SupabaseClient,
 				workflowId: Workflow.Id,
@@ -37,6 +60,15 @@ export class WorkbenchService {
 	};
 
 	public readonly workflow = {
+		create: async (
+			token: string,
+			payload: Workbench.API.Workflow.Create.Request,
+		): Promise<Workbench.API.Workflow.Create.Response> => {
+			const supabase = createAuthenticatedClient(token);
+			const workflow_id = await this.dbOps.workflow.create(supabase, payload);
+			return { workflow_id };
+		},
+
 		get: async (
 			token: string,
 			workflowId: Workflow.Id,

@@ -88,7 +88,8 @@ export const createCanvasCallbacks = (
 
             WorkbenchSDK.actions.node.create(
                 blueprint,
-                convertMousePositionToCanvas(event.clientX, event.clientY)
+                convertMousePositionToCanvas(event.clientX, event.clientY),
+                undefined
             )
         },
 
@@ -192,8 +193,17 @@ export const createCanvasCallbacks = (
             e.preventDefault();
             if (WorkbenchSDK.isLocked) return;
 
-            WorkbenchSDK.actions
-                .setClickedNodeId(nodeDriver.id as Workflow.Node.Id)
+            WorkbenchSDK.actions.setSelectionContextMenu(null);
+            WorkbenchSDK.actions.setClickedNodeId(nodeDriver.id as Workflow.Node.Id);
+        },
+        onSelectionContextMenu: (e, _nodes) => {
+            e.preventDefault();
+            if (WorkbenchSDK.isLocked) return;
+
+            WorkbenchSDK.actions.setSelectionContextMenu({ x: e.clientX, y: e.clientY });
+        },
+        onPaneContextMenu: (_e) => {
+            WorkbenchSDK.actions.setSelectionContextMenu(null);
         },
         onMoveEnd: (_, viewport) => {
             WorkbenchSDK.actions.layout.viewport.set(viewport)
@@ -275,7 +285,7 @@ export const createCanvasCallbacks = (
         onNodeClick: (event, node) => {
             event.stopPropagation();
 
-            if (WorkbenchSDK.isLocked) return;
+            if (WorkbenchSDK.isLocked) return; 
 
             WorkbenchSDK.actions.setClickedNodeId(node.id as Workflow.Node.Id)
         },
