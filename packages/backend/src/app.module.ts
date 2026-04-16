@@ -11,6 +11,7 @@ import { ShelfModule } from './services/Shelf/shelf.module';
 import { WorkbenchModule } from './services/Workbench/workbench.module';
 import { RealtimeModule } from './services/Realtime/realtime.module';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
+import { AuthModule } from './services/Auth/auth.module';
 
 @Module({
     imports: [
@@ -35,6 +36,7 @@ import { GlobalExceptionFilter } from './filters/global-exception.filter';
         ShelfModule,
         WorkbenchModule,
         RealtimeModule,
+        AuthModule,
     ],
     controllers: [],
     providers: [

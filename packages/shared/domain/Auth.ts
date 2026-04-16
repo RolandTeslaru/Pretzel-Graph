@@ -1,4 +1,5 @@
 import { z } from "zod"
+import type { AxiosInstance } from "axios"
 
 export namespace Auth {
     export namespace User {
@@ -17,4 +18,22 @@ export namespace Auth {
         })
     }
     export type User = z.infer<typeof User.Schema>
+
+    export namespace API {
+        export namespace Me {
+            export namespace Get {
+                export const Request = z.object({})
+                export type Request = z.infer<typeof Request>
+                export const Response = z.object({
+                    user: User.Schema,
+                })
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function get(api: AxiosInstance, req: Get.Request = {}): Promise<Get.Response> {
+                const { data } = await api.get<Get.Response>('/api/auth/me', { params: req })
+                return data
+            }
+        }
+    }
 }
