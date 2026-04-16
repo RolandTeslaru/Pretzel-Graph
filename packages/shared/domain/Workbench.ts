@@ -7,6 +7,23 @@ import { Workflow as DomainWorkflow } from "./Workflow"
 export namespace Workbench {
     export namespace API {
         export namespace Workflow {
+            export namespace Create {
+                export const Request = z.object({
+                    workflow: DomainWorkflow.Schema,
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({
+                    workflow_id: DomainWorkflow.Id,
+                })
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function create(api: AxiosInstance, request: Create.Request): Promise<Create.Response> {
+                const { data } = await api.post<Create.Response>("/api/workbench/workflows", request)
+                return data
+            }
+
             export namespace Get {
                 export const Request = z.object({
                     workflowId: DomainWorkflow.Id,

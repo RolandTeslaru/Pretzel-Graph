@@ -3,6 +3,7 @@ import React, { memo, useEffect, useMemo } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { createCanvasCallbacks, canvasProps } from './props'
 import { createCycleSelectionDrivers } from '../../utils/createDrivers'
+import { SelectionContextMenu } from './SelectionContextMenu'
 
 type NodeDriver = WorkbenchSDK.NodeDriver | WorkbenchSDK.CycleSelectionNodeDriver
 type EdgeDriver = WorkbenchSDK.EdgeDriver
@@ -19,8 +20,9 @@ const WorkflowCanvas: React.FC = memo(() => {
     }, []);
 
     return (
-        <div ref={WorkbenchSDK.canvasWrapper} className='w-full h-full relative '>
+        <div ref={WorkbenchSDK.canvasWrapper} className='w-full h-full relative'>
             <CanvasRenderer />
+            <SelectionContextMenu />
         </div>
     )
 })

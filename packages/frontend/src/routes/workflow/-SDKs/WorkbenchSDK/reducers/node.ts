@@ -37,7 +37,7 @@ export const nodeReducers = {
         layoutReducers.node.remove(s, deletedNodeId);
         nodeReducers.clearIssues(s, deletedNodeId);
     },
-    create: (s, blueprint, position) => {
+    create: (s, blueprint, position, staticValues) => {
         s.isDirty = true;
         const nodeId = Workflow.Node.createId(blueprint.id);
         const newNode = {
@@ -70,14 +70,18 @@ export const nodeReducers = {
 
         // Populate default values from fields
         for (const field of blueprint.fields) {
-            if ('initialValue' in field && field.initialValue !== undefined) {
+            if (staticValues && staticValues[field.id] !== undefined) {
+                initialStaticValues[field.id] = staticValues[field.id];
+            } else if ('initialValue' in field && field.initialValue !== undefined) {
                 initialStaticValues[field.id] = field.initialValue;
             }
         }
 
         // Populate default values from inputs
         for (const input of blueprint.inputs) {
-            if ('initialValue' in input && input.initialValue !== undefined) {
+            if (staticValues && staticValues[input.id] !== undefined) {
+                initialStaticValues[input.id] = staticValues[input.id];
+            } else if ('initialValue' in input && input.initialValue !== undefined) {
                 initialStaticValues[input.id] = input.initialValue;
             }
         }
@@ -354,7 +358,7 @@ export const nodeReducers = {
 
 interface NodeReducers {
     remove         : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
-    create         : (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }) => void;
+    create         : (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }, staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>) => void;
     disconnect     : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;  
     recreate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
     duplicate      : (state: WorkbenchSDK.State, originalNode: Workflow.Node, position?: { x: number, y: number }) => Workflow.Node;

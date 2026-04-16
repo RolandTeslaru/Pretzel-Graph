@@ -8,6 +8,13 @@ import { Workflow, Workbench } from '@vx-agent-editor/shared/domain';
 export class WorkbenchController {
     constructor(private readonly workbenchService: WorkbenchService) { }
 
+    @Post('workflows')
+    @HttpCode(200)
+    async createWorkflow(@Req() req: AuthenticatedRequest, @Body() body: any) {
+        const payload = Workbench.API.Workflow.Create.Request.parse(body);
+        return await this.workbenchService.workflow.create(req.token, payload);
+    }
+
     @Get('workflows/:id')
     async getWorkflow(@Req() req: AuthenticatedRequest, @Param('id') id: Workflow.Id) {
         return await this.workbenchService.workflow.get(req.token, id);
