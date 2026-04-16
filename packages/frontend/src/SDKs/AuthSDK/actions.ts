@@ -2,6 +2,7 @@ import { supabase } from "@/libs/supabase";
 import { toast } from "sonner";
 import { Auth } from "@vx-agent-editor/shared/domain";
 import { AuthSDK, AuthSDKImpl } from "./sdk";
+import { api } from '@/SDKs/ApiInterceptorSDK';
 
 export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
     return {
@@ -15,12 +16,11 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
                 return false;
             }
 
-            const userId = data.user!.id as Auth.User.Id
-
-            const { user, error: userError } = await sdk.db.getUser(userId)
-
-            if (userError) {
-                toast.error(`AuthSDK: Could not fetch user: ${userError.message}`)
+            let user: Auth.User
+            try {
+                ({ user } = await Auth.API.Me.get(api))
+            } catch (error) {
+                toast.error(`AuthSDK: Could not fetch user: ${error instanceof Error ? error.message : String(error)}`)
                 return false
             }
 
@@ -62,12 +62,11 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
                 return false;
             }
 
-            const userId = data.user!.id as Auth.User.Id
-
-            const { user, error: userError } = await sdk.db.getUser(userId)
-
-            if (userError) {
-                toast.error(userError.message)
+            let user: Auth.User
+            try {
+                ({ user } = await Auth.API.Me.get(api))
+            } catch (error) {
+                toast.error(error instanceof Error ? error.message : String(error))
                 return false
             }
 
@@ -78,26 +77,19 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
             toast.info("Logged In!")
             return true;
         },
-        syncUser: async (userId) => {
-            const { user, error } = await sdk.db.getUser(userId)
+        syncUser: async (_userId) => {
+            try {
+                const { user } = await Auth.API.Me.get(api)
 
-            if (error) {
-                console.error("Failed to fetch user profile", error);
+                sdk.setState(s => {
+                    s.user = user;
+                    s.isAuthenticated = true;
+                    s.isLoading = false;
+                })
+            } catch (error) {
+                console.error("Failed to fetch user profile", error)
                 sdk.setState(s => { s.isLoading = false });
-                return
             }
-
-            if (!user) {
-                console.error("User not found");
-                sdk.setState(s => { s.isLoading = false })
-                return;
-            }
-
-            sdk.setState(s => {
-                s.user = user;
-                s.isAuthenticated = true;
-                s.isLoading = false;
-            })
         }
     }
 }
