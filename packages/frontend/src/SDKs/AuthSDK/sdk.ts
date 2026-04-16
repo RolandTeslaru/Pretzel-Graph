@@ -4,9 +4,7 @@ import { immer } from "zustand/middleware/immer";
 import { supabase } from "@/libs/supabase";
 import { SDK } from "../SDKManager";
 import { Auth } from "@vx-agent-editor/shared/domain";
-import type { Session } from "@supabase/supabase-js"
 import { _createAuthActions_ } from "./actions";
-import { api } from '@/SDKs/ApiInterceptorSDK';
 
 @SDK("Auth")
 export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
@@ -20,33 +18,17 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
     }))
   )
 
-  public readonly db: AuthSDK.Db = {
-    getUser: async (_userId: Auth.User.Id) => {
-      try {
-        const { user } = await Auth.API.Me.get(api)
-        return { user, error: null }
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error('Failed to fetch user')
-        return { user: null, error }
-      }
-    },
-    getSession: async () => {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      if (error) {
-        console.error("Error fetching session", error)
-        return null
-      }
-      return session;
-    }
-  }
-
   /**
    * Initialize the Auth SDK.
    * Recover session and set up listeners.
    */
   public async init() {
     // Check active session
-    const session = await this.db.getSession();
+    const { data: { session }, error } = await supabase.auth.getSession()
+    if (error) {
+      console.error("Error fetching session", error)
+    }
+
     if (session?.user) {
       await this.actions.syncUser(session.user.id as Auth.User.Id);
     } else {
@@ -76,11 +58,6 @@ export namespace AuthSDK {
     isAuthenticated: boolean;
     user: null | Auth.User;
     isLoading: boolean;
-  }
-
-  export type Db = {
-    getUser: (userId: Auth.User.Id) => Promise<{ user: Auth.User | null, error: Error | null }>
-    getSession: () => Promise<Session | null>
   }
 
   export type Actions = {
