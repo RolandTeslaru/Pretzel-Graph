@@ -35,6 +35,7 @@ namespace TreeComponents {
         draggable?: boolean
         droppable?: boolean
         disabled?: boolean
+        expanded?: boolean
         className?: string
     }
 
@@ -55,6 +56,7 @@ namespace TreeComponents {
         defaultNodeIcon?: ComponentType<{ className?: string }>
         defaultLeafIcon?: ComponentType<{ className?: string }>
         onDocumentDrag?: (sourceItem: DataItem, targetItem: DataItem) => void
+        onExpandedChange?: (item: DataItem, isExpanded: boolean) => void
         renderItem?: (params: RenderItemParams) => ReactNode
     }
 
@@ -84,6 +86,7 @@ type TreeContextValue = {
         handleSelectChange: (item: TreeComponents.DataItem | undefined) => void
         handleDragStart: (item: TreeComponents.DataItem) => void
         handleDrop: (item: TreeComponents.DataItem) => void
+        handleExpandedChange: (item: TreeComponents.DataItem, isExpanded: boolean) => void
     }
 }
 
@@ -127,15 +130,15 @@ function useTreeSelector<T>(selector: (state: TreeStoreSnapshot) => T) {
 }
 
 const treeVariants = cva(
-    'group hover:before:opacity-100 before:absolute before:rounded-lg before:left-0 px-2 before:w-full before:opacity-0 before:bg-accent/70 before:h-[2rem] before:-z-10'
+    'group relative rounded-md px-1.5 hover:bg-accent/50'
 )
 
 const selectedTreeVariants = cva(
-    'before:opacity-100 before:bg-accent/70 text-accent-foreground'
+    'bg-accent/70 text-accent-foreground'
 )
 
 const dragOverVariants = cva(
-    'before:opacity-100 before:bg-primary/20 text-primary-foreground'
+    'bg-primary/20 text-primary-foreground'
 )
 
 function normalizeTreeData(data: TreeComponents.DataItem[] | TreeComponents.DataItem) {
@@ -193,6 +196,7 @@ const Root = forwardRef<HTMLDivElement, TreeComponents.Root>(
             defaultNodeIcon,
             className,
             onDocumentDrag,
+            onExpandedChange,
             renderItem,
             ...props
         },
@@ -230,6 +234,13 @@ const Root = forwardRef<HTMLDivElement, TreeComponents.Root>(
             [onDocumentDrag, store]
         )
 
+        const handleExpandedChange = useCallback(
+            (item: TreeComponents.DataItem, isExpanded: boolean) => {
+                onExpandedChange?.(item, isExpanded)
+            },
+            [onExpandedChange]
+        )
+
         const expandedItemIds = useMemo(
             () => collectExpandedItemIds(data, initialSelectedItemId, expandAll),
             [data, expandAll, initialSelectedItemId]
@@ -246,6 +257,7 @@ const Root = forwardRef<HTMLDivElement, TreeComponents.Root>(
                     handleSelectChange,
                     handleDragStart,
                     handleDrop,
+                    handleExpandedChange,
                 },
             }),
             [
@@ -257,6 +269,7 @@ const Root = forwardRef<HTMLDivElement, TreeComponents.Root>(
                 handleSelectChange,
                 handleDragStart,
                 handleDrop,
+                handleExpandedChange,
             ]
         )
 
@@ -332,7 +345,6 @@ function Node({
     const {
         expandedItemIds,
         defaultNodeIcon,
-        defaultLeafIcon,
         renderItem,
         actions,
     } = useTreeContext()
@@ -341,15 +353,16 @@ function Node({
     const draggedItemId = useTreeSelector((snapshot) => snapshot.draggedItem?.id)
 
     const [value, setValue] = useState(
-        expandedItemIds.includes(item.id) ? [item.id] : []
+        item.expanded ?? expandedItemIds.includes(item.id) ? [item.id] : []
     )
     const [isDragOver, setIsDragOver] = useState(false)
     const hasChildren = !!item.children?.length
     const isOpen = value.includes(item.id)
 
     useEffect(() => {
-        setValue(expandedItemIds.includes(item.id) ? [item.id] : [])
-    }, [expandedItemIds, item.id])
+        const nextExpanded = item.expanded ?? expandedItemIds.includes(item.id)
+        setValue(nextExpanded ? [item.id] : [])
+    }, [expandedItemIds, item.id, item.expanded])
 
     const onDragStart = (event: DragEvent) => {
         if (!item.draggable || item.disabled) {
@@ -390,7 +403,10 @@ function Node({
         <AccordionPrimitive.Root
             type='multiple'
             value={value}
-            onValueChange={(nextValue) => setValue(nextValue)}
+            onValueChange={(nextValue) => {
+                setValue(nextValue)
+                actions.handleExpandedChange(item, nextValue.includes(item.id))
+            }}
         >
             <AccordionPrimitive.Item value={item.id}>
                 <AccordionTrigger
@@ -401,12 +417,24 @@ function Node({
                         item.disabled && 'cursor-not-allowed opacity-50 pointer-events-none',
                         item.className
                     )}
-                    onClick={() => {
+                    onClick={(event) => {
                         if (item.disabled) {
                             return
                         }
+
+                        const target = event.target as HTMLElement | null
+                        const clickedChevron = !!target?.closest('[data-tree-chevron="true"]')
+
+                        if (!clickedChevron) {
+                            // Keep row click for select/navigation; expansion is chevron-only.
+                            event.preventDefault()
+                        }
+
                         actions.handleSelectChange(item)
-                        item.onClick?.()
+
+                        if (!clickedChevron) {
+                            item.onClick?.()
+                        }
                     }}
                     draggable={!!item.draggable && !item.disabled}
                     onDragStart={onDragStart}
@@ -438,7 +466,7 @@ function Node({
                         </>
                     )}
                 </AccordionTrigger>
-                <AccordionContent className='ml-4 border-l pl-1'>
+                <AccordionContent className='ml-3.5 border-l border-border/70 pl-2'>
                     <Item
                         data={item.children ? item.children : item}
                         level={level + 1}
@@ -506,7 +534,7 @@ const Leaf = forwardRef<HTMLDivElement, TreeComponents.Leaf>(
             <div
                 ref={ref}
                 className={cn(
-                    'ml-5 flex cursor-pointer items-center py-2 text-left before:right-1',
+                    'ml-3.5 flex cursor-pointer items-center py-1 text-left',
                     treeVariants(),
                     className,
                     isSelected && selectedTreeVariants(),
@@ -567,12 +595,12 @@ const AccordionTrigger = forwardRef<
         <AccordionPrimitive.Trigger
             ref={ref}
             className={cn(
-                'first:[&[data-state=open]>svg]:first-of-type:rotate-90 flex w-full flex-1 items-center py-2 transition-all',
+                'first:[&[data-state=open]>svg]:first-of-type:rotate-90 flex w-full flex-1 items-center py-1 transition-all',
                 className
             )}
             {...props}
         >
-            <SystemIcons.ChevronRight className='mr-1 h-4 w-4 shrink-0 text-accent-foreground/50 transition-transform duration-200' />
+            <SystemIcons.ChevronRight data-tree-chevron="true" className='mr-1 h-4 w-4 shrink-0 text-accent-foreground/50 transition-transform duration-200' />
             {children}
         </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>

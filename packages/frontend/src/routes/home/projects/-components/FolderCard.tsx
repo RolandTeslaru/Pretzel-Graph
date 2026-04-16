@@ -56,7 +56,7 @@ export function FolderCard({ folder }: FolderCardProps) {
     )
 }
 
-function openDeleteFolderDialog(folder: Library.Folder) {
+export function openDeleteFolderDialog(folder: Library.Folder) {
     const dialogId = `delete-folder-${folder.id}`
 
     DialogSDK.actions.push(dialogId, (props) => (

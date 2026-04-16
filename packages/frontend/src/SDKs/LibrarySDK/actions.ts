@@ -3,6 +3,9 @@ import { api } from '../ApiInterceptorSDK';
 import type { LibrarySDKImpl } from './sdk';
 
 export type _LibrarySDKActions = {
+    preferences: {
+        setFolderExpanded: (folderId: Library.Folder.Id, isExpanded: boolean) => void;
+    };
     bootstrap: {
         get: () => Promise<Library.API.Bootstrap.Get.Response>;
     };
@@ -29,6 +32,14 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
     const setState = sdk.useStore.setState;
 
     return {
+        preferences: {
+            setFolderExpanded: (folderId, isExpanded) => {
+                setState((s) => {
+                    s.treeExpandedByFolderId[folderId] = isExpanded;
+                });
+            },
+        },
+
         bootstrap: {
             get: async () => {
                 const data = await Library.API.Bootstrap.get(api);
