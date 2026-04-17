@@ -108,22 +108,6 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
     public readonly canvasWrapper = React.createRef<HTMLDivElement>();
 
-
-    public async loadWorkflow(workflowId: Workflow.Id) {
-        try {
-            const { workflow } = await Workbench.API.Workflow.get(api, { workflowId })
-            if (!workflow)
-                throw new Error("Workflow not found")
-
-            Workflow.Schema.parse(workflow);
-            this.actions.workflow.open(workflow)
-        } catch (error) {
-            console.error(error)
-            toast.error("Failed to parse workflow")
-            throw error
-        }
-    }
-
     public readonly createDrivers = createDrivers
 }
 
