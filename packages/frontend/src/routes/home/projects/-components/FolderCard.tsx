@@ -22,7 +22,12 @@ export function FolderCard({ folder }: FolderCardProps) {
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content align="end">
                         <DropdownMenu.Item onClick={() => openEditFolderDialog({ folder })}>
+                            <SystemIcons.SquarePen />
                             Edit folder
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(folder.id)}>
+                            <SystemIcons.Copy />
+                            Copy ID
                         </DropdownMenu.Item>
                         <DropdownMenu.Item
                             variant="destructive"

@@ -25,6 +25,7 @@ export type _LibrarySDKActions = {
         delete: (id: Library.Folder.Id) => Promise<Library.API.Folder.Remove.Response>;
     };
     workflow: {
+        upsertMeta: (meta: Library.WorkflowMeta) => void;
         create: (payload: Library.API.Workflow.Create.Request) => Promise<Library.API.Workflow.Create.Response>;
         update: (payload: Library.API.Workflow.Update.Request) => Promise<Library.API.Workflow.Update.Response>;
         delete: (id: Workflow.Id) => Promise<Library.API.Workflow.Remove.Response>;
@@ -188,6 +189,13 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
         },
 
         workflow: {
+            // Used by non-Library creation flows (e.g. Workbench createSubWorkflow)
+            // to keep the Library tree in sync without triggering a full bootstrap.
+            upsertMeta: (meta) => {
+                setState((s) => { s.workflowMetas[meta.id] = meta; });
+                rebuildTree();
+            },
+
             create: async (payload) => {
                 const data = await Library.API.Workflow.create(api, payload);
                 // Full Workflow returned; cache the meta projection (omit data).

@@ -27,7 +27,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content align="end">
                         <DropdownMenu.Item onClick={() => openEditProjectDialog({ project })}>
+                            <SystemIcons.SquarePen />
                             Edit project
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(project.id)}>
+                            <SystemIcons.Copy />
+                            Copy ID
                         </DropdownMenu.Item>
                         <DropdownMenu.Item
                             variant="destructive"
