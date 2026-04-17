@@ -38,7 +38,7 @@ function CreateSubWorkflowContent({
     })
 
     const onSubmit = (values: NameValues) => {
-        WorkbenchSDK.actions.createSubWorkflow(nodeIds, edgeIds, values.display_name)
+        WorkbenchSDK.actions.subWorkflow.create(nodeIds, edgeIds, values.display_name)
         DialogSDK.actions.pop(dialogId)
     }
 
@@ -85,7 +85,11 @@ function CreateSubWorkflowContent({
 }
 
 export const SelectionContextMenu: React.FC = memo(() => {
-    const [menu, selectedNodeCount] = WorkbenchSDK.useStore(s => [s.selectionContextMenu, s.lastSelection?.nodes.length || 0] as const);
+    const [menu, selectedNodeCount] = WorkbenchSDK.useStore(s => [
+        s.selectionContextMenu, 
+        s.lastSelection?.nodes.length || 0
+    ] as const);
+    
     const close = () => WorkbenchSDK.actions.setSelectionContextMenu(null);
 
     if (!menu) return null;
