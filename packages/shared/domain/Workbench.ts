@@ -36,8 +36,8 @@ export namespace Workbench {
                 export type Response = z.infer<typeof Response>
             }
 
-            export async function get(api: AxiosInstance, request: Get.Request): Promise<Get.Response> {
-                const { data } = await api.get<Get.Response>(`/api/workbench/workflows/${request.workflowId}`)
+            export async function get(api: AxiosInstance, request: Get.Request, abortSignal?: AbortSignal): Promise<Get.Response> {
+                const { data } = await api.get<Get.Response>(`/api/workbench/workflows/${request.workflowId}`, { signal: abortSignal })
                 return data
             }
 

@@ -5,7 +5,7 @@ import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import WorkflowCanvas from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/Canvas'
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
+import { Dialog, DropdownMenu, Spinner } from '@vx-agent-editor/vx-ui/foundations'
 import NodeSidebar from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/NodeSidebar'
 import ChatSidebar from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatSidebar'
 import WorkflowControls from '@/routes/workflow/-SDKs/OrchestratorSDK/ui/WorkflowControls'
@@ -14,10 +14,11 @@ import TemporalControls from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/TemporalCo
 import SpotlightSearch from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/SpotlightSearch'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
-import { Validation, Workflow } from '@vx-agent-editor/shared/domain'
+import { Validation, Workbench, Workflow } from '@vx-agent-editor/shared/domain'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import Breadcrumbs from '../home/projects/-components/Breadcrumbs'
+import { DialogSDK } from '@/SDKs/DialogSDK'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -25,12 +26,17 @@ export const Route = createFileRoute('/workflow/$workflowid')({
             throw redirect({ to: '/auth' })
         }
     },
-    loader: async () => {
-        await QuerySDK.client.fetchQuery({
-            queryKey: ['library', 'bootstrap'],
-            queryFn: () => LibrarySDK.actions.bootstrap.get(),
-            staleTime: 60_000,
-        })
+    loader: ({ params, abortController }) => {
+        const workflowId = params.workflowid as Workflow.Id;
+
+        const loadtimeoutId = setTimeout(() => {
+            DialogSDK.actions.push(`workflow-${workflowId}`, (props) => (
+                <DialogSDK.Template dismissible={false} {...props} className='p-4 flex flex-row gap-4'>
+                    <Dialog.Title className='text-lg font-bold'>Retrieving Workflow</Dialog.Title>
+                    <Spinner/>
+                </DialogSDK.Template>
+            ))
+        }, 2000)
 
         // Fire and forget
         QuerySDK.client.prefetchQuery({
@@ -44,12 +50,27 @@ export const Route = createFileRoute('/workflow/$workflowid')({
             staleTime: Infinity
         })
 
+        QuerySDK.client.prefetchQuery({
+            queryKey: ['library', 'bootstrap'],
+            queryFn: () => LibrarySDK.actions.bootstrap.get(),
+            staleTime: 60_000,
+        })
+
+        WorkbenchSDK.actions.workflow.load(workflowId, abortController.signal)
+        .finally(() => {
+            clearTimeout(loadtimeoutId);
+            DialogSDK.actions.pop(`workflow-${workflowId}`)
+        })
+
         return null;
     },
-    onLeave: () => {
+    onLeave: ({ params }) => {
+        const workflowId = params.workflowid as Workflow.Id;
+
+        DialogSDK.actions.pop(`workflow-${workflowId}`)
+
+        WorkbenchSDK.actions.workflow.close()
         WorkbenchSDK.actions.commit();
-        QuerySDK.client.removeQueries({ queryKey: ['core-blueprints'] });
-        QuerySDK.client.removeQueries({ queryKey: ['bundle-blueprints'] });
     },
     component: WorkflowLayoutComponent,
 })
@@ -81,7 +102,6 @@ function WorkflowLayoutComponent() {
             {/* <StackDebugPanel/> */}
             <SpotlightSearch />
             <StackSDK.UIOverlay />  
-            <Outlet />
         </div>
     )
 }
