@@ -22,7 +22,12 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content align="end">
                         <DropdownMenu.Item onClick={() => openEditWorkflowDialog({ workflow })}>
+                            <SystemIcons.SquarePen />
                             Edit
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(workflow.id)}>
+                            <SystemIcons.Copy />
+                            Copy ID
                         </DropdownMenu.Item>
                         <DropdownMenu.Item
                             variant="destructive"
