@@ -4,12 +4,17 @@ import { Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import type { Workflow } from '@vx-agent-editor/shared/domain'
 import React, { memo } from 'react'
+import type { Field } from '@vx-agent-editor/shared/domain/Foundations/Field'
+import { router } from '@/main'
 
 interface Props {
     node: Workflow.Node
 }
 
 export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
+
+    const isSubWorkflowNode = node.blueprintId === "Core.Utils.ExecuteSubWorkflow"
+
     return (
         <div className='bg-card border border-border rounded-lg p-0.5 gap-1 flex flex-row shadow-md shadow-black/10'>
             <Button variant="ghost" size="icon-xs" className='h-6!'
@@ -30,12 +35,19 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
             >
                 <SystemIcons.ArrowLeftRight />
             </Button>
-            <Button size="icon-xs" variant="ghost" 
-                onClick={() => WorkbenchSDK.actions.node.setDisabled(node.id, !node.isDisabled)}
-                className={`${node.isDisabled ? `bg-red-500/40 text-red-700`: ``}`}    
-            >
-                <SystemIcons.Power className='stroke-2'/>
-            </Button>
+            {isSubWorkflowNode && (
+                <Button variant="active" size="xs" className='h-6!'
+                    onClick={() => {
+                        const state = WorkbenchSDK.state;
+                        const workflowId =WorkbenchSDK.selectors.field.getValue(state, node.id, "workflowId" as Field.Id) as Workflow.Id | null
+                        const href = router.buildLocation({ to: "/workflow/$workflowid", params: { workflowid: workflowId || ""  } }).href;
+                        window.open(href, "_blank");
+                    }}
+                >
+                    <SystemIcons.Graph/>
+                    Open
+                </Button>
+            )}
             <Button variant="ghost-success" size="icon-xs" className='text-xs'>
                 <SystemIcons.Play />
             </Button>
@@ -73,6 +85,13 @@ const MoreOptionsDropdown: React.FC<Props> = ({ node }) => {
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="start">
                 <DropdownMenu.Item
+                    onClick={() => WorkbenchSDK.actions.node.setDisabled(node.id, !node.isDisabled)}
+                >
+                    <SystemIcons.Power />
+                    {node.isDisabled ? 'Enable' : 'Disable'}
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item
                     onClick={() => WorkbenchSDK.actions.clipboard.copyNode(node.id)}
                 >
                     <SystemIcons.Clipboard />
@@ -93,9 +112,19 @@ const MoreOptionsDropdown: React.FC<Props> = ({ node }) => {
                         WorkbenchSDK.actions.node.recreate(node.id, blueprint)
                     }}
                 >
-                    <SystemIcons.FileCode />
+                    <SystemIcons.Undo />
                     Recreate
                 </DropdownMenu.Item>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(node.id)}>
+                    <SystemIcons.Copy />
+                    Copy Node ID
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(node.blueprintId)}>
+                    <SystemIcons.Copy />
+                    Copy Blueprint ID
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator />
                 <DropdownMenu.Item variant="destructive"
                     onClick={() => WorkbenchSDK.actions.node.remove(node.id)}
                 >

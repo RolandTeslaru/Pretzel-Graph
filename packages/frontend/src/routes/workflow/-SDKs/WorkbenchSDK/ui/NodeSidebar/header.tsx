@@ -3,6 +3,7 @@ import { LazyIcon } from '@vx-agent-editor/vx-ui/icons/LazyIcon'
 import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { Workflow } from '@vx-agent-editor/shared/domain'
 import { WorkbenchSDK } from '../../sdk'
+import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import { ExecutionSessionSDK } from '@/routes/workflow/-SDKs/ExecutionSessionSDK/sdk'
 import StatusIndicator from '../Canvas/Node/Header/StatusIndicator'
 
@@ -88,7 +89,28 @@ const HeaderOptionsDropdown = ({ node }: { node: Workflow.Node }) => (
             </Button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Content align="end">
-            <DropdownMenu.Item variant="destructive">
+            <DropdownMenu.Item
+                onClick={() => {
+                    ShelfSDK.actions.hydrateBlueprint(node.blueprintId)
+                    const blueprint = ShelfSDK.state.blueprints[node.blueprintId]
+                    if (!blueprint) return
+                    WorkbenchSDK.actions.node.recreate(node.id, blueprint)
+                }}
+            >
+                <SystemIcons.Undo />
+                Recreate
+            </DropdownMenu.Item>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(node.id)}>
+                <SystemIcons.Copy />
+                Copy Node ID
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(node.blueprintId)}>
+                <SystemIcons.Copy />
+                Copy Blueprint ID
+            </DropdownMenu.Item>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Item variant="destructive" onClick={() => WorkbenchSDK.actions.node.remove(node.id)}>
                 <SystemIcons.Trash2 />
                 Delete
             </DropdownMenu.Item>
