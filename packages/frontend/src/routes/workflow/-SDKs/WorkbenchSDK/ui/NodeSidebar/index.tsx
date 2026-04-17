@@ -11,6 +11,7 @@ import { NodeSidebarFooter } from './footer';
 
 
 const NodeSidebar = () => {
+
     const clickedNode = WorkbenchSDK.useStore(s => s.clickedNodeId ? s.workflow.data.nodes[s.clickedNodeId] : null);
 
     useEffect(() => {

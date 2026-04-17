@@ -68,16 +68,18 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
 
     public readonly actions = createDialogSDKActions(this);
 
-    public readonly Template: DialogSDK.Template = ({ children, entry, dialogsSize, index, className }) => {
+    public readonly Template: DialogSDK.Template = ({ children, entry, dialogsSize, index, className, dismissible = true }) => {
         const delayStyle = useAnimationDelay();
         const scale_offset = (index - (dialogsSize - 1)) * 8;
         const y_offset = (index - (dialogsSize - 1)) * 40;
         const finalScale = 1 + scale_offset / 100;
 
+        const blockDismiss = dismissible ? undefined : (e: Event) => e.preventDefault();
+
         return (
             <Dialog.Root
                 open={entry.isOpen}
-                onOpenChange={() => DialogSDK.actions.pop(entry.dialogId)}
+                onOpenChange={() => { if (dismissible) DialogSDK.actions.pop(entry.dialogId) }}
             >
                 <Dialog.Content
                     style={{
@@ -88,6 +90,8 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     darkenBackground={index === 0}
                     blockTransparency={dialogsSize - index > 1}
                     className={className}
+                    onInteractOutside={blockDismiss}
+                    onEscapeKeyDown={blockDismiss}
                 >
                     {children}
                 </Dialog.Content>
@@ -96,7 +100,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
     }
 
 
-    public readonly AlertTemplate: DialogSDK.AlertTemplate = ({ children, entry, dialogsSize, index, className, onCancel, onApprove, type = "warning" }) => {
+    public readonly AlertTemplate: DialogSDK.AlertTemplate = ({ children, entry, dialogsSize, index, className, onCancel, onApprove, type = "warning", dismissible = true }) => {
         const delayStyle = useAnimationDelay();
         const scale_offset = (index - (dialogsSize - 1)) * 8;
         const y_offset = (index - (dialogsSize - 1)) * 40;
@@ -105,8 +109,10 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
         const isWarning = type === "warning"
         const isDanger = type === "danger"
 
+        const blockDismiss = dismissible ? undefined : (e: Event) => e.preventDefault();
+
         return (
-            <AlertDialog.Root open={entry.isOpen} onOpenChange={() => DialogSDK.actions.pop(entry.dialogId)}>
+            <AlertDialog.Root open={entry.isOpen} onOpenChange={() => { if (dismissible) DialogSDK.actions.pop(entry.dialogId) }}>
                 <AlertDialog.Content
                     style={{
                         ...delayStyle,
@@ -116,6 +122,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     darkenBackground={index === 0}
                     blockTransparency={dialogsSize - index > 1}
                     className={`flex flex-row max-w-[600px] ${className || ""}`}
+                    onEscapeKeyDown={blockDismiss}
                 >
                     {type === "danger" &&
                         <div className="relative pl-9 pr-5 pt-9 mb-auto">
@@ -186,6 +193,7 @@ export namespace DialogSDK {
         entry: Omit<Entry, "renderer">,
         dialogsSize: number
         index: number
+        dismissible?: boolean
         onCancel?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, entry: Omit<Entry, "renderer">, dialogsSize: number, index: number) => void
         onApprove?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, entry: Omit<Entry, "renderer">, dialogsSize: number, index: number) => void
     }

@@ -22,7 +22,6 @@ import { Route as HomeSettingsRouteImport } from './routes/home/settings'
 import { Route as HomeProjectsRouteImport } from './routes/home/projects'
 import { Route as HomeExecutionsRouteImport } from './routes/home/executions'
 import { Route as HomeCredentialsRouteImport } from './routes/home/credentials'
-import { Route as WorkflowWorkflowidIndexRouteImport } from './routes/workflow/$workflowid/index'
 import { Route as HomeProjectsIndexRouteImport } from './routes/home/projects/index'
 import { Route as HomeProjectsFolderIdRouteImport } from './routes/home/projects/$folderId'
 
@@ -91,11 +90,6 @@ const HomeCredentialsRoute = HomeCredentialsRouteImport.update({
   path: '/credentials',
   getParentRoute: () => HomeRoute,
 } as any)
-const WorkflowWorkflowidIndexRoute = WorkflowWorkflowidIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => WorkflowWorkflowidRoute,
-} as any)
 const HomeProjectsIndexRoute = HomeProjectsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -116,14 +110,13 @@ export interface FileRoutesByFullPath {
   '/home/settings': typeof HomeSettingsRoute
   '/home/templates': typeof HomeTemplatesRoute
   '/home/usage': typeof HomeUsageRoute
-  '/workflow/$workflowid': typeof WorkflowWorkflowidRouteWithChildren
+  '/workflow/$workflowid': typeof WorkflowWorkflowidRoute
   '/auth/': typeof AuthIndexRoute
   '/home/': typeof HomeIndexRoute
   '/icons-preview/': typeof IconsPreviewIndexRoute
   '/ui-preview/': typeof UiPreviewIndexRoute
   '/home/projects/$folderId': typeof HomeProjectsFolderIdRoute
   '/home/projects/': typeof HomeProjectsIndexRoute
-  '/workflow/$workflowid/': typeof WorkflowWorkflowidIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -132,13 +125,13 @@ export interface FileRoutesByTo {
   '/home/settings': typeof HomeSettingsRoute
   '/home/templates': typeof HomeTemplatesRoute
   '/home/usage': typeof HomeUsageRoute
+  '/workflow/$workflowid': typeof WorkflowWorkflowidRoute
   '/auth': typeof AuthIndexRoute
   '/home': typeof HomeIndexRoute
   '/icons-preview': typeof IconsPreviewIndexRoute
   '/ui-preview': typeof UiPreviewIndexRoute
   '/home/projects/$folderId': typeof HomeProjectsFolderIdRoute
   '/home/projects': typeof HomeProjectsIndexRoute
-  '/workflow/$workflowid': typeof WorkflowWorkflowidIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -150,14 +143,13 @@ export interface FileRoutesById {
   '/home/settings': typeof HomeSettingsRoute
   '/home/templates': typeof HomeTemplatesRoute
   '/home/usage': typeof HomeUsageRoute
-  '/workflow/$workflowid': typeof WorkflowWorkflowidRouteWithChildren
+  '/workflow/$workflowid': typeof WorkflowWorkflowidRoute
   '/auth/': typeof AuthIndexRoute
   '/home/': typeof HomeIndexRoute
   '/icons-preview/': typeof IconsPreviewIndexRoute
   '/ui-preview/': typeof UiPreviewIndexRoute
   '/home/projects/$folderId': typeof HomeProjectsFolderIdRoute
   '/home/projects/': typeof HomeProjectsIndexRoute
-  '/workflow/$workflowid/': typeof WorkflowWorkflowidIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -177,7 +169,6 @@ export interface FileRouteTypes {
     | '/ui-preview/'
     | '/home/projects/$folderId'
     | '/home/projects/'
-    | '/workflow/$workflowid/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -186,13 +177,13 @@ export interface FileRouteTypes {
     | '/home/settings'
     | '/home/templates'
     | '/home/usage'
+    | '/workflow/$workflowid'
     | '/auth'
     | '/home'
     | '/icons-preview'
     | '/ui-preview'
     | '/home/projects/$folderId'
     | '/home/projects'
-    | '/workflow/$workflowid'
   id:
     | '__root__'
     | '/'
@@ -210,13 +201,12 @@ export interface FileRouteTypes {
     | '/ui-preview/'
     | '/home/projects/$folderId'
     | '/home/projects/'
-    | '/workflow/$workflowid/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HomeRoute: typeof HomeRouteWithChildren
-  WorkflowWorkflowidRoute: typeof WorkflowWorkflowidRouteWithChildren
+  WorkflowWorkflowidRoute: typeof WorkflowWorkflowidRoute
   AuthIndexRoute: typeof AuthIndexRoute
   IconsPreviewIndexRoute: typeof IconsPreviewIndexRoute
   UiPreviewIndexRoute: typeof UiPreviewIndexRoute
@@ -315,13 +305,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeCredentialsRouteImport
       parentRoute: typeof HomeRoute
     }
-    '/workflow/$workflowid/': {
-      id: '/workflow/$workflowid/'
-      path: '/'
-      fullPath: '/workflow/$workflowid/'
-      preLoaderRoute: typeof WorkflowWorkflowidIndexRouteImport
-      parentRoute: typeof WorkflowWorkflowidRoute
-    }
     '/home/projects/': {
       id: '/home/projects/'
       path: '/'
@@ -375,21 +358,10 @@ const HomeRouteChildren: HomeRouteChildren = {
 
 const HomeRouteWithChildren = HomeRoute._addFileChildren(HomeRouteChildren)
 
-interface WorkflowWorkflowidRouteChildren {
-  WorkflowWorkflowidIndexRoute: typeof WorkflowWorkflowidIndexRoute
-}
-
-const WorkflowWorkflowidRouteChildren: WorkflowWorkflowidRouteChildren = {
-  WorkflowWorkflowidIndexRoute: WorkflowWorkflowidIndexRoute,
-}
-
-const WorkflowWorkflowidRouteWithChildren =
-  WorkflowWorkflowidRoute._addFileChildren(WorkflowWorkflowidRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HomeRoute: HomeRouteWithChildren,
-  WorkflowWorkflowidRoute: WorkflowWorkflowidRouteWithChildren,
+  WorkflowWorkflowidRoute: WorkflowWorkflowidRoute,
   AuthIndexRoute: AuthIndexRoute,
   IconsPreviewIndexRoute: IconsPreviewIndexRoute,
   UiPreviewIndexRoute: UiPreviewIndexRoute,
