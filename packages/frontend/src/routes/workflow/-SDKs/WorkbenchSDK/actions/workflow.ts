@@ -1,6 +1,8 @@
 import type { DropFirstArg } from "@/SDKs/types";
 import type { WorkbenchSDKImpl, WorkbenchSDK } from "../sdk"
 import { withCommit } from "../utils/actions"
+import { Workbench, Workflow } from "@vx-agent-editor/shared/domain";
+import { api } from "@/SDKs/ApiInterceptorSDK";
 
 export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
     const setState = sdk.useStore.setState;
@@ -11,6 +13,19 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
         close:             withCommit((...props) => setState(s => { reducers.workflow.close(s,     ...props) })),
         open:              (...props) => setState(s => { reducers.workflow.open(s,        ...props) }),
         validate:          (...props) => setState(s => { reducers.workflow.validate(s,    ...props) }),
+        load:              async (workflowId, abortSignal) => {
+            try     {
+                const { workflow } = await Workbench.API.Workflow.get(api, { workflowId }, abortSignal)
+                if (!workflow)
+                    throw new Error("Workflow not found")
+
+                Workflow.Schema.parse(workflow);
+                setState(s => { reducers.workflow.open(s, workflow) })
+            } catch (error) {
+                console.error("Failed to load workflow", error);
+                throw error;
+            }
+        }
     } satisfies WorkflowActions;
 }
 
@@ -19,4 +34,5 @@ export type WorkflowActions = {
     close               : DropFirstArg<WorkbenchSDK.Reducers['workflow']['close']>;
     open                : DropFirstArg<WorkbenchSDK.Reducers['workflow']['open']>;
     validate            : DropFirstArg<WorkbenchSDK.Reducers['workflow']['validate']>;
+    load: (workflowId: Workflow.Id, abortSignal: AbortSignal) => Promise<void>;
 };

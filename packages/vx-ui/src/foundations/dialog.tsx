@@ -60,8 +60,9 @@ const Content: DialogComponents.Content = ({
     {darkenBackground && <Overlay />}
     <DialogPrimitive.Content
       className={classNames(
-        `${theme || ""} fixed top-[50%] left-[50%] z-50 rounded-2xl 
-         border border-border transition-[opacity,transform] duration-400 ease-in-out
+        `${theme || ""} fixed top-[50%] left-[50%] z-50 rounded-2xl
+         border border-border outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0
+         transition-[opacity,transform] duration-400 ease-in-out
          data-[state=open]:animate-in 
          data-[state=closed]:animate-out 
          data-[state=closed]:fade-out-0 
