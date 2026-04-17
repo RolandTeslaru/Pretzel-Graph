@@ -12,7 +12,7 @@ SystemSDK.init()
 AuthSDK.init()
 
 
-const router = createRouter({
+export const router = createRouter({
   routeTree,
   context: {
     auth: undefined!, // passed in the provider
