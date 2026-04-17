@@ -36,18 +36,19 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
     }
 
     // Listen for changes
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    supabase.auth.onAuthStateChange((event, session) => {                                                                                                                                                                         
       if (event === 'SIGNED_IN' && session?.user) {
-        await this.actions.syncUser(session.user.id as Auth.User.Id);
+          setTimeout(() => {                                                                                                                                                                                                    
+              this.actions.syncUser(session.user.id as Auth.User.Id)                                                                                                                                                            
+          }, 0)
+      } else if (event === 'SIGNED_OUT') {                                                                                                                                                                                      
+          this.setState(s => {                                                                                                                                                                                                  
+              s.user = null
+              s.isAuthenticated = false                                                                                                                                                                                         
+              s.isLoading = false                                                                                                                                                                                             
+          })
       }
-      else if (event === 'SIGNED_OUT') {
-        this.setState(s => {
-          s.user = null;
-          s.isAuthenticated = false;
-          s.isLoading = false;
-        })
-      }
-    })
+  })
   }
 
   public readonly actions: AuthSDK.Actions = _createAuthActions_(this);

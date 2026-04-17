@@ -68,9 +68,8 @@ export const Route = createFileRoute('/workflow/$workflowid')({
         const workflowId = params.workflowid as Workflow.Id;
 
         DialogSDK.actions.pop(`workflow-${workflowId}`)
-
-        WorkbenchSDK.actions.workflow.close()
         WorkbenchSDK.actions.commit();
+        WorkbenchSDK.actions.workflow.close()
     },
     component: WorkflowLayoutComponent,
 })
