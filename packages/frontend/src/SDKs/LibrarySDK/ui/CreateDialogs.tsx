@@ -205,7 +205,7 @@ function EditFolderContent({
                 display_name: values.display_name,
                 description: values.description || null,
             })
-            await QuerySDK.client.invalidateQueries({ queryKey: ['folders', folder.id, 'contents'] })
+            // await QuerySDK.client.invalidateQueries({ queryKey: ['folders', folder.id, 'contents'] })
             DialogSDK.actions.pop(dialogId)
         } catch (err) {
             console.error('Failed to update folder', err)
@@ -271,7 +271,7 @@ function EditWorkflowContent({
                 display_name: values.display_name,
                 description: values.description || null,
             })
-            await QuerySDK.client.invalidateQueries({ queryKey: ['folders', workflow.folder_id, 'contents'] })
+            // await QuerySDK.client.invalidateQueries({ queryKey: ['folders', workflow.folder_id, 'contents'] })
             DialogSDK.actions.pop(dialogId)
         } catch (err) {
             console.error('Failed to update workflow', err)
