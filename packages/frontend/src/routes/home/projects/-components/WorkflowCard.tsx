@@ -13,7 +13,17 @@ interface WorkflowCardProps {
 
 export function WorkflowCard({ workflow }: WorkflowCardProps) {
     return (
-        <div className="relative rounded-xl border hover:bg-muted/40 transition-colors">
+        <div
+            className="relative rounded-xl border hover:bg-muted/40 transition-colors shadow-md shadow-black/10"
+            style={{
+                backgroundColor: workflow.accent
+                    ? `color-mix(in srgb, var(--${workflow.accent}) 8%, transparent)`
+                    : undefined,
+                borderColor: workflow.accent
+                    ? `color-mix(in srgb, var(--${workflow.accent}) 30%, var(--border))`
+                    : undefined,
+            }}
+        >
             <div className="absolute top-2 right-2 z-10">
                 <DropdownMenu.Root>
                     <DropdownMenu.Trigger asChild>
@@ -47,8 +57,19 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
                 className="block p-4 pr-11"
             >
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted shrink-0">
-                        <LazyIcon name={workflow.icon ?? "Graph"} size={16} />
+                    <div
+                        className="p-2 rounded-full shrink-0"
+                        style={{
+                            backgroundColor: workflow.accent
+                                ? `color-mix(in srgb, var(--${workflow.accent}) 25%, transparent)`
+                                : 'var(--muted)',
+                        }}
+                    >
+                        <LazyIcon
+                            name={workflow.icon ?? "Graph"}
+                            size={16}
+                            style={{ color: workflow.accent ? `var(--${workflow.accent}-foreground)` : undefined }}
+                        />
                     </div>
                     <div className="min-w-0 flex-1">
                         <div className="font-medium truncate">{workflow.display_name || 'Untitled'}</div>
