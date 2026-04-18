@@ -13,7 +13,7 @@ interface Props {
 
 export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
 
-    const isSubWorkflowNode = node.blueprintId === "Core.Utils.ExecuteSubWorkflow"
+    const isSubWorkflowNode = node.blueprintId === "Core.SubWorkflow.Execute"
 
     return (
         <div className='bg-card border border-border rounded-lg p-0.5 gap-1 flex flex-row shadow-md shadow-black/10'>
@@ -107,9 +107,7 @@ const MoreOptionsDropdown: React.FC<Props> = ({ node }) => {
                     onClick={() => {
                         ShelfSDK.actions.hydrateBlueprint(node.blueprintId);
 
-                        const blueprint = ShelfSDK.state.blueprints[node.blueprintId];
-                        if (!blueprint) return;
-                        WorkbenchSDK.actions.node.recreate(node.id, blueprint)
+                        WorkbenchSDK.actions.node.recreate(node.id)
                     }}
                 >
                     <SystemIcons.Undo />

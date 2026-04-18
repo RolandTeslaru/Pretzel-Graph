@@ -87,8 +87,17 @@ export const CORE_DRAWERS = {
       "Core.Utils.Message.Compose",
       "Core.Utils.Tool.Runner",
       "Core.Utils.List.Select",
-      "Core.Utils.Tool.Catalog",
-      "Core.Utils.ExecuteSubWorkflow"
+      "Core.Utils.Tool.Catalog"
+    ],
+  },
+  sub_workflow: {
+    displayName: "Sub-Workflow",
+    id: "sub_workflow",
+    icon: "Graph",
+    blueprintIds: [
+      "Core.SubWorkflow.Execute",
+      "Core.SubWorkflow.ExposeInputPort",
+      "Core.SubWorkflow.ExposeOutputPort"
     ],
   },
   prototypes: {

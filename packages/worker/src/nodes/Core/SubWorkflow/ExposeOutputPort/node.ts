@@ -10,17 +10,9 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        context: ExecutionContext,
-        inputs: InferInputs<typeof Blueprint>,
+        _context: ExecutionContext,
+        _inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-
-        const { workflowId } = this.fields;
-        const { } = inputs;
-
-        // TODO: load sub-workflow by workflowId and execute it via the engine
-
-        return {
-            output: null,
-        };
+        return {};
     }
 }

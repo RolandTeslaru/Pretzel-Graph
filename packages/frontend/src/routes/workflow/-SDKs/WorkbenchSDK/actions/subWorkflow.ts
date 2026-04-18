@@ -3,6 +3,7 @@ import { withAsyncCommit, withCyclesRecompute } from "../utils/actions"
 import { toast } from "sonner";
 import { ShelfSDK } from "../../ShelfSDK/sdk";
 import { Foundations, Workbench, Workflow } from "@vx-agent-editor/shared/domain";
+import { extractExposedPorts } from "@vx-agent-editor/shared/subworkflow";
 import { cloneDeep } from 'lodash';
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { api } from "@/SDKs/ApiInterceptorSDK";
@@ -19,12 +20,12 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
                 return;
             }
 
-            const blueprint = ShelfSDK.state.blueprints["Core.Utils.ExecuteSubWorkflow" as Foundations.Blueprint.Id];
+            const blueprint = ShelfSDK.state.blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]
             if (!blueprint) {
                 toast.error("ExecuteSubWorkflow blueprint not loaded — open the node shelf first");
                 return;
             }
-
+            
             const state = sdk.state;
             const masterWorkflow = state.workflow;
             const selectedNodeIds = new Set(nodeIds);
@@ -118,7 +119,15 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
                         reducers.edge.remove(s, edgeId)
                 })
 
-                reducers.node.create(s, blueprint, groupNodePos, { ["workflowId" as Foundations.Field.Id]: workflowId })
+                const exposedSubWorkflowBlueprint = {
+                    ...blueprint,
+                    ...extractExposedPorts(subflow),
+                }
+
+                reducers.node.create(
+                    s, exposedSubWorkflowBlueprint, groupNodePos,
+                    { ["workflowId" as Foundations.Field.Id]: workflowId }
+                )
             }))
         })
     } satisfies SubWorkflowActions;
