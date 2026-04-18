@@ -26,6 +26,7 @@ export namespace Field {
         "Integer",
         "Float",
         "String",
+        "UniqueString",
         "Secret",
         "Boolean",
         "MultiOption",
@@ -65,6 +66,14 @@ export namespace Field {
         variant: configLiteral("String"),
         initialValue: z.string(),
         multiline: z.boolean(),
+        placeholder: z.string().optional(),
+    })
+
+    export const UniqueString = Field.Base.extend({
+        variant: configLiteral("UniqueString"),
+        initialValue: z.string(),
+        prefix: z.string().optional(),
+        length: z.number().optional(),
         placeholder: z.string().optional(),
     })
 
@@ -299,6 +308,7 @@ export namespace Field {
     export interface Integer extends z.infer<typeof Integer> { }
     export interface Float extends z.infer<typeof Float> { }
     export interface String extends z.infer<typeof String> { }
+    export interface UniqueString extends z.infer<typeof UniqueString> { }
     export interface Secret extends z.infer<typeof Secret> { }
     export interface Boolean extends z.infer<typeof Boolean> { }
     export interface MultiOption extends z.infer<typeof MultiOption> { }
@@ -314,6 +324,7 @@ export namespace Field {
         Integer,
         Float,
         String,
+        UniqueString,
         Secret,
         Boolean,
         MultiOption,

@@ -2,7 +2,7 @@ import { CompilationResult } from "../compiler";
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
 import { ExecutionSession, Foundations } from "@vx-agent-editor/shared/domain";
 import { S2Engine } from "../S2/engine";
-import { Vertex } from "../S2/graph";
+import { S2Graph, Vertex } from "../S2/graph";
 import { Synthesizer } from "../synthesizer";
 import { ExecutionContext } from "../context";
 import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
@@ -21,7 +21,7 @@ export class AggexEngine {
     private emit: Emitter;
     private context: ExecutionContext;
     private nodeInstanceMap: CompilationResult['nodeInstanceMap'];
-    private compiledGraph: CompilationResult['compiledGraph'];
+    private s2Graph: S2Graph;
     private eventChannel: ExecutionSession.Event.Channel;
 
     private readonly workflow: Workflow;
@@ -54,9 +54,9 @@ export class AggexEngine {
     }
 
     constructor(compilationResult: CompilationResult, hooks: AggexHooks = {}) {
-        this.context = compilationResult.context;
+        this.context = compilationResult.executionContext;
         this.nodeInstanceMap = compilationResult.nodeInstanceMap;
-        this.compiledGraph = compilationResult.compiledGraph;
+        this.s2Graph = compilationResult.compiledGraph;
         this.eventChannel = ExecutionSession.Event.getChannel(this.context.session.id)
         this.emit = this.context.emit;
         this.workflow = this.context.workflow;
@@ -241,7 +241,7 @@ export class AggexEngine {
         const wfNode = entry.wfNode;
         const nodeInstance = entry.instance;
 
-        const allDependencies = this.compiledGraph.dependenciesMap.get(vertexId)!; 
+        const allDependencies = this.s2Graph.dependenciesMap.get(vertexId)!; 
 
         const dataDependency = entry.instance.fields["dataDependency" as Foundations.Field.Id];
         
@@ -389,7 +389,7 @@ export class AggexEngine {
         else{
             if(dataDepField === "AND"){
                 // In non-AND signal dependency mode, we need to check if all data dependencies are resolved before allowing the node to run
-                const dependencies = this.compiledGraph.dependenciesMap.get(vertexId)!;
+                const dependencies = this.s2Graph.dependenciesMap.get(vertexId)!;
 
                 const incomingInputs = this.resolveInputs(wfNode.id, dependencies, true);
 
@@ -426,7 +426,7 @@ export class AggexEngine {
 
         const result =  await Promise.race<AggexEngine.ExecutionResult>([
 
-            this.s2Engine.ignite(this.compiledGraph, hooks).then(
+            this.s2Engine.ignite(this.s2Graph, hooks).then(
                 () => ({ 
                     status: "completed" as const, 
                     duration: (performance.now() - start) / 1000 

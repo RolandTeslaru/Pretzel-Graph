@@ -5,6 +5,7 @@ import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
 import { AlertDialog, Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
 import type { Library } from '@vx-agent-editor/shared/domain'
 import { openEditWorkflowDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
+import { LazyIcon } from '@vx-agent-editor/vx-ui/icons/LazyIcon'
 
 interface WorkflowCardProps {
     workflow: Library.WorkflowMeta
@@ -47,7 +48,7 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
             >
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-muted shrink-0">
-                        <SystemIcons.FileCode size={16} />
+                        <LazyIcon name={workflow.icon ?? "Graph"} size={16} />
                     </div>
                     <div className="min-w-0 flex-1">
                         <div className="font-medium truncate">{workflow.display_name || 'Untitled'}</div>

@@ -36,7 +36,7 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
                 <SystemIcons.ArrowLeftRight />
             </Button>
             {isSubWorkflowNode && (
-                <Button variant="active" size="xs" className='h-6!'
+                <Button variant="ghost-active" size="icon-xs" className='h-6!'
                     onClick={() => {
                         const state = WorkbenchSDK.state;
                         const workflowId =WorkbenchSDK.selectors.field.getValue(state, node.id, "workflowId" as Field.Id) as Workflow.Id | null
@@ -45,7 +45,6 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
                     }}
                 >
                     <SystemIcons.Graph/>
-                    Open
                 </Button>
             )}
             <Button variant="ghost-success" size="icon-xs" className='text-xs'>
