@@ -1,6 +1,6 @@
 {
-  "version": "1776382442449",
-  "generatedAt": "2026-04-16T23:34:02.449Z",
+  "version": "1776506445203",
+  "generatedAt": "2026-04-18T10:00:45.203Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -2013,6 +2013,219 @@
       ],
       "description": "Routes input to one of multiple outputs based on a condition."
     },
+    "Core.SubWorkflow.Execute": {
+      "id": "Core.SubWorkflow.Execute",
+      "displayName": "Execute Sub-Workflow",
+      "icon": "Graph",
+      "accent": "utility",
+      "toolCompatible": false,
+      "fields": [
+        {
+          "id": "workflowId",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Sub-Workflow ID",
+          "tooltip": "The ID of the sub-workflow to execute",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "workflow_..."
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": [],
+      "description": "Executes a saved sub-workflow and returns its output."
+    },
+    "Core.SubWorkflow.ExposeInputPort": {
+      "id": "Core.SubWorkflow.ExposeInputPort",
+      "displayName": "Expose Input Port",
+      "icon": "LogIn",
+      "accent": "utility",
+      "toolCompatible": false,
+      "fields": [
+        {
+          "id": "required",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Required",
+          "variant": "Boolean",
+          "initialValue": false
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "output",
+          "displayName": "Output",
+          "polymorphicGroupId": "expose_input_port",
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
+        }
+      ],
+      "description": "Exposes an unresolved output port for external workflow input wiring."
+    },
+    "Core.SubWorkflow.ExposeOutputPort": {
+      "id": "Core.SubWorkflow.ExposeOutputPort",
+      "displayName": "Expose Output Port",
+      "icon": "LogOut",
+      "accent": "utility",
+      "toolCompatible": false,
+      "fields": [
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "polymorphicGroupId": "expose_output_port",
+          "internal": false,
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "description": "Accepts an unresolved input port for external workflow output wiring."
+    },
     "Core.Text.Input": {
       "id": "Core.Text.Input",
       "displayName": "Text Input",
@@ -2086,76 +2299,6 @@
         }
       ],
       "description": "This node is a Text input"
-    },
-    "Core.Utils.ExecuteSubWorkflow": {
-      "id": "Core.Utils.ExecuteSubWorkflow",
-      "displayName": "Execute Sub-Workflow",
-      "icon": "Graph",
-      "accent": "utility",
-      "toolCompatible": false,
-      "fields": [
-        {
-          "id": "workflowId",
-          "advanced": false,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Sub-Workflow ID",
-          "tooltip": "The ID of the sub-workflow to execute",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": "workflow_..."
-        },
-        {
-          "id": "signalDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Signal Dependency",
-          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All signals required"
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one signal required"
-            },
-            {
-              "value": "XOR",
-              "displayName": "(XOR) Exactly one signal required"
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready"
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one data dependency ready"
-            }
-          ],
-          "kind": "select"
-        }
-      ],
-      "inputs": [],
-      "outputs": [],
-      "description": "Executes a saved sub-workflow and returns its output."
     },
     "Core.Utils.JsonInjector": {
       "id": "Core.Utils.JsonInjector",
