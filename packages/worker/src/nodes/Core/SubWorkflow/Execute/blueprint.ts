@@ -1,7 +1,7 @@
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
-    id: "Core.Utils.ExecuteSubWorkflow",
+    id: "Core.SubWorkflow.Execute",
     displayName: "Execute Sub-Workflow",
     description: "Executes a saved sub-workflow and returns its output.",
     icon: "Graph",
