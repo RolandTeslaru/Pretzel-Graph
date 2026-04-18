@@ -2,6 +2,7 @@ import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
 import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "src/types";
 import { ExecutionContext } from "./context";
 import { Emitter } from "./event/emitter"
+import type { CompilationContext } from "./compiler"
 
 export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_ToolBlueprint extends Foundations.Blueprint = any> {
 
@@ -67,8 +68,9 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_T
         throw new Error("This node cannot be converted to a tool");
     }
 
-    public init(
-        context: ExecutionContext
+    public compile(
+        context: ExecutionContext,
+        compilationContext: CompilationContext,
     ): Promise<void> | void { }
 
     public static resolveInitialFieldValues<T_Blueprint extends Foundations.Blueprint>(
@@ -165,5 +167,5 @@ export abstract class RuntimeRouterNode<T_Blueprint extends Foundations.Blueprin
 
 export namespace RuntimeNode {
     export type ConstructorProps = ConstructorParameters<typeof RuntimeNode>[0]
-    export type InitProps = Parameters<RuntimeNode<Foundations.Blueprint>["init"]>[0]
+    export type CompileProps = Parameters<RuntimeNode<Foundations.Blueprint>["compile"]>[0]
 }

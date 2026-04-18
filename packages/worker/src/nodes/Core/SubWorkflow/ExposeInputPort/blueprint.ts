@@ -1,3 +1,4 @@
+import { Foundations } from "@vx-agent-editor/shared/domain";
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
@@ -11,6 +12,13 @@ export const Blueprint = defineBlueprint({
             id: "required",
             displayName: "Required",
             initialValue: false
+        }),
+        FieldBuilder.UniqueString({
+            id: "exposed_port_id",
+            displayName: "Exposed Port ID",
+            prefix: "ExposedInputPort-",
+            length: 5,
+            required: false
         })
     ],
     inputs: [],
@@ -22,3 +30,4 @@ export const Blueprint = defineBlueprint({
         }),
     ],
 });
+

@@ -27,7 +27,7 @@ export class LibraryService {
                         .throwOnError(),
                     supabase
                         .from('workflows')
-                        .select('id, folder_id, display_name, description, locked, mcp_enabled, created_at, updated_at')
+                        .select('id, folder_id, display_name, description, icon, accent, locked, mcp_enabled, created_at, updated_at')
                         .order('created_at', { ascending: false })
                         .throwOnError(),
                 ]);
@@ -147,7 +147,7 @@ export class LibraryService {
                     supabase
                         .from('workflows')
                         // select workflow meta fields only
-                        .select('id, folder_id, display_name, description, locked, mcp_enabled, created_at, updated_at')
+                        .select('id, folder_id, display_name, description, icon, accent, locked, mcp_enabled, created_at, updated_at')
                         .eq('folder_id', id)
                         .throwOnError(),
                 ]);
@@ -193,10 +193,11 @@ export class LibraryService {
                     .update({
                         display_name: payload.display_name,
                         description: payload.description ?? null,
+                        ...(payload.icon !== undefined && { icon: payload.icon }),
+                        ...(payload.accent !== undefined && { accent: payload.accent }),
                     })
                     .eq('id', payload.id)
-                    // select workflow meta fields only
-                    .select('id, folder_id, display_name, description, locked, mcp_enabled, created_at, updated_at')
+                    .select('id, folder_id, display_name, description, icon, accent, locked, mcp_enabled, created_at, updated_at')
                     .single()
                     .throwOnError();
 

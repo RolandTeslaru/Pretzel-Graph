@@ -90,6 +90,12 @@ export const buttonVariants = cva(
           dark:bg-sky-700/20 dark:text-sky-400 dark:hover:bg-sky-700/30
           focus-visible:ring-sky-600/20 dark:focus-visible:ring-sky-600/40
           focus-visible:border-sky-600/40
+        `,
+        "ghost-active": `
+          shadow-none text-sky-700 dark:text-sky-400
+          hover:bg-sky-400/20 hover:text-sky-800 dark:hover:text-sky-300
+          aria-expanded:bg-sky-400/20 aria-expanded:text-sky-800
+          dark:aria-expanded:bg-sky-500/20 dark:aria-expanded:text-sky-300
         `
       },
       size: {
