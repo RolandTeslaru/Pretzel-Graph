@@ -122,7 +122,10 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
                 const exposedSubWorkflowBlueprint = {
                     ...blueprint,
                     ...extractExposedPorts(subflow),
-                }
+                    displayName: displayName,
+                    icon: subflow.icon ?? blueprint.icon,
+                    accent: subflow.accent ?? blueprint.accent,
+                } satisfies Foundations.Blueprint;
 
                 reducers.node.create(
                     s, exposedSubWorkflowBlueprint, groupNodePos,

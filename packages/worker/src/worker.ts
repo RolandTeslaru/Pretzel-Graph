@@ -70,8 +70,11 @@ export class AggexWorkerImpl {
         const { workflow, jobId, executionSession } = bullJob.data;
         console.log("Processing Queue Item", jobId, "workflow id", workflow.id, "execution session id:", executionSession.id);
 
-        const signalChannel = Orchestrator.Signal.getChannel(jobId);
         const eventChannel = Orchestrator.Event.getChannel(jobId);
+        const signalChannel = Orchestrator.Signal.getChannel(jobId);
+
+        this.signalHandlers.set(signalChannel, (signal) => this.handleSignal(signal));
+        this.redisSub.subscribe(signalChannel);
 
         let lockExtendInterval: ReturnType<typeof setInterval> | null = null;
         let pauseTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -113,10 +116,7 @@ export class AggexWorkerImpl {
 
         try {
             const compilationResult = await this.compiler.compile(workflow, jobId, executionSession, this.emit);
-            const context = compilationResult.context;
-
-            this.signalHandlers.set(signalChannel, (signal) => this.handleSignal(signal));
-            this.redisSub.subscribe(signalChannel);
+            const context = compilationResult.executionContext;
 
             const onPauseTimeout = () => {
                 console.log(`[Worker] Max pause duration reached for job ${jobId}, terminating`);

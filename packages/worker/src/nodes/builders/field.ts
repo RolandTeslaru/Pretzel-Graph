@@ -51,6 +51,20 @@ export namespace FieldBuilder {
 
 
 
+    export function UniqueString<TId extends string, TReq extends boolean = false>(
+        config: { prefix?: string; length?: number; placeholder?: string; } & BaseProps<TId, TReq>
+    ): Ret<TId, "UniqueString", Foundations.Field.UniqueString, TReq, true> {
+        return {
+            ...buildBase(config),
+            variant: "UniqueString",
+            placeholder: config.placeholder ?? "",
+            prefix: config.prefix,
+            length: config.length,
+            // Placeholder; real value is generated per-node at create time.
+            initialValue: "",
+        };
+    }
+
     export function String<TId extends string, TReq extends boolean = false>(
         config: { initialValue: string; multiline?: boolean; placeholder?: string; } & BaseProps<TId, TReq>
     ): Ret<TId, "String", Foundations.Field.String, TReq, true>;

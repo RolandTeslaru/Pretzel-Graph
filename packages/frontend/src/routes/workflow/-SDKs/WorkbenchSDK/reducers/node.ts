@@ -6,6 +6,18 @@ import { cacheReducers } from "./cache";
 import { layoutReducers } from "./layout";
 import { fieldReducers } from "./field";
 import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
+import uid from "../../../../../utils/uid";
+
+const generateUniqueString = (field: Foundations.Field): string => {
+    if (field.variant !== "UniqueString") return "";
+    return `${field.prefix ?? ""}${uid.randomUUID(field.length ?? 5)}`;
+}
+
+const resolveFieldInitialValue = (field: Foundations.Field) => {
+    if (field.variant === "UniqueString") return generateUniqueString(field);
+    if ('initialValue' in field) return field.initialValue;
+    return undefined;
+}
 
 export const nodeReducers = {
     remove: (s, deletedNodeId) => {
@@ -72,8 +84,9 @@ export const nodeReducers = {
         for (const field of blueprint.fields) {
             if (staticValues && staticValues[field.id] !== undefined) {
                 initialStaticValues[field.id] = staticValues[field.id];
-            } else if ('initialValue' in field && field.initialValue !== undefined) {
-                initialStaticValues[field.id] = field.initialValue;
+            } else {
+                const resolved = resolveFieldInitialValue(field);
+                if (resolved !== undefined) initialStaticValues[field.id] = resolved;
             }
         }
 
@@ -145,7 +158,7 @@ export const nodeReducers = {
             description : blueprint.description,
             isMinimized : isMinimized,
             isFlipped   : isFlipped,
-            accent      : blueprint.accent ? `var(--${blueprint.accent})` : undefined,
+            accent      : blueprint.accent ? blueprint.accent : undefined,
 
             toolCompatible: blueprint.toolCompatible,
         } satisfies Workflow.Node
@@ -237,8 +250,8 @@ export const nodeReducers = {
 
         for (const field of blueprint.fields) {
             if (field.id in next) continue;
-            if ('initialValue' in field && field.initialValue !== undefined)
-                next[field.id] = field.initialValue;
+            const resolved = resolveFieldInitialValue(field);
+            if (resolved !== undefined) next[field.id] = resolved;
         }
 
         for (const input of blueprint.inputs) {

@@ -13,7 +13,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
     const reducers = sdk.reducers;
 
     return {
-        remove:            withCommit((...props) => setState(withCyclesRecompute(s => { reducers.node.remove(s,            ...props) }))),
+        remove:            withCommit((...props) => setState(withCyclesRecompute(s => { reducers.node.remove(s, ...props) }))),
         create:            withCommit((...props) => setState(s => { reducers.node.create(s,            ...props) })),
         duplicate:         withCommit((...props) => setState(s => { reducers.node.duplicate(s,         ...props) })),
         setDisabled:       withCommit((...props) => setState(s => { reducers.node.setDisabled(s,       ...props) })),
@@ -44,6 +44,9 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
                 const exposedPortsBlueprint = {
                     ...blueprint,
                     ...extractExposedPorts(subWorkflow),
+                    displayName: subWorkflow.display_name,
+                    icon: subWorkflow.icon ?? blueprint.icon,
+                    accent: subWorkflow.accent ?? blueprint.accent,
                 } satisfies Foundations.Blueprint;
                 setState(withCyclesRecompute(s => { reducers.node.recreate(s, nodeId, exposedPortsBlueprint)}));
                 return;
