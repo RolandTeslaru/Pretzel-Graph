@@ -9,10 +9,15 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public readonly Blueprint = Blueprint;
 
+    public ejectedData: any
+
     protected override async onRun(
-        _context: ExecutionContext,
-        _inputs: InferInputs<typeof Blueprint>,
+        context: ExecutionContext,
+        inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
+
+        this.ejectedData = inputs.input
+
         return {};
     }
 }

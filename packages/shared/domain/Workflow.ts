@@ -108,11 +108,16 @@ export namespace Workflow {
 
 
 
+    export const DEFAULT_ICON = "graph"
+    export const DEFAULT_ACCENT = "utility"
+
     export const Schema = z.object({
         id: Workflow.Id,
         display_name: z.string(),
         locked: z.boolean(),
         description: z.string().optional().nullable(),
+        icon: z.string().nullable().optional(),
+        accent: z.string().nullable().optional(),
 
         created_at: z.coerce.date(),
         updated_at: z.coerce.date(),
@@ -133,7 +138,6 @@ export namespace Workflow {
             ui: z.object({
                 layout: Layout.Schema,
                 viewport: Viewport.Schema,
-                icon: z.string().nullable().optional(),
                 icon_color: z.string().nullable().optional(),
             }),
         })
@@ -145,6 +149,8 @@ export namespace Workflow {
         locked: false,
         display_name: "",
         description: "",
+        icon: null,
+        accent: null,
         folder_id: "" as Workflow["folder_id"],
         created_at: new Date(),
         updated_at: new Date(),
@@ -155,7 +161,6 @@ export namespace Workflow {
             ui: {
                 layout: {},
                 viewport: { x: 0, y: 0, zoom: 1 },
-                icon: null,
                 icon_color: null,
             }
         }

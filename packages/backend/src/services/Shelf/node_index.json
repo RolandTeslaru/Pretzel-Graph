@@ -1,6 +1,6 @@
 {
-  "version": "1776506445203",
-  "generatedAt": "2026-04-18T10:00:45.203Z",
+  "version": "1776527203797",
+  "generatedAt": "2026-04-18T15:46:43.797Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -2098,6 +2098,18 @@
           "displayName": "Required",
           "variant": "Boolean",
           "initialValue": false
+        },
+        {
+          "id": "exposed_port_id",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Exposed Port ID",
+          "variant": "UniqueString",
+          "initialValue": "",
+          "prefix": "ExposedInputPort-",
+          "length": 5,
+          "placeholder": ""
         },
         {
           "id": "signalDependency",

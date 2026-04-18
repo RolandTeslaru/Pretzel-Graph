@@ -227,6 +227,8 @@ export namespace Library {
                     id: DomainWorkflow.Id,
                     display_name: z.string().min(1),
                     description: z.string().nullable().optional(),
+                    icon: z.string().nullable().optional(),
+                    accent: z.string().nullable().optional(),
                 });
                 export type Request = z.infer<typeof Request>;
                 export type Response = Library.WorkflowMeta;

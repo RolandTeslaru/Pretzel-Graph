@@ -28,7 +28,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         super(workflowNode, context);
     }
 
-    public override async init(context: ExecutionContext) {
+    public override async compile(context: ExecutionContext) {
         const incomingEdges = context.workflowCache.incomingEdgesMap[this.workflowNode.id];
         const upstreamNodeId = Object.keys(incomingEdges)[0] as Workflow.Node.Id | undefined;
 

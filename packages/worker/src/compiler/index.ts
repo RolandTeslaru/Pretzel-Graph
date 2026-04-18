@@ -10,11 +10,14 @@ import { S2Graph, Vertex } from "../S2/graph";
 import { ExecutionContext, createExecutionContext } from "../context";
 import { load } from "@langchain/core/load";
 import { BaseMessage } from "@langchain/core/messages";
-import { InferFields } from "../types";
+import { resolveFields } from "../utils";
+import { CompilationContext, createCompilationContext } from "./context";
+
+export { CompilationContext, createCompilationContext, extendCompilePath } from "./context";
 
 export interface CompilationResult {
     compiledGraph: S2Graph;
-    context: ExecutionContext;
+    executionContext: ExecutionContext;
     nodeInstanceMap: Map<Vertex.Id | Workflow.Node.Id, { wfNode: Workflow.Node; instance: RuntimeNode<Foundations.Blueprint> }>;
 }
 
@@ -26,6 +29,7 @@ export class WorkflowCompiler {
         jobId: Orchestrator.Job.Id,
         session: ExecutionSession,
         emit: Emitter,
+        compilationContext: CompilationContext = createCompilationContext(workflow.id),
     ): Promise<CompilationResult> {
         const workflowCache = Workflow.createCache(workflow);
 
@@ -47,7 +51,7 @@ export class WorkflowCompiler {
 
         const subWorkflows: ExecutionContext["subWorkflows"] = {};
 
-        const context = createExecutionContext({
+        const executionCtx = createExecutionContext({
             workflow,
             workflowCache,
             emit,
@@ -62,34 +66,7 @@ export class WorkflowCompiler {
 
         // Add nodes to the graph
         for (const wfNode of Object.values(nodes)) {
-
-            const NodeConstructor = await CatalogueService.getNode(wfNode.blueprintId);
-
-            if (!NodeConstructor)
-                throw new AggexCompilerError(
-                    SystemError.Code.COMPILATION_NODE_NOT_FOUND,
-                    `Could not find node with blueprintId "${wfNode.blueprintId}" in the catalogue`,
-                    { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
-                )
-
-            const nodeInstance = new NodeConstructor(wfNode, context);
-
-            await nodeInstance.init(context)
-
-            const vertexId = wfNode.id as unknown as Vertex.Id;
-
-            graph.addVertex(wfNode.id);
-
-            nodeInstanceMap.set(vertexId, { wfNode, instance: nodeInstance });
-
-            const fieldValues = resolveFields(wfNode.id, workflow);
-
-            // Set vertex execution strategy based on node fields. Default is "AND"
-            if (Object.hasOwn(fieldValues, "signalDependency"))
-                graph.setVertexStrategy(
-                    vertexId,
-                    fieldValues["signalDependency" as Foundations.Field.Id] as Vertex.STRATEGY
-                );
+            await this.compileNode(wfNode, workflow, graph, nodeInstanceMap, executionCtx, compilationContext);
         }
 
         // Add Edges. Might also get ran multiple times because nodes can have multiple edges between them because of ports.
@@ -118,7 +95,48 @@ export class WorkflowCompiler {
             graph.addDependency(S2Graph.START_VERTEX_ID, nodeId);
         });
 
-        return { compiledGraph: graph, context, nodeInstanceMap };
+        return { 
+            compiledGraph: graph, 
+            executionContext: executionCtx, 
+            nodeInstanceMap 
+    };
+    }
+
+    private async compileNode(
+        wfNode: Workflow.Node,
+        workflow: Workflow,
+        graph: S2Graph,
+        nodeInstanceMap: CompilationResult["nodeInstanceMap"],
+        executionCtx: ExecutionContext,
+        compilationContext: CompilationContext,
+    ): Promise<void> {
+        const NodeConstructor = await CatalogueService.getNode(wfNode.blueprintId);
+
+        if (!NodeConstructor)
+            throw new AggexCompilerError(
+                SystemError.Code.COMPILATION_NODE_NOT_FOUND,
+                `Could not find node with blueprintId "${wfNode.blueprintId}" in the catalogue`,
+                { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
+            )
+
+        const nodeInstance = new NodeConstructor(wfNode, executionCtx);
+
+        await nodeInstance.compile(executionCtx, compilationContext)
+
+        const vertexId = wfNode.id as unknown as Vertex.Id;
+
+        graph.addVertex(wfNode.id);
+
+        nodeInstanceMap.set(vertexId, { wfNode, instance: nodeInstance });
+
+        const fieldValues = resolveFields(wfNode.id, workflow);
+
+        // Set vertex execution strategy based on node fields. Default is "AND"
+        if (Object.hasOwn(fieldValues, "signalDependency"))
+            graph.setVertexStrategy(
+                vertexId,
+                fieldValues["signalDependency" as Foundations.Field.Id] as Vertex.STRATEGY
+            );
     }
 
     private findStartNodes(
@@ -138,23 +156,3 @@ export class WorkflowCompiler {
 
 
 
-function resolveFields<T_Blueprint extends Foundations.Blueprint>(
-    nodeId: Workflow.Node.Id,
-    workflow: Workflow
-): InferFields<T_Blueprint> {
-    const node = workflow.data.nodes[nodeId];
-    const staticValues = workflow.data.staticValues[nodeId] ?? {};
-
-    const resolved: Record<Foundations.Field.Id, Foundations.Field.Value> = {};
-
-    for (const field of node.fields) {
-        const fieldId = field.id as Foundations.Field.Id;
-
-        if (fieldId in staticValues)
-            resolved[fieldId] = staticValues[fieldId] as Foundations.Field.Value;
-        else
-            resolved[fieldId] = field.initialValue as Foundations.Field.Value;
-    }
-
-    return resolved as InferFields<T_Blueprint>
-}

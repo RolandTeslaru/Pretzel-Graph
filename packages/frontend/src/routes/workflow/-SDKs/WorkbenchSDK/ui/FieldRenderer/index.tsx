@@ -43,6 +43,7 @@ type FieldRendererMapType = {
 
 export const FIELD_RENDERER_MAP: FieldRendererMapType = {
     String: StringField,
+    UniqueString: StringField as any,
     Boolean: BooleanField,
     Integer: IntegerField,
     Float: FloatField,

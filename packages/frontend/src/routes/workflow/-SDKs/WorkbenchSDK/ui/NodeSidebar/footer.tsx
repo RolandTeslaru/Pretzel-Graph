@@ -43,12 +43,12 @@ export const NodeSidebarFooter = () => {
 
     return (
         <div className='absolute z-10 bottom-2 left-2 flex flex-row justify-between bg-card w-[calc(100%-16px)] p-1 rounded-full border border-border shadow-md shadow-black/10'>
-            <Button variant={isInputsOpen ? "active" : "ghost"} size="sm" className="gap-2" onClick={toggleInputs}>
+            <Button variant={isInputsOpen ? "active" : "ghost"} size="sm" className="gap-2 rounded-full" onClick={toggleInputs}>
                 <SystemIcons.LogIn/>
                 <p className="text-xs h-auto my-auto mt-1.5">Incoming</p>
             </Button>
 
-            <Button variant={isOutputsOpen ? "active" : "ghost"} size={"sm"} className="gap-2" onClick={toggleOutputs}>
+            <Button variant={isOutputsOpen ? "active" : "ghost"} size={"sm"} className="gap-2 rounded-full" onClick={toggleOutputs}>
                 <p className="text-xs mt-0.5">Outgoing</p>
                 <SystemIcons.LogOut />
             </Button>
