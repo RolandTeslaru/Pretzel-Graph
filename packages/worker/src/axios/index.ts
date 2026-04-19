@@ -14,10 +14,10 @@ export class AxiosServiceImpl {
     public init() {
         // REQUEST INTERCEPTOR: Inject internal service token
         this.api.interceptors.request.use(async (config) => {
-            const token = process.env.INTERNAL_SERVICE_SECRET;
+            const token = process.env.WORKER_SERVICE_INTERNAL_TOKEN;
 
             if (token) {
-                config.headers['X-Internal-Token'] = token;
+                config.headers['Internal-Service-Token'] = token;
             }
 
             return config;

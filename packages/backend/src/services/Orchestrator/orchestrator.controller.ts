@@ -2,25 +2,43 @@ import { Controller, Post, Body, UseGuards, Req, HttpCode, Get, Param } from '@n
 import { OrchestratorService } from './orchestrator.service';
 import { Auth, Orchestrator } from '@vx-agent-editor/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
+import { InternalAuthGuard, InternalAuthenticatedRequest } from '../../auth/internal-auth.guard';
 
 @Controller('orchestrator')
-@UseGuards(SupabaseAuthGuard)
 export class OrchestratorController {
     constructor(private readonly orchestratorService: OrchestratorService) { }
 
 
     @Post('run')
+    @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async run(
         @Req() req: AuthenticatedRequest,
         @Body() body: any
     ) {
         const payload = Orchestrator.API.Run.Request.parse(body);
-        return await this.orchestratorService.run(req.token, req.user.id as Auth.User.Id, payload);
+        return await this.orchestratorService.runFromUser(req.token, req.user.id as Auth.User.Id, payload);
+    }
+
+
+    @Post('internal/run')
+    @UseGuards(InternalAuthGuard)
+    @HttpCode(200)
+    async runInternal(
+        @Req() req: InternalAuthenticatedRequest,
+        @Body() body: any
+    ) {
+        const payload = Orchestrator.API.Run.InternalRequest.parse(body);
+
+        return await this.orchestratorService.runFromService(payload, {
+            type: 'service',
+            service: req.internal.service,
+        });
     }
 
 
     @Get('await-result/:jobId')
+    @UseGuards(SupabaseAuthGuard)
     async awaitResult(
         @Req() req: AuthenticatedRequest,
         @Param('jobId') jobId: string
@@ -34,6 +52,7 @@ export class OrchestratorController {
 
 
     @Post('pause')
+    @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async pause(
         @Req() req: AuthenticatedRequest,
@@ -45,6 +64,7 @@ export class OrchestratorController {
 
 
     @Post('resume')
+    @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async resume(
         @Req() req: AuthenticatedRequest,
@@ -56,6 +76,7 @@ export class OrchestratorController {
 
 
     @Post('heartbeat')
+    @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async heartbeat(
         @Req() req: AuthenticatedRequest,
@@ -67,6 +88,7 @@ export class OrchestratorController {
 
 
     @Post('suspend')
+    @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async suspend(
         @Req() req: AuthenticatedRequest,
@@ -78,6 +100,7 @@ export class OrchestratorController {
 
 
     @Post('terminate')
+    @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async terminate(
         @Req() req: AuthenticatedRequest,
@@ -89,6 +112,7 @@ export class OrchestratorController {
 
 
     @Post('list-active')
+    @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async listActive(
         @Req() req: AuthenticatedRequest,
@@ -98,6 +122,7 @@ export class OrchestratorController {
 
 
     @Post('terminate-all')
+    @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async terminateAll(
         @Req() req: AuthenticatedRequest,
@@ -107,6 +132,7 @@ export class OrchestratorController {
 
 
     @Post('finalise')
+    @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async finalise(
         @Req() req: AuthenticatedRequest,
