@@ -18,7 +18,8 @@ export namespace Orchestrator {
         export const Schema = z.object({
             id: Job.Id,
             workflowId: Workflow.Id,
-            userId: Auth.User.Id,
+            userId: Auth.User.Id.optional(),
+            trigger: Trigger.Schema,
             status: Job.Status,
             createdAt: z.date(),
             updatedAt: z.date(),
@@ -33,12 +34,29 @@ export namespace Orchestrator {
             export const Schema = z.object({
                 jobId: Job.Id,
                 workflow: Workflow.Schema,
-                userId: Auth.User.Id,
                 executionSession: ExecutionSession.Schema,
                 chatId: Chat.Id.optional()
             })
         }
         export type Item = z.infer<typeof Item.Schema>
+    }
+
+    export namespace Trigger {
+        export const User = z.object({
+            type: z.literal("user"),
+            userId: Auth.User.Id,
+        })
+        export type User = z.infer<typeof User>
+
+        export const Service = z.object({
+            type: z.literal("service"),
+            service: z.string(),
+            authorizedByUserId: Auth.User.Id.optional(),
+        })
+        export type Service = z.infer<typeof Service>
+
+        export const Schema = z.discriminatedUnion("type", [User, Service])
+        export type Type = z.infer<typeof Schema>
     }
 
 
@@ -209,12 +227,16 @@ export namespace Orchestrator {
                 workflow: Workflow.Schema,
                 executionSession: ExecutionSession.Schema,
             })
+
+            export const InternalRequest = Request
+
             export const Response = z.object({
                 success: z.boolean(),
                 jobId: Job.Id.optional()
             })
 
             export type Request = z.infer<typeof Request>
+            export type InternalRequest = z.infer<typeof InternalRequest>
             export type Response = z.infer<typeof Response>
         }
         export async function run(

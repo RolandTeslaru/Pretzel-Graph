@@ -3,14 +3,13 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue, QueueEvents } from 'bullmq';
 import Redis from 'ioredis';
 import { createAuthenticatedClient, createServiceClient } from '@/utils/supabase';
+import { Principal } from '@/domain/Principal';
 import { REDIS_HOST, REDIS_PORT } from '@vx-agent-editor/shared/constants';
-import { Auth, Realtime, Validation, Workflow } from '@vx-agent-editor/shared/domain';
-import { Orchestrator } from '@vx-agent-editor/shared/domain';
+import { Auth, Orchestrator, Realtime, Validation, Workflow } from '@vx-agent-editor/shared/domain';
 import { SystemError } from '@vx-agent-editor/shared/domain/SystemError';
 import { SecretsResolver } from './utils';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { RealtimeService } from '../Realtime/realtime.service';
-import { ChatService } from '../Chat/chat.service';
 import { withSupabaseAssert } from '@vx-agent-editor/shared/errors/supabase';
 import { Algorithms } from '@vx-agent-editor/shared/domain/Algorithms';
 
@@ -32,7 +31,6 @@ export class OrchestratorService {
         @InjectQueue(Orchestrator.EXECUTION_QUEUE_ID)
         private readonly executionQueue: Queue,
         private readonly realtime: RealtimeService,
-        private readonly chat: ChatService,
     ) {
 
         this.queueEvents.on("completed", async ({ jobId, returnvalue }) => {
@@ -61,7 +59,18 @@ export class OrchestratorService {
 
     private readonly dbOps = {
         job: {
-            create: withSupabaseAssert('job.create', async (supabase: SupabaseClient, { workflowId, userId }: { workflowId: Workflow.Id, userId: Auth.User.Id }) => {
+            create: withSupabaseAssert('job.create', async (
+                supabase: SupabaseClient,
+                {
+                    workflowId,
+                    userId,
+                    trigger,
+                }: {
+                    workflowId: Workflow.Id,
+                    userId?: Auth.User.Id,
+                    trigger: Orchestrator.Trigger.Type,
+                }
+            ) => {
                 const jobId = crypto.randomUUID() as Orchestrator.Job.Id;
                 await supabase.from('jobs').insert({
                     id: jobId,
@@ -70,7 +79,8 @@ export class OrchestratorService {
                     created_at: new Date(),
                     updated_at: new Date(),
                     duration: 0,
-                    user_id: userId
+                    user_id: userId,
+                    trigger,
                 }).throwOnError();
                 return jobId;
             }),
@@ -88,12 +98,50 @@ export class OrchestratorService {
     };
 
 
-    async run(
+    async runFromUser(
         token: string,
         userId: Auth.User.Id,
         payload: Orchestrator.API.Run.Request
     ): Promise<Orchestrator.API.Run.Response> {
+
+        const principal = {
+            type: 'user',
+            userId,
+            supabase: createAuthenticatedClient(token),
+        } satisfies Principal.User;
+
+        return this.runCore(
+            principal,
+            payload
+        );
+    }
+
+
+    async runFromService(
+        payload: Orchestrator.API.Run.Request,
+        trigger: Orchestrator.Trigger.Service
+    ): Promise<Orchestrator.API.Run.Response> {
+
+        const principal = {
+            type: 'service',
+            service: trigger.service,
+            authorizedByUserId: trigger.authorizedByUserId,
+            supabase: this.serviceSupabase,
+        } satisfies Principal.Service;
+
+        return this.runCore(
+            principal,
+            payload,
+        );
+    }
+
+
+    private async runCore(
+        principal: Principal,
+        payload: Orchestrator.API.Run.Request
+    ): Promise<Orchestrator.API.Run.Response> {
         const { workflow, executionSession } = payload
+        const { supabase } = principal
 
         const wfCache = Workflow.createCache(workflow);
 
@@ -111,29 +159,30 @@ export class OrchestratorService {
                 { data: { issues } }
             );
 
-        const supabase = createAuthenticatedClient(token);
+        const trigger: Orchestrator.Trigger.Type = 
+            principal.type === 'user'
+            ? { type: 'user', userId: principal.userId }
+            : {
+                type: 'service',
+                service: principal.service,
+                authorizedByUserId: principal.authorizedByUserId,
+            };
 
-        const jobId = await this.dbOps.job.create(supabase, { workflowId: workflow.id, userId });
+        const jobId = await this.dbOps.job.create(
+            supabase,
+            {
+                workflowId: workflow.id,
+                userId: principal.type === 'user' ? principal.userId : undefined,
+                trigger,
+            }
+        );
 
         try {
             await SecretsResolver.resolveWorkflow(supabase, workflow);
 
-            const needsChat = Object.values(workflow.data.nodes).some(n =>
-                n.blueprintId === "Core.Chat.Output"
-            );
-
-            if (needsChat) {
-                await this.chat.ensure(token, userId, {
-                    chatId: executionSession.chatId,
-                    workflow_id: workflow.id,
-                });
-            }
-
-
             const queueItem: Orchestrator.ExecutionQueue.Item = {
                 jobId,
                 workflow,
-                userId,
                 executionSession
             };
 
