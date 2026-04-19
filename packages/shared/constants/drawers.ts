@@ -12,6 +12,7 @@ export const CORE_DRAWERS = {
     id: "input_output",
     icon: "Cable",
     blueprintIds: [
+      "Core.Webhook",
       "Core.Chat.Input", 
       "Core.Chat.Output", 
       "Core.Text.Input", 

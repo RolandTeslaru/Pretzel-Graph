@@ -1,6 +1,6 @@
 {
-  "version": "1776604638321",
-  "generatedAt": "2026-04-19T13:17:18.321Z",
+  "version": "1776607928219",
+  "generatedAt": "2026-04-19T14:12:08.219Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -2767,6 +2767,130 @@
         }
       ],
       "description": "Executes a tool with the provided input and returns the result."
+    },
+    "Core.Webhook": {
+      "id": "Core.Webhook",
+      "displayName": "Webhook",
+      "icon": "Webhook",
+      "accent": "utility",
+      "toolCompatible": false,
+      "fields": [
+        {
+          "id": "path",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Path",
+          "tooltip": "Unique suffix appended to your webhook server base path.",
+          "variant": "UniqueString",
+          "initialValue": "",
+          "prefix": "webhook-",
+          "length": 10,
+          "placeholder": "webhook-abc123"
+        },
+        {
+          "id": "method",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "HTTP Method",
+          "tooltip": "Method accepted by this webhook route.",
+          "variant": "MultiOption",
+          "initialValue": "POST",
+          "options": [
+            {
+              "value": "GET"
+            },
+            {
+              "value": "POST"
+            },
+            {
+              "value": "PUT"
+            },
+            {
+              "value": "PATCH"
+            },
+            {
+              "value": "DELETE"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "body",
+          "displayName": "Body",
+          "tooltip": "Webhook request body.",
+          "variant": "Data"
+        },
+        {
+          "id": "headers",
+          "displayName": "Headers",
+          "tooltip": "Webhook request headers.",
+          "variant": "Data"
+        },
+        {
+          "id": "query",
+          "displayName": "Query",
+          "tooltip": "Webhook query parameters.",
+          "variant": "Data"
+        },
+        {
+          "id": "params",
+          "displayName": "Params",
+          "tooltip": "Webhook path parameters.",
+          "variant": "Data"
+        }
+      ],
+      "description": "Starts the workflow from inbound webhook requests."
     },
     "Integrations.Anthropic.Chat": {
       "id": "Integrations.Anthropic.Chat",
