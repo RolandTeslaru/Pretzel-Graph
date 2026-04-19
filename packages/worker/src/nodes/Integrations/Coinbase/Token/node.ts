@@ -43,7 +43,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         super(workflowNode, context);
     }
 
-    public override async compile(context: ExecutionContext): Promise<void> {
+    protected override async onCompile(context: ExecutionContext): Promise<void> {
         const { cdpKeyId, cdpKeySecret, walletSecret, networkId, walletAddress } = this.fields;
 
         if (!cdpKeyId || !cdpKeySecret || !walletSecret)

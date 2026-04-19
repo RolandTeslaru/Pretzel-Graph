@@ -40,7 +40,7 @@ No build step — used directly as a workspace dependency.
 ```
 packages/
   frontend/    # React 19 + Vite + XYFlow graph editor
-  backend/     # Express 5 + WebSocket + BullMQ
+  backend/     # NestJS + WebSocket + BullMQ
   shared/      # Domain models (Zod schemas) used by all packages
   vx-ui/       # UI component library (Radix + Tailwind foundations, icons)
   worker/      # Workflow execution engine (LangChain + LangGraph)
@@ -77,7 +77,7 @@ Branded string types (e.g., `Workflow.Id`, `Node.Id`) are used throughout for ty
 - Uses LangGraph state machines for agent loop execution
 
 ### Backend
-Express server on port 3001 (configurable via `.env` `BACKEND_PORT`). Routes:
+NestJS server on port 3001 (configurable via `.env` `PORT`). Routes:
 - `/api/library` — Workflow CRUD (Supabase)
 - `/api/shelf` — Node blueprint catalog
 - `/api/orchestrator` — Trigger workflow execution

@@ -3,7 +3,6 @@ import { useEffect, useRef, useCallback } from 'react'
 const CELL_SIZE = 24
 const ALIVE_PROBABILITY = 0.15
 const TICK_MS = 140
-const FADE_COLOR = 'rgba(0, 0, 0, 0.15)'
 const MIN_ALIVE_RATIO = 0.1 // inject life if population drops below 3%
 const INJECT_RADIUS = 5     // spawn a ~10×10 patch of random cells
 
@@ -15,6 +14,9 @@ export default function GameOfLifeBackground() {
     const rafRef = useRef<number>(0)
     const lastTickRef = useRef(0)
     const primaryColorRef = useRef<string>('#ffffff')
+    const fadeColorRef = useRef<string>('rgba(0, 0, 0, 0.15)')
+    const clearColorRef = useRef<string>('#000000')
+    const cellAlphaRef = useRef<number>(0.2)
 
     // Initialize the grid with random alive cells
     const initGrid = useCallback((cols: number, rows: number): Uint8Array => {
@@ -85,7 +87,7 @@ export default function GameOfLifeBackground() {
         (ctx: CanvasRenderingContext2D, grid: Uint8Array, cols: number, rows: number) => {
             // Fade trail effect
             ctx.globalAlpha = 1
-            ctx.fillStyle = FADE_COLOR
+            ctx.fillStyle = fadeColorRef.current
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
             // Set the color for cells
@@ -101,10 +103,10 @@ export default function GameOfLifeBackground() {
                     if (grid[y * cols + x] === 1) {
                         // Add to core path
                         corePath.rect(
-                            x * CELL_SIZE + 1,
-                            y * CELL_SIZE + 1,
-                            CELL_SIZE - 2,
-                            CELL_SIZE - 2
+                            x * CELL_SIZE,
+                            y * CELL_SIZE,
+                            CELL_SIZE,
+                            CELL_SIZE
                         )
                     }
                 }
@@ -113,7 +115,7 @@ export default function GameOfLifeBackground() {
            
 
             // Draw Core
-            ctx.globalAlpha = 0.15
+            ctx.globalAlpha = cellAlphaRef.current
             ctx.fill(corePath)
         },
         [],
@@ -125,6 +127,17 @@ export default function GameOfLifeBackground() {
 
         const ctx = canvas.getContext('2d')
         if (!ctx) return
+
+        const applyThemeColors = () => {
+            const isDark = document.documentElement.classList.contains('dark')
+            const style = getComputedStyle(document.body)
+            const primary = style.getPropertyValue('--accent-amber').trim()
+            primaryColorRef.current = primary || (isDark ? '#fbbf24' : '#d97706')
+
+            fadeColorRef.current = isDark ? 'rgba(0, 0, 0, 0.14)' : 'rgba(248, 247, 244, 0.08)'
+            clearColorRef.current = isDark ? '#000000' : '#f8f7f4'
+            cellAlphaRef.current = isDark ? 0.24 : 0.6
+        }
 
         const resize = () => {
             const dpr = window.devicePixelRatio || 1
@@ -147,20 +160,24 @@ export default function GameOfLifeBackground() {
             }
             gridRef.current = grid
 
-            // Get primary color from CSS variable
-            const style = getComputedStyle(document.body)
-            const primary = style.getPropertyValue('--accent-amber').trim()
-            if (primary) {
-                primaryColorRef.current = primary
-            }
+            applyThemeColors()
 
-            // Clear with solid black on resize
+            // Clear with a theme-aware base tone on resize
             ctx.globalAlpha = 1
-            ctx.fillStyle = '#000'
+            ctx.fillStyle = clearColorRef.current
             ctx.fillRect(0, 0, w, h)
         }
 
         resize()
+
+        const themeObserver = new MutationObserver(() => {
+            applyThemeColors()
+        })
+        themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class'],
+        })
+
         window.addEventListener('resize', resize)
 
         const loop = (time: number) => {
@@ -187,6 +204,7 @@ export default function GameOfLifeBackground() {
 
         return () => {
             window.removeEventListener('resize', resize)
+            themeObserver.disconnect()
             cancelAnimationFrame(rafRef.current)
         }
     }, [initGrid, nextGeneration, draw, injectLife])

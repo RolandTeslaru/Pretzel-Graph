@@ -68,7 +68,15 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_T
         throw new Error("This node cannot be converted to a tool");
     }
 
-    public compile(
+
+    public async compile(
+        context: ExecutionContext,
+        compilationContext: CompilationContext
+    ): Promise<void> {
+        return this.onCompile(context, compilationContext);
+    }
+
+    protected onCompile(
         context: ExecutionContext,
         compilationContext: CompilationContext,
     ): Promise<void> | void { }

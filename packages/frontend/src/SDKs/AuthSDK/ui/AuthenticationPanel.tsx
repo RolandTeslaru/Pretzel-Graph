@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { Input, Form, Button, Select, Tabs, Spinner } from '@vx-agent-editor/vx-ui/foundations'
 import { useState } from 'react'
 import { AuthSDK } from '../sdk'
+import { router } from '@/main'
 
 const loginSchema = z.object({
     email: z.email(),
@@ -148,6 +149,9 @@ const LoginPanel = () => {
         setDisabled(true)
         const success = await AuthSDK.actions.login(values)
         setDisabled(false)
+        if(success) {
+            router.navigate({ to: "/home"})
+        }
     }
 
     return (
