@@ -18,7 +18,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     private localEngine: AggexEngine | null = null;
     private localNodeInstanceMap: CompilationResult["nodeInstanceMap"] | null = null;
 
-    public override async compile(
+    protected override async onCompile(
         context: ExecutionContext,
         compilationContext: CompilationContext,
     ): Promise<void> {

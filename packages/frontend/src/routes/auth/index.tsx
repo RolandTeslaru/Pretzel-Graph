@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import AuthenticationPanel from '@/SDKs/AuthSDK/ui/AuthenticationPanel'
-import VexrLogo from '@/SDKs/DialogSDK/components/VexrLogo'
 import GameOfLifeBackground from './GameOfLifeBackground'
+import { Pretzel } from '@vx-agent-editor/vx-ui/icons/system'
 
 
 export const Route = createFileRoute('/auth/')({
@@ -16,10 +16,10 @@ export const Route = createFileRoute('/auth/')({
 
 function AuthPage() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
             <GameOfLifeBackground />
-            <div className="relative z-10 w-full h-full max-w-md p-6 bg-background/80 backdrop-blur-md border border-border/50 rounded-2xl shadow-black shadow-2xl">
-                <VexrLogo className='h-[100px] mb-10 opacity-15' />
+            <div className="relative z-10 w-full h-full max-w-md p-6 bg-background/80 backdrop-blur-md border border-border rounded-2xl shadow-black/20 shadow-2xl">
+                <Pretzel className="mx-auto mb-4 text-primary" size={80} />
                 <AuthenticationPanel />
             </div>
         </div>
