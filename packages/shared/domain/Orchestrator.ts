@@ -15,6 +15,24 @@ export namespace Orchestrator {
         export const Status = z.enum(["pending", "running", "paused", "suspended", "completed", "failed", "terminated"])
         export type Status = z.infer<typeof Status>
 
+        export namespace Trigger {
+            export const User = z.object({
+                type: z.literal("user"),
+                userId: Auth.User.Id,
+            })
+            export type User = z.infer<typeof User>
+
+            export const Service = z.object({
+                type: z.literal("service"),
+                service: z.string(),
+                authorizedByUserId: Auth.User.Id.optional(),
+            })
+            export type Service = z.infer<typeof Service>
+
+            export const Schema = z.discriminatedUnion("type", [User, Service])
+        }
+        export type Trigger = z.infer<typeof Trigger.Schema>
+
         export const Schema = z.object({
             id: Job.Id,
             workflowId: Workflow.Id,
@@ -41,23 +59,6 @@ export namespace Orchestrator {
         export type Item = z.infer<typeof Item.Schema>
     }
 
-    export namespace Trigger {
-        export const User = z.object({
-            type: z.literal("user"),
-            userId: Auth.User.Id,
-        })
-        export type User = z.infer<typeof User>
-
-        export const Service = z.object({
-            type: z.literal("service"),
-            service: z.string(),
-            authorizedByUserId: Auth.User.Id.optional(),
-        })
-        export type Service = z.infer<typeof Service>
-
-        export const Schema = z.discriminatedUnion("type", [User, Service])
-        export type Type = z.infer<typeof Schema>
-    }
 
 
     // Events are usually emitted by the Aggex Worker
