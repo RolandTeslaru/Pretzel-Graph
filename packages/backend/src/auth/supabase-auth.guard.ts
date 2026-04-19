@@ -1,12 +1,14 @@
 import { CanActivate, ExecutionContext as NestExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
+import { Token } from '@/domain/Token';
 import { createAuthenticatedClient, getUserId } from '../utils/supabase';
+import { Auth } from '@vx-agent-editor/shared/domain';
 
 export interface AuthenticatedRequest extends Request {
     user: {
-        id: string;
+        id: Auth.User.Id;
     };
-    token: string;
+    token: Token.UserSupabaseJWT;
 }
 
 @Injectable()
@@ -37,8 +39,13 @@ export class SupabaseAuthGuard implements CanActivate {
         }
     }
 
-    private extractTokenFromHeader(request: Request): string | undefined {
+    private extractTokenFromHeader(request: Request): Token.UserSupabaseJWT | undefined {
         const [type, token] = request.headers.authorization?.split(' ') ?? [];
-        return type === 'Bearer' ? token : undefined;
+
+        if (type !== 'Bearer' || !token)
+            return undefined;
+
+        const parsed = Token.UserSupabaseJWT.safeParse(token);
+        return parsed.success ? parsed.data : undefined;
     }
 }
