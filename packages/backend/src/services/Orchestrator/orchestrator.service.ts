@@ -68,7 +68,7 @@ export class OrchestratorService {
                 }: {
                     workflowId: Workflow.Id,
                     userId?: Auth.User.Id,
-                    trigger: Orchestrator.Trigger.Type,
+                    trigger: Orchestrator.Job.Trigger,
                 }
             ) => {
                 const jobId = crypto.randomUUID() as Orchestrator.Job.Id;
@@ -119,7 +119,7 @@ export class OrchestratorService {
 
     async runFromService(
         payload: Orchestrator.API.Run.Request,
-        trigger: Orchestrator.Trigger.Service
+        trigger: Orchestrator.Job.Trigger.Service
     ): Promise<Orchestrator.API.Run.Response> {
 
         const principal = {
@@ -159,7 +159,7 @@ export class OrchestratorService {
                 { data: { issues } }
             );
 
-        const trigger: Orchestrator.Trigger.Type = 
+        const trigger: Orchestrator.Job.Trigger = 
             principal.type === 'user'
             ? { type: 'user', userId: principal.userId }
             : {
