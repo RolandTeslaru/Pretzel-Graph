@@ -19,16 +19,13 @@ const InternalChatAPI = {
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-
-
-    private responseMessageId: Chat.Message.Id | null = null;
     private chatId: Chat.Id | null = null;
 
     constructor(workflowNode: Workflow.Node, context: ExecutionContext) {
         super(workflowNode, context);
     }
 
-    public override async compile(context: ExecutionContext) {
+    protected override async onCompile(context: ExecutionContext) {
         const incomingEdges = context.workflowCache.incomingEdgesMap[this.workflowNode.id];
         const upstreamNodeId = Object.keys(incomingEdges)[0] as Workflow.Node.Id | undefined;
 
