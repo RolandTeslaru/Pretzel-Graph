@@ -4,12 +4,12 @@ import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
 
 
 export class SecretsResolver {
-    public static async resolveWorkflow(supabase: SupabaseClient, workflow: Workflow) {
+    public static async resolveWorkflow(supabase: SupabaseClient, workflowData: Workflow.Data) {
         const resolvedSecrets: Record<Vault.Credential.Id, Vault.Secret> = {};
 
-        for (const [_, node] of Object.entries(workflow.data.nodes)) {
+        for (const [_, node] of Object.entries(workflowData.nodes)) {
 
-            const staticValues = workflow.data.staticValues[node.id];
+            const staticValues = workflowData.staticValues[node.id];
 
             for (const [_, field] of Object.entries(node.fields)) {
                 if (field.variant !== "Secret")

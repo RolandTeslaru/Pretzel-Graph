@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+ import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from '@vx-agent-editor/shared/constants';
 import { Realtime } from '@vx-agent-editor/shared/domain/Realtime';

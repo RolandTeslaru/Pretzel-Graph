@@ -7,10 +7,10 @@ export const uid = {
 
 export function resolveFields<T_Blueprint extends Foundations.Blueprint>(
     nodeId: Workflow.Node.Id,
-    workflow: Workflow
+    workflowData: Workflow.Data
 ): InferFields<T_Blueprint> {
-    const node = workflow.data.nodes[nodeId];
-    const staticValues = workflow.data.staticValues[nodeId] ?? {};
+    const node = workflowData.nodes[nodeId];
+    const staticValues = workflowData.staticValues[nodeId] ?? {};
 
     const resolved: Record<Foundations.Field.Id, Foundations.Field.Value> = {};
 

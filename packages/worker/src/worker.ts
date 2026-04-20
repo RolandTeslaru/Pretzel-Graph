@@ -67,8 +67,8 @@ export class AggexWorkerImpl {
         bullJob: BullJob<Orchestrator.ExecutionQueue.Item>,
         token?: string
     ) => {
-        const { workflow, jobId, executionSession } = bullJob.data;
-        console.log("Processing Queue Item", jobId, "workflow id", workflow.id, "execution session id:", executionSession.id);
+        const { workflowId, workflowData, jobId, executionSession } = bullJob.data;
+        console.log("Processing Queue Item", jobId, "workflow id", workflowId, "execution session id:", executionSession.id);
 
         const eventChannel = Orchestrator.Event.getChannel(jobId);
         const signalChannel = Orchestrator.Signal.getChannel(jobId);
@@ -109,13 +109,13 @@ export class AggexWorkerImpl {
 
         this.emit<Orchestrator.Event.Started>({
             jobId,
-            workflowId: workflow.id,
+            workflowId,
             type: "started",
             channel: eventChannel
         });
 
         try {
-            const compilationResult = await this.compiler.compile(workflow, jobId, executionSession, this.emit);
+            const compilationResult = await this.compiler.compile(workflowId, workflowData, jobId, executionSession, this.emit);
             const context = compilationResult.executionContext;
 
             const onPauseTimeout = () => {
@@ -131,7 +131,7 @@ export class AggexWorkerImpl {
                     this.pauseTimeoutResetters.set(jobId, () => startPauseTimeout(onPauseTimeout));
                     this.emit<Orchestrator.Event.Paused>({
                         jobId,
-                        workflowId: workflow.id,
+                        workflowId,
                         type: "paused",
                         channel: eventChannel,
                     });
@@ -140,7 +140,7 @@ export class AggexWorkerImpl {
                     stopLockExtension();
                     this.emit<Orchestrator.Event.Resumed>({
                         jobId,
-                        workflowId: workflow.id,
+                        workflowId,
                         type: "resumed",
                         channel: eventChannel,
                     });
@@ -158,14 +158,14 @@ export class AggexWorkerImpl {
             if (result.status === 'terminated')
                 this.emit<Orchestrator.Event.Terminated>({
                     jobId,
-                    workflowId: workflow.id,
+                    workflowId,
                     type: "terminated",
                     channel: eventChannel,
                 });
             else if (result.status === "completed" )
                 this.emit<Orchestrator.Event.Completed>({
                     jobId,
-                    workflowId: workflow.id,
+                    workflowId,
                     type: "completed",
                     channel: eventChannel,
                     result: "Workflow execution completed successfully"
@@ -180,7 +180,7 @@ export class AggexWorkerImpl {
 
             this.emit<Orchestrator.Event.Failed>({
                 jobId,
-                workflowId: workflow.id,
+                workflowId,
                 type: "failed",
                 channel: eventChannel,
                 error: systemError.toJSON()

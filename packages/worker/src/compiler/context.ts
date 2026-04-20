@@ -1,7 +1,9 @@
 import { Workflow } from "@vx-agent-editor/shared/domain";
 
+export type WorkflowCompilationUnit = Pick<Workflow, "id" | "data">;
+
 export interface CompilationContext {
-    workflowCache: Map<Workflow.Id, Workflow>;
+    workflowCache: Map<Workflow.Id, WorkflowCompilationUnit>;
     compilePath: readonly Workflow.Id[];
 }
 

@@ -51,7 +51,8 @@ export namespace Orchestrator {
         export namespace Item {
             export const Schema = z.object({
                 jobId: Job.Id,
-                workflow: Workflow.Schema,
+                workflowId: Workflow.Id,
+                workflowData: Workflow.Data.Schema,
                 executionSession: ExecutionSession.Schema,
                 chatId: Chat.Id.optional()
             })
@@ -225,7 +226,8 @@ export namespace Orchestrator {
     export namespace API {
         export namespace Run {
             export const Request = z.object({
-                workflow: Workflow.Schema,
+                workflowId: Workflow.Id,
+                workflowData: Workflow.Data.Schema,
                 executionSession: ExecutionSession.Schema,
             })
 
