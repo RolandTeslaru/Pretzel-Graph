@@ -1,6 +1,8 @@
 import { Workflow } from "./Workflow"
 
 export namespace Algorithms {
+
+    
     export namespace Tarjan {
         export function deriveSCCs(
             nodes: Workflow["data"]["nodes"],
