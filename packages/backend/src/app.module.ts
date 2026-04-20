@@ -12,6 +12,7 @@ import { WorkbenchModule } from './services/Workbench/workbench.module';
 import { RealtimeModule } from './services/Realtime/realtime.module';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { AuthModule } from './services/Auth/auth.module';
+import { VersionControlModule } from './services/VersionControl/version-control.module';
 
 @Module({
     imports: [
@@ -37,6 +38,7 @@ import { AuthModule } from './services/Auth/auth.module';
         WorkbenchModule,
         RealtimeModule,
         AuthModule,
+        VersionControlModule,
     ],
     controllers: [],
     providers: [
