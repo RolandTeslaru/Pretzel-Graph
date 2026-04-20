@@ -31,7 +31,7 @@ const isValidConnectionCallback = (conn: Connection | Edge) => {
 
     return isLocked ? false : Validation.Connection.isValid(
         conn as WorkbenchSDK.DriverConnection,
-        state.workflow,
+        state.workflow.data,
         state.cache
     );
 }
@@ -68,7 +68,7 @@ export const Port: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, is
 
         return Validation.Connection.isValid(
             conn as WorkbenchSDK.DriverConnection,
-            state.workflow,
+            state.workflow.data,
             state.cache
         )
     }, [draggedHandle])

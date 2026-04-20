@@ -148,7 +148,7 @@ export const createCanvasCallbacks = (
             if (
                 Validation.Connection.isValid(
                     newConn as WorkbenchSDK.DriverConnection, 
-                    state.workflow, 
+                    state.workflow.data, 
                     state.cache
                 ) === false
             )

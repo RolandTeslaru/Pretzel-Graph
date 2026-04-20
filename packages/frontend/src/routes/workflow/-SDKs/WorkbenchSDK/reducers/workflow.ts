@@ -12,7 +12,7 @@ export const workflowReducers = {
     },
     open: (s, workflow) => {
         s.workflow = workflow;
-        s.cache = Workflow.createCache(workflow);
+        s.cache = Workflow.createCache(workflow.data);
         s.cycles = [];
         s.stronglyConnectedComponents = [];
         s.issues = {
@@ -26,10 +26,10 @@ export const workflowReducers = {
     },
     close: (s) => {
         s.workflow = cloneDeep(Workflow.INITIAL);
-        s.cache = Workflow.createCache(cloneDeep(Workflow.INITIAL));
+        s.cache = Workflow.createCache(cloneDeep(Workflow.INITIAL.data));
     },
     validate: (s) => {
-        const issues = Validation.Issue.checkWorkflow(s.workflow, s.cycles, s.cache);
+        const issues = Validation.Issue.checkWorkflow(s.workflow.data, s.cycles, s.cache);
         s.issues = issues;
     },
     recomputeAllCycles: (s) => {
@@ -42,7 +42,7 @@ export const workflowReducers = {
         const cycles = Algorithms.Johnson.getAllCycles(arcsMap, sccs);
         s.cycles = cycles;  
 
-        s.issues.cycles = Validation.Issue.Cycle.checkAll(cycles, s.workflow);
+        s.issues.cycles = Validation.Issue.Cycle.checkAll(cycles, s.workflow.data);
         s.cyclesDirty = false;
     }
 } satisfies WorkflowReducers
