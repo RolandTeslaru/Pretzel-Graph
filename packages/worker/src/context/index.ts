@@ -6,9 +6,10 @@ import { produce } from "immer";
 export interface ExecutionContext {
     jobId: Orchestrator.Job.Id,
     session: ExecutionSession,
-    workflow: Readonly<Workflow>,
+    workflowId: Workflow.Id,
+    workflowData: Readonly<Workflow.Data>,
     workflowCache: Readonly<Workflow.Cache>,
-    subWorkflows: Record<Workflow.Node.Id, Readonly<Workflow>>,
+    subWorkflows: Record<Workflow.Node.Id, Readonly<Workflow.Data>>,
     streamController: StreamController,
     abortController: AbortController
     emit: Emitter,

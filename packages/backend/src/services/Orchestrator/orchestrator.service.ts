@@ -140,17 +140,17 @@ export class OrchestratorService {
         principal: Principal,
         payload: Orchestrator.API.Run.Request
     ): Promise<Orchestrator.API.Run.Response> {
-        const { workflow, executionSession } = payload
+        const { workflowId, workflowData, executionSession } = payload
         const { supabase } = principal
 
-        const wfCache = Workflow.createCache(workflow);
+        const wfCache = Workflow.createCache(workflowData);
 
         const arcsMap = Workflow.deriveArcs(wfCache);
-        const sccs = Algorithms.Tarjan.deriveSCCs(workflow.data.nodes, arcsMap)[3]
+        const sccs = Algorithms.Tarjan.deriveSCCs(workflowData.nodes, arcsMap)[3]
         
         const cycles = Algorithms.Johnson.getAllCycles(arcsMap, sccs);
 
-        const issues = Validation.Issue.checkWorkflow(workflow, cycles, wfCache);
+        const issues = Validation.Issue.checkWorkflow(workflowData, cycles, wfCache);
 
         if (Validation.workflowHasIssues(issues) )
             throw new SystemError(
@@ -171,18 +171,19 @@ export class OrchestratorService {
         const jobId = await this.dbOps.job.create(
             supabase,
             {
-                workflowId: workflow.id,
+                workflowId,
                 userId: principal.type === 'user' ? principal.userId : undefined,
                 trigger,
             }
         );
 
         try {
-            await SecretsResolver.resolveWorkflow(supabase, workflow);
+            await SecretsResolver.resolveWorkflow(supabase, workflowData);
 
             const queueItem: Orchestrator.ExecutionQueue.Item = {
                 jobId,
-                workflow,
+                workflowId,
+                workflowData,
                 executionSession
             };
 

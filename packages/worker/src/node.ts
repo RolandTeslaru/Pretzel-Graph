@@ -15,7 +15,7 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_T
         public readonly workflowNode: Workflow.Node,
         protected readonly context: ExecutionContext
     ) {
-        this.fields = RuntimeNode.resolveFields<T_Blueprint>(this.workflowNode.id, context.workflow)
+        this.fields = RuntimeNode.resolveFields<T_Blueprint>(this.workflowNode.id, context.workflowData)
         this.emit = context.emit;
     }
 
@@ -103,10 +103,10 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_T
     // And if not, it uses the initialValue
     private static resolveFields<T_Blueprint extends Foundations.Blueprint>(
         nodeId: Workflow.Node.Id,
-        workflow: Workflow
+        workflowData: Workflow.Data
     ): InferFields<T_Blueprint> {
-        const node = workflow.data.nodes[nodeId];
-        const staticValues = workflow.data.staticValues[nodeId] ?? {};
+        const node = workflowData.nodes[nodeId];
+        const staticValues = workflowData.staticValues[nodeId] ?? {};
 
         const resolved: Record<Foundations.Field.Id, Foundations.Field.Value> = {};
 

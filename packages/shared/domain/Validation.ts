@@ -20,9 +20,9 @@ export namespace Validation {
             export function check(
                 field: Foundations.Field,
                 nodeId: Workflow.Node.Id,
-                workflow: Workflow
+                workflowData: Workflow.Data
             ): Issue.Field | null {
-                const value = workflow.data.staticValues[nodeId]?.[field.id];
+                const value = workflowData.staticValues[nodeId]?.[field.id];
 
                 if (value === undefined || value === null || value === "")
                     return {
@@ -42,7 +42,7 @@ export namespace Validation {
             export function check(
                 input: Port.Input,
                 nodeId: Workflow.Node.Id,
-                workflow: Workflow,
+                workflowData: Workflow.Data,
                 cache: Workflow.Cache,
             ) {
                 if (!input.required)
@@ -53,7 +53,7 @@ export namespace Validation {
                     return null;
 
                 if (input.variant === "Message" || input.variant === "Text") {
-                    const value = workflow.data.staticValues[nodeId]?.[input.id];
+                    const value = workflowData.staticValues[nodeId]?.[input.id];
                     if (value !== undefined && value !== null && value !== "")
                         return null;
 
@@ -75,7 +75,7 @@ export namespace Validation {
             inputs: Record<Port.Input.Id, Issue.Input>;
         }
         export namespace Node {
-            export function check(node: Workflow.Node, workflow: Workflow, cache: Workflow.Cache) {
+            export function check(node: Workflow.Node, workflowData: Workflow.Data, cache: Workflow.Cache) {
                 const nodeIssues: Issue.Node = { fields: {}, inputs: {} }
 
                 let numFieldIssues = 0;
@@ -83,7 +83,7 @@ export namespace Validation {
 
 
                 for (const field of node.fields) {
-                    const fieldIssue = Issue.Field.check(field, node.id, workflow)
+                    const fieldIssue = Issue.Field.check(field, node.id, workflowData)
                     if (fieldIssue) {
                         nodeIssues.fields[field.id] = fieldIssue
                         numFieldIssues++;
@@ -91,7 +91,7 @@ export namespace Validation {
                 }
 
                 for (const input of node.inputs) {
-                    const inputIssue = Issue.Input.check(input, node.id, workflow, cache)
+                    const inputIssue = Issue.Input.check(input, node.id, workflowData, cache)
                     if (inputIssue) {
                         nodeIssues.inputs[input.id] = inputIssue
                         numInputIssues++;
@@ -109,20 +109,20 @@ export namespace Validation {
             nodes: Record<Workflow.Node.Id, Issue.Node>
             cycles: Issue.Cycle[]
         }
-        export function checkWorkflow(workflow: Workflow, cycles: Workflow.Node.Id[][], cache: Workflow.Cache) {
+        export function checkWorkflow(workflowData: Workflow.Data, cycles: Workflow.Node.Id[][], cache: Workflow.Cache) {
             const issues: Issue.Workflow_ = {
                 nodes: {},
                 cycles: []
             }
 
-            for (const node of Object.values(workflow.data.nodes)) {
-                const nodeIssues = Node.check(node, workflow, cache)
+            for (const node of Object.values(workflowData.nodes)) {
+                const nodeIssues = Node.check(node, workflowData, cache)
                 if (nodeIssues)
                     issues.nodes[node.id] = nodeIssues
             }
 
             for (const cycle of cycles) {
-                const cycleIssue = Issue.Cycle.check(cycle, workflow);
+                const cycleIssue = Issue.Cycle.check(cycle, workflowData);
                 if (cycleIssue)
                     issues.cycles.push(cycleIssue);
             }
@@ -141,12 +141,12 @@ export namespace Validation {
                 "Core.Routing.Switch",
             ])
 
-            export function check(cycle: Workflow.Node.Id[], workflow: Workflow) {
+            export function check(cycle: Workflow.Node.Id[], workflowData: Workflow.Data) {
 
                 let hasRouteBranchingNode = false;
 
                 cycle.forEach(nodeId => {
-                    const node = workflow.data.nodes[nodeId];
+                    const node = workflowData.nodes[nodeId];
                     if (!node)
                         throw new Error(`Node ${nodeId} not found in workflow during cycle validation. Cycle: ${cycle.join(" -> ")}`);
 
@@ -163,11 +163,11 @@ export namespace Validation {
                 return null
             }
 
-            export function checkAll(cycles: Workflow.Node.Id[][], workflow: Workflow) {
+            export function checkAll(cycles: Workflow.Node.Id[][], workflowData: Workflow.Data) {
                 const issues: Issue.Cycle[] = [];
 
                 cycles.forEach(cycle => {
-                    const issue = check(cycle, workflow);
+                    const issue = check(cycle, workflowData);
                     if (!issue)
                         return;
 
@@ -248,10 +248,10 @@ export namespace Validation {
 
 
     export namespace Connection {
-        export function isValid(conn: Connection, workflow: Workflow, cache: Workflow.Cache) {
+        export function isValid(conn: Connection, workflowData: Workflow.Data, cache: Workflow.Cache) {
 
-            const sourceNode = workflow.data.nodes[conn.source];
-            const targetNode = workflow.data.nodes[conn.target];
+            const sourceNode = workflowData.nodes[conn.source];
+            const targetNode = workflowData.nodes[conn.target];
 
             const sourceHandleId = conn.sourceHandle;
             const targetHandleId = conn.targetHandle;
@@ -262,7 +262,7 @@ export namespace Validation {
             if (conn.source === conn.target)
                 return false;
 
-            if (doesEdgeAlreadyExist(workflow, sourceNode.id, sourceHandleId, targetNode.id, targetHandleId))
+            if (doesEdgeAlreadyExist(workflowData, sourceNode.id, sourceHandleId, targetNode.id, targetHandleId))
                 return false;
 
             if (!arePortsCompatible(sourceNode, sourceHandleId, targetNode, targetHandleId))
@@ -287,12 +287,12 @@ export namespace Validation {
 
 
 function doesEdgeAlreadyExist(
-    workflow: Workflow,
+    workflowData: Workflow.Data,
     sourceNodeId: Workflow.Node.Id,
     sourceHandleId: Port.Output.Id,
     targetNodeId: Workflow.Node.Id,
     targetHandleId: Port.Input.Id
 ) {
     const edgeId = Workflow.Edge.createId(sourceNodeId, sourceHandleId, targetNodeId, targetHandleId);
-    return !!workflow.data.edges[edgeId]
+    return !!workflowData.edges[edgeId]
 }
