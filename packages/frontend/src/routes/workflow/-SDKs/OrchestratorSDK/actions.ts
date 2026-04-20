@@ -28,7 +28,8 @@ export const createOrchestratorSDKActions = (sdk: OrchestratorSDKImpl) => {
             ExecutionSessionSDK.actions.prepareForRun()
 
             const executionPromise = Orchestrator.API.run(api, {
-                workflow,
+                workflowId: workflow.id,
+                workflowData: workflow.data,
                 executionSession: ExecutionSessionSDK.state.session,
             });
 

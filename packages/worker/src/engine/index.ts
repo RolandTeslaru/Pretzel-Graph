@@ -24,7 +24,8 @@ export class AggexEngine {
     private s2Graph: S2Graph;
     private eventChannel: ExecutionSession.Event.Channel;
 
-    private readonly workflow: Workflow;
+    private readonly workflowId: Workflow.Id;
+    private readonly workflowData: Workflow.Data;
     private readonly workflowCache: Workflow.Cache;
 
 
@@ -59,7 +60,8 @@ export class AggexEngine {
         this.s2Graph = compilationResult.compiledGraph;
         this.eventChannel = ExecutionSession.Event.getChannel(this.context.session.id)
         this.emit = this.context.emit;
-        this.workflow = this.context.workflow;
+        this.workflowId = this.context.workflowId;
+        this.workflowData = this.context.workflowData;
         this.workflowCache = this.context.workflowCache;
         this.hooks = hooks;
     }
@@ -86,7 +88,7 @@ export class AggexEngine {
         result: Record<string, any>
     ): Set<Vertex.Id> {
         const signals = new Set<Vertex.Id>();
-        const edges = this.workflow.data.edges;
+        const edges = this.workflowData.edges;
         const returnedKeys = new Set(Object.keys(result));
 
         for (const edge of Object.values(edges))
@@ -104,8 +106,8 @@ export class AggexEngine {
         incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set(),
         keepMissingPorts = false
     ): Record<Foundations.Port.Input.Id, any> {
-        const node = this.workflow.data.nodes[nodeId];
-        const staticValues = this.workflow.data.staticValues[nodeId] ?? {};
+        const node = this.workflowData.nodes[nodeId];
+        const staticValues = this.workflowData.staticValues[nodeId] ?? {};
 
         const resolved: Record<Foundations.Port.Input.Id, any> = {};
 
@@ -113,7 +115,7 @@ export class AggexEngine {
 
         for (const input of node.inputs) {
             const edgeId = incomingEdgeByPort[input.id]
-            const edge = this.workflow.data.edges[edgeId];
+            const edge = this.workflowData.edges[edgeId];
 
             if (edge) {
                 if(incomingSignals.has(edge.source.nodeId) === false){
@@ -207,7 +209,7 @@ export class AggexEngine {
         this.activeNodes.add(nodeId)
 
         this.emit<ExecutionSession.Event.Node.Started>({
-            workflowId: this.workflow.id,
+            workflowId: this.workflowId,
             type: "node:started",
             executionSessionId: this.context.session.id,
             nodeId: entry.wfNode.id,
@@ -295,7 +297,7 @@ export class AggexEngine {
 
         this.emit<ExecutionSession.Event.Node.Completed>({
             executionSessionId: this.context.session.id,
-            workflowId: this.workflow.id,
+            workflowId: this.workflowId,
             type: "node:completed",
             nodeId: entry.wfNode.id,
             channel: this.eventChannel,
@@ -328,7 +330,7 @@ export class AggexEngine {
 
         this.emit<ExecutionSession.Event.Node.Waiting>({
             executionSessionId: this.context.session.id,
-            workflowId: this.workflow.id,
+            workflowId: this.workflowId,
             type: "node:waiting",
             nodeId: wfNode.id,
             channel: this.eventChannel,
@@ -357,7 +359,7 @@ export class AggexEngine {
 
         this.emit<ExecutionSession.Event.Node.Error>({
             executionSessionId: this.context.session.id,
-            workflowId: this.workflow.id,
+            workflowId: this.workflowId,
             type: "node:error",
             nodeId: vertexId as unknown as Workflow.Node.Id,
             channel: this.eventChannel,

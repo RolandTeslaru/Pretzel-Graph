@@ -25,17 +25,18 @@ export class WorkflowCompiler {
     constructor() { }
 
     public async compile(
-        workflow: Workflow,
+        workflowId: Workflow.Id,
+        workflowData: Workflow.Data,
         jobId: Orchestrator.Job.Id,
         session: ExecutionSession,
         emit: Emitter,
-        compilationContext: CompilationContext = createCompilationContext(workflow.id),
+        compilationContext: CompilationContext = createCompilationContext(workflowId),
     ): Promise<CompilationResult> {
-        const workflowCache = Workflow.createCache(workflow);
+        const workflowCache = Workflow.createCache(workflowData);
 
         const graph = new S2Graph();
-        const nodes = workflow.data.nodes;
-        const edges = workflow.data.edges;
+        const nodes = workflowData.nodes;
+        const edges = workflowData.edges;
 
         // START vertex — S2Engine ignites from here
         graph.addVertex(S2Graph.START_VERTEX_ID);
@@ -52,7 +53,8 @@ export class WorkflowCompiler {
         const subWorkflows: ExecutionContext["subWorkflows"] = {};
 
         const executionCtx = createExecutionContext({
-            workflow,
+            workflowId,
+            workflowData,
             workflowCache,
             emit,
             jobId,
@@ -66,7 +68,7 @@ export class WorkflowCompiler {
 
         // Add nodes to the graph
         for (const wfNode of Object.values(nodes)) {
-            await this.compileNode(wfNode, workflow, graph, nodeInstanceMap, executionCtx, compilationContext);
+            await this.compileNode(wfNode, workflowData, graph, nodeInstanceMap, executionCtx, compilationContext);
         }
 
         // Add Edges. Might also get ran multiple times because nodes can have multiple edges between them because of ports.
@@ -104,7 +106,7 @@ export class WorkflowCompiler {
 
     private async compileNode(
         wfNode: Workflow.Node,
-        workflow: Workflow,
+        workflowData: Workflow.Data,
         graph: S2Graph,
         nodeInstanceMap: CompilationResult["nodeInstanceMap"],
         executionCtx: ExecutionContext,
@@ -129,7 +131,7 @@ export class WorkflowCompiler {
 
         nodeInstanceMap.set(vertexId, { wfNode, instance: nodeInstance });
 
-        const fieldValues = resolveFields(wfNode.id, workflow);
+        const fieldValues = resolveFields(wfNode.id, workflowData);
 
         // Set vertex execution strategy based on node fields. Default is "AND"
         if (Object.hasOwn(fieldValues, "signalDependency"))
@@ -140,8 +142,8 @@ export class WorkflowCompiler {
     }
 
     private findStartNodes(
-        nodes: Workflow["data"]["nodes"],
-        edges: Workflow["data"]["edges"]
+        nodes: Workflow.Data["nodes"],
+        edges: Workflow.Data["edges"]
     ): Workflow.Node.Id[] {
         const targetNodeIds: Set<Workflow.Node.Id> = new Set();
         Object.values(edges).forEach(edge => {

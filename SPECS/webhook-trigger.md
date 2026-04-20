@@ -2,7 +2,9 @@
 
 ## Motivation
 
-Enable workflows to be triggered by external HTTP events (Stripe payments, GitHub pushes, Zapier, custom integrations, etc.) without requiring a user session. A dedicated webhook server receives inbound requests, maps them to published workflows via an in-memory registry, and invokes the standard orchestrator execution path.
+Enable workflows to be triggered by external HTTP events. A dedicated webhook server receives inbound requests, maps them to published workflows via an in-memory registry, and invokes the standard orchestrator execution path.
+
+Publishing is decoupled from drafts via a `version_control` table — each publish is an immutable deep-copy snapshot, so editing a workflow never changes live webhook behavior and prior versions can be reverted to by flipping a flag.
 
 ---
 
@@ -21,17 +23,26 @@ External service
       → rest of workflow executes normally
 ```
 
+### Version Control Model
+
+- `workflows` table — the editable draft. Always mutable.
+- `version_control` table — immutable snapshots. Each publish inserts a new row with `version = max+1` and full `data` deep copy of the draft.
+- Only one row per `workflow_id` may have `is_active = true` (enforced by partial unique index).
+- **Publish** = insert new active row, flip previous active row to `is_active = false`.
+- **Revert** = flip `is_active` flags between rows. No data copy required.
+- **Webhook server** reads only from `version_control WHERE is_active = true` — drafts never reach production.
+
 ### In-Memory Registry Lifecycle
 
 ```
 Boot
-  → query Supabase: workflows WHERE published = true
-  → filter: has at least one node with blueprintId "Core.Webhook"
+  → query Supabase: version_control WHERE is_active = true
+  → filter: snapshot's data.nodes has at least one with blueprintId "Core.Webhook"
   → build Map<webhookPath, { workflow: Workflow, ownerId: Auth.User.Id }>
 
 Runtime
-  → Redis sub channel "webhook:workflow:published"   → upsert entry
-  → Redis sub channel "webhook:workflow:unpublished" → delete entry
+  → Redis sub channel "webhook:workflow:published"   → upsert entry (fetch new active snapshot)
+  → Redis sub channel "webhook:workflow:unpublished" → remove entry
 
 Request arrives at POST /webhooks/:path
   → map.get(path) → not found → 404
@@ -44,82 +55,55 @@ Request arrives at POST /webhooks/:path
 
 | File | Change |
 |---|---|
-| `packages/shared/domain/Workflow.ts` | Add `published: boolean` field |
+| `supabase/migrations/` | New — create `version_control` table |
+| `packages/shared/domain/VersionControl.ts` | New — Zod schema for published snapshots |
 | `packages/shared/constants/drawers.ts` | Register `Core.Webhook` in `CORE_DRAWERS.input_output` |
-| `packages/worker/src/nodes/Core/Webhook/blueprint.ts` | New — Webhook node blueprint |
-| `packages/worker/src/nodes/Core/Webhook/node.ts` | New — Webhook node execution |
-| `packages/worker/src/node_index.json` | Register new node (via `npm run generate-indexes`) |
+| `packages/worker/src/nodes/Core/Webhook/blueprint.ts` | ✅ Exists — generic Webhook node blueprint |
+| `packages/worker/src/nodes/Core/Webhook/node.ts` | ✅ Exists — reads `session.metadata.webhookPayload` |
 | `packages/backend/src/services/Orchestrator/orchestrator.controller.ts` | Add `POST run-internal` endpoint |
 | `packages/backend/src/services/Orchestrator/orchestrator.service.ts` | Add `runInternal()` method |
-| `packages/backend/src/services/Library/library.service.ts` | Add `publish()` / `unpublish()` methods |
-| `packages/backend/src/services/Library/library.controller.ts` | Add publish/unpublish routes |
+| `packages/backend/src/services/Library/library.service.ts` | Add `publish()` / `unpublish()` / `revert()` methods |
+| `packages/backend/src/services/Library/library.controller.ts` | Add publish/unpublish/revert routes |
 | `packages/webhook/src/services/Webhook/webhook.service.ts` | Replace queue logic with registry + run-internal call |
 | `packages/webhook/src/services/Webhook/webhook.controller.ts` | Route by path, return 200 immediately |
 | `packages/webhook/src/services/Webhook/webhook.module.ts` | Wire up registry service |
 | `packages/webhook/src/registry/webhook-registry.service.ts` | New — in-memory map + Redis subscriber |
-| `supabase/migrations/` | New — add `published` column to `workflows` table |
 
 ---
 
 ## Implementation Steps
 
 ### 1. DB Migration
-Add `published boolean NOT NULL DEFAULT false` to the `workflows` table.
 
-### 2. Workflow Domain (`packages/shared/domain/Workflow.ts`)
-Add to `Workflow.Schema`:
-```typescript
-published: z.boolean().default(false),
+```sql
+CREATE TABLE version_control (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  workflow_id     uuid NOT NULL REFERENCES workflows(id) ON DELETE CASCADE,
+  user_id         uuid NOT NULL REFERENCES users(id),
+  version         int NOT NULL,
+  data            jsonb NOT NULL,
+  display_name    text,
+  published_at    timestamptz NOT NULL DEFAULT now(),
+  is_active       boolean NOT NULL DEFAULT true,
+  UNIQUE (workflow_id, version)
+);
+
+CREATE UNIQUE INDEX one_active_per_workflow
+  ON version_control (workflow_id)
+  WHERE is_active = true;
 ```
 
-### 3. Webhook Node Blueprint (`packages/worker/src/nodes/Core/Webhook/blueprint.ts`)
-```typescript
-export const Blueprint = defineBlueprint({
-    id: "Core.Webhook",
-    displayName: "Webhook",
-    description: "Starts the workflow when an inbound HTTP request arrives at the configured path.",
-    icon: "Webhook",
-    accent: "trigger",
-    fields: [
-        FieldBuilder.String({
-            id: "path",
-            displayName: "Path",
-            initialValue: "",
-            tooltip: "URL suffix that identifies this webhook. e.g. my-workflow → POST /webhooks/my-workflow",
-        }),
-        FieldBuilder.Select({
-            id: "method",
-            displayName: "HTTP Method",
-            initialValue: "POST",
-            options: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-        }),
-    ],
-    inputs: [],  // trigger node — no inputs
-    outputs: [
-        OutputBuilder.Data({ id: "body",    displayName: "Body" }),
-        OutputBuilder.Data({ id: "headers", displayName: "Headers" }),
-        OutputBuilder.Data({ id: "query",   displayName: "Query Params" }),
-        OutputBuilder.Data({ id: "params",  displayName: "Path Params" }),
-    ],
-});
-```
+### 2. Webhook Node (already implemented)
+`Core.Webhook` blueprint and runtime already exist. Contract the webhook server must respect:
+- Fields: `path` (unique string, user-defined identifier), `method` (GET/POST/PUT/PATCH/DELETE)
+- Outputs: `body`, `headers`, `query`, `params`
+- The node reads `session.metadata.webhookPayload` which must contain `{ body, headers, query, params, method }`
+- If `payload.method` is set and mismatches the configured `method` field, the node throws — so the webhook server should always pass `method` in the payload
 
-### 4. Webhook Node Execution (`packages/worker/src/nodes/Core/Webhook/node.ts`)
-The node reads the request data injected into `executionSession.metadata.webhookPayload` by the orchestrator, and emits it on output ports:
-```typescript
-execute(context) {
-    const payload = context.session.metadata['webhookPayload'] ?? {};
-    context.output('body',    payload.body    ?? null);
-    context.output('headers', payload.headers ?? {});
-    context.output('query',   payload.query   ?? {});
-    context.output('params',  payload.params  ?? {});
-}
-```
-
-### 5. Register in Drawers (`packages/shared/constants/drawers.ts`)
+### 3. Register in Drawers (`packages/shared/constants/drawers.ts`)
 Add `"Core.Webhook"` to `CORE_DRAWERS.input_output`.
 
-### 6. `run-internal` Endpoint (Backend)
+### 4. `run-internal` Endpoint (Backend)
 
 **Controller** — `POST /api/orchestrator/run-internal`, protected by `InternalAuthGuard`:
 ```typescript
@@ -138,6 +122,7 @@ z.object({
     workflow:       Workflow.Schema,
     ownerId:        Auth.User.Id,
     webhookPayload: z.object({
+        method:  z.string(),
         body:    z.unknown(),
         headers: z.record(z.string()),
         query:   z.record(z.string()),
@@ -155,23 +140,29 @@ z.object({
       metadata: { webhookPayload: payload.webhookPayload, trigger: 'webhook' },
   });
   ```
-- Injects `webhookPayload` into session metadata
 - Runs standard validation + enqueue path (same as `run()`, minus the user-auth Supabase calls)
 - Does **not** wait for worker confirmation (fire-and-forget) — webhook server already returned 200
 
-### 7. Publish / Unpublish (Backend Library)
+### 5. Publish / Unpublish / Revert (Backend Library)
 
-**New routes:**
-- `POST /api/library/workflows/:id/publish`
-- `POST /api/library/workflows/:id/unpublish`
+**New routes** (behind `SupabaseAuthGuard`):
+- `POST /api/library/workflows/:id/publish` — snapshot the current draft as a new active version
+- `POST /api/library/workflows/:id/unpublish` — set current active row `is_active = false` (no active version remains)
+- `POST /api/library/workflows/:id/revert/:version` — flip `is_active` back to a specific older version
 
-Both behind `SupabaseAuthGuard`. Service:
-1. Update `published` column in Supabase
-2. Publish Redis event on channel `webhook:workflow:published` / `webhook:workflow:unpublished` with `{ workflowId }`
+**Publish flow (in a DB transaction):**
+1. `SELECT COALESCE(MAX(version), 0) + 1 FROM version_control WHERE workflow_id = $1`
+2. `UPDATE version_control SET is_active = false WHERE workflow_id = $1 AND is_active = true`
+3. `INSERT INTO version_control (workflow_id, user_id, version, data, display_name) VALUES (...)` with `is_active = true`
+4. Emit Redis event `webhook:workflow:published` with `{ workflowId }`
+
+**Unpublish:** `UPDATE … SET is_active = false WHERE workflow_id = $1` + Redis event `webhook:workflow:unpublished`.
+
+**Revert:** transactional flip — deactivate current active, activate the target version, emit `webhook:workflow:published`.
 
 Redis publisher uses `ioredis` (already a dependency).
 
-### 8. Webhook Registry Service (`packages/webhook/src/registry/webhook-registry.service.ts`)
+### 6. Webhook Registry Service (`packages/webhook/src/registry/webhook-registry.service.ts`)
 
 ```typescript
 @Injectable()
@@ -184,15 +175,14 @@ export class WebhookRegistryService implements OnModuleInit {
     }
 
     private async loadAll() {
-        // query Supabase service client: workflows WHERE published = true
-        // filter: has node with blueprintId "Core.Webhook"
-        // for each: extract path field → map.set(path, { workflow, ownerId })
+        // service client → SELECT * FROM version_control WHERE is_active = true
+        // for each row: parse data → find Webhook nodes → for each: map.set(node.fields.path, { workflow, ownerId: row.user_id })
     }
 
     private subscribeToRedis() {
         // ioredis subscriber
-        // on "webhook:workflow:published"   → fetch that workflow → upsert into map
-        // on "webhook:workflow:unpublished" → remove from map
+        // on "webhook:workflow:published"   → fetch active snapshot for workflowId → upsert entries for each webhook node path
+        // on "webhook:workflow:unpublished" → remove all entries whose workflow.id === workflowId
     }
 
     resolve(path: string) {
@@ -201,7 +191,7 @@ export class WebhookRegistryService implements OnModuleInit {
 }
 ```
 
-### 9. Webhook Controller (Updated)
+### 7. Webhook Controller (Updated)
 
 ```typescript
 @Post(':path(*)')
@@ -211,6 +201,7 @@ async receive(@Param('path') path: string, @Req() req: WebhookRequest) {
     if (!entry) throw new NotFoundException(`No workflow registered at path: ${path}`);
 
     await this.webhookService.handle(entry, {
+        method:  req.method,
         body:    req.body,
         headers: req.headers as Record<string, string>,
         query:   req.query   as Record<string, string>,
@@ -221,14 +212,15 @@ async receive(@Param('path') path: string, @Req() req: WebhookRequest) {
 }
 ```
 
-`WebhookService.handle()` calls `POST /api/orchestrator/run-internal` via `HttpService` (axios) with `x-internal-token` header.
+`WebhookService.handle()` calls `POST /api/orchestrator/run-internal` via axios with `x-internal-token` header.
 
 ---
 
 ## Open Questions
 
 1. **Response mode** — for now webhook always returns `200 { received: true }` immediately. A future "wait for result" mode would require the webhook server to poll `await-result` and hold the connection open.
-2. **Multiple Webhook nodes** — what if a workflow has two Webhook nodes with different paths? Currently the registry would register both paths pointing to the same workflow. Is that intentional?
-3. **Auth on webhook endpoints** — HMAC guard is stubbed as passthrough. Which providers need signature verification first?
-4. **`ownerId` source** — the registry needs the workflow owner's `userId` to pass to `runInternal`. This should come from the `workflows` table (add `user_id` to the Supabase query at boot).
-5. **Stale registry on boot** — if the webhook server restarts while the backend is down, `loadAll()` fails silently. Should it retry, crash, or start with an empty map?
+2. **Multiple Webhook nodes** — a single workflow snapshot can have multiple Webhook nodes with different paths. The registry handles this by registering each path → same `{ workflow, ownerId }` entry. Confirmed intentional.
+3. **Optional per-node auth** — generic endpoints are public by default (n8n-style). Future extension: add auth fields to the Webhook node blueprint (None / Header Auth / Basic Auth).
+4. **Stale registry on boot** — if Supabase is unreachable at boot, `loadAll()` currently has no retry. Decision: crash vs start-with-empty-map vs exponential backoff retry.
+5. **Method routing** — the Webhook node has a `method` field, but the webhook server currently accepts only `POST /webhooks/:path`. Do we need to add other method handlers, or rely on the node's runtime method check?
+6. **Draft cleanup on workflow delete** — `ON DELETE CASCADE` on `workflow_id` means deleting a workflow wipes its entire version history. Intentional or do we want to soft-delete to preserve audit trail?

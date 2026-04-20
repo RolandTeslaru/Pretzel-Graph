@@ -111,20 +111,8 @@ export namespace Workflow {
     export const DEFAULT_ICON = "graph"
     export const DEFAULT_ACCENT = "utility"
 
-    export const Schema = z.object({
-        id: Workflow.Id,
-        display_name: z.string(),
-        locked: z.boolean(),
-        description: z.string().optional().nullable(),
-        icon: z.string().nullable().optional(),
-        accent: z.string().nullable().optional(),
-
-        created_at: z.coerce.date(),
-        updated_at: z.coerce.date(),
-
-        folder_id: z.string().brand("FolderId"),
-
-        data: z.object({
+    export namespace Data {
+        export const Schema = z.object({
             nodes: z.record(Node.Id, Node.Schema),
             edges: z.record(Edge.Id, Edge.Schema),
             staticValues: z.record(
@@ -141,6 +129,23 @@ export namespace Workflow {
                 icon_color: z.string().nullable().optional(),
             }),
         })
+    }
+    export type Data = z.infer<typeof Data.Schema>;
+
+    export const Schema = z.object({
+        id: Workflow.Id,
+        display_name: z.string(),
+        locked: z.boolean(),
+        description: z.string().optional().nullable(),
+        icon: z.string().nullable().optional(),
+        accent: z.string().nullable().optional(),
+
+        created_at: z.coerce.date(),
+        updated_at: z.coerce.date(),
+
+        folder_id: z.string().brand("FolderId"),
+
+        data: Data.Schema
     });
 
 
@@ -218,7 +223,7 @@ export namespace Workflow {
         }
     }
 
-    export function createCache(wf: Workflow): Cache {
+    export function createCache(data: Workflow.Data): Cache {
         const cache = {
             incomingEdgesMap: {},
             outgoingEdgesMap: {},
@@ -226,14 +231,14 @@ export namespace Workflow {
             outputHandlesMap: {},
         } as Cache;
 
-        Object.values(wf.data.nodes).forEach(node => {
+        Object.values(data.nodes).forEach(node => {
             cache.outgoingEdgesMap[node.id] = {};
             cache.incomingEdgesMap[node.id] = {};
             cache.inputHandlesMap[node.id] = {};
             cache.outputHandlesMap[node.id] = {};
         })
 
-        Object.values(wf.data.edges).forEach(edge => {
+        Object.values(data.edges).forEach(edge => {
             const sourceNodeId = edge.source.nodeId;
             const targetNodeId = edge.target.nodeId;
 

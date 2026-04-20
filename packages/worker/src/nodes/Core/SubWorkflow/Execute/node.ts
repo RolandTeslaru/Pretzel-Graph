@@ -36,14 +36,14 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         let subWorkflow = compilationContext.workflowCache.get(subWorkflowId);
         if (!subWorkflow) {
             const res = await Workbench.API.Workflow.get(AxiosService.api, { workflowId: subWorkflowId });
-            subWorkflow = res.workflow;
+            subWorkflow = { id: res.workflow.id, data: res.workflow.data };
             compilationContext.workflowCache.set(subWorkflowId, subWorkflow);
         }
 
         const childCtx = extendCompilePath(compilationContext, subWorkflowId);
 
         const compilationResult = await new WorkflowCompiler().compile(
-            subWorkflow, context.jobId, context.session, context.emit, childCtx,
+            subWorkflow.id, subWorkflow.data, context.jobId, context.session, context.emit, childCtx,
         );
         this.localNodeInstanceMap = compilationResult.nodeInstanceMap;
         this.localEngine = new AggexEngine(compilationResult);
