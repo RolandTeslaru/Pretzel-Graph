@@ -60,6 +60,8 @@ export const nodeReducers = {
             fields      : cloneDeep(blueprint.fields)   as Workflow.Node['fields'],
             inputs      : cloneDeep(blueprint.inputs)   as Workflow.Node['inputs'],
             outputs     : cloneDeep(blueprint.outputs)  as Workflow.Node["outputs"],
+            webhooks    : cloneDeep(blueprint.webhooks) as Workflow.Node["webhooks"] | undefined,
+
             icon        : blueprint.icon,
             description : blueprint.description,
             isMinimized : false,
@@ -154,6 +156,8 @@ export const nodeReducers = {
             fields      : cloneDeep(blueprint.fields)   as Workflow.Node['fields'],
             inputs      : cloneDeep(blueprint.inputs)   as Workflow.Node['inputs'],
             outputs     : cloneDeep(blueprint.outputs)  as Workflow.Node["outputs"],
+            webhooks    : cloneDeep(blueprint.webhooks) as Workflow.Node["webhooks"] | undefined,
+
             icon        : blueprint.icon,
             description : blueprint.description,
             isMinimized : isMinimized,
@@ -187,6 +191,8 @@ export const nodeReducers = {
             fields       : cloneDeep(originalNode.fields)   as Workflow.Node['fields'],
             inputs       : cloneDeep(originalNode.inputs)   as Workflow.Node['inputs'],
             outputs      : cloneDeep(originalNode.outputs)  as Workflow.Node["outputs"],
+            webhooks     : cloneDeep(originalNode.webhooks) as Workflow.Node["webhooks"] | undefined,
+
             icon         : originalNode.icon,
             description  : originalNode.description,
             isMinimized  : originalNode.isMinimized,
