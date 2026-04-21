@@ -16,12 +16,13 @@ import { ExecutionSessionSDK } from '@/routes/workflow/-SDKs/ExecutionSessionSDK
 import { OrchestratorSDK } from '@/routes/workflow/-SDKs/OrchestratorSDK/sdk'
 import { ChatSDK } from '@/routes/workflow/-SDKs/ChatSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
+import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 
 interface RouterContext {
     auth: AuthSDK.State
 }
 
-const SDK_OPTIONS = ['WorkbenchSDK', 'ExecutionSessionSDK', 'OrchestratorSDK', 'ChatSDK', 'LibrarySDK'] as const
+const SDK_OPTIONS = ['WorkbenchSDK', 'ExecutionSessionSDK', 'OrchestratorSDK', 'ChatSDK', 'LibrarySDK', 'ShelfSDK'] as const
 type SDKOption = typeof SDK_OPTIONS[number]
 
 function setsToArrays(value: unknown): unknown {
@@ -42,6 +43,7 @@ function useSDKState(selected: SDKOption) {
     const orchestrator = OrchestratorSDK.useStore(s => s);
     const chat = ChatSDK.useStore(s => s);
     const library = LibrarySDK.useStore(s => s);
+    const shelf = ShelfSDK.useStore(s => s);
 
     const raw = (() => {
         switch (selected) {
@@ -50,6 +52,7 @@ function useSDKState(selected: SDKOption) {
             case 'OrchestratorSDK': return orchestrator;
             case 'ChatSDK': return chat;
             case 'LibrarySDK': return library;
+            case 'ShelfSDK': return shelf;
         }
     })();
 
