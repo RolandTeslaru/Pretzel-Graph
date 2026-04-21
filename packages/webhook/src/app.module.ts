@@ -5,6 +5,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { REDIS_HOST, REDIS_PORT } from '@vx-agent-editor/shared/constants';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { TriggerModule } from './services/Trigger/trigger.module';
+import { WorkflowRegistryModule } from './services/WorkflowRegistry/workflow-registry.module';
 
 @Module({
     imports: [
@@ -22,6 +23,7 @@ import { TriggerModule } from './services/Trigger/trigger.module';
             },
         }),
         TriggerModule,
+        WorkflowRegistryModule,
     ],
     providers: [
         { provide: APP_GUARD, useClass: ThrottlerGuard },

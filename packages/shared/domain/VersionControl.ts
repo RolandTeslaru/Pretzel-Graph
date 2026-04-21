@@ -40,6 +40,7 @@ export namespace VersionControl {
         export namespace Published {
             export const Schema = Base.extend({
                 type: z.literal("published"),
+                publication: Publication.Schema,
             })
         }
         export type Published = z.infer<typeof Published.Schema>
@@ -47,6 +48,7 @@ export namespace VersionControl {
         export namespace Activated {
             export const Schema = Base.extend({
                 type: z.literal("activated"),
+                publication: Publication.Schema,
             })
         }
         export type Activated = z.infer<typeof Activated.Schema>
