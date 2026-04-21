@@ -1,13 +1,10 @@
 import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
-import { Orchestrator } from '@vx-agent-editor/shared/domain';
 import { TriggerController } from './trigger.controller';
 import { TriggerService } from './trigger.service';
+import { WorkflowRegistryModule } from '../WorkflowRegistry/workflow-registry.module';
 
 @Module({
-    imports: [
-        BullModule.registerQueue({ name: Orchestrator.EXECUTION_QUEUE_ID }),
-    ],
+    imports: [WorkflowRegistryModule],
     controllers: [TriggerController],
     providers: [TriggerService],
 })
