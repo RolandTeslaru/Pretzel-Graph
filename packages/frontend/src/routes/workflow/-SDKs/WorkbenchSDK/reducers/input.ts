@@ -34,7 +34,7 @@ export const inputReducers = {
         return false;
     },
     validate: (s, nodeId, input) => {
-        const issue = Validation.Issue.Input.check(input, nodeId, s.workflow, s.cache);
+        const issue = Validation.Issue.Input.check(input, nodeId, s.workflow.data, s.cache);
 
         if (issue){
             s.issues.nodes[nodeId] ??= { fields: {}, inputs: {} };

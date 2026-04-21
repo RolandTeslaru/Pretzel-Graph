@@ -1,8 +1,13 @@
 import { Foundations } from "@vx-agent-editor/shared/domain";
+import type { Webhook } from "@vx-agent-editor/shared/domain/Foundations/Webhook";
+import type { Port }  from "@vx-agent-editor/shared/domain/Foundations/Port";
+import type { Field } from "@vx-agent-editor/shared/domain/Foundations/Field";
+import type { Blueprint } from "@vx-agent-editor/shared/domain/Foundations/Blueprint";
 import { FieldBuilder } from "./field";
 export { FieldBuilder } from "./field"
 export { InputBuilder } from "./input"
 export { OutputBuilder } from "./output"
+export { WebhookBuilder } from "./webhook"
 
 
 // ============================================
@@ -13,12 +18,13 @@ export { OutputBuilder } from "./output"
 // Explicit return type to avoid "cannot be named without reference to zod internals" error
 type DefineBlueprintReturn<
     TId extends string,
-    TFields extends readonly Foundations.Field[],
-    TInputs extends readonly Foundations.Port.Input[],
-    TOutputs extends readonly Foundations.Port.Output[],
+    TFields extends readonly Field[],
+    TInputs extends readonly Port.Input[],
+    TOutputs extends readonly Port.Output[],
+    TWebhooks extends readonly Webhook[] = readonly [],
     TToolCompatible extends boolean = false
 > = {
-    readonly id: TId & Foundations.Blueprint.Id;
+    readonly id: TId & Blueprint.Id;
     readonly displayName: string;
     readonly description: string;
     readonly icon: string;
@@ -28,6 +34,7 @@ type DefineBlueprintReturn<
         : readonly [...TFields, ...typeof executionStrategyFields];
     readonly inputs: TInputs;
     readonly outputs: TOutputs;
+    readonly webhooks?: TWebhooks;
     readonly toolCompatible: TToolCompatible;
 }
 
@@ -69,9 +76,10 @@ export const executionStrategyFields = [signalDependencyStrategyField, dataDepen
 
 export function defineBlueprint<
     const TId extends string,
-    const TFields extends readonly Foundations.Field[],
-    const TInputs extends readonly Foundations.Port.Input[],
-    const TOutputs extends readonly Foundations.Port.Output[],
+    const TFields extends readonly Field[],
+    const TInputs extends readonly Port.Input[],
+    const TOutputs extends readonly Port.Output[],
+    const TWebhooks extends readonly Webhook[] = readonly [],
     const TToolCompatible extends boolean = false
 >(config: {
     id: TId;
@@ -82,8 +90,9 @@ export function defineBlueprint<
     fields: TFields;
     inputs: TInputs;
     outputs: TOutputs;
+    webhooks?: TWebhooks;
     toolCompatible?: TToolCompatible
-}): DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TToolCompatible> {
+}): DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TWebhooks, TToolCompatible> {
 
     const baseFields = [
         ...config.fields,
@@ -93,10 +102,10 @@ export function defineBlueprint<
     const fields = (
         config.toolCompatible
         ? [...baseFields, hiddenToolField]
-        : baseFields) as DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TToolCompatible>["fields"];
+        : baseFields) as DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TWebhooks, TToolCompatible>["fields"];
 
     return {
-        id: config.id as TId & Foundations.Blueprint.Id,
+        id: config.id as TId & Blueprint.Id,
         displayName: config.displayName,
         description: config.description,
         icon: config.icon,
@@ -104,6 +113,7 @@ export function defineBlueprint<
         fields,
         inputs: config.inputs,
         outputs: config.outputs,
-        toolCompatible: (config.toolCompatible ?? false) as TToolCompatible,
+        webhooks: config.webhooks,
+        toolCompatible: config.toolCompatible as TToolCompatible,
     };
 }

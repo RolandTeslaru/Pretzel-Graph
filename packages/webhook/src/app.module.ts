@@ -4,7 +4,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { REDIS_HOST, REDIS_PORT } from '@vx-agent-editor/shared/constants';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
-import { WebhookModule } from './services/Webhook/webhook.module';
+import { TriggerModule } from './services/Trigger/trigger.module';
 
 @Module({
     imports: [
@@ -21,7 +21,7 @@ import { WebhookModule } from './services/Webhook/webhook.module';
                 removeOnFail: { count: 50 },
             },
         }),
-        WebhookModule,
+        TriggerModule,
     ],
     providers: [
         { provide: APP_GUARD, useClass: ThrottlerGuard },

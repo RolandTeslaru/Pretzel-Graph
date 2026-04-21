@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { Port } from "./Port"
 import { Field } from "./Field"
+import { Webhook } from "./Webhook"
 
 // ============================================
 // BLUEPRINT
@@ -34,7 +35,8 @@ export namespace Blueprint {
             displayName: z.string(),
             icon: z.string(),
             accent: z.string().optional(),
-            toolCompatible: z.boolean(),
+            toolCompatible: z.boolean().optional(),
+            description: z.string().nullable().optional(),
         })
     }
     export type Meta = z.infer<typeof Meta.Schema>
@@ -43,7 +45,7 @@ export namespace Blueprint {
         fields: z.array(Field.Schema).readonly(),
         inputs: z.array(Port.Input.Schema).readonly(),
         outputs: z.array(Port.Output.Schema).readonly(),
-        description: z.string(),
+        webhooks: z.array(Webhook.Schema).readonly().optional(),
     }).readonly()
 }
 export type Blueprint = z.infer<typeof Blueprint.Schema>
