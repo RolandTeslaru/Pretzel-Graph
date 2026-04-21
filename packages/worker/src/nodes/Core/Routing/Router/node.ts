@@ -3,7 +3,7 @@ import { Blueprint } from "./blueprint";
 import { ExecutionContext } from "src/context";
 import { RuntimeRouterNode } from "src/node";
 import { InferInputs, InferOutputs } from "src/types";
-import { Foundations } from "@vx-agent-editor/shared/domain";
+import { Expression, Foundations } from "@vx-agent-editor/shared/domain";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeRouterNode<typeof Blueprint> {
@@ -20,8 +20,14 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
 
         const result: Partial<InferOutputs<typeof Blueprint>> = {};
 
+        const expressionCtx: Expression.Context = {
+            thisNode: this.workflowNode,
+            thisNodeValues: this.fields,
+            incoming: inputs
+        }
+
         for (const { condition, portId } of cases) {
-            if (Foundations.Field.Condition.evaluate(condition, inputs))
+            if (Foundations.Field.Condition.evaluate(condition, expressionCtx))
                 (result as Record<string, unknown>)[portId] = input;
         }
 

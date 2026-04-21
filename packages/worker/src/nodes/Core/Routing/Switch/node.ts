@@ -3,7 +3,7 @@ import { Blueprint } from "./blueprint";
 import { ExecutionContext } from "src/context";
 import { RuntimeNode, RuntimeRouterNode } from "src/node";
 import { InferInputs, InferOutputs, OneOf } from "src/types";
-import { Foundations } from "@vx-agent-editor/shared/domain";
+import { Expression, Foundations } from "@vx-agent-editor/shared/domain";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeRouterNode<typeof Blueprint> {
@@ -18,9 +18,14 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
         const { cases } = this.fields;
         const { input } = inputs;
 
+        const expressionCtx: Expression.Context = {
+            thisNode: this.workflowNode,
+            thisNodeValues: this.fields,
+            incoming: inputs
+        }
 
         for (const { condition, portId } of cases) {
-            const result = Foundations.Field.Condition.evaluate(condition, inputs);
+            const result = Foundations.Field.Condition.evaluate(condition, expressionCtx);
             
             if (result)
                 return { [portId]: input } as OneOf<InferOutputs<typeof Blueprint>>;
