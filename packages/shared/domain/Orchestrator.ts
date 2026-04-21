@@ -252,6 +252,16 @@ export namespace Orchestrator {
             );
             return data;
         }
+        export async function runInternal(
+            api: AxiosInstance,
+            req: Run.InternalRequest
+        ): Promise<Run.Response> {
+            const { data } = await api.post<Run.Response>(
+                '/api/orchestrator/internal/run',
+                req
+            );
+            return data;
+        }
 
         export namespace Pause {
             export const Request = z.object({
