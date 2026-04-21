@@ -1,6 +1,6 @@
 {
-  "version": "1776696161524",
-  "generatedAt": "2026-04-20T14:42:41.524Z",
+  "version": "1776775968372",
+  "generatedAt": "2026-04-21T12:52:48.372Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -8,7 +8,7 @@
       "displayName": "Language Model",
       "icon": "BrainCircuit",
       "accent": "port-LanguageModel",
-      "toolCompatible": false,
+      "description": "Runs a language model given a specified provider.",
       "fields": [
         {
           "id": "stream",
@@ -106,15 +106,14 @@
           "tooltip": "The response from the model",
           "variant": "Message"
         }
-      ],
-      "description": "Runs a language model given a specified provider."
+      ]
     },
     "Core.Chat.SessionMessages": {
       "id": "Core.Chat.SessionMessages",
       "displayName": "Session Messages",
       "icon": "History",
       "accent": "port-Message",
-      "toolCompatible": false,
+      "description": "Outputs the message history accumulated in the current execution session",
       "fields": [
         {
           "id": "signalDependency",
@@ -186,15 +185,14 @@
           "tooltip": "The message history from the current execution session",
           "variant": "MessageList"
         }
-      ],
-      "description": "Outputs the message history accumulated in the current execution session"
+      ]
     },
     "Core.Chat.Input": {
       "id": "Core.Chat.Input",
       "displayName": "Chat Input",
       "icon": "MessagesSquare",
       "accent": "port-Message",
-      "toolCompatible": false,
+      "description": "This node is a chat input",
       "fields": [
         {
           "id": "signalDependency",
@@ -260,15 +258,14 @@
           "tooltip": "The response from the model",
           "variant": "Message"
         }
-      ],
-      "description": "This node is a chat input"
+      ]
     },
     "Core.Chat.Output": {
       "id": "Core.Chat.Output",
       "displayName": "Chat Output",
       "icon": "MessagesSquare",
       "accent": "port-Message",
-      "toolCompatible": false,
+      "description": "This node is a chat output",
       "fields": [
         {
           "id": "signalDependency",
@@ -326,15 +323,14 @@
           "required": true
         }
       ],
-      "outputs": [],
-      "description": "This node is a chat output"
+      "outputs": []
     },
     "Core.Developer.AllBuilders": {
       "id": "Core.Developer.AllBuilders",
       "displayName": "All Builders",
       "icon": "Rocket",
       "accent": "utility",
-      "toolCompatible": false,
+      "description": "A developer node showcasing all available field, input, and output builders.",
       "fields": [
         {
           "id": "stringField",
@@ -748,15 +744,14 @@
           "displayName": "Data List Output",
           "variant": "DataList"
         }
-      ],
-      "description": "A developer node showcasing all available field, input, and output builders."
+      ]
     },
     "Core.Developer.ConsoleLog": {
       "id": "Core.Developer.ConsoleLog",
       "displayName": "Console Log",
       "icon": "SquareTerminal",
       "accent": "utility",
-      "toolCompatible": false,
+      "description": "Logs input data to the console with a specified log level.",
       "fields": [
         {
           "id": "level",
@@ -861,15 +856,14 @@
           "tooltip": "Passes the input message through unchanged.",
           "variant": "Message"
         }
-      ],
-      "description": "Logs input data to the console with a specified log level."
+      ]
     },
     "Core.Developer.ErrorThrower": {
       "id": "Core.Developer.ErrorThrower",
       "displayName": "Error Thrower",
       "icon": "Bug",
       "accent": "utility",
-      "toolCompatible": false,
+      "description": "Throws a configured error when the node is executed.",
       "fields": [
         {
           "id": "error",
@@ -941,15 +935,14 @@
           "required": false
         }
       ],
-      "outputs": [],
-      "description": "Throws a configured error when the node is executed."
+      "outputs": []
     },
     "Core.Developer.Eval": {
       "id": "Core.Developer.Eval",
       "displayName": "Runtime Node Eval",
       "icon": "SquareTerminal",
       "accent": "utility",
-      "toolCompatible": false,
+      "description": "Dangerously executes a JavaScript script at node runtime.",
       "fields": [
         {
           "id": "code",
@@ -1023,15 +1016,14 @@
           "displayName": "Output",
           "variant": "Text"
         }
-      ],
-      "description": "Dangerously executes a JavaScript script at node runtime."
+      ]
     },
     "Core.Developer.HttpRequest": {
       "id": "Core.Developer.HttpRequest",
       "displayName": "HTTP Request",
       "icon": "Globe",
       "accent": "utility",
-      "toolCompatible": false,
+      "description": "Makes an HTTP request.",
       "fields": [
         {
           "id": "method",
@@ -1157,15 +1149,14 @@
           "displayName": "Status",
           "variant": "Integer"
         }
-      ],
-      "description": "Makes an HTTP request."
+      ]
     },
     "Core.Developer.Sleep": {
       "id": "Core.Developer.Sleep",
       "displayName": "Sleep",
       "icon": "Clock",
       "accent": "utility",
-      "toolCompatible": false,
+      "description": "Pauses execution for a specified duration.",
       "fields": [
         {
           "id": "duration",
@@ -1247,15 +1238,14 @@
           "variant": "Unresolved",
           "originalVariant": "Unresolved"
         }
-      ],
-      "description": "Pauses execution for a specified duration."
+      ]
     },
     "Core.Routing.Accumulator": {
       "id": "Core.Routing.Accumulator",
       "displayName": "Accumulator",
       "icon": "GitPullRequestArrow",
       "accent": "group-routing",
-      "toolCompatible": false,
+      "description": "Collects inputs over multiple executions and emits the accumulated result.",
       "fields": [
         {
           "id": "signalDependency",
@@ -1341,15 +1331,14 @@
           "variant": "UnresolvedList",
           "originalVariant": "UnresolvedList"
         }
-      ],
-      "description": "Collects inputs over multiple executions and emits the accumulated result."
+      ]
     },
     "Core.Routing.IfElse": {
       "id": "Core.Routing.IfElse",
       "displayName": "If Else",
       "icon": "Split",
       "accent": "group-routing",
-      "toolCompatible": false,
+      "description": "Routes input to one of multiple outputs based on a condition.",
       "fields": [
         {
           "id": "condition",
@@ -1455,15 +1444,14 @@
           "variant": "Unresolved",
           "originalVariant": "Unresolved"
         }
-      ],
-      "description": "Routes input to one of multiple outputs based on a condition."
+      ]
     },
     "Core.Routing.Merge": {
       "id": "Core.Routing.Merge",
       "displayName": "Merge",
       "icon": "Merge",
       "accent": "group-routing",
-      "toolCompatible": false,
+      "description": "Merges multiple inputs into a single output.",
       "fields": [
         {
           "id": "inputPorts",
@@ -1552,15 +1540,14 @@
           "variant": "UnresolvedList",
           "originalVariant": "UnresolvedList"
         }
-      ],
-      "description": "Merges multiple inputs into a single output."
+      ]
     },
     "Core.Routing.Passthrough": {
       "id": "Core.Routing.Passthrough",
       "displayName": "Passthrough",
       "icon": "ArrowRightRight",
       "accent": "group-routing",
-      "toolCompatible": false,
+      "description": "Forwards each input directly to the output at the same index.",
       "fields": [
         {
           "id": "ports",
@@ -1658,15 +1645,14 @@
           "variant": "Unresolved",
           "originalVariant": "Unresolved"
         }
-      ],
-      "description": "Forwards each input directly to the output at the same index."
+      ]
     },
     "Core.Routing.Router": {
       "id": "Core.Routing.Router",
       "displayName": "Router",
       "icon": "ListTree",
       "accent": "group-routing",
-      "toolCompatible": false,
+      "description": "Routes input to all outputs whose condition evaluates to true.",
       "fields": [
         {
           "id": "cases",
@@ -1834,15 +1820,14 @@
           "variant": "Unresolved",
           "originalVariant": "Unresolved"
         }
-      ],
-      "description": "Routes input to all outputs whose condition evaluates to true."
+      ]
     },
     "Core.Routing.Switch": {
       "id": "Core.Routing.Switch",
       "displayName": "Switch",
       "icon": "Option",
       "accent": "group-routing",
-      "toolCompatible": false,
+      "description": "Routes input to one of multiple outputs based on a condition.",
       "fields": [
         {
           "id": "cases",
@@ -2010,15 +1995,14 @@
           "variant": "Unresolved",
           "originalVariant": "Unresolved"
         }
-      ],
-      "description": "Routes input to one of multiple outputs based on a condition."
+      ]
     },
     "Core.SubWorkflow.Execute": {
       "id": "Core.SubWorkflow.Execute",
       "displayName": "Execute Sub-Workflow",
       "icon": "Graph",
       "accent": "utility",
-      "toolCompatible": false,
+      "description": "Executes a saved sub-workflow and returns its output.",
       "fields": [
         {
           "id": "workflowId",
@@ -2080,15 +2064,14 @@
         }
       ],
       "inputs": [],
-      "outputs": [],
-      "description": "Executes a saved sub-workflow and returns its output."
+      "outputs": []
     },
     "Core.SubWorkflow.ExposeInputPort": {
       "id": "Core.SubWorkflow.ExposeInputPort",
       "displayName": "Expose Input Port",
       "icon": "LogIn",
       "accent": "utility",
-      "toolCompatible": false,
+      "description": "Exposes an unresolved output port for external workflow input wiring.",
       "fields": [
         {
           "id": "required",
@@ -2167,15 +2150,14 @@
           "variant": "Unresolved",
           "originalVariant": "Unresolved"
         }
-      ],
-      "description": "Exposes an unresolved output port for external workflow input wiring."
+      ]
     },
     "Core.SubWorkflow.ExposeOutputPort": {
       "id": "Core.SubWorkflow.ExposeOutputPort",
       "displayName": "Expose Output Port",
       "icon": "LogOut",
       "accent": "utility",
-      "toolCompatible": false,
+      "description": "Accepts an unresolved input port for external workflow output wiring.",
       "fields": [
         {
           "id": "signalDependency",
@@ -2235,15 +2217,14 @@
           "required": false
         }
       ],
-      "outputs": [],
-      "description": "Accepts an unresolved input port for external workflow output wiring."
+      "outputs": []
     },
     "Core.Text.Input": {
       "id": "Core.Text.Input",
       "displayName": "Text Input",
       "icon": "Type",
       "accent": "port-Text",
-      "toolCompatible": false,
+      "description": "This node is a Text input",
       "fields": [
         {
           "id": "signalDependency",
@@ -2309,15 +2290,14 @@
           "tooltip": "The output from the model",
           "variant": "Message"
         }
-      ],
-      "description": "This node is a Text input"
+      ]
     },
     "Core.Utils.JsonInjector": {
       "id": "Core.Utils.JsonInjector",
       "displayName": "JSON Injector",
       "icon": "Braces",
       "accent": "utility",
-      "toolCompatible": false,
+      "description": "Injects JSON data into the flow.",
       "fields": [
         {
           "id": "data",
@@ -2382,15 +2362,14 @@
           "displayName": "Output",
           "variant": "Data"
         }
-      ],
-      "description": "Injects JSON data into the flow."
+      ]
     },
     "Core.Utils.List.Select": {
       "id": "Core.Utils.List.Select",
       "displayName": "Select Element",
       "icon": "Brackets",
       "accent": "utility",
-      "toolCompatible": false,
+      "description": "Selects a single element from a list input.",
       "fields": [
         {
           "id": "strategy",
@@ -2490,15 +2469,14 @@
           "variant": "UnresolvedScalar",
           "originalVariant": "UnresolvedScalar"
         }
-      ],
-      "description": "Selects a single element from a list input."
+      ]
     },
     "Core.Utils.Message.Compose": {
       "id": "Core.Utils.Message.Compose",
       "displayName": "Compose Message",
       "icon": "Mail",
       "accent": "port-Message",
-      "toolCompatible": false,
+      "description": "Converts any data into a Human, System, or Tool message by serializing it into the message content.",
       "fields": [
         {
           "id": "role",
@@ -2585,15 +2563,14 @@
           "displayName": "Message",
           "variant": "Message"
         }
-      ],
-      "description": "Converts any data into a Human, System, or Tool message by serializing it into the message content."
+      ]
     },
     "Core.Utils.Tool.Catalog": {
       "id": "Core.Utils.Tool.Catalog",
       "displayName": "Tool Catalog",
       "icon": "SwatchBook",
       "accent": "port-Tool",
-      "toolCompatible": false,
+      "description": "Utility node for managing a catalog of tools.",
       "fields": [
         {
           "id": "tools_num",
@@ -2684,15 +2661,14 @@
           "displayName": "Tool List",
           "variant": "ToolList"
         }
-      ],
-      "description": "Utility node for managing a catalog of tools."
+      ]
     },
     "Core.Utils.Tool.Runner": {
       "id": "Core.Utils.Tool.Runner",
       "displayName": "Tool Runner",
       "icon": "Hammer",
       "accent": "port-Tool",
-      "toolCompatible": false,
+      "description": "Executes a tool with the provided input and returns the result.",
       "fields": [
         {
           "id": "signalDependency",
@@ -2765,15 +2741,14 @@
           "tooltip": "The result of the tool execution.",
           "variant": "MessageList"
         }
-      ],
-      "description": "Executes a tool with the provided input and returns the result."
+      ]
     },
     "Core.Webhook": {
       "id": "Core.Webhook",
       "displayName": "Webhook",
       "icon": "Webhook",
       "accent": "utility",
-      "toolCompatible": false,
+      "description": "Starts the workflow from inbound webhook requests.",
       "fields": [
         {
           "id": "path",
@@ -2890,14 +2865,27 @@
           "variant": "Data"
         }
       ],
-      "description": "Starts the workflow from inbound webhook requests."
+      "webhooks": [
+        {
+          "id": "req",
+          "method": {
+            "fieldId": "method"
+          },
+          "path": {
+            "fieldId": "path"
+          },
+          "responseMode": {
+            "fieldId": "responseMode"
+          }
+        }
+      ]
     },
     "Integrations.Anthropic.Chat": {
       "id": "Integrations.Anthropic.Chat",
       "displayName": "Anthropic Chat",
       "icon": "Anthropic",
       "accent": "port-LanguageModel",
-      "toolCompatible": false,
+      "description": "This node talks to Anthropic Claude models",
       "fields": [
         {
           "id": "apiKey",
@@ -3052,8 +3040,7 @@
           "tooltip": "The language model instance used for this response, useful for chaining calls with the same model and settings.",
           "variant": "LanguageModel"
         }
-      ],
-      "description": "This node talks to Anthropic Claude models"
+      ]
     },
     "Integrations.Coinbase.Market": {
       "id": "Integrations.Coinbase.Market",
@@ -3061,6 +3048,7 @@
       "icon": "Coinbase",
       "accent": "port-Json",
       "toolCompatible": true,
+      "description": "Fetches live DeFi market data. Pyth for real-time asset prices, DeFiLlama for protocol TVL and analytics. No API key required.",
       "fields": [
         {
           "id": "dataSource",
@@ -3164,8 +3152,7 @@
           "tooltip": "Complete parsed response from the selected data source.",
           "variant": "Json"
         }
-      ],
-      "description": "Fetches live DeFi market data. Pyth for real-time asset prices, DeFiLlama for protocol TVL and analytics. No API key required."
+      ]
     },
     "Integrations.Coinbase.Token": {
       "id": "Integrations.Coinbase.Token",
@@ -3173,6 +3160,7 @@
       "icon": "Coinbase",
       "accent": "port-Json",
       "toolCompatible": true,
+      "description": "Read ERC-20 token balances and allowances, or transfer and approve tokens using a Coinbase-managed CDP wallet. No private key — Coinbase handles signing.",
       "fields": [
         {
           "id": "cdpKeyId",
@@ -3341,15 +3329,14 @@
           "tooltip": "Complete balance response including token metadata.",
           "variant": "Json"
         }
-      ],
-      "description": "Read ERC-20 token balances and allowances, or transfer and approve tokens using a Coinbase-managed CDP wallet. No private key — Coinbase handles signing."
+      ]
     },
     "Integrations.Google.GenerativeAI": {
       "id": "Integrations.Google.GenerativeAI",
       "displayName": "Google Gen AI",
       "icon": "Google",
       "accent": "port-LanguageModel",
-      "toolCompatible": false,
+      "description": "This node talks to google generative ai api",
       "fields": [
         {
           "id": "apiKey",
@@ -3500,8 +3487,7 @@
           "tooltip": "The language model instance used for this response, useful for chaining calls with the same model and settings.",
           "variant": "LanguageModel"
         }
-      ],
-      "description": "This node talks to google generative ai api"
+      ]
     },
     "Integrations.HyperLiquid.Account": {
       "id": "Integrations.HyperLiquid.Account",
@@ -3509,6 +3495,7 @@
       "icon": "HyperLiquid",
       "accent": "port-Json",
       "toolCompatible": true,
+      "description": "Reads HyperLiquid account state for a wallet address: positions, balance, open orders, fills. Public read-only — only a wallet address is required, never a private key.",
       "fields": [
         {
           "id": "defaultAddress",
@@ -3609,8 +3596,7 @@
           "tooltip": "Array of currently resting orders for the address.",
           "variant": "DataList"
         }
-      ],
-      "description": "Reads HyperLiquid account state for a wallet address: positions, balance, open orders, fills. Public read-only — only a wallet address is required, never a private key."
+      ]
     },
     "Integrations.HyperLiquid.Market": {
       "id": "Integrations.HyperLiquid.Market",
@@ -3618,6 +3604,7 @@
       "icon": "HyperLiquid",
       "accent": "port-DataList",
       "toolCompatible": true,
+      "description": "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata. No API key required.",
       "fields": [
         {
           "id": "interval",
@@ -3750,15 +3737,14 @@
           "tooltip": "Convenience summary: { coin, interval, count, firstClose, lastClose, change, changePct }.",
           "variant": "Json"
         }
-      ],
-      "description": "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata. No API key required."
+      ]
     },
     "Integrations.OpenAI.Chat": {
       "id": "Integrations.OpenAI.Chat",
       "displayName": "OpenAI Chat",
       "icon": "OpenAI",
       "accent": "port-LanguageModel",
-      "toolCompatible": false,
+      "description": "This node talks to OpenAI's GPT chat models via the Chat Completions API",
       "fields": [
         {
           "id": "apiKey",
@@ -3934,15 +3920,14 @@
           "tooltip": "The language model instance used for this response, useful for chaining calls with the same model and settings.",
           "variant": "LanguageModel"
         }
-      ],
-      "description": "This node talks to OpenAI's GPT chat models via the Chat Completions API"
+      ]
     },
     "Integrations.OpenRouter.Chat": {
       "id": "Integrations.OpenRouter.Chat",
       "displayName": "OpenRouter Chat",
       "icon": "OpenRouter",
       "accent": "port-LanguageModel",
-      "toolCompatible": false,
+      "description": "Connect to hundreds of models via OpenRouter's unified API",
       "fields": [
         {
           "id": "openrouterApiKey",
@@ -4113,15 +4098,14 @@
           "tooltip": "The OpenRouter language model instance.",
           "variant": "LanguageModel"
         }
-      ],
-      "description": "Connect to hundreds of models via OpenRouter's unified API"
+      ]
     },
     "Integrations.Tavily.Retriever": {
       "id": "Integrations.Tavily.Retriever",
       "displayName": "Tavily Retriever",
       "icon": "Tavily",
       "accent": "port-Retriever",
-      "toolCompatible": false,
+      "description": "Configures a Tavily search retriever. Connect its output to a Search node or an agent.",
       "fields": [
         {
           "id": "apiKey",
@@ -4230,8 +4214,7 @@
           "displayName": "Retriever",
           "variant": "Retriever"
         }
-      ],
-      "description": "Configures a Tavily search retriever. Connect its output to a Search node or an agent."
+      ]
     },
     "Integrations.Tavily.Search": {
       "id": "Integrations.Tavily.Search",
@@ -4239,6 +4222,7 @@
       "icon": "Tavily",
       "accent": "port-Retriever",
       "toolCompatible": true,
+      "description": "Searches the web using Tavily and returns the results as documents.",
       "fields": [
         {
           "id": "apiKey",
@@ -4367,15 +4351,14 @@
           "tooltip": "Search results as Document objects (pageContent + metadata).",
           "variant": "DataList"
         }
-      ],
-      "description": "Searches the web using Tavily and returns the results as documents."
+      ]
     },
     "Integrations.Uniswap.Swap": {
       "id": "Integrations.Uniswap.Swap",
       "displayName": "Uniswap",
       "icon": "Uniswap",
       "accent": "port-ToolList",
-      "toolCompatible": false,
+      "description": "Provides Uniswap tools for token swapping on EVM chains. Exposes check_approval, get_quote and swap_tokens as a tool list for agents. Requires a Uniswap API key and an EVM private key for signing transactions.",
       "fields": [
         {
           "id": "uniswapApiKey",
@@ -4505,8 +4488,7 @@
           "tooltip": "3 tools: uniswap_check_approval, uniswap_get_quote, uniswap_swap_tokens.",
           "variant": "ToolList"
         }
-      ],
-      "description": "Provides Uniswap tools for token swapping on EVM chains. Exposes check_approval, get_quote and swap_tokens as a tool list for agents. Requires a Uniswap API key and an EVM private key for signing transactions."
+      ]
     }
   }
 }
