@@ -19,7 +19,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(
         context: ExecutionContext,
-        _inputs: InferInputs<typeof Blueprint>,
+        inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const metadata = toRecord(context.session.metadata);
         const webhookPayload = toRecord(metadata.webhookPayload);
@@ -39,5 +39,9 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             query: toRecord(webhookPayload.query),
             params: toRecord(webhookPayload.params),
         };
+    }
+
+    protected override onWebhook(): Promise<void> | void {
+        
     }
 }

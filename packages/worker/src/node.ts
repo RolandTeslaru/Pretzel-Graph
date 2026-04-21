@@ -31,6 +31,14 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_T
         return this.onRun(this.context, inputs);
     }
 
+    protected abstract onRun(
+        context: ExecutionContext,
+        inputs: InferInputs<T_Blueprint>
+    ): Promise<Partial<InferOutputs<T_Blueprint>>>;
+
+
+
+
 
     public async buildTool(
         inputs: InferInputs<T_ToolBlueprint>
@@ -39,6 +47,17 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_T
         return this.onBuildTool(this.context, inputs);
     }
 
+    protected onBuildTool(
+        context: ExecutionContext,
+        inputs: InferInputs<T_ToolBlueprint>
+    ): Promise<InferOutputs<T_ToolBlueprint>> {
+        throw new Error("This node cannot be converted to a tool");
+    }
+
+
+
+
+
     public async wait(
         partialInputs: InferInputs<T_Blueprint>,
         dependencyResolutionMap: Record<Workflow.Node.Id, boolean>
@@ -46,27 +65,14 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_T
         this.isWaiting = true;
         return this.onWait(this.context, partialInputs);
     }
-
-    /**
-     * Implement this in each node. Called by run().
-     */
-    protected abstract onRun(
-        context: ExecutionContext,
-        inputs: InferInputs<T_Blueprint>
-    ): Promise<Partial<InferOutputs<T_Blueprint>>>;
-
+    
     protected onWait(
         context: ExecutionContext,
         inputs: InferInputs<T_Blueprint>
     ): Promise<void> | void {}
 
 
-    protected onBuildTool(
-        context: ExecutionContext,
-        inputs: InferInputs<T_ToolBlueprint>
-    ): Promise<InferOutputs<T_ToolBlueprint>> {
-        throw new Error("This node cannot be converted to a tool");
-    }
+
 
 
     public async compile(
@@ -80,6 +86,21 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_T
         context: ExecutionContext,
         compilationContext: CompilationContext,
     ): Promise<void> | void { }
+
+
+
+
+
+    public async webhook(
+
+    ): Promise<void> {
+        return this.onWebhook();
+    }
+
+    protected onWebhook(
+
+    ): Promise<void> | void { }
+
 
     public static resolveInitialFieldValues<T_Blueprint extends Foundations.Blueprint>(
         blueprint: T_Blueprint,

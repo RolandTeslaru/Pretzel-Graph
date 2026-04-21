@@ -1,4 +1,4 @@
-import { Workflow, Foundations, ExecutionSession } from '@vx-agent-editor/shared/domain';
+import { Workflow, Foundations, ExecutionSession, Expression } from '@vx-agent-editor/shared/domain';
 import { Port } from '@vx-agent-editor/shared/domain/Foundations/Port';
 import { Field } from '@vx-agent-editor/shared/domain/Foundations/Field';
 import type { WorkbenchSDK } from './sdk';
@@ -106,6 +106,16 @@ export const workbenchSelectors = {
 
             return hasNoIncoming && hasNoOutgoing;
         },
+        getStaticValues: (s, nodeId) => s.workflow.data.staticValues[nodeId] ?? null,
+        getExpressionContext: (s, nodeId, session) => {
+            const ctx: Expression.Context = {
+                thisNode: s.workflow.data.nodes[nodeId],
+                thisNodeValues: s.workflow.data.staticValues[nodeId] ?? {},
+                incoming: workbenchSelectors.execution.getNodeIncomingData(s, nodeId, session) ?? {},
+            }
+
+            return ctx;
+        }
     },
     field: {
         get: (s, nodeId, fieldId) => {
@@ -278,6 +288,8 @@ export type _WorkBenchSDKSelectors = {
         isSourceNode: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
         isSinkNode: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
         isIsolatedNode: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
+        getStaticValues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Field.Id | Port.Id, any> | null
+        getExpressionContext: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session: ExecutionSession) => Expression.Context 
     }
     field: {
         get: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Field | null

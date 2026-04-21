@@ -85,3 +85,17 @@ export type InferOutputs<D> = 0 extends (1 & D) ? any
     }
     : never
     : never;
+
+/**
+ * Infer webhook definitions from a Blueprint into a record keyed by webhook id.
+ */
+export type InferWebhooks<D> = 0 extends (1 & D) ? any
+    : D extends { webhooks?: infer T }
+    ? T extends readonly { id: string }[]
+    ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
+        ? Id
+        : K extends { id: infer Id extends string } ? Id : never
+        ]: K
+    }
+    : Record<string, never>
+    : Record<string, never>;

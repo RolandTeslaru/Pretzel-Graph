@@ -11,8 +11,8 @@ export interface InboundWebhookJob {
 }
 
 @Injectable()
-export class WebhookService {
-    private readonly logger = new Logger(WebhookService.name);
+export class TriggerService {
+    private readonly logger = new Logger(TriggerService.name);
 
     constructor(
         @InjectQueue(Orchestrator.EXECUTION_QUEUE_ID)

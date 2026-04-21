@@ -357,7 +357,7 @@ export const nodeReducers = {
         }
             
 
-        const nodeIssues = Validation.Issue.Node.check(node, s.workflow, s.cache);
+        const nodeIssues = Validation.Issue.Node.check(node, s.workflow.data, s.cache);
 
         if(!nodeIssues)
             delete s.issues.nodes[nodeId];

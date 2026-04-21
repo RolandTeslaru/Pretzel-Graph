@@ -33,7 +33,7 @@ export const fieldReducers = {
         s.workflow.data.staticValues[nodeId][fieldId] = next
     },
     validate: (s, nodeId, field) => {
-        const issue = Validation.Issue.Field.check(field, nodeId, s.workflow)
+        const issue = Validation.Issue.Field.check(field, nodeId, s.workflow.data)
 
         if (issue) {
             s.issues.nodes[nodeId].fields[field.id] = issue;

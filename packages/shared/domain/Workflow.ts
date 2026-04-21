@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { Foundations } from "./Foundations";
-import { type SupabaseClient } from "@supabase/supabase-js";
 import { Auth } from "./Auth";
+import { Blueprint } from "./Foundations/Blueprint";
 
 export namespace Workflow {
     export const Id = z.string().brand("WorkflowId");
@@ -16,24 +16,17 @@ export namespace Workflow {
         export const Id = z.string().brand("NodeId");
         export type Id = z.infer<typeof Id>;
 
-        export const Schema = z.object({
+        export const Schema = Blueprint.Meta.Schema.extend({
             id: Node.Id,
             blueprintId: z.string().brand("BlueprintId"),
-
-            displayName: z.string(),
 
             fields: z.array(Foundations.Field.Schema),
             inputs: z.array(Foundations.Port.Input.Schema),
             outputs: z.array(Foundations.Port.Output.Schema),
 
-            toolCompatible: z.boolean().optional(),
-            
-            icon: z.string().nullable().optional(),
-            description: z.string().nullable().optional(),
             isMinimized: z.boolean().default(false),
             isFlipped: z.boolean().optional(),
             isDisabled: z.boolean().optional(),
-            accent: z.string().optional(),
         });
 
         export function createId(blueprintId: Foundations.Blueprint.Id) {
@@ -69,16 +62,6 @@ export namespace Workflow {
     }
     export interface Edge extends z.infer<typeof Edge.Schema> { }
 
-
-
-    export namespace Arc {
-        export const Id = z.string().brand("ArcId")
-        export type Id = z.infer<typeof Id>
-
-        export function getId(sourceNodeId: Node.Id, targetNodeId: Node.Id){
-            return `${sourceNodeId}-${targetNodeId}` as Arc.Id
-        }
-    }
 
 
 

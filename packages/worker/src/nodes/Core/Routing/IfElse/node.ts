@@ -17,6 +17,10 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
 
         const { condition } = this.fields;
 
+        const exporessionCtx: Expression.Context = {
+            thisNode: this.
+        }
+
         const result = Foundations.Field.Condition.evaluate(condition, inputs);
 
         if (result)
