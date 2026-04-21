@@ -23,13 +23,14 @@ export namespace Webhook {
         responseMode: z.string(),
     })
 
-    export interface Resolved {
-        id: Webhook.Id
-        path: Webhook.Path
-        method: Webhook.Method
-        responseMode: Webhook.ResponseMode
-    }
-
+    export const ResolvedSchema = z.object({
+        id: Webhook.Id,
+        method: Method,
+        path: Path,
+        responseMode: ResponseMode,
+    })
+    export type Resolved = z.infer<typeof ResolvedSchema>
+    
     /**
      * Resolve `${{ @thisNodeValues[...] }}` templates on a Webhook definition
      * against the node's static values. Output is fully-concrete strings
@@ -45,10 +46,12 @@ export namespace Webhook {
             thisNodeValues: staticValues,
             incoming: {},
         };
-        const path = String(Expression.evaluate(webhook.path, ctx) ?? "") as Webhook.Path;
-        const method = Method.parse(Expression.evaluate(webhook.method, ctx));
-        const responseMode = ResponseMode.parse(Expression.evaluate(webhook.responseMode, ctx));
-        return { id: webhook.id, path, method, responseMode };
+        return ResolvedSchema.parse({
+            id: webhook.id,
+            path: Expression.evaluate(webhook.path, ctx),
+            method: Expression.evaluate(webhook.method, ctx),
+            responseMode: Expression.evaluate(webhook.responseMode, ctx),
+        });
     }
 }
 export type Webhook = z.infer<typeof Webhook.Schema>
