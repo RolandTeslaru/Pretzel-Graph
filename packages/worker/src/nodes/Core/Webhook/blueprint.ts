@@ -1,3 +1,5 @@
+import { Field } from "@vx-agent-editor/shared/domain/Foundations/Field";
+import { Webhook } from "@vx-agent-editor/shared/domain/Foundations/Webhook";
 import { defineBlueprint, FieldBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({
@@ -30,8 +32,28 @@ export const Blueprint = defineBlueprint({
             ],
             tooltip: "Method accepted by this webhook route.",
         }),
+        FieldBuilder.MultiOption({
+            id: "responseMode",
+            displayName: "Response Mode",
+            initialValue: "onReceived",
+            variant: "select",
+            options: [
+                { value: "onReceived", displayName: "On Received" },
+                { value: "workflowCompletion", displayName: "When Workflow Completes" },
+                { value: "manual", displayName: "Manual" },
+            ],
+            tooltip: "Whether the webhook response should be sent immediately with an empty body, or delayed until the workflow finishes executing and includes a response payload.",
+        }),
     ],
     inputs: [],
+    webhooks: [
+        {
+            id: "req" as Webhook.Id,
+            path: '${{ @thisNodeValues["path"] }}' as Webhook.Path,
+            method: '${{ @thisNodeValues["method"]}}' as Webhook.Method,
+            responseMode: '${{ @thisNodeValues["responseMode"] }}' as Webhook.ResponseMode,
+        }
+    ],
     outputs: [
         OutputBuilder.Data({
             id: "body",

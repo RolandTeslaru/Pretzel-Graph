@@ -1,10 +1,10 @@
 import { Controller, Post, Param, Req, UseGuards, HttpCode } from '@nestjs/common';
-import { WebhookService } from './webhook.service';
+import { TriggerService } from './trigger.service';
 import { HmacSignatureGuard, WebhookRequest } from '@/guards/hmac-signature.guard';
 
 @Controller()
-export class WebhookController {
-    constructor(private readonly webhookService: WebhookService) {}
+export class TriggerController {
+    constructor(private readonly triggerService: TriggerService) {}
 
     // POST /webhooks/:provider
     // The :provider param drives both signature verification and downstream routing.
@@ -17,6 +17,6 @@ export class WebhookController {
         @Req() req: WebhookRequest,
     ) {
         const event = (req.headers['x-webhook-event'] as string | undefined) ?? 'unknown';
-        return this.webhookService.handle(provider, event, req.body);
+        return this.triggerService.handle(provider, event, req.body);
     }
 }
