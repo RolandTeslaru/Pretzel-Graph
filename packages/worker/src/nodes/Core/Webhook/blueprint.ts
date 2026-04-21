@@ -49,9 +49,9 @@ export const Blueprint = defineBlueprint({
     webhooks: [
         {
             id: "req" as Webhook.Id,
-            path: '${{ @thisNodeValues["path"] }}' as Webhook.Path,
-            method: '${{ @thisNodeValues["method"]}}' as Webhook.Method,
-            responseMode: '${{ @thisNodeValues["responseMode"] }}' as Webhook.ResponseMode,
+            path: '${{ @thisNodeValues["path"] }}',
+            method: '${{ @thisNodeValues["method"] }}',
+            responseMode: '${{ @thisNodeValues["responseMode"] }}',
         }
     ],
     outputs: [
