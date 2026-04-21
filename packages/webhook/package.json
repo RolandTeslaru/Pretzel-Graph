@@ -15,6 +15,7 @@
         "@nestjs/throttler": "^6.5.0",
         "@supabase/supabase-js": "^2.93.3",
         "@vx-agent-editor/shared": "*",
+        "axios": "^1.7.7",
         "bullmq": "^5.67.2",
         "dotenv": "^17.2.3",
         "ioredis": "^5.9.2",

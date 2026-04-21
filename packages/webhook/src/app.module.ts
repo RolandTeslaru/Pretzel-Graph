@@ -4,6 +4,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { REDIS_HOST, REDIS_PORT } from '@vx-agent-editor/shared/constants';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
+import { ApiModule } from './services/Api/api.module';
 import { TriggerModule } from './services/Trigger/trigger.module';
 import { WorkflowRegistryModule } from './services/WorkflowRegistry/workflow-registry.module';
 
@@ -22,6 +23,7 @@ import { WorkflowRegistryModule } from './services/WorkflowRegistry/workflow-reg
                 removeOnFail: { count: 50 },
             },
         }),
+        ApiModule,
         TriggerModule,
         WorkflowRegistryModule,
     ],
