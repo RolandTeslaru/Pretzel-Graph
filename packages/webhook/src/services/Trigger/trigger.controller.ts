@@ -1,22 +1,25 @@
-import { Controller, Post, Param, Req, UseGuards, HttpCode } from '@nestjs/common';
+import { All, Controller, Param, Req } from '@nestjs/common';
+import { Request } from 'express';
+import { Webhook } from '@vx-agent-editor/shared/domain/Foundations/Webhook';
 import { TriggerService } from './trigger.service';
-import { HmacSignatureGuard, WebhookRequest } from '@/guards/hmac-signature.guard';
 
 @Controller()
 export class TriggerController {
     constructor(private readonly triggerService: TriggerService) {}
 
-    // POST /webhooks/:provider
-    // The :provider param drives both signature verification and downstream routing.
-    // e.g. POST /webhooks/stripe, POST /webhooks/github
-    @Post(':provider')
-    @UseGuards(HmacSignatureGuard)
-    @HttpCode(200)
+    // Handles any HTTP method on /webhooks/:path — method is validated
+    // against the registered webhook in the service layer.
+    @All(':path')
     async receive(
-        @Param('provider') provider: string,
-        @Req() req: WebhookRequest,
+        @Param('path') path: string,
+        @Req() req: Request,
     ) {
-        const event = (req.headers['x-webhook-event'] as string | undefined) ?? 'unknown';
-        return this.triggerService.handle(provider, event, req.body);
+        return this.triggerService.handle({
+            method: Webhook.Method.parse(req.method),
+            path: path as Webhook.Path,
+            headers: req.headers as Record<string, unknown>,
+            query: req.query as Record<string, unknown>,
+            body: req.body,
+        });
     }
 }

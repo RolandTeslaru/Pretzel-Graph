@@ -50,7 +50,7 @@ export namespace ExecutionSession {
         edge_state: z.record(Workflow.Edge.Id, EdgeState.Schema).default({}),
         messages: z.array(z.custom<BaseMessage>((v) => v !== null && typeof v === 'object')).default([]),
         metadata: z.record(z.string(), z.any()).default({}),
-        chatId: z.lazy(() => Chat.Id)
+        chatId: z.lazy(() => Chat.Id).optional()
     })
 
 
