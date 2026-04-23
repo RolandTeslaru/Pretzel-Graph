@@ -19,7 +19,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     private localNodeInstanceMap: CompilationResult["nodeInstanceMap"] | null = null;
 
     protected override async onCompile(
-        context: ExecutionContext,
         compilationContext: CompilationContext,
     ): Promise<void> {
         const subWorkflowId = this.fields.workflowId as Workflow.Id;
@@ -43,7 +42,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const childCtx = extendCompilePath(compilationContext, subWorkflowId);
 
         const compilationResult = await new WorkflowCompiler().compile(
-            subWorkflow.id, subWorkflow.data, context.jobId, context.session, context.emit, childCtx,
+            subWorkflow.id, subWorkflow.data, this.context.jobId, this.context.session, this.context.emit, childCtx,
         );
         this.localNodeInstanceMap = compilationResult.nodeInstanceMap;
         this.localEngine = new AggexEngine(compilationResult);

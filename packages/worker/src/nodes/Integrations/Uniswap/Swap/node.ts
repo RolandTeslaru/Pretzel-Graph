@@ -86,7 +86,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private clients!: UniswapClients;
 
-    constructor(workflowNode: Workflow.Node, context: ExecutionContext) {
+    constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
         this.clients = buildClients(this.fields);
     }

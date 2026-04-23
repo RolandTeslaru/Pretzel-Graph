@@ -39,11 +39,11 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     private walletProvider!: EvmWalletProvider;
     private agentkit!: AgentKit;
 
-    constructor(workflowNode: Workflow.Node, context: ExecutionContext) {
+    constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
     }
 
-    protected override async onCompile(context: ExecutionContext): Promise<void> {
+    protected override async onCompile() {
         const { cdpKeyId, cdpKeySecret, walletSecret, networkId, walletAddress } = this.fields;
 
         if (!cdpKeyId || !cdpKeySecret || !walletSecret)
