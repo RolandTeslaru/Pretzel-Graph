@@ -1,8 +1,4 @@
 import { Chat, ExecutionSession, Orchestrator, Realtime } from "@vx-agent-editor/shared/domain";
 
-export type EmitterEvent =
-    | Orchestrator.Event
-    | Chat.Event
-    | ExecutionSession.Event
 
-export type Emitter = <T_Event extends EmitterEvent>(event: T_Event) => void
+export type Emitter = <T_Event extends Realtime.Event>(event: T_Event) => void

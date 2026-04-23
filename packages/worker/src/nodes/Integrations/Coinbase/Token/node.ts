@@ -7,7 +7,6 @@ import {
 import { tool } from "@langchain/core/tools";
 
 import { RegisterNode } from "src/services/Catalogue/service";
-import { ExecutionContext } from "src/context";
 import { RuntimeNode } from "src/node";
 import { InferInputs, InferOutputs } from "src/types";
 import { Workflow } from "@vx-agent-editor/shared/domain";

@@ -2,7 +2,6 @@ import { RegisterNode } from "../../../../services/Catalogue/service";
 import { Blueprint } from "./blueprint"
 import { Workflow } from "@vx-agent-editor/shared/domain";
 import { RuntimeNode } from "src/node";
-import { ExecutionContext } from "src/context";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
 
 import { Chat } from "@vx-agent-editor/shared/domain";
