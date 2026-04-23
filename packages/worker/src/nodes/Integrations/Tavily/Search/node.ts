@@ -1,6 +1,5 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint, ToolBlueprint } from "./blueprint";
-import { ExecutionContext } from "src/context";
 import { RuntimeNode } from "src/node";
 import { InferInputs, InferOutputs } from "src/types";
 import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
