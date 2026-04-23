@@ -16,6 +16,7 @@
         "@nestjs/throttler": "^6.5.0",
         "@nestjs/websockets": "^11.1.16",
         "@supabase/supabase-js": "^2.93.3",
+        "@vx-agent-editor/node-sdk": "*",
         "@vx-agent-builder/worker": "file:../worker",
         "@vx-agent-editor/shared": "*",
         "bullmq": "^5.67.2",
