@@ -1,7 +1,7 @@
 import React from 'react'
-import { ExecutionSession, Workflow } from '@vx-agent-editor/shared/domain';
+import { ExecutionSession, Workflow } from '@pretzel-graph/shared/domain';
 import MinimizedHandles from './MinimizedHandles';
-import { LazyIcon } from '@vx-agent-editor/vx-ui/icons/LazyIcon';
+import { LazyIcon } from '@pretzel-graph/vx-ui/icons/LazyIcon';
 import StatusIndicator from './StatusIndicator';
 
 interface Props {

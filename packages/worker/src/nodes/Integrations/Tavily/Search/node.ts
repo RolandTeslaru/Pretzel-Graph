@@ -4,7 +4,7 @@ import { RuntimeNode } from "src/node";
 import { InferInputs, InferOutputs } from "src/types";
 import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
 import { tool } from "@langchain/core/tools";
-import { Workflow } from "@vx-agent-editor/shared/domain";
+import { Workflow } from "@pretzel-graph/shared/domain";
 import { z } from "zod/v3";
 
 

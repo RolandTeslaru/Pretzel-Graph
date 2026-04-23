@@ -3,10 +3,10 @@ import { ShelfSDK } from "../../ShelfSDK/sdk";
 import type { WorkbenchSDKImpl, WorkbenchSDK } from "../sdk";
 import { debouncedValidateField, withAsyncCommit, withCommit, withCyclesRecompute } from "../utils/actions";
 import type { NodeActions } from "./node";
-import type { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import type { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import type { DropFirstArg } from "@/SDKs/types";
-import { Field } from "@vx-agent-editor/shared/domain/Foundations/Field";
-import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
+import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
+import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 
 export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActions) {
     const setState = sdk.useStore.setState;

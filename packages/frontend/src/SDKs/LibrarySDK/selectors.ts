@@ -1,4 +1,4 @@
-import { Library, Workflow } from '@vx-agent-editor/shared/domain';
+import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import type { LibrarySDK, LibrarySDKImpl } from './sdk';
 
 

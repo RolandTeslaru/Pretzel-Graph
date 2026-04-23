@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@vx-agent-editor/node-sdk";
+import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 const networkOptions = [
     { value: "base-mainnet", displayName: "Base" },

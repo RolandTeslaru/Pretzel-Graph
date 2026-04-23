@@ -1,9 +1,9 @@
 import React, { memo } from 'react'
 import { ShelfSDK } from '../sdk';
-import { Tooltip } from '@vx-agent-editor/vx-ui/foundations';
-import type { Foundations } from '@vx-agent-editor/shared/domain';
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons';
-import { LazyIcon } from '@vx-agent-editor/vx-ui/icons/LazyIcon';
+import { Tooltip } from '@pretzel-graph/vx-ui/foundations';
+import type { Foundations } from '@pretzel-graph/shared/domain';
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons';
+import { LazyIcon } from '@pretzel-graph/vx-ui/icons/LazyIcon';
 
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {

@@ -1,6 +1,6 @@
 import { supabase } from "@/libs/supabase";
 import { toast } from "sonner";
-import { Auth } from "@vx-agent-editor/shared/domain";
+import { Auth } from "@pretzel-graph/shared/domain";
 import { AuthSDK, AuthSDKImpl } from "./sdk";
 import { api } from '@/SDKs/ApiInterceptorSDK';
 

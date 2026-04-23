@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react'
 import { type Connection, Handle, Position, type Edge } from "@xyflow/react";
 import { cn } from '@/utils/styleUtils';
-import { Tooltip } from '@vx-agent-editor/vx-ui/foundations/Tooltip';
+import { Tooltip } from '@pretzel-graph/vx-ui/foundations/Tooltip';
 import HandleTooltipContent from './tooltip';
-import { Foundations, Validation, Workflow } from '@vx-agent-editor/shared/domain';
+import { Foundations, Validation, Workflow } from '@pretzel-graph/shared/domain';
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk';
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk';
 

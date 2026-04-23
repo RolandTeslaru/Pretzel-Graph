@@ -1,7 +1,7 @@
-import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
-import { Foundations, ExecutionSession, Orchestrator } from "@vx-agent-editor/shared/domain";
+import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
+import { Foundations, ExecutionSession, Orchestrator } from "@pretzel-graph/shared/domain";
 import { CatalogueService } from "src/services/Catalogue/service";
-import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
+import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { AggexCompilerError } from "../errors";
 import { RuntimeNode } from "../node";
 import { S2Graph, Vertex } from "../S2/graph";

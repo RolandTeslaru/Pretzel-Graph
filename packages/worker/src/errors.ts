@@ -1,4 +1,4 @@
-import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
+import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 
 /**
  * Base error for the Aggex execution engine.

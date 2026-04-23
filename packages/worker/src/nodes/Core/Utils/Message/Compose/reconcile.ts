@@ -1,4 +1,4 @@
-import { Foundations } from "@vx-agent-editor/shared/domain";
+import { Foundations } from "@pretzel-graph/shared/domain";
 import { InferFields } from "src/types";
 import { FieldBuilder } from "src/nodes/builders";
 import { cloneDeep } from "lodash";

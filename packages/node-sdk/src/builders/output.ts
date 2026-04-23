@@ -1,4 +1,4 @@
-import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
+import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { LC } from "../langchain";
 
 export type LiteralOutput<

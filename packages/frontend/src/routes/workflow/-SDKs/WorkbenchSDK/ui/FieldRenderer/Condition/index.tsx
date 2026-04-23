@@ -2,10 +2,10 @@ import { memo, useEffect, useState } from 'react'
 import { WorkbenchSDK } from '../../../sdk'
 import { FieldLabel } from '../FieldLabel'
 import type { RendererProps } from '../FieldLabel'
-import { Foundations, Workflow } from '@vx-agent-editor/shared/domain'
-import { Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
+import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
+import { Button, DropdownMenu } from '@pretzel-graph/vx-ui/foundations'
 import { ExpressionInput } from './ExpressionInput'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
 import { OperatorSelector } from './OperatorSelector'
 
 type RuleId = Foundations.Field.Condition.Rule.Id

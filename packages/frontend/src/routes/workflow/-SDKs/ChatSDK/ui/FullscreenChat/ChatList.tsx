@@ -1,8 +1,8 @@
 import { ChatSDK } from '../../sdk'
-import { Input } from '@vx-agent-editor/vx-ui/foundations/input'
-import { ContextMenu } from '@vx-agent-editor/vx-ui/foundations'
-import type { Chat } from '@vx-agent-editor/shared/domain'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { Input } from '@pretzel-graph/vx-ui/foundations/input'
+import { ContextMenu } from '@pretzel-graph/vx-ui/foundations'
+import type { Chat } from '@pretzel-graph/shared/domain'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
 
 function formatChatDate(iso: string): string {
     const date = new Date(iso)

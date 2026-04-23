@@ -1,7 +1,7 @@
 import { Controller, UseGuards, Get, Post, Param, Body, Req, HttpCode } from '@nestjs/common';
 import { WorkbenchService } from './workbench.service';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
-import { Workflow, Workbench } from '@vx-agent-editor/shared/domain';
+import { Workflow, Workbench } from '@pretzel-graph/shared/domain';
 
 @Controller('workbench')
 @UseGuards(SupabaseAuthGuard)

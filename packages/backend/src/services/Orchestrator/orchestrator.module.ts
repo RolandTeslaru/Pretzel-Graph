@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { OrchestratorController } from './orchestrator.controller';
 import { OrchestratorService } from './orchestrator.service';
-import { Orchestrator } from '@vx-agent-editor/shared/domain';
+import { Orchestrator } from '@pretzel-graph/shared/domain';
 import { RealtimeModule } from '../Realtime/realtime.module';
 
 @Module({

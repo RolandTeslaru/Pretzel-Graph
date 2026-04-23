@@ -1,6 +1,6 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
-import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import { RuntimeNode } from "src/node";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
 import { HumanMessage } from "@langchain/core/messages";

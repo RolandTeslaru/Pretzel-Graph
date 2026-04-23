@@ -1,8 +1,8 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { WorkbenchSDK } from "../sdk"
-import { SystemIcons } from "@vx-agent-editor/vx-ui/icons"
-import { LazyIcon } from "@vx-agent-editor/vx-ui/icons/LazyIcon"
-import type { Workflow } from "@vx-agent-editor/shared/domain"
+import { SystemIcons } from "@pretzel-graph/vx-ui/icons"
+import { LazyIcon } from "@pretzel-graph/vx-ui/icons/LazyIcon"
+import type { Workflow } from "@pretzel-graph/shared/domain"
 
 interface SearchResult {
     nodeId: Workflow.Node.Id

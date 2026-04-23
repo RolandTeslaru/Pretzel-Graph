@@ -1,10 +1,10 @@
 import { RegisterNode } from "../../../../services/Catalogue/service";
 import { Blueprint } from "./blueprint"
-import { Workflow } from "@vx-agent-editor/shared/domain";
+import { Workflow } from "@pretzel-graph/shared/domain";
 import { RuntimeNode } from "src/node";
 import { InferFields, InferInputs, InferOutputs } from "src/types";
 
-import { Chat } from "@vx-agent-editor/shared/domain";
+import { Chat } from "@pretzel-graph/shared/domain";
 import { AxiosService } from "src/axios";
 import { LC } from "src/langchain";
 

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Button, Badge, AlertDialog, Spinner } from '@vx-agent-editor/vx-ui/foundations'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { Button, Badge, AlertDialog, Spinner } from '@pretzel-graph/vx-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { DialogSDK } from '@/SDKs/DialogSDK'
-import { Orchestrator } from '@vx-agent-editor/shared/domain'
+import { Orchestrator } from '@pretzel-graph/shared/domain'
 import { api } from '@/SDKs/ApiInterceptorSDK'
 import { toast } from 'sonner'
 

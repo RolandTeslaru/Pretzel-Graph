@@ -1,6 +1,6 @@
 import { Controller, Post, Body, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { ChatService } from './chat.service';
-import { Auth, Chat } from '@vx-agent-editor/shared/domain';
+import { Auth, Chat } from '@pretzel-graph/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
 
 @Controller('chat')

@@ -1,5 +1,5 @@
-import { Foundations } from "@vx-agent-editor/shared/domain";
-import type { Webhook } from "@vx-agent-editor/shared/domain/Foundations/Webhook";
+import { Foundations } from "@pretzel-graph/shared/domain";
+import type { Webhook } from "@pretzel-graph/shared/domain/Foundations/Webhook";
 
 export type LiteralWebhook<
     TId extends string,

@@ -1,6 +1,6 @@
 import { StackSDK } from "@/routes/workflow/-SDKs/StackSDK";
-import { Button } from "@vx-agent-editor/vx-ui/foundations";
-import { SystemIcons } from "@vx-agent-editor/vx-ui/icons";
+import { Button } from "@pretzel-graph/vx-ui/foundations";
+import { SystemIcons } from "@pretzel-graph/vx-ui/icons";
 import IncomingPanel from "./IncomingPanel";
 
 export const NodeSidebarFooter = () => {

@@ -1,6 +1,6 @@
 import { Controller, Post, Body, UseGuards, Req, HttpCode, Get, Param } from '@nestjs/common';
 import { OrchestratorService } from './orchestrator.service';
-import { Auth, Orchestrator } from '@vx-agent-editor/shared/domain';
+import { Auth, Orchestrator } from '@pretzel-graph/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
 import { InternalAuthGuard, InternalAuthenticatedRequest } from '../../auth/internal-auth.guard';
 

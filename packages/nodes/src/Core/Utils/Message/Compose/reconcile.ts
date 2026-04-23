@@ -1,6 +1,6 @@
-import { Foundations } from "@vx-agent-editor/shared/domain";
-import { InferFields } from "@vx-agent-editor/node-sdk";
-import { FieldBuilder } from "@vx-agent-editor/node-sdk";
+import { Foundations } from "@pretzel-graph/shared/domain";
+import { InferFields } from "@pretzel-graph/node-sdk";
+import { FieldBuilder } from "@pretzel-graph/node-sdk";
 import { cloneDeep } from "lodash";
 
 export const reconcile = (

@@ -1,7 +1,7 @@
 import { BaseSDK } from "@/SDKs/Base";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { Foundations, Shelf } from "@vx-agent-editor/shared/domain";
+import { Foundations, Shelf } from "@pretzel-graph/shared/domain";
 import { _createShelfActions_, type _ShelfActions } from "./actions";
 import { _createShelfSelectors_, type _ShelfSelectors } from "./selectors";
 import { _createShelfReducers_, type _ShelfReducers } from "./reducers";

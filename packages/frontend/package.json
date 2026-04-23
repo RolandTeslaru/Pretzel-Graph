@@ -38,7 +38,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-router": "^1.157.18",
-    "@vx-agent-editor/shared": "*",
+    "@pretzel-graph/shared": "*",
     "@xyflow/react": "^12.10.0",
     "axios": "^1.13.4",
     "class-variance-authority": "^0.7.1",

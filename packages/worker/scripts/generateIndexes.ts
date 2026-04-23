@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { Foundations, Shelf } from "@vx-agent-editor/shared/domain"
+import { Foundations, Shelf } from "@pretzel-graph/shared/domain"
 
 const NODES_ROOT = path.resolve(__dirname, "../src/nodes");
 const OUTPUT_PATH = path.resolve(__dirname, "../dist/node_index.json")

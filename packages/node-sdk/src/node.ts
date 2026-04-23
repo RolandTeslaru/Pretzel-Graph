@@ -1,4 +1,4 @@
-import { ExecutionSession, Foundations, Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/domain";
+import { ExecutionSession, Foundations, Orchestrator, Realtime, Workflow } from "@pretzel-graph/shared/domain";
 import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "./types";
 import type { CompilationContext } from "./compiler-context";
 

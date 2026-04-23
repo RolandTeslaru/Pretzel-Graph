@@ -1,6 +1,6 @@
 import { cloneDeep } from "lodash";
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@vx-agent-editor/node-sdk";
-import { InferOutputs } from "@vx-agent-editor/node-sdk";
+import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { InferOutputs } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Tavily.Search",

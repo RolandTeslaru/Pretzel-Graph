@@ -1,6 +1,6 @@
-import { Workflow, Foundations, ExecutionSession, Expression } from '@vx-agent-editor/shared/domain';
-import { Port } from '@vx-agent-editor/shared/domain/Foundations/Port';
-import { Field } from '@vx-agent-editor/shared/domain/Foundations/Field';
+import { Workflow, Foundations, ExecutionSession, Expression } from '@pretzel-graph/shared/domain';
+import { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
+import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 import type { WorkbenchSDK } from './sdk';
 
 type NodeId = Workflow.Node.Id

@@ -1,6 +1,6 @@
-import { Foundations } from '@vx-agent-editor/shared/domain'
-import { DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { Foundations } from '@pretzel-graph/shared/domain'
+import { DropdownMenu } from '@pretzel-graph/vx-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
 import { dataTypeLabel, operatorLabel } from './utils'
 
 const Operator = Foundations.Field.Condition.Operator

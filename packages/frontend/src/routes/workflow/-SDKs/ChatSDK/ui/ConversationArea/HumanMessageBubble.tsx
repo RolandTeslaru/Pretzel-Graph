@@ -1,4 +1,4 @@
-import { Chat } from '@vx-agent-editor/shared/domain'
+import { Chat } from '@pretzel-graph/shared/domain'
 import { motion } from 'motion/react'
 
 const HumanMessageBubble = ({ message }: { message: Chat.Message.Human }) => {

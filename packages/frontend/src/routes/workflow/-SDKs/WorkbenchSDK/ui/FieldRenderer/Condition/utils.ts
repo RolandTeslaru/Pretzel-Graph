@@ -1,4 +1,4 @@
-import { Foundations } from '@vx-agent-editor/shared/domain'
+import { Foundations } from '@pretzel-graph/shared/domain'
 
 type Operator = Foundations.Field.Condition.Operator
 type DataType = Foundations.Field.Condition.DataType

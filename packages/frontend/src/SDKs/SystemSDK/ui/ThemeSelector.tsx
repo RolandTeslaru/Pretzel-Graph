@@ -1,5 +1,5 @@
-import { Tabs } from '@vx-agent-editor/vx-ui/foundations'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { Tabs } from '@pretzel-graph/vx-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
 import { SystemSDK } from '../sdk'
 
 const ThemeSelector = () => {

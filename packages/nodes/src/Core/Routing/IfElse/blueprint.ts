@@ -1,5 +1,5 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@vx-agent-editor/node-sdk";
-import { Foundations } from "@vx-agent-editor/shared/domain";
+import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { Foundations } from "@pretzel-graph/shared/domain";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.IfElse",

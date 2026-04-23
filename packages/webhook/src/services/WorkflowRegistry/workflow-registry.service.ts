@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnModuleDestroy, OnModuleInit } from '@nestjs/common/interfaces';
-import { REDIS_HOST, REDIS_PORT } from '@vx-agent-editor/shared/constants';
-import { VersionControl, Workflow } from '@vx-agent-editor/shared/domain';
-import { Webhook } from '@vx-agent-editor/shared/domain/Foundations/Webhook';
+import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
+import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
+import { Webhook } from '@pretzel-graph/shared/domain/Foundations/Webhook';
 import Redis from 'ioredis';
 import { createServiceClient } from '@/utils/supabase';
 

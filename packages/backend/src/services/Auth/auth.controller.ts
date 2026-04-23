@@ -1,7 +1,7 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
-import { Auth } from '@vx-agent-editor/shared/domain';
+import { Auth } from '@pretzel-graph/shared/domain';
 
 @Controller('auth')
 @UseGuards(SupabaseAuthGuard)

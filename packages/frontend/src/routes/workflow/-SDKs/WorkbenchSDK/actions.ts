@@ -1,8 +1,8 @@
 import { WorkbenchSDKImpl, WorkbenchSDK } from './sdk';
 import type { DropFirstArg } from '@/SDKs/types';
-import { Workflow } from '@vx-agent-editor/shared/domain';
-import { Port } from '@vx-agent-editor/shared/domain/Foundations/Port';
-import { Field } from '@vx-agent-editor/shared/domain/Foundations/Field';
+import { Workflow } from '@pretzel-graph/shared/domain';
+import { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
+import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 import { commit, debouncedCommit, withCommit, debouncedValidateInput, withCyclesRecompute } from './utils/actions';
 import { createSubWorkflowActions, type SubWorkflowActions } from './actions/subWorkflow';
 import { createNodeActions, type NodeActions } from './actions/node';

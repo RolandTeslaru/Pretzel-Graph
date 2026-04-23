@@ -1,5 +1,5 @@
 {
-    "name": "@vx-agent-editor/worker",
+    "name": "@pretzel-graph/worker",
     "version": "1.0.0",
     "description": "Vexr Agentic Graph Execution Engine based on LangGraph",
     "main": "dist/index.js",
@@ -16,8 +16,8 @@
         "@coinbase/agentkit": "^0.10.4",
         "@coinbase/cdp-sdk": "^1.47.0",
         "@langchain/community": "^1.1.27",
-        "@vx-agent-editor/node-sdk": "*",
-        "@vx-agent-editor/shared": "*",
+        "@pretzel-graph/node-sdk": "*",
+        "@pretzel-graph/shared": "*",
         "axios": "^1.13.6",
         "bullmq": "^5.67.2",
         "dotenv": "^17.3.1",

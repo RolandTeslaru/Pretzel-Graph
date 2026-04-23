@@ -1,4 +1,4 @@
-import { Workflow } from "@vx-agent-editor/shared/domain";
+import { Workflow } from "@pretzel-graph/shared/domain";
 
 type OnLlmChunkCallback = (content: string) => void;
 

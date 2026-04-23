@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@vx-agent-editor/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Tavily.Retriever",

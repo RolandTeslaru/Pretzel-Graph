@@ -1,12 +1,12 @@
-import { RegisterNode } from "@vx-agent-editor/node-sdk";
+import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
-import { RuntimeNode } from "@vx-agent-editor/node-sdk";
-import { InferInputs, InferOutputs } from "@vx-agent-editor/node-sdk";
-import { Workbench, Workflow, SystemError } from "@vx-agent-editor/shared/domain";
+import { RuntimeNode } from "@pretzel-graph/node-sdk";
+import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { Workbench, Workflow, SystemError } from "@pretzel-graph/shared/domain";
 import { AxiosService } from "../../../services/AxiosService";
-import { CompilationContext, extendCompilePath } from "@vx-agent-editor/worker";
-import { AggexEngine } from "@vx-agent-editor/worker";
-import { AggexCompilerError } from "@vx-agent-editor/worker";
+import { CompilationContext, extendCompilePath } from "@pretzel-graph/worker";
+import { AggexEngine } from "@pretzel-graph/worker";
+import { AggexCompilerError } from "@pretzel-graph/worker";
 
 
 @RegisterNode(Blueprint.id)

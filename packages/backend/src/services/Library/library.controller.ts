@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Delete, Body, Param, UseGuards, Req, HttpCode, Patch } from '@nestjs/common';
 import { LibraryService } from './library.service';
-import { Library, Workflow } from '@vx-agent-editor/shared/domain';
+import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
 
 @Controller('library')

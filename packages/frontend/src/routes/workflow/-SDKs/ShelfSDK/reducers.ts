@@ -1,4 +1,4 @@
-import { Foundations, Shelf, Workflow } from "@vx-agent-editor/shared/domain";
+import { Foundations, Shelf, Workflow } from "@pretzel-graph/shared/domain";
 import type { ShelfSDKImpl, ShelfSDK } from "./sdk";
 
 export type State = ShelfSDK.State
