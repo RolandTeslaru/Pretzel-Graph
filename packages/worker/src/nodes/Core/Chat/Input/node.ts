@@ -1,4 +1,4 @@
-import { RegisterNode } from "../../../../services/Catalogue/service";
+import { RegisterNode } from "@vx-agent-editor/node-sdk"
 import { Blueprint } from "./blueprint"
 import { RuntimeNode } from "src/node";
 import { InferInputs, InferOutputs } from "src/types";
