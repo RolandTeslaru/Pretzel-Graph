@@ -6,7 +6,7 @@ import { RuntimeNode, ExecutionContext } from "src/index";
 export type NodeConstructor = {
     new(
         workflowNode: Workflow.Node,
-        context: ExecutionContext
+        context: RuntimeNode.ExecutionContext
     ): RuntimeNode<any, any>;
 }
 

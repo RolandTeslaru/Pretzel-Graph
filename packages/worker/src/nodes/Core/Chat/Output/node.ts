@@ -21,15 +21,18 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private chatId: Chat.Id | null = null;
 
-    constructor(workflowNode: Workflow.Node, context: ExecutionContext) {
+    constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
     }
 
-    protected override async onCompile(context: ExecutionContext) {
-        const incomingEdges = context.workflowCache.incomingEdgesMap[this.workflowNode.id];
+    protected override async onCompile() {
+        const session = this.context.session
+        const workflowCache = this.context.workflowCache;
+
+        const incomingEdges = workflowCache.incomingEdgesMap[this.workflowNode.id];
         const upstreamNodeId = Object.keys(incomingEdges)[0] as Workflow.Node.Id | undefined;
 
-        const chatId = context.session.chatId;
+        const chatId = session.chatId;
 
         if (!chatId)
             return;

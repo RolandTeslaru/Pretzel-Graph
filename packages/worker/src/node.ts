@@ -1,6 +1,5 @@
 import { ExecutionSession, Foundations, Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/domain";
 import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "src/types";
-import { ExecutionContext } from "./context";
 import { Emitter } from "./event/emitter"
 import type { CompilationContext } from "./compiler"
 import { readonly } from "zod";
@@ -79,14 +78,12 @@ export abstract class RuntimeNode<
 
 
     public async compile(
-        context: ExecutionContext,
         compilationContext: CompilationContext
     ): Promise<void> {
-        return this.onCompile(context, compilationContext);
+        return this.onCompile(compilationContext);
     }
 
     protected onCompile(
-        context: ExecutionContext,
         compilationContext: CompilationContext,
     ): Promise<void> | void { }
 
