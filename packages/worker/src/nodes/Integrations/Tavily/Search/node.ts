@@ -30,7 +30,6 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
 
     protected override async onRun(
-        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
@@ -41,7 +40,6 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
 
     protected override async onBuildTool(
-        context: ExecutionContext,
         inputs: InferInputs<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
         return {

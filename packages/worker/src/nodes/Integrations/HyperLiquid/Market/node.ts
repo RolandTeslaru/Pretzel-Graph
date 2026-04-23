@@ -52,7 +52,6 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onRun(
-        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const { interval, lookbackHours } = this.fields;
@@ -68,7 +67,6 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onBuildTool(
-        context: ExecutionContext,
         inputs: InferInputs<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
         const { interval: defaultInterval, lookbackHours: defaultLookback } = this.fields;
