@@ -1,4 +1,4 @@
-import type { Foundations } from "@vx-agent-editor/shared/domain";
+import type { Foundations } from "@pretzel-graph/shared/domain";
 import type { ShelfSDK } from "./sdk";
 
 export function _createShelfSelectors_(){

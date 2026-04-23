@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { cn } from '@/utils/styleUtils';
-import type { ExecutionSession } from '@vx-agent-editor/shared/domain';
+import type { ExecutionSession } from '@pretzel-graph/shared/domain';
 
 interface StatusBorderProps {
   status: ExecutionSession.NodeStatus['status'] | undefined

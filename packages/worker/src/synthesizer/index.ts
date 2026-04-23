@@ -1,1 +1,1 @@
-export { Synthesizer } from "@vx-agent-editor/node-sdk";
+export { Synthesizer } from "@pretzel-graph/node-sdk";

@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { Textarea } from '@vx-agent-editor/vx-ui/foundations'
+import { Textarea } from '@pretzel-graph/vx-ui/foundations'
 import { WorkbenchSDK } from '../../sdk'
 import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'

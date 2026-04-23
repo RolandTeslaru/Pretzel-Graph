@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Realtime } from "@vx-agent-editor/shared/domain";
+import { Realtime } from "@pretzel-graph/shared/domain";
 import { supabase } from "@/libs/supabase";
 import { toast } from "sonner";
 

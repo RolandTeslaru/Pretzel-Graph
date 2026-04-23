@@ -1,4 +1,4 @@
-import type { Foundations, Validation, Workflow } from "@vx-agent-editor/shared/domain"
+import type { Foundations, Validation, Workflow } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDK } from "../sdk"
 import { MarkerType } from "@xyflow/react";
 

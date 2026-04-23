@@ -1,6 +1,6 @@
-import { Label } from '@vx-agent-editor/vx-ui/foundations/label'
-import { Foundations, Workflow } from '@vx-agent-editor/shared/domain'
-import { Spinner } from '@vx-agent-editor/vx-ui/foundations'
+import { Label } from '@pretzel-graph/vx-ui/foundations/label'
+import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
+import { Spinner } from '@pretzel-graph/vx-ui/foundations'
 
 interface LabelProps {
     field: Foundations.Field

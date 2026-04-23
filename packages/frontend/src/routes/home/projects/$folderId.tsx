@@ -1,11 +1,11 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
-import { Button } from '@vx-agent-editor/vx-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { Button } from '@pretzel-graph/vx-ui/foundations'
 import { openCreateFolderDialog, openCreateWorkflowDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
 import { FolderCard } from './-components/FolderCard'
 import { WorkflowCard } from './-components/WorkflowCard'
-import type { Library } from '@vx-agent-editor/shared/domain'
+import type { Library } from '@pretzel-graph/shared/domain'
 import Breadcrumbs from './-components/Breadcrumbs'
 
 export const Route = createFileRoute('/home/projects/$folderId')({

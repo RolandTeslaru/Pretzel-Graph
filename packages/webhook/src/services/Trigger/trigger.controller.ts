@@ -1,6 +1,6 @@
 import { All, Controller, Param, Req } from '@nestjs/common';
 import { Request } from 'express';
-import { Webhook } from '@vx-agent-editor/shared/domain/Foundations/Webhook';
+import { Webhook } from '@pretzel-graph/shared/domain/Foundations/Webhook';
 import { TriggerService } from './trigger.service';
 
 @Controller()

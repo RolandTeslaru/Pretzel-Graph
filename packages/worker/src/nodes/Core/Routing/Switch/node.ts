@@ -2,7 +2,7 @@ import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode, RuntimeRouterNode } from "src/node";
 import { InferInputs, InferOutputs, OneOf } from "src/types";
-import { Expression, Foundations } from "@vx-agent-editor/shared/domain";
+import { Expression, Foundations } from "@pretzel-graph/shared/domain";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeRouterNode<typeof Blueprint> {

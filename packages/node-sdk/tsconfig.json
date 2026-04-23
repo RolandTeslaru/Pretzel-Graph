@@ -13,7 +13,7 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "paths": {
-            "@vx-agent-editor/shared/*": ["../shared/*"]
+            "@pretzel-graph/shared/*": ["../shared/*"]
         }
     },
     "include": ["src/**/*"],

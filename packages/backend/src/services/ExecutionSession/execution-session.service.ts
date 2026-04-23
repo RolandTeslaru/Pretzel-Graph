@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { createAuthenticatedClient } from '@/utils/supabase';
-import { Auth, ExecutionSession, Workflow } from '@vx-agent-editor/shared/domain';
+import { Auth, ExecutionSession, Workflow } from '@pretzel-graph/shared/domain';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { withSupabaseAssert } from '@vx-agent-editor/shared/errors/supabase';
+import { withSupabaseAssert } from '@pretzel-graph/shared/errors/supabase';
 
 @Injectable()
 export class ExecutionSessionService {

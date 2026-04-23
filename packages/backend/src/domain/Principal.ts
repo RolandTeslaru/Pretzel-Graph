@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Auth } from '@vx-agent-editor/shared/domain';
+import { Auth } from '@pretzel-graph/shared/domain';
 
 const SupabaseClientSchema = z.custom<SupabaseClient>(
     (value) => typeof value === 'object' && value !== null,

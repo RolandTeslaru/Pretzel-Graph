@@ -6,25 +6,25 @@ import { useState } from "react"
 import {
     Example,
     ExampleWrapper,
-} from '@vx-agent-editor/vx-ui/foundations/example'
+} from '@pretzel-graph/vx-ui/foundations/example'
 import {
     AlertDialog,
-} from '@vx-agent-editor/vx-ui/foundations/alertDialog'
+} from '@pretzel-graph/vx-ui/foundations/alertDialog'
 import {
     Avatar,
     AvatarFallback,
     AvatarGroup,
     AvatarImage,
-} from '@vx-agent-editor/vx-ui/foundations/avatar'
-import { Badge } from '@vx-agent-editor/vx-ui/foundations/Badge'
-import { Button } from '@vx-agent-editor/vx-ui/foundations/button'
+} from '@pretzel-graph/vx-ui/foundations/avatar'
+import { Badge } from '@pretzel-graph/vx-ui/foundations/Badge'
+import { Button } from '@pretzel-graph/vx-ui/foundations/button'
 import {
     Card,
-} from '@vx-agent-editor/vx-ui/foundations/card'
-import { Checkbox } from '@vx-agent-editor/vx-ui/foundations/checkbox'
+} from '@pretzel-graph/vx-ui/foundations/card'
+import { Checkbox } from '@pretzel-graph/vx-ui/foundations/checkbox'
 import {
     DropdownMenu,
-} from '@vx-agent-editor/vx-ui/foundations/dropdownMenu'
+} from '@pretzel-graph/vx-ui/foundations/dropdownMenu'
 import {
     Empty,
     EmptyContent,
@@ -32,8 +32,8 @@ import {
     EmptyHeader,
     EmptyMedia,
     EmptyTitle,
-} from '@vx-agent-editor/vx-ui/foundations/empty'
-import { Input } from '@vx-agent-editor/vx-ui/foundations/input'
+} from '@pretzel-graph/vx-ui/foundations/empty'
+import { Input } from '@pretzel-graph/vx-ui/foundations/input'
 import {
     InputGroup,
     InputGroupAddon,
@@ -41,7 +41,7 @@ import {
     InputGroupInput,
     InputGroupText,
     InputGroupTextarea,
-} from '@vx-agent-editor/vx-ui/foundations/input-group'
+} from '@pretzel-graph/vx-ui/foundations/input-group'
 import {
     Item,
     ItemActions,
@@ -49,19 +49,19 @@ import {
     ItemDescription,
     ItemMedia,
     ItemTitle,
-} from '@vx-agent-editor/vx-ui/foundations/item'
-import { Label } from '@vx-agent-editor/vx-ui/foundations/label'
+} from '@pretzel-graph/vx-ui/foundations/item'
+import { Label } from '@pretzel-graph/vx-ui/foundations/label'
 import {
     Popover,
-} from '@vx-agent-editor/vx-ui/foundations/popover'
+} from '@pretzel-graph/vx-ui/foundations/popover'
 import {
     RadioGroup,
     RadioGroupItem,
-} from '@vx-agent-editor/vx-ui/foundations/radio-group'
+} from '@pretzel-graph/vx-ui/foundations/radio-group'
 import {
     Select,
-} from '@vx-agent-editor/vx-ui/foundations/select'
-import { Separator } from '@vx-agent-editor/vx-ui/foundations/separator'
+} from '@pretzel-graph/vx-ui/foundations/select'
+import { Separator } from '@pretzel-graph/vx-ui/foundations/separator'
 import {
     Sheet,
     SheetClose,
@@ -71,22 +71,22 @@ import {
     SheetHeader,
     SheetTitle,
     SheetTrigger,
-} from '@vx-agent-editor/vx-ui/foundations/sheet'
-import { Slider } from '@vx-agent-editor/vx-ui/foundations/slider'
-import { Dialog, Spinner, Tabs } from '@vx-agent-editor/vx-ui/foundations'
-import { Switch } from '@vx-agent-editor/vx-ui/foundations/switch'
-import { Textarea } from '@vx-agent-editor/vx-ui/foundations/textarea'
-import { DateInput } from '@vx-agent-editor/vx-ui/foundations/DateInput'
-import { DualRangeSlider } from '@vx-agent-editor/vx-ui/foundations/dualRangeSlider'
+} from '@pretzel-graph/vx-ui/foundations/sheet'
+import { Slider } from '@pretzel-graph/vx-ui/foundations/slider'
+import { Dialog, Spinner, Tabs } from '@pretzel-graph/vx-ui/foundations'
+import { Switch } from '@pretzel-graph/vx-ui/foundations/switch'
+import { Textarea } from '@pretzel-graph/vx-ui/foundations/textarea'
+import { DateInput } from '@pretzel-graph/vx-ui/foundations/DateInput'
+import { DualRangeSlider } from '@pretzel-graph/vx-ui/foundations/dualRangeSlider'
 import {
     Tooltip,
-} from '@vx-agent-editor/vx-ui/foundations/Tooltip'
+} from '@pretzel-graph/vx-ui/foundations/Tooltip'
 import {
     ContextMenu,
-} from '@vx-agent-editor/vx-ui/foundations/contextMenu'
-import { SystemIcons } from "@vx-agent-editor/vx-ui/icons"
-import { Field } from "@vx-agent-editor/vx-ui/foundations/fieldLayout"
-import { ButtonGroup } from "@vx-agent-editor/vx-ui/foundations/button-group"
+} from '@pretzel-graph/vx-ui/foundations/contextMenu'
+import { SystemIcons } from "@pretzel-graph/vx-ui/icons"
+import { Field } from "@pretzel-graph/vx-ui/foundations/fieldLayout"
+import { ButtonGroup } from "@pretzel-graph/vx-ui/foundations/button-group"
 import { DialogSDK } from "@/SDKs/DialogSDK"
 import { SystemSDK } from "@/SDKs/SystemSDK"
 import ThemeSelector from "@/SDKs/SystemSDK/ui/ThemeSelector"

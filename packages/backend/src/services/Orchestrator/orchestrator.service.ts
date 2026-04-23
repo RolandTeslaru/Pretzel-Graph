@@ -4,14 +4,14 @@ import { Queue, QueueEvents } from 'bullmq';
 import Redis from 'ioredis';
 import { createAuthenticatedClient, createServiceClient } from '@/utils/supabase';
 import { Principal } from '@/domain/Principal';
-import { REDIS_HOST, REDIS_PORT } from '@vx-agent-editor/shared/constants';
-import { Auth, Orchestrator, Realtime, Validation, Workflow } from '@vx-agent-editor/shared/domain';
-import { SystemError } from '@vx-agent-editor/shared/domain/SystemError';
+import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
+import { Auth, Orchestrator, Realtime, Validation, Workflow } from '@pretzel-graph/shared/domain';
+import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { SecretsResolver } from './utils';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { RealtimeService } from '../Realtime/realtime.service';
-import { withSupabaseAssert } from '@vx-agent-editor/shared/errors/supabase';
-import { Algorithms } from '@vx-agent-editor/shared/domain/Algorithms';
+import { withSupabaseAssert } from '@pretzel-graph/shared/errors/supabase';
+import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
 
 @Injectable()
 export class OrchestratorService {

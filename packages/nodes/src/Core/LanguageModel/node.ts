@@ -1,8 +1,8 @@
-import { RegisterNode } from "@vx-agent-editor/node-sdk";
+import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
-import { RuntimeNode } from "@vx-agent-editor/node-sdk";
-import { InferFields, InferInputs, InferOutputs } from "@vx-agent-editor/node-sdk";
-import { LC } from "@vx-agent-editor/node-sdk";
+import { RuntimeNode } from "@pretzel-graph/node-sdk";
+import { InferFields, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { LC } from "@pretzel-graph/node-sdk";
 
 type Inputs = InferInputs<typeof Blueprint>
 type Outputs = InferOutputs<typeof Blueprint>

@@ -1,4 +1,4 @@
-import { ExecutionSession, Workflow } from "@vx-agent-editor/shared/domain";
+import { ExecutionSession, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { type ExecutionSessionSDKImpl } from "./sdk"
 import { toast } from "sonner";

@@ -1,8 +1,8 @@
  import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
-import { REDIS_HOST, REDIS_PORT } from '@vx-agent-editor/shared/constants';
-import { Realtime } from '@vx-agent-editor/shared/domain/Realtime';
-import { Orchestrator } from '@vx-agent-editor/shared/domain';
+import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
+import { Realtime } from '@pretzel-graph/shared/domain/Realtime';
+import { Orchestrator } from '@pretzel-graph/shared/domain';
 
 @Injectable()
 export class RealtimeService implements OnModuleDestroy {

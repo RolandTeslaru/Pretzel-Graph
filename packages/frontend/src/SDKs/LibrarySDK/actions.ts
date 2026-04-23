@@ -1,9 +1,9 @@
-import { Library, Workflow } from '@vx-agent-editor/shared/domain';
+import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { api } from '../ApiInterceptorSDK';
 import type { LibrarySDKImpl } from './sdk';
 import type { LibrarySDK } from './sdk';
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons';
-import type { TreeDataItem } from '@vx-agent-editor/vx-ui/components/Tree/tree-view';
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons';
+import type { TreeDataItem } from '@pretzel-graph/vx-ui/components/Tree/tree-view';
 
 export type _LibrarySDKActions = {
     rebuildTree: () => void;

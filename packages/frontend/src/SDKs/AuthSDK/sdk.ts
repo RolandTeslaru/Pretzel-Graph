@@ -3,7 +3,7 @@ import { BaseSDK } from "../Base";
 import { immer } from "zustand/middleware/immer";
 import { supabase } from "@/libs/supabase";
 import { SDK } from "../SDKManager";
-import { Auth } from "@vx-agent-editor/shared/domain";
+import { Auth } from "@pretzel-graph/shared/domain";
 import { _createAuthActions_ } from "./actions";
 
 @SDK("Auth")

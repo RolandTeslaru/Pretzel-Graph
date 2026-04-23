@@ -1,9 +1,9 @@
-import { Button } from '@vx-agent-editor/vx-ui/foundations'
+import { Button } from '@pretzel-graph/vx-ui/foundations'
 import React from 'react'
 import { useStore } from 'zustand'
 
 import { WorkbenchSDK } from '../sdk'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
 
 const TemporalControls = () => {
   const temporalStore = (WorkbenchSDK.useStore as any).temporal;

@@ -1,5 +1,5 @@
 import { Controller, Post, Body, UseGuards, HttpCode } from '@nestjs/common';
-import { Chat } from '@vx-agent-editor/shared/domain';
+import { Chat } from '@pretzel-graph/shared/domain';
 import { InternalAuthGuard } from '../../auth/internal-auth.guard';
 import { createServiceClient } from '../../utils/supabase';
 

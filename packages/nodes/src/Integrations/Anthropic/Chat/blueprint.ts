@@ -1,4 +1,4 @@
-import { FieldBuilder, defineBlueprint, OutputBuilder } from "@vx-agent-editor/node-sdk";
+import { FieldBuilder, defineBlueprint, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Anthropic.Chat",

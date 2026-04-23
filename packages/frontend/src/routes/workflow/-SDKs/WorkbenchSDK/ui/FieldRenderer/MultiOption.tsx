@@ -1,6 +1,6 @@
 import { memo } from 'react'
-import { Select } from "@vx-agent-editor/vx-ui/foundations/select"
-import { Tabs } from '@vx-agent-editor/vx-ui/foundations'
+import { Select } from "@pretzel-graph/vx-ui/foundations/select"
+import { Tabs } from '@pretzel-graph/vx-ui/foundations'
 import { WorkbenchSDK } from '../../sdk'
 import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'

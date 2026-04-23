@@ -1,4 +1,4 @@
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
 import React from 'react'
 
 const IncomingPanel = () => {

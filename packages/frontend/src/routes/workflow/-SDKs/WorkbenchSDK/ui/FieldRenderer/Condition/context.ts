@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import { Foundations, Workflow } from '@vx-agent-editor/shared/domain'
+import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
 
 type RuleId      = Foundations.Field.Condition.Rule.Id
 type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id

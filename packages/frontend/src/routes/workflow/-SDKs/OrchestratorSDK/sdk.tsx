@@ -1,7 +1,7 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
-import { Orchestrator } from "@vx-agent-editor/shared/domain";
+import { Orchestrator } from "@pretzel-graph/shared/domain";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { createOrchestratorSDKActions, type OrchestratorSDKActions } from "./actions";
 import { orchestratorSDKReducers } from "./reducers";

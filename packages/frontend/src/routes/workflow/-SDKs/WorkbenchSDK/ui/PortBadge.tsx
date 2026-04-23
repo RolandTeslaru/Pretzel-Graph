@@ -1,6 +1,6 @@
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
-import { Badge } from '@vx-agent-editor/vx-ui/foundations'
-import type { Foundations } from '@vx-agent-editor/shared/domain'
+import { Badge } from '@pretzel-graph/vx-ui/foundations'
+import type { Foundations } from '@pretzel-graph/shared/domain'
 import React from 'react'
 
 interface Props {

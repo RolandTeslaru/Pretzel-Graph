@@ -2,7 +2,7 @@ import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "src/node";
 import { InferInputs, InferOutputs } from "src/types";
-import { Workbench, Workflow, SystemError } from "@vx-agent-editor/shared/domain";
+import { Workbench, Workflow, SystemError } from "@pretzel-graph/shared/domain";
 import { AxiosService } from "src/axios";
 import { CompilationContext, extendCompilePath } from "src/compiler";
 import { AggexEngine } from "src/engine";

@@ -1,4 +1,4 @@
-import { FieldBuilder, defineBlueprint, OutputBuilder, InputBuilder } from "@vx-agent-editor/node-sdk";
+import { FieldBuilder, defineBlueprint, OutputBuilder, InputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Text.Input",

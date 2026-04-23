@@ -1,10 +1,10 @@
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
-import { Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
-import type { Workflow } from '@vx-agent-editor/shared/domain'
+import { Button, DropdownMenu } from '@pretzel-graph/vx-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import type { Workflow } from '@pretzel-graph/shared/domain'
 import React, { memo } from 'react'
-import type { Field } from '@vx-agent-editor/shared/domain/Foundations/Field'
+import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field'
 import { router } from '@/main'
 
 interface Props {

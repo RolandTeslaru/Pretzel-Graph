@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react'
 import { WorkbenchSDK } from '../../../../sdk'
-import { Workflow, Foundations } from '@vx-agent-editor/shared/domain';
+import { Workflow, Foundations } from '@pretzel-graph/shared/domain';
 import { Port } from '../Port'
 import { INPUT_RENDERER_MAP } from '../../../InputRenderer';
 import { InputLabel, type InputLabelSize, type InputLabelVariant } from '../../../InputRenderer/label';

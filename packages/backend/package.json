@@ -1,5 +1,5 @@
 {
-    "name": "@vx-agent-editor/backend",
+    "name": "@pretzel-graph/backend",
     "version": "0.0.1",
     "private": true,
     "scripts": {
@@ -16,9 +16,9 @@
         "@nestjs/throttler": "^6.5.0",
         "@nestjs/websockets": "^11.1.16",
         "@supabase/supabase-js": "^2.93.3",
-        "@vx-agent-editor/node-sdk": "*",
-        "@vx-agent-editor/worker": "file:../worker",
-        "@vx-agent-editor/shared": "*",
+        "@pretzel-graph/node-sdk": "*",
+        "@pretzel-graph/worker": "file:../worker",
+        "@pretzel-graph/shared": "*",
         "bullmq": "^5.67.2",
         "cors": "^2.8.6",
         "dotenv": "^17.2.3",

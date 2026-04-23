@@ -1,4 +1,4 @@
-import { Chat, SystemError } from "@vx-agent-editor/shared/domain";
+import { Chat, SystemError } from "@pretzel-graph/shared/domain";
 import { OrchestratorSDK } from "../OrchestratorSDK/sdk";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import type { ChatSDKImpl } from "./sdk";

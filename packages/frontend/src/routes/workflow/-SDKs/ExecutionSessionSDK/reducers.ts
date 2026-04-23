@@ -1,5 +1,5 @@
-import { ExecutionSession } from "@vx-agent-editor/shared/domain";
-import { Workflow } from "@vx-agent-editor/shared/domain";
+import { ExecutionSession } from "@pretzel-graph/shared/domain";
+import { Workflow } from "@pretzel-graph/shared/domain";
 import type { ExecutionSessionSDKImpl, ExecutionSessionSDK } from "./sdk";
 
 export type State = ExecutionSessionSDK.State;
