@@ -2,7 +2,6 @@ import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { RuntimeNode } from "src/node";
-import { ExecutionContext } from "src/context";
 import { InferInputs, InferOutputs } from "src/types";
 import { Workflow } from "@vx-agent-editor/shared/domain";
 

@@ -1,7 +1,6 @@
-import path from "path";
 import { container, singleton } from "tsyringe";
 import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
-import { RuntimeNode } from "@vx-agent-editor/node-sdk";
+import type { RuntimeNode } from "./node";
 
 export type NodeConstructor = {
     new(
@@ -12,7 +11,6 @@ export type NodeConstructor = {
 
 @singleton()
 class CatalogueServiceImpl {
-    // Seperete static and instance registry because i cannot use the instance registry in the static method Register
     private static registry = new Map<Foundations.Blueprint.Id, NodeConstructor>();
     private __registry = CatalogueServiceImpl.registry;
 
@@ -23,30 +21,29 @@ class CatalogueServiceImpl {
         CatalogueServiceImpl.registry.set(blueprintId, constructor);
     }
 
-    private nodesRoot: string;
+    private nodesRoot: string = "";
 
-    constructor() {
-        this.nodesRoot = path.resolve(__dirname, "../../nodes");
+    public setNodesRoot(rootPath: string) {
+        this.nodesRoot = rootPath;
     }
 
     public async getNode(blueprintId: Foundations.Blueprint.Id) {
-        // 1. Check Memory Cache (Registry)
         if (this.__registry.has(blueprintId))
             return this.__registry.get(blueprintId);
 
-        // 2. Convention over Configuration: Resolve Path
-        // "Google.Chat.v1" -> "Google/Chat/v1"
+        if (!this.nodesRoot)
+            throw new Error(`[CatalogueService] nodesRoot not set. Call setNodesRoot() before loading nodes.`);
+
         const relativePath = blueprintId.replace(/\./g, "/");
-        const fullPath = path.join(this.nodesRoot, relativePath + "/node");
+        const fullPath = `${this.nodesRoot}/${relativePath}/node`;
 
         try {
             await import(fullPath);
 
-            // check registry after dynamic import
             if (this.__registry.has(blueprintId))
                 return this.__registry.get(blueprintId);
 
-            throw new Error(`Module loaded from ${relativePath} but it did not register '${blueprintId}'. Check the @RegisterNode decorator.`);
+            throw new Error(`Module loaded from ${relativePath} but did not register '${blueprintId}'. Check the @RegisterNode decorator.`);
 
         } catch (error) {
             console.error(`[CatalogueService] Failed to load node '${blueprintId}':`, error);
@@ -55,29 +52,23 @@ class CatalogueServiceImpl {
     }
 
     public async getReconciler(blueprintId: Foundations.Blueprint.Id) {
-        // 1. Convention over Configuration: Resolve Path
-        // "Google.Chat.v1" -> "Google/Chat/v1"
+        if (!this.nodesRoot)
+            throw new Error(`[CatalogueService] nodesRoot not set. Call setNodesRoot() before loading reconcilers.`);
+
         const relativePath = blueprintId.replace(/\./g, "/");
-        const fullPath = path.join(this.nodesRoot, relativePath + "/reconcile");
+        const fullPath = `${this.nodesRoot}/${relativePath}/reconcile`;
 
         try {
             const module = await import(fullPath);
-            // The imported module should export a function that accepts (fieldId, newValue)
             return module.reconcile || module.default;
 
         } catch (error: any) {
-            // If reconcile.ts doesn't exist, try to load blueprint and return default Identity reconcile
-            if (error.code === 'MODULE_NOT_FOUND' || error.code === 'ERR_MODULE_NOT_FOUND') {
-                try {
-                    return (
-                        blueprint: Foundations.Blueprint,
-                        _changedFieldId: Foundations.Field.Id,
-                        _newValue: Foundations.Field.Value
-                    ) => blueprint; // Default identity: return inferred blueprint as-is
-                } catch (bpError) {
-                    console.error(`[CatalogueService] Failed to load blueprint for '${blueprintId}':`, bpError);
-                    return null;
-                }
+            if (error.code === "MODULE_NOT_FOUND" || error.code === "ERR_MODULE_NOT_FOUND") {
+                return (
+                    blueprint: Foundations.Blueprint,
+                    _changedFieldId: Foundations.Field.Id,
+                    _newValue: Foundations.Field.Value
+                ) => blueprint;
             }
 
             console.error(`[CatalogueService] Failed to load reconcile for '${blueprintId}':`, error);
@@ -86,17 +77,10 @@ class CatalogueServiceImpl {
     }
 }
 
-
 export const CatalogueService = container.resolve(CatalogueServiceImpl);
 
-
-
-export function RegisterNode(
-    blueprintId: Foundations.Blueprint.Id
-) {
-
+export function RegisterNode(blueprintId: Foundations.Blueprint.Id) {
     return function (constructor: new (...args: any[]) => RuntimeNode<any, any>) {
         CatalogueServiceImpl.register(blueprintId, constructor as NodeConstructor);
     };
-
 }
