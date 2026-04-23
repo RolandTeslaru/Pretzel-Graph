@@ -1,6 +1,5 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
-import { ExecutionContext } from "src/context";
 import { RuntimeNode, RuntimeRouterNode } from "src/node";
 import { InferInputs, InferOutputs, OneOf } from "src/types";
 import { Expression, Foundations } from "@vx-agent-editor/shared/domain";
@@ -11,7 +10,6 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<Partial<InferOutputs<typeof Blueprint>>> { // we dont really know what routes will be generated, so we return partial outputs
 
