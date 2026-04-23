@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Shelf } from '@vx-agent-editor/shared/domain';
 import * as indexJson from './node_index.json';
 import { ALL_DRAWERS, SECTIONS } from '@vx-agent-editor/shared/constants/drawers';
-import { CatalogueService as AGGEXCatalogueService } from '@vx-agent-builder/worker';
+import { CatalogueService } from "@vx-agent-editor/node-sdk"
 import { Blueprint } from '@vx-agent-editor/shared/domain/Foundations/Blueprint';
 
 const INDEX = indexJson as Shelf.Index;
@@ -64,7 +64,7 @@ export class ShelfService {
         payload: Shelf.API.Blueprint.Reconcile.Request
     ): Promise<Shelf.API.Blueprint.Reconcile.Response> {
         const { blueprint, fieldId, newValue } = payload;
-        const reconcileFn = await AGGEXCatalogueService.getReconciler(blueprint.id);
+        const reconcileFn = await CatalogueService.getReconciler(blueprint.id);
 
         if (!reconcileFn)
             throw new Error(`Reconciler for node ${blueprint.id} not found`);

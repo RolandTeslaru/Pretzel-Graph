@@ -6,7 +6,7 @@ import { Synthesizer } from "../synthesizer";
 import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
 import { S2Hooks } from "src/S2/types";
 import { AggexExecutionError } from "src/errors";
-import { RuntimeNode } from "..";
+import { RuntimeNode } from "@vx-agent-editor/node-sdk";
 import { Blueprint } from "@vx-agent-editor/shared/domain/Foundations/Blueprint";
 import { WorkflowCompiler } from "src/compiler";
 import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
