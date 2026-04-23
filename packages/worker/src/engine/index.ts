@@ -1,14 +1,17 @@
 import { Workflow } from "@vx-agent-editor/shared/domain/Workflow";
-import { ExecutionSession, Foundations } from "@vx-agent-editor/shared/domain";
+import { ExecutionSession } from "@vx-agent-editor/shared/domain";
 import { S2Engine } from "../S2/engine";
 import { S2Graph, Vertex } from "../S2/graph";
 import { Synthesizer } from "../synthesizer";
 import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
-import { Emitter } from "src/event/emitter";
 import { S2Hooks } from "src/S2/types";
 import { AggexExecutionError } from "src/errors";
 import { RuntimeNode } from "..";
 import { Blueprint } from "@vx-agent-editor/shared/domain/Foundations/Blueprint";
+import { WorkflowCompiler } from "src/compiler";
+import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
+import { Projection } from "@vx-agent-editor/shared/domain/Foundations/Projection";
+import { Field } from "@vx-agent-editor/shared/domain/Foundations/Field";
 
 export interface AggexHooks {
     onPause?(): void;
@@ -16,13 +19,12 @@ export interface AggexHooks {
 }
 
 export class AggexEngine {
-    private s2Engine: S2Engine | null = null;
+    private s2Engine: S2Engine = new S2Engine();
 
     private pausePromise: Promise<void> | null = null;
     private pauseResolve: (() => void) | null = null;
 
     private hooks: AggexHooks;
-    private activeNodes: Set<Workflow.Node.Id | Vertex.Id> = new Set();
 
     public pause(){
         if(this.pausePromise)
@@ -54,8 +56,8 @@ export class AggexEngine {
     private projectOutputs(
         result: Record<string, any>,
         wfNode: Workflow.Node
-    ): Record<Foundations.Port.Output.Id, Foundations.Projection> {
-        const projected: Record<Foundations.Port.Output.Id, Foundations.Projection> = {};
+    ): Record<Port.Output.Id, Projection> {
+        const projected: Record<Port.Output.Id, Projection> = {};
 
         for (const output of wfNode.outputs) {
             const key = output.id;
@@ -91,11 +93,11 @@ export class AggexEngine {
         nodeId: Workflow.Node.Id,
         incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set(),
         keepMissingPorts = false,
-    ): Record<Foundations.Port.Input.Id, any> {
+    ): Record<Port.Input.Id, any> {
         const node = ctx.workflowData.nodes[nodeId];
         const staticValues = ctx.workflowData.staticValues[nodeId] ?? {};
 
-        const resolved: Record<Foundations.Port.Input.Id, any> = {};
+        const resolved: Record<Port.Input.Id, any> = {};
 
         const incomingEdgeByPort = ctx.workflowCache.inputHandlesMap[nodeId]
 
@@ -124,7 +126,7 @@ export class AggexEngine {
                 const raw = staticValue ?? fallback;
 
                 if (raw !== undefined) {
-                    resolved[input.id] = raw as Foundations.Field.Value;
+                    resolved[input.id] = raw as Field.Value;
                 }
                 else {
                     resolved[input.id] = undefined;
@@ -205,7 +207,7 @@ export class AggexEngine {
                 );
         }
 
-        this.activeNodes.add(nodeId)
+        ctx.activeNodes.add(nodeId)
 
         ctx.emit<ExecutionSession.Event.Node.Started>({
             workflowId: workflowId,
@@ -218,11 +220,11 @@ export class AggexEngine {
     }
 
 
-    private async awaitPause() {
+    private async awaitPause(ctx: AggexEngine.ExecutionContext) {
         if(!this.pausePromise)
             return
 
-        if(this.activeNodes.size === 0)
+        if(ctx.activeNodes.size === 0)
             this.hooks.onPause?.();
 
         await this.pausePromise;
@@ -245,7 +247,7 @@ export class AggexEngine {
 
         const allDependencies = ctx.compiledGraph.dependenciesMap.get(vertexId)!; 
 
-        const dataDependency = entry.instance.fields["dataDependency" as Foundations.Field.Id];
+        const dataDependency = entry.instance.fields["dataDependency" as Field.Id];
         
         const inputs = this.resolveInputs(
             ctx, 
@@ -253,7 +255,7 @@ export class AggexEngine {
             dataDependency === "AND" ? allDependencies : signals
         );
 
-        const isTool = nodeInstance.fields["isConvertedToTool" as Foundations.Field.Id] === true;
+        const isTool = nodeInstance.fields["isConvertedToTool" as Field.Id] === true;
 
         let result;
         if(isTool)
@@ -279,7 +281,7 @@ export class AggexEngine {
     ) {
         const { session, nodeInstanceMap, workflowCache } = ctx
 
-        this.activeNodes.delete(vertexId);
+        ctx.activeNodes.delete(vertexId);
 
         const entry = nodeInstanceMap.get(vertexId);
         if (!entry)
@@ -315,7 +317,7 @@ export class AggexEngine {
             stateUpdate: { edge_state: edgeStateUpdate },
         });
 
-        await this.awaitPause();
+        await this.awaitPause(ctx);
     }
 
 
@@ -395,8 +397,8 @@ export class AggexEngine {
 
         const { instance, wfNode } = entry;
 
-        const signalDepField = instance.fields["signalDependency" as Foundations.Field.Id];
-        const dataDepField = instance.fields["dataDependency" as Foundations.Field.Id];
+        const signalDepField = instance.fields["signalDependency" as Field.Id];
+        const dataDepField = instance.fields["dataDependency" as Field.Id];
 
         // if(!signalDepField || !dataDepField)
         //     return true;
@@ -414,7 +416,7 @@ export class AggexEngine {
 
                 // If we find a undefined port, it means that not all data dependencies are resolved, and the node cannot run yet
                 for(const portId in incomingInputs){
-                    if(incomingInputs[portId as Foundations.Port.Input.Id] === undefined)
+                    if(incomingInputs[portId as Port.Input.Id] === undefined)
                         return false;
                 }
                 return true;
@@ -434,9 +436,7 @@ export class AggexEngine {
         ctx: AggexEngine.ExecutionContext
     
     ): Promise<AggexEngine.ExecutionResult> {
-        this.s2Engine = new S2Engine();
-
-        this.activeNodes.clear();
+        ctx.activeNodes.clear();
 
         const hooks: S2Hooks = {
             onVertexExecute:   (...props: Parameters<S2Hooks["onVertexExecute"]>)   => this.onNodeExecuted(ctx, ...props),
@@ -470,12 +470,6 @@ export class AggexEngine {
 
         return result;
     }
-
-
-
-    public async runSubWorkflow(){
-
-    }
 }
 
 
@@ -489,6 +483,9 @@ export namespace AggexEngine {
 
     export interface ExecutionContext extends RuntimeNode.ExecutionContext {
         compiledGraph: S2Graph,
+        compileWorkflow: WorkflowCompiler["compile"]
+        runSubWorkflow: AggexEngine["run"]
+        activeNodes: Set<Workflow.Node.Id | Vertex.Id>;
         nodeInstanceMap:  Map<
         
             Vertex.Id | Workflow.Node.Id, 
