@@ -1,5 +1,5 @@
 import { Chat } from '@pretzel-graph/shared/domain'
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { motion } from 'motion/react'
 
 const ToolBubble = ({ message }: { message: Chat.Message.Tool }) => {

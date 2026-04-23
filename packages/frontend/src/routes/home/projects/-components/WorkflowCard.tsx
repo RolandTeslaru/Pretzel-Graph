@@ -1,11 +1,11 @@
 import { Link } from '@tanstack/react-router'
 import { DialogSDK } from '@/SDKs/DialogSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
-import { AlertDialog, Button, DropdownMenu } from '@pretzel-graph/vx-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
+import { AlertDialog, Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { openEditWorkflowDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
-import { LazyIcon } from '@pretzel-graph/vx-ui/icons/LazyIcon'
+import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 
 interface WorkflowCardProps {
     workflow: Library.WorkflowMeta

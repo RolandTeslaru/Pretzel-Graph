@@ -1,7 +1,7 @@
 import { Chat } from '@pretzel-graph/shared/domain'
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { motion } from 'motion/react'
-import { Spinner } from '@pretzel-graph/vx-ui/foundations'
+import { Spinner } from '@pretzel-graph/standard-ui/foundations'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 

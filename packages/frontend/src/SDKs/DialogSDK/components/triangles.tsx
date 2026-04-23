@@ -1,6 +1,6 @@
 import React from "react"
 import VexrLogo from "./VexrLogo"
-import { SystemIcons } from "@pretzel-graph/vx-ui/icons"
+import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
 
 const DangerTriangle = () => (
     <div className="px-2 pt-2 relative">

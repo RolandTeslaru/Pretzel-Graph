@@ -38,8 +38,8 @@
       "@pretzel-graph/shared/*": [
         "../shared/*"
       ],
-      "@pretzel-graph/vx-ui/*": [
-        "../vx-ui/src/*"
+      "@pretzel-graph/standard-ui/*": [
+        "../standard-ui/src/*"
       ]
     }
   },

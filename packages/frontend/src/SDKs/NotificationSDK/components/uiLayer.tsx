@@ -1,6 +1,6 @@
 import { SystemSDK } from '@/SDKs/SystemSDK'
-import { Spinner } from '@pretzel-graph/vx-ui/foundations'
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import React, { memo } from 'react'
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 

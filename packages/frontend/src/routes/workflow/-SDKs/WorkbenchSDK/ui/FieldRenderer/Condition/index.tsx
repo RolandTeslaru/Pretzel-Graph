@@ -3,9 +3,9 @@ import { WorkbenchSDK } from '../../../sdk'
 import { FieldLabel } from '../FieldLabel'
 import type { RendererProps } from '../FieldLabel'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
-import { Button, DropdownMenu } from '@pretzel-graph/vx-ui/foundations'
+import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { ExpressionInput } from './ExpressionInput'
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { OperatorSelector } from './OperatorSelector'
 
 type RuleId = Foundations.Field.Condition.Rule.Id

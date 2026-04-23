@@ -1,5 +1,5 @@
-import { Button, Spinner, Tooltip } from '@pretzel-graph/vx-ui/foundations'
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { Button, Spinner, Tooltip } from '@pretzel-graph/standard-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { OrchestratorSDK } from '../sdk'
 
 const handlePause = () => {

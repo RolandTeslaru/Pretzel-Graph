@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { WorkbenchSDK } from "../sdk"
-import { SystemIcons } from "@pretzel-graph/vx-ui/icons"
-import { LazyIcon } from "@pretzel-graph/vx-ui/icons/LazyIcon"
+import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
+import { LazyIcon } from "@pretzel-graph/standard-ui/icons/LazyIcon"
 import type { Workflow } from "@pretzel-graph/shared/domain"
 
 interface SearchResult {

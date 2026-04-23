@@ -1,11 +1,11 @@
 import React, { memo, useEffect, useState } from 'react'
 import { ShelfSDK } from '../sdk'
 import { Shelf } from "@pretzel-graph/shared/domain";
-import { Spinner } from '@pretzel-graph/vx-ui/foundations';
+import { Spinner } from '@pretzel-graph/standard-ui/foundations';
 import { useShallow } from 'zustand/react/shallow';
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons';
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
 import DrawerItem from './DrawerItem';
-import { LazyIcon } from '@pretzel-graph/vx-ui/icons/LazyIcon';
+import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon';
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk';
 
 
