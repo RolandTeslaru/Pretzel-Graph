@@ -1,10 +1,10 @@
 import { memo } from 'react'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { WorkbenchSDK } from '../../sdk'
-import { Textarea } from '@pretzel-graph/vx-ui/foundations'
+import { Textarea } from '@pretzel-graph/standard-ui/foundations'
 import { HighlightedTextarea } from './HighlightedTextarea'
 import { InputLabel, type InputLabelVariant, type InputLabelSize } from './label';
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons';
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
 
 
 type RendererProps<K extends Foundations.Port.Input['variant']> = {

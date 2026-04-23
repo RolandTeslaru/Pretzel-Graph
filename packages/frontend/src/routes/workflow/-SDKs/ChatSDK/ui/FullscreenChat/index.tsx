@@ -1,7 +1,7 @@
-import { Button, DropdownMenu } from '@pretzel-graph/vx-ui/foundations'
+import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import ConversationArea from '../ConversationArea'
 import ChatList from './ChatList'
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { ChatSDK } from '../../sdk'
 
 const FullscreenChat = () => {

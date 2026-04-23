@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { type Connection, Handle, Position, type Edge } from "@xyflow/react";
 import { cn } from '@/utils/styleUtils';
-import { Tooltip } from '@pretzel-graph/vx-ui/foundations/Tooltip';
+import { Tooltip } from '@pretzel-graph/standard-ui/foundations/Tooltip';
 import HandleTooltipContent from './tooltip';
 import { Foundations, Validation, Workflow } from '@pretzel-graph/shared/domain';
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk';

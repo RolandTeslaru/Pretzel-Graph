@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { Switch } from '@pretzel-graph/vx-ui/foundations/switch'
+import { Switch } from '@pretzel-graph/standard-ui/foundations/switch'
 import { WorkbenchSDK } from '../../sdk'
 import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'

@@ -1,8 +1,8 @@
 
 import React, { useMemo } from 'react';
-import { cn } from '@pretzel-graph/vx-ui/utils/cn';
-import { Button, Dialog } from '@pretzel-graph/vx-ui/foundations';
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons';
+import { cn } from '@pretzel-graph/standard-ui/utils/cn';
+import { Button, Dialog } from '@pretzel-graph/standard-ui/foundations';
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
 import { DialogSDK } from '@/SDKs/DialogSDK';
 import type { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { WorkbenchSDK } from '../../sdk';

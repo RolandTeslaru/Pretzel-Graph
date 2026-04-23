@@ -1,4 +1,4 @@
-import { ScrollArea, Separator } from '@pretzel-graph/vx-ui/foundations'
+import { ScrollArea, Separator } from '@pretzel-graph/standard-ui/foundations'
 import { Drawers } from './Drawers'
 import SectionTabs from './SectionTabs'
 import Search from './Search'

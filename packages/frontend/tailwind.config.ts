@@ -44,7 +44,7 @@ const config: Config = {
         "components/**/*.{ts,tsx}",
         "./index.html",
         "./src/**/*.{js,ts,tsx,jsx}",
-        "../vx-ui/src/**/*.{js,ts,tsx,jsx}",
+        "../standard-ui/src/**/*.{js,ts,tsx,jsx}",
     ],
     important: false,
     theme: {

@@ -1,9 +1,9 @@
-import { Input, ScrollArea, Spinner } from '@pretzel-graph/vx-ui/foundations'
+import { Input, ScrollArea, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { useMemo, memo, useEffect, useState } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
-import { Accordion } from '@pretzel-graph/vx-ui/foundations/accordion';
+import { Accordion } from '@pretzel-graph/standard-ui/foundations/accordion';
 import { FieldRenderer } from '../FieldRenderer';
 import { INPUT_RENDERER_MAP } from '../InputRenderer';
 import { NodeSidebarHeader } from './header';

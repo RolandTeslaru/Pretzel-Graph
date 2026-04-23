@@ -1,5 +1,5 @@
-import { CollapsiblePanel } from '@pretzel-graph/vx-ui/components/CollapsiblePanel'
-import { AlertDialog, Button, Dialog } from '@pretzel-graph/vx-ui/foundations'
+import { CollapsiblePanel } from '@pretzel-graph/standard-ui/components/CollapsiblePanel'
+import { AlertDialog, Button, Dialog } from '@pretzel-graph/standard-ui/foundations'
 import { DialogSDK } from '../sdk'
 
 export const DialogSDKDebugPanel = ({defaultOpen}: {defaultOpen?: boolean}) => {
