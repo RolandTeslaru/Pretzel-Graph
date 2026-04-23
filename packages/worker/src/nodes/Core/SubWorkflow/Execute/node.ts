@@ -4,7 +4,7 @@ import { RuntimeNode } from "src/node";
 import { InferInputs, InferOutputs } from "src/types";
 import { Workbench, Workflow, SystemError } from "@vx-agent-editor/shared/domain";
 import { AxiosService } from "src/axios";
-import { CompilationContext, WorkflowCompiler, extendCompilePath } from "src/compiler";
+import { CompilationContext, extendCompilePath } from "src/compiler";
 import { AggexEngine } from "src/engine";
 import { AggexCompilerError } from "src/errors";
 
@@ -13,19 +13,23 @@ import { AggexCompilerError } from "src/errors";
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     public readonly Blueprint = Blueprint;
+    
+    private localEngineCtx: AggexEngine.ExecutionContext | null = null;
 
-    
-    private localEngine: AggexEngine | null = null;
-    
-    private localEngineExecutionCtx: AggexEngine.ExecutionContext | null = null;
+    constructor(wfNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
+        super(wfNode, context);
+    }
 
     protected override async onCompile(
         compilationContext: CompilationContext,
     ): Promise<void> {
+        const globalEngineCtx = this.context as unknown as AggexEngine.ExecutionContext;
+        const { workflowsMap, compilePath } = compilationContext;
         const subWorkflowId = this.fields.workflowId as Workflow.Id;
 
-        if (compilationContext.compilePath.includes(subWorkflowId)) {
-            const cyclePath = [...compilationContext.compilePath, subWorkflowId];
+        // Detect cycles in sub-workflow calls
+        if (compilePath.includes(subWorkflowId)) {
+            const cyclePath = [...compilePath, subWorkflowId];
             throw new AggexCompilerError(
                 SystemError.Code.COMPILATION_SUBWORKFLOW_CYCLE,
                 `Recursive sub-workflow: ${cyclePath.join(" → ")}`,
@@ -33,20 +37,20 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             );
         }
 
-        let subWorkflow = compilationContext.workflowCache.get(subWorkflowId);
+
+        // Fetch sub-workflow if its not in the map
+        let subWorkflow = workflowsMap.get(subWorkflowId);
         if (!subWorkflow) {
             const res = await Workbench.API.Workflow.get(AxiosService.api, { workflowId: subWorkflowId });
             subWorkflow = { id: res.workflow.id, data: res.workflow.data };
-            compilationContext.workflowCache.set(subWorkflowId, subWorkflow);
+            workflowsMap.set(subWorkflowId, subWorkflow);
         }
 
         const childCtx = extendCompilePath(compilationContext, subWorkflowId);
 
-        this.localEngineExecutionCtx = await new WorkflowCompiler().compile(
+        this.localEngineCtx = await globalEngineCtx.compileWorkflow(
             subWorkflow.id, subWorkflow.data, this.context.jobId, this.context.session, this.context.emit, childCtx,
         );
-
-        this.localEngine = new AggexEngine();
     }
 
 
@@ -56,12 +60,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const { workflowId: _workflowId } = this.fields;
 
-        if(!this.localEngine || !this.localEngineExecutionCtx) {
+        if(!this.localEngineCtx) {
             throw new Error("SubWorkflow.Execute node not properly compiled");
         }
 
         // Inject parent workflow data stream into node
-        this.localEngineExecutionCtx.nodeInstanceMap.forEach(({wfNode, instance}) => {
+        this.localEngineCtx.nodeInstanceMap.forEach(({wfNode, instance}) => {
             if(wfNode.blueprintId === "Core.SubWorkflow.ExposeInputPort" && "injectedData" in instance){
                 // The exposed port id is the same as the local node id of the ExposeInputPort node
                 const bridgeId = wfNode.id as keyof InferInputs<typeof Blueprint>;
@@ -70,11 +74,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         })
 
         try {
-            await this.localEngine.run(this.localEngineExecutionCtx)
+            await this.localEngineCtx.runSubWorkflow(this.localEngineCtx)
             
             const result: Partial<InferOutputs<typeof Blueprint>> = {};
             // Extract data from nodes
-            this.localEngineExecutionCtx.nodeInstanceMap.forEach(({wfNode, instance}) => {
+            this.localEngineCtx.nodeInstanceMap.forEach(({wfNode, instance}) => {
                 if(wfNode.blueprintId === "Core.SubWorkflow.ExposeOutputPort" && "ejectedData" in instance){
                     // The exposed port id is the same as the local node id of the ExposeOutputPort node
                     (result as Record<string, unknown>)[wfNode.id] = instance.ejectedData;
