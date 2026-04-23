@@ -5,7 +5,6 @@ import { Orchestrator, Realtime } from '@vx-agent-editor/shared/domain';
 import { SystemError } from '@vx-agent-editor/shared/domain/SystemError';
 import { AggexEngine, AggexHooks } from 'src/engine';
 import { container, singleton } from 'tsyringe';
-import { Emitter } from './event/emitter';
 import { WorkflowCompiler } from './compiler';
 
 const LOCK_EXTEND_INTERVAL_MS = 15_000;
@@ -204,7 +203,7 @@ export class AggexWorkerImpl {
     )
 
 
-    public emit: Emitter = (event) => {
+    public emit<T_Event extends Realtime.Event>(event: T_Event){
         this.publishToRedis(event)
     }
 
