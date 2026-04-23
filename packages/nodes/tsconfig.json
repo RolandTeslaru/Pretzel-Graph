@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "noEmit": true,
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "noImplicitOverride": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "paths": {
+            "@vx-agent-editor/node-sdk": ["../node-sdk/src/index.ts"],
+            "@vx-agent-editor/node-sdk/*": ["../node-sdk/src/*"],
+            "@vx-agent-editor/shared/*": ["../shared/*"],
+            "@vx-agent-builder/worker": ["../worker/src/index.ts"],
+            "@vx-agent-builder/worker/*": ["../worker/src/*"],
+            "src/*": ["../worker/src/*"]
+        }
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist"]
+}

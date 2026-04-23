@@ -7,6 +7,12 @@
             "@/*": [
                 "./src/*"
             ],
+            "@vx-agent-editor/node-sdk": [
+                "../node-sdk/src/index.ts"
+            ],
+            "@vx-agent-editor/node-sdk/*": [
+                "../node-sdk/src/*"
+            ],
             "@vx-agent-builder/worker": [
                 "../worker/src/index.ts"
             ],
