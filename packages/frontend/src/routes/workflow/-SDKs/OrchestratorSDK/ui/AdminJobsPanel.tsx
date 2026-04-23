@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Button, Badge, AlertDialog, Spinner } from '@pretzel-graph/vx-ui/foundations'
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { Button, Badge, AlertDialog, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { Orchestrator } from '@pretzel-graph/shared/domain'

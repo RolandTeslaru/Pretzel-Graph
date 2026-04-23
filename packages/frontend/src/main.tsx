@@ -6,7 +6,7 @@ import './index.css'
 import { SystemSDK } from './SDKs/SystemSDK/sdk'
 import { AuthSDK } from './SDKs/AuthSDK/sdk'
 import { routeTree } from './routeTree.gen'
-import { Spinner } from "@pretzel-graph/vx-ui/foundations"
+import { Spinner } from "@pretzel-graph/standard-ui/foundations"
 
 SystemSDK.init()
 AuthSDK.init()

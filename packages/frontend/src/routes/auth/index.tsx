@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import AuthenticationPanel from '@/SDKs/AuthSDK/ui/AuthenticationPanel'
 import GameOfLifeBackground from './GameOfLifeBackground'
-import { Pretzel } from '@pretzel-graph/vx-ui/icons/system'
+import { Pretzel } from '@pretzel-graph/standard-ui/icons/system'
 
 
 export const Route = createFileRoute('/auth/')({

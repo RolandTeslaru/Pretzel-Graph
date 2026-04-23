@@ -1,6 +1,6 @@
 import { memo, useEffect } from 'react'
-import { Select } from "@pretzel-graph/vx-ui/foundations/select"
-import { Badge } from '@pretzel-graph/vx-ui/foundations'
+import { Select } from "@pretzel-graph/standard-ui/foundations/select"
+import { Badge } from '@pretzel-graph/standard-ui/foundations'
 import { WorkbenchSDK } from '../../sdk'
 import { VaultSDK } from '@/SDKs/VaultSDK/sdk'
 import { DialogSDK } from '@/SDKs/DialogSDK'

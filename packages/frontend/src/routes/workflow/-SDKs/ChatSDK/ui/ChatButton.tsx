@@ -1,5 +1,5 @@
-import { Button } from '@pretzel-graph/vx-ui/foundations'
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { Button } from '@pretzel-graph/standard-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { ChatSDK } from '../sdk'
 
 const ChatButton = () => {

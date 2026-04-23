@@ -1,4 +1,4 @@
-import { Button, Input } from "@pretzel-graph/vx-ui/foundations"
+import { Button, Input } from "@pretzel-graph/standard-ui/foundations"
 import { useState } from "react"
 import { NotificationSDK } from "../sdk";
 

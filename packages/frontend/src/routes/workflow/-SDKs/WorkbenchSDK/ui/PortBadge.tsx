@@ -1,5 +1,5 @@
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
-import { Badge } from '@pretzel-graph/vx-ui/foundations'
+import { Badge } from '@pretzel-graph/standard-ui/foundations'
 import type { Foundations } from '@pretzel-graph/shared/domain'
 import React from 'react'
 

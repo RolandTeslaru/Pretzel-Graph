@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import * as SystemIcons from '@pretzel-graph/vx-ui/icons/system'
+import * as SystemIcons from '@pretzel-graph/standard-ui/icons/system'
 import { useState } from 'react'
 
 export const Route = createFileRoute('/icons-preview/')({
