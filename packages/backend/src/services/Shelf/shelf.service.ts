@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Shelf } from '@vx-agent-editor/shared/domain';
+import { Shelf } from '@pretzel-graph/shared/domain';
 import * as indexJson from './node_index.json';
-import { ALL_DRAWERS, SECTIONS } from '@vx-agent-editor/shared/constants/drawers';
-import { CatalogueService } from "@vx-agent-editor/node-sdk"
-import { Blueprint } from '@vx-agent-editor/shared/domain/Foundations/Blueprint';
+import { ALL_DRAWERS, SECTIONS } from '@pretzel-graph/shared/constants/drawers';
+import { CatalogueService } from "@pretzel-graph/node-sdk"
+import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 
 const INDEX = indexJson as Shelf.Index;
 

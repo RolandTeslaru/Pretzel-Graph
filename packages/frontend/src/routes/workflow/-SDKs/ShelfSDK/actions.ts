@@ -1,6 +1,6 @@
 import type { ShelfSDKImpl, ShelfSDK } from "./sdk";
 import type { DropFirstArg } from "@/SDKs/types";
-import { Foundations, Shelf } from "@vx-agent-editor/shared/domain";
+import { Foundations, Shelf } from "@pretzel-graph/shared/domain";
 import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 

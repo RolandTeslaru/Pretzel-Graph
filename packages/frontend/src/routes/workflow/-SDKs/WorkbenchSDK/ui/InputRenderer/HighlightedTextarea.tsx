@@ -1,10 +1,10 @@
 
 import React, { useMemo } from 'react';
-import { cn } from '@vx-agent-editor/vx-ui/utils/cn';
-import { Button, Dialog } from '@vx-agent-editor/vx-ui/foundations';
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons';
+import { cn } from '@pretzel-graph/vx-ui/utils/cn';
+import { Button, Dialog } from '@pretzel-graph/vx-ui/foundations';
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons';
 import { DialogSDK } from '@/SDKs/DialogSDK';
-import type { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
+import type { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { WorkbenchSDK } from '../../sdk';
 
 interface HighlightedTextareaProps extends React.ComponentProps<"textarea"> {

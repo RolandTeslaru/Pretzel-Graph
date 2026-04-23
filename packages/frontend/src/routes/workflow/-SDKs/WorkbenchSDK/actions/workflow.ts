@@ -1,7 +1,7 @@
 import type { DropFirstArg } from "@/SDKs/types";
 import type { WorkbenchSDKImpl, WorkbenchSDK } from "../sdk"
 import { withCommit } from "../utils/actions"
-import { Workbench, Workflow } from "@vx-agent-editor/shared/domain";
+import { Workbench, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 
 export function createWorkflowActions(sdk: WorkbenchSDKImpl) {

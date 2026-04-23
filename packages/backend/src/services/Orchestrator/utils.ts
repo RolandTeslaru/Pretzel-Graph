@@ -1,6 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Vault, Workflow } from "@vx-agent-editor/shared/domain";
-import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
+import { Vault, Workflow } from "@pretzel-graph/shared/domain";
+import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 
 
 export class SecretsResolver {

@@ -1,7 +1,7 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
-import { Chat, ExecutionSession } from "@vx-agent-editor/shared/domain";
+import { Chat, ExecutionSession } from "@pretzel-graph/shared/domain";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { createExecutionSDKActions, type ExecutionSDKActions } from "./actions";

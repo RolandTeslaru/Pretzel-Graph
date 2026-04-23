@@ -1,9 +1,9 @@
 import { memo, useId, useCallback } from 'react';
 import { type EdgeProps, getBezierPath, EdgeLabelRenderer } from '@xyflow/react';
 import { WorkbenchSDK } from '../../../sdk';
-import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import { ExecutionSessionSDK } from '@/routes/workflow/-SDKs/ExecutionSessionSDK/sdk';
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons';
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons';
 
 const WorkflowEdge = memo(({
     source,

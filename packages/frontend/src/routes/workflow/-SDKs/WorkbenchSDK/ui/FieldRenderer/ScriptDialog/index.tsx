@@ -1,10 +1,10 @@
 import React, { memo, Suspense, lazy, useEffect, useState } from 'react'
 import { FieldLabel, type RendererProps } from '..';
-import { Button, Dialog, Input, Spinner } from '@vx-agent-editor/vx-ui/foundations';
+import { Button, Dialog, Input, Spinner } from '@pretzel-graph/vx-ui/foundations';
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk';
 import { DialogSDK } from '@/SDKs/DialogSDK';
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons';
-import type { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons';
+import type { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
 

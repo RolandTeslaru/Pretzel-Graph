@@ -1,6 +1,6 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger } from '@nestjs/common';
 import { Response } from 'express';
-import { SystemError } from '@vx-agent-editor/shared/domain/SystemError';
+import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { ZodError } from 'zod';
 
 @Catch()

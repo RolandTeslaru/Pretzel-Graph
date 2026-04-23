@@ -3,7 +3,7 @@ import { Blueprint } from "./blueprint";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { RuntimeNode } from "src/node";
 import { InferInputs, InferOutputs } from "src/types";
-import { Workflow } from "@vx-agent-editor/shared/domain";
+import { Workflow } from "@pretzel-graph/shared/domain";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {

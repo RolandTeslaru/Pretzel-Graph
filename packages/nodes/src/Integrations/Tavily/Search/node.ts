@@ -1,10 +1,10 @@
-import { RegisterNode } from "@vx-agent-editor/node-sdk";
+import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint, ToolBlueprint } from "./blueprint";
-import { RuntimeNode } from "@vx-agent-editor/node-sdk";
-import { InferInputs, InferOutputs } from "@vx-agent-editor/node-sdk";
+import { RuntimeNode } from "@pretzel-graph/node-sdk";
+import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
 import { tool } from "@langchain/core/tools";
-import { Workflow } from "@vx-agent-editor/shared/domain";
+import { Workflow } from "@pretzel-graph/shared/domain";
 import { z } from "zod/v3";
 
 

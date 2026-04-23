@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
+import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
 import { OrchestratorModule } from './services/Orchestrator/orchestrator.module';
 import { ChatModule } from './services/Chat/chat.module';
 import { ExecutionSessionModule } from './services/ExecutionSession/execution-session.module';

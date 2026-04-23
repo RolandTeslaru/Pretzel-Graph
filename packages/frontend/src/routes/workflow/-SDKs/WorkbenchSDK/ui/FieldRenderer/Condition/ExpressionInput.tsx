@@ -1,8 +1,8 @@
 import { ExecutionSessionSDK } from '@/routes/workflow/-SDKs/ExecutionSessionSDK/sdk'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
-import { Expression, Workflow } from '@vx-agent-editor/shared/domain'
-import { Input, Tooltip } from '@vx-agent-editor/vx-ui/foundations'
-import { cn } from '@vx-agent-editor/vx-ui/utils/cn'
+import { Expression, Workflow } from '@pretzel-graph/shared/domain'
+import { Input, Tooltip } from '@pretzel-graph/vx-ui/foundations'
+import { cn } from '@pretzel-graph/vx-ui/utils/cn'
 import { useState, useEffect } from 'react'
 import JsonView from 'react18-json-view'
 

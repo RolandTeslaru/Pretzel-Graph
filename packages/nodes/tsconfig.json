@@ -13,11 +13,11 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "paths": {
-            "@vx-agent-editor/node-sdk": ["../node-sdk/src/index.ts"],
-            "@vx-agent-editor/node-sdk/*": ["../node-sdk/src/*"],
-            "@vx-agent-editor/shared/*": ["../shared/*"],
-            "@vx-agent-editor/worker": ["../worker/src/index.ts"],
-            "@vx-agent-editor/worker/*": ["../worker/src/*"],
+            "@pretzel-graph/node-sdk": ["../node-sdk/src/index.ts"],
+            "@pretzel-graph/node-sdk/*": ["../node-sdk/src/*"],
+            "@pretzel-graph/shared/*": ["../shared/*"],
+            "@pretzel-graph/worker": ["../worker/src/index.ts"],
+            "@pretzel-graph/worker/*": ["../worker/src/*"],
             "src/*": ["../worker/src/*"]
         }
     },

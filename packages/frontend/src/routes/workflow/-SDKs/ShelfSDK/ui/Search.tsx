@@ -1,8 +1,8 @@
-import { Input } from '@vx-agent-editor/vx-ui/foundations'
+import { Input } from '@pretzel-graph/vx-ui/foundations'
 import React, { useMemo, useEffect, useState } from 'react'
 import { ShelfSDK } from '../sdk';
 import { debounce } from 'lodash';
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons';
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons';
 
 
 const Search = () => {

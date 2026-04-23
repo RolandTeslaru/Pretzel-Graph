@@ -1,6 +1,6 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
-import { Workflow } from "@vx-agent-editor/shared/domain";
+import { Workflow } from "@pretzel-graph/shared/domain";
 import { ChatOpenAI } from "@langchain/openai";
 import { RuntimeNode } from "src/node";
 import { InferInputs, InferOutputs } from "src/types";

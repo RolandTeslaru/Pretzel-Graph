@@ -2,11 +2,11 @@ import { immer } from "zustand/middleware/immer";
 import { _createLibraryActions_, type _LibrarySDKActions } from "./actions";
 import { _createLibrarySelectors_, type _LibrarySDKSelectors } from "./selectors";
 import { BaseSDK } from "../Base";
-import { Workflow, Library } from "@vx-agent-editor/shared/domain";
+import { Workflow, Library } from "@pretzel-graph/shared/domain";
 import { SDK } from "../SDKManager";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
-import type { TreeDataItem } from '@vx-agent-editor/vx-ui/components/Tree/tree-view';
+import type { TreeDataItem } from '@pretzel-graph/vx-ui/components/Tree/tree-view';
 
 @SDK("Library")
 export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {

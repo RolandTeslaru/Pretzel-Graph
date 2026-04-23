@@ -1,10 +1,10 @@
-import { Workflow } from "@vx-agent-editor/shared/domain";
+import { Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { cacheReducers } from "./cache";
 import { inputReducers } from "./input";
 import { workbenchSelectors } from "../selectors"
 import { nodeReducers } from "./node";
-import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
+import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 
 const sel = workbenchSelectors
 

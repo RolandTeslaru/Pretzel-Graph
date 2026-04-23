@@ -1,4 +1,4 @@
-import { Foundations } from "@vx-agent-editor/shared/domain";
+import { Foundations } from "@pretzel-graph/shared/domain";
 
 export type LiteralField<
     T_Id extends string,

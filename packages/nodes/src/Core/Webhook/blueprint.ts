@@ -1,6 +1,6 @@
-import { Field } from "@vx-agent-editor/shared/domain/Foundations/Field";
-import { Webhook } from "@vx-agent-editor/shared/domain/Foundations/Webhook";
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@vx-agent-editor/node-sdk";
+import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
+import { Webhook } from "@pretzel-graph/shared/domain/Foundations/Webhook";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Webhook",

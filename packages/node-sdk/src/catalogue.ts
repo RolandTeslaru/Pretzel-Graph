@@ -1,5 +1,5 @@
 import { container, singleton } from "tsyringe";
-import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import type { RuntimeNode } from "./node";
 
 export type NodeConstructor = {

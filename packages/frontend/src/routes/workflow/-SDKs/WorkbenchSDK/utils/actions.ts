@@ -1,7 +1,7 @@
 import { WorkbenchSDK } from '../sdk';
 import { debounce } from '@/decorators/debounce';
 import { toast } from 'sonner';
-import { Foundations, Workbench, Workflow } from '@vx-agent-editor/shared/domain';
+import { Foundations, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { api } from '@/SDKs/ApiInterceptorSDK';
 import { workflowReducers } from '../reducers/workflow';
 

@@ -1,7 +1,7 @@
-import { Tabs } from '@vx-agent-editor/vx-ui/foundations'
+import { Tabs } from '@pretzel-graph/vx-ui/foundations'
 import { memo } from 'react'
 import { ShelfSDK } from '../sdk'
-import type { Shelf } from '@vx-agent-editor/shared/domain';
+import type { Shelf } from '@pretzel-graph/shared/domain';
 
 const SectionTabs = memo(() => {
     const selectedSection = ShelfSDK.useStore(s => s.selectedSection);

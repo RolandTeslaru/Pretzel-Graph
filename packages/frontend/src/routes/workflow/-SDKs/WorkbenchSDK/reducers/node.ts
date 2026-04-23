@@ -1,11 +1,11 @@
-import { Foundations, Validation, Workflow } from "@vx-agent-editor/shared/domain";
+import { Foundations, Validation, Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { cloneDeep } from 'lodash';
 import { edgeReducers } from "./edge";
 import { cacheReducers } from "./cache";
 import { layoutReducers } from "./layout";
 import { fieldReducers } from "./field";
-import { Port } from "@vx-agent-editor/shared/domain/Foundations/Port";
+import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import uid from "../../../../../utils/uid";
 
 const generateUniqueString = (field: Foundations.Field): string => {

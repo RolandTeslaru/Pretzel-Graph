@@ -1,5 +1,5 @@
-import { Chat } from '@vx-agent-editor/shared/domain'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { Chat } from '@pretzel-graph/shared/domain'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
 import { motion } from 'motion/react'
 
 const ToolBubble = ({ message }: { message: Chat.Message.Tool }) => {

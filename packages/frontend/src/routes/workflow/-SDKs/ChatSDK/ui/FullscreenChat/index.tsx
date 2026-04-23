@@ -1,7 +1,7 @@
-import { Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
+import { Button, DropdownMenu } from '@pretzel-graph/vx-ui/foundations'
 import ConversationArea from '../ConversationArea'
 import ChatList from './ChatList'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
 import { ChatSDK } from '../../sdk'
 
 const FullscreenChat = () => {

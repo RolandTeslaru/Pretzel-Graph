@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { Foundations, Workflow } from '@vx-agent-editor/shared/domain'
+import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
 
 import { StringField } from './String'
 import { BooleanField } from './Boolean'

@@ -1,6 +1,6 @@
 import { Controller, Post, Body, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { ExecutionSessionService } from './execution-session.service';
-import { Auth, ExecutionSession } from '@vx-agent-editor/shared/domain';
+import { Auth, ExecutionSession } from '@pretzel-graph/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
 
 @Controller('execution-session')

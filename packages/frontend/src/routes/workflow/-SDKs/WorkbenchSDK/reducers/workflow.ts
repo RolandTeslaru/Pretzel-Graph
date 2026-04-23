@@ -1,7 +1,7 @@
-import { Validation, Workflow } from "@vx-agent-editor/shared/domain";
+import { Validation, Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { cloneDeep } from 'lodash';
-import { Algorithms } from "@vx-agent-editor/shared/domain/Algorithms";
+import { Algorithms } from "@pretzel-graph/shared/domain/Algorithms";
 
 export const workflowReducers = {
     setLock: (s, lock) => {
