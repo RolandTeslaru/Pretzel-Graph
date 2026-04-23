@@ -1,6 +1,6 @@
 import { Controller, Post, Body, UseGuards, HttpCode } from '@nestjs/common';
 import { ShelfService } from './shelf.service';
-import { Shelf } from '@vx-agent-editor/shared/domain';
+import { Shelf } from '@pretzel-graph/shared/domain';
 import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
 
 @Controller('shelf')

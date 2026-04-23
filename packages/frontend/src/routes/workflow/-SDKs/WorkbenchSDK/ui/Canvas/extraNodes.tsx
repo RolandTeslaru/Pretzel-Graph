@@ -1,10 +1,10 @@
 import type { NodeProps } from '@xyflow/react'
 import type { WorkbenchSDK } from '../../sdk'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
 import { memo } from 'react'
 import { motion } from 'motion/react'
-import { Tooltip } from '@vx-agent-editor/vx-ui/foundations'
-import type { Validation } from '@vx-agent-editor/shared/domain'
+import { Tooltip } from '@pretzel-graph/vx-ui/foundations'
+import type { Validation } from '@pretzel-graph/shared/domain'
 
 export const ProblematicCycleSelectionNode = memo(({ data }: NodeProps<WorkbenchSDK.CycleSelectionNodeDriver>) => {
     return (

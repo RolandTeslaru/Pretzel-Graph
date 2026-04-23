@@ -1,10 +1,10 @@
-import { ScrollArea, Separator } from '@vx-agent-editor/vx-ui/foundations'
+import { ScrollArea, Separator } from '@pretzel-graph/vx-ui/foundations'
 import { Drawers } from './Drawers'
 import SectionTabs from './SectionTabs'
 import Search from './Search'
 import { ShelfSDK } from '../sdk'
 import { nodeColorsName } from '@/utils/styleUtils'
-import type { Foundations } from '@vx-agent-editor/shared/domain'
+import type { Foundations } from '@pretzel-graph/shared/domain'
 
 const ShelfSidebar = () => {
     return (

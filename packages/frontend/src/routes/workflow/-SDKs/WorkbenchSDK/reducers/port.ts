@@ -1,4 +1,4 @@
-import type { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import type { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { edgeReducers } from "./edge";
 

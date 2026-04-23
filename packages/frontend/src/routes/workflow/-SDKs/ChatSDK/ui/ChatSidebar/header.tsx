@@ -1,7 +1,7 @@
 import { ChatSDK } from '../../sdk'
 import ChatSelect from './ChatSelect'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
-import { Button, DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { Button, DropdownMenu } from '@pretzel-graph/vx-ui/foundations'
 
 const ChatSidebarHeader = () => {
 

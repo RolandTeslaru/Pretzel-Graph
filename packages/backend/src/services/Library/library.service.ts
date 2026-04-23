@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { createAuthenticatedClient, getUserId } from '@/utils/supabase';
-import { Library, Workflow } from '@vx-agent-editor/shared/domain';
+import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { withSupabaseAssert } from '@vx-agent-editor/shared/errors/supabase';
+import { withSupabaseAssert } from '@pretzel-graph/shared/errors/supabase';
 
 @Injectable()
 export class LibraryService {

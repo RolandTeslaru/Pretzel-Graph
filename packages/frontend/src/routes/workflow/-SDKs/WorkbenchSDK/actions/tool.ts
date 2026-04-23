@@ -1,7 +1,7 @@
 import type { WorkbenchSDKImpl } from "../sdk"
-import type { Workflow } from "@vx-agent-editor/shared/domain";
+import type { Workflow } from "@pretzel-graph/shared/domain";
 import type { FieldActions } from "./field";
-import { Field } from "@vx-agent-editor/shared/domain/Foundations/Field";
+import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 
 export function createToolActions(sdk: WorkbenchSDKImpl, fieldActions: FieldActions) {
     const sel = sdk.selectors;

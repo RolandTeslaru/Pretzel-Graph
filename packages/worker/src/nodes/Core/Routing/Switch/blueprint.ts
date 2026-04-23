@@ -1,4 +1,4 @@
-import { Foundations } from "@vx-agent-editor/shared/domain";
+import { Foundations } from "@pretzel-graph/shared/domain";
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "src/nodes/builders";
 
 export const Blueprint = defineBlueprint({

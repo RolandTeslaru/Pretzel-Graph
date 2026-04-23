@@ -35,10 +35,10 @@
       "@/*": [
         "./src/*"
       ],
-      "@vx-agent-editor/shared/*": [
+      "@pretzel-graph/shared/*": [
         "../shared/*"
       ],
-      "@vx-agent-editor/vx-ui/*": [
+      "@pretzel-graph/vx-ui/*": [
         "../vx-ui/src/*"
       ]
     }

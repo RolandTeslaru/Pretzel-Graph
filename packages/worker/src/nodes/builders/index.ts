@@ -1,8 +1,8 @@
-import { Foundations } from "@vx-agent-editor/shared/domain";
-import type { Webhook } from "@vx-agent-editor/shared/domain/Foundations/Webhook";
-import type { Port }  from "@vx-agent-editor/shared/domain/Foundations/Port";
-import type { Field } from "@vx-agent-editor/shared/domain/Foundations/Field";
-import type { Blueprint } from "@vx-agent-editor/shared/domain/Foundations/Blueprint";
+import { Foundations } from "@pretzel-graph/shared/domain";
+import type { Webhook } from "@pretzel-graph/shared/domain/Foundations/Webhook";
+import type { Port }  from "@pretzel-graph/shared/domain/Foundations/Port";
+import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
+import type { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { FieldBuilder } from "./field";
 export { FieldBuilder } from "./field"
 export { InputBuilder } from "./input"

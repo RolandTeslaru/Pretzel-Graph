@@ -1,6 +1,6 @@
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
-import { Tooltip } from '@vx-agent-editor/vx-ui/foundations'
-import type { ExecutionSession, Validation, Workflow } from '@vx-agent-editor/shared/domain'
+import { Tooltip } from '@pretzel-graph/vx-ui/foundations'
+import type { ExecutionSession, Validation, Workflow } from '@pretzel-graph/shared/domain'
 import { GlowingAlertTriangle, GlowingCompletedCheck, GlowingFailedX, GlowingRunningSpinner, GlowingWaitingClock } from './icons'
 
 

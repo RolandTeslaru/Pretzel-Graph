@@ -1,4 +1,4 @@
-import { Field } from '@vx-agent-editor/shared/domain/Foundations/Field';
+import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 
 type ConditionValue = Field.Condition.Value
 type RuleId = Field.Condition.Rule.Id

@@ -3,9 +3,9 @@ import { WebSocket } from 'ws';
 import { IncomingMessage } from 'http';
 import Redis from 'ioredis';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants";
-import { Realtime } from "@vx-agent-editor/shared/domain/Realtime";
-import { Auth } from "@vx-agent-editor/shared/domain/Auth";
+import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
+import { Realtime } from "@pretzel-graph/shared/domain/Realtime";
+import { Auth } from "@pretzel-graph/shared/domain/Auth";
 import { createAuthenticatedClient, createServiceClient, getUserId } from '../../utils/supabase';
 
 const OWNERSHIP_CACHE_TTL_MS = 30_000;

@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException, MethodNotAllowedException } from '@nestjs/common';
-import { ExecutionSession, Orchestrator, VersionControl } from '@vx-agent-editor/shared/domain';
-import { Webhook } from '@vx-agent-editor/shared/domain/Foundations/Webhook';
+import { ExecutionSession, Orchestrator, VersionControl } from '@pretzel-graph/shared/domain';
+import { Webhook } from '@pretzel-graph/shared/domain/Foundations/Webhook';
 import { WorkflowRegistryService } from '../WorkflowRegistry/workflow-registry.service';
 import { ApiService } from '../Api/api.service';
 

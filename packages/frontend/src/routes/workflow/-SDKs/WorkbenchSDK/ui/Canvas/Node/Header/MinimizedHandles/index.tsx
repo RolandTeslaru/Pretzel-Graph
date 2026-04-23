@@ -1,4 +1,4 @@
-import { Workflow } from '@vx-agent-editor/shared/domain'
+import { Workflow } from '@pretzel-graph/shared/domain'
 import React, { useMemo } from 'react'
 import { Port } from '../../Port'
 

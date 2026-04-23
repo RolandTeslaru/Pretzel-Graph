@@ -3,11 +3,11 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { WorkbenchSDK } from '../../sdk'
-import { DropdownMenu } from '@vx-agent-editor/vx-ui/foundations'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
-import { Button, Dialog, Form, Input } from '@vx-agent-editor/vx-ui/foundations'
+import { DropdownMenu } from '@pretzel-graph/vx-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { Button, Dialog, Form, Input } from '@pretzel-graph/vx-ui/foundations'
 import { DialogSDK } from '@/SDKs/DialogSDK'
-import { Workflow } from '@vx-agent-editor/shared/domain'
+import { Workflow } from '@pretzel-graph/shared/domain'
 
 const NameSchema = z.object({
     display_name: z.string().trim().min(1, 'Name is required'),

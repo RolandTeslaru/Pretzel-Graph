@@ -1,8 +1,8 @@
 import { Job as BullJob, Worker } from 'bullmq';
 import IORedis from 'ioredis';
-import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants"
-import { Orchestrator, Realtime } from '@vx-agent-editor/shared/domain';
-import { SystemError } from '@vx-agent-editor/shared/domain/SystemError';
+import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants"
+import { Orchestrator, Realtime } from '@pretzel-graph/shared/domain';
+import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { AggexEngine, AggexHooks } from 'src/engine';
 import { container, singleton } from 'tsyringe';
 import { WorkflowCompiler } from './compiler';

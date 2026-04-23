@@ -1,5 +1,5 @@
-import { Label } from "@vx-agent-editor/vx-ui/foundations/label"
-import type { Foundations } from "@vx-agent-editor/shared/domain"
+import { Label } from "@pretzel-graph/vx-ui/foundations/label"
+import type { Foundations } from "@pretzel-graph/shared/domain"
 
 export type InputLabelVariant = "default" | "section" | "inline" | "meta" | "secondary"
 export type InputLabelSize = "xs" | "sm" | "md" | "lg"

@@ -16,19 +16,19 @@
             "src/*": [
                 "./src/*"
             ],
-            "@vx-agent-editor/node-sdk": [
+            "@pretzel-graph/node-sdk": [
                 "../node-sdk/src/index.ts"
             ],
-            "@vx-agent-editor/node-sdk/*": [
+            "@pretzel-graph/node-sdk/*": [
                 "../node-sdk/src/*"
             ],
-            "@vx-agent-editor/shared/*": [
+            "@pretzel-graph/shared/*": [
                 "../shared/*"
             ],
-            "@vx-agent-editor/blueprints/*": [
+            "@pretzel-graph/blueprints/*": [
                 "../blueprints/src/*"
             ],
-            "@vx-agent-editor/nodes/*": [
+            "@pretzel-graph/nodes/*": [
                 "../nodes/src/*"
             ]
         }

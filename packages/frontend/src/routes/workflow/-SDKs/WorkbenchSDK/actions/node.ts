@@ -2,11 +2,11 @@ import type { DropFirstArg } from "@/SDKs/types";
 import { type WorkbenchSDKImpl, WorkbenchSDK } from "../sdk"
 import { withAsyncCommit, withCommit, withCyclesRecompute } from "../utils/actions"
 import { ShelfSDK } from "../../ShelfSDK/sdk";
-import { Foundations, Workbench, type Workflow } from "@vx-agent-editor/shared/domain";
-import type { Field } from "@vx-agent-editor/shared/domain/Foundations/Field";
+import { Foundations, Workbench, type Workflow } from "@pretzel-graph/shared/domain";
+import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
-import { extractExposedPorts } from "@vx-agent-editor/shared/subworkflow";
+import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow";
 
 export function createNodeActions(sdk: WorkbenchSDKImpl) {
     const setState = sdk.useStore.setState;

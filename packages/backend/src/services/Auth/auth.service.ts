@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { createAuthenticatedClient } from '@/utils/supabase';
-import { withSupabaseAssert } from '@vx-agent-editor/shared/errors/supabase';
-import { Auth } from '@vx-agent-editor/shared/domain';
+import { withSupabaseAssert } from '@pretzel-graph/shared/errors/supabase';
+import { Auth } from '@pretzel-graph/shared/domain';
 
 @Injectable()
 export class AuthService {

@@ -1,6 +1,6 @@
 import { memo } from 'react'
-import { Input } from "@vx-agent-editor/vx-ui/foundations/input"
-import { Slider } from '@vx-agent-editor/vx-ui/foundations'
+import { Input } from "@pretzel-graph/vx-ui/foundations/input"
+import { Slider } from '@pretzel-graph/vx-ui/foundations'
 import { WorkbenchSDK } from '../../sdk'
 import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'

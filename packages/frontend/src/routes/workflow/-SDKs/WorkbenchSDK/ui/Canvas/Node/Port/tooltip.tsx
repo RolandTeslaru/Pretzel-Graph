@@ -1,4 +1,4 @@
-import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
+import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import React, { useMemo } from 'react'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk';
 import { PortBadge } from '../../../PortBadge';

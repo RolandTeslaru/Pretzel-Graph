@@ -6,7 +6,7 @@ import WorkbenchNode from './Node'
 import { ProblematicCycleSelectionNode } from './extraNodes'
 import { nodeColorsName } from '@/utils/styleUtils'
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
-import { Workflow, Foundations, Validation } from "@vx-agent-editor/shared/domain"
+import { Workflow, Foundations, Validation } from "@pretzel-graph/shared/domain"
 import { withCyclesRecompute } from '../../utils/actions'
 
 type NodeDriver = WorkbenchSDK.NodeDriver | WorkbenchSDK.CycleSelectionNodeDriver

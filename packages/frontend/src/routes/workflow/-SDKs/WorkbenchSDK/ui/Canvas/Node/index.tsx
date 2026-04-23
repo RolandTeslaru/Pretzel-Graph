@@ -5,7 +5,7 @@ import NodeInputs from './Inputs';
 import NodeOutputs from './Outputs';
 
 import type { NodeProps } from '@xyflow/react';
-import { Workflow } from '@vx-agent-editor/shared/domain';
+import { Workflow } from '@pretzel-graph/shared/domain';
 import { NodeToolbar, Position } from '@xyflow/react';
 import { NodeCustomToolbar } from './CustomToolbar';
 import { cn } from '@/utils/styleUtils';

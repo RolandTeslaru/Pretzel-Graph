@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Auth } from '@vx-agent-editor/shared/domain';
+import { Auth } from '@pretzel-graph/shared/domain';
 import dotenv from 'dotenv';
 
 dotenv.config();

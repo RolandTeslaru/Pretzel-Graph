@@ -1,4 +1,4 @@
-import { FieldBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "@vx-agent-editor/node-sdk";
+import { FieldBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.OpenAI.Chat",

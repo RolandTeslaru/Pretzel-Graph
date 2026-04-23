@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Delete, Body, Param, UseGuards, Req, HttpCode } from '@nestjs/common';
-import { VersionControl } from '@vx-agent-editor/shared/domain';
+import { VersionControl } from '@pretzel-graph/shared/domain';
 import { VersionControlService } from './version-control.service';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
 

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Foundations, Workflow } from '@vx-agent-editor/shared/domain';
+import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { Port } from '../Port'
 import { cn } from '@/utils/styleUtils'
 

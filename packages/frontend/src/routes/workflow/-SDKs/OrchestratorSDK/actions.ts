@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
-import { Chat, Orchestrator, Validation } from "@vx-agent-editor/shared/domain";
+import { Chat, Orchestrator, Validation } from "@pretzel-graph/shared/domain";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { type OrchestratorSDKImpl, type OrchestratorSDK } from "./sdk"
 import { ExecutionSessionSDK } from "../ExecutionSessionSDK/sdk";

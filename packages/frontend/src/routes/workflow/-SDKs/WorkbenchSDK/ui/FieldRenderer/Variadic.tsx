@@ -1,9 +1,9 @@
 import React, { memo } from 'react'
 import { FieldLabel, type RendererProps } from './FieldLabel'
 import { WorkbenchSDK } from '../../sdk'
-import { ButtonGroup } from '@vx-agent-editor/vx-ui/foundations/button-group'
-import { Button, Input } from '@vx-agent-editor/vx-ui/foundations'
-import { SystemIcons } from '@vx-agent-editor/vx-ui/icons'
+import { ButtonGroup } from '@pretzel-graph/vx-ui/foundations/button-group'
+import { Button, Input } from '@pretzel-graph/vx-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
 
 export const VariadicField = memo<RendererProps<'Variadic'>>(({ field, nodeId, className }) => {
     const value = WorkbenchSDK.useStore(s => {

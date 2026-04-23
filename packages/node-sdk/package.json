@@ -1,5 +1,5 @@
 {
-    "name": "@vx-agent-editor/node-sdk",
+    "name": "@pretzel-graph/node-sdk",
     "version": "1.0.0",
     "description": "Node authoring SDK — RuntimeNode base class, builders, and CatalogueService",
     "main": "src/index.ts",
@@ -10,7 +10,7 @@
     },
     "dependencies": {
         "@langchain/core": "*",
-        "@vx-agent-editor/shared": "*",
+        "@pretzel-graph/shared": "*",
         "tsyringe": "^4.10.0",
         "reflect-metadata": "^0.2.2"
     },

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
-import { Chat, Orchestrator } from "@vx-agent-editor/shared/domain";
+import { Chat, Orchestrator } from "@pretzel-graph/shared/domain";
 import { QuerySDK } from "@/SDKs/QuerySDK/sdk";
 import { createChatSDKActions, type ChatSDKActions } from "./actions";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";

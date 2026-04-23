@@ -1,8 +1,8 @@
-import { RegisterNode } from "@vx-agent-editor/node-sdk";
+import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
-import { RuntimeRouterNode } from "@vx-agent-editor/node-sdk";
-import { InferInputs, InferOutputs } from "@vx-agent-editor/node-sdk";
-import { Expression, Foundations } from "@vx-agent-editor/shared/domain";
+import { RuntimeRouterNode } from "@pretzel-graph/node-sdk";
+import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { Expression, Foundations } from "@pretzel-graph/shared/domain";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeRouterNode<typeof Blueprint> {

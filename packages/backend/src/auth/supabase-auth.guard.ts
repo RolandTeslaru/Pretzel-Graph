@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext as NestExecutionContext, Injectable, Unau
 import { Request } from 'express';
 import { Token } from '@/domain/Token';
 import { createAuthenticatedClient, getUserId } from '../utils/supabase';
-import { Auth } from '@vx-agent-editor/shared/domain';
+import { Auth } from '@pretzel-graph/shared/domain';
 
 export interface AuthenticatedRequest extends Request {
     user: {

@@ -2,8 +2,8 @@ import type { WorkbenchSDKImpl } from "../sdk"
 import { withAsyncCommit, withCyclesRecompute } from "../utils/actions"
 import { toast } from "sonner";
 import { ShelfSDK } from "../../ShelfSDK/sdk";
-import { Foundations, Workbench, Workflow } from "@vx-agent-editor/shared/domain";
-import { extractExposedPorts } from "@vx-agent-editor/shared/subworkflow";
+import { Foundations, Workbench, Workflow } from "@pretzel-graph/shared/domain";
+import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow";
 import { cloneDeep } from 'lodash';
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { api } from "@/SDKs/ApiInterceptorSDK";

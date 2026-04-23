@@ -7,16 +7,16 @@
             "@/*": [
                 "./src/*"
             ],
-            "@vx-agent-editor/node-sdk": [
+            "@pretzel-graph/node-sdk": [
                 "../node-sdk/src/index.ts"
             ],
-            "@vx-agent-editor/node-sdk/*": [
+            "@pretzel-graph/node-sdk/*": [
                 "../node-sdk/src/*"
             ],
-            "@vx-agent-editor/worker": [
+            "@pretzel-graph/worker": [
                 "../worker/src/index.ts"
             ],
-            "@vx-agent-editor/worker/*": [
+            "@pretzel-graph/worker/*": [
                 "../worker/src/*"
             ],
             "src/*": [
