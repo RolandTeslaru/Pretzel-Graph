@@ -4,9 +4,9 @@ import { RuntimeNode } from "@vx-agent-editor/node-sdk";
 import { InferInputs, InferOutputs } from "@vx-agent-editor/node-sdk";
 import { Workbench, Workflow, SystemError } from "@vx-agent-editor/shared/domain";
 import { AxiosService } from "../../../services/AxiosService";
-import { CompilationContext, extendCompilePath } from "@vx-agent-builder/worker";
-import { AggexEngine } from "@vx-agent-builder/worker";
-import { AggexCompilerError } from "@vx-agent-builder/worker";
+import { CompilationContext, extendCompilePath } from "@vx-agent-editor/worker";
+import { AggexEngine } from "@vx-agent-editor/worker";
+import { AggexCompilerError } from "@vx-agent-editor/worker";
 
 
 @RegisterNode(Blueprint.id)

@@ -16,8 +16,8 @@
             "@vx-agent-editor/node-sdk": ["../node-sdk/src/index.ts"],
             "@vx-agent-editor/node-sdk/*": ["../node-sdk/src/*"],
             "@vx-agent-editor/shared/*": ["../shared/*"],
-            "@vx-agent-builder/worker": ["../worker/src/index.ts"],
-            "@vx-agent-builder/worker/*": ["../worker/src/*"],
+            "@vx-agent-editor/worker": ["../worker/src/index.ts"],
+            "@vx-agent-editor/worker/*": ["../worker/src/*"],
             "src/*": ["../worker/src/*"]
         }
     },
