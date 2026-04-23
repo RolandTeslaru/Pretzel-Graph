@@ -3,7 +3,6 @@ import { Blueprint } from "./blueprint";
 import { Workflow } from "@vx-agent-editor/shared/domain";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { RuntimeNode } from "src/node";
-import { ExecutionContext } from "src/context";
 import { InferInputs, InferOutputs } from "src/types";
 
 @RegisterNode(Blueprint.id)
