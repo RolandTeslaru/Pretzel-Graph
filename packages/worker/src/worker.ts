@@ -1,13 +1,12 @@
 import { Job as BullJob, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from "@vx-agent-editor/shared/constants"
-import { Orchestrator } from '@vx-agent-editor/shared/domain';
+import { Orchestrator, Realtime } from '@vx-agent-editor/shared/domain';
 import { SystemError } from '@vx-agent-editor/shared/domain/SystemError';
 import { AggexEngine, AggexHooks } from 'src/engine';
 import { container, singleton } from 'tsyringe';
-import { Emitter, EmitterEvent } from './event/emitter';
+import { Emitter } from './event/emitter';
 import { WorkflowCompiler } from './compiler';
-import { ExecutionContext } from './context';
 
 const LOCK_EXTEND_INTERVAL_MS = 15_000;
 const LOCK_EXTEND_DURATION_MS = 30_000;
@@ -20,7 +19,7 @@ export class AggexWorkerImpl {
 
     private compiler = new WorkflowCompiler();
     private runningEngines = new Map<Orchestrator.Job.Id, AggexEngine>();
-    private runningExecutionContexts = new Map<Orchestrator.Job.Id, ExecutionContext>()
+    private runningExecutionContexts = new Map<Orchestrator.Job.Id, AggexEngine.ExecutionContext>()
     private signalHandlers = new Map<string, (signal: Orchestrator.Signal) => void>();
 
     private redisPub = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
@@ -46,7 +45,7 @@ export class AggexWorkerImpl {
 
         switch (signal.type) {
             case "terminate":
-                ctx.abortController.abort();
+                ctx.abortWorkflow()
                 break;
             case "pause":
                 engine?.pause();
@@ -55,7 +54,7 @@ export class AggexWorkerImpl {
                 engine?.resume();
                 break;
             case "suspend":
-                ctx.abortController.abort();
+                ctx.abortWorkflow();
                 break;
             case "heartbeat":
                 this.pauseTimeoutResetters.get(signal.jobId)?.();
@@ -115,12 +114,11 @@ export class AggexWorkerImpl {
         });
 
         try {
-            const compilationResult = await this.compiler.compile(workflowId, workflowData, jobId, executionSession, this.emit);
-            const context = compilationResult.executionContext;
+            const engineExecutionCtx = await this.compiler.compile(workflowId, workflowData, jobId, executionSession, this.emit);
 
             const onPauseTimeout = () => {
                 console.log(`[Worker] Max pause duration reached for job ${jobId}, terminating`);
-                context.abortController.abort();
+                engineExecutionCtx.abortWorkflow()
                 engine.resume();
             };
 
@@ -147,13 +145,13 @@ export class AggexWorkerImpl {
                 },
             };
 
-            const engine = new AggexEngine(compilationResult, aggexHooks);
+            const engine = new AggexEngine(aggexHooks);
             this.runningEngines.set(jobId, engine);
-            this.runningExecutionContexts.set(jobId, context);
+            this.runningExecutionContexts.set(jobId, engineExecutionCtx);
 
-            const result = await engine.run();
+            const result = await engine.run(engineExecutionCtx);
 
-            context.streamController.disposeAll();
+            // engineExecutionCtx.streamController.disposeAll();
 
             if (result.status === 'terminated')
                 this.emit<Orchestrator.Event.Terminated>({
@@ -206,11 +204,11 @@ export class AggexWorkerImpl {
     )
 
 
-    public emit: Emitter = (event: EmitterEvent) => {
+    public emit: Emitter = (event) => {
         this.publishToRedis(event)
     }
 
-    public async publishToRedis(event: EmitterEvent) {
+    public async publishToRedis(event: Realtime.Event) {
         this.redisPub.publish(event.channel, JSON.stringify(event));
     }
 }

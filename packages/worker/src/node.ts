@@ -204,6 +204,7 @@ export namespace RuntimeNode {
         readonly abortWorkflow: (reason?: any) => void,
         readonly emit: <T_Event extends Realtime.Event>(event: T_Event) => void,
         readonly workflowData: Workflow.Data,
+        readonly workflowId: Workflow.Id,
         readonly workflowCache: Workflow.Cache,
         readonly jobId: Orchestrator.Job.Id,
     }
