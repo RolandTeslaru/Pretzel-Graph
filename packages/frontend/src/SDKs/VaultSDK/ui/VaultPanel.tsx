@@ -8,10 +8,10 @@ import {
   Dialog,
   Spinner,
   AlertDialog, // Still needed for Header/Title etc if they are not exposed by standard dialog
-} from '@pretzel-graph/vx-ui/foundations'
+} from '@pretzel-graph/standard-ui/foundations'
 import { Vault } from '@pretzel-graph/shared/domain'
 import { DialogSDK } from '@/SDKs/DialogSDK'
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { toast } from 'sonner'
 
 const VaultPanel = () => {

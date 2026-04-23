@@ -1,6 +1,6 @@
 import { Foundations } from '@pretzel-graph/shared/domain'
-import { DropdownMenu } from '@pretzel-graph/vx-ui/foundations'
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons'
+import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { dataTypeLabel, operatorLabel } from './utils'
 
 const Operator = Foundations.Field.Condition.Operator

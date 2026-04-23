@@ -1,4 +1,4 @@
-import { Tabs } from '@pretzel-graph/vx-ui/foundations'
+import { Tabs } from '@pretzel-graph/standard-ui/foundations'
 import { memo } from 'react'
 import { ShelfSDK } from '../sdk'
 import type { Shelf } from '@pretzel-graph/shared/domain';

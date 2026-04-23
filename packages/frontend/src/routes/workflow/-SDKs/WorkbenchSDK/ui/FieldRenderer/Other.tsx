@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { Input } from "@pretzel-graph/vx-ui/foundations/input"
+import { Input } from "@pretzel-graph/standard-ui/foundations/input"
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../sdk'
 import { FieldLabel } from './FieldLabel'

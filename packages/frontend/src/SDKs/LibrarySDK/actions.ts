@@ -2,8 +2,8 @@ import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { api } from '../ApiInterceptorSDK';
 import type { LibrarySDKImpl } from './sdk';
 import type { LibrarySDK } from './sdk';
-import { SystemIcons } from '@pretzel-graph/vx-ui/icons';
-import type { TreeDataItem } from '@pretzel-graph/vx-ui/components/Tree/tree-view';
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
+import type { TreeDataItem } from '@pretzel-graph/standard-ui/components/Tree/tree-view';
 
 export type _LibrarySDKActions = {
     rebuildTree: () => void;

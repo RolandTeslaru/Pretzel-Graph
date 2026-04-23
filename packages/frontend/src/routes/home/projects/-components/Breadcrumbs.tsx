@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Breadcrumb } from '@pretzel-graph/vx-ui/foundations'
+import { Breadcrumb } from '@pretzel-graph/standard-ui/foundations'
 import { Fragment } from 'react'
 
 interface Props {
