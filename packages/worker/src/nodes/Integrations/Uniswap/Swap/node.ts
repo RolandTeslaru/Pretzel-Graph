@@ -92,7 +92,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     }
 
     protected override async onRun(
-        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const { wallet, public: publicClient, chainId, apiKey } = this.clients;

@@ -38,13 +38,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     }
 
     protected override async onRun(
-        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {
 
         const { messages: lcMessages } = inputs
 
-        context.updateSession(d => {
+        this.context.updateSession(d => {
             lcMessages.forEach(msg => {
                 d.messages.push(msg);
             })
@@ -65,7 +64,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     chat_id: this.chatId!,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
-                    job_id: context.jobId,
+                    job_id: this.context.jobId,
                     data: {
                         isProcessing: false,
                         tool_calls: (lcMsg.tool_calls ?? []).map(tc => ({
@@ -85,7 +84,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     chat_id: this.chatId!,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
-                    job_id: context.jobId,
+                    job_id: this.context.jobId,
                 } satisfies Chat.Message.Human;
             }
 
@@ -98,7 +97,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     chat_id: this.chatId!,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
-                    job_id: context.jobId,
+                    job_id: this.context.jobId,
                     data: {
                         tool_call_id: Chat.ToolCall.Id.parse(lcMsg.tool_call_id),
                         tool_name: lcMsg.name ?? "",
@@ -115,7 +114,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     chat_id: this.chatId!,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
-                    job_id: context.jobId,
+                    job_id: this.context.jobId,
                 } satisfies Chat.Message.System;
             }
 

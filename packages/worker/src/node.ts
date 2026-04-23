@@ -1,19 +1,25 @@
-import { Foundations, Workflow } from "@vx-agent-editor/shared/domain";
+import { ExecutionSession, Foundations, Orchestrator, Realtime, Workflow } from "@vx-agent-editor/shared/domain";
 import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "src/types";
 import { ExecutionContext } from "./context";
 import { Emitter } from "./event/emitter"
 import type { CompilationContext } from "./compiler"
+import { readonly } from "zod";
 
-export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_ToolBlueprint extends Foundations.Blueprint = any> {
+export abstract class RuntimeNode<
 
-    public readonly emit: Emitter;
+    T_Blueprint extends Foundations.Blueprint, 
+    T_ToolBlueprint extends Foundations.Blueprint = any
+
+> {
+
+    public readonly emit: RuntimeNode.ExecutionContext["emit"];
     public fields: InferFields<T_Blueprint>
 
     protected isWaiting: boolean = false;
 
     constructor(
         public readonly workflowNode: Workflow.Node,
-        protected readonly context: ExecutionContext
+        protected readonly context: RuntimeNode.ExecutionContext
     ) {
         this.fields = RuntimeNode.resolveFields<T_Blueprint>(this.workflowNode.id, context.workflowData)
         this.emit = context.emit;
@@ -28,11 +34,10 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_T
     ): Promise<Partial<InferOutputs<T_Blueprint>>> {
         this.isWaiting = false;
 
-        return this.onRun(this.context, inputs);
+        return this.onRun(inputs);
     }
 
     protected abstract onRun(
-        context: ExecutionContext,
         inputs: InferInputs<T_Blueprint>
     ): Promise<Partial<InferOutputs<T_Blueprint>>>;
 
@@ -44,11 +49,10 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_T
         inputs: InferInputs<T_ToolBlueprint>
     ): Promise<InferOutputs<T_ToolBlueprint>> {
         this.isWaiting = false;
-        return this.onBuildTool(this.context, inputs);
+        return this.onBuildTool(inputs);
     }
 
     protected onBuildTool(
-        context: ExecutionContext,
         inputs: InferInputs<T_ToolBlueprint>
     ): Promise<InferOutputs<T_ToolBlueprint>> {
         throw new Error("This node cannot be converted to a tool");
@@ -63,11 +67,10 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_T
         dependencyResolutionMap: Record<Workflow.Node.Id, boolean>
     ): Promise<void> {
         this.isWaiting = true;
-        return this.onWait(this.context, partialInputs);
+        return this.onWait(partialInputs);
     }
     
     protected onWait(
-        context: ExecutionContext,
         inputs: InferInputs<T_Blueprint>
     ): Promise<void> | void {}
 
@@ -151,7 +154,7 @@ export abstract class RuntimeNode<T_Blueprint extends Foundations.Blueprint, T_T
             signal: AbortSignal
         ) => void
     ): Promise<T> {
-        const signal = this.context.abortController.signal;
+        const signal = this.context.abortSignal; 
 
         if (signal.aborted)
             return Promise.reject(signal.reason);
@@ -184,11 +187,10 @@ export abstract class RuntimeRouterNode<T_Blueprint extends Foundations.Blueprin
         inputs: InferInputs<T_Blueprint>
     ): Promise<InferOutputs<T_Blueprint>> {
         this.isWaiting = false;
-        return this.onRun(this.context, inputs) as Promise<InferOutputs<T_Blueprint>>;
+        return this.onRun(inputs) as Promise<InferOutputs<T_Blueprint>>;
     }
 
     protected abstract override onRun(
-        context: ExecutionContext,
         inputs: InferInputs<T_Blueprint>
     ): Promise<Partial<InferOutputs<T_Blueprint>>>;
 }
@@ -197,4 +199,16 @@ export abstract class RuntimeRouterNode<T_Blueprint extends Foundations.Blueprin
 export namespace RuntimeNode {
     export type ConstructorProps = ConstructorParameters<typeof RuntimeNode>[0]
     export type CompileProps = Parameters<RuntimeNode<Foundations.Blueprint>["compile"]>[0]
+    
+    export interface ExecutionContext {
+        readonly session: ExecutionSession,
+        readonly updateSession: (recipe: (draft: ExecutionSession) => void) => void,
+        readonly abortSignal: AbortSignal,
+        readonly abortWorkflow: (reason?: any) => void,
+        readonly emit: <T_Event extends Realtime.Event>(event: T_Event) => void,
+        readonly workflowData: Workflow.Data,
+        readonly workflowCache: Workflow.Cache,
+        readonly jobId: Orchestrator.Job.Id,
+    }
 }
+

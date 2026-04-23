@@ -11,17 +11,20 @@ export interface ExecutionContext {
     workflowCache: Readonly<Workflow.Cache>,
     subWorkflows: Record<Workflow.Node.Id, Readonly<Workflow.Data>>,
     streamController: StreamController,
-    abortController: AbortController
+    abortController: AbortController,
+    abortSignal: AbortSignal,
+    abortWorkflow: (reason?: any) => void,
     emit: Emitter,
     updateSession: (recipe: (draft: ExecutionSession) => void) => void,
 }
 
 export function createExecutionContext(
-    props: Omit<ExecutionContext, "updateSession">
+    props: Omit<ExecutionContext, "updateSession" | "abortSignal" | "abortWorkflow">
 ): ExecutionContext {
     const ctx: ExecutionContext = {
         ...props,
-        abortController: new AbortController(),
+        abortSignal: props.abortController.signal,
+        abortWorkflow: (reason) => props.abortController.abort(reason),
         updateSession: (recipe) => {
             ctx.session = produce(ctx.session, recipe);
         },

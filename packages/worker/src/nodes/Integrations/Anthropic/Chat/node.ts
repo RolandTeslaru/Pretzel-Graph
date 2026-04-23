@@ -13,13 +13,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private readonly llm: ChatAnthropic;
 
-    constructor(workflowNode: Workflow.Node, context: ExecutionContext) {
+    constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
         this.llm = new ChatAnthropic(this.fields);
     }
 
     protected override async onRun(
-        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         return {

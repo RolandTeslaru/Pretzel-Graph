@@ -1,7 +1,6 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "src/node";
-import { ExecutionContext } from "src/context";
 import { InferInputs, InferOutputs } from "src/types";
 import { LC } from "src/langchain";
 
@@ -11,7 +10,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
@@ -33,7 +31,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                         const result = await tool.invoke(
                             call, 
                             {
-                                signal: context.abortController.signal,
+                                signal: this.context.abortSignal,
                             }) as LC.ToolMessage;
                         return result;
                     } catch (error) {
