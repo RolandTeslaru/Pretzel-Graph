@@ -7,19 +7,15 @@ import { RuntimeNode } from "../node";
 import { Emitter } from "../event/emitter";
 import { StreamController } from "../context/stream-controller";
 import { S2Graph, Vertex } from "../S2/graph";
-import { ExecutionContext, createExecutionContext } from "../context";
 import { load } from "@langchain/core/load";
 import { BaseMessage } from "@langchain/core/messages";
 import { resolveFields } from "../utils";
 import { CompilationContext, createCompilationContext } from "./context";
+import { AggexEngine } from "src/engine";
+import { produce } from "immer";
 
 export { CompilationContext, createCompilationContext, extendCompilePath } from "./context";
 
-export interface CompilationResult {
-    compiledGraph: S2Graph;
-    executionContext: ExecutionContext;
-    nodeInstanceMap: Map<Vertex.Id | Workflow.Node.Id, { wfNode: Workflow.Node; instance: RuntimeNode<Foundations.Blueprint> }>;
-}
 
 export class WorkflowCompiler {
     constructor() { }
@@ -31,7 +27,7 @@ export class WorkflowCompiler {
         session: ExecutionSession,
         emit: Emitter,
         compilationContext: CompilationContext = createCompilationContext(workflowId),
-    ): Promise<CompilationResult> {
+    ): Promise<AggexEngine.ExecutionContext> {
         const workflowCache = Workflow.createCache(workflowData);
 
         const graph = new S2Graph();
@@ -48,28 +44,45 @@ export class WorkflowCompiler {
                 return load(JSON.stringify(msg)) as Promise<BaseMessage>;
             })
         );
-        const hydratedSession = { ...session, messages: reconstructedMessages };
 
-        const subWorkflows: ExecutionContext["subWorkflows"] = {};
+        session = produce(session, d => { d.messages = reconstructedMessages});
 
-        const executionCtx = createExecutionContext({
-            workflowId,
+        const nodeInstanceMap = new Map() as AggexEngine.ExecutionContext["nodeInstanceMap"];
+
+        
+        // 
+        // Build contexts
+        // 
+        
+        const abortController = new AbortController();
+        
+        const nodeExecutionCtx = {
+            jobId,
+            session,
             workflowData,
             workflowCache,
             emit,
-            jobId,
-            session: hydratedSession,
-            streamController: new StreamController(),
-            abortController: new AbortController(),
-            subWorkflows
-        });
+            abortWorkflow: (reason) => abortController.abort(reason),
+            updateSession: (recipe) => {
+                session = produce(session, recipe);
+            },
+            abortSignal: abortController.signal,
+            workflowId: workflowId
+        } satisfies RuntimeNode.ExecutionContext
 
-        const nodeInstanceMap = new Map<Vertex.Id, { wfNode: Workflow.Node; instance: RuntimeNode<Foundations.Blueprint> }>();
+
+        const engineExecutionCtx = {
+            ...nodeExecutionCtx,
+            compiledGraph: graph,
+            nodeInstanceMap,
+        } satisfies AggexEngine.ExecutionContext
+
+
+
 
         // Add nodes to the graph
-        for (const wfNode of Object.values(nodes)) {
-            await this.compileNode(wfNode, workflowData, graph, nodeInstanceMap, executionCtx, compilationContext);
-        }
+        for (const wfNode of Object.values(nodes))
+            await this.prepareNode(wfNode, engineExecutionCtx, compilationContext);
 
         // Add Edges. Might also get ran multiple times because nodes can have multiple edges between them because of ports.
         for (const edge of Object.values(edges)) {
@@ -97,22 +110,17 @@ export class WorkflowCompiler {
             graph.addDependency(S2Graph.START_VERTEX_ID, nodeId);
         });
 
-        return { 
-            compiledGraph: graph, 
-            executionContext: executionCtx, 
-            nodeInstanceMap 
-    };
+        return engineExecutionCtx;
     }
 
-    private async compileNode(
+    private async prepareNode(
         wfNode: Workflow.Node,
-        workflowData: Workflow.Data,
-        graph: S2Graph,
-        nodeInstanceMap: CompilationResult["nodeInstanceMap"],
-        executionCtx: ExecutionContext,
+        engineExecutionCtx: AggexEngine.ExecutionContext,
         compilationContext: CompilationContext,
     ): Promise<void> {
         const NodeConstructor = await CatalogueService.getNode(wfNode.blueprintId);
+
+        const { compiledGraph: graph, nodeInstanceMap } = engineExecutionCtx;
 
         if (!NodeConstructor)
             throw new AggexCompilerError(
@@ -121,9 +129,9 @@ export class WorkflowCompiler {
                 { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
             )
 
-        const nodeInstance = new NodeConstructor(wfNode, executionCtx);
+        const nodeInstance = new NodeConstructor(wfNode, engineExecutionCtx);
 
-        await nodeInstance.compile(executionCtx, compilationContext)
+        await nodeInstance.compile(compilationContext)
 
         const vertexId = wfNode.id as unknown as Vertex.Id;
 
@@ -131,7 +139,7 @@ export class WorkflowCompiler {
 
         nodeInstanceMap.set(vertexId, { wfNode, instance: nodeInstance });
 
-        const fieldValues = resolveFields(wfNode.id, workflowData);
+        const fieldValues = resolveFields(wfNode.id, engineExecutionCtx.workflowData);
 
         // Set vertex execution strategy based on node fields. Default is "AND"
         if (Object.hasOwn(fieldValues, "signalDependency"))
@@ -140,6 +148,7 @@ export class WorkflowCompiler {
                 fieldValues["signalDependency" as Foundations.Field.Id] as Vertex.STRATEGY
             );
     }
+    
 
     private findStartNodes(
         nodes: Workflow.Data["nodes"],
