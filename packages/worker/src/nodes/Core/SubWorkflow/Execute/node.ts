@@ -42,7 +42,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         let subWorkflow = workflowsMap.get(subWorkflowId);
         if (!subWorkflow) {
             const res = await Workbench.API.Workflow.get(AxiosService.api, { workflowId: subWorkflowId });
-            subWorkflow = { id: res.workflow.id, data: res.workflow.data };
+        
+            subWorkflow = { 
+                id: res.workflow.id, 
+                data: res.workflow.data 
+            };
+        
             workflowsMap.set(subWorkflowId, subWorkflow);
         }
 
