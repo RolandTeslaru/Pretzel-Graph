@@ -1,0 +1,29 @@
+{
+    "name": "@vx-agent-editor/nodes",
+    "version": "1.0.0",
+    "description": "Node implementations for the PretzelGraph execution engine",
+    "main": "src/index.ts",
+    "types": "src/index.ts",
+    "scripts": {
+        "build": "tsc --build tsconfig.build.json",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@coinbase/agentkit": "^0.10.4",
+        "@coinbase/cdp-sdk": "^1.47.0",
+        "@langchain/anthropic": "*",
+        "@langchain/community": "*",
+        "@langchain/core": "*",
+        "@langchain/google-genai": "*",
+        "@langchain/openai": "*",
+        "@langchain/openrouter": "*",
+        "@vx-agent-editor/node-sdk": "*",
+        "@vx-agent-editor/shared": "*",
+        "@vx-agent-builder/worker": "*",
+        "axios": "*",
+        "lodash": "^4.17.23",
+        "viem": "^2.47.12",
+        "zod": "^4.3.6"
+    },
+    "devDependencies": {}
+}
