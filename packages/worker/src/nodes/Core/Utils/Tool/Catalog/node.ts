@@ -1,7 +1,6 @@
 import { RegisterNode } from "src/services/Catalogue/service";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "src/node";
-import { ExecutionContext } from "src/context";
 import { InferInputs, InferOutputs } from "src/types";
 import { LC } from "src/langchain";
 
@@ -13,7 +12,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
 
     protected override async onRun(
-        context: ExecutionContext,
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         
