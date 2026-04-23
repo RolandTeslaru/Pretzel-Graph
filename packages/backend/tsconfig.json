@@ -13,10 +13,10 @@
             "@vx-agent-editor/node-sdk/*": [
                 "../node-sdk/src/*"
             ],
-            "@vx-agent-builder/worker": [
+            "@vx-agent-editor/worker": [
                 "../worker/src/index.ts"
             ],
-            "@vx-agent-builder/worker/*": [
+            "@vx-agent-editor/worker/*": [
                 "../worker/src/*"
             ],
             "src/*": [
