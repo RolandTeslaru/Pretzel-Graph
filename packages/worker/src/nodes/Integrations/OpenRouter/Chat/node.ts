@@ -13,7 +13,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private readonly llm: ChatOpenRouter;
 
-    constructor(workflowNode: Workflow.Node, context: ExecutionContext) {
+    constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
         this.llm = new ChatOpenRouter(this.fields as any);
     }
