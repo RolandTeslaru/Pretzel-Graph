@@ -4,8 +4,6 @@ import { CatalogueService } from "src/services/Catalogue/service";
 import { SystemError } from "@vx-agent-editor/shared/domain/SystemError";
 import { AggexCompilerError } from "../errors";
 import { RuntimeNode } from "../node";
-import { Emitter } from "../event/emitter";
-import { StreamController } from "../context/stream-controller";
 import { S2Graph, Vertex } from "../S2/graph";
 import { load } from "@langchain/core/load";
 import { BaseMessage } from "@langchain/core/messages";
@@ -21,13 +19,15 @@ export class WorkflowCompiler {
     constructor() { }
 
     public async compile(
-        workflowId: Workflow.Id,
+        workflowId:   Workflow.Id,
         workflowData: Workflow.Data,
-        jobId: Orchestrator.Job.Id,
-        session: ExecutionSession,
-        emit: Emitter,
+        jobId:        Orchestrator.Job.Id,
+        session:      ExecutionSession,
+        emit:         RuntimeNode.ExecutionContext["emit"],
+        
         compilationContext: CompilationContext = createCompilationContext(workflowId),
     ): Promise<AggexEngine.ExecutionContext> {
+
         const workflowCache = Workflow.createCache(workflowData);
 
         const graph = new S2Graph();
@@ -71,10 +71,15 @@ export class WorkflowCompiler {
         } satisfies RuntimeNode.ExecutionContext
 
 
+        const dummyEngine = new AggexEngine();
+
         const engineExecutionCtx = {
             ...nodeExecutionCtx,
             compiledGraph: graph,
             nodeInstanceMap,
+            activeNodes: new Set(),
+            compileWorkflow: this.compile.bind(this),
+            runSubWorkflow: dummyEngine.run.bind(dummyEngine),
         } satisfies AggexEngine.ExecutionContext
 
 

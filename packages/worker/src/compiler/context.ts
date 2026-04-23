@@ -3,12 +3,12 @@ import { Workflow } from "@vx-agent-editor/shared/domain";
 export type WorkflowCompilationUnit = Pick<Workflow, "id" | "data">;
 
 export interface CompilationContext {
-    workflowCache: Map<Workflow.Id, WorkflowCompilationUnit>;
+    workflowsMap: Map<Workflow.Id, WorkflowCompilationUnit>;
     compilePath: readonly Workflow.Id[];
 }
 
 export function createCompilationContext(rootId: Workflow.Id): CompilationContext {
-    return { workflowCache: new Map(), compilePath: [rootId] };
+    return { workflowsMap: new Map(), compilePath: [rootId] };
 }
 
 export function extendCompilePath(
@@ -16,7 +16,7 @@ export function extendCompilePath(
     nextId: Workflow.Id,
 ): CompilationContext {
     return {
-        workflowCache: ctx.workflowCache,
+        workflowsMap: ctx.workflowsMap,
         compilePath: [...ctx.compilePath, nextId],
     };
 }
