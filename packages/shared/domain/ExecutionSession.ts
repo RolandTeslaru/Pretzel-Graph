@@ -50,7 +50,7 @@ export namespace ExecutionSession {
         edge_state: z.record(Workflow.Edge.Id, EdgeState.Schema).default({}),
         messages: z.array(z.custom<BaseMessage>((v) => v !== null && typeof v === 'object')).default([]),
         metadata: z.record(z.string(), z.any()).default({}),
-        chatId: z.lazy(() => Chat.Id).optional()
+        chatId: z.lazy(() => Chat.Id).optional(),
     })
 
 
@@ -70,7 +70,6 @@ export namespace ExecutionSession {
 
     export const Update = Schema.partial()
     export type Update = z.infer<typeof Update>
-
 
     export namespace Database {
         export namespace Row {
@@ -242,3 +241,46 @@ export namespace ExecutionSession {
     }
 }
 export type ExecutionSession = z.infer<typeof ExecutionSession.Schema>
+
+
+
+export namespace ExecutionIgniter {
+    export namespace WorkbenchManual {
+
+        export const Schema = z.object({
+            variant: z.literal("workbench_manual"),
+            payload: z.object({}).optional(),
+        })
+    }
+
+    export namespace Webhook {
+        export const Schema = z.object({
+            variant: z.literal("webhook"),
+            nodeId: Workflow.Node.Id,
+            payload: z.object({
+                method: z.string(),
+                path: z.string(),
+                headers: z.record(z.string(), z.unknown()),
+                query: z.record(z.string(), z.unknown()),
+                body: z.unknown(),
+            }),
+        })
+    }
+
+    export namespace Scheduled {
+        export const Schema = z.object({
+            variant: z.literal("scheduled"),
+            payload: z.object({
+                scheduledAt: z.iso.datetime(),
+                scheduleId: z.string().optional(),
+            }),
+        })
+    }
+
+    export const Schema = z.discriminatedUnion("variant", [
+        WorkbenchManual.Schema,
+        Webhook.Schema,
+        Scheduled.Schema,
+    ])
+}
+export type ExecutionIgniter = z.infer<typeof ExecutionIgniter.Schema>

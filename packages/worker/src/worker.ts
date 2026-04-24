@@ -65,7 +65,7 @@ export class AggexWorkerImpl {
         bullJob: BullJob<Orchestrator.ExecutionQueue.Item>,
         token?: string
     ) => {
-        const { workflowId, workflowData, jobId, executionSession } = bullJob.data;
+        const { workflowId, workflowData, jobId, executionSession, igniter } = bullJob.data;
         console.log("Processing Queue Item", jobId, "workflow id", workflowId, "execution session id:", executionSession.id);
 
         const eventChannel = Orchestrator.Event.getChannel(jobId);
@@ -113,7 +113,7 @@ export class AggexWorkerImpl {
         });
 
         try {
-            const engineExecutionCtx = await this.compiler.compile(workflowId, workflowData, jobId, executionSession, this.emit);
+            const engineExecutionCtx = await this.compiler.compile(workflowId, workflowData, jobId, executionSession, this.emit, undefined, igniter);
 
             const onPauseTimeout = () => {
                 console.log(`[Worker] Max pause duration reached for job ${jobId}, terminating`);

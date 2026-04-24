@@ -123,6 +123,7 @@ export class VersionControlService {
     ): Promise<VersionControl.API.Publish.Response> {
         const supabase = createAuthenticatedClient(token);
         const publication = await this.dbOps.publish(supabase, payload);
+        publication.is_active = true;
         this.realtime.emitSignal<VersionControl.Signal.Published>({
             channel: VersionControl.Signal.getChannel(publication.workflow_id, "published"),
             type: "published",

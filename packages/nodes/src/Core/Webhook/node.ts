@@ -16,30 +16,24 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public readonly Blueprint = Blueprint;
 
+    private payload: AnyRecord | null = null;
+
+    protected override async onWebhook(webhookPayload: AnyRecord) {
+        this.payload = webhookPayload;
+    }
+
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const metadata = toRecord(this.context.session.metadata);
-        const webhookPayload = toRecord(metadata.webhookPayload);
-
-        const configuredMethod = String(this.fields.method ?? "POST").toUpperCase();
-        const incomingMethod = typeof webhookPayload.method === "string"
-            ? webhookPayload.method.toUpperCase()
-            : undefined;
-
-        if (incomingMethod && configuredMethod !== incomingMethod) {
-            throw new Error(`Webhook method mismatch: expected ${configuredMethod}, got ${incomingMethod}`);
+        if (!this.payload) {
+            throw new Error("Webhook node has no payload — was triggerWebhook called before run?");
         }
 
         return {
-            body: Object.prototype.hasOwnProperty.call(webhookPayload, "body") ? webhookPayload.body : null,
-            headers: toRecord(webhookPayload.headers),
-            query: toRecord(webhookPayload.query),
-            params: toRecord(webhookPayload.params),
+            body: this.payload.body ?? null,
+            headers: toRecord(this.payload.headers),
+            query: toRecord(this.payload.query),
+            params: {},
         };
-    }
-
-    protected override onWebhook(): Promise<void> | void {
-        
     }
 }

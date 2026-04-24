@@ -89,15 +89,15 @@ export abstract class RuntimeNode<
 
 
 
-    public async webhook(
-
+    public async triggerWebhook(
+        webhookPaylod: Record<string, unknown>
     ): Promise<void> {
-        return this.onWebhook();
+        return this.onWebhook(webhookPaylod);
     }
 
-    protected onWebhook(
-
-    ): Promise<void> | void { }
+    protected async onWebhook(
+        webhookPaylod: Record<string, unknown>
+    ): Promise<void> { }
 
 
     public static resolveInitialFieldValues<T_Blueprint extends Foundations.Blueprint>(
