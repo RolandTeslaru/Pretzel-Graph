@@ -465,8 +465,7 @@ function ButtonGroupExamples() {
                     </ButtonGroup>
                     <ButtonGroup className="hidden sm:flex">
                         <Button variant="outline" size="icon-sm" aria-label="Previous">
-                            <SystemIcons.ArrowLeft
-                            />
+                            <SystemIcons.ArrowLeft/>
                         </Button>
                         <Button variant="outline" size="icon-sm" aria-label="Next">
                             <SystemIcons.ArrowRight />

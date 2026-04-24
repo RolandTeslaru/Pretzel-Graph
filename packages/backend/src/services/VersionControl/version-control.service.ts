@@ -18,7 +18,7 @@ export class VersionControlService {
     private readonly dbOps = {
         publish: withSupabaseAssert('publication.publish', async (
             supabase: SupabaseClient,
-            { workflowId, workflowData }: VersionControl.API.Publish.Request,
+            { workflowId, name, description, workflowData }: VersionControl.API.Publish.Request,
         ): Promise<VersionControl.Publication> => {
             const user_id = await getUserId(supabase);
             if (!user_id) throw new Error('Unauthenticated');
@@ -27,6 +27,8 @@ export class VersionControlService {
                 .rpc('publish_workflow', {
                     p_workflow_id: workflowId,
                     p_user_id: user_id,
+                    p_name: name,
+                    p_description: description ?? null,
                     p_workflow_data: workflowData,
                 })
                 .single()
