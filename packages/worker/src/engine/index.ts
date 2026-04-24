@@ -180,9 +180,9 @@ export class AggexEngine {
         ctx: AggexEngine.ExecutionContext, 
         nodeId: Vertex.Id
     ): void {
-        const { workflowId, session, workflowCache, nodeInstanceMap } = ctx
+        const { workflowId, session, workflowCache, nodeRuntimeMap } = ctx
 
-        const entry = nodeInstanceMap.get(nodeId);
+        const entry = nodeRuntimeMap.get(nodeId);
         if (!entry)
             return;
 
@@ -238,7 +238,7 @@ export class AggexEngine {
         signals: Set<Workflow.Node.Id | Vertex.Id>
     ): Promise<Set<Vertex.Id> | void> => {
         
-        const entry = ctx.nodeInstanceMap.get(vertexId);
+        const entry = ctx.nodeRuntimeMap.get(vertexId);
         if (!entry)
             return;
         
@@ -279,11 +279,11 @@ export class AggexEngine {
         vertexId: Vertex.Id,
         resolvedOutSignals: Set<Vertex.Id> | void
     ) {
-        const { session, nodeInstanceMap, workflowCache } = ctx
+        const { session, nodeRuntimeMap, workflowCache } = ctx
 
         ctx.activeNodes.delete(vertexId);
 
-        const entry = nodeInstanceMap.get(vertexId);
+        const entry = nodeRuntimeMap.get(vertexId);
         if (!entry)
             return
 
@@ -330,7 +330,7 @@ export class AggexEngine {
         dependencyResolutionMap: Record<Vertex.Id, boolean>,
         totalDeps: number
     ) {
-        const entry = ctx.nodeInstanceMap.get(vertexId);
+        const entry = ctx.nodeRuntimeMap.get(vertexId);
         if (!entry)
             return
 
@@ -391,7 +391,7 @@ export class AggexEngine {
         receivedSignals: Set<Vertex.Id>,
         s2EngineAssesment: boolean
     ): boolean {
-        const entry = ctx.nodeInstanceMap.get(vertexId);
+        const entry = ctx.nodeRuntimeMap.get(vertexId);
         if (!entry)
             return true;
 
@@ -486,7 +486,7 @@ export namespace AggexEngine {
         compileWorkflow: WorkflowCompiler["compile"]
         runSubWorkflow: AggexEngine["run"]
         activeNodes: Set<Workflow.Node.Id | Vertex.Id>;
-        nodeInstanceMap:  Map<
+        nodeRuntimeMap:  Map<
         
             Vertex.Id | Workflow.Node.Id, 
             { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> }
