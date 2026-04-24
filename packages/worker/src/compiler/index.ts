@@ -48,7 +48,7 @@ export class WorkflowCompiler {
 
         session = produce(session, d => { d.messages = reconstructedMessages});
 
-        const nodeInstanceMap = new Map() as AggexEngine.ExecutionContext["nodeInstanceMap"];
+        const nodeRuntimeMap = new Map() as AggexEngine.ExecutionContext["nodeRuntimeMap"];
 
         
         // 
@@ -77,7 +77,7 @@ export class WorkflowCompiler {
         const engineExecutionCtx = {
             ...nodeExecutionCtx,
             compiledGraph: graph,
-            nodeInstanceMap,
+            nodeRuntimeMap,
             activeNodes: new Set(),
             compileWorkflow: this.compile.bind(this),
             runSubWorkflow: dummyEngine.run.bind(dummyEngine),
@@ -117,7 +117,7 @@ export class WorkflowCompiler {
         });
 
         if (igniter?.variant === "webhook") {
-            const entry = nodeInstanceMap.get(igniter.nodeId as unknown as Vertex.Id);
+            const entry = nodeRuntimeMap.get(igniter.nodeId as unknown as Vertex.Id);
             if (entry) {
                 await entry.instance.triggerWebhook(igniter.payload as Record<string, unknown>);
             }
@@ -133,7 +133,7 @@ export class WorkflowCompiler {
     ): Promise<void> {
         const NodeConstructor = await CatalogueService.getNode(wfNode.blueprintId);
 
-        const { compiledGraph: graph, nodeInstanceMap } = engineExecutionCtx;
+        const { compiledGraph: graph, nodeRuntimeMap } = engineExecutionCtx;
 
         if (!NodeConstructor)
             throw new AggexCompilerError(
@@ -150,7 +150,7 @@ export class WorkflowCompiler {
 
         graph.addVertex(wfNode.id);
 
-        nodeInstanceMap.set(vertexId, { wfNode, instance: nodeInstance });
+        nodeRuntimeMap.set(vertexId, { wfNode, instance: nodeInstance });
 
         const fieldValues = resolveFields(wfNode.id, engineExecutionCtx.workflowData);
 
