@@ -1,9 +1,9 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { Foundations, ExecutionSession, Orchestrator } from "@pretzel-graph/shared/domain";
-import { CatalogueService } from "src/services/Catalogue/service";
+import { CatalogueService } from "@pretzel-graph/node-sdk";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { AggexCompilerError } from "../errors";
-import { RuntimeNode } from "../node";
+import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { S2Graph, Vertex } from "../S2/graph";
 import { load } from "@langchain/core/load";
 import { BaseMessage } from "@langchain/core/messages";

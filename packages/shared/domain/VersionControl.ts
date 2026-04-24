@@ -32,6 +32,8 @@ export namespace VersionControl {
         export const getChannel = (workflowId: Workflow.Id, action: Action): Channel =>
             `version_control:${workflowId}:${action}` as Channel
 
+        export const PATTERN_CHANNEL = "version_control:*" as Channel;
+
         export const Base = Realtime.Signal.Base.extend({
             workflowId: Workflow.Id,
             publicationId: Publication.Id,
