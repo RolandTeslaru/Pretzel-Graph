@@ -40,15 +40,15 @@ export class VersionControlService {
         list: withSupabaseAssert('publication.list', async (
             supabase: SupabaseClient,
             { workflowId }: VersionControl.API.List.Request,
-        ): Promise<VersionControl.Publication[]> => {
+        ): Promise<VersionControl.PublicationMeta[]> => {
             const { data: rows } = await supabase
                 .from('version_control')
-                .select('*')
+                .select('id, workflow_id, version, name, description, is_active, published_at')
                 .eq('workflow_id', workflowId)
                 .order('version', { ascending: false })
                 .throwOnError();
 
-            return (rows ?? []).map((r) => VersionControl.Publication.Schema.parse(r));
+            return (rows ?? []).map((r) => VersionControl.PublicationMeta.Schema.parse(r));
         }),
 
         get: withSupabaseAssert('publication.get', async (

@@ -6,7 +6,7 @@ import { Realtime } from "./Realtime";
 
 export namespace VersionControl {
     export namespace Publication {
-        export const Id = z.coerce.string().brand("PublicationId");
+        export const Id = z.uuid().brand("PublicationId");
         export type Id = z.infer<typeof Id>
 
         export const Schema = z.object({
@@ -22,6 +22,14 @@ export namespace VersionControl {
         })
     }
     export type Publication = z.infer<typeof Publication.Schema>
+
+    export namespace PublicationMeta {
+        export const Schema = Publication.Schema.omit({
+            workflow_data: true,
+            user_id: true,
+        })
+    }
+    export type PublicationMeta = z.infer<typeof PublicationMeta.Schema>
 
     // Signals are emitted by the backend when a publication changes state.
     // Subscribers (e.g. the webhook server) use them to keep caches in sync.
@@ -108,7 +116,7 @@ export namespace VersionControl {
             export type Request = z.infer<typeof Request>
 
             export const Response = z.object({
-                publications: Publication.Schema.array(),
+                publications: PublicationMeta.Schema.array(),
             })
             export type Response = z.infer<typeof Response>
         }
