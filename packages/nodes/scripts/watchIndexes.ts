@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { spawn } from 'child_process';
 
-const TARGET_DIR = path.resolve(__dirname, '../src/nodes');
+const TARGET_DIR = path.resolve(__dirname, '../src');
 const SCRIPT_PATH = path.resolve(__dirname, 'generateIndexes.ts');
 
 let timer: NodeJS.Timeout | null = null;

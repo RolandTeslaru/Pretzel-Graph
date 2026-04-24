@@ -150,8 +150,6 @@ export class AggexWorkerImpl {
 
             const result = await engine.run(engineExecutionCtx);
 
-            // engineExecutionCtx.streamController.disposeAll();
-
             if (result.status === 'terminated')
                 this.emit<Orchestrator.Event.Terminated>({
                     jobId,
