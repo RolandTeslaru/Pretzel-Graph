@@ -14,11 +14,14 @@ class CatalogueServiceImpl {
     private static registry = new Map<Foundations.Blueprint.Id, NodeConstructor>();
     private __registry = CatalogueServiceImpl.registry;
 
-    public static register(blueprintId: Foundations.Blueprint.Id, constructor: NodeConstructor) {
-        if (CatalogueServiceImpl.registry.has(blueprintId))
+    public static register(
+        blueprintId: Foundations.Blueprint.Id, 
+        constructor: NodeConstructor
+    ) {
+        if (this.registry.has(blueprintId))
             console.warn(`[NodeRegistry] Overwriting node type: ${blueprintId}`);
 
-        CatalogueServiceImpl.registry.set(blueprintId, constructor);
+        this.registry.set(blueprintId, constructor);
     }
 
     private nodesRoot: string = "";
