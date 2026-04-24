@@ -32,11 +32,9 @@
 - [ ] 🟢 **Narrow synthesizer return types** — change `synthesizeInput` and `ensureReference` return types from `any` to a proper union. (`worker/src/synthesizer/index.ts`)
 
 ### Naming & Package Hygiene
-- [ ] 🟡 **Rename package identifiers to PretzelGraph** — `vx-agent-editor` and `vx-agent-builder` are used interchangeably across `package.json` files, tsconfig `paths`, and imports (e.g. `@vx-agent-builder/worker` in `backend/tsconfig.json`). Settle on a single identifier (e.g. `@pretzelgraph/`) and do a global rename. Also rename the repo directory from `vxAgentEditor` if desired.
 - [ ] 🟢 **Fix `shared/package.json` main entry** — `"main": "index.ts"` is non-standard. Should point to a compiled output or use `exports` with `ts-node`/path mappings explicitly documented.
 
 ### Separation of Concerns
-- [ ] 🟢 **Deduplicate `resolveFields()`** — identical function in `worker/src/node.ts` and `worker/src/compiler/index.ts`. Extract to a shared util and import from both.
 - [ ] 🟢 **Delete debug/test panels** — remove `testPanel.tsx` (NotificationSDK), `debugPanel.tsx` (DialogSDK), and the dead `StateViewer` component + `useSDKState` hook in `workflow/$workflowid.tsx`. None are behind feature flags.
 - [ ] 🟢 **Split `Canvas/props.ts`** — file mixes static config, a utility function, and React Flow event callbacks (a controller). Split into `config.ts`, `utils.ts`, and `callbacks.ts`.
 - [ ] 🔴 **Fix `ChatSDKImpl` constructor side effects** — constructor calls `QuerySDK` and subscribes to `RealtimeSDK` directly, making initialization order implicit. Move to an explicit `init()` method or lazy subscription.
@@ -46,11 +44,7 @@
 ## 🔧 Bucket 3 — Completion
 > Planned and half-built features. The previous dev left scaffolding for all of these.
 
-- [ ] 🟡 **Implement Accumulator node** — blueprint + runtime. Holds previous state across iterations. Core primitive for ReAct loops. Error code `EXECUTION_ACCUMULATOR_OVERFLOW` (2007) already exists.
-- [ ] 🟡 **Implement Pause/Resume** — `case "pause": break` in `worker.ts` is a stub. Design and implement actual pause behavior (freeze execution state, allow resume from same position).
 - [ ] 🟢 **Add iteration counter to execution session state** — track how many times each node has fired. Required for cycle limit enforcement and Accumulator overflow detection.
-- [ ] 🟡 **Surface errors on canvas nodes** — errors emit via WebSocket but it's unclear they visually appear on the node that failed. Verify the `node:error` event updates node status in `ExecutionSessionSDK` and the canvas reflects it.
-- [ ] 🟢 **Clean up `research/` package** — determine what's experimental POC vs intended feature. Either promote to a real package or delete.
 
 ---
 
@@ -76,7 +70,12 @@
 
 ## ✅ Done
 
-<!-- Completed tasks move here -->
+- [x] 🟡 **Rename package identifiers to PretzelGraph** — all packages now use `@pretzel-graph/` consistently.
+- [x] 🟢 **Deduplicate `resolveFields()`** — extracted to `worker/src/utils.ts`; compiler imports from there.
+- [x] 🟡 **Implement Accumulator node** — blueprint + runtime in `packages/nodes/src/Core/Routing/Accumulator/`.
+- [x] 🟡 **Implement Pause/Resume** — `engine.ts` has real `pause()`/`resume()` with promise-based freeze; `worker.ts` routes `case "pause"` and `case "resume"` to it.
+- [x] 🟡 **Surface errors on canvas nodes** — `node:error` WebSocket event is handled in `ExecutionSessionSDK/sdk.tsx:69`.
+- [x] 🟢 **Clean up `research/` package** — package deleted.
 
 ---
 
