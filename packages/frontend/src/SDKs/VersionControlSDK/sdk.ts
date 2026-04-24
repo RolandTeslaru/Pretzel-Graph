@@ -5,6 +5,7 @@ import { SDK } from "../SDKManager";
 import { VersionControl, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "../ApiInterceptorSDK";
 import { RealtimeSDK } from "../Realtime/sdk";
+import { QuerySDK } from "../QuerySDK/sdk";
 
 @SDK("VersionControl")
 export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
@@ -42,6 +43,7 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
         publish: async (payload) => {
             const data = await VersionControl.API.publish(api, payload);
             this.reducers.upsertPublication(data.publication);
+            QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications", payload.workflowId] });
             return data;
         },
 
@@ -60,22 +62,29 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
         activate: async (publicationId) => {
             const data = await VersionControl.API.activate(api, { publicationId });
             this.useStore.setState(s => {
-                for (const pub of s.publications) pub.is_active = false;
+                for (const pub of s.publications) 
+                    pub.is_active = false;
+                
                 const idx = s.publications.findIndex(p => p.id === data.publication.id);
-                if (idx >= 0) s.publications[idx] = data.publication;
+                
+                if (idx >= 0) 
+                    s.publications[idx] = data.publication;
             });
+            QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
             return data;
         },
 
         deactivate: async (publicationId) => {
             const data = await VersionControl.API.deactivate(api, { publicationId });
             this.reducers.upsertPublication(data.publication);
+            QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
             return data;
         },
 
         remove: async (publicationId) => {
             const data = await VersionControl.API.remove(api, { publicationId });
             this.reducers.removePublication(publicationId);
+            QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
             return data;
         },
 
@@ -124,12 +133,12 @@ export const VersionControlSDK = SDK.get<VersionControlSDKImpl>("VersionControl"
 
 export namespace VersionControlSDK {
     export type State = {
-        publications: VersionControl.Publication[]
+        publications: VersionControl.PublicationMeta[]
         subscribedWorkflowId: Workflow.Id | null
     }
 
     export type Reducers = {
-        upsertPublication: (pub: VersionControl.Publication) => void
+        upsertPublication: (pub: VersionControl.PublicationMeta) => void
         removePublication: (id: VersionControl.Publication.Id) => void
     }
 
@@ -145,6 +154,6 @@ export namespace VersionControlSDK {
     }
 
     export type Selectors = {
-        activePublication: () => VersionControl.Publication | null
+        activePublication: () => VersionControl.PublicationMeta | null
     }
 }
