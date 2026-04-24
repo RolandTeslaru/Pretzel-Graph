@@ -1,17 +1,20 @@
 import z from "zod";
+import type { AxiosInstance } from "axios";
 import { Workflow } from "./Workflow";
 import { Auth } from "./Auth";
 import { Realtime } from "./Realtime";
 
 export namespace VersionControl {
     export namespace Publication {
-        export const Id = z.string().brand("PublicationId");
+        export const Id = z.coerce.string().brand("PublicationId");
         export type Id = z.infer<typeof Id>
 
         export const Schema = z.object({
             id: Publication.Id,
             workflow_id: Workflow.Id,
             version: z.number(),
+            name: z.string(),
+            description: z.string().nullable(),
             workflow_data: Workflow.Data.Schema,
             user_id: Auth.User.Id,
             is_active: z.boolean(),
@@ -82,6 +85,8 @@ export namespace VersionControl {
         export namespace Publish {
             export const Request = z.object({
                 workflowId: Workflow.Id,
+                name: z.string(),
+                description: z.string().nullable().optional(),
                 workflowData: Workflow.Data.Schema,
             })
             export type Request = z.infer<typeof Request>
@@ -91,6 +96,11 @@ export namespace VersionControl {
             })
             export type Response = z.infer<typeof Response>
         }
+        export async function publish(api: AxiosInstance, req: Publish.Request): Promise<Publish.Response> {
+            const { data } = await api.post<Publish.Response>("/api/version-control/publish", req);
+            return data;
+        }
+
         export namespace List {
             export const Request = z.object({
                 workflowId: Workflow.Id,
@@ -102,6 +112,11 @@ export namespace VersionControl {
             })
             export type Response = z.infer<typeof Response>
         }
+        export async function list(api: AxiosInstance, req: List.Request): Promise<List.Response> {
+            const { data } = await api.get<List.Response>(`/api/version-control/list/${req.workflowId}`);
+            return data;
+        }
+
         export namespace Get {
             export const Request = z.object({
                 publicationId: Publication.Id,
@@ -113,6 +128,11 @@ export namespace VersionControl {
             })
             export type Response = z.infer<typeof Response>
         }
+        export async function get(api: AxiosInstance, req: Get.Request): Promise<Get.Response> {
+            const { data } = await api.get<Get.Response>(`/api/version-control/${req.publicationId}`);
+            return data;
+        }
+
         export namespace Activate {
             export const Request = z.object({
                 publicationId: Publication.Id,
@@ -122,7 +142,11 @@ export namespace VersionControl {
             export const Response = z.object({
                 publication: Publication.Schema,
             })
-            export type Response = z.infer<typeof Response> 
+            export type Response = z.infer<typeof Response>
+        }
+        export async function activate(api: AxiosInstance, req: Activate.Request): Promise<Activate.Response> {
+            const { data } = await api.post<Activate.Response>(`/api/version-control/${req.publicationId}/activate`);
+            return data;
         }
 
         export namespace Deactivate {
@@ -136,6 +160,10 @@ export namespace VersionControl {
             })
             export type Response = z.infer<typeof Response>
         }
+        export async function deactivate(api: AxiosInstance, req: Deactivate.Request): Promise<Deactivate.Response> {
+            const { data } = await api.post<Deactivate.Response>(`/api/version-control/${req.publicationId}/deactivate`);
+            return data;
+        }
 
         export namespace Remove {
             export const Request = z.object({
@@ -147,6 +175,10 @@ export namespace VersionControl {
                 success: z.boolean(),
             })
             export type Response = z.infer<typeof Response>
+        }
+        export async function remove(api: AxiosInstance, req: Remove.Request): Promise<Remove.Response> {
+            const { data } = await api.delete<Remove.Response>(`/api/version-control/${req.publicationId}`);
+            return data;
         }
     }
 }
