@@ -6,8 +6,6 @@ import { Webhook } from '@pretzel-graph/shared/domain/Foundations/Webhook';
 import Redis from 'ioredis';
 import { createServiceClient } from '@/utils/supabase';
 
-const VERSION_CONTROL_PATTERN = 'version_control:*';
-
 @Injectable()
 export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(WorkflowRegistryService.name);
@@ -59,9 +57,9 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
     // ─────────────────────────────────────────────────────────
 
     private subscribeToSignals() {
-        this.redisSub.psubscribe(VERSION_CONTROL_PATTERN, (err) => {
+        this.redisSub.psubscribe(VersionControl.Signal.PATTERN_CHANNEL, (err) => {
             if (err) this.logger.error(`psubscribe failed: ${err.message}`);
-            else this.logger.log(`Subscribed to ${VERSION_CONTROL_PATTERN}`);
+            else this.logger.log(`Subscribed to ${VersionControl.Signal.PATTERN_CHANNEL}`);
         });
 
         this.redisSub.on('pmessage', (_pattern, _channel, raw) => {

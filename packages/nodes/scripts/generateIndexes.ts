@@ -1,9 +1,10 @@
+import "reflect-metadata";
 import * as fs from "fs";
 import * as path from "path";
 
 import { Foundations, Shelf } from "@pretzel-graph/shared/domain"
 
-const NODES_ROOT = path.resolve(__dirname, "../src/nodes");
+const NODES_ROOT = path.resolve(__dirname, "../src");
 const OUTPUT_PATH = path.resolve(__dirname, "../dist/node_index.json")
 const BACKEND_TARGET = path.resolve(__dirname, "../../backend/src/services/Shelf/node_index.json");
 const BACKEND_SERVICE_FILE = path.resolve(__dirname, "../../backend/src/services/Shelf/service.ts");
@@ -44,6 +45,7 @@ async function generateIndex() {
         blueprints,
     }
 
+    fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true })
     fs.writeFileSync(OUTPUT_PATH, JSON.stringify(index, null, 2))
     console.log(`Successfully indexed ${Object.keys(blueprints).length} nodes in ${Object.keys(drawers).length} drawers`)
 

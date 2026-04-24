@@ -2,7 +2,7 @@ import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { ExecutionSession } from "@pretzel-graph/shared/domain";
 import { S2Engine } from "../S2/engine";
 import { S2Graph, Vertex } from "../S2/graph";
-import { Synthesizer } from "../synthesizer";
+import { Synthesizer } from "@pretzel-graph/node-sdk";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { S2Hooks } from "src/S2/types";
 import { AggexExecutionError } from "src/errors";
@@ -491,6 +491,6 @@ export namespace AggexEngine {
             Vertex.Id | Workflow.Node.Id, 
             { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> }
         
-        >
+    >
     }
 }

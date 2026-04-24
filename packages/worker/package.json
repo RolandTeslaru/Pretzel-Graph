@@ -6,10 +6,8 @@
     "types": "dist/index.d.ts",
     "scripts": {
         "build": "tsc --build tsconfig.build.json",
-        "dev": "concurrently \"npm:watch:indexes\" \"tsx watch src/server.ts\" --names \"INDEX,SERVER\" --prefix-colors \"blue,green\"",
+        "dev": "tsx watch src/server.ts",
         "start": "node dist/server.js",
-        "generate-indexes": "tsx scripts/generateIndexes.ts",
-        "watch:indexes": "tsx scripts/watchIndexes.ts",
         "test": "jest"
     },
     "dependencies": {
