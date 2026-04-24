@@ -14,6 +14,11 @@ const ChatSidebarHeader = () => {
                 style={{ backgroundColor: 'color-mix(in srgb, var(--port-Message) 25%, transparent)' }}
             >
                 <SystemIcons.MessagesSquare className='my-auto h-4 w-4' style={{ color: 'var(--port-Message-foreground)' }} />
+                {!currentChatName &&
+                    <p className='text-xs h-auto my-auto truncate font-medium pr-1' style={{ color: 'var(--port-Message-foreground)' }}>
+                        Conversation
+                    </p>
+                }
             </div>
             <p className='text-xs h-auto my-auto truncate font-medium'>{currentChatName}</p>
             <div className='flex flex-row gap-2 border border-border bg-card-float rounded-full ml-auto my-auto h-auto p-0.5 shadow-md shadow-black/10'>

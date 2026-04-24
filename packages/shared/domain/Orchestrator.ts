@@ -3,7 +3,7 @@ import { Workflow } from "./Workflow"
 import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
 import { type AxiosInstance } from "axios"
-import { ExecutionSession } from "./ExecutionSession"
+import { ExecutionSession, ExecutionIgniter } from "./ExecutionSession"
 import { Chat } from "./Chat"
 import { SystemError } from "./SystemError"
 
@@ -54,6 +54,7 @@ export namespace Orchestrator {
                 workflowId: Workflow.Id,
                 workflowData: Workflow.Data.Schema,
                 executionSession: ExecutionSession.Schema,
+                igniter: ExecutionIgniter.Schema.optional(),
                 chatId: Chat.Id.optional()
             })
         }
@@ -231,7 +232,9 @@ export namespace Orchestrator {
                 executionSession: ExecutionSession.Schema,
             })
 
-            export const InternalRequest = Request
+            export const InternalRequest = Request.extend({
+                igniter: ExecutionIgniter.Schema.optional(),
+            })
 
             export const Response = z.object({
                 success: z.boolean(),
