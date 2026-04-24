@@ -813,6 +813,15 @@ export const LogOut: React.FC<BaseIconProps> = (props) => (
 )
 LogOut.displayName = "LogOut"
 
+export const CloudUpload: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M12 13v8"/>
+        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
+        <path d="m8 17 4-4 4 4"/>
+    </BaseIcon>
+)
+CloudUpload.displayName = "CloudUpload"
+
 export const Webhook: React.FC<BaseIconProps> = (props) => (
     <BaseIcon strokeWidth={2} {...props}>
         <path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2"/>

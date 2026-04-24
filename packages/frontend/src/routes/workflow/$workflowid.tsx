@@ -5,7 +5,7 @@ import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import WorkflowCanvas from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/Canvas'
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { Dialog, DropdownMenu, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Dialog, DropdownMenu, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import NodeSidebar from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/NodeSidebar'
 import ChatSidebar from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatSidebar'
 import WorkflowControls from '@/routes/workflow/-SDKs/OrchestratorSDK/ui/WorkflowControls'
@@ -19,6 +19,8 @@ import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import Breadcrumbs from '../home/projects/-components/Breadcrumbs'
 import { DialogSDK } from '@/SDKs/DialogSDK'
+import { ButtonGroup } from '@pretzel-graph/standard-ui/foundations/button-group'
+import { openPublishDialog } from '@/SDKs/VersionControlSDK/ui/PublishDialog'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -33,7 +35,7 @@ export const Route = createFileRoute('/workflow/$workflowid')({
             DialogSDK.actions.push(`workflow-${workflowId}`, (props) => (
                 <DialogSDK.Template dismissible={false} {...props} className='p-4 flex flex-row gap-4'>
                     <Dialog.Title className='text-lg font-bold'>Retrieving Workflow</Dialog.Title>
-                    <Spinner/>
+                    <Spinner />
                 </DialogSDK.Template>
             ))
         }, 2000)
@@ -57,10 +59,10 @@ export const Route = createFileRoute('/workflow/$workflowid')({
         })
 
         WorkbenchSDK.actions.workflow.load(workflowId, abortController.signal)
-        .finally(() => {
-            clearTimeout(loadtimeoutId);
-            DialogSDK.actions.pop(`workflow-${workflowId}`)
-        })
+            .finally(() => {
+                clearTimeout(loadtimeoutId);
+                DialogSDK.actions.pop(`workflow-${workflowId}`)
+            })
 
         return null;
     },
@@ -93,14 +95,15 @@ function WorkflowLayoutComponent() {
         <div className='w-full h-screen overflow-hidden'>
             <ShelfSidebar />
             <WorkflowCanvas />
-            <ChatSidebar/>
+            <ChatSidebar />
             <NodeSidebar />
-            <BottomPanel/>
-            <PathPanel/>
+            <BottomPanel />
+            <PathPanel />
+            <TopRightPanel />
             {/* <AdminJobsPanel /> */}
             {/* <StackDebugPanel/> */}
             <SpotlightSearch />
-            <StackSDK.UIOverlay />  
+            <StackSDK.UIOverlay />
         </div>
     )
 }
@@ -112,8 +115,8 @@ const BottomPanel = () => {
 
     return (
         <div className='flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 -translate-x-1/2 z-10'>
-            <TemporalControls/>
-            <ChatButton/>
+            <TemporalControls />
+            <ChatButton />
             <WorkflowControls canRun={!hasIssues} />
         </div>
     )
@@ -126,51 +129,69 @@ const PathPanel = () => {
 
     const breadCrumbs = LibrarySDK.useStore(s => {
         return LibrarySDK.selectors.getBreadcrumbs(s, folder_id);
-    });    
-    
+    });
+
     return (
         <div className='fixed top-5 left-5 flex gap-3 text-sm font-medium'>
-            <PretzelLogoDropwdown/>
-            <Breadcrumbs className='my-auto' cwd={breadCrumbs} finalFileName={display_name}/>
+            <PretzelLogoDropwdown />
+            <Breadcrumbs className='my-auto' cwd={breadCrumbs} finalFileName={display_name} />
+        </div>
+    )
+}
+
+
+export const TopRightPanel = () => {
+    return (
+        <div className='flex flex-row gap-2 fixed top-5 right-5 z-10 p-1 rounded-xl bg-card backdrop-blur-sm border border-border'>
+            <Button variant="ghost" size="sm" onClick={openPublishDialog}>
+                <SystemIcons.CloudUpload className='size-4 mr-1'/>
+                Publish
+            </Button>
+
+            <div className='h-4 my-auto border-l border-border' />
+
+            <Button variant="ghost" size="icon-sm">
+                <SystemIcons.History className='size-4'/>
+            </Button>
         </div>
     )
 }
 
 const PretzelLogoDropwdown = () => {
     const theme = SystemSDK.useStore(s => s.theme);
-    
+
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <SystemIcons.Pretzel size={30} className='text-primary cursor-pointer '/>
+                <SystemIcons.Pretzel size={30} className='text-primary cursor-pointer ' />
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align='start' >
                 <h4 className='px-2 py-1 text-md font-medium text-primary'>
                     PretzelGraph.ai
                 </h4>
                 <DropdownMenu.Item>
-                    <SystemIcons.User/>
+                    <SystemIcons.User />
                     Account
                 </DropdownMenu.Item>
                 <DropdownMenu.Item>
-                    <SystemIcons.Settings/>
+                    <SystemIcons.Settings />
                     Settings
                 </DropdownMenu.Item>
-                <DropdownMenu.Separator/>
+                <DropdownMenu.Separator />
                 <DropdownMenu.RadioGroup value={theme} onValueChange={(value) => SystemSDK.actions.setTheme(value as "light" | "dark")}>
                     <p className='px-2 py-1 text-sm text-muted-foreground'>
                         Theme
                     </p>
                     <DropdownMenu.RadioItem value="light">
-                        <SystemIcons.Sun/>
+                        <SystemIcons.Sun />
                         Light
                     </DropdownMenu.RadioItem>
                     <DropdownMenu.RadioItem value="dark">
-                        <SystemIcons.Moon/>
+                        <SystemIcons.Moon />
                         Dark
                     </DropdownMenu.RadioItem>
                     <DropdownMenu.RadioItem value="system">
-                        <SystemIcons.Monitor/>
+                        <SystemIcons.Monitor />
                         System
                     </DropdownMenu.RadioItem>
                 </DropdownMenu.RadioGroup>
