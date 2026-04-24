@@ -97,7 +97,7 @@ code {
   --destructive-foreground: theme(--color-white);
   --border: oklch(86.9% 0.005 56.366);
 
-  --muted: theme(--color-neutral-100);
+  --muted: oklch(95.2% 0 0);
   --muted-foreground: theme(--color-neutral-500);
   --input: theme(--color-white);
 
