@@ -118,7 +118,7 @@ export class OrchestratorService {
 
 
     async runFromService(
-        payload: Orchestrator.API.Run.Request,
+        payload: Orchestrator.API.Run.InternalRequest,
         trigger: Orchestrator.Job.Trigger.Service
     ): Promise<Orchestrator.API.Run.Response> {
 
@@ -138,9 +138,9 @@ export class OrchestratorService {
 
     private async runCore(
         principal: Principal,
-        payload: Orchestrator.API.Run.Request
+        payload: Orchestrator.API.Run.InternalRequest
     ): Promise<Orchestrator.API.Run.Response> {
-        const { workflowId, workflowData, executionSession } = payload
+        const { workflowId, workflowData, executionSession, igniter } = payload
         const { supabase } = principal
 
         const wfCache = Workflow.createCache(workflowData);
@@ -184,7 +184,8 @@ export class OrchestratorService {
                 jobId,
                 workflowId,
                 workflowData,
-                executionSession
+                executionSession,
+                igniter,
             };
 
             await this.executionQueue.add('run', queueItem, { jobId });

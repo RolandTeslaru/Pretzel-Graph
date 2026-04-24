@@ -144,7 +144,7 @@ const PathPanel = () => {
 export const TopRightPanel = () => {
     return (
         <div className='flex flex-row gap-2 fixed top-5 right-5 z-10 p-1 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
-            <Button variant="ghost" size="sm" onClick={openPublishDialog}>
+            <Button className='rounded-full' variant="ghost" size="sm" onClick={openPublishDialog}>
                 <SystemIcons.CloudUpload className='size-4 mr-1'/>
                 Publish
             </Button>

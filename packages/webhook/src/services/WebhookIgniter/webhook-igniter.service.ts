@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException, MethodNotAllowedException } from '@nestjs/common';
-import { ExecutionSession, Orchestrator, VersionControl } from '@pretzel-graph/shared/domain';
+import { ExecutionIgniter, ExecutionSession, Orchestrator, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { Webhook } from '@pretzel-graph/shared/domain/Foundations/Webhook';
 import { WorkflowRegistryService } from '../WorkflowRegistry/workflow-registry.service';
 import { ApiService } from '../Api/api.service';
@@ -13,8 +13,8 @@ export interface InboundRequest {
 }
 
 @Injectable()
-export class TriggerService {
-    private readonly logger = new Logger(TriggerService.name);
+export class WebhookIgniterService {
+    private readonly logger = new Logger(WebhookIgniterService.name);
 
     constructor(
         private readonly registry: WorkflowRegistryService,
@@ -36,10 +36,23 @@ export class TriggerService {
 
         const executionSession = ExecutionSession.Schema.parse({});
 
+        const igniter: ExecutionIgniter = {
+            variant: "webhook",
+            nodeId: match.nodeId as Workflow.Node.Id,
+            payload: {
+                method: req.method,
+                path: req.path,
+                headers: req.headers,
+                query: req.query,
+                body: req.body,
+            },
+        };
+
         const payload: Orchestrator.API.Run.InternalRequest = {
             workflowId: publication.workflow_id,
             workflowData: publication.workflow_data,
             executionSession,
+            igniter,
         };
 
         const { jobId, success } = await Orchestrator.API.runInternal(this.api.client, payload); 

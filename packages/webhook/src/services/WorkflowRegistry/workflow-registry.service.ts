@@ -97,30 +97,47 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
         this.publicationsMap.set(publication.workflow_id, publication);
 
         const { workflow_data } = publication;
+        const registeredPaths: string[] = [];
+
         for (const [nodeId, node] of Object.entries(workflow_data.nodes) as [
             Workflow.Node.Id,
             Workflow.Node,
         ][]) {
-            if (!node.webhooks?.length) 
+            if (!node.webhooks?.length)
                 continue;
             const staticValues = workflow_data.staticValues[nodeId] ?? {};
-            
+
             for (const webhook of node.webhooks) {
                 const resolvedWebhook = Webhook.resolve(webhook, node, staticValues);
                 this.webhookPathMap.set(resolvedWebhook.path, publication.workflow_id);
+                registeredPaths.push(`[${resolvedWebhook.method}] /${resolvedWebhook.path} (node: ${nodeId})`);
             }
         }
+
+        this.logger.log(
+            `Registered publication "${publication.name}" v${publication.version} (workflow: ${publication.workflow_id})\n` +
+            (registeredPaths.length
+                ? registeredPaths.map(p => `  → ${p}`).join('\n')
+                : '  → (no webhook nodes)'),
+        );
     }
 
     private removePublication(workflowId: Workflow.Id) {
         const publication = this.publicationsMap.get(workflowId);
         if (!publication) return;
 
-        for (const [path, owner] of this.webhookPathMap)
-            if (owner === workflowId) 
+        const removedPaths: string[] = [];
+        for (const [path, owner] of this.webhookPathMap) {
+            if (owner === workflowId) {
                 this.webhookPathMap.delete(path);
+                removedPaths.push(path);
+            }
+        }
 
         this.publicationsMap.delete(workflowId);
+        this.logger.log(
+            `Removed publication for workflow ${workflowId} — cleared paths: ${removedPaths.join(', ') || '(none)'}`,
+        );
     }
 
     // ─────────────────────────────────────────────────────────

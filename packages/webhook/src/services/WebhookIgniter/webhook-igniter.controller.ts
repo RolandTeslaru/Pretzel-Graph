@@ -1,11 +1,11 @@
 import { All, Controller, Param, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { Webhook } from '@pretzel-graph/shared/domain/Foundations/Webhook';
-import { TriggerService } from './trigger.service';
+import { WebhookIgniterService } from './webhook-igniter.service';
 
 @Controller()
-export class TriggerController {
-    constructor(private readonly triggerService: TriggerService) {}
+export class WebhookIgniterController {
+    constructor(private readonly igniterService: WebhookIgniterService) {}
 
     // Handles any HTTP method on /webhooks/:path — method is validated
     // against the registered webhook in the service layer.
@@ -14,7 +14,7 @@ export class TriggerController {
         @Param('path') path: string,
         @Req() req: Request,
     ) {
-        return this.triggerService.handle({
+        return this.igniterService.handle({
             method: Webhook.Method.parse(req.method),
             path: path as Webhook.Path,
             headers: req.headers as Record<string, unknown>,
