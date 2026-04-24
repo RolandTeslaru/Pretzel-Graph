@@ -11,6 +11,7 @@ import { resolveFields } from "../utils";
 import { CompilationContext, createCompilationContext } from "./context";
 import { AggexEngine } from "src/engine";
 import { produce } from "immer";
+import { ExecutionIgniter } from "@pretzel-graph/shared/domain/ExecutionSession";
 
 export { CompilationContext, createCompilationContext, extendCompilePath } from "./context";
 
@@ -24,8 +25,8 @@ export class WorkflowCompiler {
         jobId:        Orchestrator.Job.Id,
         session:      ExecutionSession,
         emit:         RuntimeNode.ExecutionContext["emit"],
-        
         compilationContext: CompilationContext = createCompilationContext(workflowId),
+        igniter?:     ExecutionIgniter,
     ): Promise<AggexEngine.ExecutionContext> {
 
         const workflowCache = Workflow.createCache(workflowData);
@@ -114,6 +115,13 @@ export class WorkflowCompiler {
         startNodes.forEach(nodeId => {
             graph.addDependency(S2Graph.START_VERTEX_ID, nodeId);
         });
+
+        if (igniter?.variant === "webhook") {
+            const entry = nodeInstanceMap.get(igniter.nodeId as unknown as Vertex.Id);
+            if (entry) {
+                await entry.instance.triggerWebhook(igniter.payload as Record<string, unknown>);
+            }
+        }
 
         return engineExecutionCtx;
     }

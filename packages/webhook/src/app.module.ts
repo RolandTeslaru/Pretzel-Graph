@@ -5,7 +5,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { ApiModule } from './services/Api/api.module';
-import { TriggerModule } from './services/Trigger/trigger.module';
+import { WebhookIgniterModule } from './services/WebhookIgniter/webhook-igniter.module';
 import { WorkflowRegistryModule } from './services/WorkflowRegistry/workflow-registry.module';
 
 @Module({
@@ -24,7 +24,7 @@ import { WorkflowRegistryModule } from './services/WorkflowRegistry/workflow-reg
             },
         }),
         ApiModule,
-        TriggerModule,
+        WebhookIgniterModule,
         WorkflowRegistryModule,
     ],
     providers: [

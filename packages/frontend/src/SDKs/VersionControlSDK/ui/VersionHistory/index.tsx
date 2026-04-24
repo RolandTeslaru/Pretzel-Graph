@@ -57,7 +57,7 @@ function VersionHistory() {
 
     return (
         <div className="w-[340px] overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border/70 px-3 py-2.5">
+            <div className="flex items-center justify-between border-b border-border/70 p-2">
                 <div className="flex items-center gap-2">
                     <SystemIcons.History className="size-4 text-muted-foreground" />
                     <div className="text-sm font-medium">
@@ -67,7 +67,7 @@ function VersionHistory() {
             </div>
 
             <ScrollArea.Root className="max-h-[420px]">
-                <div className="space-y-3 px-3 py-3">
+                <div className="space-y-3 p-2">
                     <TimelineItem
                         actionType="draft"
                         highlighted={isDirty}
