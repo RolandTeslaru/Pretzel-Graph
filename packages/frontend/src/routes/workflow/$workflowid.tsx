@@ -5,7 +5,7 @@ import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import WorkflowCanvas from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/Canvas'
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { Button, Dialog, DropdownMenu, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Dialog, DropdownMenu, Popover, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import NodeSidebar from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/NodeSidebar'
 import ChatSidebar from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatSidebar'
 import WorkflowControls from '@/routes/workflow/-SDKs/OrchestratorSDK/ui/WorkflowControls'
@@ -21,6 +21,7 @@ import Breadcrumbs from '../home/projects/-components/Breadcrumbs'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { ButtonGroup } from '@pretzel-graph/standard-ui/foundations/button-group'
 import { openPublishDialog } from '@/SDKs/VersionControlSDK/ui/PublishDialog'
+import VersionHistory from '@/SDKs/VersionControlSDK/ui/VersionHistory'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -114,7 +115,7 @@ const BottomPanel = () => {
     const hasIssues = WorkbenchSDK.useStore(s => Validation.workflowHasIssues(s.issues));
 
     return (
-        <div className='flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 -translate-x-1/2 z-10'>
+        <div className='shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 -translate-x-1/2 z-10'>
             <TemporalControls />
             <ChatButton />
             <WorkflowControls canRun={!hasIssues} />
@@ -142,7 +143,7 @@ const PathPanel = () => {
 
 export const TopRightPanel = () => {
     return (
-        <div className='flex flex-row gap-2 fixed top-5 right-5 z-10 p-1 rounded-xl bg-card backdrop-blur-sm border border-border'>
+        <div className='flex flex-row gap-2 fixed top-5 right-5 z-10 p-1 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
             <Button variant="ghost" size="sm" onClick={openPublishDialog}>
                 <SystemIcons.CloudUpload className='size-4 mr-1'/>
                 Publish
@@ -150,9 +151,16 @@ export const TopRightPanel = () => {
 
             <div className='h-4 my-auto border-l border-border' />
 
-            <Button variant="ghost" size="icon-sm">
-                <SystemIcons.History className='size-4'/>
-            </Button>
+            <Popover.Root>
+                <Popover.Trigger asChild>
+                    <Button variant="ghost" size="icon-sm">
+                        <SystemIcons.History className='size-4'/>
+                    </Button>
+                </Popover.Trigger>
+                <Popover.Content align="end" className='p-0 rounded-xl' sideOffset={10}>
+                    <VersionHistory />
+                </Popover.Content>
+            </Popover.Root>
         </div>
     )
 }
