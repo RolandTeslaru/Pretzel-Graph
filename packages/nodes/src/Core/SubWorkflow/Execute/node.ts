@@ -70,7 +70,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         }
 
         // Inject parent workflow data stream into node
-        this.localEngineCtx.nodeInstanceMap.forEach(({wfNode, instance}) => {
+        this.localEngineCtx.nodeRuntimeMap.forEach(({wfNode, instance}) => {
             if(wfNode.blueprintId === "Core.SubWorkflow.ExposeInputPort" && "injectedData" in instance){
                 // The exposed port id is the same as the local node id of the ExposeInputPort node
                 const bridgeId = wfNode.id as keyof InferInputs<typeof Blueprint>;
@@ -83,7 +83,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             
             const result: Partial<InferOutputs<typeof Blueprint>> = {};
             // Extract data from nodes
-            this.localEngineCtx.nodeInstanceMap.forEach(({wfNode, instance}) => {
+            this.localEngineCtx.nodeRuntimeMap.forEach(({wfNode, instance}) => {
                 if(wfNode.blueprintId === "Core.SubWorkflow.ExposeOutputPort" && "ejectedData" in instance){
                     // The exposed port id is the same as the local node id of the ExposeOutputPort node
                     (result as Record<string, unknown>)[wfNode.id] = instance.ejectedData;
