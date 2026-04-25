@@ -7,6 +7,9 @@ export namespace Token {
     export const InternalService = z.string().min(1).brand('InternalServiceToken');
     export type InternalService = z.infer<typeof InternalService>
 
-    export const Schema = z.union([UserSupabaseJWT, InternalService]);
+    export const RuntimeNode = z.string().min(1).brand('RuntimeNodeToken');
+    export type RuntimeNode = z.infer<typeof RuntimeNode>
+
+    export const Schema = z.union([UserSupabaseJWT, InternalService, RuntimeNode]);
 }
 export type Token = z.infer<typeof Token.Schema>
