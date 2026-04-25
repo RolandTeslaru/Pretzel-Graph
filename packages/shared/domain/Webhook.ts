@@ -9,8 +9,17 @@ export namespace Webhook {
     export const Id = z.string().brand("WebhookId")
     export type Id = z.infer<typeof Id>
 
+    export const WorkflowId = z.string().brand("WorkflowId")
+    export type WorkflowId = z.infer<typeof WorkflowId>
+
     export const Path = z.string().brand("WebhookPath")
     export type Path = z.infer<typeof Path>
+
+    export const RouteId = z.string().brand("WebhookRouteId")
+    export type RouteId = z.infer<typeof RouteId>
+
+    export const createId = (workflowId: WorkflowId, path: Path): RouteId =>
+        `${workflowId}/${path}` as RouteId
 
     export const Method = z.enum(["GET", "POST", "PUT", "DELETE", "PATCH"])
     export type Method = z.infer<typeof Method>
