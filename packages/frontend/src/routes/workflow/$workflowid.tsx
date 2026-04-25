@@ -5,7 +5,7 @@ import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import WorkflowCanvas from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/Canvas'
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { Button, Dialog, DropdownMenu, Popover, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { Badge, Button, Dialog, DropdownMenu, Popover, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import NodeSidebar from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/NodeSidebar'
 import ChatSidebar from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatSidebar'
 import WorkflowControls from '@/routes/workflow/-SDKs/OrchestratorSDK/ui/WorkflowControls'
@@ -22,6 +22,7 @@ import { DialogSDK } from '@/SDKs/DialogSDK'
 import { ButtonGroup } from '@pretzel-graph/standard-ui/foundations/button-group'
 import { openPublishDialog } from '@/SDKs/VersionControlSDK/ui/PublishDialog'
 import VersionHistory from '@/SDKs/VersionControlSDK/ui/VersionHistory'
+import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -57,6 +58,12 @@ export const Route = createFileRoute('/workflow/$workflowid')({
             queryKey: ['library', 'bootstrap'],
             queryFn: () => LibrarySDK.actions.bootstrap.get(),
             staleTime: 60_000,
+        })
+        
+        QuerySDK.client.prefetchQuery({
+            queryKey: ['version-control', 'publications', workflowId],
+            queryFn: () => VersionControlSDK.actions.list(workflowId),
+            staleTime: 30_000,
         })
 
         WorkbenchSDK.actions.workflow.load(workflowId, abortController.signal)
@@ -142,9 +149,13 @@ const PathPanel = () => {
 
 
 export const TopRightPanel = () => {
+    const isPublished = VersionControlSDK.useStore(s => s.publications.length > 0);
     return (
-        <div className='flex flex-row gap-2 fixed top-5 right-5 z-10 p-1 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
+        <div className='flex flex-row gap-2 fixed top-5 right-5 z-10 p-0.5 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
             <Button className='rounded-full' variant="ghost" size="sm" onClick={openPublishDialog}>
+                {isPublished && (
+                    <div className='content-[""] my-auto w-2 h-2 mr-2 rounded-full bg-green-500'/>
+                )}
                 <SystemIcons.CloudUpload className='size-4 mr-1'/>
                 Publish
             </Button>
