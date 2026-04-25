@@ -23,6 +23,9 @@ import { ButtonGroup } from '@pretzel-graph/standard-ui/foundations/button-group
 import { openPublishDialog } from '@/SDKs/VersionControlSDK/ui/PublishDialog'
 import VersionHistory from '@/SDKs/VersionControlSDK/ui/VersionHistory'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
+import { GlowingAlertTriangle } from './-SDKs/WorkbenchSDK/ui/Canvas/Node/Header/icons'
+import { AnimatePresence, motion } from 'motion/react'
+import IssuesViewer from './-SDKs/WorkbenchSDK/ui/IssuesViewer'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -122,10 +125,35 @@ const BottomPanel = () => {
     const hasIssues = WorkbenchSDK.useStore(s => Validation.workflowHasIssues(s.issues));
 
     return (
-        <div className='shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border fixed bottom-5 left-1/2 -translate-x-1/2 z-10'>
-            <TemporalControls />
-            <ChatButton />
-            <WorkflowControls canRun={!hasIssues} />
+        <div className='bottom-5 left-1/2 -translate-x-1/2 z-10 fixed'>
+            <div className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border overflow-visible'>
+                <TemporalControls />
+                <ChatButton />
+                <WorkflowControls canRun={!hasIssues} />
+                {/* Issues bubble — absolutely positioned to the right of the bar */}
+                <AnimatePresence>
+                    {hasIssues && (
+                        <Popover.Root>
+                            <Popover.Trigger asChild>
+                                <motion.div
+                                    className='absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/70 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'
+                                    initial={{ x: -24, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    exit={{ x: -24, opacity: 0 }}
+                                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                >
+                                    <div className='w-auto h-auto mx-auto mt-[5px]'>
+                                        <GlowingAlertTriangle/>
+                                    </div>
+                                </motion.div>
+                            </Popover.Trigger>
+                            <Popover.Content side="top" align="center" sideOffset={12} className='rounded-xl p-3 max-w-72'>
+                                <IssuesViewer />
+                            </Popover.Content>
+                        </Popover.Root>
+                    )}
+                </AnimatePresence>
+            </div>
         </div>
     )
 }
