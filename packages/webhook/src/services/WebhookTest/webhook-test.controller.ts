@@ -1,6 +1,6 @@
 import { All, Body, Controller, HttpCode, NotFoundException, Post, Param, Req } from '@nestjs/common';
 import { Request } from 'express';
-import { Webhook } from '@pretzel-graph/shared/domain/Foundations/Webhook';
+import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import { WebhookTestService } from './webhook-test.service';
 
 @Controller('test')

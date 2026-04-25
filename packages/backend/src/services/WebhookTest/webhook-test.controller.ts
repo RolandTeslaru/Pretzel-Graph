@@ -1,6 +1,6 @@
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { SupabaseAuthGuard } from '@/auth/supabase-auth.guard';
-import { Webhook } from '@pretzel-graph/shared/domain/Foundations/Webhook';
+import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import axios from 'axios';
 
 @Controller('api/webhook/test')

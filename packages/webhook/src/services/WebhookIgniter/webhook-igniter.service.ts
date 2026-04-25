@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException, MethodNotAllowedException } from '@nestjs/common';
 import { ExecutionIgniter, ExecutionSession, Orchestrator, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
-import { Webhook } from '@pretzel-graph/shared/domain/Foundations/Webhook';
+import { resolveWebhook } from '@pretzel-graph/shared/utils';
+import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import { WorkflowRegistryService } from '../WorkflowRegistry/workflow-registry.service';
 import { ApiService } from '../Api/api.service';
 
@@ -73,7 +74,7 @@ export class WebhookIgniterService {
             if (!node.webhooks?.length) continue;
             const staticValues = publication.workflow_data.staticValues[node.id] ?? {};
             for (const webhook of node.webhooks) {
-                const resolved = Webhook.resolve(webhook, node, staticValues);
+                const resolved = resolveWebhook(webhook, node, staticValues);
                 if (resolved.path === path && resolved.method === method) {
                     return { nodeId, webhook: resolved };
                 }

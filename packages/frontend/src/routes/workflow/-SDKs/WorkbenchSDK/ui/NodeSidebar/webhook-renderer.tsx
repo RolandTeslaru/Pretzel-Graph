@@ -1,28 +1,28 @@
-import { Expression, type Foundations, type Workflow } from '@pretzel-graph/shared/domain'
+import { Expression, type Webhook, type Workflow } from '@pretzel-graph/shared/domain'
 import React, { memo, useMemo } from 'react'
 import { ExecutionSessionSDK } from '../../../ExecutionSessionSDK/sdk'
 import { WorkbenchSDK } from '../../sdk'
 
 interface Props {
-    webhook: Foundations.Webhook
+    webhook: Webhook
     nodeId: Workflow.Node.Id
 }
 
 const WebhookRenderer: React.FC<Props> = memo(({ webhook, nodeId }) => {
-    
+
     const session = ExecutionSessionSDK.useStore(s => s.session);
 
     const expressionCtx = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.getExpressionContext(s, nodeId, session));
-  
+
     const parsedWebhook = useMemo(() => {
         if (!expressionCtx)
             return webhook;
 
-        const w = {...webhook} as Foundations.Webhook;
+        const w = {...webhook} as Webhook;
 
         w.method = Expression.evaluate(webhook.method, expressionCtx) as string;
         w.path = Expression.evaluate(webhook.path, expressionCtx) as string;
-        w.responseMode = Expression.evaluate(webhook.responseMode, expressionCtx) as Foundations.Webhook.ResponseMode;
+        w.responseMode = Expression.evaluate(webhook.responseMode, expressionCtx) as Webhook.ResponseMode;
 
         return w;
 

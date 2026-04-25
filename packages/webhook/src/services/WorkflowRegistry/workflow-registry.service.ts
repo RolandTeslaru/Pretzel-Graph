@@ -2,7 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnModuleDestroy, OnModuleInit } from '@nestjs/common/interfaces';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
-import { Webhook } from '@pretzel-graph/shared/domain/Foundations/Webhook';
+import { resolveWebhook } from '@pretzel-graph/shared/utils';
+import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import Redis from 'ioredis';
 import { createServiceClient } from '@/utils/supabase';
 
@@ -108,7 +109,7 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
             const staticValues = workflow_data.staticValues[nodeId] ?? {};
 
             for (const webhook of node.webhooks) {
-                const resolvedWebhook = Webhook.resolve(webhook, node, staticValues);
+                const resolvedWebhook = resolveWebhook(webhook, node, staticValues);
                 this.webhookPathMap.set(resolvedWebhook.path, publication.workflow_id);
                 registeredPaths.push(`[${resolvedWebhook.method}] /${resolvedWebhook.path} (node: ${nodeId})`);
             }

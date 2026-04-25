@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
-import { Webhook } from '@pretzel-graph/shared/domain/Foundations/Webhook';
+import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import { Workflow } from '@pretzel-graph/shared/domain';
 import Redis from 'ioredis';
 

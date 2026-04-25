@@ -2,6 +2,7 @@ import { z } from "zod"
 import { Foundations } from "./Foundations";
 import { Auth } from "./Auth";
 import { Blueprint } from "./Foundations/Blueprint";
+import { Webhook } from "./Webhook";
 
 export namespace Workflow {
     export const Id = z.string().brand("WorkflowId");
@@ -23,7 +24,7 @@ export namespace Workflow {
             fields: z.array(Foundations.Field.Schema),
             inputs: z.array(Foundations.Port.Input.Schema),
             outputs: z.array(Foundations.Port.Output.Schema),
-            webhooks: z.array(Foundations.Webhook.Schema).optional(),
+            webhooks: z.array(Webhook.Schema).optional(),
 
             isMinimized: z.boolean().default(false),
             isFlipped: z.boolean().optional(),
