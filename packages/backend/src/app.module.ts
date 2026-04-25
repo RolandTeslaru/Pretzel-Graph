@@ -13,6 +13,7 @@ import { RealtimeModule } from './services/Realtime/realtime.module';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { AuthModule } from './services/Auth/auth.module';
 import { VersionControlModule } from './services/VersionControl/version-control.module';
+import { WebhookTestModule } from './services/WebhookTest/webhook-test.module';
 
 @Module({
     imports: [
@@ -39,6 +40,7 @@ import { VersionControlModule } from './services/VersionControl/version-control.
         RealtimeModule,
         AuthModule,
         VersionControlModule,
+        WebhookTestModule,
     ],
     controllers: [],
     providers: [
