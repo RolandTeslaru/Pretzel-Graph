@@ -1,9 +1,9 @@
 import z from "zod";
 import type { AxiosInstance } from "axios";
-import { Expression } from "../Expression";
-import { Realtime } from "../Realtime";
-import { Workflow } from "../Workflow";
-import type { Field } from "./Field";
+import { Realtime } from "./Realtime";
+
+const WorkflowId = z.string().brand("WorkflowId");
+type WorkflowId = z.infer<typeof WorkflowId>;
 
 export namespace Webhook {
     export const Id = z.string().brand("WebhookId")
@@ -44,24 +44,6 @@ export namespace Webhook {
     }
     export type Payload = z.infer<typeof Payload.Schema>
 
-    export function resolve(
-        webhook: Webhook,
-        node: Workflow.Node,
-        staticValues: Record<Field.Id, unknown>,
-    ): Resolved {
-        const ctx: Expression.Context = {
-            thisNode: node,
-            thisNodeValues: staticValues,
-            incoming: {},
-        };
-        return ResolvedSchema.parse({
-            id: webhook.id,
-            path: Expression.evaluate(webhook.path, ctx),
-            method: Expression.evaluate(webhook.method, ctx),
-            responseMode: Expression.evaluate(webhook.responseMode, ctx),
-        });
-    }
-
     // ─────────────────────────────────────────────────────────
     // Test — in-editor webhook testing without publishing
     // ─────────────────────────────────────────────────────────
@@ -71,11 +53,11 @@ export namespace Webhook {
             export const Channel = Realtime.Channel.brand("WebhookTestChannel")
             export type Channel = z.infer<typeof Channel>
 
-            export const getChannel = (workflowId: Workflow.Id): Channel =>
+            export const getChannel = (workflowId: WorkflowId): Channel =>
                 `webhook:test:${workflowId}` as Channel
 
             const Base = Realtime.Signal.Base.extend({
-                workflowId: Workflow.Id,
+                workflowId: WorkflowId,
             })
 
             export namespace Resolve {
@@ -95,7 +77,7 @@ export namespace Webhook {
         export namespace API {
             export namespace Register {
                 export const Request = z.object({
-                    workflowId: Workflow.Id,
+                    workflowId: WorkflowId,
                     path: Path,
                     method: Method,
                 })

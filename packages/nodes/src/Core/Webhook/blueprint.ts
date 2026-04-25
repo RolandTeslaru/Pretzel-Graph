@@ -1,5 +1,5 @@
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
-import { Webhook } from "@pretzel-graph/shared/domain/Foundations/Webhook";
+import { Webhook } from "@pretzel-graph/shared/domain/Webhook";
 import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({

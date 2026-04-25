@@ -2,7 +2,7 @@ import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
-import { Webhook } from "@pretzel-graph/shared/domain/Foundations/Webhook";
+import { Webhook } from "@pretzel-graph/shared/domain/Webhook";
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
 import { AxiosService } from "../../services/AxiosService";
 import Redis from "ioredis";
