@@ -32,9 +32,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
 
 
-    protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
+    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
         if (!this.payload) {
             this.payload = await this.waitForTestPayload();
         }
