@@ -201,11 +201,7 @@ export class AggexWorkerImpl {
     )
 
 
-    public emit<T_Event extends Realtime.Event>(event: T_Event){
-        this.publishToRedis(event)
-    }
-
-    public async publishToRedis(event: Realtime.Event) {
+    public emit = <T_Event extends Realtime.Event>(event: T_Event) => {
         this.redisPub.publish(event.channel, JSON.stringify(event));
     }
 }
