@@ -3,8 +3,9 @@ import { AppModule } from './app.module';
 import * as express from 'express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);

@@ -5,8 +5,8 @@ import { container, singleton } from "tsyringe";
 class AxiosServiceImpl {
     constructor() {
         this.api.interceptors.request.use((config) => {
-            const token = process.env.INTERNAL_SERVICE_SECRET;
-            if (token) config.headers["Internal-Service-Token"] = token;
+            const token = process.env.RUNTIME_NODE_INTERNAL_TOKEN;
+            if (token) config.headers["Runtime-Node-Token"] = token;
             return config;
         });
 
