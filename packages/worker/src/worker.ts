@@ -44,7 +44,7 @@ export class AggexWorkerImpl {
 
         switch (signal.type) {
             case "terminate":
-                ctx.abortWorkflow()
+                ctx.abortExecution()
                 break;
             case "pause":
                 engine?.pause();
@@ -53,7 +53,7 @@ export class AggexWorkerImpl {
                 engine?.resume();
                 break;
             case "suspend":
-                ctx.abortWorkflow();
+                ctx.abortExecution();
                 break;
             case "heartbeat":
                 this.pauseTimeoutResetters.get(signal.jobId)?.();
@@ -117,7 +117,7 @@ export class AggexWorkerImpl {
 
             const onPauseTimeout = () => {
                 console.log(`[Worker] Max pause duration reached for job ${jobId}, terminating`);
-                engineExecutionCtx.abortWorkflow()
+                engineExecutionCtx.abortExecution()
                 engine.resume();
             };
 
