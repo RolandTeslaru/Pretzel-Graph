@@ -6,6 +6,7 @@ import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { ApiModule } from './services/Api/api.module';
 import { WebhookIgniterModule } from './services/WebhookIgniter/webhook-igniter.module';
+import { WebhookTestModule } from './services/WebhookTest/webhook-test.module';
 import { WorkflowRegistryModule } from './services/WorkflowRegistry/workflow-registry.module';
 
 @Module({
@@ -26,6 +27,7 @@ import { WorkflowRegistryModule } from './services/WorkflowRegistry/workflow-reg
         ApiModule,
         WebhookIgniterModule,
         WorkflowRegistryModule,
+        WebhookTestModule,
     ],
     providers: [
         { provide: APP_GUARD, useClass: ThrottlerGuard },
