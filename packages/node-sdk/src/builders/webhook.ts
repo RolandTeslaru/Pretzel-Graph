@@ -1,19 +1,18 @@
-import { Foundations } from "@pretzel-graph/shared/domain";
-import type { Webhook } from "@pretzel-graph/shared/domain/Foundations/Webhook";
+import type { Webhook } from "@pretzel-graph/shared/domain/Webhook";
 
 export type LiteralWebhook<
     TId extends string,
     TWebhook extends Webhook,
 > = {
-    id: TId & Foundations.Webhook.Id;
+    id: TId & Webhook.Id;
     readonly __literalId?: TId;
 } & Omit<TWebhook, "id">;
 
 export namespace WebhookBuilder {
     export type BaseProps<
         TId extends string,
-        TMethod extends Foundations.Webhook.Method,
-        TResponseMode extends Foundations.Webhook.ResponseMode,
+        TMethod extends Webhook.Method,
+        TResponseMode extends Webhook.ResponseMode,
     > = {
         id: TId;
         method: TMethod;
@@ -23,8 +22,8 @@ export namespace WebhookBuilder {
 
     type Ret<
         TId extends string,
-        TMethod extends Foundations.Webhook.Method,
-        TResponseMode extends Foundations.Webhook.ResponseMode,
+        TMethod extends Webhook.Method,
+        TResponseMode extends Webhook.ResponseMode,
     > = LiteralWebhook<
         TId,
         Webhook & { method: TMethod; responseMode: TResponseMode }
@@ -32,28 +31,28 @@ export namespace WebhookBuilder {
 
     function buildBase<
         TId extends string,
-        TMethod extends Foundations.Webhook.Method,
-        TResponseMode extends Foundations.Webhook.ResponseMode,
+        TMethod extends Webhook.Method,
+        TResponseMode extends Webhook.ResponseMode,
     >(config: BaseProps<TId, TMethod, TResponseMode>) {
         return {
-            id: config.id as TId & Foundations.Webhook.Id,
+            id: config.id as TId & Webhook.Id,
             method: config.method,
-            path: config.path as Foundations.Webhook.Path,
+            path: config.path as Webhook.Path,
             responseMode: config.responseMode,
-        } satisfies { id: TId & Foundations.Webhook.Id } & Omit<Webhook, "id">;
+        } satisfies { id: TId & Webhook.Id } & Omit<Webhook, "id">;
     }
 
     export function Route<
         TId extends string,
-        TMethod extends Foundations.Webhook.Method,
-        TResponseMode extends Foundations.Webhook.ResponseMode,
+        TMethod extends Webhook.Method,
+        TResponseMode extends Webhook.ResponseMode,
     >(config: BaseProps<TId, TMethod, TResponseMode>): Ret<TId, TMethod, TResponseMode> {
         return buildBase(config) as unknown as Ret<TId, TMethod, TResponseMode>;
     }
 
     export function GET<
         TId extends string,
-        TResponseMode extends Foundations.Webhook.ResponseMode,
+        TResponseMode extends Webhook.ResponseMode,
     >(
         config: Omit<BaseProps<TId, "GET", TResponseMode>, "method">
     ): Ret<TId, "GET", TResponseMode> {
@@ -62,7 +61,7 @@ export namespace WebhookBuilder {
 
     export function POST<
         TId extends string,
-        TResponseMode extends Foundations.Webhook.ResponseMode,
+        TResponseMode extends Webhook.ResponseMode,
     >(
         config: Omit<BaseProps<TId, "POST", TResponseMode>, "method">
     ): Ret<TId, "POST", TResponseMode> {
@@ -71,7 +70,7 @@ export namespace WebhookBuilder {
 
     export function PUT<
         TId extends string,
-        TResponseMode extends Foundations.Webhook.ResponseMode,
+        TResponseMode extends Webhook.ResponseMode,
     >(
         config: Omit<BaseProps<TId, "PUT", TResponseMode>, "method">
     ): Ret<TId, "PUT", TResponseMode> {
@@ -80,7 +79,7 @@ export namespace WebhookBuilder {
 
     export function PATCH<
         TId extends string,
-        TResponseMode extends Foundations.Webhook.ResponseMode,
+        TResponseMode extends Webhook.ResponseMode,
     >(
         config: Omit<BaseProps<TId, "PATCH", TResponseMode>, "method">
     ): Ret<TId, "PATCH", TResponseMode> {
@@ -89,7 +88,7 @@ export namespace WebhookBuilder {
 
     export function DELETE<
         TId extends string,
-        TResponseMode extends Foundations.Webhook.ResponseMode,
+        TResponseMode extends Webhook.ResponseMode,
     >(
         config: Omit<BaseProps<TId, "DELETE", TResponseMode>, "method">
     ): Ret<TId, "DELETE", TResponseMode> {

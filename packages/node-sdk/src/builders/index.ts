@@ -1,5 +1,5 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import type { Webhook } from "@pretzel-graph/shared/domain/Foundations/Webhook";
+import type { Webhook } from "@pretzel-graph/shared/domain/Webhook";
 import type { Port }  from "@pretzel-graph/shared/domain/Foundations/Port";
 import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";

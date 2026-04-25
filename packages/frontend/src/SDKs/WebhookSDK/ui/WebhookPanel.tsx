@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Button, Input, Textarea, Select, Badge, ScrollArea } from "@pretzel-graph/standard-ui/foundations"
 import { WebhookSDK } from "../sdk"
 import type { WebhookSDK as WebhookSDKNS } from "../sdk"
-import { Webhook } from "@pretzel-graph/shared/domain/Foundations/Webhook"
+import { Webhook } from "@pretzel-graph/shared/domain/Webhook"
 import { cn } from "@pretzel-graph/standard-ui/utils/cn"
 
 const METHODS = Webhook.Method.options

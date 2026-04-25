@@ -1,4 +1,4 @@
-import { Expression, Foundations } from "./domain";
+import { Expression, Foundations, Webhook, Workflow } from "./domain";
 import { Field } from "./domain/Foundations/Field";
 
 type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id
@@ -121,6 +121,20 @@ export function evaluateRuleGroup(
         return children.some(id => evaluateChild(id));
 
     throw new Error(`Invalid combinator: ${combinator}`);
+}
+
+export function resolveWebhook(
+    webhook: Webhook,
+    node: Workflow.Node,
+    staticValues: Record<Field.Id, unknown>,
+): Webhook.Resolved {
+    const ctx: Expression.Context = { thisNode: node, thisNodeValues: staticValues, incoming: {} };
+    return Webhook.ResolvedSchema.parse({
+        id: webhook.id,
+        path: Expression.evaluate(webhook.path, ctx),
+        method: Expression.evaluate(webhook.method, ctx),
+        responseMode: Expression.evaluate(webhook.responseMode, ctx),
+    });
 }
 
 export function evaluateCondition(

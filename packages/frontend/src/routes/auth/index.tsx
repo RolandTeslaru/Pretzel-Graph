@@ -18,9 +18,11 @@ function AuthPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
             <GameOfLifeBackground />
-            <div className="relative z-10 w-full h-full max-w-md p-6 bg-background/80 backdrop-blur-md border border-border rounded-2xl shadow-black/20 shadow-2xl">
-                <Pretzel className="mx-auto mb-4 text-primary" size={80} />
-                <AuthenticationPanel />
+            <div className="absolute left-0 top-0 z-10 flex h-full xl:w-[500px] w-full  bg-background/90 backdrop-blur-lg r">
+                <div className='max-w-md min-w-md h-auto m-auto'>
+                    <Pretzel className="mx-auto mb-4 text-primary" size={80} />
+                    <AuthenticationPanel />
+                </div>
             </div>
         </div>
     )
