@@ -1,6 +1,6 @@
 {
-  "version": "1777071320474",
-  "generatedAt": "2026-04-24T22:55:20.474Z",
+  "version": "1777103297257",
+  "generatedAt": "2026-04-25T07:48:17.257Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -2759,8 +2759,7 @@
           "tooltip": "Unique suffix appended to your webhook server base path.",
           "variant": "UniqueString",
           "initialValue": "",
-          "prefix": "webhook-",
-          "length": 10,
+          "length": 32,
           "placeholder": "webhook-abc123"
         },
         {
