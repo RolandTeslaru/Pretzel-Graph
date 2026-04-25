@@ -7,14 +7,14 @@ import { WebhookIgniterService } from './webhook-igniter.service';
 export class WebhookIgniterController {
     constructor(private readonly igniterService: WebhookIgniterService) {}
 
-    // Handles any HTTP method on /webhooks/:path — method is validated
-    // against the registered webhook in the service layer.
-    @All(':path')
+    @All(':workflowId/:path')
     async receive(
+        @Param('workflowId') workflowId: string,
         @Param('path') path: string,
         @Req() req: Request,
     ) {
         return this.igniterService.handle({
+            workflowId: workflowId as Webhook.WorkflowId,
             method: Webhook.Method.parse(req.method),
             path: path as Webhook.Path,
             headers: req.headers as Record<string, unknown>,

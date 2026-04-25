@@ -16,44 +16,41 @@ interface TestRegistration {
 export class WebhookTestService {
     private readonly logger = new Logger(WebhookTestService.name);
     private readonly redisPub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
-    private readonly registrations = new Map<Webhook.Path, TestRegistration>();
+    private readonly registrations = new Map<Webhook.RouteId, TestRegistration>();
 
-    register(
-        path:       Webhook.Path, 
-        method:     Webhook.Method,
-        workflowId: Workflow.Id
-    ) {
-        this.deregister(workflowId);
+    register(path: Webhook.Path, method: Webhook.Method, workflowId: Workflow.Id) {
+        const key = Webhook.createId(workflowId as unknown as Webhook.WorkflowId, path);
+
+        const existing = this.registrations.get(key);
+        if (existing) clearTimeout(existing.timer);
 
         const timer = setTimeout(() => {
-            this.registrations.delete(path);
-            this.logger.warn(`Test registration expired for path=${path} workflow=${workflowId}`);
+            this.registrations.delete(key);
+            this.logger.warn(`Test registration expired for workflow=${workflowId} path=${path}`);
         }, REGISTRATION_TTL_MS);
 
-        this.registrations.set(path, { workflowId, method, timer });
-        this.logger.log(`Registered test webhook [${method}] /${path} → workflow=${workflowId}`);
+        this.registrations.set(key, { workflowId, method, timer });
+        this.logger.log(`Registered test webhook [${method}] /${workflowId}/${path}`);
     }
 
-    deregister(
-        workflowId: Workflow.Id
-    ) {
-        for (const [path, reg] of this.registrations) {
-            if (reg.workflowId === workflowId) {
-                clearTimeout(reg.timer);
-                this.registrations.delete(path);
-            }
-        }
+    deregister(workflowId: Workflow.Id, path: Webhook.Path) {
+        const key = Webhook.createId(workflowId as unknown as Webhook.WorkflowId, path);
+        const reg = this.registrations.get(key);
+        if (!reg) return;
+        clearTimeout(reg.timer);
+        this.registrations.delete(key);
     }
 
     async dispatch(
-        path: Webhook.Path, 
-        payload: Webhook.Payload
+        workflowId: Webhook.WorkflowId,
+        path: Webhook.Path,
+        payload: Webhook.Payload,
     ): Promise<boolean> {
-        const reg = this.registrations.get(path);
+        const key = Webhook.createId(workflowId, path);
+        const reg = this.registrations.get(key);
         if (!reg) return false;
 
         const channel = Webhook.Test.Signal.getChannel(reg.workflowId);
-
         const signal: Webhook.Test.Signal.Resolve = {
             type: "resolve",
             channel,
@@ -62,9 +59,8 @@ export class WebhookTestService {
         };
 
         await this.redisPub.publish(channel, JSON.stringify(signal));
-
-        this.deregister(reg.workflowId);
-        this.logger.log(`Dispatched test webhook for workflow=${reg.workflowId} on channel=${channel}`);
+        this.deregister(reg.workflowId, path);
+        this.logger.log(`Dispatched test webhook for workflow=${reg.workflowId} path=${path}`);
         return true;
     }
 

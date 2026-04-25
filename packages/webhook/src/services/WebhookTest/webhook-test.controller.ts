@@ -15,19 +15,22 @@ export class WebhookTestController {
         return { ok: true };
     }
 
-    @All(':path')
-    async receive(@Param('path') path: string, @Req() req: Request) {
-        const webhookPath = Webhook.Path.parse(path);
+    @All(':workflowId/:path')
+    async receive(
+        @Param('workflowId') workflowId: string,
+        @Param('path') path: string,
+        @Req() req: Request,
+    ) {
         const payload: Webhook.Payload = {
             method: Webhook.Method.parse(req.method),
-            path: webhookPath,
+            path: Webhook.Path.parse(path),
             headers: req.headers as Record<string, unknown>,
             query: req.query as Record<string, unknown>,
             body: req.body,
         };
 
-        const dispatched = await this.testService.dispatch(webhookPath, payload);
-        if (!dispatched) throw new NotFoundException(`No active test webhook registered at path /${path}`);
+        const dispatched = await this.testService.dispatch(workflowId as Webhook.WorkflowId, Webhook.Path.parse(path), payload);
+        if (!dispatched) throw new NotFoundException(`No active test webhook registered at /${workflowId}/${path}`);
 
         return { ok: true };
     }

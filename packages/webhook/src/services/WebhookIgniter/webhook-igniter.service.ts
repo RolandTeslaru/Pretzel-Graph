@@ -6,6 +6,7 @@ import { WorkflowRegistryService } from '../WorkflowRegistry/workflow-registry.s
 import { ApiService } from '../Api/api.service';
 
 export interface InboundRequest {
+    workflowId: Webhook.WorkflowId;
     method: Webhook.Method;
     path: Webhook.Path;
     headers: Record<string, unknown>;
@@ -23,9 +24,9 @@ export class WebhookIgniterService {
     ) {}
 
     async handle(req: InboundRequest): Promise<unknown> {
-        const publication = this.registry.lookup(req.path);
+        const publication = this.registry.lookup(req.workflowId as unknown as Workflow.Id);
         if (!publication) {
-            throw new NotFoundException(`No active webhook registered at path ${req.path}`);
+            throw new NotFoundException(`No active webhook registered for workflow ${req.workflowId}`);
         }
 
         const match = this.findWebhookNode(publication, req.path, req.method);

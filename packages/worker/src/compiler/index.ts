@@ -57,25 +57,23 @@ export class WorkflowCompiler {
         
         const abortController = new AbortController();
         
-        const nodeExecutionCtx = {
-            jobId,
-            session,
-            workflowData,
-            workflowCache,
-            emit,
-            abortWorkflow: (reason) => abortController.abort(reason),
-            updateSession: (recipe) => {
-                session = produce(session, recipe);
-            },
-            abortSignal: abortController.signal,
-            workflowId: workflowId
-        } satisfies RuntimeNode.ExecutionContext
-
+        const abortExecution = (reason: string) => abortController.abort(reason);
+        const updateSession = (recipe: (draft: ExecutionSession) => void) => {
+            session = produce(session, recipe);
+        };
 
         const dummyEngine = new AggexEngine();
 
         const engineExecutionCtx = {
-            ...nodeExecutionCtx,
+            get session()  { return session; },
+            jobId,
+            workflowData,
+            workflowCache,
+            emit,
+            abortExecution,
+            updateSession,
+            abortSignal: abortController.signal,
+            workflowId,
             compiledGraph: graph,
             nodeRuntimeMap,
             activeNodes: new Set(),
