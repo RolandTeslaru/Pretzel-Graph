@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { Webhook } from "@pretzel-graph/shared/domain/Foundations/Webhook";
+import { Webhook } from "@pretzel-graph/shared/domain/Webhook";
 
 @SDK("Webhook")
 export class WebhookSDKImpl extends BaseSDK<WebhookSDK.State> {
