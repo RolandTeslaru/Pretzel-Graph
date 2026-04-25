@@ -8,6 +8,7 @@ import { FieldRenderer } from '../FieldRenderer';
 import { INPUT_RENDERER_MAP } from '../InputRenderer';
 import { NodeSidebarHeader } from './header';
 import { NodeSidebarFooter } from './footer';
+import WebhookRenderer from './webhook-renderer';
 
 
 const NodeSidebar = () => {
@@ -38,7 +39,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
     const [isEditing, setIsEditing] = useState(false)
     const connectedPorts = WorkbenchSDK.useStore(s => s.cache.inputHandlesMap[node.id] || EMPTY_OBJECT)
 
-    const [ fields, executionStrategyFields, inputs, connectedInputs ] = useMemo(() => {
+    const [ fields, executionStrategyFields, inputs, connectedInputs, webhooks ] = useMemo(() => {
         const connectedInputs: Foundations.Port.Input[] = [];
         const inputs: Foundations.Port.Input[] = [];
 
@@ -67,12 +68,12 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
             executionStrategyFields,
             inputs,
             connectedInputs,
+            node.webhooks || []
         ];
     }, [connectedPorts, node.inputs, node.fields]);
 
     const defaultOpen = useMemo(() => {
-        const sections: string[] = ["execution-strategy"];
-        sections.push("output");
+        const sections: string[] = ["execution-strategy", "output", "webhooks"];
 
         if (fields.length > 0)
             sections.push("fields");
@@ -126,6 +127,21 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
                                 {inputs.map(input => (
                                     <InputItem key={input.id} input={input} nodeId={node.id} />
                                 ))}
+                            </Accordion.Content>
+                        </Accordion.Item>
+                    )}
+                    {/* Webhooks */}
+                    {webhooks.length > 0 && (
+                        <Accordion.Item value='webhooks' className='border-none'>
+                            <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
+                                <h4 className='text-sm font-semibold text-foreground tracking-tight'>Webhooks</h4>
+                            </Accordion.Trigger>
+                            <Accordion.Content className='flex flex-col gap-1 bg-background/60 py-2'>
+                                {webhooks.map(webhook => 
+                                    <div key={webhook.id} className='px-4 py-1 min-w-0'>
+                                        <WebhookRenderer webhook={webhook} nodeId={node.id} />
+                                    </div>
+                                )}
                             </Accordion.Content>
                         </Accordion.Item>
                     )}
