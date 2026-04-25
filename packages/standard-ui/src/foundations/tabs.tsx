@@ -19,6 +19,7 @@ const listVars = cva(
         accent: "bg-accent/30 border-border text-foreground",
       },
       size: {
+        xxs: "p-0 gap-0",
         xs: "p-px gap-px",
         sm: "py-0.5 px-[3px] gap-0.5",
         default: "p-0.5 gap-1",
@@ -37,6 +38,7 @@ const triggerVars = cva(
   {
     variants: {
       size: {
+        xxs: "rounded-sm px-1 py-px text-[10px]",
         xs: "rounded-sm px-1.5 py-0.5 text-xs",
         sm: "rounded-sm px-2 py-0.5 text-xs",
         default: "rounded-md px-3 py-1.5 text-sm",
@@ -58,6 +60,7 @@ const indicatorVars = cva(
         accent: "bg-input dark:border-neutral-600 border-white"
       },
       size: {
+        xxs: "rounded-sm",
         xs: "rounded-sm",
         sm: "rounded-md",
         default: "rounded-md",
@@ -84,7 +87,7 @@ function Root({
   )
 }
 
-type TabsSize = "xs" | "sm" | "default" | "lg"
+type TabsSize = "xxs" | "xs" | "sm" | "default" | "lg"
 const TabsSizeContext = React.createContext<TabsSize>("default")
 
 const List = ({

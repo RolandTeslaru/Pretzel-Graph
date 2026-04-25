@@ -199,7 +199,7 @@ export namespace RuntimeNode {
         readonly session: ExecutionSession,
         readonly updateSession: (recipe: (draft: ExecutionSession) => void) => void,
         readonly abortSignal: AbortSignal,
-        readonly abortWorkflow: (reason?: any) => void,
+        readonly abortExecution: (reason?: any) => void,
         readonly emit: <T_Event extends Realtime.Event>(event: T_Event) => void,
         readonly workflowData: Workflow.Data,
         readonly workflowId: Workflow.Id,

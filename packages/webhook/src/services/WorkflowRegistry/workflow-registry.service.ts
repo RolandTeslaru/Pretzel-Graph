@@ -3,7 +3,6 @@ import { OnModuleDestroy, OnModuleInit } from '@nestjs/common/interfaces';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { resolveWebhook } from '@pretzel-graph/shared/utils';
-import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import Redis from 'ioredis';
 import { createServiceClient } from '@/utils/supabase';
 
@@ -14,16 +13,12 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
 
     // workflowId maps to active publication
     private readonly publicationsMap = new Map<Workflow.Id, VersionControl.Publication>();
-    // resolved webhook path maps to workflowId (for lookup)
-    private readonly webhookPathMap = new Map<Webhook.Path, Workflow.Id>();
 
     // ─────────────────────────────────────────────────────────
     // Public lookup
     // ─────────────────────────────────────────────────────────
 
-    public lookup(path: Webhook.Path): VersionControl.Publication | undefined {
-        const workflowId = this.webhookPathMap.get(path);
-        if (!workflowId) return undefined;
+    public lookup(workflowId: Workflow.Id): VersionControl.Publication | undefined {
         return this.publicationsMap.get(workflowId);
     }
 
@@ -49,7 +44,7 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
         }
 
         this.logger.log(
-            `Hydrated registry — ${publications.length} publications, ${this.webhookPathMap.size} webhook routes`,
+            `Hydrated registry — ${publications.length} publications`,
         );
     }
 
@@ -109,9 +104,8 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
             const staticValues = workflow_data.staticValues[nodeId] ?? {};
 
             for (const webhook of node.webhooks) {
-                const resolvedWebhook = resolveWebhook(webhook, node, staticValues);
-                this.webhookPathMap.set(resolvedWebhook.path, publication.workflow_id);
-                registeredPaths.push(`[${resolvedWebhook.method}] /${resolvedWebhook.path} (node: ${nodeId})`);
+                const resolved = resolveWebhook(webhook, node, staticValues);
+                registeredPaths.push(`[${resolved.method}] /${publication.workflow_id}/${resolved.path} (node: ${nodeId})`);
             }
         }
 
@@ -124,21 +118,9 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
     }
 
     private removePublication(workflowId: Workflow.Id) {
-        const publication = this.publicationsMap.get(workflowId);
-        if (!publication) return;
-
-        const removedPaths: string[] = [];
-        for (const [path, owner] of this.webhookPathMap) {
-            if (owner === workflowId) {
-                this.webhookPathMap.delete(path);
-                removedPaths.push(path);
-            }
-        }
-
+        if (!this.publicationsMap.has(workflowId)) return;
         this.publicationsMap.delete(workflowId);
-        this.logger.log(
-            `Removed publication for workflow ${workflowId} — cleared paths: ${removedPaths.join(', ') || '(none)'}`,
-        );
+        this.logger.log(`Removed publication for workflow ${workflowId}`);
     }
 
     // ─────────────────────────────────────────────────────────

@@ -27,16 +27,17 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     
     
     protected override async onWebhook(webhookPayload: AnyRecord) {
+        console.log(`[WebhookNode] Payload injected via igniter — method=${(webhookPayload as Webhook.Payload).method} path=${(webhookPayload as Webhook.Payload).path}`);
         this.payload = webhookPayload as Webhook.Payload;
     }
 
-
-
     protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
         if (!this.payload) {
+            console.log(`[WebhookNode] No payload — entering test mode`);
             this.payload = await this.waitForTestPayload();
         }
 
+        console.log(`[WebhookNode] Resolving with method=${this.payload.method} path=${this.payload.path}`);
         return {
             body: this.payload.body ?? null,
             headers: toRecord(this.payload.headers),
@@ -45,15 +46,14 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         };
     }
 
-
-
     private async waitForTestPayload() {
         const { workflowId } = this.context;
-        
         const path   = this.fields.path   as Webhook.Path;
         const method = this.fields.method as Webhook.Method;
 
+        console.log(`[WebhookNode] Registering test webhook [${method}] /${workflowId}/${path}`);
         await Webhook.Test.API.register(AxiosService.api, { workflowId, path, method });
+        console.log(`[WebhookNode] Waiting for test payload on channel=${Webhook.Test.Signal.getChannel(workflowId)}`);
 
         return this.AbortablePromise<Webhook.Payload>((resolve, reject, signal) => {
             const channel = Webhook.Test.Signal.getChannel(workflowId);
@@ -67,7 +67,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
             const timer = setTimeout(() => {
                 cleanup();
-                this.context.abortWorkflow('Webhook test timed out after 2 minutes');
+                this.context.abortExecution('Webhook test timed out after 2 minutes');
                 reject(new Error('Webhook test timed out'));
             }, TEST_WAIT_MS);
 
@@ -82,7 +82,9 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 try {
                     const sig = Webhook.Test.Signal.Schema.parse(JSON.parse(raw));
                     switch (sig.type) {
-                        case "resolve": return resolve(sig.payload);
+                        case "resolve":
+                            console.log(`[WebhookNode] Test payload received on channel=${channel}`, JSON.stringify(sig.payload, null, 2));
+                            return resolve(sig.payload);
                     }
                 } catch (e) {
                     reject(e);

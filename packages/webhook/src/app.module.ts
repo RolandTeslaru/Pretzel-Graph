@@ -25,9 +25,9 @@ import { WorkflowRegistryModule } from './services/WorkflowRegistry/workflow-reg
             },
         }),
         ApiModule,
-        WebhookIgniterModule,
-        WorkflowRegistryModule,
         WebhookTestModule,
+        WorkflowRegistryModule,
+        WebhookIgniterModule,
     ],
     providers: [
         { provide: APP_GUARD, useClass: ThrottlerGuard },
