@@ -2,7 +2,7 @@ import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import type { Validation, Workflow } from '@pretzel-graph/shared/domain'
 import { AlertTriangleFill } from '@pretzel-graph/standard-ui/icons/system'
 import { Separator } from '@pretzel-graph/standard-ui/foundations/separator'
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { NodeBadgeFromNode } from '@/components/NodeBadge'
 
 const IssuesViewer = () => {
     const issues = WorkbenchSDK.useStore(s => s.issues)
@@ -24,10 +24,10 @@ const IssuesViewer = () => {
                 return (
                     <div key={nodeId} className='flex flex-col gap-1'>
                         <div className='flex items-center gap-0.5'>
-                            {node?.icon && (
-                                <LazyIcon name={node.icon} className='w-3 h-3 shrink-0' />
-                            )}
-                            <p className='text-xs font-semibold text-foreground'>{node?.displayName ?? nodeId}</p>
+                            {node
+                                ? <NodeBadgeFromNode node={node} accent={false} className='text-xs px-0!' />
+                                : <p className='text-xs font-semibold text-foreground'>{nodeId}</p>
+                            }
                         </div>
                         {inputIssues.map((issue, i) => (
                             <p key={i} className='text-xs text-muted-foreground'>
@@ -55,10 +55,12 @@ const IssuesViewer = () => {
                         {cycle.nodes.map((id, i) => {
                             const n = nodes[id]
                             return (
-                                <span key={id} className='flex items-center gap-0.5'>
+                                <span key={id} className='flex items-center gap-1'>
                                     {i > 0 && <span>→</span>}
-                                    {n?.icon && <LazyIcon name={n.icon} className='w-3 h-3 shrink-0' />}
-                                    <span>{n?.displayName ?? id}</span>
+                                    {n
+                                        ? <NodeBadgeFromNode node={n} className='text-xs' />
+                                        : <span>{id}</span>
+                                    }
                                 </span>
                             )
                         })}

@@ -90,12 +90,7 @@ const HeaderOptionsDropdown = ({ node }: { node: Workflow.Node }) => (
         </DropdownMenu.Trigger>
         <DropdownMenu.Content align="end">
             <DropdownMenu.Item
-                onClick={() => {
-                    ShelfSDK.actions.hydrateBlueprint(node.blueprintId)
-                    const blueprint = ShelfSDK.state.blueprints[node.blueprintId]
-                    if (!blueprint) return
-                    WorkbenchSDK.actions.node.recreate(node.id, blueprint)
-                }}
+                onClick={() => { WorkbenchSDK.actions.node.recreate(node.id)}}
             >
                 <SystemIcons.Undo />
                 Recreate
