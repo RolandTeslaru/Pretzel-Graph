@@ -29,6 +29,9 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
         recreate:          withAsyncCommit( async (nodeId, ) => {
             const s = sdk.state;
             const node = s.workflow.data.nodes[nodeId];
+            
+            await ShelfSDK.actions.hydrateBlueprint(node.blueprintId)
+
             const blueprintId = node.blueprintId;
             
             const blueprint = ShelfSDK.state.blueprints[node.blueprintId];

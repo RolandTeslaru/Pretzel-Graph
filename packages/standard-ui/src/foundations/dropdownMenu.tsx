@@ -67,7 +67,7 @@ function Content({ className, sideOffset = 4, ...rest }: DropdownMenu.Content) {
           origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto 
           rounded-lg border border-border p-1 
           
-          shadow-xl backdrop-blur-sm
+          shadow-xl backdrop-blur-md
           dark:shadow-black/30
           light:shadow-neutral-950/30
 

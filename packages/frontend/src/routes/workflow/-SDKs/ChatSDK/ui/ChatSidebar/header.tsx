@@ -10,14 +10,14 @@ const ChatSidebarHeader = () => {
     return (
         <div className='flex flex-row gap-2 absolute top-2 w-[calc(100%-16px)] left-2 z-10 '>
             <div
-                className='flex items-center gap-2 p-1.5 rounded-full'
+                className='flex items-center gap-2 px-2 py-1 rounded-full'
                 style={{ backgroundColor: 'color-mix(in srgb, var(--port-Message) 25%, transparent)' }}
             >
                 <SystemIcons.MessagesSquare className='my-auto h-4 w-4' style={{ color: 'var(--port-Message-foreground)' }} />
                 {!currentChatName &&
-                    <p className='text-xs h-auto my-auto truncate font-medium pr-1' style={{ color: 'var(--port-Message-foreground)' }}>
+                    <h4 className='text-sm h-auto my-auto truncate font-semibold pr-1' style={{ color: 'var(--port-Message-foreground)' }}>
                         Conversation
-                    </p>
+                    </h4>
                 }
             </div>
             <p className='text-xs h-auto my-auto truncate font-medium'>{currentChatName}</p>

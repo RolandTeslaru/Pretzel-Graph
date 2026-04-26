@@ -202,10 +202,10 @@ code {
   --port-Document-accent: theme(--color-lime-200);
   --port-Document-glow: theme(--color-lime-600);
 
-  --port-Data: theme(--color-red-700);
-  --port-Data-foreground: theme(--color-red-100);
-  --port-Data-accent: theme(--color-red-400);
-  --port-Data-glow: theme(--color-red-600);
+  --port-Data: theme(--color-slate-500);
+  --port-Data-foreground: theme(--color-slate-100);
+  --port-Data-accent: theme(--color-slate-400);
+  --port-Data-glow: theme(--color-slate-600);
 
   --port-VectorStore: theme(--color-amber-400);
   --port-VectorStore-foreground: theme(--color-yellow-400);
@@ -336,7 +336,7 @@ code {
   --port-File-glow: theme(--color-lime-300);
   --port-Json-glow: theme(--color-amber-300);
   --port-Document-glow: theme(--color-lime-300);
-  --port-Data-glow: theme(--color-red-300);
+  --port-Data-glow: theme(--color-slate-300);
   --port-VectorStore-glow: theme(--color-amber-300);
   --port-Retriever-glow: theme(--color-yellow-300);
   --port-Integer-glow: theme(--color-purple-300);
