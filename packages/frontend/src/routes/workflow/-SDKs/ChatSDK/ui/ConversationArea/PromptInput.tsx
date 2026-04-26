@@ -8,6 +8,8 @@ import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import AddImageDialogContent from './AddImageDialog'
 import AddFileDialogContent from './AddFileDialog'
+import { WorkbenchSDK } from '../../../WorkbenchSDK/sdk'
+import { NodeBadge } from '@/components/NodeBadge'
 
 type PromptFormValues = {
     prompt: string
@@ -18,6 +20,10 @@ interface Props {
 }
 
 const PromptInput: React.FC<Props> = ({ className }) => {
+    const hasChatInputNode = WorkbenchSDK.useStore(s => {
+        return Object.values(s.workflow.data.nodes).some(node => node.blueprintId === "Core.Chat.Input");
+    })
+    
     const { handleSubmit, control, reset, formState: { isValid } } = useForm<PromptFormValues>({
         defaultValues: {
             prompt: ""
@@ -39,6 +45,11 @@ const PromptInput: React.FC<Props> = ({ className }) => {
     return (
         <form ref={formRef} onSubmit={handleSubmit(onSubmit)}>
             <InputGroup className={className}>
+                {!hasChatInputNode && (
+                    <p className='absolute top-1/2 -translate-y-1/2 text-xs text-foreground flex items-center gap-1'>
+                        Add a <NodeBadge icon="MessagesSquare" label="Chat Input" accent="port-Message" /> node to send messages.
+                    </p>
+                )}
                 <Controller
                     name="prompt"
                     control={control}
@@ -48,13 +59,14 @@ const PromptInput: React.FC<Props> = ({ className }) => {
                             value={field.value}
                             onChange={field.onChange}
                             onSend={() => formRef.current?.requestSubmit()}
+                            disabled={!hasChatInputNode}
                         />
                     )}
                 />
 
                 <InputGroupAddon align="block-end">
-                    <ArtifactAddButton />
-                    <SendButton disabled={!isValid} />
+                    <ArtifactAddButton disabled={!hasChatInputNode} />
+                    <SendButton disabled={!isValid || !hasChatInputNode} />
                 </InputGroupAddon>
             </InputGroup>
         </form>
@@ -63,7 +75,7 @@ const PromptInput: React.FC<Props> = ({ className }) => {
 
 export default PromptInput
 
-const PromptTextArea = ({ value, onChange, onSend }: { value: string, onChange: (val: string) => void, onSend: () => void }) => {
+const PromptTextArea = ({ value, onChange, onSend, disabled }: { value: string, onChange: (val: string) => void, onSend: () => void, disabled: boolean }) => {
     const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -77,6 +89,7 @@ const PromptTextArea = ({ value, onChange, onSend }: { value: string, onChange: 
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask, Search or Chat..."
+            disabled={disabled}
         />
     )
 }
@@ -97,7 +110,7 @@ const SendButton = ({ disabled }: { disabled: boolean }) => {
     )
 }
 
-const ArtifactAddButton = () => {
+const ArtifactAddButton = ({ disabled }: { disabled: boolean }) => {
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
@@ -106,6 +119,10 @@ const ArtifactAddButton = () => {
                     className="style-lyra:rounded-none rounded-full"
                     size="icon-xs"
                     aria-label="Add"
+                    disabled={disabled}
+                    onClick={(e) => {
+                        if (disabled) e.preventDefault();
+                    }}
                 >
                     <SystemIcons.Plus />
                 </InputGroupButton>

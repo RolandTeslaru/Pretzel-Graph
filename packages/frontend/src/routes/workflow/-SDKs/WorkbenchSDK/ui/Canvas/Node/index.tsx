@@ -41,10 +41,13 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
 
   const nodeStatus = ExecutionSessionSDK.useStore(s => s.session.node_status[node.id]);
 
+  const isStatusComplete = nodeStatus && nodeStatus.status === "completed"
+
+  const completedBorder = `color-mix(in srgb, var(--status-success) 80%, var(--border))`;
 
   if (node.accent) {
-    backgroundColor = `color-mix(in srgb, var(--${node.accent}) 30%, var(--node-accent-base))`;
-    borderColor = `color-mix(in srgb, var(--${node.accent}) 50%, var(--border))`;
+    backgroundColor = `color-mix(in srgb, var(--${node.accent}) 40%, var(--node-accent-base))`;
+    borderColor = isStatusComplete ? completedBorder : `color-mix(in srgb, var(--${node.accent}) 50%, var(--border))`;
   }
 
 
@@ -74,8 +77,6 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
             <NodeOutputs node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped} />
           </div>
         }
-
-
 
         <StatusBorder status={nodeStatus?.status} backgroundColor={backgroundColor} isClicked={isNodeClicked} />
 
