@@ -5,14 +5,14 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 import React, { memo } from 'react'
 import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field'
-import { router } from '@/main'
+import { useRouter } from '@tanstack/react-router'
 
 interface Props {
     node: Workflow.Node
 }
 
 export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
-
+    const router = useRouter()
     const isSubWorkflowNode = node.blueprintId === "Core.SubWorkflow.Execute"
 
     return (

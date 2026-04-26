@@ -55,9 +55,7 @@ export const StatusBorder = memo(({ status, backgroundColor, isClicked }: Status
           animation: "spin 1.5s linear infinite",
           inset: "-40%",
         } : {
-          background: status === "completed"
-            ? "var(--status-success)"
-            : status === "waiting"
+          background: status === "waiting"
               ? "var(--status-waiting)"
               : "transparent",
           opacity: 0.6,
