@@ -51,10 +51,12 @@ export namespace ExecutionSession {
         messages: z.array(z.custom<BaseMessage>((v) => v !== null && typeof v === 'object')).default([]),
         metadata: z.record(z.string(), z.any()).default({}),
         chatId: z.lazy(() => Chat.Id).optional(),
+        created_at: z.iso.datetime().optional(),
+        updated_at: z.iso.datetime().optional(),
     })
 
 
-    export const createInitial = (chatId: Chat.Id) => {
+    export const createInitial = () => {
         return {
             id: createId(),
             node_output_instances: {},
@@ -64,7 +66,6 @@ export namespace ExecutionSession {
             edge_state: {},
             messages: [],
             metadata: {},
-            chatId
         } as z.infer<typeof Schema>
     }
 
@@ -84,6 +85,17 @@ export namespace ExecutionSession {
         }
         export type Row = z.infer<typeof Row.Schema>
     }
+
+    // Job status values mirrored here to avoid a circular import with Orchestrator
+    export const JobStatus = z.enum(["pending", "running", "paused", "suspended", "completed", "failed", "terminated"])
+    export type JobStatus = z.infer<typeof JobStatus>
+
+    export namespace Meta {
+        export const Schema = Database.Row.Schema.omit({ data: true, user_id: true }).extend({
+            status: ExecutionSession.JobStatus,
+        })
+    }
+    export type Meta = z.infer<typeof Meta.Schema>
 
 
     export namespace Event {
@@ -106,14 +118,6 @@ export namespace ExecutionSession {
             update: ExecutionSession.Update
         })
         export type Update = z.infer<typeof Update>
-
-        export const MessageChunk = Base.extend({
-            type: z.literal('node_messages:chunk'),
-            nodeId: Workflow.Node.Id,
-            chunk: z.string(),
-            isChatOutput: z.boolean().optional(),
-        })
-        export type MessageChunk = z.infer<typeof MessageChunk>
 
         export namespace Node {
             export const Started = Base.extend({
@@ -160,7 +164,6 @@ export namespace ExecutionSession {
 
         export const Schema = z.discriminatedUnion("type", [
             Update,
-            MessageChunk,
             Node.Started,
             Node.Completed,
             Node.Error,
@@ -237,6 +240,52 @@ export namespace ExecutionSession {
                 req
             );
             return data;
+        }
+
+        export namespace Meta {
+            export namespace List {
+                export const Request = z.object({
+                    workflowId: Workflow.Id,
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({
+                    sessionMetas: z.array(ExecutionSession.Meta.Schema),
+                })
+                export type Response = z.infer<typeof Response>
+            }
+            export async function list(
+                api: AxiosInstance,
+                req: Meta.List.Request
+            ): Promise<Meta.List.Response> {
+                const { data } = await api.post<Meta.List.Response>(
+                    '/api/execution-session/meta/list',
+                    req
+                );
+                return data;
+            }
+
+            export namespace Get {
+                export const Request = z.object({
+                    id: ExecutionSession.Id,
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({
+                    sessionMeta: ExecutionSession.Meta.Schema,
+                })
+                export type Response = z.infer<typeof Response>
+            }
+            export async function get(
+                api: AxiosInstance,
+                req: Meta.Get.Request
+            ): Promise<Meta.Get.Response> {
+                const { data } = await api.post<Meta.Get.Response>(
+                    '/api/execution-session/meta/get',
+                    req
+                );
+                return data;
+            }
         }
     }
 }
