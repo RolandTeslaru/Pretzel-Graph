@@ -1,6 +1,8 @@
 import { ExecutionSession, Foundations, Orchestrator, Realtime, Workflow } from "@pretzel-graph/shared/domain";
 import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "./types";
 import type { CompilationContext } from "./compiler-context";
+import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
+import Redis from "ioredis";
 
 export abstract class RuntimeNode<
 
@@ -14,6 +16,9 @@ export abstract class RuntimeNode<
 
     protected isWaiting: boolean = false;
 
+
+
+
     constructor(
         public readonly workflowNode: Workflow.Node,
         protected readonly context: RuntimeNode.ExecutionContext
@@ -21,6 +26,9 @@ export abstract class RuntimeNode<
         this.fields = RuntimeNode.resolveFields<T_Blueprint>(this.workflowNode.id, context.workflowData)
         this.emit = context.emit;
     }
+
+
+
 
 
     /**
@@ -33,6 +41,9 @@ export abstract class RuntimeNode<
 
         return this.onRun(inputs);
     }
+
+
+
 
     protected abstract onRun(
         inputs: InferInputs<T_Blueprint>
@@ -48,6 +59,9 @@ export abstract class RuntimeNode<
         this.isWaiting = false;
         return this.onBuildTool(inputs);
     }
+
+
+
 
     protected onBuildTool(
         inputs: InferInputs<T_ToolBlueprint>
@@ -67,6 +81,9 @@ export abstract class RuntimeNode<
         return this.onWait(partialInputs);
     }
     
+
+
+    
     protected onWait(
         inputs: InferInputs<T_Blueprint>
     ): Promise<void> | void {}
@@ -80,6 +97,8 @@ export abstract class RuntimeNode<
     ): Promise<void> {
         return this.onCompile(compilationContext);
     }
+
+
 
     protected onCompile(
         compilationContext: CompilationContext,
@@ -95,9 +114,13 @@ export abstract class RuntimeNode<
         return this.onWebhook(webhookPaylod);
     }
 
+
+
     protected async onWebhook(
         webhookPaylod: Record<string, unknown>
     ): Promise<void> { }
+
+
 
 
     public static resolveInitialFieldValues<T_Blueprint extends Foundations.Blueprint>(
@@ -117,6 +140,8 @@ export abstract class RuntimeNode<
 
         return resolved as InferFieldsWithInitial<T_Blueprint>
     }
+
+
 
     // Checks if a field has static values
     // And if not, it uses the initialValue
@@ -142,6 +167,8 @@ export abstract class RuntimeNode<
     }
 
 
+
+
     protected AbortablePromise<T>(
         executor: (
             resolve: (value: T) => void,
@@ -164,6 +191,43 @@ export abstract class RuntimeNode<
                 (reason) => { signal.removeEventListener("abort", onAbort); reject(reason); },
                 signal
             );
+        })
+    }
+
+
+
+
+    protected CreateSignalPromise(signalChannel: Realtime.Channel, timeout: number, onPayload: (raw: string) => void){
+        return this.AbortablePromise((resolve, reject, abortSignal) => {
+            const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+        
+            const cleanup = () => {
+                clearTimeout(timer);
+                redis.unsubscribe(signalChannel).catch(() => {});
+                redis.disconnect();
+            };
+
+            const timer = setTimeout(() => {
+                cleanup();
+                this.context.abortExecution('Webhook test timed out after 2 minutes');
+                reject(new Error('Webhook test timed out'));
+            }, timeout);
+
+            abortSignal.addEventListener('abort', cleanup, { once: true });
+
+            redis.subscribe(signalChannel, (err) => {
+                if (err) { cleanup(); reject(err); }
+            });
+
+            redis.on('message', (_channel, raw) => {
+                cleanup();
+                try {
+                    onPayload(raw);
+                    return resolve(JSON.parse(raw));
+                } catch (e) {
+                    reject(e);
+                }
+            });
         })
     }
 }

@@ -17,6 +17,7 @@ export class ExecutionSessionSDKImpl extends BaseSDK<ExecutionSessionSDK.State> 
     public readonly useStore: BaseSDK.Store<ExecutionSessionSDK.State> = createWithEqualityFn(
         immer<ExecutionSessionSDK.State>(() => ({
             session: ExecutionSession.createInitial(Chat.createId()),
+            sessionMetas: {},
         })),
         shallow
     )
@@ -97,6 +98,7 @@ export namespace ExecutionSessionSDK {
 
     export type State = {
         session: ExecutionSession
+        sessionMetas: Record<ExecutionSession.Id, ExecutionSession.Meta>
     }
 
     export type Reducers = _ExecutionSessionReducers

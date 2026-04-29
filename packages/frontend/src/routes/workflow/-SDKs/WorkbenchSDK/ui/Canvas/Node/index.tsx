@@ -39,7 +39,7 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
   let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
 
-  const nodeStatus = ExecutionSessionSDK.useStore(s => s.session.node_status[node.id]);
+  const nodeStatus = ExecutionSessionSDK.useStore(s => s.session.node_status?.[node.id]);
 
   const isStatusComplete = nodeStatus && nodeStatus.status === "completed"
 

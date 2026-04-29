@@ -26,3 +26,5 @@ class AxiosServiceImpl {
 }
 
 export const AxiosService = container.resolve(AxiosServiceImpl);
+
+export const api = AxiosService.api;
