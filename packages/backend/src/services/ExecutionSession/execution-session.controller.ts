@@ -28,4 +28,18 @@ export class ExecutionSessionController {
         const payload = ExecutionSession.API.Update.Request.parse(body);
         return await this.executionSessionService.update(req.token, req.user.id as Auth.User.Id, payload);
     }
+
+    @Post('meta/list')
+    @HttpCode(200)
+    async listMeta(@Req() req: AuthenticatedRequest, @Body() body: any) {
+        const payload = ExecutionSession.API.Meta.List.Request.parse(body);
+        return await this.executionSessionService.listMeta(req.token, req.user.id as Auth.User.Id, payload);
+    }
+
+    @Post('meta/get')
+    @HttpCode(200)
+    async getMeta(@Req() req: AuthenticatedRequest, @Body() body: any) {
+        const payload = ExecutionSession.API.Meta.Get.Request.parse(body);
+        return await this.executionSessionService.getMeta(req.token, req.user.id as Auth.User.Id, payload);
+    }
 }
