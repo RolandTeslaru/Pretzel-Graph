@@ -1,40 +1,109 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
-import { Chat, ExecutionSession } from "@pretzel-graph/shared/domain";
+import { Chat, Execution,} from "@pretzel-graph/shared/domain";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { createExecutionSDKActions, type ExecutionSDKActions } from "./actions";
 import { _createExecutionReducers_, type _ExecutionSessionReducers } from "./reducers";
+import type { OrchestratorSDK } from "../OrchestratorSDK/sdk";
+import { toast } from "sonner";
 
-@SDK("ExecutionSession")
+@SDK("Execution")
 export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
 
     constructor() { super() }
 
     public readonly useStore: BaseSDK.Store<ExecutionSDK.State> = createWithEqualityFn(
         immer<ExecutionSDK.State>(() => ({
-            session: ExecutionSession.createInitial(Chat.createId()),
+            jobId: undefined,
+            executionStatus: "idle",
+            awaitedConfirmation: new Set(),
+            session: Execution.Session.createInitial(),
         })),
         shallow
     )
 
     public readonly reducers: ExecutionSDK.Reducers = _createExecutionReducers_(this)
-
+    public readonly actions: ExecutionSDK.Actions = createExecutionSDKActions(this);
+    public readonly selectors: ExecutionSDK.Selectors = {}
+    
+    public useAwaitConfirmation = (event: OrchestratorSDK.AwaitedConfirmation): () => void => {
+        this.actions.addAwaitedConfirmation(event);
+        return () => { this.actions.removeAwaitedConfirmation(event); };
+    }
+    
     public readonly runtime = {
         unsubscribeFromJobChannel: null as (() => void) | null
     }
-
-    public readonly actions: ExecutionSDK.Actions = createExecutionSDKActions(this);
-
-    public readonly selectors: ExecutionSDK.Selectors = {}
+    
+    public handleOnEvent = (e: ExecutionSession.Event) => {
+        console.log("Execution Session Event Received:", e.type)
+        switch(e.type){
+            case "node:started":
+                this.setState(s => {
+                    if(e.stateUpdate)
+                        this.reducers.applyUpdate(s, e.stateUpdate);
+                    this.reducers.setNodeStatus(s, e.nodeId, { status: "running", started_at: new Date().toISOString() })
+                })
+                break;
+            case "node:completed":
+                this.setState(s => {
+                    s.session.node_output_projections[e.nodeId] = e.output as any;
+                    if(e.stateUpdate)
+                        this.reducers.applyUpdate(s, e.stateUpdate);
+                    this.reducers.setNodeStatus(s, e.nodeId, { status: "completed", completed_at: new Date().toISOString() })
+                })
+                break;
+            case "node:waiting":
+                this.setState(s => {
+                    this.reducers.setNodeStatus(s, e.nodeId, { status: "waiting" })
+                })
+                break;
+            case "node:error":
+                this.setState(s => {
+                    this.reducers.setNodeStatus(s, e.nodeId, { status: "failed", error: e.error, completed_at: new Date().toISOString() })
+                })
+                break;
+            case "update":
+                this.setState(s => {
+                    this.reducers.applyUpdate(s, e.update);
+                })
+                break;
+            default:
+                toast.error(`Received unknown event: ${e.type}`)
+        }
+    }
 }
 
 export const ExecutionSDK = SDK.get<ExecutionSDKImpl>("ExecutionSession")
 
-export namespace ExecutionSDK {
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export namespace ExecutionSDK {
     export type State = {
+        jobId: Orchestrator.Job.Id | undefined
+        executionStatus: "idle" | "running" | "completed" | "failed" | "terminated" | "paused" | "suspended"
+        awaitedConfirmation: Set<"started" | "paused" | "resumed" | "terminated" | "suspended">
         session: ExecutionSession
     }
 

@@ -1,7 +1,6 @@
 import { ExecutionSession } from "@pretzel-graph/shared/domain";
 import { Workflow } from "@pretzel-graph/shared/domain";
-import type { ExecutionSessionSDK } from "../ExecutionSessionSDK/sdk";
-import type { ExecutionSDK, ExecutionSDKImpl, ExecutionSDKImplImpl } from "./sdk";
+import type { ExecutionSDK, ExecutionSDKImpl } from "./sdk";
 
 export type State = ExecutionSDK.State;
 
@@ -13,15 +12,10 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
             }
             Object.assign(s.session.node_status[nodeId], update);
         },
-        clearNodeStatus: (s, nodeId) => {
-            delete s.session.node_status[nodeId];
-        },
-        clearAllNodeStatuses: (s) => {
-            s.session.node_status = {};
-        },
         applyUpdate: (s, update) => {
             Object.entries(update).forEach(([key, value]) => {
                 if (value)
+                    // @ts-expect-error
                     Object.assign(s.session[key as keyof ExecutionSession], value);
             })
         }
@@ -30,7 +24,5 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
 
 export type _ExecutionSessionReducers = {
     setNodeStatus: (state: State, nodeId: Workflow.Node.Id, update: Partial<ExecutionSession.NodeStatus>) => void;
-    clearNodeStatus: (state: State, nodeId: Workflow.Node.Id) => void;
-    clearAllNodeStatuses: (state: State) => void;
     applyUpdate: (state: State, update: ExecutionSession.Update) => void
 };

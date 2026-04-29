@@ -68,6 +68,49 @@ export const createExecutionSessionSDKActions = (sdk: ExecutionSessionSDKImpl) =
         setNodeStatus: (...args) => sdk.setState(s => sdk.reducers.setNodeStatus(s, ...args)),
         clearNodeStatus: (...args) => sdk.setState(s => sdk.reducers.clearNodeStatus(s, ...args)),
         clearAllNodeStatuses: () => sdk.setState(s => sdk.reducers.clearAllNodeStatuses(s)),
+        setSession: async (id) => {
+            try {
+                console.log("FETCHIN G SESSION WITH ID ", id)
+                const response = await ExecutionSession.API.get(api, { id });
+                console.log("SET SESSION RESPONSE ", response,)
+                sdk.setState(s => {
+                    s.session = response.session;
+                });
+                return response.session;
+            } catch (error) {
+                toast.error("Failed to load execution session");
+                throw error;
+            }
+        },
+        meta: {
+            list: async (workflowId) => {
+                try {
+                    const response = await ExecutionSession.API.Meta.list(api, { workflowId });
+                    console.log("Fetched session metas:", response.sessionMetas);
+                    sdk.setState(s => {
+                        for (const meta of response.sessionMetas) {
+                            s.sessionMetas[meta.id] = meta;
+                        }
+                    });
+                    return response.sessionMetas;
+                } catch (error) {
+                    toast.error("Failed to load execution session history");
+                    throw error;
+                }
+            },
+            get: async (id) => {
+                try {
+                    const response = await ExecutionSession.API.Meta.get(api, { id });
+                    sdk.setState(s => {
+                        s.sessionMetas[response.sessionMeta.id] = response.sessionMeta;
+                    });
+                    return response.sessionMeta;
+                } catch (error) {
+                    toast.error("Failed to load execution session");
+                    throw error;
+                }
+            },
+        },
     } satisfies ExecutionSessionSDKActions
 }
 
@@ -80,5 +123,10 @@ export type ExecutionSessionSDKActions = {
     clearNodeStatus: DropFirstArg<ExecutionSessionSDKImpl["reducers"]["clearNodeStatus"]>,
     clearStatus: () => void,
     clearAllNodeStatuses: () => void,
-    prepareForRun: () => void
+    prepareForRun: () => void,
+    setSession: (id: ExecutionSession.Id) => Promise<ExecutionSession>,
+    meta: {
+        list: (workflowId: Workflow.Id) => Promise<ExecutionSession.Meta[]>,
+        get: (id: ExecutionSession.Id) => Promise<ExecutionSession.Meta>,
+    },
 }

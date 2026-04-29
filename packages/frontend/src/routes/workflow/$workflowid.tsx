@@ -26,6 +26,8 @@ import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { GlowingAlertTriangle } from './-SDKs/WorkbenchSDK/ui/Canvas/Node/Header/icons'
 import { AnimatePresence, motion } from 'motion/react'
 import IssuesViewer from './-SDKs/WorkbenchSDK/ui/IssuesViewer'
+import SessionSelector from './-SDKs/ExecutionSessionSDK/ui/SessionSelector'
+import { ExecutionSessionSDK } from './-SDKs/ExecutionSessionSDK/sdk'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -66,6 +68,12 @@ export const Route = createFileRoute('/workflow/$workflowid')({
         QuerySDK.client.prefetchQuery({
             queryKey: ['version-control', 'publications', workflowId],
             queryFn: () => VersionControlSDK.actions.list(workflowId),
+            staleTime: 30_000,
+        })
+
+        QuerySDK.client.prefetchQuery({
+            queryKey: ['execution-session-metas', workflowId],
+            queryFn: () => ExecutionSessionSDK.actions.meta.list(workflowId),
             staleTime: 30_000,
         })
 
@@ -111,6 +119,7 @@ function WorkflowLayoutComponent() {
             <BottomPanel />
             <PathPanel />
             <TopRightPanel />
+            {/* <BottomRightPanel /> */}
             {/* <AdminJobsPanel /> */}
             {/* <StackDebugPanel/> */}
             <SpotlightSearch />
@@ -200,6 +209,15 @@ export const TopRightPanel = () => {
                     <VersionHistory />
                 </Popover.Content>
             </Popover.Root>
+        </div>
+    )
+}
+
+
+export const BottomRightPanel = () => {
+    return (
+        <div className='flex flex-row gap-2 fixed bottom-5 right-5 z-10 p-1 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
+            <SessionSelector/>
         </div>
     )
 }
