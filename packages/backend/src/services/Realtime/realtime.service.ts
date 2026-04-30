@@ -1,34 +1,32 @@
- import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { Realtime } from '@pretzel-graph/shared/domain/Realtime';
-import { Orchestrator } from '@pretzel-graph/shared/domain';
 
 @Injectable()
 export class RealtimeService implements OnModuleDestroy {
     private readonly redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
     private readonly redisPub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 
-    
-    private readonly waiters = new Map<string, Set<(event: Orchestrator.Event) => void>>();
+    private readonly waiters = new Map<string, Set<(event: Realtime.Event) => void>>();
 
     constructor() {
         this.redisSub.on('message', (channel, msg) => {
             const channelWaiters = this.waiters.get(channel);
             if (!channelWaiters) return;
-            const event = JSON.parse(msg) as Orchestrator.Event;
+            const event = JSON.parse(msg) as Realtime.Event;
             for (const waiter of channelWaiters) waiter(event);
         });
     }
 
-    private static readonly TERMINAL_TYPES = new Set<Orchestrator.Event['type']>(['completed', 'failed', 'terminated']);
+    private static readonly TERMINAL_TYPES = new Set<string>(['completed', 'failed', 'terminated']);
 
     public withTerminalEvent(
-        eventChannel: Orchestrator.Event.Channel,
+        eventChannel: Realtime.Channel,
         timeoutMs: number = 10 * 60_000
-    ): Promise<Orchestrator.Event | null> {
-        return new Promise<Orchestrator.Event | null>((resolve) => {
-            const waiter = (event: Orchestrator.Event) => {
+    ): Promise<Realtime.Event | null> {
+        return new Promise<Realtime.Event | null>((resolve) => {
+            const waiter = (event: Realtime.Event) => {
                 if (!RealtimeService.TERMINAL_TYPES.has(event.type)) return;
                 clearTimeout(timeout);
                 cleanup();
@@ -68,13 +66,12 @@ export class RealtimeService implements OnModuleDestroy {
      * Must be called before `emitSignal` to avoid missing the response.
      */
     public withEventConfirmation(
-        eventChannel: Orchestrator.Event.Channel,
-        eventType: Orchestrator.Event['type'],
+        eventChannel: Realtime.Channel,
+        eventType: string,
         timeoutMs: number = 5000
     ): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
-            // Matches incoming events by type and resolves the promise
-            const waiter = (event: Orchestrator.Event) => {
+            const waiter = (event: Realtime.Event) => {
                 if (event.type !== eventType) return;
                 clearTimeout(timeout);
                 cleanup();

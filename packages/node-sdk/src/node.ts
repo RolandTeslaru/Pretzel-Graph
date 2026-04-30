@@ -1,4 +1,4 @@
-import { ExecutionSession, Foundations, Orchestrator, Realtime, Workflow } from "@pretzel-graph/shared/domain";
+import { Execution, Foundations, Realtime, Workflow } from "@pretzel-graph/shared/domain";
 import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "./types";
 import type { CompilationContext } from "./compiler-context";
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
@@ -260,15 +260,15 @@ export namespace RuntimeNode {
     export type CompileProps = Parameters<RuntimeNode<Foundations.Blueprint>["compile"]>[0]
     
     export interface ExecutionContext {
-        readonly session: ExecutionSession,
-        readonly updateSession: (recipe: (draft: ExecutionSession) => void) => void,
+        readonly executionId: Execution.Id,
+        readonly session: Execution.Session,
+        readonly updateSession: (recipe: (draft: Execution.Session) => void) => void,
         readonly abortSignal: AbortSignal,
         readonly abortExecution: (reason?: any) => void,
         readonly emit: <T_Event extends Realtime.Event>(event: T_Event) => void,
         readonly workflowData: Workflow.Data,
         readonly workflowId: Workflow.Id,
         readonly workflowCache: Workflow.Cache,
-        readonly jobId: Orchestrator.Job.Id,
     }
 }
 

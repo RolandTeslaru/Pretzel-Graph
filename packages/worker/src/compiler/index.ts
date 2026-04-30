@@ -1,5 +1,5 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { Foundations, ExecutionSession, Orchestrator } from "@pretzel-graph/shared/domain";
+import { Foundations, Execution } from "@pretzel-graph/shared/domain";
 import { CatalogueService } from "@pretzel-graph/node-sdk";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { AggexCompilerError } from "../errors";
@@ -11,7 +11,6 @@ import { resolveFields } from "../utils";
 import { CompilationContext, createCompilationContext } from "./context";
 import { AggexEngine } from "src/engine";
 import { produce } from "immer";
-import { ExecutionIgniter } from "@pretzel-graph/shared/domain/ExecutionSession";
 
 export { CompilationContext, createCompilationContext, extendCompilePath } from "./context";
 
@@ -22,13 +21,14 @@ export class WorkflowCompiler {
     public async compile(
         workflowId:   Workflow.Id,
         workflowData: Workflow.Data,
-        jobId:        Orchestrator.Job.Id,
-        session:      ExecutionSession,
+        execution:    Execution,
         emit:         RuntimeNode.ExecutionContext["emit"],
         compilationContext: CompilationContext = createCompilationContext(workflowId),
-        igniter?:     ExecutionIgniter,
     ): Promise<AggexEngine.ExecutionContext> {
 
+        const session = execution.session;
+        const igniter = execution.igniter
+        
         const workflowCache = Workflow.createCache(workflowData);
 
         const graph = new S2Graph();
@@ -46,7 +46,7 @@ export class WorkflowCompiler {
             })
         );
 
-        session = produce(session, d => { d.messages = reconstructedMessages});
+        execution.session = produce(session, d => { d.messages = reconstructedMessages});
 
         const nodeRuntimeMap = new Map() as AggexEngine.ExecutionContext["nodeRuntimeMap"];
 
@@ -58,18 +58,18 @@ export class WorkflowCompiler {
         const abortController = new AbortController();
         
         const abortExecution = (reason: string) => abortController.abort(reason);
-        const updateSession = (recipe: (draft: ExecutionSession) => void) => {
-            session = produce(session, recipe);
+        const updateSession = (recipe: (draft: Execution.Session) => void) => {
+            execution.session = produce(execution.session, recipe);
         };
 
         const dummyEngine = new AggexEngine();
 
         const engineExecutionCtx = {
             get session()  { return session; },
-            jobId,
             workflowData,
             workflowCache,
             emit,
+            executionId: execution.id,
             abortExecution,
             updateSession,
             abortSignal: abortController.signal,

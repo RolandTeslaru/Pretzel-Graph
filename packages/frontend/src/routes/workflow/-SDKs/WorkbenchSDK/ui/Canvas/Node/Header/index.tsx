@@ -1,5 +1,5 @@
 import React from 'react'
-import { ExecutionSession, Workflow } from '@pretzel-graph/shared/domain';
+import { Execution, Workflow } from '@pretzel-graph/shared/domain';
 import MinimizedHandles from './MinimizedHandles';
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon';
 import StatusIndicator from './StatusIndicator';
@@ -7,10 +7,10 @@ import StatusIndicator from './StatusIndicator';
 interface Props {
   node: Workflow.Node
   isWorkflowLocked: boolean
-  executionStatus?: ExecutionSession.NodeStatus
+  sessionStatus: Execution.Session.NodeStatus
 }
 
-export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionStatus }) => {
+export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, sessionStatus }) => {
   const isMinimized = node.isMinimized;
   const isFlipped = node.isFlipped;
   if (isMinimized)
@@ -24,7 +24,7 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionS
           />
         </div>
         <div className='absolute -bottom-1 -right-5'>
-          <StatusIndicator executionStatus={executionStatus} nodeId={node.id} />
+          <StatusIndicator sessionStatus={sessionStatus} nodeId={node.id} />
         </div>
         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 truncate text-xs font-semibold text-foreground/80">
           {node.displayName}
@@ -42,7 +42,7 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionS
       <div className="flex-1 truncate font-semibold text-foreground/80">
         {node.displayName}
       </div>
-      <StatusIndicator executionStatus={executionStatus} nodeId={node.id} />
+      <StatusIndicator sessionStatus={sessionStatus} nodeId={node.id} />
 
     </div>
   )

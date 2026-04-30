@@ -1,13 +1,12 @@
 import { Chat, SystemError } from "@pretzel-graph/shared/domain";
-import { OrchestratorSDK } from "../OrchestratorSDK/sdk";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import type { ChatSDKImpl } from "./sdk";
 import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { DialogSDK } from "@/SDKs/DialogSDK";
 import FullscreenChat from "./ui/FullscreenChat";
-import { ExecutionSessionSDK } from "../ExecutionSessionSDK/sdk";
 import { AIMessage, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
+import { ExecutionSDK } from "../ExecutionSDK/sdk";
 
 function deriveChatName(content: string, maxLength = 50): string {
     const trimmed = content.trim().replace(/\s+/g, ' ');
@@ -75,17 +74,17 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
 
                     sdk.actions.message.upsert(message)
 
-                    ExecutionSessionSDK.setState(s => {
-                        s.session.messages.push(new HumanMessage(message.content))
-                    })
-                    const jobId = await OrchestratorSDK.actions.run()
+                    // ExecutionSessionSDK.setState(s => {
+                    //     s.session.messages.push(new HumanMessage(message.content))
+                    // })
+                    // const jobId = await OrchestratorSDK.actions.run()
 
-                    if (!jobId)
-                        throw new Error("No job id returned");
+                    // if (!jobId)
+                    //     throw new Error("No job id returned");
 
-                    sdk.setState(s => {
-                        sdk.reducers.resolveJobId(s, message.id, jobId)
-                    })
+                    // sdk.setState(s => {
+                    //     sdk.reducers.resolveJobId(s, message.id, jobId)
+                    // })
                 }
                 catch (err) {
                     toast.error(SystemError.messageFrom(err));
@@ -136,26 +135,26 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                         s.isLoading = false;
                     })
 
-                    ExecutionSessionSDK.setState(s => {
-                        s.session.messages = [];
+                    // ExecutionSDK.setState(s => {
+                    //     s.session.messages = [];
 
-                        messages.forEach(msg => {
+                    //     messages.forEach(msg => {
 
-                            switch (msg.role) {
-                                case "ai":
-                                    s.session.messages.push(new AIMessage(msg.content));
-                                    break
-                                case "human":
-                                    s.session.messages.push(new HumanMessage(msg.content));
-                                    break;
-                                case "system":
-                                    s.session.messages.push(new SystemMessage(msg.content));
-                                    break;
-                                // case "tool":
-                                // s.session.messages.push(new ToolMessage(msg.));
-                            }
-                        })
-                    })
+                    //         switch (msg.role) {
+                    //             case "ai":
+                    //                 s.session.messages.push(new AIMessage(msg.content));
+                    //                 break
+                    //             case "human":
+                    //                 s.session.messages.push(new HumanMessage(msg.content));
+                    //                 break;
+                    //             case "system":
+                    //                 s.session.messages.push(new SystemMessage(msg.content));
+                    //                 break;
+                    //             // case "tool":
+                    //             // s.session.messages.push(new ToolMessage(msg.));
+                    //         }
+                    //     })
+                    // })
 
                 } catch (err) {
                     sdk.setState(s => {
@@ -171,9 +170,9 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     s.messages = [];
                     s.messagesRecord = {};
                 });
-                ExecutionSessionSDK.setState(s => {
-                    s.session.messages = [];
-                });
+                // ExecutionSessionSDK.setState(s => {
+                //     s.session.messages = [];
+                // });
             },
             clearMessages: async () => {
                 sdk.setState(s => {

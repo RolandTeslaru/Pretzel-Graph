@@ -1,5 +1,4 @@
 import { Button } from '@pretzel-graph/standard-ui/foundations'
-import React from 'react'
 import { useStore } from 'zustand'
 
 import { WorkbenchSDK } from '../sdk'

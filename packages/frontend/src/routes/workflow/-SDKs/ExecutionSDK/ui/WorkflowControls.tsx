@@ -1,33 +1,33 @@
 import { Button, Spinner, Tooltip } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { OrchestratorSDK } from '../sdk'
+import { ExecutionSDK } from '../sdk'
 
 const handlePause = () => {
-  const currentJobId = OrchestratorSDK.state.jobId;
-  if (!currentJobId) return;
-  OrchestratorSDK.actions.pause(currentJobId)
+  const currentExecution = ExecutionSDK.state.currentExecution;
+  if (!currentExecution) return;
+  ExecutionSDK.actions.pause(currentExecution.id)
 }
 
 const handleTerminate = () => {
-  const currentJobId = OrchestratorSDK.state.jobId;
-  if (!currentJobId) return;
-  OrchestratorSDK.actions.terminate(currentJobId);
+  const currentExecution = ExecutionSDK.state.currentExecution;
+  if (!currentExecution) return;
+  ExecutionSDK.actions.terminate(currentExecution.id)
 }
 
 const handleRun = () => {
-  OrchestratorSDK.actions.run();
+  ExecutionSDK.actions.run();
 }
 
 const handleResume = () => {
-  const currentJobId = OrchestratorSDK.state.jobId;
-  if (!currentJobId) return;
-  OrchestratorSDK.actions.resume(currentJobId);
+  const currentExecution = ExecutionSDK.state.currentExecution;
+  if (!currentExecution) return;
+  ExecutionSDK.actions.resume(currentExecution.id);
 }
 
 const handleSuspend = () => {
-  const currentJobId = OrchestratorSDK.state.jobId;
-  if (!currentJobId) return;
-  OrchestratorSDK.actions.suspend(currentJobId);
+  const currentExecution = ExecutionSDK.state.currentExecution;
+  if (!currentExecution) return;
+  ExecutionSDK.actions.suspend(currentExecution.id);
 }
 
 const ControlButton = ({ loading, icon: Icon, iconClassName, label, ...rest }: { loading: boolean; icon: React.FC<{ className?: string }>; iconClassName?: string; label?: string } & React.ComponentProps<typeof Button>) => (
@@ -38,9 +38,9 @@ const ControlButton = ({ loading, icon: Icon, iconClassName, label, ...rest }: {
 
 const WorkflowControls = ({ canRun }: { canRun: boolean }) => {
 
-  const [jobId, awaitedConfirmation, executionStatus] = OrchestratorSDK.useStore(s => [s.jobId, s.awaitedConfirmation, s.executionStatus]);
+  const [currentExecution, awaitedConfirmation] = ExecutionSDK.useStore(s => [s.currentExecution, s.awaitedConfirmation]);
 
-  if (jobId === undefined) {
+  if (!currentExecution) {
     return (
       <ControlButton disabled={!canRun} loading={awaitedConfirmation.has("started")} icon={SystemIcons.Play} iconClassName="mr-auto" label="Run" variant="success" onClick={handleRun} />
     )
@@ -48,7 +48,7 @@ const WorkflowControls = ({ canRun }: { canRun: boolean }) => {
 
   return (
     <>
-      {executionStatus === "paused"
+      {currentExecution.status === "paused"
         ? <ControlButton loading={awaitedConfirmation.has("resumed")} icon={SystemIcons.Play} label="Resume" variant="warning" onClick={handleResume} />
         : <Tooltip.Root>
             <Tooltip.Trigger>

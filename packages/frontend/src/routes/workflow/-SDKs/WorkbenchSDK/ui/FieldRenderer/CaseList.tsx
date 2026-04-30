@@ -6,7 +6,7 @@ import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
 import { ConditionContext, useConditionContext } from './Condition/context'
 import { Button, DropdownMenu, Input, Label } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { ExpressionInput } from './Condition/ExpressionInput'
+import { ExpressionInput } from './ExpressionInput'
 import { OperatorSelector } from './Condition/OperatorSelector'
 
 type Value = Foundations.Field.CaseList.Value
