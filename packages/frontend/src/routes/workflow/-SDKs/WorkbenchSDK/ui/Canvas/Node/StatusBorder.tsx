@@ -1,9 +1,9 @@
 import { memo } from 'react'
 import { cn } from '@/utils/styleUtils';
-import type { ExecutionSession } from '@pretzel-graph/shared/domain';
+import type { Execution } from '@pretzel-graph/shared/domain';
 
 interface StatusBorderProps {
-  status: ExecutionSession.NodeStatus['status'] | undefined
+  status: Execution.Session.NodeStatus['status'] | undefined
   backgroundColor: string
   isClicked?: boolean
 }

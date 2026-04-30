@@ -9,8 +9,8 @@ import { Workflow } from '@pretzel-graph/shared/domain';
 import { NodeToolbar, Position } from '@xyflow/react';
 import { NodeCustomToolbar } from './CustomToolbar';
 import { cn } from '@/utils/styleUtils';
-import { ExecutionSessionSDK } from '@/routes/workflow/-SDKs/ExecutionSessionSDK/sdk';
 import { StatusBorder } from './StatusBorder';
+import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 
 const WorkbenchNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const node = WorkbenchSDK.useStore(s => s.workflow.data.nodes[props.id as Workflow.Node.Id])
@@ -39,7 +39,7 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
   let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
 
-  const nodeStatus = ExecutionSessionSDK.useStore(s => s.session.node_status?.[node.id]);
+  const nodeStatus = ExecutionSDK.useStore(s => ExecutionSDK.selectors.getNodeStatus(s, node.id));
 
   const isStatusComplete = nodeStatus && nodeStatus.status === "completed"
 
@@ -69,7 +69,7 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
         style={{ backgroundColor, borderColor, borderWidth: 2 }}
         id={node.id}
       >
-        <NodeHeader executionStatus={nodeStatus} node={node} isWorkflowLocked={isWorkflowLocked} />
+        <NodeHeader sessionStatus={nodeStatus} node={node} isWorkflowLocked={isWorkflowLocked} />
 
         {node.isMinimized === false &&
           <div className='bg-card/80 py-2 border gap-2 flex flex-col border-border/50 rounded-b-[22px] rounded-t-lg shadow-sm shadow-black/10 min-h-8'>

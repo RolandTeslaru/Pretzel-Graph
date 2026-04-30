@@ -31,7 +31,6 @@ This is **distinct** from the existing `user_credentials` + Supabase Vault syste
 - `packages/shared/domain/index.ts` — export `ApiKey`.
 - `packages/backend/src/app.module.ts` — register `ApiKeysModule`.
 - `packages/backend/src/services/Execution/execution.controller.ts` — add a `runFromSdk` endpoint guarded by `ApiKeyAuthGuard`.
-- `packages/shared/domain/Execution.ts` — add `Igniter.Sdk` variant: `{ variant: "sdk", inputs?: Record<string, unknown> }`.
 
 ### Database
 - New `api_keys` table (see schema below).

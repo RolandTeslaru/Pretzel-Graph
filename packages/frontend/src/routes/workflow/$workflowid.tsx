@@ -8,26 +8,23 @@ import { useEffect } from 'react'
 import { Badge, Button, Dialog, DropdownMenu, Popover, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import NodeSidebar from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/NodeSidebar'
 import ChatSidebar from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatSidebar'
-import WorkflowControls from '@/routes/workflow/-SDKs/OrchestratorSDK/ui/WorkflowControls'
+import WorkflowControls from '@/routes/workflow/-SDKs/ExecutionSDK/ui/WorkflowControls'
 import ChatButton from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatButton'
 import TemporalControls from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/TemporalControls'
 import SpotlightSearch from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/SpotlightSearch'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
-import { Validation, Workbench, Workflow } from '@pretzel-graph/shared/domain'
+import { Validation, Workflow } from '@pretzel-graph/shared/domain'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import Breadcrumbs from '../home/projects/-components/Breadcrumbs'
 import { DialogSDK } from '@/SDKs/DialogSDK'
-import { ButtonGroup } from '@pretzel-graph/standard-ui/foundations/button-group'
 import { openPublishDialog } from '@/SDKs/VersionControlSDK/ui/PublishDialog'
 import VersionHistory from '@/SDKs/VersionControlSDK/ui/VersionHistory'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { GlowingAlertTriangle } from './-SDKs/WorkbenchSDK/ui/Canvas/Node/Header/icons'
 import { AnimatePresence, motion } from 'motion/react'
 import IssuesViewer from './-SDKs/WorkbenchSDK/ui/IssuesViewer'
-import SessionSelector from './-SDKs/ExecutionSessionSDK/ui/SessionSelector'
-import { ExecutionSessionSDK } from './-SDKs/ExecutionSessionSDK/sdk'
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -71,11 +68,11 @@ export const Route = createFileRoute('/workflow/$workflowid')({
             staleTime: 30_000,
         })
 
-        QuerySDK.client.prefetchQuery({
-            queryKey: ['execution-session-metas', workflowId],
-            queryFn: () => ExecutionSessionSDK.actions.meta.list(workflowId),
-            staleTime: 30_000,
-        })
+        // QuerySDK.client.prefetchQuery({
+        //     queryKey: ['execution-session-metas', workflowId],
+        //     queryFn: () => ExecutionSDK.actions.meta.list(workflowId),
+        //     staleTime: 30_000,
+        // })
 
         WorkbenchSDK.actions.workflow.load(workflowId, abortController.signal)
             .finally(() => {
@@ -217,7 +214,7 @@ export const TopRightPanel = () => {
 export const BottomRightPanel = () => {
     return (
         <div className='flex flex-row gap-2 fixed bottom-5 right-5 z-10 p-1 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
-            <SessionSelector/>
+            {/* <SessionSelector/> */}
         </div>
     )
 }

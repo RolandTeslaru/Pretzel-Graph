@@ -1,13 +1,13 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
-import { Chat, Execution,} from "@pretzel-graph/shared/domain";
+import { Chat, Execution } from "@pretzel-graph/shared/domain";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { createExecutionSDKActions, type ExecutionSDKActions } from "./actions";
 import { _createExecutionReducers_, type _ExecutionSessionReducers } from "./reducers";
-import type { OrchestratorSDK } from "../OrchestratorSDK/sdk";
 import { toast } from "sonner";
+import { executionSDKSelectors, type ExecutionSDKSelectors } from "./selectors";
 
 @SDK("Execution")
 export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
@@ -17,7 +17,6 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
     public readonly useStore: BaseSDK.Store<ExecutionSDK.State> = createWithEqualityFn(
         immer<ExecutionSDK.State>(() => ({
             jobId: undefined,
-            executionStatus: "idle",
             awaitedConfirmation: new Set(),
             session: Execution.Session.createInitial(),
         })),
@@ -26,9 +25,9 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
 
     public readonly reducers: ExecutionSDK.Reducers = _createExecutionReducers_(this)
     public readonly actions: ExecutionSDK.Actions = createExecutionSDKActions(this);
-    public readonly selectors: ExecutionSDK.Selectors = {}
+    public readonly selectors: ExecutionSDK.Selectors = executionSDKSelectors;
     
-    public useAwaitConfirmation = (event: OrchestratorSDK.AwaitedConfirmation): () => void => {
+    public useAwaitConfirmation = (event: ExecutionSDK.AwaitedConfirmation): () => void => {
         this.actions.addAwaitedConfirmation(event);
         return () => { this.actions.removeAwaitedConfirmation(event); };
     }
@@ -37,7 +36,7 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         unsubscribeFromJobChannel: null as (() => void) | null
     }
     
-    public handleOnEvent = (e: ExecutionSession.Event) => {
+    public handleOnEvent = (e: Execution.Event) => {
         console.log("Execution Session Event Received:", e.type)
         switch(e.type){
             case "node:started":
@@ -49,7 +48,7 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
                 break;
             case "node:completed":
                 this.setState(s => {
-                    s.session.node_output_projections[e.nodeId] = e.output as any;
+                    s.currentExecution!.session.node_output_projections[e.nodeId] = e.output as any;
                     if(e.stateUpdate)
                         this.reducers.applyUpdate(s, e.stateUpdate);
                     this.reducers.setNodeStatus(s, e.nodeId, { status: "completed", completed_at: new Date().toISOString() })
@@ -76,38 +75,20 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
     }
 }
 
-export const ExecutionSDK = SDK.get<ExecutionSDKImpl>("ExecutionSession")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export const ExecutionSDK = SDK.get<ExecutionSDKImpl>("Execution")
 
 
 
 
 export namespace ExecutionSDK {
+    export type AwaitedConfirmation = "started" | "paused" | "resumed" | "terminated" | "suspended"
+
     export type State = {
-        jobId: Orchestrator.Job.Id | undefined
-        executionStatus: "idle" | "running" | "completed" | "failed" | "terminated" | "paused" | "suspended"
-        awaitedConfirmation: Set<"started" | "paused" | "resumed" | "terminated" | "suspended">
-        session: ExecutionSession
+        currentExecution?: Execution
+        awaitedConfirmation: Set<AwaitedConfirmation>
     }
 
     export type Reducers = _ExecutionSessionReducers
     export type Actions = ExecutionSDKActions;
-    export type Selectors = {}
+    export type Selectors = ExecutionSDKSelectors
 }

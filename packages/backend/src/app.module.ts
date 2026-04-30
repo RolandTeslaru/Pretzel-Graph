@@ -3,9 +3,8 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
-import { OrchestratorModule } from './services/Orchestrator/orchestrator.module';
+import { ExecutionModule } from './services/Execution/execution.module';
 import { ChatModule } from './services/Chat/chat.module';
-import { ExecutionSessionModule } from './services/ExecutionSession/execution-session.module';
 import { LibraryModule } from './services/Library/library.module';
 import { ShelfModule } from './services/Shelf/shelf.module';
 import { WorkbenchModule } from './services/Workbench/workbench.module';
@@ -31,9 +30,8 @@ import { WebhookTestModule } from './services/WebhookTest/webhook-test.module';
                 removeOnFail: { count: 50 },
             },
         }),
-        OrchestratorModule,
+        ExecutionModule,
         ChatModule,
-        ExecutionSessionModule,
         LibraryModule,
         ShelfModule,
         WorkbenchModule,

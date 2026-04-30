@@ -1,11 +1,11 @@
-import { Button, DropdownMenu, Input } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Input } from '@pretzel-graph/standard-ui/foundations'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Workflow } from '@pretzel-graph/shared/domain'
-import { WorkbenchSDK } from '../../sdk'
-import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
-import { ExecutionSessionSDK } from '@/routes/workflow/-SDKs/ExecutionSessionSDK/sdk'
-import StatusIndicator from '../Canvas/Node/Header/StatusIndicator'
+import { WorkbenchSDK } from '../../../sdk'
+import { ExecutionSDK } from '../../../../ExecutionSDK/sdk'
+import StatusIndicator from '../../Canvas/Node/Header/StatusIndicator'
+import { OptionsDropdown } from './OptionsDropdown'
 
 interface HeaderProps {
     node: Workflow.Node
@@ -16,9 +16,7 @@ interface HeaderProps {
 
 export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }: HeaderProps) => {
 
-    const nodeStatus = ExecutionSessionSDK.useStore(s => {
-        return s.session.node_status[node.id]
-    });
+    const nodeStatus = ExecutionSDK.useStore(s => ExecutionSDK.selectors.getNodeStatus(s, node.id));
 
     return (
         <div className='absolute z-10 top-2 left-2 right-2 flex flex-row gap-2'>
@@ -51,10 +49,9 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                 )}
             </div>
 
-            <StatusIndicator nodeId={node.id} executionStatus={nodeStatus} className='mb-0 mt-auto'/>
-                        
-            <div className='ml-auto z-10 flex flex-row bg-card-float w-fit p-0.5 rounded-xl border border-border shadow-md shadow-black/10'>
+            <StatusIndicator nodeId={node.id} sessionStatus={nodeStatus} className='mb-0 mt-auto'/>
 
+            <div className='ml-auto z-10 flex flex-row bg-card-float w-fit p-0.5 rounded-xl border border-border shadow-md shadow-black/10'>
                 {isEditing ? (
                     <div className='flex flex-row gap-2 ml-auto my-auto h-auto'>
                         <Button size="xs" className='rounded-full' variant="success" onClick={onEditFinish}>
@@ -74,41 +71,10 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                         <Button size="icon-xs" variant="ghost-success">
                             <SystemIcons.Play />
                         </Button>
-                        <HeaderOptionsDropdown node={node} />
+                        <OptionsDropdown node={node} />
                     </div>
                 )}
             </div>
         </div>
     )
 }
-const HeaderOptionsDropdown = ({ node }: { node: Workflow.Node }) => (
-    <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
-            <Button size="icon-xs" variant="ghost">
-                <SystemIcons.Ellipsis className='text-secondary-foreground' />
-            </Button>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content align="end">
-            <DropdownMenu.Item
-                onClick={() => { WorkbenchSDK.actions.node.recreate(node.id)}}
-            >
-                <SystemIcons.Undo />
-                Recreate
-            </DropdownMenu.Item>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(node.id)}>
-                <SystemIcons.Copy />
-                Copy Node ID
-            </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(node.blueprintId)}>
-                <SystemIcons.Copy />
-                Copy Blueprint ID
-            </DropdownMenu.Item>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item variant="destructive" onClick={() => WorkbenchSDK.actions.node.remove(node.id)}>
-                <SystemIcons.Trash2 />
-                Delete
-            </DropdownMenu.Item>
-        </DropdownMenu.Content>
-    </DropdownMenu.Root>
-)

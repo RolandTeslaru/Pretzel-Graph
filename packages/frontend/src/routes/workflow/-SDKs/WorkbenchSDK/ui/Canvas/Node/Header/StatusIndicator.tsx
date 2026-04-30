@@ -1,21 +1,20 @@
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import { Tooltip } from '@pretzel-graph/standard-ui/foundations'
-import type { ExecutionSession, Validation, Workflow } from '@pretzel-graph/shared/domain'
+import type { Execution, Validation, Workflow } from '@pretzel-graph/shared/domain'
 import { GlowingAlertTriangle, GlowingCompletedCheck, GlowingFailedX, GlowingRunningSpinner, GlowingWaitingClock } from './icons'
 
+interface Props {
+  nodeId: Workflow.Node.Id,
+  className?: string,
+  sessionStatus: Execution.Session.NodeStatus
+}
 
 const StatusIndicator = ({
   nodeId,
   className = "",
-  executionStatus
-}: {
-  nodeId: Workflow.Node.Id,
-  className?: string,
-  executionStatus?: ExecutionSession.NodeStatus
-}) => {
+  sessionStatus
+}: Props) => {
   const hasIssues = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.hasIssues(s, nodeId))
-
-
 
   if (hasIssues)
     return (
@@ -31,18 +30,18 @@ const StatusIndicator = ({
       </Tooltip.Root>
     )
 
-  if (!executionStatus || executionStatus.status === "idle")
+  if (sessionStatus.status === "idle")
     return null;
 
-  if (executionStatus.status === "running")
+  if (sessionStatus.status === "running")
     return (
       <GlowingRunningSpinner />
     )
-  else if (executionStatus.status === "waiting")
+  else if (sessionStatus.status === "waiting")
     return (
       <GlowingWaitingClock />
     )
-  else if (executionStatus.status === "failed")
+  else if (sessionStatus.status === "failed")
     return (
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
@@ -51,11 +50,11 @@ const StatusIndicator = ({
           </div>
         </Tooltip.Trigger>
         <Tooltip.Content align="center" side="right" sideOffset={10}>
-          <FailedTooltipContent error={executionStatus.error} />
+          <FailedTooltipContent error={sessionStatus.error} />
         </Tooltip.Content>
       </Tooltip.Root>
     )
-  else if (executionStatus.status === "completed") {
+  else if (sessionStatus.status === "completed") {
     return (
       <GlowingCompletedCheck />
     )
@@ -109,7 +108,7 @@ const renderInputIssueMessage = (issue: Validation.Issue.Input) => {
 
 
 
-export const FailedTooltipContent = ({ error }: { error: ExecutionSession.NodeStatus["error"] }) => {
+export const FailedTooltipContent = ({ error }: { error: Execution.Session.NodeStatus["error"] }) => {
   if(!error)
     return null;
   return (
