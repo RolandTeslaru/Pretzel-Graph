@@ -109,6 +109,7 @@ export namespace SystemError {
         INFRA_DATABASE_ERROR = 5001,
         INFRA_QUEUE_ERROR = 5002,
         INFRA_UNKNOWN = 5999,
+        NOT_FOUND = 404
     }
 
 

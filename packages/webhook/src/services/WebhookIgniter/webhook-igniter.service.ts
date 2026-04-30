@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException, MethodNotAllowedException } from '@nestjs/common';
-import { ExecutionIgniter, ExecutionSession, Orchestrator, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
+import { Execution, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { resolveWebhook } from '@pretzel-graph/shared/utils';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import { WorkflowRegistryService } from '../WorkflowRegistry/workflow-registry.service';
@@ -36,9 +36,7 @@ export class WebhookIgniterService {
             );
         }
 
-        const executionSession = ExecutionSession.Schema.parse({});
-
-        const igniter: ExecutionIgniter = {
+        const igniter: Execution.Igniter = {
             variant: "webhook",
             nodeId: match.nodeId as Workflow.Node.Id,
             payload: {
@@ -50,20 +48,19 @@ export class WebhookIgniterService {
             },
         };
 
-        const payload: Orchestrator.API.Run.InternalRequest = {
+        const payload: Execution.API.Run.InternalRequest = {
             workflowId: publication.workflow_id,
             workflowData: publication.workflow_data,
-            executionSession,
             igniter,
         };
 
-        const { jobId, success } = await Orchestrator.API.runInternal(this.api.client, payload); 
+        const { execution } = await Execution.API.runInternal(this.api.client, payload); 
 
         this.logger.log(
-            `Triggered workflow=${publication.workflow_id} publication=${publication.id} jobId=${jobId}`,
+            `Triggered workflow=${publication.workflow_id} publication=${publication.id} executionId=${execution.id}`,
         );
 
-        return { jobId, success };
+        return { execution };
     }
 
     private findWebhookNode(

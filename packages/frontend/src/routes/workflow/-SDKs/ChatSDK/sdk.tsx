@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
-import { Chat, Orchestrator } from "@pretzel-graph/shared/domain";
+import { Chat } from "@pretzel-graph/shared/domain";
 import { QuerySDK } from "@/SDKs/QuerySDK/sdk";
 import { createChatSDKActions, type ChatSDKActions } from "./actions";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
@@ -47,9 +47,6 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 
 
     public readonly reducers: ChatSDK.Reducers = {
-        resolveJobId: (s, messageId, jobId) => {
-            s.messagesRecord[messageId].job_id = jobId;
-        },
         upsertMessage: (s, message) => {
             // If its not in the messages record then its not in the msessage stack aswell, so push it.
             if (!s.messagesRecord[message.id]) {
@@ -129,7 +126,6 @@ export namespace ChatSDK {
     }
 
     export type Reducers = {
-        resolveJobId: (state: State, messageId: Chat.Message.Id, jobId: Orchestrator.Job.Id) => void
         upsertMessage: (state: State, message: Chat.Message) => void
         appendContent: (state: State, messageId: Chat.Message.Id, content: string) => void
     }

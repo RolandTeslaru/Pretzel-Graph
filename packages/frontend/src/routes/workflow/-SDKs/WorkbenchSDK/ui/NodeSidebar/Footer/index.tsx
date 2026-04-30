@@ -1,7 +1,7 @@
 import { StackSDK } from "@/routes/workflow/-SDKs/StackSDK";
 import { Button } from "@pretzel-graph/standard-ui/foundations";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
-import IncomingPanel from "./IncomingPanel";
+import IncomingPanel from "../IncomingPanel";
 
 export const NodeSidebarFooter = () => {
 

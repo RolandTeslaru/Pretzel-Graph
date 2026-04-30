@@ -6,8 +6,8 @@ import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { Accordion } from '@pretzel-graph/standard-ui/foundations/accordion';
 import { FieldRenderer } from '../FieldRenderer';
 import { INPUT_RENDERER_MAP } from '../InputRenderer';
-import { NodeSidebarHeader } from './header';
-import { NodeSidebarFooter } from './footer';
+import { NodeSidebarHeader } from './Header';
+import { NodeSidebarFooter } from './Footer';
 import WebhookRenderer from './webhook-renderer';
 
 

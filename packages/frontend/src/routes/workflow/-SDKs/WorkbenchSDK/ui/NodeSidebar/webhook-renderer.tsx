@@ -1,10 +1,10 @@
 import { Expression, type Webhook, type Workflow } from '@pretzel-graph/shared/domain'
 import React, { memo, useMemo, useState } from 'react'
-import { ExecutionSessionSDK } from '../../../ExecutionSessionSDK/sdk'
 import { WorkbenchSDK } from '../../sdk'
 import { Button, Tabs } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { toast } from 'sonner'
+import { ExecutionSDK } from '../../../ExecutionSDK/sdk'
 
 interface Props {
     webhook: Webhook
@@ -13,7 +13,7 @@ interface Props {
 
 const WebhookRenderer: React.FC<Props> = memo(({ webhook, nodeId }) => {
 
-    const session = ExecutionSessionSDK.useStore(s => s.session);
+    const session = ExecutionSDK.useStore(s => s.currentExecution?.session);
 
     const expressionCtx = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.getExpressionContext(s, nodeId, session));
 
