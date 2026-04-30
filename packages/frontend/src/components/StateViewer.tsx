@@ -5,14 +5,13 @@ import 'react18-json-view/src/dark.css'
 import { Button, Select } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
-import { ExecutionSessionSDK } from '@/routes/workflow/-SDKs/ExecutionSessionSDK/sdk'
-import { OrchestratorSDK } from '@/routes/workflow/-SDKs/OrchestratorSDK/sdk'
 import { ChatSDK } from '@/routes/workflow/-SDKs/ChatSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK/sdk'
+import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk'
 
-const SDK_OPTIONS = ['WorkbenchSDK', 'ExecutionSessionSDK', 'OrchestratorSDK', 'ChatSDK', 'LibrarySDK', 'ShelfSDK', 'VersionControlSDK'] as const
+const SDK_OPTIONS = ['WorkbenchSDK', 'ExecutionSDK', 'ChatSDK', 'LibrarySDK', 'ShelfSDK', 'VersionControlSDK'] as const
 type SDKOption = typeof SDK_OPTIONS[number]
 
 function setsToArrays(value: unknown): unknown {
@@ -29,8 +28,7 @@ function setsToArrays(value: unknown): unknown {
 
 function useSDKState(selected: SDKOption) {
     const workbench = WorkbenchSDK.useStore(s => s);
-    const execution = ExecutionSessionSDK.useStore(s => s);
-    const orchestrator = OrchestratorSDK.useStore(s => s);
+    const execution = ExecutionSDK.useStore(s => s);
     const chat = ChatSDK.useStore(s => s);
     const library = LibrarySDK.useStore(s => s);
     const shelf = ShelfSDK.useStore(s => s);
@@ -39,8 +37,7 @@ function useSDKState(selected: SDKOption) {
     const raw = (() => {
         switch (selected) {
             case 'WorkbenchSDK': return workbench;
-            case 'ExecutionSessionSDK': return execution;
-            case 'OrchestratorSDK': return orchestrator;
+            case 'ExecutionSDK': return execution;
             case 'ChatSDK': return chat;
             case 'LibrarySDK': return library;
             case 'ShelfSDK': return shelf;

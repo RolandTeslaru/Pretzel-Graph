@@ -2,8 +2,8 @@ import { memo, useId, useCallback } from 'react';
 import { type EdgeProps, getBezierPath, EdgeLabelRenderer } from '@xyflow/react';
 import { WorkbenchSDK } from '../../../sdk';
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
-import { ExecutionSessionSDK } from '@/routes/workflow/-SDKs/ExecutionSessionSDK/sdk';
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
+import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 
 const WorkflowEdge = memo(({
     source,
@@ -30,7 +30,7 @@ const WorkflowEdge = memo(({
     const markerId = useId();
 
     const sourceNode = WorkbenchSDK.useStore(s => s.workflow.data.nodes[source as Workflow.Node.Id]);
-    const edgeStatus = ExecutionSessionSDK.useStore(s => s.session.edge_state[id as Workflow.Edge.Id] ?? { status: "idle", runCount: 0 });
+    const edgeStatus = ExecutionSDK.useStore(s => s.currentExecution?.session?.edge_state[id as Workflow.Edge.Id] ?? { status: "idle", runCount: 0 });
 
     const handleDelete = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
