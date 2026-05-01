@@ -19,7 +19,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
     private listeners = new Map<Realtime.Channel, Set<(data: any, websocketMessage: MessageEvent<any>) => void>>();
 
     public subscribeToChannel<T>(
-        channel: Realtime.Channel,
+        channel:  Realtime.Channel,
         callback: (data: T, websocketMessage: MessageEvent<T>) => void
     ) {
         if (!this.listeners.has(channel)) {

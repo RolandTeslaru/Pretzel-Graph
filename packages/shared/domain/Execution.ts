@@ -13,6 +13,7 @@ export namespace Execution {
 
     export const Id = z.string().brand("ExecutionId")
     export type Id = z.infer<typeof Id>
+    export const createId = () => crypto.randomUUID() as Id
 
     export const Status = z.enum([
         "pending", "running", "paused", "suspended",
@@ -169,30 +170,30 @@ export namespace Execution {
 
         // Lifecycle
         export const Started    = Base.extend({ type: z.literal('started') })
-        export const Paused     = Base.extend({ type: z.literal('paused') })
-        export const Resumed    = Base.extend({ type: z.literal('resumed') })
-        export const Suspended  = Base.extend({ type: z.literal('suspended') })
+        export const Paused     = Base.extend({ type: z.literal('paused'), session: Session.Schema })
+        export const Resumed    = Base.extend({ type: z.literal('resumed'), session: Session.Schema })
+        export const Completed  = Base.extend({ type: z.literal('completed'), session: Session.Schema })
+        export const Failed     = Base.extend({ type: z.literal('failed'), session: Session.Schema, error: SystemError.Schema })
+        export const Suspended  = Base.extend({ type: z.literal('suspended'), session: Session.Schema })
         export const Terminated = Base.extend({ type: z.literal('terminated') })
-        export const Completed  = Base.extend({ type: z.literal('completed'), result: z.string() })
-        export const Failed     = Base.extend({ type: z.literal('failed'), error: SystemError.Schema })
 
         // Progress
-        export const Update = Base.extend({
-            type:   z.literal('update'),
-            update: Session.Update,
+        export const SessionUpdate = Base.extend({
+            type:          z.literal('update'),
+            sessionUpdate: Session.Update,
         })
 
         export namespace Node {
             export const Started   = Base.extend({
-                type:        z.literal('node:started'),
-                nodeId:      Workflow.Node.Id,
-                stateUpdate: Session.Update.optional(),
+                type:          z.literal('node:started'),
+                nodeId:        Workflow.Node.Id,
+                sessionUpdate: Session.Update.optional(),
             })
             export const Completed = Base.extend({
-                type:        z.literal('node:completed'),
-                nodeId:      Workflow.Node.Id,
-                output:      z.unknown(),
-                stateUpdate: Session.Update.optional(),
+                type:          z.literal('node:completed'),
+                nodeId:        Workflow.Node.Id,
+                output:        z.unknown(),
+                sessionUpdate: Session.Update.optional(),
             })
             export const Error     = Base.extend({
                 type:   z.literal('node:error'),
@@ -212,18 +213,18 @@ export namespace Execution {
             export type Waiting   = z.infer<typeof Waiting>
         }
 
-        export type Started    = z.infer<typeof Started>
-        export type Paused     = z.infer<typeof Paused>
-        export type Resumed    = z.infer<typeof Resumed>
-        export type Suspended  = z.infer<typeof Suspended>
-        export type Terminated = z.infer<typeof Terminated>
-        export type Completed  = z.infer<typeof Completed>
-        export type Failed     = z.infer<typeof Failed>
-        export type Update     = z.infer<typeof Update>
+        export type Started         = z.infer<typeof Started>
+        export type Paused          = z.infer<typeof Paused>
+        export type Resumed         = z.infer<typeof Resumed>
+        export type Suspended       = z.infer<typeof Suspended>
+        export type Terminated      = z.infer<typeof Terminated>
+        export type Completed       = z.infer<typeof Completed>
+        export type Failed          = z.infer<typeof Failed>
+        export type SessionUpdate   = z.infer<typeof SessionUpdate>
 
         export const Schema = z.discriminatedUnion("type", [
             Started, Paused, Resumed, Suspended, Terminated, Completed, Failed,
-            Update,
+            SessionUpdate,
             Node.Started, Node.Completed, Node.Error, Node.Waiting,
         ])
     }
@@ -265,6 +266,7 @@ export namespace Execution {
             export const Request = z.object({
                 workflowId:   Workflow.Id,
                 workflowData: Workflow.Data.Schema,
+                executionId:  Execution.Id.optional(),
             })
             export type Request = z.infer<typeof Request>
 
@@ -278,6 +280,22 @@ export namespace Execution {
             })
             export type Response = z.infer<typeof Response>
         }
+        export namespace SdkRun {
+            export const Request = z.object({
+                workflowId: Workflow.Id,
+                inputs:     z.record(z.string(), z.unknown()).optional(),
+                await:      z.boolean().optional(),
+            })
+            export type Request = z.infer<typeof Request>
+
+            // await=true → full execution (same as Run.Response); await=false → just the id
+            export const Response = z.union([
+                z.object({ execution: Execution.Schema }),
+                z.object({ executionId: Execution.Id }),
+            ])
+            export type Response = z.infer<typeof Response>
+        }
+
         export async function run(api: AxiosInstance, req: Run.Request): Promise<Run.Response> {
             const { data } = await api.post<Run.Response>('/api/execution/run', req)
             return data
@@ -288,19 +306,8 @@ export namespace Execution {
             return data
         }
 
-        export namespace AwaitResult {
-            export const Request = z.object({ executionId: Execution.Id })
-            export type Request = z.infer<typeof Request>
-
-            export const Response = z.object({
-                status: z.enum(['completed', 'failed', 'terminated']),
-                error:  SystemError.Schema.optional(),
-            })
-            export type Response = z.infer<typeof Response>
-        }
-
-        export async function awaitResult(api: AxiosInstance, req: AwaitResult.Request): Promise<AwaitResult.Response> {
-            const { data } = await api.get<AwaitResult.Response>(`/api/execution/await-result/${req.executionId}`, { timeout: 11 * 60_000 })
+        export async function sdkRun(api: AxiosInstance, req: SdkRun.Request): Promise<SdkRun.Response> {
+            const { data } = await api.post<SdkRun.Response>('/api/execution/sdk/run', req)
             return data
         }
 

@@ -5,18 +5,63 @@ import { toast } from "sonner";
 export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event) => {
     console.log("Execution Session Event Received:", e.type)
     switch (e.type) {
+        case "started":
+            sdk.setState(s => {
+                sdk.reducers.setStatus(s, "running");
+            })
+            break;
+        case "completed":
+            sdk.setState(s => {
+                sdk.reducers.setSession(s, e.session);
+                sdk.reducers.setStatus(s, "completed");
+            })
+            sdk.actions.removeAwaitedConfirmation("started");
+            sdk.runtime.unsubscribeFromEvents?.();
+            break;
+        case "failed":
+            sdk.setState(s => {
+                sdk.reducers.setSession(s, e.session);
+                sdk.reducers.setStatus(s, "failed");
+                sdk.reducers.setError(s, e.error);
+            })
+            break;
+        case "terminated":
+            sdk.setState(s => {
+                sdk.reducers.setStatus(s, "terminated");
+            })
+            sdk.actions.removeAwaitedConfirmation("terminated");
+            sdk.runtime.unsubscribeFromEvents?.();
+            break;
+        case "paused":
+            sdk.setState(s => {
+                sdk.reducers.setSession(s, e.session);
+                sdk.reducers.setStatus(s, "paused");
+            })
+            break;
+        case "resumed":
+            sdk.setState(s => {
+                sdk.reducers.setSession(s, e.session);
+                sdk.reducers.setStatus(s, "running");
+            })
+            break;
+        case "suspended":
+            sdk.setState(s => {
+                sdk.reducers.setSession(s, e.session);
+                sdk.reducers.setStatus(s, "suspended");
+            })
+            break;
+
         case "node:started":
             sdk.setState(s => {
-                if (e.stateUpdate)
-                    sdk.reducers.applyUpdate(s, e.stateUpdate);
-                sdk.reducers.setNodeStatus(s, e.nodeId, { status: "running", started_at: new Date().toISOString() })
+                sdk.reducers.applySessionUpdate(s, e.sessionUpdate);
+                
+                sdk.reducers.setNodeStatus(s, e.nodeId, {  status: "running", started_at: new Date().toISOString() })
             })
             break;
         case "node:completed":
             sdk.setState(s => {
-                s.currentExecution!.session.node_output_projections[e.nodeId] = e.output as any;
-                if (e.stateUpdate)
-                    sdk.reducers.applyUpdate(s, e.stateUpdate);
+                sdk.reducers.applySessionUpdate(s, e.sessionUpdate);
+                sdk.reducers.setNodeOutput(s, e.nodeId, e.output);
                 sdk.reducers.setNodeStatus(s, e.nodeId, { status: "completed", completed_at: new Date().toISOString() })
             })
             break;
@@ -32,10 +77,11 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event)
             break;
         case "update":
             sdk.setState(s => {
-                sdk.reducers.applyUpdate(s, e.update);
+                sdk.reducers.applySessionUpdate(s, e.sessionUpdate);
             })
             break;
         default:
+            // @ts-expect-error
             toast.error(`Received unknown event: ${e.type}`)
     }
 }

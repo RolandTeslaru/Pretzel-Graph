@@ -96,6 +96,12 @@ export const buttonVariants = cva(
           hover:bg-sky-400/20 hover:text-sky-800 dark:hover:text-sky-300
           aria-expanded:bg-sky-400/20 aria-expanded:text-sky-800
           dark:aria-expanded:bg-sky-500/20 dark:aria-expanded:text-sky-300
+        `,
+        "ghost-warning": `
+          shadow-none text-amber-600/70 dark:text-amber-400
+          hover:bg-amber-400/20 hover:text-amber-800 dark:hover:text-amber-300
+          aria-expanded:bg-amber-400/20 aria-expanded:text-amber-800
+          dark:aria-expanded:bg-amber-500/20 dark:aria-expanded:text-amber-300
         `
       },
       size: {

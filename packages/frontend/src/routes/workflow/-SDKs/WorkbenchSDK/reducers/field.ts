@@ -40,7 +40,7 @@ export const fieldReducers = {
             return true;
         }
 
-        delete s.issues.nodes[nodeId].fields[field.id];
+        delete s.issues.nodes[nodeId]?.fields?.[field.id];
 
         return false;
     },
