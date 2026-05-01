@@ -63,7 +63,7 @@ export const buttonVariants = cva(
         `,
         warning: `
           bg-amber-400/50 text-amber-700 hover:bg-amber-200 not-dark:hover:border-amber-400
-          dark:bg-yellow-400/60 dark:text-yellow-100 dark:hover:bg-yellow-400/80
+          dark:bg-amber-400/50 dark:text-yellow-100 dark:hover:bg-amber-400/80
           focus-visible:ring-amber-500/20 
           dark:focus-visible:ring-amber-500/40 focus-visible:border-amber-500/40
         `,

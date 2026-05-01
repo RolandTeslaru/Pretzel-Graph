@@ -123,8 +123,8 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
     }
 
     public readonly selectors: VersionControlSDK.Selectors = {
-        activePublication: () => {
-            return this.useStore.getState().publications.find(p => p.is_active) ?? null;
+        getActive: (state) => {
+            return state.publications.find(p => p.is_active) ?? null;
         },
     }
 }
@@ -154,6 +154,6 @@ export namespace VersionControlSDK {
     }
 
     export type Selectors = {
-        activePublication: () => VersionControl.PublicationMeta | null
+        getActive: (state: VersionControlSDK.State) => VersionControl.PublicationMeta | null
     }
 }

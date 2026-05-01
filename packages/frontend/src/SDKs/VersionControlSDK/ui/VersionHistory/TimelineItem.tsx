@@ -1,41 +1,11 @@
 import { useState, type ReactNode } from "react";
-import { DialogSDK } from "@/SDKs/DialogSDK";
 import { VersionControlSDK } from "@/SDKs/VersionControlSDK/sdk";
 import { openPublishDialog } from "@/SDKs/VersionControlSDK/ui/PublishDialog";
 import { Button, DropdownMenu, Spinner } from "@pretzel-graph/standard-ui/foundations";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 import type { VersionControl } from "@pretzel-graph/shared/domain";
 import { toast } from "sonner";
-
-function getPublicationLabel(publication: VersionControl.PublicationMeta): string {
-    return publication.name?.trim() || `Version ${publication.id.slice(0, 8)}`;
-}
-
-function openDeletePublicationDialog(
-    publication: VersionControl.PublicationMeta,
-    onApprove: () => Promise<void>,
-) {
-    const dialogId = `delete-publication-${publication.id}`;
-
-    DialogSDK.actions.push(dialogId, (props) => (
-        <DialogSDK.AlertTemplate
-            {...props}
-            type="danger"
-            onApprove={async () => {
-                await onApprove();
-                DialogSDK.actions.pop(dialogId);
-            }}
-            onCancel={() => DialogSDK.actions.pop(dialogId)}
-        >
-            <div className="font-semibold">
-                Delete version?
-            </div>
-            <div className="text-sm text-muted-foreground">
-                This removes <span className="font-semibold text-destructive">{getPublicationLabel(publication)}</span> from version history.
-            </div>
-        </DialogSDK.AlertTemplate>
-    ));
-}
+import { getPublicationLabel, openDeactivatePublicationDialog, openDeletePublicationDialog } from "./utils";
 
 type TimelineItemProps = {
     actionType?: "draft" | "publication";
@@ -69,6 +39,19 @@ function PublicationActions({
         }
     };
 
+    const handleDeactivate = () => {
+        if (!publication.is_active || isPending) return;
+
+        openDeactivatePublicationDialog(publication, async () => {
+            setIsPending(true);
+            try {
+                await VersionControlSDK.actions.deactivate(publication.id);
+            } finally {
+                setIsPending(false);
+            }
+        });
+    };
+
     const handleDelete = () => {
         if (isPending) return;
 
@@ -76,10 +59,6 @@ function PublicationActions({
             setIsPending(true);
             try {
                 await VersionControlSDK.actions.remove(publication.id);
-                toast.success(`${getPublicationLabel(publication)} deleted`);
-            } catch {
-                toast.error("Could not delete version");
-                throw new Error("delete failed");
             } finally {
                 setIsPending(false);
             }
@@ -106,6 +85,15 @@ function PublicationActions({
                     <SystemIcons.CircleCheck className="size-4" />
                     Make active
                 </DropdownMenu.Item>
+                {publication.is_active &&
+                    <DropdownMenu.Item
+                        disabled={!publication.is_active || isPending}
+                        onClick={handleDeactivate}
+                    >
+                        <SystemIcons.Power className="size-4" />
+                        Deactivate
+                    </DropdownMenu.Item>
+                }
                 <DropdownMenu.Separator />
                 <DropdownMenu.Item
                     variant="destructive"
@@ -154,7 +142,7 @@ export function TimelineItem({
 }: TimelineItemProps) {
     return (
         <div className="relative pl-7">
-            <div className={`rounded-md border px-3 py-1 transition-colors ${highlighted ? "bg-muted/70 border-border/90 shadow-sm" : "bg-muted border-transparent hover:bg-muted/35"}`}>
+            <div className={`rounded-md border p-1 pl-3 transition-colors ${highlighted ? "bg-muted/40 border-border/90 shadow-sm" : "bg-muted/60 border-transparent hover:bg-muted/35"}`}>
                 <div className="flex items-start gap-3">
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">

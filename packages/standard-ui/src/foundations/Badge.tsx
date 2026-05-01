@@ -5,7 +5,7 @@ import { cn } from "../utils/cn"
 
 
 const badgeVariants = cva(
-  "h-5 gap-1 rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium transition-[color,opacity] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! inline-flex items-center justify-center w-fit whitespace-nowrap shrink-0 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-colors overflow-hidden group/badge",
+  "gap-1 rounded-4xl border border-transparent font-medium transition-[color,opacity] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 inline-flex items-center justify-center w-fit whitespace-nowrap shrink-0 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-colors overflow-hidden group/badge",
   {
     variants: {
       variant: {
@@ -17,20 +17,29 @@ const badgeVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         success: "bg-emerald-400/20 text-emerald-700 dark:bg-emerald-700/30 dark:text-emerald-300",
       },
+      size: {
+        default: "h-5 px-2 py-0.5 text-xs [&>svg]:size-3!",
+        sm: "h-4 px-1.5 py-px text-[10px] [&>svg]:size-2.5!",
+        xs: "h-3.5 px-1 py-px text-[9px] [&>svg]:size-2!",
+      },
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
     },
   }
 )
 
 interface BadgeProps
     extends React.ComponentPropsWithoutRef<"span">,
-    VariantProps<typeof badgeVariants> { }
+    VariantProps<typeof badgeVariants> {
+    asChild?: boolean
+}
 
 function Badge({
     className,
     variant,
+    size,
     asChild = false,
     ...props
 }: React.ComponentProps<"span"> &
@@ -40,7 +49,7 @@ function Badge({
     return (
         <Comp
             data-slot="badge"
-            className={cn(badgeVariants({ variant }), className)}
+            className={cn(badgeVariants({ variant, size }), className)}
             {...props}
         />
     )
