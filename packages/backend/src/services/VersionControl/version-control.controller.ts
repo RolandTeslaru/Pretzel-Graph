@@ -12,7 +12,7 @@ export class VersionControlController {
     @HttpCode(200)
     async publish(
         @Req() req: AuthenticatedRequest,
-        @Body() body: any,
+        @Body() body: VersionControl.API.Publish.Request,
     ) {
         const payload = VersionControl.API.Publish.Request.parse(body);
         return this.service.publish(req.token, payload);

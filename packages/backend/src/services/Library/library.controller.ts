@@ -17,7 +17,7 @@ export class LibraryController {
     // ── Projects ──────────────────────────────────────────
     @Post('projects')
     @HttpCode(200)
-    async createProject(@Req() req: AuthenticatedRequest, @Body() body: any) {
+    async createProject(@Req() req: AuthenticatedRequest, @Body() body: Library.API.Project.Create.Request) {
         const payload = Library.API.Project.Create.Request.parse(body);
         return await this.libraryService.project.create(req.token, payload);
     }
@@ -28,7 +28,7 @@ export class LibraryController {
     }
 
     @Patch('projects/:id')
-    async updateProject(@Req() req: AuthenticatedRequest, @Param('id') id: Library.Folder.Id, @Body() body: any) {
+    async updateProject(@Req() req: AuthenticatedRequest, @Param('id') id: Library.Folder.Id, @Body() body: Omit<Library.API.Project.Update.Request, 'id'>) {
         const payload = Library.API.Project.Update.Request.parse({ ...body, id });
         return await this.libraryService.project.update(req.token, payload);
     }
@@ -37,13 +37,13 @@ export class LibraryController {
     // ── Folders ───────────────────────────────────────────
     @Post('folders')
     @HttpCode(200)
-    async createFolder(@Req() req: AuthenticatedRequest, @Body() body: any) {
+    async createFolder(@Req() req: AuthenticatedRequest, @Body() body: Library.API.Folder.Create.Request) {
         const payload = Library.API.Folder.Create.Request.parse(body);
         return await this.libraryService.folder.create(req.token, payload);
     }
 
     @Patch('folders/:id')
-    async updateFolder(@Req() req: AuthenticatedRequest, @Param('id') id: Library.Folder.Id, @Body() body: any) {
+    async updateFolder(@Req() req: AuthenticatedRequest, @Param('id') id: Library.Folder.Id, @Body() body: Omit<Library.API.Folder.Update.Request, 'id'>) {
         const payload = Library.API.Folder.Update.Request.parse({ ...body, id });
         return await this.libraryService.folder.update(req.token, payload);
     }
@@ -62,7 +62,7 @@ export class LibraryController {
     // ── Workflows ─────────────────────────────────────────
     @Post('workflows')
     @HttpCode(200)
-    async createWorkflow(@Req() req: AuthenticatedRequest, @Body() body: any) {
+    async createWorkflow(@Req() req: AuthenticatedRequest, @Body() body: Library.API.Workflow.Create.Request) {
         const payload = Library.API.Workflow.Create.Request.parse(body);
         return await this.libraryService.workflow.create(req.token, payload);
     }
@@ -73,7 +73,7 @@ export class LibraryController {
     }
 
     @Patch('workflows/:id')
-    async updateWorkflow(@Req() req: AuthenticatedRequest, @Param('id') id: Workflow.Id, @Body() body: any) {
+    async updateWorkflow(@Req() req: AuthenticatedRequest, @Param('id') id: Workflow.Id, @Body() body: Omit<Library.API.Workflow.Update.Request, 'id'>) {
         const payload = Library.API.Workflow.Update.Request.parse({ ...body, id });
         return await this.libraryService.workflow.update(req.token, payload);
     }

@@ -13,7 +13,7 @@ export class ChatController {
     @HttpCode(200)
     async create(
         @Req() req: AuthenticatedRequest,
-        @Body() body: any
+        @Body() body: Chat.API.Create.Request
     ) {
         const payload = Chat.API.Create.Request.parse(body);
         return await this.chatService.create(req.token, req.user.id as Auth.User.Id, payload);
@@ -24,7 +24,7 @@ export class ChatController {
     @HttpCode(200)
     async ensure(
         @Req() req: AuthenticatedRequest,
-        @Body() body: any
+        @Body() body: Chat.API.Ensure.Request
     ) {
         const payload = Chat.API.Ensure.Request.parse(body);
         return await this.chatService.ensure(req.token, req.user.id as Auth.User.Id, payload);
@@ -35,7 +35,7 @@ export class ChatController {
     @HttpCode(200)
     async get(
         @Req() req: AuthenticatedRequest,
-        @Body() body: any
+        @Body() body: Chat.API.Get.Request
     ) {
         const payload = Chat.API.Get.Request.parse(body);
         return await this.chatService.get(req.token, req.user.id as Auth.User.Id, payload);
@@ -55,7 +55,7 @@ export class ChatController {
     @HttpCode(200)
     async erase(
         @Req() req: AuthenticatedRequest,
-        @Body() body: any
+        @Body() body: Chat.API.Erase.Request
     ) {
         const payload = Chat.API.Erase.Request.parse(body);
         return await this.chatService.erase(req.token, req.user.id as Auth.User.Id, payload);
@@ -66,7 +66,7 @@ export class ChatController {
     @HttpCode(200)
     async addMessage(
         @Req() req: AuthenticatedRequest,
-        @Body() body: any
+        @Body() body: Chat.API.Message.Add.Request
     ) {
         const payload = Chat.API.Message.Add.Request.parse(body);
         return await this.chatService.message.add(req.token, payload);
@@ -77,7 +77,7 @@ export class ChatController {
     @HttpCode(200)
     async eraseMessage(
         @Req() req: AuthenticatedRequest,
-        @Body() body: any
+        @Body() body: Chat.API.Message.Erase.Request
     ) {
         const payload = Chat.API.Message.Erase.Request.parse(body);
         return await this.chatService.message.erase(req.token, payload);
@@ -88,7 +88,7 @@ export class ChatController {
     @HttpCode(200)
     async updateMessage(
         @Req() req: AuthenticatedRequest,
-        @Body() body: any
+        @Body() body: Chat.API.Message.Update.Request
     ) {
         const payload = Chat.API.Message.Update.Request.parse(body);
         return await this.chatService.message.update(req.token, payload);
