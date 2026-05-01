@@ -1,13 +1,15 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
-import { Chat, Execution } from "@pretzel-graph/shared/domain";
+import { Execution } from "@pretzel-graph/shared/domain";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { createExecutionSDKActions, type ExecutionSDKActions } from "./actions";
 import { _createExecutionReducers_, type _ExecutionSessionReducers } from "./reducers";
-import { toast } from "sonner";
 import { executionSDKSelectors, type ExecutionSDKSelectors } from "./selectors";
+import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
+import { api } from "@/SDKs/ApiInterceptorSDK";
+import { handleExecutionEvents } from "./handle-events";
 
 @SDK("Execution")
 export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
@@ -23,8 +25,8 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         shallow
     )
 
-    public readonly reducers: ExecutionSDK.Reducers = _createExecutionReducers_(this)
-    public readonly actions: ExecutionSDK.Actions = createExecutionSDKActions(this);
+    public readonly reducers:  ExecutionSDK.Reducers  = _createExecutionReducers_(this)
+    public readonly actions:   ExecutionSDK.Actions   = createExecutionSDKActions(this);
     public readonly selectors: ExecutionSDK.Selectors = executionSDKSelectors;
     
     public useAwaitConfirmation = (event: ExecutionSDK.AwaitedConfirmation): () => void => {
@@ -33,49 +35,79 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
     }
     
     public readonly runtime = {
-        unsubscribeFromJobChannel: null as (() => void) | null
+        unsubscribeFromChannel: null as (() => void) | null
     }
-    
-    public handleOnEvent = (e: Execution.Event) => {
-        console.log("Execution Session Event Received:", e.type)
-        switch(e.type){
-            case "node:started":
-                this.setState(s => {
-                    if(e.stateUpdate)
-                        this.reducers.applyUpdate(s, e.stateUpdate);
-                    this.reducers.setNodeStatus(s, e.nodeId, { status: "running", started_at: new Date().toISOString() })
-                })
-                break;
-            case "node:completed":
-                this.setState(s => {
-                    s.currentExecution!.session.node_output_projections[e.nodeId] = e.output as any;
-                    if(e.stateUpdate)
-                        this.reducers.applyUpdate(s, e.stateUpdate);
-                    this.reducers.setNodeStatus(s, e.nodeId, { status: "completed", completed_at: new Date().toISOString() })
-                })
-                break;
-            case "node:waiting":
-                this.setState(s => {
-                    this.reducers.setNodeStatus(s, e.nodeId, { status: "waiting" })
-                })
-                break;
-            case "node:error":
-                this.setState(s => {
-                    this.reducers.setNodeStatus(s, e.nodeId, { status: "failed", error: e.error, completed_at: new Date().toISOString() })
-                })
-                break;
-            case "update":
-                this.setState(s => {
-                    this.reducers.applyUpdate(s, e.update);
-                })
-                break;
-            default:
-                toast.error(`Received unknown event: ${e.type}`)
-        }
+
+    public subscribeToEvents(executionId: Execution.Id) {
+        this.runtime.unsubscribeFromChannel?.();
+
+        if(!executionId) return;
+
+        console.log("Subscribing to execution events for executionId:", executionId)
+
+        this.runtime.unsubscribeFromChannel = RealtimeSDK.subscribeToChannel(
+            Execution.Event.getChannel(executionId),
+            this.handleOnEvent
+        )
     }
+
+    public handleOnEvent = (e: Execution.Event) => { handleExecutionEvents(this, e) }
 }
 
 export const ExecutionSDK = SDK.get<ExecutionSDKImpl>("Execution")
+
+
+
+
+// Subscribe to current execution events
+ExecutionSDK.subscribe((state, prev) => {
+    if(state.currentExecution?.id === prev.currentExecution?.id)
+        return
+
+    ExecutionSDK.subscribeToEvents(state.currentExecution!.id)
+})
+
+
+
+
+// Heartbeat: while paused, send a heartbeat every 2 minutes on mouse activity
+// to prevent the worker from terminating the paused job.
+const HEARTBEAT_INTERVAL_MS = 2 * 60_000;
+let heartbeatListener: (() => void) | null = null;
+
+function startHeartbeat(executionId: Execution.Id) {
+    stopHeartbeat();
+
+    let lastSent = 0;
+
+    heartbeatListener = () => {
+        const now = Date.now();
+        if (now - lastSent < HEARTBEAT_INTERVAL_MS) return;
+        lastSent = now;
+        Execution.API.heartbeat(api, { executionId }).catch(() => {});
+    };
+
+    document.addEventListener("mousemove", heartbeatListener);
+}
+
+function stopHeartbeat() {
+    if (heartbeatListener) {
+        document.removeEventListener("mousemove", heartbeatListener);
+        heartbeatListener = null;
+    }
+}
+
+ExecutionSDK.subscribe((state, prev) => {
+    if(state.currentExecution?.status === prev.currentExecution?.status)
+        return
+
+    if(state.currentExecution?.status === "paused")
+        startHeartbeat(state.currentExecution.id)
+    else
+        stopHeartbeat()
+})
+
+
 
 
 

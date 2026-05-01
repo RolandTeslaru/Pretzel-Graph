@@ -391,13 +391,6 @@ export namespace Execution {
             return data
         }
 
-        export namespace ListActive {
-            export const Request = z.object({})
-            export type Request = z.infer<typeof Request>
-            export const Response = z.object({ executions: z.array(Execution.Meta) })
-            export type Response = z.infer<typeof Response>
-        }
-
         export namespace Get {
             export const Request = z.object({ executionId: Execution.Id })
             export type Request = z.infer<typeof Request>
@@ -446,6 +439,13 @@ export namespace Execution {
             export async function get(api: AxiosInstance, req: Get.Request): Promise<Get.Response> {
                 const { data } = await api.post<Get.Response>('/api/execution/meta/get', req)
                 return data
+            }
+
+            export namespace ListActive {
+                export const Request = z.object({})
+                export type Request = z.infer<typeof Request>
+                export const Response = z.object({ executions: z.array(Execution.Meta) })
+                export type Response = z.infer<typeof Response>
             }
         }
     }
