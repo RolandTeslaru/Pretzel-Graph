@@ -18,9 +18,9 @@ export class AggexWorkerImpl {
 
     private compiler = new WorkflowCompiler();  
 
-    private runningEngines           = new Map<Execution.Id, AggexEngine>();
-    private runningExecutionContexts = new Map<Execution.Id, AggexEngine.ExecutionContext>()
-    private signalHandlers           = new Map<Execution.Signal.Channel, (signal: Execution.Signal) => void>();
+    private runningEnginesMap           = new Map<Execution.Id, AggexEngine>();
+    private runningExecutionContextsMap = new Map<Execution.Id, AggexEngine.ExecutionContext>()
+    private signalHandlersMap           = new Map<Execution.Signal.Channel, (signal: Execution.Signal) => void>();
 
     private redisPub    = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
     private redisSub    = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
@@ -28,7 +28,7 @@ export class AggexWorkerImpl {
 
     public init() {
         this.redisSub.on("message", (ch: Execution.Signal.Channel, msg: string) => {
-            const handler = this.signalHandlers.get(ch);
+            const handler = this.signalHandlersMap.get(ch);
             if (!handler) return;
             const signal = JSON.parse(msg) as Execution.Signal;
             handler(signal);
@@ -39,8 +39,8 @@ export class AggexWorkerImpl {
     private pauseTimeoutResetters = new Map<Execution.Id, () => void>();
 
     private handleSignal(signal: Execution.Signal) {
-        const engine = this.runningEngines.get(signal.executionId);
-        const ctx = this.runningExecutionContexts.get(signal.executionId);
+        const engine = this.runningEnginesMap.get(signal.executionId);
+        const ctx = this.runningExecutionContextsMap.get(signal.executionId);
         if (!ctx) return;
 
         switch (signal.type) {
@@ -73,7 +73,7 @@ export class AggexWorkerImpl {
         const eventChannel  = Execution.Event.getChannel(execution.id);
         const signalChannel = Execution.Signal.getChannel(execution.id);
 
-        this.signalHandlers.set(signalChannel, (signal) => this.handleSignal(signal));
+        this.signalHandlersMap.set(signalChannel, (signal) => this.handleSignal(signal));
         this.redisSub.subscribe(signalChannel);
 
         let lockExtendInterval: ReturnType<typeof setInterval> | null = null;
@@ -115,7 +115,9 @@ export class AggexWorkerImpl {
         });
 
         try {
+            // Compile and register execution context
             const engineExecutionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.emit);
+            this.runningExecutionContextsMap.set(executionId, engineExecutionCtx);
 
             const onPauseTimeout = () => {
                 console.log(`[Worker] Max pause duration reached for job ${bullJob.id}, terminating`);
@@ -133,6 +135,7 @@ export class AggexWorkerImpl {
                         workflowId,
                         type: "paused",
                         channel: eventChannel,
+                        session: engineExecutionCtx.session,
                     });
                 },
                 onResume: () => {
@@ -142,13 +145,14 @@ export class AggexWorkerImpl {
                         workflowId,
                         type: "resumed",
                         channel: eventChannel,
+                        session: engineExecutionCtx.session,
                     });
                 },
             };
 
+            // Create and register engine
             const engine = new AggexEngine(aggexHooks);
-            this.runningEngines.set(executionId, engine);
-            this.runningExecutionContexts.set(executionId, engineExecutionCtx);
+            this.runningEnginesMap.set(executionId, engine);
 
             const result = await engine.run(engineExecutionCtx);
 
@@ -159,14 +163,19 @@ export class AggexWorkerImpl {
                     type: "terminated",
                     channel: eventChannel,
                 });
-            else if (result.status === "completed" )
+            else if (result.status === "completed") {
+                const session = engineExecutionCtx.session;
+                console.log(`[Worker] completed — node_status keys: ${Object.keys(session.node_status).join(', ') || '(none)'}`);
+                console.log(`[Worker] completed — node_output_projections keys: ${Object.keys(session.node_output_projections).join(', ') || '(none)'}`);
+                console.log(`[Worker] completed — edge_state keys: ${Object.keys(session.edge_state).join(', ') || '(none)'}`);
                 this.emit<Execution.Event.Completed>({
                     executionId,
                     workflowId,
                     type: "completed",
                     channel: eventChannel,
-                    result: "Workflow execution completed successfully"
+                    session,
                 });
+            }
 
             return { status: result.status };
 
@@ -175,12 +184,18 @@ export class AggexWorkerImpl {
 
             console.error("Error during execution of job", execution.id, systemError.message, systemError.detail || "");
 
+            const engineExecutionCtx = this.runningExecutionContextsMap.get(execution.id)!;
+            const session = engineExecutionCtx.session;
+            console.log(`[Worker] failed — node_status keys: ${Object.keys(session.node_status).join(', ') || '(none)'}`);
+            console.log(`[Worker] failed — node_output_projections keys: ${Object.keys(session.node_output_projections).join(', ') || '(none)'}`);
+
             this.emit<Execution.Event.Failed>({
                 executionId: execution.id,
                 workflowId,
                 type: "failed",
                 channel: eventChannel,
-                error: systemError.toJSON()
+                error: systemError.toJSON(),
+                session
             });
             
             return { status: 'failed', error: systemError.toJSON() };
@@ -189,9 +204,9 @@ export class AggexWorkerImpl {
             stopLockExtension();
             console.log("Deleting job", execution.id, "from running engines and contexts")
 
-            this.runningEngines.delete(execution.id);
-            this.runningExecutionContexts.delete(execution.id);
-            this.signalHandlers.delete(signalChannel);
+            this.runningEnginesMap.delete(execution.id);
+            this.runningExecutionContextsMap.delete(execution.id);
+            this.signalHandlersMap.delete(signalChannel);
             this.redisSub.unsubscribe(signalChannel);
         }
     }

@@ -8,7 +8,7 @@ import { useEffect } from 'react'
 import { Badge, Button, Dialog, DropdownMenu, Popover, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import NodeSidebar from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/NodeSidebar'
 import ChatSidebar from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatSidebar'
-import WorkflowControls from '@/routes/workflow/-SDKs/ExecutionSDK/ui/WorkflowControls'
+import ExecutionControls from '@/routes/workflow/-SDKs/ExecutionSDK/ui/ExecutionControls'
 import ChatButton from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatButton'
 import TemporalControls from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/TemporalControls'
 import SpotlightSearch from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/SpotlightSearch'
@@ -132,17 +132,17 @@ const BottomPanel = () => {
 
     return (
         <div className='bottom-5 left-1/2 -translate-x-1/2 z-10 fixed'>
-            <div className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border overflow-visible'>
+            <motion.div layout transition={{ layout: { type: "spring", stiffness: 400, damping: 30 } }} className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border overflow-visible'>
                 <TemporalControls />
                 <ChatButton />
-                <WorkflowControls canRun={!hasIssues} />
+                <ExecutionControls canRun={!hasIssues} />
                 {/* Issues bubble — absolutely positioned to the right of the bar */}
                 <AnimatePresence>
                     {hasIssues && (
                         <Popover.Root>
                             <Popover.Trigger asChild>
                                 <motion.div
-                                    className='absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/70 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'
+                                    className='absolute left-[calc(100%+16px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/70 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'
                                     initial={{ x: -24, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
                                     exit={{ x: -24, opacity: 0 }}
@@ -159,7 +159,7 @@ const BottomPanel = () => {
                         </Popover.Root>
                     )}
                 </AnimatePresence>
-            </div>
+            </motion.div>
         </div>
     )
 }
@@ -188,7 +188,7 @@ export const TopRightPanel = () => {
         <div className='flex flex-row gap-2 fixed top-5 right-5 z-10 p-0.5 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
             <Button className='rounded-full' variant="ghost" size="sm" onClick={openPublishDialog}>
                 {isPublished && (
-                    <div className='content-[""] my-auto w-2 h-2 mr-2 rounded-full bg-green-500'/>
+                    <div className='content-[""] my-auto w-2 h-2 mr-2 rounded-full bg-green-400'/>
                 )}
                 <SystemIcons.CloudUpload className='size-4 mr-1'/>
                 Publish
