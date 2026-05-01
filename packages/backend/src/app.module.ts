@@ -13,6 +13,7 @@ import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { AuthModule } from './services/Auth/auth.module';
 import { VersionControlModule } from './services/VersionControl/version-control.module';
 import { WebhookTestModule } from './services/WebhookTest/webhook-test.module';
+import { PermissionModule } from './services/Permission/permission.module';
 
 @Module({
     imports: [
@@ -39,6 +40,7 @@ import { WebhookTestModule } from './services/WebhookTest/webhook-test.module';
         AuthModule,
         VersionControlModule,
         WebhookTestModule,
+        PermissionModule,
     ],
     controllers: [],
     providers: [

@@ -2,11 +2,11 @@ import { WebSocketGateway, OnGatewayConnection, OnGatewayDisconnect } from '@nes
 import { WebSocket } from 'ws';
 import { IncomingMessage } from 'http';
 import Redis from 'ioredis';
-import { SupabaseClient } from '@supabase/supabase-js';
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
 import { Realtime } from "@pretzel-graph/shared/domain/Realtime";
-import { Auth } from "@pretzel-graph/shared/domain/Auth";
-import { createAuthenticatedClient, createServiceClient, getUserId } from '../../utils/supabase';
+import { Auth, Chat, Execution } from "@pretzel-graph/shared/domain";
+import { createAuthenticatedClient, getUserId } from '../../utils/supabase';
+import { PermissionService } from '../Permission/permission.service';
 
 const OWNERSHIP_CACHE_TTL_MS = 30_000;
 
@@ -22,23 +22,22 @@ interface CacheEntry {
 @WebSocketGateway()
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
-    private serviceSupabase: SupabaseClient = createServiceClient();
 
-    private wsSubscriptions = new Map<Realtime.Channel, Set<WebSocket>>();
-    private socketIdentities = new WeakMap<WebSocket, SocketIdentity>();
     // Cache key: "userId:channel" -> allowed/denied + TTL
-    private ownershipCache = new Map<string, CacheEntry>();
+    private ownershipCache   = new Map<string, CacheEntry>();
+    private wsSubscriptions  = new Map<Realtime.Channel, Set<WebSocket>>();
+    private socketIdentities = new WeakMap<WebSocket, SocketIdentity>();
 
-    constructor() {
+    constructor(private readonly ownership: PermissionService) {
         this.redisSub.on('message', (channel, serializedEvent) => {
             const clients = this.wsSubscriptions.get(channel as Realtime.Channel);
-            if (clients) {
-                clients.forEach(ws => {
-                    if (ws.readyState === WebSocket.OPEN) {
-                        ws.send(serializedEvent);
-                    }
-                });
-            }
+            if (!clients)
+                return; 
+            clients.forEach(ws => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(serializedEvent);
+                }
+            });
         });
     }
 
@@ -86,9 +85,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         authenticated = true;
 
         // Replay any messages that arrived during auth
-        for (const raw of pendingMessages) {
+        for (const raw of pendingMessages)
             this.handleMessage(ws, raw);
-        }
     }
 
     private async handleMessage(ws: WebSocket, raw: string) {
@@ -125,10 +123,15 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         // Only cache when the resource was found (owned or denied).
         // Don't cache not-found — frontend subscribes preemptively before resource creation.
         if (result !== 'not_found') {
-            this.ownershipCache.set(cacheKey, { allowed: result === 'owned', expiresAt: Date.now() + OWNERSHIP_CACHE_TTL_MS });
+            const cacheEntry: CacheEntry =  { 
+                allowed: result === 'owned', 
+                expiresAt: Date.now() + OWNERSHIP_CACHE_TTL_MS 
+            }
+            this.ownershipCache.set(cacheKey, cacheEntry);
         }
         return result !== 'denied';
     }
+
 
     /**
      * - 'owned': resource exists and belongs to this user (cacheable)
@@ -136,38 +139,18 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
      * - 'not_found': resource doesn't exist yet — allow preemptive subscribe (not cached)
      */
     private async queryOwnership(userId: Auth.User.Id, channel: Realtime.Channel): Promise<'owned' | 'denied' | 'not_found'> {
-        if (channel.startsWith('job:')) {
-            const jobId = channel.slice('job:'.length);
-            const cleanJobId = jobId.includes(':') ? jobId.split(':')[0] : jobId;
-            const { data } = await this.serviceSupabase
-                .from('jobs')
-                .select('user_id')
-                .eq('id', cleanJobId)
-                .single();
-            if (!data) return 'not_found';
-            return data.user_id === userId ? 'owned' : 'denied';
+        if (channel.startsWith('execution:')) {
+            const executionId = channel.slice('execution:'.length) as Execution.Id;
+            const ownerId = await this.ownership.loadExecutionOwner(executionId);
+            if (!ownerId) return 'not_found';
+            return ownerId === userId ? 'owned' : 'denied';
         }
 
         if (channel.startsWith('chat:')) {
-            const chatId = channel.slice('chat:'.length);
-            const { data } = await this.serviceSupabase
-                .from('chats')
-                .select('user_id')
-                .eq('id', chatId)
-                .single();
-            if (!data) return 'not_found';
-            return data.user_id === userId ? 'owned' : 'denied';
-        }
-
-        if (channel.startsWith('execution_session:')) {
-            const sessionId = channel.slice('execution_session:'.length);
-            const { data } = await this.serviceSupabase
-                .from('execution_sessions')
-                .select('user_id')
-                .eq('id', sessionId)
-                .single();
-            if (!data) return 'not_found';
-            return data.user_id === userId ? 'owned' : 'denied';
+            const chatId = channel.slice('chat:'.length) as Chat.Id;
+            const ownerId = await this.ownership.loadChatOwner(chatId);
+            if (!ownerId) return 'not_found';
+            return ownerId === userId ? 'owned' : 'denied';
         }
 
         // Unknown channel prefix — treat as denied

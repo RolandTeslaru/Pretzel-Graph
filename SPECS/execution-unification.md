@@ -34,7 +34,8 @@ It also enables the security fixes called out below — having one entity with o
 - `packages/backend/src/services/Execution/execution.controller.ts`
 - `packages/backend/src/services/Execution/execution.service.ts`
 - `packages/backend/src/services/Execution/utils.ts` — port `SecretsResolver` from `Orchestrator/utils.ts`.
-- `packages/backend/src/auth/ownership.ts` — `assertWorkflowOwnership`, `assertExecutionOwnership`, `loadWorkflowOwner`. See "Authorization Helpers" below.
+
+> **Depends on `SPECS/ownership-service.md`** — `OwnershipService` (with `assertWorkflow`, `assertExecution`, `loadWorkflowOwner`) is assumed available via DI. Land that spec first or in the same change.
 - `packages/frontend/src/routes/workflow/-SDKs/ExecutionSDK/sdk.tsx` — finish the existing stub; consolidates both old SDKs.
 - `packages/frontend/src/routes/workflow/-SDKs/ExecutionSDK/actions.ts`
 - `packages/frontend/src/routes/workflow/-SDKs/ExecutionSDK/reducers.ts`
@@ -305,88 +306,22 @@ RLS on `executions`: standard owner-scoped (`select`/`update` where `user_id = a
 - Frontend SDK subscribes once per running execution and routes by `event.type`. The `OrchestratorSDK.subscribeToJob` + `ExecutionSessionSDK.subscribeToEvents` two-channel dance is gone.
 - Backend `RealtimeService.withTerminalEvent` / `withEventConfirmation` keep their shapes; only the typed event union changes.
 
-## Authorization Helpers
+## Authorization
 
-Three pure functions in `packages/backend/src/auth/ownership.ts`. Sit next to `supabase-auth.guard.ts` and `internal-auth.guard.ts`. **Not Nest guards** — guards don't see parsed body params cleanly, and these helpers all need an id (`workflowId` or `executionId`) from the body. Call them directly from service methods.
+Owner-gating is delegated to **`OwnershipService`** — see `SPECS/ownership-service.md` for the service shape, rationale, and module wiring. This spec assumes the service is already provided globally and injectable into `ExecutionService` via `constructor(private readonly ownership: OwnershipService)`.
 
-All three return 404 (not 403) on mismatch — never leak existence.
-
-### `assertWorkflowOwnership(supabase, workflowId, requesterId) → ownerId`
-
-For interactive runs (`runFromUser`). Two-layer defense: RLS gates the row (silent miss for non-owners via the **authenticated** client), and an explicit `data.user_id !== requesterId` check guards against an RLS misconfiguration ever leaking. Returns the owner id so the caller doesn't need a second lookup to populate `Execution.userId`.
-
-```ts
-export async function assertWorkflowOwnership(
-  supabase: SupabaseClient,        // authenticated client
-  workflowId: Workflow.Id,
-  requesterId: Auth.User.Id,
-): Promise<Auth.User.Id> {
-  const { data, error } = await supabase
-    .from('workflows')
-    .select('user_id')
-    .eq('id', workflowId)
-    .maybeSingle();
-
-  if (error || !data || data.user_id !== requesterId)
-    throw new SystemError(SystemError.Code.NOT_FOUND, 'Workflow not found');
-
-  return data.user_id as Auth.User.Id;
-}
-```
-
-### `assertExecutionOwnership(supabase, executionId, requesterId) → void`
-
-For control endpoints (`pause`, `resume`, `terminate`, `suspend`, `heartbeat`, `awaitResult`). Same shape as the workflow check, different table. No return — callers already have the executionId; they just want the gate.
-
-```ts
-export async function assertExecutionOwnership(
-  supabase: SupabaseClient,
-  executionId: Execution.Id,
-  requesterId: Auth.User.Id,
-): Promise<void> {
-  const { data, error } = await supabase
-    .from('executions')
-    .select('user_id')
-    .eq('id', executionId)
-    .maybeSingle();
-
-  if (error || !data || data.user_id !== requesterId)
-    throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
-}
-```
-
-### `loadWorkflowOwner(serviceSupabase, workflowId) → ownerId`
-
-For service-path runs (webhook, scheduled, SDK). No requester to compare against — the trigger's authority was already established upstream (webhook key validated by webhook controller, scheduler authorization, API key validated by `ApiKeyAuthGuard`). This just resolves "whose execution is this, for billing / RLS / attribution." Uses the **service client** because RLS would block a cross-user lookup.
-
-```ts
-export async function loadWorkflowOwner(
-  serviceSupabase: SupabaseClient,   // service client — bypasses RLS
-  workflowId: Workflow.Id,
-): Promise<Auth.User.Id> {
-  const { data, error } = await serviceSupabase
-    .from('workflows')
-    .select('user_id')
-    .eq('id', workflowId)
-    .maybeSingle();
-
-  if (error || !data)
-    throw new SystemError(SystemError.Code.NOT_FOUND, 'Workflow not found');
-
-  return data.user_id as Auth.User.Id;
-}
-```
+Methods used by this spec: `ownership.assertWorkflow`, `ownership.assertExecution`, `ownership.loadWorkflowOwner`.
 
 ## Security Fixes (in scope)
 
-1. **Ownership check on every control endpoint** (`pause`, `resume`, `terminate`, `suspend`, `heartbeat`). Current code only checks ownership in `awaitResult`. The other endpoints fire the Redis signal regardless of caller — so any authenticated user who knows an `executionId` can pause/terminate a stranger's execution. Fix: call `assertExecutionOwnership(supabase, executionId, requester.userId)` at the top of each control handler. (Also retrofit `awaitResult` to use the helper for consistency — its current inline check leaks via the wrong error code.)
+1. **Ownership check on every control endpoint** (`pause`, `resume`, `terminate`, `suspend`, `heartbeat`). Current code only checks ownership in `awaitResult`. The other endpoints fire the Redis signal regardless of caller — so any authenticated user who knows an `executionId` can pause/terminate a stranger's execution. Fix: call `await ownership.assertExecution(supabase, executionId, requester.userId)` at the top of each control handler. (Also retrofit `awaitResult` to use the service for consistency — its current inline check leaks via the wrong error code.)
 
 2. **`Execution.userId` is the workflow owner, derived server-side, never trusted from the body.** Today, `Job.userId` is set to `requester.userId` for user runs and `undefined` for service runs. Both are wrong:
-   - `runFromUser`: `Execution.userId = await assertWorkflowOwnership(supabase, workflowId, requester.userId)`. The helper both gates the run (refuses if requester doesn't own the workflow) **and** returns the owner id for the new row in one call.
-   - `runFromService` (webhook/scheduled): `Execution.userId = await loadWorkflowOwner(serviceSupabase, workflowId)` — service-triggered runs finally get owner attribution instead of `undefined`.
+   - `runFromUser`: `Execution.userId = await ownership.assertWorkflow(supabase, workflowId, requester.userId)`. The method both gates the run (refuses if requester doesn't own the workflow) **and** returns the owner id for the new row in one call.
+   - `runFromService` (webhook/scheduled): `Execution.userId = await ownership.loadWorkflowOwner(workflowId)` — service-triggered runs finally get owner attribution instead of `undefined`.
    The request body never carries a `userId` field on any path.
 
-3. **Workflow ownership assertion on `run`.** Subsumed by (2): `assertWorkflowOwnership` is the same call that both gates the run and resolves the owner id. The cross-user credential leak was already blocked by RLS on `secrets` / `user_credentials` going through the authenticated supabase client (preserve this — do not switch `SecretsResolver` to the service client). Workbench/chat continue to ship draft `workflowData` from the body because they *are* the editor — the ownership check is on `workflowId`, not on the data shape.
+3. **Workflow ownership assertion on `run`.** Subsumed by (2): `ownership.assertWorkflow` is the same call that both gates the run and resolves the owner id. The cross-user credential leak was already blocked by RLS on `secrets` / `user_credentials` going through the authenticated supabase client (preserve this — do not switch `SecretsResolver` to the service client). Workbench/chat continue to ship draft `workflowData` from the body because they *are* the editor — the ownership check is on `workflowId`, not on the data shape.
 
 Out of scope (separate specs): per-webhook-node `triggerAuthorizationKey`, scheduled-trigger ownership/scheduling system, API keys for the SDK (see `SPECS/api-keys.md`).
 

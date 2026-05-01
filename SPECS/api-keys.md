@@ -27,6 +27,8 @@ This is **distinct** from the existing `user_credentials` + Supabase Vault syste
 - `packages/shared/domain/ApiKey.ts` — Zod schema + API namespace.
 - `packages/sdk/` — new package, the `PretzelGraph` npm client.
 
+> **Depends on `SPECS/ownership-service.md`** — the SDK run path uses `OwnershipService.loadWorkflowOwner` to attribute the execution to the workflow owner.
+
 ### Modify
 - `packages/shared/domain/index.ts` — export `ApiKey`.
 - `packages/backend/src/app.module.ts` — register `ApiKeysModule`.
