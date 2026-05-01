@@ -7,13 +7,12 @@ export class AxiosServiceImpl {
         this.init();
     }
 
-    public readonly api = axios.create({
-        baseURL: process.env.API_URL,
-    });
+    public readonly api = axios.create({});
 
     public init() {
         // REQUEST INTERCEPTOR: Inject internal service token
         this.api.interceptors.request.use(async (config) => {
+            config.baseURL = process.env.API_URL;
             const token = process.env.WORKER_SERVICE_INTERNAL_TOKEN;
 
             if (token) {

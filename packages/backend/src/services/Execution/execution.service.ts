@@ -32,12 +32,6 @@ export class ExecutionService {
         private readonly realtime:       RealtimeService,
         private readonly ownership:      PermissionService,
     ) {
-        this.queueEvents.on('completed', async ({ jobId, returnvalue }) => {
-            const result = typeof returnvalue === 'string' ? JSON.parse(returnvalue) : returnvalue;
-            const status = result?.status === 'terminated' ? 'terminated' : 'completed';
-            await this.dbOps.update(this.serviceSupabase, { executionId: jobId as Execution.Id, status });
-        });
-
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
             console.error(`[Execution] ${jobId} failed:`, failedReason);
             const status = failedReason === 'terminated' ? 'terminated' : 'failed';
@@ -523,8 +517,8 @@ export class ExecutionService {
     public async update(
         payload: Execution.API.Update.Request
     ): Promise<Execution.API.Update.Response> {
-        const { executionId, session } = payload;
-        await this.dbOps.update(this.serviceSupabase, { executionId, session });
+        const { executionId, status, session } = payload;
+        await this.dbOps.update(this.serviceSupabase, { executionId, status, session });
         return {};
     }
 

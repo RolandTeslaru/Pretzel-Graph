@@ -24,6 +24,9 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event)
                 sdk.reducers.setStatus(s, "failed");
                 sdk.reducers.setError(s, e.error);
             })
+            sdk.actions.removeAwaitedConfirmation("started");
+            sdk.runtime.unsubscribeFromEvents?.();
+            toast.error(`Execution failed: ${e.error.message}`)
             break;
         case "terminated":
             sdk.setState(s => {

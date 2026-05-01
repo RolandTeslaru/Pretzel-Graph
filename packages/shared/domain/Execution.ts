@@ -413,7 +413,8 @@ export namespace Execution {
         export namespace Update {
             export const Request = z.object({
                 executionId: Execution.Id,
-                session:     Session.Update,
+                status:      Status.optional(),
+                session:     Session.Update.optional(),
             })
             export type Request = z.infer<typeof Request>
             export const Response = z.object({})
