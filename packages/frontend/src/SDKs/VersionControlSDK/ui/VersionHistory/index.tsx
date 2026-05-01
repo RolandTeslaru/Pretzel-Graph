@@ -3,9 +3,9 @@ import { WorkbenchSDK } from "@/routes/workflow/-SDKs/WorkbenchSDK/sdk";
 import { Badge, Button, ScrollArea, Spinner } from "@pretzel-graph/standard-ui/foundations";
 import { Accordion } from "@pretzel-graph/standard-ui/foundations/accordion";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
-import type { VersionControl } from "@pretzel-graph/shared/domain";
 import { VersionControlSDK } from "../../sdk";
 import { TimelineItem } from "./TimelineItem";
+import { getPublicationLabel, openDeactivatePublicationDialog } from "./utils";
 
 const RECENT_GROUP_SIZE = 4;
 
@@ -28,16 +28,14 @@ function formatTimelineTimestamp(value: Date | string | null | undefined): strin
     return `${day} at ${time}`;
 }
 
-function getPublicationLabel(publication: VersionControl.PublicationMeta): string {
-    return publication.name?.trim() || `Version ${publication.id.slice(0, 8)}`;
-}
-
 function VersionHistory() {
     const [workflowId, workflowUpdatedAt, isDirty] = WorkbenchSDK.useStore(s => [
         s.workflow.id,
         s.workflow.updated_at,
         s.isDirty,
     ]);
+
+    const activePublication = VersionControlSDK.useStore(s => VersionControlSDK.selectors.getActive(s));
 
     const versionsQuery = QuerySDK.useQuery(
         ["version-control", "publications", workflowId],
@@ -57,13 +55,29 @@ function VersionHistory() {
 
     return (
         <div className="w-[340px] overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border/70 p-2">
+            <div className="flex items-center justify-between border-b border-border/70 py-2 px-3">
                 <div className="flex items-center gap-2">
-                    <SystemIcons.History className="size-4 text-muted-foreground" />
                     <div className="text-sm font-medium">
                         Version history
                     </div>
                 </div>
+                {activePublication &&
+                    <Button
+                        variant="ghost-warning"
+                        size="icon-xs"
+                        className="gap-2"
+                        disabled={!activePublication}
+                        onClick={() => {
+                            if (!activePublication) return;
+                            openDeactivatePublicationDialog(
+                                activePublication,
+                                () => VersionControlSDK.actions.deactivate(activePublication.id),
+                            );
+                        }}
+                    >
+                        <SystemIcons.Power />
+                    </Button>
+                }
             </div>
 
             <ScrollArea.Root className="max-h-[420px]">
@@ -125,7 +139,7 @@ function VersionHistory() {
                                         <TimelineItem
                                             actionType="publication"
                                             key={publication.id}
-                                            badge={publication.is_active ? <Badge variant="outline" className="rounded-full border-primary/25 bg-primary/8 px-1.5 py-0 text-[10px] text-primary">Active</Badge> : undefined}
+                                            badge={publication.is_active ? <Badge variant="success" size={"xs"}>Active</Badge> : undefined}
                                             label={getPublicationLabel(publication)}
                                             marker={<span className={`size-2 rounded-full border ${publication.is_active ? "border-primary bg-primary" : "border-border bg-background"}`} />}
                                             publication={publication}
@@ -146,7 +160,7 @@ function VersionHistory() {
                                             <TimelineItem
                                                 actionType="publication"
                                                 key={publication.id}
-                                                badge={publication.is_active ? <Badge variant="outline" className="rounded-full border-primary/25 bg-primary/8 px-1.5 py-0 text-[10px] text-primary">Active</Badge> : undefined}
+                                                badge={publication.is_active ? <Badge size={"xs"} variant="success">Active</Badge> : undefined}
                                                 label={getPublicationLabel(publication)}
                                                 marker={<span className={`size-2 rounded-full border ${publication.is_active ? "border-primary bg-primary" : "border-border bg-background"}`} />}
                                                 publication={publication}
