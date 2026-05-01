@@ -107,7 +107,7 @@ const ExecutionControls = ({ canRun }: Props) => {
         )}
         {currentExecution && (status === "completed" || status === "failed" || status === "terminated") && (
           <Button size="icon-sm" variant="ghost-destructive" onClick={handleClear}>
-            <SystemIcons.Trash2 />
+            <SystemIcons.Trash2 className='scale-80'/>
           </Button>
         )}
       </motion.div>

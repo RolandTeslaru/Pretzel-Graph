@@ -6,6 +6,7 @@ import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { AggexEngine, AggexHooks } from 'src/engine';
 import { container, singleton } from 'tsyringe';
 import { WorkflowCompiler } from './compiler';
+import { AxiosService } from './axios';
 
 const LOCK_EXTEND_INTERVAL_MS = 15_000;
 const LOCK_EXTEND_DURATION_MS = 30_000;
@@ -156,28 +157,17 @@ export class AggexWorkerImpl {
 
             const result = await engine.run(engineExecutionCtx);
 
-            if (result.status === 'terminated')
-                this.emit<Execution.Event.Terminated>({
-                    executionId,
-                    workflowId,
-                    type: "terminated",
-                    channel: eventChannel,
-                });
-            else if (result.status === "completed") {
-                const session = engineExecutionCtx.session;
-                console.log(`[Worker] completed — node_status keys: ${Object.keys(session.node_status).join(', ') || '(none)'}`);
-                console.log(`[Worker] completed — node_output_projections keys: ${Object.keys(session.node_output_projections).join(', ') || '(none)'}`);
-                console.log(`[Worker] completed — edge_state keys: ${Object.keys(session.edge_state).join(', ') || '(none)'}`);
-                this.emit<Execution.Event.Completed>({
-                    executionId,
-                    workflowId,
-                    type: "completed",
-                    channel: eventChannel,
-                    session,
-                });
-            }
+            const session = engineExecutionCtx.session;
+            const status = result.status === 'terminated' ? 'terminated' : 'completed';
 
-            return { status: result.status };
+            await Execution.API.update(AxiosService.api, { executionId, status, session });
+
+            if (status === 'terminated')
+                this.emit<Execution.Event.Terminated>({ executionId, workflowId, type: "terminated", channel: eventChannel });
+            else
+                this.emit<Execution.Event.Completed>({ executionId, workflowId, type: "completed", channel: eventChannel, session });
+
+            return { status };
 
         } catch (err: unknown) {
             const systemError = SystemError.fromUnknown(err)
@@ -185,9 +175,9 @@ export class AggexWorkerImpl {
             console.error("Error during execution of job", execution.id, systemError.message, systemError.detail || "");
 
             const engineExecutionCtx = this.runningExecutionContextsMap.get(execution.id)!;
-            const session = engineExecutionCtx.session;
-            console.log(`[Worker] failed — node_status keys: ${Object.keys(session.node_status).join(', ') || '(none)'}`);
-            console.log(`[Worker] failed — node_output_projections keys: ${Object.keys(session.node_output_projections).join(', ') || '(none)'}`);
+            const session = engineExecutionCtx?.session ?? Execution.Session.createInitial();
+
+            await Execution.API.update(AxiosService.api, { executionId: execution.id, status: 'failed', session }).catch(() => {});
 
             this.emit<Execution.Event.Failed>({
                 executionId: execution.id,
@@ -195,9 +185,9 @@ export class AggexWorkerImpl {
                 type: "failed",
                 channel: eventChannel,
                 error: systemError.toJSON(),
-                session
+                session,
             });
-            
+
             return { status: 'failed', error: systemError.toJSON() };
 
         } finally {
