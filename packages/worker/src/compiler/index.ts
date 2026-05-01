@@ -65,7 +65,7 @@ export class WorkflowCompiler {
         const dummyEngine = new AggexEngine();
 
         const engineExecutionCtx = {
-            get session()  { return session; },
+            get session()  { return execution.session; },
             workflowData,
             workflowCache,
             emit,

@@ -7,11 +7,11 @@ import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
     return {
         run: async () => {
-            const confirmEvent = sdk.useAwaitConfirmation("started")
+            const confirmStartedEvent = sdk.useAwaitConfirmation("started")
 
-            if (sdk.state.currentExecution) {
+            if (sdk.state.currentExecution && ["running", "paused"].includes(sdk.state.currentExecution.status)) {
                 toast.warning("A workflow is already running")
-                confirmEvent();
+                confirmStartedEvent();
                 return sdk.state.currentExecution.id;
             }
 
@@ -19,18 +19,23 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             WorkbenchSDK.actions.workflow.validate()
             if (Validation.workflowHasIssues(WorkbenchSDK.state.issues)) {
                 toast.error("Workflow has nodes with missing fields or inputs. Please fix them before running.")
-                confirmEvent();
+                confirmStartedEvent();
                 return null
             }
 
             const workflow = WorkbenchSDK.state.workflow;
 
-            const executionPromise = Execution.API.run(api, {
+            // Generate the ID eagerly
+            const executionId = Execution.createId();
+            sdk.subscribeToEvents(executionId);
+
+            const executionCreationPromise = Execution.API.run(api, {
                 workflowId: workflow.id,
                 workflowData: workflow.data,
+                executionId,
             });
 
-            toast.promise(executionPromise, {
+            toast.promise(executionCreationPromise, {
                 loading: "Preparing workflow execution",
                 error: (error) => {
                     const SystemError = error?.response?.data?.error;
@@ -40,36 +45,22 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             })
 
             try {
-                const { execution } = await executionPromise;
+                const { execution } = await executionCreationPromise;
 
                 if (!execution) {
-                    toast.error("No worker available — execution failed to start")
-                    confirmEvent();
+                    toast.error("No worker available, execution failed to start")
                     return null;
                 }
 
                 sdk.setState(s => {
-                    s.currentExecution = execution
+                    s.currentExecution = { ...execution, status: "running" }
                 })
-
-                confirmEvent();
-
-                Execution.API.awaitResult(api, { executionId: execution.id }).then(({ status, error }) => {
-                    sdk.setState(s => {
-                        s.currentExecution!.status = status
-                    })
-                    if (status === 'completed') toast.success('Workflow completed successfully')
-                    else if (status === 'failed') toast.error(`Workflow execution failed: ${error?.message} [${error?.code}]`)
-                    else if (status === 'terminated') toast.error('Workflow execution terminated')
-                }).catch(() => {
-                    sdk.setState(s => { s.currentExecution!.status = "failed" })
-                    toast.error('Lost connection to workflow execution')
-                })
-
+                            
                 return execution.id;
             } catch {
-                confirmEvent();
                 return null;
+            } finally {
+                confirmStartedEvent();
             }
         },
         pause: async (executionId) => {
@@ -127,6 +118,9 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             confirmEvent()
             return success;
         },
+        clear: () => {
+            sdk.setState(s => { s.currentExecution = undefined })
+        },
         addAwaitedConfirmation: (event) => {
             sdk.setState(s => {
                 s.awaitedConfirmation.add(event)
@@ -142,7 +136,8 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
 export type ExecutionSDKActions = {
 
-    run: () => Promise<Execution.Id | null>,
+    run:   () => Promise<Execution.Id | null>,
+    clear: () => void,
     pause:     (executionId: Execution.Id) => Promise<boolean>,
     terminate: (executionId: Execution.Id) => Promise<boolean>,
     resume:    (executionId: Execution.Id) => Promise<boolean>,

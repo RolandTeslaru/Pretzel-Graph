@@ -3,6 +3,7 @@ import { ExecutionService } from './execution.service';
 import { Auth, Execution } from '@pretzel-graph/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
 import { InternalAuthGuard, InternalAuthenticatedRequest } from '../../auth/internal-auth.guard';
+import { ApiKeyAuthGuard, ApiKeyAuthenticatedRequest } from '../../auth/api-key-auth.guard';
 
 @Controller('execution')
 export class ExecutionController {
@@ -22,16 +23,6 @@ export class ExecutionController {
     async runInternal(@Req() req: InternalAuthenticatedRequest, @Body() body: any) {
         const payload = Execution.API.Run.InternalRequest.parse(body);
         return this.executionService.runFromService(payload, req.internal.service);
-    }
-
-    @Get('await-result/:executionId')
-    @UseGuards(SupabaseAuthGuard)
-    async awaitResult(@Req() req: AuthenticatedRequest, @Param('executionId') executionId: string) {
-        return this.executionService.awaitResult(
-            req.token,
-            req.user.id as Auth.User.Id,
-            { executionId: executionId as Execution.Id }
-        );
     }
 
     @Post('pause')
@@ -126,5 +117,13 @@ export class ExecutionController {
     @HttpCode(200)
     async metaListActive(@Req() req: AuthenticatedRequest) {
         return this.executionService.meta.listActive(req.token, req.user.id as Auth.User.Id);
+    }
+
+    @Post('sdk/run')
+    @UseGuards(ApiKeyAuthGuard)
+    @HttpCode(200)
+    async sdkRun(@Req() req: ApiKeyAuthenticatedRequest, @Body() body: any) {
+        const payload = Execution.API.SdkRun.Request.parse(body);
+        return this.executionService.runFromSdk(req.user.id as Auth.User.Id, payload);
     }
 }

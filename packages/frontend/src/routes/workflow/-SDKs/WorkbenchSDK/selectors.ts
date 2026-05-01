@@ -7,6 +7,8 @@ type NodeId = Workflow.Node.Id
 type ConditionValue = Field.Condition.Value
 type CaseListValue = Field.CaseList.Value
 
+const EMPTY_CONNECTED_PORTS: Record<string, Workflow.Edge.Id> = {}
+
 const conditionSelectors = {
     getValue: (s, nodeId, fieldId) =>
         (s.workflow.data.staticValues[nodeId]?.[fieldId] as ConditionValue | undefined) ?? null,
@@ -49,6 +51,7 @@ const caseListSelectors = {
 } as CaseListSelectors
 
 export const workbenchSelectors = {
+    getClickedNode: (s) => s.clickedNodeId ? s.workflow.data.nodes[s.clickedNodeId] ?? null : null,
     node: {
         get: (s, nodeId) => s.workflow.data.nodes[nodeId] ?? null,
         hasIssues: (s, nodeId) => {
@@ -106,6 +109,7 @@ export const workbenchSelectors = {
 
             return hasNoIncoming && hasNoOutgoing;
         },
+        getConnectedPorts: (s, nodeId) => s.cache.inputHandlesMap[nodeId] ?? EMPTY_CONNECTED_PORTS,
         getStaticValues: (s, nodeId) => s.workflow.data.staticValues[nodeId] ?? null,
         getExpressionContext: (s, nodeId, session) => {
             const ctx: Expression.Context = {
@@ -288,6 +292,7 @@ interface CaseListSelectors {
 }
 
 export interface _WorkBenchSDKSelectors {
+    getClickedNode: (state: WorkbenchSDK.State) => Workflow.Node | null
     node: {
         get:              (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node
         hasIssues:        (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
@@ -297,6 +302,7 @@ export interface _WorkBenchSDKSelectors {
         isSinkNode:       (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
         isIsolatedNode:   (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
 
+        getConnectedPorts:    (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Port.Input.Id, Workflow.Edge.Id>
         getStaticValues:      (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Field.Id | Port.Id, any> | null
         getExpressionContext: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session?: Execution.Session) => Expression.Context 
     }
