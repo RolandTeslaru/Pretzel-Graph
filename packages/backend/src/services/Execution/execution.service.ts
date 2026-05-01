@@ -3,16 +3,15 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue, QueueEvents } from 'bullmq';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { createAuthenticatedClient, createServiceClient } from '@/utils/supabase';
-import { Principal } from '@/domain/Principal';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { Auth, Execution, Validation, Workflow } from '@pretzel-graph/shared/domain';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
-import { withSupabaseAssert } from '@pretzel-graph/shared/errors/supabase';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { SecretsResolver } from './utils';
 import { PermissionService } from '../Permission/permission.service';
 import { Token } from '@/domain/Token';
+import { ExecutionDatabase } from './execution.database';
 
 @Injectable()
 export class ExecutionService {
@@ -31,144 +30,14 @@ export class ExecutionService {
         private readonly executionQueue: Queue,
         private readonly realtime:       RealtimeService,
         private readonly ownership:      PermissionService,
+        private readonly database:       ExecutionDatabase,
     ) {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
             console.error(`[Execution] ${jobId} failed:`, failedReason);
             const status = failedReason === 'terminated' ? 'terminated' : 'failed';
-            await this.dbOps.update(this.serviceSupabase, { executionId: jobId as Execution.Id, status, error: failedReason });
+            await this.database.update(this.serviceSupabase, { executionId: jobId as Execution.Id, status, error: failedReason });
         });
     }
-
-
-
-
-    private readonly dbOps = {
-        create: withSupabaseAssert('execution.create', async (
-            supabase: SupabaseClient,
-            props: {
-                workflowId:  Workflow.Id,
-                userId:      Auth.User.Id,
-                igniter:     Execution.Igniter,
-                session:     Execution.Session,
-                executionId?: Execution.Id,
-            }
-        ) => {
-            const executionId = props.executionId ?? crypto.randomUUID() as Execution.Id;
-            await supabase
-                .from('executions')
-                .insert({
-                    id:          executionId,
-                    workflow_id: props.workflowId,
-                    user_id:     props.userId,
-                    igniter:     props.igniter,
-                    status:      'pending',
-                    duration:    0,
-                    session:     props.session,
-                    created_at:  new Date(),
-                    updated_at:  new Date(),
-                })
-                .throwOnError();
-            return executionId;
-        }),
-
-        update: withSupabaseAssert('execution.update', async (
-            supabase: SupabaseClient,
-            props: { 
-                executionId: Execution.Id, 
-                status?:     Execution.Status, 
-                error?:      string, 
-                session?:    Execution.Session.Update 
-            }
-        ) => {
-            await supabase
-                .from('executions')
-                .update({
-                    ...(props.status !== undefined && { status: props.status }),
-                    ...(props.error !== undefined && { error: props.error }),
-                    ...(props.session !== undefined && { session: props.session }),
-                    updated_at: new Date(),
-                })
-                .eq('id', props.executionId)
-                .throwOnError();
-        }),
-
-        getStatus: withSupabaseAssert('execution.getStatus', async (
-            supabase: SupabaseClient,
-            executionId: Execution.Id
-        ): Promise<Execution.Status> => {
-            const { data, error } = await supabase
-                .from('executions')
-                .select('status')
-                .eq('id', executionId)
-                .single()
-                .throwOnError();
-
-            if (error) 
-                throw error;
-
-            return data?.status ?? null;
-        }),
-        get: withSupabaseAssert('execution.get', async (
-            supabase: SupabaseClient,
-            executionId: Execution.Id
-        ): Promise<Execution> => {
-            const { data, error } = await supabase
-                .from('executions')
-                .select('id, workflow_id, igniter, status, duration, error, session, created_at, updated_at')
-                .eq('id', executionId)
-                .single()
-                .throwOnError();
-
-            if (error || !data)
-                throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
-
-            return data as Execution;
-        }),
-        meta: {
-            get: withSupabaseAssert('execution.meta.get', async (
-                supabase: SupabaseClient,
-                executionId: Execution.Id
-            ): Promise<Execution.Meta> => {
-                const { data, error } = await supabase
-                    .from('executions')
-                    .select('id, workflow_id, igniter, status, duration, error, created_at, updated_at')
-                    .eq('id', executionId)
-                    .single()
-                    .throwOnError();
-
-                if (error || !data) 
-                    throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
-                return data as Execution.Meta;
-            }),
-            list: withSupabaseAssert('execution.meta.list', async (
-                supabase: SupabaseClient,
-                workflowId: Workflow.Id
-            ): Promise<Execution.Meta[]> => {
-                const { data, error } = await supabase
-                    .from('executions')
-                    .select('id, workflow_id, igniter, status, duration, error, created_at, updated_at')
-                    .eq('workflow_id', workflowId)
-                    .order('created_at', { ascending: false })
-                    .throwOnError();
-
-                if (error) throw new SystemError(SystemError.Code.INFRA_DATABASE_ERROR, error);
-                return data as Execution.Meta[] ?? [];
-            }),
-            listActive: withSupabaseAssert('execution.meta.listActive', async (
-                supabase: SupabaseClient,
-            ): Promise<Execution.Meta[]> => {
-                const { data, error } = await supabase
-                    .from('executions')
-                    .select('id, workflow_id, igniter, status, duration, error, created_at, updated_at')
-                    .in('status', ['pending', 'running'])
-                    .order('created_at', { ascending: false })
-                    .throwOnError();
-
-                if (error) throw new SystemError(SystemError.Code.INFRA_DATABASE_ERROR, error);
-                return data as Execution.Meta[] ?? [];
-            }),
-        }
-    };
 
 
 
@@ -201,17 +70,7 @@ export class ExecutionService {
         userId:  Auth.User.Id,
         payload: Execution.API.SdkRun.Request,
     ): Promise<Execution.API.SdkRun.Response> {
-        // Load the active published version — client never sends workflowData
-        const { data: row, error } = await this.serviceSupabase
-            .from('version_control')
-            .select('workflow_data')
-            .eq('workflow_id', payload.workflowId)
-            .eq('is_active', true)
-            .single();
-
-        if (error || !row) throw new SystemError(SystemError.Code.NOT_FOUND, 'No active published version found for this workflow');
-
-        const workflowData = Workflow.Data.Schema.parse(row.workflow_data);
+        const workflowData = await this.database.getActivePublishedWorkflowData(this.serviceSupabase, payload.workflowId);
         const igniter: Execution.Igniter = { variant: 'sdk', inputs: payload.inputs };
 
         const runPayload: Execution.API.Run.Request = { workflowId: payload.workflowId, workflowData };
@@ -248,7 +107,7 @@ export class ExecutionService {
             );
 
         const session = Execution.Session.createInitial();
-        const executionId = await this.dbOps.create(supabase, { workflowId, userId, igniter, session, executionId: payload.executionId });
+        const executionId = await this.database.create(supabase, { workflowId, userId, igniter, session, executionId: payload.executionId });
 
         const execution = {
             id: executionId,
@@ -275,7 +134,7 @@ export class ExecutionService {
 
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            await this.dbOps.update(supabase, { executionId, status: 'failed', error: message });
+            await this.database.update(supabase, { executionId, status: 'failed', error: message });
             throw error;
         }
 
@@ -286,7 +145,7 @@ export class ExecutionService {
         );
 
         if (!started) {
-            await this.dbOps.update(supabase, { executionId, status: 'failed', error: 'No worker picked up the job' });
+            await this.database.update(supabase, { executionId, status: 'failed', error: 'No worker picked up the job' });
             this.executionQueue.remove(executionId).catch(err =>
                 console.error('Failed to remove execution from queue after start timeout', err)
             );
@@ -333,7 +192,7 @@ export class ExecutionService {
         });
 
         const success = await confirmation;
-        if (success) await this.dbOps.update(supabase, { executionId, status: 'paused' });
+        if (success) await this.database.update(supabase, { executionId, status: 'paused' });
         return { success };
     }
 
@@ -362,7 +221,7 @@ export class ExecutionService {
         });
 
         const success = await confirmation;
-        if (success) await this.dbOps.update(supabase, { executionId, status: 'running' });
+        if (success) await this.database.update(supabase, { executionId, status: 'running' });
         return { success };
     }
 
@@ -414,7 +273,7 @@ export class ExecutionService {
         });
 
         const success = await confirmation;
-        if (success) await this.dbOps.update(supabase, { executionId, status: 'suspended' });
+        if (success) await this.database.update(supabase, { executionId, status: 'suspended' });
         return { success };
     }
 
@@ -443,7 +302,7 @@ export class ExecutionService {
         });
 
         const success = await confirmation;
-        if (success) await this.dbOps.update(supabase, { executionId, status: 'terminated' });
+        if (success) await this.database.update(supabase, { executionId, status: 'terminated' });
         return { success };
     }
 
@@ -451,7 +310,7 @@ export class ExecutionService {
 
 
     public async finalise({ executionId, status }: Execution.API.Finalise.Request): Promise<Execution.API.Finalise.Response> {
-        await this.dbOps.update(this.serviceSupabase, { executionId, status });
+        await this.database.update(this.serviceSupabase, { executionId, status });
         return {};
     }
 
@@ -465,19 +324,14 @@ export class ExecutionService {
     ): Promise<Execution.API.TerminateAll.Response> {
         await this.ownership.assertUserAdmin(userId);
 
-        const { data: active, error } = await this.serviceSupabase
-            .from('executions')
-            .select('id')
-            .in('status', ['pending', 'running']);
+        const activeExecutionIds = await this.database.listActiveIds(this.serviceSupabase);
+        if (activeExecutionIds.length === 0) return { terminatedCount: 0 };
 
-        if (error) throw new SystemError(SystemError.Code.INFRA_DATABASE_ERROR, error.message);
-        if (!active || active.length === 0) return { terminatedCount: 0 };
-
-        for (const row of active) {
+        for (const executionId of activeExecutionIds) {
             this.realtime.emitSignal<Execution.Signal.Terminate>({
-                channel: Execution.Signal.getChannel(row.id),
+                channel: Execution.Signal.getChannel(executionId),
                 type: 'terminate',
-                executionId: row.id,
+                executionId,
             });
         }
 
@@ -485,12 +339,9 @@ export class ExecutionService {
         for (const job of waiting) 
             await job.remove();
 
-        await this.serviceSupabase
-            .from('executions')
-            .update({ status: 'terminated', error: 'Terminated by admin', updated_at: new Date() })
-            .in('id', active.map(r => r.id));
+        await this.database.terminateMany(this.serviceSupabase, activeExecutionIds, 'Terminated by admin');
 
-        return { terminatedCount: active.length };
+        return { terminatedCount: activeExecutionIds.length };
     }
 
 
@@ -506,7 +357,7 @@ export class ExecutionService {
 
         await this.ownership.assertExecution(supabase, executionId, userId);
 
-        const execution = await this.dbOps.get(supabase, executionId);
+        const execution = await this.database.get(supabase, executionId);
 
         return { execution };
     }
@@ -518,7 +369,7 @@ export class ExecutionService {
         payload: Execution.API.Update.Request
     ): Promise<Execution.API.Update.Response> {
         const { executionId, status, session } = payload;
-        await this.dbOps.update(this.serviceSupabase, { executionId, status, session });
+        await this.database.update(this.serviceSupabase, { executionId, status, session });
         return {};
     }
 
@@ -535,7 +386,7 @@ export class ExecutionService {
 
             await this.ownership.assertExecution(supabase, executionId, userId);
 
-            const meta = await this.dbOps.meta.get(supabase, executionId);
+            const meta = await this.database.meta.get(supabase, executionId);
 
             return { execution: meta };
         },
@@ -548,7 +399,7 @@ export class ExecutionService {
             const { workflowId } = payload;
             const supabase = createAuthenticatedClient(token);
 
-            const metaList = await this.dbOps.meta.list(supabase, workflowId);
+            const metaList = await this.database.meta.list(supabase, workflowId);
 
             return { executions: metaList };
         },
@@ -562,7 +413,7 @@ export class ExecutionService {
             const supabase = createAuthenticatedClient(token);
             await this.ownership.assertUserAdmin(userId);
 
-            const executions = await this.dbOps.meta.listActive(supabase);
+            const executions = await this.database.meta.listActive(supabase);
 
             return { executions: executions };
         }
