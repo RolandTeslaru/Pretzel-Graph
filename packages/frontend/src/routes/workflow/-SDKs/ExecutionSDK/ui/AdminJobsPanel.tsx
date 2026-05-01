@@ -7,7 +7,7 @@ import { api } from '@/SDKs/ApiInterceptorSDK'
 import { toast } from 'sonner'
 import { Execution } from '@pretzel-graph/shared/domain'
 
-type ActiveJob = Execution.API.ListActive.Response['jobs'][number]
+type ActiveJob = Execution.API.Meta.ListActive.Response['jobs'][number]
 
 const statusColor = (status: string) => {
     if (status === 'running') return 'default'

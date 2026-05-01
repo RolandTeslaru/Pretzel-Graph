@@ -18,9 +18,8 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
 
     public readonly useStore: BaseSDK.Store<ExecutionSDK.State> = createWithEqualityFn(
         immer<ExecutionSDK.State>(() => ({
-            jobId: undefined,
+            currentExecution: undefined,
             awaitedConfirmation: new Set(),
-            session: Execution.Session.createInitial(),
         })),
         shallow
     )
@@ -35,17 +34,19 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
     }
     
     public readonly runtime = {
-        unsubscribeFromChannel: null as (() => void) | null
+        unsubscribeFromEvents: null as (() => void) | null,
+        subscribedExecutionId:  null as Execution.Id | null,
     }
 
     public subscribeToEvents(executionId: Execution.Id) {
-        this.runtime.unsubscribeFromChannel?.();
+        if (this.runtime.subscribedExecutionId === executionId) return;
 
-        if(!executionId) return;
+        this.runtime.unsubscribeFromEvents?.();
+        this.runtime.subscribedExecutionId = executionId;
 
         console.log("Subscribing to execution events for executionId:", executionId)
 
-        this.runtime.unsubscribeFromChannel = RealtimeSDK.subscribeToChannel(
+        this.runtime.unsubscribeFromEvents = RealtimeSDK.subscribeToChannel(
             Execution.Event.getChannel(executionId),
             this.handleOnEvent
         )
@@ -63,6 +64,11 @@ export const ExecutionSDK = SDK.get<ExecutionSDKImpl>("Execution")
 ExecutionSDK.subscribe((state, prev) => {
     if(state.currentExecution?.id === prev.currentExecution?.id)
         return
+
+    if(!state.currentExecution) {
+        ExecutionSDK.runtime.unsubscribeFromEvents?.();
+        return
+    }
 
     ExecutionSDK.subscribeToEvents(state.currentExecution!.id)
 })
@@ -113,7 +119,7 @@ ExecutionSDK.subscribe((state, prev) => {
 
 
 export namespace ExecutionSDK {
-    export type AwaitedConfirmation = "started" | "paused" | "resumed" | "terminated" | "suspended"
+    export type AwaitedConfirmation = "started" | "paused" | "resumed" | "terminated" | "suspended" | "executed"
 
     export type State = {
         currentExecution?: Execution

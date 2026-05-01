@@ -213,13 +213,18 @@ export class AggexEngine {
 
         ctx.activeNodes.add(nodeId)
 
+        ctx.updateSession(d => {
+            d.node_status[entry.wfNode.id] = { status: "running", started_at: new Date().toISOString() };
+        });
+
+        console.log(`[Engine] node:started  ${entry.wfNode.id}`);
         ctx.emit<Execution.Event.Node.Started>({
             workflowId: workflowId,
             type: "node:started",
             executionId,
             nodeId: entry.wfNode.id,
             channel: this.getEventChannel(ctx),
-            stateUpdate: { edge_state: edgeStateUpdate },
+            sessionUpdate: { edge_state: edgeStateUpdate },
         });
     }
 
@@ -271,6 +276,7 @@ export class AggexEngine {
             d.node_output_instances[wfNode.id] = result;
             d.node_output_projections[wfNode.id] = this.projectOutputs(result, wfNode);
         });
+        console.log(`[Engine] node:executed ${wfNode.id} — session node_output_projections keys: ${Object.keys(ctx.session.node_output_projections).join(', ') || '(none)'}`);
             
         if ('isRouterNode' in nodeInstance)
             return this.resolveRouterSignals(ctx, wfNode.id, result);
@@ -311,6 +317,17 @@ export class AggexEngine {
             }
         }
 
+        ctx.updateSession(d => {
+            d.edge_state = { ...d.edge_state, ...edgeStateUpdate };
+            const existing = d.node_status[entry.wfNode.id];
+            d.node_status[entry.wfNode.id] = {
+                status: "completed",
+                started_at: existing?.started_at,
+                completed_at: new Date().toISOString(),
+            };
+        });
+
+        console.log(`[Engine] node:completed ${entry.wfNode.id}`);
         ctx.emit<Execution.Event.Node.Completed>({
             executionId: ctx.executionId,
             workflowId: ctx.workflowId,
@@ -318,7 +335,7 @@ export class AggexEngine {
             nodeId: entry.wfNode.id,
             channel: this.getEventChannel(ctx),
             output: projectedOutput,
-            stateUpdate: { edge_state: edgeStateUpdate },
+            sessionUpdate: { edge_state: edgeStateUpdate },
         });
 
         await this.awaitPause(ctx);
@@ -378,11 +395,22 @@ export class AggexEngine {
                 error instanceof Error ? error.message : String(error),
             )
 
+        const nodeId = vertexId as unknown as Workflow.Node.Id;
+        ctx.updateSession(d => {
+            const existing = d.node_status[nodeId];
+            d.node_status[nodeId] = {
+                status: "failed",
+                started_at: existing?.started_at,
+                completed_at: new Date().toISOString(),
+                error: aggexError.toJSON() as any,
+            };
+        });
+
         ctx.emit<Execution.Event.Node.Error>({
             executionId: ctx.executionId,
             workflowId: ctx.workflowId,
             type: "node:error",
-            nodeId: vertexId as unknown as Workflow.Node.Id,
+            nodeId,
             channel: this.getEventChannel(ctx),
             error: aggexError.toJSON()
         })

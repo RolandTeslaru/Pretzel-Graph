@@ -1,4 +1,4 @@
-import { Input, ScrollArea, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import { useMemo, memo, useEffect, useState } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
@@ -9,11 +9,13 @@ import { INPUT_RENDERER_MAP } from '../InputRenderer';
 import { NodeSidebarHeader } from './Header';
 import { NodeSidebarFooter } from './Footer';
 import WebhookRenderer from './webhook-renderer';
+import { InputItem } from './input-renderer';
+import { NodeDescription } from './node-description';
 
 
 const NodeSidebar = () => {
 
-    const clickedNode = WorkbenchSDK.useStore(s => s.clickedNodeId ? s.workflow.data.nodes[s.clickedNodeId] : null);
+    const clickedNode = WorkbenchSDK.useStore(WorkbenchSDK.selectors.getClickedNode);
 
     useEffect(() => {
         if (clickedNode) {
@@ -33,11 +35,9 @@ const NodeSidebar = () => {
 export default NodeSidebar
 
 
-const EMPTY_OBJECT = {}
-
 const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
     const [isEditing, setIsEditing] = useState(false)
-    const connectedPorts = WorkbenchSDK.useStore(s => s.cache.inputHandlesMap[node.id] || EMPTY_OBJECT)
+    const connectedPorts = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.getConnectedPorts(s, node.id))
 
     const [ fields, executionStrategyFields, inputs, connectedInputs, webhooks ] = useMemo(() => {
         const connectedInputs: Foundations.Port.Input[] = [];
@@ -97,22 +97,7 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
 
             {/* Sections */}
             <ScrollArea.Root className='mask-[linear-gradient(to_bottom,transparent,black_48px,black_calc(100%-48px),transparent)]'>
-                {(node.description || isEditing) && (
-                    <div className='py-2 px-2 pt-14'>
-                        {isEditing ? (
-                            <Input
-                                className='text-xs bg-transparent shadow-none focus-visible:ring-0 text-muted-foreground placeholder:text-muted-foreground/50'
-                                defaultValue={node.description as string}
-                                placeholder='Add a description...'
-                                onBlur={e => WorkbenchSDK.actions.node.setDescription(node.id, e.target.value)}
-                            />
-                        ) : (
-                            <p className='text-muted-foreground text-xs'>
-                                {node.description}
-                            </p>
-                        )}
-                    </div>
-                )}
+                <NodeDescription node={node} isEditing={isEditing} />
                 <Accordion.Root
                     type="multiple"
                     defaultValue={defaultOpen}
@@ -176,24 +161,4 @@ const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => 
             </ScrollArea.Root>
         </>
     )
-})
-
-
-const InputItem = memo(({ input, nodeId }: { input: Foundations.Port.Input, nodeId: Workflow.Node.Id }) => {
-    
-    const Component = INPUT_RENDERER_MAP[input.variant] as React.ComponentType<{
-        input: Foundations.Port.Input
-        nodeId: Workflow.Node.Id
-        className?: string
-        isFlipped?: boolean
-    }> | undefined
-    
-    if(Component)
-        return (
-            <div className='px-4'>
-                <Component input={input} nodeId={nodeId} />
-            </div>
-        )
-
-    return null
 })

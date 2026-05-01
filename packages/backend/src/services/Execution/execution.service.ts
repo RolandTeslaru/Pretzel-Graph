@@ -52,13 +52,14 @@ export class ExecutionService {
         create: withSupabaseAssert('execution.create', async (
             supabase: SupabaseClient,
             props: {
-                workflowId: Workflow.Id,
-                userId:     Auth.User.Id,
-                igniter:    Execution.Igniter,
-                session:    Execution.Session,
+                workflowId:  Workflow.Id,
+                userId:      Auth.User.Id,
+                igniter:     Execution.Igniter,
+                session:     Execution.Session,
+                executionId?: Execution.Id,
             }
         ) => {
-            const executionId = crypto.randomUUID() as Execution.Id;
+            const executionId = props.executionId ?? crypto.randomUUID() as Execution.Id;
             await supabase
                 .from('executions')
                 .insert({
@@ -198,8 +199,33 @@ export class ExecutionService {
     ): Promise<Execution.API.Run.Response> {
 
         const ownerId = await this.ownership.loadWorkflowOwner(payload.workflowId);
-        
+
         return this.runCore(this.serviceSupabase, ownerId, payload, payload.igniter ?? { variant: 'workbench_manual' });
+    }
+
+    public async runFromSdk(
+        userId:  Auth.User.Id,
+        payload: Execution.API.SdkRun.Request,
+    ): Promise<Execution.API.SdkRun.Response> {
+        // Load the active published version — client never sends workflowData
+        const { data: row, error } = await this.serviceSupabase
+            .from('version_control')
+            .select('workflow_data')
+            .eq('workflow_id', payload.workflowId)
+            .eq('is_active', true)
+            .single();
+
+        if (error || !row) throw new SystemError(SystemError.Code.NOT_FOUND, 'No active published version found for this workflow');
+
+        const workflowData = Workflow.Data.Schema.parse(row.workflow_data);
+        const igniter: Execution.Igniter = { variant: 'sdk', inputs: payload.inputs };
+
+        const runPayload: Execution.API.Run.Request = { workflowId: payload.workflowId, workflowData };
+        const result = await this.runCore(this.serviceSupabase, userId, runPayload, igniter);
+
+        if (payload.await) return result;
+
+        return { executionId: result.execution.id };
     }
 
 
@@ -228,7 +254,7 @@ export class ExecutionService {
             );
 
         const session = Execution.Session.createInitial();
-        const executionId = await this.dbOps.create(supabase, { workflowId, userId, igniter, session });
+        const executionId = await this.dbOps.create(supabase, { workflowId, userId, igniter, session, executionId: payload.executionId });
 
         const execution = {
             id: executionId,
@@ -291,43 +317,6 @@ export class ExecutionService {
 
 
 
-    public async awaitResult(
-        token:   Token.UserSupabaseJWT,
-        userId:  Auth.User.Id,
-        payload: Execution.API.AwaitResult.Request,
-    ): Promise<Execution.API.AwaitResult.Response> {
-        const { executionId } = payload;
-        const supabase = createAuthenticatedClient(token);
-        await this.ownership.assertExecution(supabase, executionId, userId);
-
-        // Check status first in db
-        const status = await this.dbOps.getStatus(supabase, executionId);
-
-        if (['completed', 'failed', 'terminated'].includes(status))
-            // @ts-expect-error
-            return { status };
-
-        const channel = Execution.Event.getChannel(executionId);
-
-        // Wait for terminal event from worker
-
-        const event = await this.realtime.withTerminalEvent(channel);
-
-        if (!event)
-            return { status: 'failed', error: { code: SystemError.Code.EXECUTION_TIMEOUT, message: 'Execution timed out' } };
-
-        if (event.type === 'failed')
-            return { status: 'failed', error: (event as any).error };
-
-        if (event.type === 'terminated')
-            return { status: 'terminated' };
-
-        return { status: 'completed' };
-    }
-
-
-
-
     public async pause(
         token:   Token.UserSupabaseJWT,
         userId:  Auth.User.Id,
@@ -338,12 +327,13 @@ export class ExecutionService {
 
         await this.ownership.assertExecution(supabase, executionId, userId);
 
-        const channel = Execution.Event.getChannel(executionId);
+        const eventChannel  = Execution.Event.getChannel(executionId);
+        const signalChannel = Execution.Signal.getChannel(executionId);
 
-        const confirmation = this.realtime.withEventConfirmation(channel, 'paused');
+        const confirmation = this.realtime.withEventConfirmation(eventChannel, 'paused');
 
         this.realtime.emitSignal<Execution.Signal.Pause>({
-            channel,
+            channel: signalChannel,
             type: 'pause',
             executionId,
         });
@@ -366,12 +356,13 @@ export class ExecutionService {
 
         await this.ownership.assertExecution(supabase, executionId, userId);
 
-        const channel = Execution.Event.getChannel(executionId);
+        const eventChannel  = Execution.Event.getChannel(executionId);
+        const signalChannel = Execution.Signal.getChannel(executionId);
 
-        const confirmation = this.realtime.withEventConfirmation(channel, 'resumed');
+        const confirmation = this.realtime.withEventConfirmation(eventChannel, 'resumed');
 
         this.realtime.emitSignal<Execution.Signal.Resume>({
-            channel,
+            channel: signalChannel,
             type: 'resume',
             executionId,
         });
@@ -417,12 +408,13 @@ export class ExecutionService {
 
         await this.ownership.assertExecution(supabase, executionId, userId);
 
-        const channel = Execution.Event.getChannel(executionId);
+        const eventChannel  = Execution.Event.getChannel(executionId);
+        const signalChannel = Execution.Signal.getChannel(executionId);
 
-        const confirmation = this.realtime.withEventConfirmation(channel, 'suspended');
+        const confirmation = this.realtime.withEventConfirmation(eventChannel, 'suspended');
 
         this.realtime.emitSignal<Execution.Signal.Suspend>({
-            channel,
+            channel: signalChannel,
             type: 'suspend',
             executionId,
         });
@@ -445,12 +437,13 @@ export class ExecutionService {
         const supabase = createAuthenticatedClient(token);
         await this.ownership.assertExecution(supabase, executionId, userId);
 
-        const channel = Execution.Event.getChannel(executionId);
+        const eventChannel  = Execution.Event.getChannel(executionId);
+        const signalChannel = Execution.Signal.getChannel(executionId);
 
-        const confirmation = this.realtime.withEventConfirmation(channel, 'terminated');
+        const confirmation = this.realtime.withEventConfirmation(eventChannel, 'terminated');
 
         this.realtime.emitSignal<Execution.Signal.Terminate>({
-            channel,
+            channel: signalChannel,
             type: 'terminate',
             executionId,
         });
