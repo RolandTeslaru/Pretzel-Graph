@@ -693,7 +693,7 @@ Redo.displayName = "Redo"
 
 
 export const Power: React.FC<BaseIconProps> = (props) => (
-    <BaseIcon strokeWidth={props.strokeWidth ?? 2} {...props}>
+    <BaseIcon strokeWidth={props.strokeWidth ?? 2.5} {...props}>
         <path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>
     </BaseIcon>
 )
