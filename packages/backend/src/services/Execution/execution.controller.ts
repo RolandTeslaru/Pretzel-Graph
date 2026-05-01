@@ -74,13 +74,6 @@ export class ExecutionController {
         return this.executionService.terminate(req.token, req.user.id as Auth.User.Id, payload);
     }
 
-    @Post('list-active')
-    @UseGuards(SupabaseAuthGuard)
-    @HttpCode(200)
-    async listActive(@Req() req: AuthenticatedRequest) {
-        return this.executionService.listActive(req.token, req.user.id as Auth.User.Id);
-    }
-
     @Post('terminate-all')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
@@ -117,7 +110,7 @@ export class ExecutionController {
     @HttpCode(200)
     async metaList(@Req() req: AuthenticatedRequest, @Body() body: any) {
         const payload = Execution.API.Meta.List.Request.parse(body);
-        return this.executionService.metaList(req.token, payload);
+        return this.executionService.meta.list(req.token, payload);
     }
 
     @Post('meta/get')
@@ -125,6 +118,13 @@ export class ExecutionController {
     @HttpCode(200)
     async metaGet(@Req() req: AuthenticatedRequest, @Body() body: any) {
         const payload = Execution.API.Meta.Get.Request.parse(body);
-        return this.executionService.metaGet(req.token, req.user.id as Auth.User.Id, payload);
+        return this.executionService.meta.get(req.token, req.user.id as Auth.User.Id, payload);
+    }
+
+    @Post('meta/list-active')
+    @UseGuards(SupabaseAuthGuard)
+    @HttpCode(200)
+    async metaListActive(@Req() req: AuthenticatedRequest) {
+        return this.executionService.meta.listActive(req.token, req.user.id as Auth.User.Id);
     }
 }
