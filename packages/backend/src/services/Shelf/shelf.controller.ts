@@ -11,7 +11,7 @@ export class ShelfController {
     @Post('blueprint/get')
     @HttpCode(200)
     getBlueprint(
-        @Body() body: any
+        @Body() body: Shelf.API.Blueprint.Get.Request
     ) {
         const payload = Shelf.API.Blueprint.Get.Request.parse(body);
         return this.shelfService.getBlueprint(payload);
@@ -21,7 +21,7 @@ export class ShelfController {
     @Post('blueprint/getBatch')
     @HttpCode(200)
     getBatchBlueprints(
-        @Body() body: any
+        @Body() body: Shelf.API.Blueprint.GetBatch.Request
     ) {
         const payload = Shelf.API.Blueprint.GetBatch.Request.parse(body);
         return this.shelfService.getBatchBlueprints(payload);
@@ -31,7 +31,7 @@ export class ShelfController {
     @Post('blueprint/getAllInSection')
     @HttpCode(200)
     getAllInSection(
-        @Body() body: any
+        @Body() body: Shelf.API.Blueprint.GetAllInSection.Request
     ) {
         const payload = Shelf.API.Blueprint.GetAllInSection.Request.parse(body);
         return this.shelfService.getAllInSection(payload);
@@ -40,7 +40,7 @@ export class ShelfController {
     @Post('blueprint/reconcile')
     @HttpCode(200)
     async reconcileBlueprint(
-        @Body() body: any
+        @Body() body: Shelf.API.Blueprint.Reconcile.Request
     ) {
         const payload = Shelf.API.Blueprint.Reconcile.Request.parse(body);
         return await this.shelfService.reconcileBlueprint(payload);
