@@ -1,132 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { createAuthenticatedClient, getUserId } from '@/utils/supabase';
-import { withSupabaseAssert } from '@pretzel-graph/shared/errors/supabase';
-import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
+import { createAuthenticatedClient } from '@/utils/supabase';
+import { VersionControl } from '@pretzel-graph/shared/domain';
 import { RealtimeService } from '../Realtime/realtime.service';
+import { VersionControlDatabase } from './version-control.database';
 
 @Injectable()
 export class VersionControlService {
     constructor(
         private readonly realtime: RealtimeService,
+        private readonly database: VersionControlDatabase,
     ) {}
-
-    // ─────────────────────────────────────────────────────────
-    // DB ops
-    // ─────────────────────────────────────────────────────────
-
-    private readonly dbOps = {
-        publish: withSupabaseAssert('publication.publish', async (
-            supabase: SupabaseClient,
-            { workflowId, name, description, workflowData }: VersionControl.API.Publish.Request,
-        ): Promise<VersionControl.Publication> => {
-            const user_id = await getUserId(supabase);
-            if (!user_id) throw new Error('Unauthenticated');
-
-            const { data: row } = await supabase
-                .rpc('publish_workflow', {
-                    p_workflow_id: workflowId,
-                    p_user_id: user_id,
-                    p_name: name,
-                    p_description: description ?? null,
-                    p_workflow_data: workflowData,
-                })
-                .single()
-                .throwOnError();
-
-            return VersionControl.Publication.Schema.parse(row);
-        }),
-
-        list: withSupabaseAssert('publication.list', async (
-            supabase: SupabaseClient,
-            { workflowId }: VersionControl.API.List.Request,
-        ): Promise<VersionControl.PublicationMeta[]> => {
-            const { data: rows } = await supabase
-                .from('version_control')
-                .select('id, workflow_id, version, name, description, is_active, published_at')
-                .eq('workflow_id', workflowId)
-                .order('version', { ascending: false })
-                .throwOnError();
-
-            return (rows ?? []).map((r) => VersionControl.PublicationMeta.Schema.parse(r));
-        }),
-
-        get: withSupabaseAssert('publication.get', async (
-            supabase: SupabaseClient,
-            { publicationId }: VersionControl.API.Get.Request,
-        ): Promise<VersionControl.Publication> => {
-            const { data: row } = await supabase
-                .from('version_control')
-                .select('*')
-                .eq('id', publicationId)
-                .single()
-                .throwOnError();
-
-            return VersionControl.Publication.Schema.parse(row);
-        }),
-
-        activate: withSupabaseAssert('publication.activate', async (
-            supabase: SupabaseClient,
-            { publicationId }: VersionControl.API.Activate.Request,
-        ): Promise<VersionControl.Publication> => {
-            const { data: row } = await supabase
-                .rpc('activate_publication', { p_publication_id: publicationId })
-                .single()
-                .throwOnError();
-
-            return VersionControl.Publication.Schema.parse(row);
-        }),
-
-        deactivate: withSupabaseAssert('publication.deactivate', async (
-            supabase: SupabaseClient,
-            { publicationId }: VersionControl.API.Deactivate.Request,
-        ): Promise<VersionControl.Publication> => {
-            const { data: row } = await supabase
-                .from('version_control')
-                .update({ is_active: false })
-                .eq('id', publicationId)
-                .select('*')
-                .single()
-                .throwOnError();
-
-            return VersionControl.Publication.Schema.parse(row);
-        }),
-
-        remove: withSupabaseAssert('publication.remove', async (
-            supabase: SupabaseClient,
-            { publicationId }: VersionControl.API.Remove.Request,
-        ): Promise<{ workflowId: Workflow.Id; wasActive: boolean }> => {
-            const { data: row } = await supabase
-                .from('version_control')
-                .select('workflow_id, is_active')
-                .eq('id', publicationId)
-                .single()
-                .throwOnError();
-
-            await supabase
-                .from('version_control')
-                .delete()
-                .eq('id', publicationId)
-                .throwOnError();
-
-            return { workflowId: row.workflow_id as Workflow.Id, wasActive: row.is_active };
-        }),
-    };
-
-    // ─────────────────────────────────────────────────────────
-    // Public API
-    // ─────────────────────────────────────────────────────────
 
     async publish(
         token: string,
         payload: VersionControl.API.Publish.Request,
     ): Promise<VersionControl.API.Publish.Response> {
         const supabase = createAuthenticatedClient(token);
-        const publication = await this.dbOps.publish(supabase, payload);
+        const publication = await this.database.publish(supabase, payload);
         publication.is_active = true;
         this.realtime.emitSignal<VersionControl.Signal.Published>({
-            channel: VersionControl.Signal.getChannel(publication.workflow_id, "published"),
-            type: "published",
+            channel: VersionControl.Signal.getChannel(publication.workflow_id, 'published'),
+            type: 'published',
             workflowId: publication.workflow_id,
             publicationId: publication.id,
             publication,
@@ -139,7 +33,7 @@ export class VersionControlService {
         payload: VersionControl.API.List.Request,
     ): Promise<VersionControl.API.List.Response> {
         const supabase = createAuthenticatedClient(token);
-        const publications = await this.dbOps.list(supabase, payload);
+        const publications = await this.database.list(supabase, payload);
         return { publications };
     }
 
@@ -148,7 +42,7 @@ export class VersionControlService {
         payload: VersionControl.API.Get.Request,
     ): Promise<VersionControl.API.Get.Response> {
         const supabase = createAuthenticatedClient(token);
-        const publication = await this.dbOps.get(supabase, payload);
+        const publication = await this.database.get(supabase, payload);
         return { publication };
     }
 
@@ -157,10 +51,10 @@ export class VersionControlService {
         payload: VersionControl.API.Activate.Request,
     ): Promise<VersionControl.API.Activate.Response> {
         const supabase = createAuthenticatedClient(token);
-        const publication = await this.dbOps.activate(supabase, payload);
+        const publication = await this.database.activate(supabase, payload);
         this.realtime.emitSignal<VersionControl.Signal.Activated>({
-            channel: VersionControl.Signal.getChannel(publication.workflow_id, "activated"),
-            type: "activated",
+            channel: VersionControl.Signal.getChannel(publication.workflow_id, 'activated'),
+            type: 'activated',
             workflowId: publication.workflow_id,
             publicationId: publication.id,
             publication,
@@ -173,10 +67,10 @@ export class VersionControlService {
         payload: VersionControl.API.Deactivate.Request,
     ): Promise<VersionControl.API.Deactivate.Response> {
         const supabase = createAuthenticatedClient(token);
-        const publication = await this.dbOps.deactivate(supabase, payload);
+        const publication = await this.database.deactivate(supabase, payload);
         this.realtime.emitSignal<VersionControl.Signal.Deactivated>({
-            channel: VersionControl.Signal.getChannel(publication.workflow_id, "deactivated"),
-            type: "deactivated",
+            channel: VersionControl.Signal.getChannel(publication.workflow_id, 'deactivated'),
+            type: 'deactivated',
             workflowId: publication.workflow_id,
             publicationId: publication.id,
         });
@@ -188,10 +82,10 @@ export class VersionControlService {
         payload: VersionControl.API.Remove.Request,
     ): Promise<VersionControl.API.Remove.Response> {
         const supabase = createAuthenticatedClient(token);
-        const { workflowId } = await this.dbOps.remove(supabase, payload);
+        const { workflowId } = await this.database.remove(supabase, payload);
         this.realtime.emitSignal<VersionControl.Signal.Removed>({
-            channel: VersionControl.Signal.getChannel(workflowId, "removed"),
-            type: "removed",
+            channel: VersionControl.Signal.getChannel(workflowId, 'removed'),
+            type: 'removed',
             workflowId,
             publicationId: payload.publicationId,
         });

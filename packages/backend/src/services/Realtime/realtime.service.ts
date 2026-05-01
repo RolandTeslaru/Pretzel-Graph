@@ -19,44 +19,6 @@ export class RealtimeService implements OnModuleDestroy {
         });
     }
 
-    private static readonly TERMINAL_TYPES = new Set<string>(['completed', 'failed', 'terminated']);
-
-    public withTerminalEvent(
-        eventChannel: Realtime.Channel,
-        timeoutMs: number = 10 * 60_000
-    ): Promise<Realtime.Event | null> {
-        return new Promise<Realtime.Event | null>((resolve) => {
-            const waiter = (event: Realtime.Event) => {
-                if (!RealtimeService.TERMINAL_TYPES.has(event.type)) return;
-                clearTimeout(timeout);
-                cleanup();
-                resolve(event);
-            };
-
-            const cleanup = () => {
-                const channelWaiters = this.waiters.get(eventChannel);
-                if (channelWaiters) {
-                    channelWaiters.delete(waiter);
-                    if (channelWaiters.size === 0) {
-                        this.waiters.delete(eventChannel);
-                        this.redisSub.unsubscribe(eventChannel);
-                    }
-                }
-            };
-
-            const timeout = setTimeout(() => {
-                cleanup();
-                resolve(null);
-            }, timeoutMs);
-
-            if (!this.waiters.has(eventChannel)) {
-                this.waiters.set(eventChannel, new Set());
-                this.redisSub.subscribe(eventChannel);
-            }
-            this.waiters.get(eventChannel)!.add(waiter);
-        });
-    }
-
     /**
      * Request-reply pattern over Redis pub/sub.
      * Subscribes to the event channel BEFORE the caller emits a signal,
