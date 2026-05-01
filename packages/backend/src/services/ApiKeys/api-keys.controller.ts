@@ -10,7 +10,7 @@ export class ApiKeysController {
 
     @Post('create')
     @HttpCode(200)
-    async create(@Req() req: AuthenticatedRequest, @Body() body: any) {
+    async create(@Req() req: AuthenticatedRequest, @Body() body: ApiKey.API.Create.Request) {
         const payload = ApiKey.API.Create.Request.parse(body);
         return this.apiKeysService.create(req.token, req.user.id, payload);
     }
@@ -22,7 +22,7 @@ export class ApiKeysController {
 
     @Post('revoke')
     @HttpCode(200)
-    async revoke(@Req() req: AuthenticatedRequest, @Body() body: any) {
+    async revoke(@Req() req: AuthenticatedRequest, @Body() body: ApiKey.API.Revoke.Request) {
         const payload = ApiKey.API.Revoke.Request.parse(body);
         return this.apiKeysService.revoke(req.token, payload);
     }

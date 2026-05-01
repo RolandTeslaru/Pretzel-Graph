@@ -10,7 +10,7 @@ export class WorkbenchController {
 
     @Post('workflows')
     @HttpCode(200)
-    async createWorkflow(@Req() req: AuthenticatedRequest, @Body() body: any) {
+    async createWorkflow(@Req() req: AuthenticatedRequest, @Body() body: Workbench.API.Workflow.Create.Request) {
         const payload = Workbench.API.Workflow.Create.Request.parse(body);
         return await this.workbenchService.workflow.create(req.token, payload);
     }
@@ -22,7 +22,7 @@ export class WorkbenchController {
 
     @Post('workflows/commit')
     @HttpCode(200)
-    async commitWorkflow(@Req() req: AuthenticatedRequest, @Body() body: any) {
+    async commitWorkflow(@Req() req: AuthenticatedRequest, @Body() body: Workbench.API.Workflow.Commit.Request) {
         const payload = Workbench.API.Workflow.Commit.Request.parse(body);
         return await this.workbenchService.workflow.commit(req.token, payload);
     }
