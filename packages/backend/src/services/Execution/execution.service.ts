@@ -11,7 +11,8 @@ import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
 import { withSupabaseAssert } from '@pretzel-graph/shared/errors/supabase';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { SecretsResolver } from './utils';
-import { assertWorkflowOwnership, assertExecutionOwnership, loadWorkflowOwner } from '../../auth/ownership';
+import { PermissionService } from '../Permission/permission.service';
+import { Token } from '@/domain/Token';
 
 @Injectable()
 export class ExecutionService {
@@ -28,7 +29,8 @@ export class ExecutionService {
     constructor(
         @InjectQueue(Execution.Queue.ID)
         private readonly executionQueue: Queue,
-        private readonly realtime: RealtimeService,
+        private readonly realtime:       RealtimeService,
+        private readonly ownership:      PermissionService,
     ) {
         this.queueEvents.on('completed', async ({ jobId, returnvalue }) => {
             const result = typeof returnvalue === 'string' ? JSON.parse(returnvalue) : returnvalue;
@@ -51,58 +53,138 @@ export class ExecutionService {
             supabase: SupabaseClient,
             props: {
                 workflowId: Workflow.Id,
-                userId: Auth.User.Id,
-                igniter: Execution.Igniter,
-                session: Execution.Session,
+                userId:     Auth.User.Id,
+                igniter:    Execution.Igniter,
+                session:    Execution.Session,
             }
         ) => {
             const executionId = crypto.randomUUID() as Execution.Id;
-            await supabase.from('executions').insert({
-                id:          executionId,
-                workflow_id: props.workflowId,
-                user_id:     props.userId,
-                igniter:     props.igniter,
-                status:      'pending',
-                duration:    0,
-                session:     props.session,
-                created_at:  new Date(),
-                updated_at:  new Date(),
-            }).throwOnError();
+            await supabase
+                .from('executions')
+                .insert({
+                    id:          executionId,
+                    workflow_id: props.workflowId,
+                    user_id:     props.userId,
+                    igniter:     props.igniter,
+                    status:      'pending',
+                    duration:    0,
+                    session:     props.session,
+                    created_at:  new Date(),
+                    updated_at:  new Date(),
+                })
+                .throwOnError();
             return executionId;
         }),
 
         update: withSupabaseAssert('execution.update', async (
             supabase: SupabaseClient,
-            props: { executionId: Execution.Id, status: Execution.Status, error?: string }
+            props: { 
+                executionId: Execution.Id, 
+                status?:     Execution.Status, 
+                error?:      string, 
+                session?:    Execution.Session.Update 
+            }
         ) => {
-            await supabase.from('executions').update({
-                status: props.status,
-                ...(props.error !== undefined && { error: props.error }),
-                updated_at: new Date(),
-            }).eq('id', props.executionId).throwOnError();
+            await supabase
+                .from('executions')
+                .update({
+                    ...(props.status !== undefined && { status: props.status }),
+                    ...(props.error !== undefined && { error: props.error }),
+                    ...(props.session !== undefined && { session: props.session }),
+                    updated_at: new Date(),
+                })
+                .eq('id', props.executionId)
+                .throwOnError();
         }),
 
-        updateSession: withSupabaseAssert('execution.updateSession', async (
+        getStatus: withSupabaseAssert('execution.getStatus', async (
             supabase: SupabaseClient,
-            props: { executionId: Execution.Id, session: Execution.Session.Update }
-        ) => {
-            await supabase.from('executions').update({
-                session: props.session,
-                updated_at: new Date(),
-            }).eq('id', props.executionId).throwOnError();
+            executionId: Execution.Id
+        ): Promise<Execution.Status> => {
+            const { data, error } = await supabase
+                .from('executions')
+                .select('status')
+                .eq('id', executionId)
+                .single()
+                .throwOnError();
+
+            if (error) 
+                throw error;
+
+            return data?.status ?? null;
         }),
+        get: withSupabaseAssert('execution.get', async (
+            supabase: SupabaseClient,
+            executionId: Execution.Id
+        ): Promise<Execution> => {
+            const { data, error } = await supabase
+                .from('executions')
+                .select('id, workflow_id, igniter, status, duration, error, session, created_at, updated_at')
+                .eq('id', executionId)
+                .single()
+                .throwOnError();
+
+            if (error || !data)
+                throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
+
+            return data as Execution;
+        }),
+        meta: {
+            get: withSupabaseAssert('execution.meta.get', async (
+                supabase: SupabaseClient,
+                executionId: Execution.Id
+            ): Promise<Execution.Meta> => {
+                const { data, error } = await supabase
+                    .from('executions')
+                    .select('id, workflow_id, igniter, status, duration, error, created_at, updated_at')
+                    .eq('id', executionId)
+                    .single()
+                    .throwOnError();
+
+                if (error || !data) 
+                    throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
+                return data as Execution.Meta;
+            }),
+            list: withSupabaseAssert('execution.meta.list', async (
+                supabase: SupabaseClient,
+                workflowId: Workflow.Id
+            ): Promise<Execution.Meta[]> => {
+                const { data, error } = await supabase
+                    .from('executions')
+                    .select('id, workflow_id, igniter, status, duration, error, created_at, updated_at')
+                    .eq('workflow_id', workflowId)
+                    .order('created_at', { ascending: false })
+                    .throwOnError();
+
+                if (error) throw new SystemError(SystemError.Code.INFRA_DATABASE_ERROR, error);
+                return data as Execution.Meta[] ?? [];
+            }),
+            listActive: withSupabaseAssert('execution.meta.listActive', async (
+                supabase: SupabaseClient,
+            ): Promise<Execution.Meta[]> => {
+                const { data, error } = await supabase
+                    .from('executions')
+                    .select('id, workflow_id, igniter, status, duration, error, created_at, updated_at')
+                    .in('status', ['pending', 'running'])
+                    .order('created_at', { ascending: false })
+                    .throwOnError();
+
+                if (error) throw new SystemError(SystemError.Code.INFRA_DATABASE_ERROR, error);
+                return data as Execution.Meta[] ?? [];
+            }),
+        }
     };
 
 
 
 
-    async runFromUser(
-        token: string,
-        userId: Auth.User.Id,
+    public async runFromUser(
+        token:   Token.UserSupabaseJWT,
+        userId:  Auth.User.Id,
         payload: Execution.API.Run.Request,
     ): Promise<Execution.API.Run.Response> {
         const supabase = createAuthenticatedClient(token);
-        const ownerId = await assertWorkflowOwnership(supabase, payload.workflowId, userId);
+        const ownerId = await this.ownership.assertWorkflow(supabase, payload.workflowId, userId);
         return this.runCore(supabase, ownerId, payload, { variant: 'workbench_manual' });
     }
 
@@ -110,12 +192,14 @@ export class ExecutionService {
 
 
 
-    async runFromService(
+    public async runFromService(
         payload: Execution.API.Run.InternalRequest,
         service: string,
     ): Promise<Execution.API.Run.Response> {
-        const userId = await loadWorkflowOwner(this.serviceSupabase, payload.workflowId);
-        return this.runCore(this.serviceSupabase, userId, payload, payload.igniter ?? { variant: 'workbench_manual' });
+
+        const ownerId = await this.ownership.loadWorkflowOwner(payload.workflowId);
+        
+        return this.runCore(this.serviceSupabase, ownerId, payload, payload.igniter ?? { variant: 'workbench_manual' });
     }
 
 
@@ -123,9 +207,9 @@ export class ExecutionService {
 
     private async runCore(
         supabase: SupabaseClient,
-        userId: Auth.User.Id,
-        payload: Execution.API.Run.Request,
-        igniter: Execution.Igniter,
+        userId:   Auth.User.Id,
+        payload:  Execution.API.Run.Request,
+        igniter:  Execution.Igniter,
     ): Promise<Execution.API.Run.Response> {
         const { workflowId, workflowData } = payload;
 
@@ -207,24 +291,27 @@ export class ExecutionService {
 
 
 
-    async awaitResult(
-        token: string,
-        userId: Auth.User.Id,
-        { executionId }: Execution.API.AwaitResult.Request,
+    public async awaitResult(
+        token:   Token.UserSupabaseJWT,
+        userId:  Auth.User.Id,
+        payload: Execution.API.AwaitResult.Request,
     ): Promise<Execution.API.AwaitResult.Response> {
+        const { executionId } = payload;
         const supabase = createAuthenticatedClient(token);
-        await assertExecutionOwnership(supabase, executionId, userId);
+        await this.ownership.assertExecution(supabase, executionId, userId);
 
-        const { data } = await supabase
-            .from('executions')
-            .select('status')
-            .eq('id', executionId)
-            .single();
+        // Check status first in db
+        const status = await this.dbOps.getStatus(supabase, executionId);
 
-        if (data && ['completed', 'failed', 'terminated'].includes(data.status))
-            return { status: data.status as Execution.API.AwaitResult.Response['status'] };
+        if (['completed', 'failed', 'terminated'].includes(status))
+            // @ts-expect-error
+            return { status };
 
-        const event = await this.realtime.withTerminalEvent(Execution.Event.getChannel(executionId));
+        const channel = Execution.Event.getChannel(executionId);
+
+        // Wait for terminal event from worker
+
+        const event = await this.realtime.withTerminalEvent(channel);
 
         if (!event)
             return { status: 'failed', error: { code: SystemError.Code.EXECUTION_TIMEOUT, message: 'Execution timed out' } };
@@ -241,18 +328,22 @@ export class ExecutionService {
 
 
 
-    async pause(
-        token: string,
-        userId: Auth.User.Id,
-        { executionId }: Execution.API.Pause.Request,
+    public async pause(
+        token:   Token.UserSupabaseJWT,
+        userId:  Auth.User.Id,
+        payload: Execution.API.Pause.Request,
     ): Promise<Execution.API.Pause.Response> {
+        const { executionId } = payload;
         const supabase = createAuthenticatedClient(token);
-        await assertExecutionOwnership(supabase, executionId, userId);
 
-        const confirmation = this.realtime.withEventConfirmation(Execution.Event.getChannel(executionId), 'paused');
+        await this.ownership.assertExecution(supabase, executionId, userId);
+
+        const channel = Execution.Event.getChannel(executionId);
+
+        const confirmation = this.realtime.withEventConfirmation(channel, 'paused');
 
         this.realtime.emitSignal<Execution.Signal.Pause>({
-            channel: Execution.Signal.getChannel(executionId),
+            channel,
             type: 'pause',
             executionId,
         });
@@ -265,18 +356,22 @@ export class ExecutionService {
 
 
 
-    async resume(
-        token: string,
-        userId: Auth.User.Id,
-        { executionId }: Execution.API.Resume.Request,
+    public async resume(
+        token:   Token.UserSupabaseJWT,
+        userId:  Auth.User.Id,
+        payload: Execution.API.Resume.Request,
     ): Promise<Execution.API.Resume.Response> {
+        const { executionId } = payload;
         const supabase = createAuthenticatedClient(token);
-        await assertExecutionOwnership(supabase, executionId, userId);
 
-        const confirmation = this.realtime.withEventConfirmation(Execution.Event.getChannel(executionId), 'resumed');
+        await this.ownership.assertExecution(supabase, executionId, userId);
+
+        const channel = Execution.Event.getChannel(executionId);
+
+        const confirmation = this.realtime.withEventConfirmation(channel, 'resumed');
 
         this.realtime.emitSignal<Execution.Signal.Resume>({
-            channel: Execution.Signal.getChannel(executionId),
+            channel,
             type: 'resume',
             executionId,
         });
@@ -289,16 +384,20 @@ export class ExecutionService {
 
 
 
-    async heartbeat(
-        token: string,
-        userId: Auth.User.Id,
-        { executionId }: Execution.API.Heartbeat.Request,
+    public async heartbeat(
+        token:   Token.UserSupabaseJWT,
+        userId:  Auth.User.Id,
+        payload: Execution.API.Heartbeat.Request,
     ): Promise<Execution.API.Heartbeat.Response> {
+        const { executionId } = payload;
         const supabase = createAuthenticatedClient(token);
-        await assertExecutionOwnership(supabase, executionId, userId);
+
+        await this.ownership.assertExecution(supabase, executionId, userId);
+
+        const channel = Execution.Signal.getChannel(executionId)
 
         this.realtime.emitSignal<Execution.Signal.Heartbeat>({
-            channel: Execution.Signal.getChannel(executionId),
+            channel,
             type: 'heartbeat',
             executionId,
         });
@@ -308,18 +407,22 @@ export class ExecutionService {
 
 
 
-    async suspend(
-        token: string,
-        userId: Auth.User.Id,
-        { executionId }: Execution.API.Suspend.Request,
+    public async suspend(
+        token:   Token.UserSupabaseJWT,
+        userId:  Auth.User.Id,
+        payload: Execution.API.Suspend.Request,
     ): Promise<Execution.API.Suspend.Response> {
         const supabase = createAuthenticatedClient(token);
-        await assertExecutionOwnership(supabase, executionId, userId);
+        const { executionId } = payload;
 
-        const confirmation = this.realtime.withEventConfirmation(Execution.Event.getChannel(executionId), 'suspended');
+        await this.ownership.assertExecution(supabase, executionId, userId);
+
+        const channel = Execution.Event.getChannel(executionId);
+
+        const confirmation = this.realtime.withEventConfirmation(channel, 'suspended');
 
         this.realtime.emitSignal<Execution.Signal.Suspend>({
-            channel: Execution.Signal.getChannel(executionId),
+            channel,
             type: 'suspend',
             executionId,
         });
@@ -332,18 +435,22 @@ export class ExecutionService {
 
 
 
-    async terminate(
-        token: string,
-        userId: Auth.User.Id,
-        { executionId }: Execution.API.Terminate.Request,
+    public async terminate(
+        token:   Token.UserSupabaseJWT,
+        userId:  Auth.User.Id,
+        payload: Execution.API.Terminate.Request,
     ): Promise<Execution.API.Terminate.Response> {
-        const supabase = createAuthenticatedClient(token);
-        await assertExecutionOwnership(supabase, executionId, userId);
+        const { executionId } = payload;
 
-        const confirmation = this.realtime.withEventConfirmation(Execution.Event.getChannel(executionId), 'terminated');
+        const supabase = createAuthenticatedClient(token);
+        await this.ownership.assertExecution(supabase, executionId, userId);
+
+        const channel = Execution.Event.getChannel(executionId);
+
+        const confirmation = this.realtime.withEventConfirmation(channel, 'terminated');
 
         this.realtime.emitSignal<Execution.Signal.Terminate>({
-            channel: Execution.Signal.getChannel(executionId),
+            channel,
             type: 'terminate',
             executionId,
         });
@@ -356,7 +463,7 @@ export class ExecutionService {
 
 
 
-    async finalise({ executionId, status }: Execution.API.Finalise.Request): Promise<Execution.API.Finalise.Response> {
+    public async finalise({ executionId, status }: Execution.API.Finalise.Request): Promise<Execution.API.Finalise.Response> {
         await this.dbOps.update(this.serviceSupabase, { executionId, status });
         return {};
     }
@@ -364,39 +471,12 @@ export class ExecutionService {
 
 
 
-    private async assertAdmin(supabase: SupabaseClient, userId: Auth.User.Id): Promise<void> {
-        const { data, error } = await supabase
-            .from('users')
-            .select('is_admin')
-            .eq('id', userId)
-            .single();
 
-        if (error || !data?.is_admin)
-            throw new SystemError(SystemError.Code.INFRA_UNKNOWN, 'Admin access required');
-    }
-
-
-
-
-    async listActive(token: string, userId: Auth.User.Id): Promise<Execution.API.ListActive.Response> {
-        const supabase = createAuthenticatedClient(token);
-        await this.assertAdmin(supabase, userId);
-
-        const { data, error } = await supabase
-            .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, created_at, updated_at')
-            .in('status', ['pending', 'running']) as { data: Execution.Meta[] | null; error: any };
-
-        if (error) throw new SystemError(SystemError.Code.INFRA_DATABASE_ERROR, error.message);
-        return { executions: data ?? [] };
-    }
-
-
-
-
-    async terminateAll(token: string, userId: Auth.User.Id): Promise<Execution.API.TerminateAll.Response> {
-        const supabase = createAuthenticatedClient(token);
-        await this.assertAdmin(supabase, userId);
+    public async terminateAll(
+        token:  Token.UserSupabaseJWT,
+        userId: Auth.User.Id
+    ): Promise<Execution.API.TerminateAll.Response> {
+        await this.ownership.assertUserAdmin(userId);
 
         const { data: active, error } = await this.serviceSupabase
             .from('executions')
@@ -415,7 +495,8 @@ export class ExecutionService {
         }
 
         const waiting = await this.executionQueue.getJobs(['waiting', 'delayed']);
-        for (const job of waiting) await job.remove();
+        for (const job of waiting) 
+            await job.remove();
 
         await this.serviceSupabase
             .from('executions')
@@ -428,58 +509,75 @@ export class ExecutionService {
 
 
 
-    async get(token: string, userId: Auth.User.Id, { executionId }: Execution.API.Get.Request): Promise<Execution.API.Get.Response> {
+    public async get(
+        token:   Token.UserSupabaseJWT,
+        userId:  Auth.User.Id, 
+        payload: Execution.API.Get.Request
+    ): Promise<Execution.API.Get.Response> {
+        const { executionId } = payload;
         const supabase = createAuthenticatedClient(token);
-        await assertExecutionOwnership(supabase, executionId, userId);
 
-        const { data, error } = await supabase
-            .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, session, created_at, updated_at')
-            .eq('id', executionId)
-            .single();
+        await this.ownership.assertExecution(supabase, executionId, userId);
 
-        if (error || !data) throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
-        return { execution: data };
+        const execution = await this.dbOps.get(supabase, executionId);
+
+        return { execution };
     }
 
 
 
 
-    async update({ executionId, session }: Execution.API.Update.Request): Promise<Execution.API.Update.Response> {
-        await this.dbOps.updateSession(this.serviceSupabase, { executionId, session });
+    public async update(
+        payload: Execution.API.Update.Request
+    ): Promise<Execution.API.Update.Response> {
+        const { executionId, session } = payload;
+        await this.dbOps.update(this.serviceSupabase, { executionId, session });
         return {};
     }
 
 
+    public meta = {
+
+        get: async (
+            token:   Token.UserSupabaseJWT,
+            userId:  Auth.User.Id,
+            payload: Execution.API.Meta.Get.Request
+        ): Promise<Execution.API.Meta.Get.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            const { executionId } = payload;
+
+            await this.ownership.assertExecution(supabase, executionId, userId);
+
+            const meta = await this.dbOps.meta.get(supabase, executionId);
+
+            return { execution: meta };
+        },
 
 
-    async metaList(token: string, { workflowId }: Execution.API.Meta.List.Request): Promise<Execution.API.Meta.List.Response> {
-        const supabase = createAuthenticatedClient(token);
+        list: async (
+            token:   Token.UserSupabaseJWT, 
+            payload: Execution.API.Meta.List.Request
+        ): Promise<Execution.API.Meta.List.Response> => {
+            const { workflowId } = payload;
+            const supabase = createAuthenticatedClient(token);
 
-        const { data, error } = await supabase
-            .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, created_at, updated_at')
-            .eq('workflow_id', workflowId)
-            .order('created_at', { ascending: false }) as { data: Execution.Meta[] | null; error: any };
+            const metaList = await this.dbOps.meta.list(supabase, workflowId);
 
-        if (error) throw new SystemError(SystemError.Code.INFRA_DATABASE_ERROR, error.message);
-        return { executions: data ?? [] };
-    }
-
-
+            return { executions: metaList };
+        },
+        
 
 
-    async metaGet(token: string, userId: Auth.User.Id, { executionId }: Execution.API.Meta.Get.Request): Promise<Execution.API.Meta.Get.Response> {
-        const supabase = createAuthenticatedClient(token);
-        await assertExecutionOwnership(supabase, executionId, userId);
+        listActive: async (
+            token:  Token.UserSupabaseJWT, 
+            userId: Auth.User.Id
+        ): Promise<Execution.API.Meta.ListActive.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            await this.ownership.assertUserAdmin(userId);
 
-        const { data, error } = await supabase
-            .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, created_at, updated_at')
-            .eq('id', executionId)
-            .single() as { data: Execution.Meta | null; error: any };
+            const executions = await this.dbOps.meta.listActive(supabase);
 
-        if (error || !data) throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
-        return { execution: data };
+            return { executions: executions };
+        }
     }
 }

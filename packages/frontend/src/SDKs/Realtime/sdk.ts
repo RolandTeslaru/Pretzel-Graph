@@ -4,7 +4,6 @@ import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
 import { Realtime } from "@pretzel-graph/shared/domain";
 import { supabase } from "@/libs/supabase";
-import { toast } from "sonner";
 
 @SDK("Realtime")
 export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
@@ -109,6 +108,8 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
                 const event = JSON.parse(message.data) as Realtime.Event;
                 // Expecting message to have a channel field (from Event.Base)
                 const channel = event.channel as Realtime.Channel;
+
+                console.log("Realtime SDK event: ", event)
 
                 if (channel && this.listeners.has(channel)) {
                     this.listeners.get(channel)!.forEach(callback => callback(event, message));
