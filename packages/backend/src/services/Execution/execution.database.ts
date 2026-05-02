@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Auth, Execution, Workflow } from '@pretzel-graph/shared/domain';
+import { Auth, Chat, Execution, Workflow } from '@pretzel-graph/shared/domain';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { withSupabaseAssert } from '@pretzel-graph/shared/errors/supabase';
 
@@ -9,11 +9,12 @@ export class ExecutionDatabase {
     public readonly create = withSupabaseAssert('execution.create', async (
         supabase: SupabaseClient,
         props: {
-            workflowId: Workflow.Id,
-            userId: Auth.User.Id,
-            igniter: Execution.Igniter,
-            session: Execution.Session,
+            workflowId:   Workflow.Id,
+            userId:       Auth.User.Id,
+            igniter:      Execution.Igniter,
+            session:      Execution.Session,
             executionId?: Execution.Id,
+            chatId?:      Chat.Id,
         }
     ) => {
         const executionId = props.executionId ?? crypto.randomUUID() as Execution.Id;
@@ -27,6 +28,7 @@ export class ExecutionDatabase {
                 status: 'pending',
                 duration: 0,
                 session: props.session,
+                chat_id: props.chatId ?? null,
                 created_at: new Date(),
                 updated_at: new Date(),
             })
@@ -38,9 +40,9 @@ export class ExecutionDatabase {
         supabase: SupabaseClient,
         props: {
             executionId: Execution.Id,
-            status?: Execution.Status,
-            error?: string,
-            session?: Execution.Session.Update
+            status?:     Execution.Status,
+            error?:      string,
+            session?:    Execution.Session.Update
         }
     ) => {
         await supabase
@@ -56,7 +58,7 @@ export class ExecutionDatabase {
     });
 
     public readonly getStatus = withSupabaseAssert('execution.getStatus', async (
-        supabase: SupabaseClient,
+        supabase:    SupabaseClient,
         executionId: Execution.Id
     ): Promise<Execution.Status> => {
         const { data, error } = await supabase
@@ -73,12 +75,12 @@ export class ExecutionDatabase {
     });
 
     public readonly get = withSupabaseAssert('execution.get', async (
-        supabase: SupabaseClient,
+        supabase:    SupabaseClient,
         executionId: Execution.Id
     ): Promise<Execution> => {
         const { data, error } = await supabase
             .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, session, created_at, updated_at')
+            .select('id, workflow_id, igniter, status, duration, error, session, chat_id, created_at, updated_at')
             .eq('id', executionId)
             .single()
             .throwOnError();
@@ -90,7 +92,7 @@ export class ExecutionDatabase {
     });
 
     public readonly getActivePublishedWorkflowData = withSupabaseAssert('execution.sdk.getActivePublishedWorkflowData', async (
-        supabase: SupabaseClient,
+        supabase:   SupabaseClient,
         workflowId: Workflow.Id
     ): Promise<Workflow.Data> => {
         const { data: row, error } = await supabase
@@ -121,7 +123,7 @@ export class ExecutionDatabase {
     });
 
     public readonly terminateMany = withSupabaseAssert('execution.terminateMany', async (
-        supabase: SupabaseClient,
+        supabase:     SupabaseClient,
         executionIds: Execution.Id[],
         error: string
     ) => {
@@ -136,12 +138,12 @@ export class ExecutionDatabase {
 
     public readonly meta = {
         get: withSupabaseAssert('execution.meta.get', async (
-            supabase: SupabaseClient,
+            supabase:    SupabaseClient,
             executionId: Execution.Id
         ): Promise<Execution.Meta> => {
             const { data, error } = await supabase
                 .from('executions')
-                .select('id, workflow_id, igniter, status, duration, error, created_at, updated_at')
+                .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at')
                 .eq('id', executionId)
                 .single()
                 .throwOnError();
@@ -152,12 +154,12 @@ export class ExecutionDatabase {
         }),
 
         list: withSupabaseAssert('execution.meta.list', async (
-            supabase: SupabaseClient,
+            supabase:   SupabaseClient,
             workflowId: Workflow.Id
         ): Promise<Execution.Meta[]> => {
             const { data, error } = await supabase
                 .from('executions')
-                .select('id, workflow_id, igniter, status, duration, error, created_at, updated_at')
+                .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at')
                 .eq('workflow_id', workflowId)
                 .order('created_at', { ascending: false })
                 .throwOnError();
@@ -171,7 +173,7 @@ export class ExecutionDatabase {
         ): Promise<Execution.Meta[]> => {
             const { data, error } = await supabase
                 .from('executions')
-                .select('id, workflow_id, igniter, status, duration, error, created_at, updated_at')
+                .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at')
                 .in('status', ['pending', 'running'])
                 .order('created_at', { ascending: false })
                 .throwOnError();

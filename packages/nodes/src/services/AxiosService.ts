@@ -5,6 +5,7 @@ import { container, singleton } from "tsyringe";
 class AxiosServiceImpl {
     constructor() {
         this.api.interceptors.request.use((config) => {
+            config.baseURL = process.env.API_URL;
             const token = process.env.RUNTIME_NODE_INTERNAL_TOKEN;
             if (token) config.headers["Runtime-Node-Token"] = token;
             return config;
@@ -20,9 +21,7 @@ class AxiosServiceImpl {
         );
     }
 
-    public readonly api = axios.create({
-        baseURL: process.env.API_URL,
-    });
+    public readonly api = axios.create({});
 }
 
 export const AxiosService = container.resolve(AxiosServiceImpl);

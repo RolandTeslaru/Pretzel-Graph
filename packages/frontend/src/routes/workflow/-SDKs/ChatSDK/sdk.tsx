@@ -78,20 +78,6 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
                     })
                 })
                 break;
-            case "response:created":
-                this.useStore.setState(s => {
-                    this.reducers.upsertMessage(s, e.responseMessage);
-
-                    if (DialogSDK.state.dialogs.has("fullscreen-chat") === false)
-                        s.isSidebarVisible = true;
-                })
-                break;
-            case "response:chunk":
-                this.actions.message.appendContent(e.responseMessageId, e.content);
-                break;
-            case "response:finished":
-                this.actions.message.setContent(e.responseMessageId, e.finalContent);
-                break;
         }
     }
 }
