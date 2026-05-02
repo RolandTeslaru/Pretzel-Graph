@@ -58,8 +58,8 @@ const CanvasEdge = memo(({
     const isWaiting = edgeStatus.status === "waiting";
     const isPreparing = edgeStatus.status === "preparing";
 
-    const glintDur = isActive ? '1.2s' : '3s';
-    const glintTargetOpacity = isActive ? 1 : 0.75;
+    const glintDur = '3s';
+    const glintTargetOpacity = 0.75;
 
     const statusColor = isActive
         ? edgeStatus.status === "completed" ? defaultColor
