@@ -24,8 +24,6 @@ export class WorkflowCompiler {
         emit:         RuntimeNode.ExecutionContext["emit"],
         compilationContext: CompilationContext = createCompilationContext(workflowId),
     ): Promise<AggexEngine.ExecutionContext> {
-
-        const igniter = execution.igniter
         
         const workflowCache = Workflow.createCache(workflowData);
 
@@ -103,6 +101,8 @@ export class WorkflowCompiler {
             graph.addDependency(S2Graph.START_VERTEX_ID, nodeId);
         });
 
+        const igniter = execution.igniter
+        
         switch (igniter?.variant) {
             case "webhook": {
                 const entry = nodeRuntimeMap.get(igniter.nodeId as unknown as Vertex.Id);
