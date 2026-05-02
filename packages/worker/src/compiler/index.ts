@@ -1,5 +1,6 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { Foundations, Execution } from "@pretzel-graph/shared/domain";
+import { Node as ChatInputNode } from "@pretzel-graph/nodes/Core/Chat/Input/node";
 import { CatalogueService } from "@pretzel-graph/node-sdk";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { AggexCompilerError } from "../errors";
@@ -114,10 +115,19 @@ export class WorkflowCompiler {
             graph.addDependency(S2Graph.START_VERTEX_ID, nodeId);
         });
 
-        if (igniter?.variant === "webhook") {
-            const entry = nodeRuntimeMap.get(igniter.nodeId as unknown as Vertex.Id);
-            if (entry) {
-                await entry.instance.triggerWebhook(igniter.payload as Record<string, unknown>);
+        switch (igniter?.variant) {
+            case "webhook": {
+                const entry = nodeRuntimeMap.get(igniter.nodeId as unknown as Vertex.Id);
+                if (entry)
+                    await entry.instance.triggerWebhook(igniter.payload as Record<string, unknown>);
+                break;
+            }
+            case "chat_message": {
+                for (const entry of nodeRuntimeMap.values()) {
+                    if (entry.instance instanceof ChatInputNode)
+                        entry.instance.injectMessage(igniter.message);
+                }
+                break;
             }
         }
 

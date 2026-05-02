@@ -5,6 +5,9 @@ import { Realtime } from "./Realtime";
 const WorkflowId = z.string().brand("WorkflowId");
 type WorkflowId = z.infer<typeof WorkflowId>;
 
+const ExecutionId = z.string().brand("ExecutionId");
+type ExecutionId = z.infer<typeof ExecutionId>;
+
 export namespace Webhook {
     export const Id = z.string().brand("WebhookId")
     export type Id = z.infer<typeof Id>
@@ -58,30 +61,20 @@ export namespace Webhook {
     // ─────────────────────────────────────────────────────────
     export namespace Test {
 
-        export namespace Signal {
-            export const Channel = Realtime.Channel.brand("WebhookTestChannel")
+        export namespace ResolveSignal {
+            export const Channel = Realtime.Channel.brand("WebhookTestResolveSignalChannel")
             export type Channel = z.infer<typeof Channel>
 
-            export const getChannel = (workflowId: WorkflowId): Channel =>
-                `webhook:test:${workflowId}` as Channel
+            export const getChannel = (executionId: ExecutionId): Channel =>
+                `webhook:test:resolve:${executionId}:signal` as Channel
 
-            const Base = Realtime.Signal.Base.extend({
-                workflowId: WorkflowId,
+            export const Schema = Realtime.Signal.Base.extend({
+                executionId: ExecutionId,
+                type: z.literal("resolve"),
+                payload: Payload.Schema,
             })
-
-            export namespace Resolve {
-                export const Schema = Base.extend({
-                    type: z.literal("resolve"),
-                    payload: Payload.Schema,
-                })
-            }
-            export type Resolve = z.infer<typeof Resolve.Schema>
-
-            export const Schema = z.discriminatedUnion("type", [
-                Resolve.Schema,
-            ])
         }
-        export type Signal = z.infer<typeof Signal.Schema>
+        export type Signal = z.infer<typeof ResolveSignal.Schema>
 
         export namespace API {
             export namespace Register {
