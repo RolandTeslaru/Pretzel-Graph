@@ -29,8 +29,12 @@ const WorkflowEdge = memo(({
 
     const markerId = useId();
 
-    const sourceNode = WorkbenchSDK.useStore(s => s.workflow.data.nodes[source as Workflow.Node.Id]);
-    const edgeStatus = ExecutionSDK.useStore(s => s.currentExecution?.session?.edge_state[id as Workflow.Edge.Id] ?? { status: "idle", runCount: 0 });
+    const sourceNode = WorkbenchSDK.useStore(s => s.workflow.data.nodes[source as Workflow.Node.Id])
+    
+    const [ edgeStatus, itemCount] = ExecutionSDK.useStore(s => [
+        ExecutionSDK.selectors.getEdgeStatus(s, id as Workflow.Edge.Id),
+        ExecutionSDK.selectors.getEdgeItemCount(s, source as Workflow.Node.Id, sourceHandleId as Foundations.Port.Output.Id),
+    ])
 
     const handleDelete = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
@@ -139,17 +143,39 @@ const WorkflowEdge = memo(({
                             position: 'absolute',
                             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
                             pointerEvents: 'none',
-                            color: statusColor,
-                            fontSize: 14,
-                            fontWeight: 600,
-                            lineHeight: 1,
-                            background: 'var(--background)',
-                            padding: '2px 5px',
-                            borderRadius: 6,
-                            border: `2px solid ${statusColor}`,
                         }}
                     >
-                        {edgeStatus.runCount}
+                        {Foundations.Port.isListLike(output.variant) && itemCount !== undefined && (
+                            <span style={{
+                                position: 'absolute',
+                                bottom: '100%',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                marginBottom: 3,
+                                color: statusColor,
+                                fontSize: 10,
+                                fontWeight: 500,
+                                lineHeight: 1,
+                                opacity: 0.8,
+                                whiteSpace: 'nowrap',
+                            }}>
+                                {itemCount} items
+                            </span>
+                        )}
+                        <div
+                            style={{
+                                color: statusColor,
+                                fontSize: 14,
+                                fontWeight: 600,
+                                lineHeight: 1,
+                                background: 'var(--background)',
+                                padding: '2px 5px',
+                                borderRadius: 6,
+                                border: `2px solid ${statusColor}`,
+                            }}
+                        >
+                            {edgeStatus.runCount}
+                        </div>
                     </div>
                 )}
             </EdgeLabelRenderer>
