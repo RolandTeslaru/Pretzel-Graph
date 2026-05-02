@@ -2,6 +2,7 @@ import { ChatSDK } from '../../sdk'
 import ChatSelect from './ChatSelect'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
+import { AnimatePresence, motion } from 'framer-motion'
 
 const ChatSidebarHeader = () => {
 
@@ -9,16 +10,26 @@ const ChatSidebarHeader = () => {
 
     return (
         <div className='flex flex-row gap-2 absolute top-2 w-[calc(100%-16px)] left-2 z-10 '>
+            {/* Chat Icon */}
             <div
                 className='flex items-center gap-2 px-2 py-1 rounded-full'
                 style={{ backgroundColor: 'color-mix(in srgb, var(--port-Message) 25%, transparent)' }}
             >
                 <SystemIcons.MessagesSquare className='my-auto h-4 w-4' style={{ color: 'var(--port-Message-foreground)' }} />
-                {!currentChatName &&
-                    <h4 className='text-sm h-auto my-auto truncate font-semibold pr-1' style={{ color: 'var(--port-Message-foreground)' }}>
-                        Conversation
-                    </h4>
-                }
+                <AnimatePresence>
+                    {!currentChatName && (
+                        <motion.h4
+                            className='text-sm h-auto my-auto truncate font-semibold pr-1'
+                            style={{ color: 'var(--port-Message-foreground)' }}
+                            initial={{ opacity: 0, width: 0 }}
+                            animate={{ opacity: 1, width: 'auto' }}
+                            exit={{ opacity: 0, width: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                        >
+                            Conversation
+                        </motion.h4>
+                    )}
+                </AnimatePresence>
             </div>
             <p className='text-xs h-auto my-auto truncate font-medium'>{currentChatName}</p>
             <div className='flex flex-row gap-2 border border-border bg-card-float rounded-full ml-auto my-auto h-auto p-0.5 shadow-md shadow-black/10'>

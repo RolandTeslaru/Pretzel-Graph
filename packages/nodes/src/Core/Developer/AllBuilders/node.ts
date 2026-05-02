@@ -27,15 +27,22 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         } = inputs;
 
         return {
-            messageOutput: messageInput,
-            textOutput: stringField,
-            languageModelOutput: languageModelInput,
-            documentOutput: documentInput,
-            retrieverOutput: retrieverInput,
-            embeddingsOutput: embeddingsInput,
-            vectorStoreOutput: vectorStoreInput,
-            toolOutput: toolInput,
-            dataFrameOutput: { data: "frame" }
+            messageOutput:         messageInput,
+            textOutput:            stringField,
+            languageModelOutput:   languageModelInput,
+            documentOutput:        documentInput,
+            retrieverOutput:       retrieverInput,
+            embeddingsOutput:      embeddingsInput,
+            vectorStoreOutput:     vectorStoreInput,
+            toolOutput:            toolInput,
+            dataFrameOutput:       { data: "frame" },
+            unresolvedOutput:      inputs.unresolvedInput,
+            unresolvedScalarOutput: inputs.unresolvedScalarInput,
+            unresolvedListOutput:  inputs.unresolvedListInput,
+            toolListOutput:        inputs.toolListInput,
+            messageListOutput:     inputs.messageListInput,
+            dataOutput:            inputs.dataInput,
+            dataListOutput:        inputs.dataListInput,
         };
     }
 

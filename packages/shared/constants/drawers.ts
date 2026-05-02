@@ -17,7 +17,7 @@ export const CORE_DRAWERS = {
       "Core.Chat.Output", 
       "Core.Text.Input", 
       "Core.Text.Output", 
-      "Core.Chat.SessionMessages",
+      "Core.Chat.History",
     ],
   },
   developer: {
