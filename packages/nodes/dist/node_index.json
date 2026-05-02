@@ -1,6 +1,6 @@
 {
-  "version": "1777752422533",
-  "generatedAt": "2026-05-02T20:07:02.533Z",
+  "version": "1777765035861",
+  "generatedAt": "2026-05-02T23:37:15.861Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -2898,6 +2898,208 @@
         }
       ]
     },
+    "Integrations.Alpaca.Market": {
+      "id": "Integrations.Alpaca.Market",
+      "displayName": "Alpaca Market",
+      "icon": "Graph",
+      "accent": "port-DataList",
+      "toolCompatible": true,
+      "description": "Reads US stock market data and news from Alpaca Market Data APIs.",
+      "fields": [
+        {
+          "id": "environment",
+          "advanced": true,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Environment",
+          "tooltip": "Used for trading endpoints (assets). Market data endpoints are the same for both.",
+          "variant": "MultiOption",
+          "initialValue": "live",
+          "options": [
+            {
+              "value": "live",
+              "displayName": "Live"
+            },
+            {
+              "value": "paper",
+              "displayName": "Paper"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "apiKeyId",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "API Key ID",
+          "tooltip": "Alpaca API Key ID. Falls back to ALPACA_API_KEY_ID env var.",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "apiSecret",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "API Secret",
+          "tooltip": "Alpaca API Secret. Falls back to ALPACA_API_SECRET_KEY env var.",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "timespan",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Timespan",
+          "tooltip": "Default bars granularity.",
+          "variant": "MultiOption",
+          "initialValue": "minute",
+          "options": [
+            {
+              "value": "minute",
+              "displayName": "Minute"
+            },
+            {
+              "value": "hour",
+              "displayName": "Hour"
+            },
+            {
+              "value": "day",
+              "displayName": "Day"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "multiplier",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Multiplier",
+          "tooltip": "Default bars multiplier (e.g. 5 + minute = 5Min).",
+          "variant": "Integer",
+          "initialValue": 1,
+          "min": 1,
+          "max": 60,
+          "step": 1
+        },
+        {
+          "id": "lookbackHours",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Lookback (hours)",
+          "tooltip": "Default how far back to fetch bars.",
+          "variant": "Integer",
+          "initialValue": 24,
+          "min": 1,
+          "max": 8760,
+          "step": 1
+        },
+        {
+          "id": "maxBars",
+          "advanced": true,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Max Bars",
+          "tooltip": "Safety cap to prevent huge outputs. Tools can override.",
+          "variant": "Integer",
+          "initialValue": 500,
+          "min": 1,
+          "max": 5000,
+          "step": 1
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "symbol",
+          "displayName": "Symbol",
+          "tooltip": "US stock symbol (e.g. AAPL, MSFT).",
+          "internal": false,
+          "variant": "Text",
+          "initialValue": "",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "bars",
+          "displayName": "Bars",
+          "tooltip": "Array of OHLCV bars (limited by Max Bars).",
+          "variant": "DataList"
+        },
+        {
+          "id": "summary",
+          "displayName": "Summary",
+          "tooltip": "Convenience summary about the returned bars.",
+          "variant": "Json"
+        },
+        {
+          "id": "news",
+          "displayName": "News",
+          "tooltip": "Recent news for the symbol (compact).",
+          "variant": "Json"
+        }
+      ]
+    },
     "Integrations.Anthropic.Chat": {
       "id": "Integrations.Anthropic.Chat",
       "displayName": "Anthropic Chat",
@@ -3753,6 +3955,174 @@
           "id": "summary",
           "displayName": "Summary",
           "tooltip": "Convenience summary: { coin, interval, count, firstClose, lastClose, change, changePct }.",
+          "variant": "Json"
+        }
+      ]
+    },
+    "Integrations.Massive.Market": {
+      "id": "Integrations.Massive.Market",
+      "displayName": "Massive Market",
+      "icon": "Graph",
+      "accent": "port-DataList",
+      "toolCompatible": true,
+      "description": "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search. Requires an API key.",
+      "fields": [
+        {
+          "id": "apiKey",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "API Key",
+          "tooltip": "Your Massive (Polygon.io) API key. Falls back to MASSIVE_API_KEY or POLY_API_KEY environment variables.",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "timespan",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Timespan",
+          "tooltip": "Candle granularity. Used in direct mode and as the default for the getCandles tool.",
+          "variant": "MultiOption",
+          "initialValue": "minute",
+          "options": [
+            {
+              "value": "minute",
+              "displayName": "Minute"
+            },
+            {
+              "value": "hour",
+              "displayName": "Hour"
+            },
+            {
+              "value": "day",
+              "displayName": "Day"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "multiplier",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Multiplier",
+          "tooltip": "Candle multiplier (e.g. 5 + minute = 5-minute candles).",
+          "variant": "Integer",
+          "initialValue": 1,
+          "min": 1,
+          "max": 60,
+          "step": 1
+        },
+        {
+          "id": "lookbackHours",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Lookback (hours)",
+          "tooltip": "How far back to fetch candles, in hours. The end time is always 'now'.",
+          "variant": "Integer",
+          "initialValue": 24,
+          "min": 1,
+          "max": 8760,
+          "step": 1
+        },
+        {
+          "id": "adjusted",
+          "advanced": true,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Adjusted",
+          "tooltip": "Whether to request adjusted data for aggregates when supported by the API.",
+          "variant": "Boolean",
+          "initialValue": true
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "ticker",
+          "displayName": "Ticker",
+          "tooltip": "US stock ticker symbol (e.g. AAPL, MSFT, TSLA).",
+          "internal": false,
+          "variant": "Text",
+          "initialValue": "",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "candles",
+          "displayName": "Candles",
+          "tooltip": "Array of OHLCV aggregates (bars) returned by Massive.",
+          "variant": "DataList"
+        },
+        {
+          "id": "summary",
+          "displayName": "Summary",
+          "tooltip": "Convenience summary: { ticker, timespan, multiplier, count, firstClose, lastClose, change, changePct }.",
+          "variant": "Json"
+        },
+        {
+          "id": "snapshot",
+          "displayName": "Snapshot",
+          "tooltip": "Snapshot for a ticker (last trade/quote + day metrics) when available.",
           "variant": "Json"
         }
       ]

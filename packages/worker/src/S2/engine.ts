@@ -11,7 +11,7 @@ import { S2Hooks } from "./types";
 export class S2Engine {
 
     public static readonly MAX_VERTEX_EXECUTION_DELTA = 1;
-    public static readonly MAX_VERTEX_RUN_COUNT = 5;
+    public static readonly MAX_VERTEX_RUN_COUNT = 20;
 
     constructor() { }
 
