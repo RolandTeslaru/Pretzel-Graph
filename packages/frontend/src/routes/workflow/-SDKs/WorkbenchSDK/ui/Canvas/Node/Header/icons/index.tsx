@@ -229,6 +229,79 @@ export const GlowingAlertTriangle = () => {
   )
 }
 
+export const GlowingAlertTriangleRed = () => {
+  return (
+    <svg
+      width="36"
+      height="36"
+      viewBox="-6 -4 36 36"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="cursor-pointer overflow-visible"
+      style={{ margin: '-6px' }}
+    >
+      <defs>
+        <filter id="alert-red-glow-far" x="-150%" y="-150%" width="400%" height="400%">
+          <feFlood floodColor="#ef4444" floodOpacity="1" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="9" result="blur1" />
+          <feMerge>
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur1" />
+          </feMerge>
+        </filter>
+        <filter id="alert-red-glow-mid" x="-100%" y="-100%" width="300%" height="300%">
+          <feFlood floodColor="#f87171" floodOpacity="1" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="2.5" result="blur2" />
+          <feMerge>
+            <feMergeNode in="blur2" />
+            <feMergeNode in="blur2" />
+          </feMerge>
+        </filter>
+        <filter id="alert-red-glow-tight" x="-50%" y="-50%" width="200%" height="200%">
+          <feFlood floodColor="#fca5a5" floodOpacity="0.9" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="1" result="blur3" />
+          <feMerge>
+            <feMergeNode in="blur3" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <mask id="alert-red-mark-cutout" maskUnits="userSpaceOnUse">
+          <rect width="24" height="24" fill="white" />
+          <rect x="10.25" y="7" width="3.5" height="7.5" rx="1.75" fill="black" />
+          <circle cx="12" cy="17.5" r="1.85" fill="black" />
+        </mask>
+      </defs>
+      <style>{`
+        @keyframes alertRedGlowPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        @keyframes alertRedPing {
+          0% { transform: scale(1); opacity: 0.8; }
+          75%, 100% { transform: scale(1.6); opacity: 0; }
+        }
+      `}</style>
+      <g style={{ animation: 'alertRedPing 1.2s cubic-bezier(0, 0, 0.2, 1) infinite', transformOrigin: '12px 14px' }}>
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="#ef4444" />
+      </g>
+      <g filter="url(#alert-red-glow-far)" style={{ animation: 'alertRedGlowPulse 1.2s ease-in-out infinite' }}>
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="#ef4444" />
+      </g>
+      <g filter="url(#alert-red-glow-mid)">
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="#f87171" />
+      </g>
+      <g filter="url(#alert-red-glow-tight)">
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="#fca5a5" />
+      </g>
+      <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="#fee2e2" />
+    </svg>
+  )
+}
+
 export const GlowingCompletedCheck = () => {
   return (
     <svg

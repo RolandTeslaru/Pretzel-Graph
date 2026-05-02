@@ -420,7 +420,10 @@ export class Synthesizer {
             case "human":  return new HumanMessage(msg.content);
             case "ai":     return new AIMessage(msg.content);
             case "system": return new SystemMessage(msg.content);
-            case "tool":   return new ToolMessage(msg.content, (msg as Chat.Message.Tool).data.tool_call_id);
+            case "tool": {
+                const t = msg as Chat.Message.Tool;
+                return new ToolMessage({ content: t.content, tool_call_id: t.data.tool_call_id, name: t.data.tool_name });
+            }
         }
     }
 
