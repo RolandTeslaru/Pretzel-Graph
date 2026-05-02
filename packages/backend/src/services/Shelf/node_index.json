@@ -1,6 +1,6 @@
 {
-  "version": "1777745712688",
-  "generatedAt": "2026-05-02T18:15:12.688Z",
+  "version": "1777752422533",
+  "generatedAt": "2026-05-02T20:07:02.533Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -2723,7 +2723,7 @@
           "displayName": "Tools",
           "internal": false,
           "variant": "ToolList",
-          "required": false
+          "required": true
         },
         {
           "id": "input",
@@ -2731,7 +2731,7 @@
           "internal": false,
           "variant": "Message",
           "initialValue": "",
-          "required": false
+          "required": true
         }
       ],
       "outputs": [

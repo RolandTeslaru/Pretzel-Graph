@@ -84,7 +84,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             const confirmEvent = sdk.useAwaitConfirmation("terminated")
             const { success } = await Execution.API.terminate(api, { executionId });
             if (success){
-                sdk.setState(s => s.currentExecution = undefined)
+                sdk.setState(s => { sdk.reducers.setStatus(s, "terminated") })
                 toast.info('Workflow execution terminated')
             }
             else

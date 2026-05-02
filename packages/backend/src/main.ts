@@ -4,8 +4,11 @@ import * as express from 'express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import dotenv from 'dotenv';
 import path from 'path';
+import { CatalogueService } from '@pretzel-graph/node-sdk';
 
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+
+CatalogueService.setNodesRoot(path.resolve(__dirname, '../../nodes/src'));
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
