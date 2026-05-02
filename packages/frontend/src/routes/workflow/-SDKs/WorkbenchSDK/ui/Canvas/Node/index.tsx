@@ -12,19 +12,19 @@ import { cn } from '@/utils/styleUtils';
 import { StatusBorder } from './StatusBorder';
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 
-const WorkbenchNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
+const CanvasNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const node = WorkbenchSDK.useStore(s => s.workflow.data.nodes[props.id as Workflow.Node.Id])
 
   if (!node)
     return null;
 
-  return <WorkbenchNodeContent node={node} />
+  return <Content node={node} />
 })
 
-export default WorkbenchNode
+export default CanvasNode
 
 
-const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
+const Content = memo(({ node }: { node: Workflow.Node }) => {
 
   const [isNodeClicked, isWorkflowLocked] = WorkbenchSDK.useStore(
     s => [
@@ -41,13 +41,9 @@ const WorkbenchNodeContent = memo(({ node }: { node: Workflow.Node }) => {
 
   const nodeStatus = ExecutionSDK.useStore(s => ExecutionSDK.selectors.getNodeStatus(s, node.id));
 
-  const isStatusComplete = nodeStatus && nodeStatus.status === "completed"
-
-  const completedBorder = `color-mix(in srgb, var(--status-success) 80%, var(--border))`;
-
   if (node.accent) {
     backgroundColor = `color-mix(in srgb, var(--${node.accent}) 40%, var(--node-accent-base))`;
-    borderColor = isStatusComplete ? completedBorder : `color-mix(in srgb, var(--${node.accent}) 50%, var(--border))`;
+    borderColor =  `color-mix(in srgb, var(--${node.accent}) 50%, var(--border))`;
   }
 
 
