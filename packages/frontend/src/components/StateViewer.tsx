@@ -54,7 +54,7 @@ export function StateViewer() {
     const state = useSDKState(selected);
 
     return (
-        <div className={`fixed left-[20px] bottom-[20px] z-50 w-[400px] bg-card/70 backdrop-blur-sm border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto ${minimized ? 'h-auto' : 'bottom-20 h-[500px]'}`}>
+        <div className={`fixed left-[20px] bottom-[20px] z-50 w-[400px] bg-card/80 backdrop-blur-sm border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto ${minimized ? 'h-auto' : 'bottom-20 h-[500px]'}`}>
             <div className="flex items-center justify-between px-2 py-1 border-b border-border bg-muted/30">
                 <h3 className="text-sm font-semibold text-foreground">
                     State Viewer

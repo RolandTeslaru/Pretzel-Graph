@@ -140,7 +140,7 @@ const BottomPanel = () => {
 
     return (
         <div className='bottom-5 left-1/2 -translate-x-1/2 z-10 fixed'>
-            <motion.div layout transition={{ layout: { type: "spring", stiffness: 400, damping: 30 } }} className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border overflow-visible'>
+            <motion.div layout transition={{ layout: { type: "spring", stiffness: 400, damping: 30 } }} className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/80 backdrop-blur-sm border border-border overflow-visible'>
                 <TemporalControls />
                 <ChatButton />
                 <ExecutionControls canRun={!hasIssues} />
@@ -151,7 +151,7 @@ const BottomPanel = () => {
                         <Popover.Root>
                             <Popover.Trigger asChild>
                                 <motion.div
-                                    className='absolute right-[calc(100%+16px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/70 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'
+                                    className='absolute right-[calc(100%+16px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/80 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'
                                     initial={{ x: 24, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
                                     exit={{ x: 24, opacity: 0 }}
@@ -175,7 +175,7 @@ const BottomPanel = () => {
                         <Popover.Root>
                             <Popover.Trigger asChild>
                                 <motion.div
-                                    className='absolute left-[calc(100%+16px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/70 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'
+                                    className='absolute left-[calc(100%+16px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/80 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'
                                     initial={{ x: -24, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
                                     exit={{ x: -24, opacity: 0 }}

@@ -75,7 +75,7 @@ const Content: DialogComponents.Content = ({
          data-[state=open]:slide-in-from-top-[48%]
          shadow-2xl shadow-neutral-500/60 dark:shadow-black/60
          `,
-        blockTransparency ? 'bg-card' : ' bg-card/70 backdrop-blur-sm',
+        blockTransparency ? 'bg-card' : ' bg-card/80 backdrop-blur-sm',
         className,
       )}
       style={{
