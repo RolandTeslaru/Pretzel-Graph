@@ -6,7 +6,7 @@ import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 
 export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
     return {
-        run: async () => {
+        run: async (igniter?: Execution.Igniter) => {
             const confirmStartedEvent = sdk.useAwaitConfirmation("started")
 
             if (sdk.state.currentExecution && ["running", "paused"].includes(sdk.state.currentExecution.status)) {
@@ -33,6 +33,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 workflowId: workflow.id,
                 workflowData: workflow.data,
                 executionId,
+                igniter,
             });
 
             toast.promise(executionCreationPromise, {
@@ -136,7 +137,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
 export type ExecutionSDKActions = {
 
-    run:   () => Promise<Execution.Id | null>,
+    run:   (igniter?: Execution.Igniter) => Promise<Execution.Id | null>,
     clear: () => void,
     pause:     (executionId: Execution.Id) => Promise<boolean>,
     terminate: (executionId: Execution.Id) => Promise<boolean>,

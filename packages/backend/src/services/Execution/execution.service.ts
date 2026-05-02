@@ -49,7 +49,8 @@ export class ExecutionService {
     ): Promise<Execution.API.Run.Response> {
         const supabase = createAuthenticatedClient(token);
         const ownerId = await this.ownership.assertWorkflow(supabase, payload.workflowId, userId);
-        return this.runCore(supabase, ownerId, payload, { variant: 'workbench_manual' });
+        const igniter = payload.igniter ?? { variant: 'workbench_manual' } as Execution.Igniter;
+        return this.runCore(supabase, ownerId, payload, igniter);
     }
 
 

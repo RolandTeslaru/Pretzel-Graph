@@ -5,6 +5,9 @@ import { type SupabaseClient } from "@supabase/supabase-js";
 import { Realtime } from "./Realtime";
 import { SystemError } from "./SystemError";
 
+const ExecutionId = z.string().brand("ExecutionId");
+type ExecutionId = z.infer<typeof ExecutionId>;
+
 export namespace Chat {
 
     export const Id = z.string().brand("ChatId")
@@ -206,6 +209,23 @@ export namespace Chat {
         ])
     }
     export type Event = z.infer<typeof Event.Schema>
+
+
+    export namespace Signal {
+
+        export namespace MessageSent {
+            export const channel = Realtime.Channel.brand("ChatMessageSentSignalChannel")
+            export type channel = z.infer<typeof channel>
+
+            export const getChannel = (executionId: ExecutionId) => `chat:message_sent:${executionId}` as channel
+
+            export const Schema = Realtime.Signal.Base.extend({
+                chatId: Chat.Id,
+                message: Chat.Message.Schema,
+            })
+            export type Schema = z.infer<typeof Schema>
+        }
+    }
 
     export namespace API {
         export namespace Message {
