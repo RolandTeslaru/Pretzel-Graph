@@ -7,8 +7,8 @@
     "scripts": {
         "build": "tsc --build tsconfig.build.json",
         "typecheck": "tsc --noEmit",
-        "generate-indexes": "tsx scripts/generateIndexes.ts",
-        "watch:indexes": "tsx scripts/watchIndexes.ts"
+        "generate-indexes": "tsx src/Core/scripts/generateIndexes.ts",
+        "watch:indexes": "tsx src/Core/scripts/watchIndexes.ts"
     },
     "dependencies": {
         "@coinbase/agentkit": "^0.10.4",
