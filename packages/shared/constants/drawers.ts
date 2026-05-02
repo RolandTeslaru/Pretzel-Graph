@@ -152,6 +152,12 @@ export const BUNDLE_DRAWERS = {
     icon: "Amazon",
     blueprintIds: []
   },
+  alpaca: {
+    displayName: "Alpaca",
+    id: "alpaca",
+    icon: "Graph",
+    blueprintIds: ["Integrations.Alpaca.Market"]
+  },
   anthropic: {
     displayName: "Anthropic",
     id: "anthropic",
@@ -409,6 +415,12 @@ export const BUNDLE_DRAWERS = {
     id: "maritalk",
     icon: "Maritalk",
     blueprintIds: []
+  },
+  massive: {
+    displayName: "Massive",
+    id: "massive",
+    icon: "Graph",
+    blueprintIds: ["Integrations.Massive.Market"]
   },
   mem0: {
     displayName: "Mem0",
