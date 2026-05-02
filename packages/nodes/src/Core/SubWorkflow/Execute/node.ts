@@ -2,7 +2,7 @@ import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
-import { Workbench, Workflow, SystemError } from "@pretzel-graph/shared/domain";
+import { Execution, Workbench, Workflow, SystemError } from "@pretzel-graph/shared/domain";
 import { AxiosService } from "../../../services/AxiosService";
 import { CompilationContext, extendCompilePath } from "@pretzel-graph/worker";
 import { AggexEngine } from "@pretzel-graph/worker";
@@ -53,8 +53,20 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const childCtx = extendCompilePath(compilationContext, subWorkflowId);
 
+        const subExecution: Execution = {
+            id:           this.context.executionId,
+            workflow_id:  subWorkflowId,
+            igniter:      { variant: 'workbench_manual' },
+            status:       'running' as Execution.Status,
+            duration:     0,
+            session:      this.context.session,
+            chat_id:      this.context.chat_id,
+            created_at:   new Date().toISOString(),
+            updated_at:   new Date().toISOString(),
+        };
+
         this.localEngineCtx = await globalEngineCtx.compileWorkflow(
-            subWorkflow.id, subWorkflow.data, this.context, this.context.session, this.context.emit,
+            subWorkflow.id, subWorkflow.data, subExecution, this.context.emit, childCtx,
         );
     }
 

@@ -172,6 +172,47 @@ export class ChatDatabase {
                 .update({ content })
                 .eq('id', messageId)
                 .throwOnError();
-        })
+        }),
+
+        list: withSupabaseAssert('message.list', async (
+            supabase: SupabaseClient,
+            chatId: Chat.Id
+        ): Promise<Chat.Message[]> => {
+            const { data, error } = await supabase
+                .from('chat_messages')
+                .select('*')
+                .eq('chat_id', chatId)
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+            return (data ?? []) as Chat.Message[];
+        }),
+
+        overwrite: withSupabaseAssert('message.overwrite', async (
+            supabase: SupabaseClient,
+            chatId: Chat.Id,
+            messages: Chat.Message[]
+        ): Promise<void> => {
+            await supabase
+                .from('chat_messages')
+                .delete()
+                .eq('chat_id', chatId)
+                .throwOnError();
+
+            if (messages.length === 0) return;
+
+            await supabase
+                .from('chat_messages')
+                .insert(messages.map(message => ({
+                    id: message.id,
+                    chat_id: message.chat_id,
+                    role: message.role,
+                    content: message.content,
+                    data: message.data ?? {},
+                    attachments: message.attachments ?? null,
+                    created_at: new Date(),
+                })))
+                .throwOnError();
+        }),
     };
 }

@@ -1,6 +1,6 @@
 {
-  "version": "1777577676642",
-  "generatedAt": "2026-04-30T19:34:36.642Z",
+  "version": "1777745712688",
+  "generatedAt": "2026-05-02T18:15:12.688Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -108,12 +108,12 @@
         }
       ]
     },
-    "Core.Chat.SessionMessages": {
-      "id": "Core.Chat.SessionMessages",
-      "displayName": "Session Messages",
+    "Core.Chat.History": {
+      "id": "Core.Chat.History",
+      "displayName": "Chat History",
       "icon": "History",
       "accent": "port-Message",
-      "description": "Outputs the message history accumulated in the current execution session",
+      "description": "Outputs the message history accumulated in the current chat session.",
       "fields": [
         {
           "id": "signalDependency",
@@ -182,7 +182,7 @@
         {
           "id": "history",
           "displayName": "History",
-          "tooltip": "The message history from the current execution session",
+          "tooltip": "The message history from the current chat session",
           "variant": "MessageList"
         }
       ]
