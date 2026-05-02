@@ -11,10 +11,12 @@ export const Blueprint = defineBlueprint({
         InputBuilder.ToolList({
             id: "tools",
             displayName: "Tools",
+            required: true
         }),
         InputBuilder.Message({
             id: "input",
             displayName: "AIMessage Input",
+            required: true,
         }),
     ],
     outputs: [
