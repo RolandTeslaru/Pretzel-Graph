@@ -1,8 +1,8 @@
 import { addEdge, applyEdgeChanges, applyNodeChanges, reconnectEdge, MarkerType, SelectionMode } from '@xyflow/react'
 import type { ReactFlowProps, OnSelectionChangeParams } from "@xyflow/react"
 import { WorkbenchSDK } from "../../sdk"
-import WorkflowEdge from './Edge'
-import WorkbenchNode from './Node'
+import CanvasEdge from './Edge'
+import CanvasNode from './Node'
 import { ProblematicCycleSelectionNode } from './extraNodes'
 import { nodeColorsName } from '@/utils/styleUtils'
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
@@ -30,10 +30,10 @@ export const canvasProps = Object.freeze({
     minZoom: MIN_ZOOM,
     maxZoom: MAX_ZOOM,
     edgeTypes: {
-        workflowEdge: WorkflowEdge
+        workflowEdge: CanvasEdge
     },
     nodeTypes: {
-        workflowNode: WorkbenchNode,
+        workflowNode: CanvasNode,
         cycleSelectionNode: ProblematicCycleSelectionNode,
     }
 } satisfies ReactFlowProps<NodeDriver, EdgeDriver>)
