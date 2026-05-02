@@ -1,11 +1,11 @@
 import { Controller, Post, Body, UseGuards, HttpCode } from '@nestjs/common';
 import { Chat } from '@pretzel-graph/shared/domain';
-import { InternalAuthGuard } from '../../auth/internal-auth.guard';
+import { RuntimeNodeAuthGuard } from '../../auth/runtime-node-auth.guard';
 import { createServiceClient } from '../../utils/supabase';
 import { ChatDatabase } from './chat.database';
 
 @Controller('internal/chat')
-@UseGuards(InternalAuthGuard)
+@UseGuards(RuntimeNodeAuthGuard)
 export class InternalChatController {
     constructor(private readonly database: ChatDatabase) {}
 

@@ -6,8 +6,6 @@ import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { AggexCompilerError } from "../errors";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { S2Graph, Vertex } from "../S2/graph";
-import { load } from "@langchain/core/load";
-import { BaseMessage } from "@langchain/core/messages";
 import { resolveFields } from "../utils";
 import { CompilationContext, createCompilationContext } from "./context";
 import { AggexEngine } from "src/engine";
@@ -27,7 +25,6 @@ export class WorkflowCompiler {
         compilationContext: CompilationContext = createCompilationContext(workflowId),
     ): Promise<AggexEngine.ExecutionContext> {
 
-        const session = execution.session;
         const igniter = execution.igniter
         
         const workflowCache = Workflow.createCache(workflowData);
@@ -38,16 +35,6 @@ export class WorkflowCompiler {
 
         // START vertex — S2Engine ignites from here
         graph.addVertex(S2Graph.START_VERTEX_ID);
-
-        // Reconstruct BaseMessage instances from plain serialized objects (messages arrive as JSON over HTTP/Redis)
-        const reconstructedMessages = await Promise.all(
-            session.messages.map(async (msg) => {
-                if (msg instanceof BaseMessage) return msg;
-                return load(JSON.stringify(msg)) as Promise<BaseMessage>;
-            })
-        );
-
-        execution.session = produce(session, d => { d.messages = reconstructedMessages});
 
         const nodeRuntimeMap = new Map() as AggexEngine.ExecutionContext["nodeRuntimeMap"];
 
@@ -71,6 +58,7 @@ export class WorkflowCompiler {
             workflowCache,
             emit,
             executionId: execution.id,
+            chat_id: execution.chat_id,
             abortExecution,
             updateSession,
             abortSignal: abortController.signal,
