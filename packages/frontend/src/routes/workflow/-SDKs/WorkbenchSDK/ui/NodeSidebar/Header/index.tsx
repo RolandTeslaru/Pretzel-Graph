@@ -3,8 +3,6 @@ import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../sdk'
-import { ExecutionSDK } from '../../../../ExecutionSDK/sdk'
-import StatusIndicator from '../../Canvas/Node/Header/StatusIndicator'
 import { OptionsDropdown } from './OptionsDropdown'
 
 interface HeaderProps {
@@ -15,8 +13,6 @@ interface HeaderProps {
 }
 
 export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }: HeaderProps) => {
-
-    const nodeStatus = ExecutionSDK.useStore(s => ExecutionSDK.selectors.getNodeStatus(s, node.id));
 
     return (
         <div className='absolute z-10 top-2 left-2 right-2 flex flex-row gap-2'>
@@ -48,8 +44,6 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                     </h4>
                 )}
             </div>
-
-            <StatusIndicator nodeId={node.id} sessionStatus={nodeStatus} className='mb-0 mt-auto'/>
 
             <div className='ml-auto z-10 flex flex-row bg-card-float w-fit p-0.5 rounded-xl border border-border shadow-md shadow-black/10'>
                 {isEditing ? (
