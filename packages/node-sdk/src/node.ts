@@ -123,6 +123,9 @@ export abstract class RuntimeNode<
 
 
 
+
+
+
     public static resolveInitialFieldValues<T_Blueprint extends Foundations.Blueprint>(
         blueprint: T_Blueprint,
         fields: Record<Foundations.Field.Id, Foundations.Field.Value>
@@ -197,38 +200,39 @@ export abstract class RuntimeNode<
 
 
 
-    protected CreateSignalPromise(signalChannel: Realtime.Channel, timeout: number, onPayload: (raw: string) => void){
-        return this.AbortablePromise((resolve, reject, abortSignal) => {
+    protected CreateSignalPromise<T>(
+        signalChannel: Realtime.Channel,
+        schema:        { parse: (data: unknown) => T },
+        timeout:       number,
+    ): Promise<T> {
+        return this.AbortablePromise((_resolve, _reject, abortSignal) => {
             const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
-        
+
             const cleanup = () => {
                 clearTimeout(timer);
                 redis.unsubscribe(signalChannel).catch(() => {});
                 redis.disconnect();
             };
 
-            const timer = setTimeout(() => {
-                cleanup();
-                this.context.abortExecution('Webhook test timed out after 2 minutes');
-                reject(new Error('Webhook test timed out'));
-            }, timeout);
+            const resolve = (value: T)     => { cleanup(); _resolve(value); };
+            const reject  = (reason?: any) => { cleanup(); _reject(reason); };
+
+            const timer = setTimeout(() => reject(new Error('Signal timed out')), timeout);
 
             abortSignal.addEventListener('abort', cleanup, { once: true });
 
             redis.subscribe(signalChannel, (err) => {
-                if (err) { cleanup(); reject(err); }
+                if (err) reject(err);
             });
 
             redis.on('message', (_channel, raw) => {
-                cleanup();
                 try {
-                    onPayload(raw);
-                    return resolve(JSON.parse(raw));
+                    resolve(schema.parse(JSON.parse(raw)));
                 } catch (e) {
                     reject(e);
                 }
             });
-        })
+        });
     }
 }
 

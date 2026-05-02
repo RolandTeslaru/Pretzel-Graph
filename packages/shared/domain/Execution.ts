@@ -73,7 +73,7 @@ export namespace Execution {
 
         export const ChatMessage = z.object({
             variant: z.literal("chat_message"),
-            messageId: Chat.Message.Id,
+            message: Chat.Message.Schema,
         })
 
         export const Webhook = z.object({
@@ -267,12 +267,11 @@ export namespace Execution {
                 workflowId:   Workflow.Id,
                 workflowData: Workflow.Data.Schema,
                 executionId:  Execution.Id.optional(),
+                igniter:      Igniter.Schema.optional(),
             })
             export type Request = z.infer<typeof Request>
 
-            export const InternalRequest = Request.extend({
-                igniter: Igniter.Schema.optional(),
-            })
+            export const InternalRequest = Request
             export type InternalRequest = z.infer<typeof InternalRequest>
 
             export const Response = z.object({
