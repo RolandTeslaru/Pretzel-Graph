@@ -1,4 +1,4 @@
-import { Execution, Foundations, Realtime, Workflow } from "@pretzel-graph/shared/domain";
+import { Chat, Execution, Foundations, Realtime, Workflow } from "@pretzel-graph/shared/domain";
 import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "./types";
 import type { CompilationContext } from "./compiler-context";
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
@@ -265,6 +265,7 @@ export namespace RuntimeNode {
     
     export interface ExecutionContext {
         readonly executionId: Execution.Id,
+        readonly chat_id: Chat.Id | undefined,
         readonly session: Execution.Session,
         readonly updateSession: (recipe: (draft: Execution.Session) => void) => void,
         readonly abortSignal: AbortSignal,
