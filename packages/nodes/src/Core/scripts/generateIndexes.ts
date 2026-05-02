@@ -4,10 +4,10 @@ import * as path from "path";
 
 import { Foundations, Shelf } from "@pretzel-graph/shared/domain"
 
-const NODES_ROOT = path.resolve(__dirname, "../src");
-const OUTPUT_PATH = path.resolve(__dirname, "../dist/node_index.json")
-const BACKEND_TARGET = path.resolve(__dirname, "../../backend/src/services/Shelf/node_index.json");
-const BACKEND_SERVICE_FILE = path.resolve(__dirname, "../../backend/src/services/Shelf/service.ts");
+const NODES_ROOT = path.resolve(__dirname, "../../..");
+const OUTPUT_PATH = path.resolve(__dirname, "../../../dist/node_index.json")
+const BACKEND_TARGET = path.resolve(__dirname, "../../../../backend/src/services/Shelf/node_index.json");
+const BACKEND_SERVICE_FILE = path.resolve(__dirname, "../../../../backend/src/services/Shelf/service.ts");
 
 
 async function traverseDir(dir: string, callback: (filePath: string) => Promise<void>) {

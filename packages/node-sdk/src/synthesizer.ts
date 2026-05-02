@@ -1,6 +1,6 @@
-import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 import { LC } from "./langchain";
-import { Foundations } from "@pretzel-graph/shared/domain";
+import { Chat, Foundations } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 
 
@@ -364,6 +364,63 @@ export class Synthesizer {
                     `Unknown port variant "${variant}"`,
                     { data: { variant } }
                 );
+        }
+    }
+
+
+    public static lcToChatMessage(msg: LC.BaseMessage, chatId: Chat.Id): Chat.Message {
+        const base = {
+            id:         Chat.Message.createId(),
+            chat_id:    chatId,
+            content:    typeof msg.content === "string" ? msg.content : "",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        };
+
+        switch (msg._getType()) {
+            case "ai": {
+                const lcMsg = msg as LC.AIMessage;
+                return {
+                    ...base,
+                    role: "ai",
+                    data: {
+                        isProcessing: false,
+                        tool_calls: (lcMsg.tool_calls ?? []).map(tc => ({
+                            id:        Chat.ToolCall.Id.parse(tc.id ?? crypto.randomUUID()),
+                            name:      tc.name,
+                            arguments: tc.args,
+                        })),
+                    },
+                } satisfies Chat.Message.AI;
+            }
+            case "human":
+                return { ...base, role: "human" } satisfies Chat.Message.Human;
+            case "tool": {
+                const lcMsg = msg as LC.ToolMessage;
+                return {
+                    ...base,
+                    role: "tool",
+                    data: {
+                        tool_call_id: Chat.ToolCall.Id.parse(lcMsg.tool_call_id),
+                        tool_name:    lcMsg.name ?? "",
+                        status:       "success" as const,
+                    },
+                } satisfies Chat.Message.Tool;
+            }
+            case "system":
+                return { ...base, role: "system" } satisfies Chat.Message.System;
+            default:
+                throw new Error(`Unsupported LangChain message type "${msg._getType()}"`);
+        }
+    }
+
+
+    public static chatMessageToLC(msg: Chat.Message): LC.BaseMessage {
+        switch (msg.role) {
+            case "human":  return new HumanMessage(msg.content);
+            case "ai":     return new AIMessage(msg.content);
+            case "system": return new SystemMessage(msg.content);
+            case "tool":   return new ToolMessage(msg.content, (msg as Chat.Message.Tool).data.tool_call_id);
         }
     }
 

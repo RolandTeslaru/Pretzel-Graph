@@ -1,7 +1,8 @@
-import { RegisterNode } from "@pretzel-graph/node-sdk";
+import { RegisterNode, Synthesizer } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InternalChatAPI } from "../internal-api";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -13,17 +14,23 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ): Promise<InferOutputs<typeof Blueprint>> {
         const { overwrite, append } = inputs;
 
-        this.context.updateSession(d => {
-            if (overwrite !== undefined) {
-                d.messages = [...overwrite];
-            }
-            if (append !== undefined) {
-                d.messages = [...d.messages, ...append];
-            }
-        });
+        const chatId = this.context.chat_id;
+
+        if (!chatId)
+            throw new Error("Chat ID is required for Chat History node");
+
+        if (overwrite) {
+            const messages = overwrite.map(msg => Synthesizer.lcToChatMessage(msg, chatId));
+            await InternalChatAPI.messageOverwrite(chatId, messages);
+        } else if (append) {
+            const messages = append.map(msg => Synthesizer.lcToChatMessage(msg, chatId));
+            await InternalChatAPI.messageAdd({ messages });
+        }
+
+        const { data } = await InternalChatAPI.messageList(chatId);
 
         return {
-            history: this.context.session.messages,
+            history: (data?.messages ?? []).map(msg => Synthesizer.chatMessageToLC(msg)),
         };
     }
 }

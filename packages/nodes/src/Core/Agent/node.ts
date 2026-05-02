@@ -1,6 +1,6 @@
 import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint"
-import { RuntimeNode } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, LC } from "@pretzel-graph/node-sdk";
 import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 
 
@@ -12,9 +12,14 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {
+        const { languageModel, input, systemMessage } = inputs;
 
-        const lastMessage = this.context.session.messages[this.context.session.messages.length - 1];
+        const messages: LC.BaseMessage[] = [];
+        if (systemMessage) messages.push(systemMessage);
+        messages.push(input);
 
-        return { response: lastMessage };
+        const response = await languageModel.invoke(messages);
+
+        return { response };
     }
 }
