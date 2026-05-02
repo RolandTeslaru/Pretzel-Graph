@@ -1,11 +1,11 @@
 import { memo, useId, useCallback } from 'react';
-import { type EdgeProps, getBezierPath, EdgeLabelRenderer } from '@xyflow/react';
+import { type EdgeProps, getBezierPath } from '@xyflow/react';
 import { WorkbenchSDK } from '../../../sdk';
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
-import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
+import CanvasEdgeLabel from './label';
 
-const WorkflowEdge = memo(({
+const CanvasEdge = memo(({
     source,
     sourceHandleId,
     sourceX,
@@ -28,6 +28,9 @@ const WorkflowEdge = memo(({
     });
 
     const markerId = useId();
+    const glintFilterId = useId();
+    const glintGradientId = useId();
+    const glintMaskId = useId();
 
     const sourceNode = WorkbenchSDK.useStore(s => s.workflow.data.nodes[source as Workflow.Node.Id])
     
@@ -55,6 +58,9 @@ const WorkflowEdge = memo(({
     const isWaiting = edgeStatus.status === "waiting";
     const isPreparing = edgeStatus.status === "preparing";
 
+    const glintDur = isActive ? '1.2s' : '3s';
+    const glintTargetOpacity = isActive ? 1 : 0.75;
+
     const statusColor = isActive
         ? edgeStatus.status === "completed" ? defaultColor
         : isPreparing ? defaultColor
@@ -81,6 +87,27 @@ const WorkflowEdge = memo(({
                         }
                     `}</style>
                 )}
+                <mask id={glintMaskId} maskUnits="userSpaceOnUse" x="-9999" y="-9999" width="19999" height="19999">
+                    <path d={edgePath} stroke="white" strokeWidth="1.5" fill="none" />
+                </mask>
+                <radialGradient id={glintGradientId} cx="0" cy="0" r="150" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%"   stopColor="white"        stopOpacity="1" />
+                    <stop offset="30%"  stopColor={displayColor} stopOpacity="0.9" />
+                    <stop offset="100%" stopColor={displayColor} stopOpacity="0" />
+                </radialGradient>
+                <filter id={glintFilterId} x="-100%" y="-100%" width="300%" height="300%">
+                    <feComponentTransfer result="bright">
+                        <feFuncR type="linear" slope="2" intercept="0.4" />
+                        <feFuncG type="linear" slope="2" intercept="0.4" />
+                        <feFuncB type="linear" slope="2" intercept="0.4" />
+                    </feComponentTransfer>
+                    <feGaussianBlur in="bright" stdDeviation="1.5" result="blur" />
+                    <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
                 <marker
                     id={markerId}
                     markerWidth="12"
@@ -116,71 +143,40 @@ const WorkflowEdge = memo(({
                     animation: (isWaiting || isPreparing) ? `edge-dash-flow-${CSS.escape(id)} 0.6s linear infinite` : undefined,
                 }}
             />
-            <EdgeLabelRenderer>
-                {selected && (
-                    <div
-                        style={{
-                            position: 'absolute',
-                            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-                            pointerEvents: 'all',
-                        }}
-                        onMouseDown={(e) => e.stopPropagation()}
+            {!selected && (
+                <g mask={`url(#${glintMaskId})`}>
+                    <circle
+                        r={isActive ? 200 : 150}
+                        fill={`url(#${glintGradientId})`}
+                        opacity={0}
                     >
-                        <button
-                            className={`flex items-center justify-center w-7 h-7 rounded-sm bg-secondary 
-                                hover:bg-destructive text-secondary-foreground hover:text-destructive-foreground 
-                                transition-colors cursor-pointer shadow-md border-2 border-secondary-foreground`}
-                            
-                                onClick={handleDelete}
-                        >
-                            <SystemIcons.Trash2 size={14} />
-                        </button>
-                    </div>
-                )}
-                {edgeStatus.runCount > 0 && !selected && (
-                    <div
-                        style={{
-                            position: 'absolute',
-                            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-                            pointerEvents: 'none',
-                        }}
-                    >
-                        {Foundations.Port.isListLike(output.variant) && itemCount !== undefined && (
-                            <span style={{
-                                position: 'absolute',
-                                bottom: '100%',
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                marginBottom: 3,
-                                color: statusColor,
-                                fontSize: 10,
-                                fontWeight: 500,
-                                lineHeight: 1,
-                                opacity: 0.8,
-                                whiteSpace: 'nowrap',
-                            }}>
-                                {itemCount} items
-                            </span>
-                        )}
-                        <div
-                            style={{
-                                color: statusColor,
-                                fontSize: 14,
-                                fontWeight: 600,
-                                lineHeight: 1,
-                                background: 'var(--background)',
-                                padding: '2px 5px',
-                                borderRadius: 6,
-                                border: `2px solid ${statusColor}`,
-                            }}
-                        >
-                            {edgeStatus.runCount}
-                        </div>
-                    </div>
-                )}
-            </EdgeLabelRenderer>
+                        <animateMotion
+                            dur={glintDur}
+                            repeatCount="indefinite"
+                            path={edgePath}
+                        />
+                        <animate
+                            attributeName="opacity"
+                            dur={glintDur}
+                            repeatCount="indefinite"
+                            keyTimes="0;0.12;0.88;1"
+                            values={`0;${glintTargetOpacity};${glintTargetOpacity};0`}
+                        />
+                    </circle>
+                </g>
+            )}
+            <CanvasEdgeLabel
+                selected={selected}
+                labelX={labelX}
+                labelY={labelY}
+                onDelete={handleDelete}
+                edgeStatus={edgeStatus}
+                outputVariant={output.variant}
+                itemCount={itemCount}
+                statusColor={statusColor}
+            />
         </g>
     );
 });
 
-export default WorkflowEdge;
+export default CanvasEdge;
