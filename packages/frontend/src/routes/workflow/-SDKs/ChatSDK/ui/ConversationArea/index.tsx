@@ -55,7 +55,7 @@ const ConversationArea: React.FC<Props> = ({ messagesAreaClassname}) => {
                 Add a <NodeBadge icon="MessagesSquare" label="Chat Output" accent="port-Message" /> node to view responses.
             </p>
         )}
-        <div className={"flex flex-col gap-4 py-2 px-2 mt-auto pb-[116px] pt-13" }>
+        <div className={"flex flex-col gap-4 py-2 px-2 mt-auto pb-[130px] pt-13" }>
           {isLoading && (
             <div className="flex justify-center py-2">
               <Spinner/>
