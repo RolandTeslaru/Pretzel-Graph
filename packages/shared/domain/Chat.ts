@@ -4,6 +4,7 @@ import { type AxiosInstance } from "axios"
 import { type SupabaseClient } from "@supabase/supabase-js";
 import { Realtime } from "./Realtime";
 import { SystemError } from "./SystemError";
+import { Auth } from "./Auth";
 
 const ExecutionId = z.string().brand("ExecutionId");
 type ExecutionId = z.infer<typeof ExecutionId>;
@@ -59,13 +60,12 @@ export namespace Chat {
         export type Role = z.infer<typeof Role>
 
         export const Base = z.object({
-            id: Message.Id,
-            content: z.string(),
-            chat_id: Chat.Id,
-            created_at: z.iso.datetime(),
-            updated_at: z.iso.datetime(),
+            id:          Message.Id,
+            content:     z.string(),
+            chat_id:     Chat.Id,
+            created_at:  z.iso.datetime(),
+            updated_at:  z.iso.datetime(),
             attachments: z.record(Attachment.Id, Attachment.Schema).optional(),
-            job_id: z.string().brand("JobId").optional(),
         })
 
         function configLiteral<T extends Role>(value: T) {
@@ -135,43 +135,6 @@ export namespace Chat {
             chatId: Chat.Id,
         })
 
-        export namespace Response {
-            export namespace Created {
-                export const Schema = Base.extend({
-                    type: z.literal("response:created"),
-                    responseMessage: Chat.Message.AI
-                })
-            }
-            export type Created = z.infer<typeof Created.Schema>
-    
-            export namespace Chunk {
-                export const Schema = Base.extend({
-                    type: z.literal("response:chunk"),
-                    content: z.string(),
-                    responseMessageId: Chat.Message.Id,
-                })
-            }
-            export type Chunk = z.infer<typeof Chunk.Schema>
-    
-            export namespace Finished {
-                export const Schema = Base.extend({
-                    type: z.literal("response:finished"),
-                    responseMessageId: Chat.Message.Id,
-                    finalContent: z.string(),
-                })
-            }
-            export type Finished = z.infer<typeof Finished.Schema>
-            
-            export namespace Failed {
-                export const Schema = Base.extend({
-                    type: z.literal("response:failed"),
-                    responseMessageId: Chat.Message.Id,
-                    error: SystemError.Schema,
-                })
-            }
-            export type Failed = z.infer<typeof Failed.Schema>
-        }
-
         export namespace Message {
             export namespace Added {
                 export const Schema = Base.extend({
@@ -200,9 +163,6 @@ export namespace Chat {
 
 
         export const Schema = z.discriminatedUnion("type", [
-            Response.Created.Schema,
-            Response.Chunk.Schema,
-            Response.Finished.Schema,
             Message.Added.Schema,
             Message.Updated.Schema,
             Message.Erased.Schema,
@@ -210,6 +170,14 @@ export namespace Chat {
     }
     export type Event = z.infer<typeof Event.Schema>
 
+
+    export namespace Database {
+        export namespace Row {
+            export const Chat = Schema.extend({
+                user_id: Auth.User.Id,
+            })
+        }
+    }
 
     export namespace Signal {
 
@@ -224,6 +192,18 @@ export namespace Chat {
                 message: Chat.Message.Schema,
             })
             export type Schema = z.infer<typeof Schema>
+        }
+
+        export namespace HumanResponeded {
+            export const channel = Realtime.Channel.brand("ChatHumanRespondedSignalChannel")
+            export type channel = z.infer<typeof channel>
+
+            export const getChannel = (executionId: ExecutionId) => `chat:human_responded:${executionId}` as channel
+
+            export const Schema = Realtime.Signal.Base.extend({
+                chatId: Chat.Id,
+                message: Chat.Message.Human,
+            })
         }
     }
 

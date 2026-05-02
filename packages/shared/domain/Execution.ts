@@ -49,7 +49,6 @@ export namespace Execution {
         export const Schema = z.object({
             node_status: z.record(Workflow.Node.Id, NodeStatus.Schema).default({}),
             edge_state:  z.record(Workflow.Edge.Id, EdgeState.Schema).default({}),
-            messages:    z.array(z.custom<BaseMessage>((v) => v !== null && typeof v === 'object')).default([]),
             metadata:    z.record(z.string(), z.any()).default({}),
             node_output_instances:   z.record(Workflow.Node.Id, z.any()).default({}),
             node_output_projections: z.record(Workflow.Node.Id, z.record(Port.Output.Id, Projection.Schema)).default({}),
@@ -134,6 +133,7 @@ export namespace Execution {
         duration:    z.number(),
         error:       SystemError.Schema.optional(),
         session:     Session.Schema,     // embedded; no separate id
+        chat_id:     Chat.Id.optional(), // if applicable
         created_at:  z.iso.datetime(),
         updated_at:  z.iso.datetime(),
     })
@@ -268,6 +268,7 @@ export namespace Execution {
                 workflowData: Workflow.Data.Schema,
                 executionId:  Execution.Id.optional(),
                 igniter:      Igniter.Schema.optional(),
+                chat_id:      Chat.Id.optional(),
             })
             export type Request = z.infer<typeof Request>
 

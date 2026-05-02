@@ -3,6 +3,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { ExecutionController } from './execution.controller';
 import { ExecutionService } from './execution.service';
 import { ExecutionDatabase } from './execution.database';
+import { ChatDatabase } from '../Chat/chat.database';
 import { Execution } from '@pretzel-graph/shared/domain';
 import { RealtimeModule } from '../Realtime/realtime.module';
 
@@ -12,6 +13,6 @@ import { RealtimeModule } from '../Realtime/realtime.module';
         RealtimeModule,
     ],
     controllers: [ExecutionController],
-    providers: [ExecutionService, ExecutionDatabase],
+    providers: [ExecutionService, ExecutionDatabase, ChatDatabase],
 })
 export class ExecutionModule {}

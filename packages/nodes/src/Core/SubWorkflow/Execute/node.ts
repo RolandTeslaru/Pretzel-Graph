@@ -54,7 +54,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const childCtx = extendCompilePath(compilationContext, subWorkflowId);
 
         this.localEngineCtx = await globalEngineCtx.compileWorkflow(
-            subWorkflow.id, subWorkflow.data, this.context.jobId, this.context.session, this.context.emit, childCtx,
+            subWorkflow.id, subWorkflow.data, this.context, this.context.session, this.context.emit,
         );
     }
 

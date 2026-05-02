@@ -12,6 +12,7 @@ import { SecretsResolver } from './utils';
 import { PermissionService } from '../Permission/permission.service';
 import { Token } from '@/domain/Token';
 import { ExecutionDatabase } from './execution.database';
+import { ChatDatabase } from '../Chat/chat.database';
 
 @Injectable()
 export class ExecutionService {
@@ -31,6 +32,7 @@ export class ExecutionService {
         private readonly realtime:       RealtimeService,
         private readonly ownership:      PermissionService,
         private readonly database:       ExecutionDatabase,
+        private readonly chatDatabase:   ChatDatabase,
     ) {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
             console.error(`[Execution] ${jobId} failed:`, failedReason);
@@ -91,7 +93,7 @@ export class ExecutionService {
         payload:  Execution.API.Run.Request,
         igniter:  Execution.Igniter,
     ): Promise<Execution.API.Run.Response> {
-        const { workflowId, workflowData } = payload;
+        const { workflowId, workflowData, chat_id } = payload;
 
         const wfCache = Workflow.createCache(workflowData);
         // Validation
@@ -107,14 +109,18 @@ export class ExecutionService {
                 { data: { issues } }
             );
 
+        if (payload.chat_id)
+            await this.chatDatabase.chat.ensure(supabase, userId, payload.chat_id, workflowId);
+
         const session = Execution.Session.createInitial();
-        const executionId = await this.database.create(supabase, { workflowId, userId, igniter, session, executionId: payload.executionId });
+        const executionId = await this.database.create(supabase, { workflowId, userId, igniter, session, executionId: payload.executionId, chatId: payload.chat_id });
 
         const execution = {
             id: executionId,
             session,
             igniter,
             workflow_id: workflowId,
+            chat_id,
             status: "running",
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),

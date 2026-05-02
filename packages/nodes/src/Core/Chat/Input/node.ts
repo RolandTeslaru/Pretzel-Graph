@@ -5,6 +5,7 @@ import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { HumanMessage } from "@langchain/core/messages";
 import { Chat, Webhook } from "@pretzel-graph/shared/domain";
 import { api } from "../../../services/AxiosService";
+import { InternalChatAPI } from "../internal-api";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -28,6 +29,19 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 console.error(`[ChatInputNode] Error while waiting for message:`, e);
                 throw new Error(`Failed to receive chat message within ${Node.WEBHOOK_TIMEOUT / 1000} seconds. Please ensure the webhook is being called correctly.`);
             }
+        }
+
+        const chatId = this.context.chat_id;
+        if (chatId) {
+            const dbMessage: Chat.Message.Human = {
+                id: Chat.Message.createId(),
+                role: "human",
+                content: this.message.content as string,
+                chat_id: chatId,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            };
+            await InternalChatAPI.messageAdd({ messages: [dbMessage] });
         }
 
         return { response: this.message };
