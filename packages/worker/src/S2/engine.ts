@@ -15,7 +15,13 @@ export class S2Engine {
 
     constructor() { }
 
-    public async ignite(graph: S2Graph, hooks: S2Hooks): Promise<S2Engine.ExecutionResult> {
+
+
+
+    public async ignite(
+        graph: S2Graph, 
+        hooks: S2Hooks
+    ): Promise<S2Engine.ExecutionResult> {
         return new Promise<S2Engine.ExecutionResult>((resolve, reject) => {
             const startVertex = graph.vertices.get("__START__" as Vertex.Id);
 
@@ -42,9 +48,12 @@ export class S2Engine {
         })
     }
 
+
+
+
     private canVertexRun(
         vertexId: Vertex.Id,
-        ctx: S2Engine.ExecutionContext
+        ctx:      S2Engine.ExecutionContext
     ): boolean {
         const dependencies = ctx.graph.dependenciesMap.get(vertexId)!;
         const vertex = ctx.graph.vertices.get(vertexId);
@@ -85,11 +94,12 @@ export class S2Engine {
 
 
 
+
     private fireVertexDependents(
-        vertexId: Vertex.Id,
+        vertexId:  Vertex.Id,
         signalSet: Set<Vertex.Id> | void,
-        ctx: S2Engine.ExecutionContext
-    ) {
+        ctx:       S2Engine.ExecutionContext
+    ) { 
         const allDependents = ctx.graph.dependentsMap.get(vertexId)!;
         const dependents = signalSet ?? allDependents;
         // console.log("Firing dependents of vertex", vertexId, "with signal set", signalSet, "resulting in dependents", dependents);
@@ -120,10 +130,11 @@ export class S2Engine {
 
 
 
+
     private async fireVertex(
         vertexId: Vertex.Id,
-        signals: Set<Vertex.Id>, // incoming signals that triggered this vertex to fire. For AND strategy, this will be the complete set of dependencies. For OR/XOR, this will be a subset of dependencies.
-        ctx: S2Engine.ExecutionContext
+        signals:  Set<Vertex.Id>, // incoming signals that triggered this vertex to fire. For AND strategy, this will be the complete set of dependencies. For OR/XOR, this will be a subset of dependencies.
+        ctx:      S2Engine.ExecutionContext
     ) {
         // console.log("Attempting to fire vertex", vertexId, "with incoming signals", signals);
         if (ctx.settled) return;
@@ -138,10 +149,7 @@ export class S2Engine {
 
         vertex.track();
 
-        if(
-            vertex.deltaExecution < S2Engine.MAX_VERTEX_EXECUTION_DELTA && 
-            vertex.getRunCount() > S2Engine.MAX_VERTEX_RUN_COUNT
-        ) {
+        if(this.isShortCircuiting(vertexId, ctx)) {
             ctx.settled = true;
             const err = new S2EngineShortCircuitError(vertexId, vertex.getRunCount());
             ctx.hooks.onVertexError?.(vertexId, err);
@@ -180,11 +188,24 @@ export class S2Engine {
             }
         }
     }
+
+
+
+
+    private isShortCircuiting(
+        vertexId: Vertex.Id, 
+        ctx:      S2Engine.ExecutionContext
+    ): boolean {
+        const vertex = ctx.graph.vertices.get(vertexId);
+        if (!vertex)
+            throw new S2EngineError(`Attempted to assess short-circuiting on non-existent vertex ${vertexId}.`);
+
+        return vertex.deltaExecution < S2Engine.MAX_VERTEX_EXECUTION_DELTA && vertex.getRunCount() > S2Engine.MAX_VERTEX_RUN_COUNT;
+    }
 }
 
 export namespace S2Engine {
     export type ExecutionResult = "completed"
-
 
     export interface ExecutionContext {
         graph: S2Graph;

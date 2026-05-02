@@ -26,6 +26,9 @@ export class AggexEngine {
 
     private hooks: AggexHooks;
 
+
+
+
     public pause(){
         if(this.pausePromise)
             return
@@ -34,6 +37,9 @@ export class AggexEngine {
             this.pauseResolve = resolve;
         })
     }
+
+
+
 
     public resume(){
         if(!this.pausePromise || !this.pauseResolve)
@@ -45,13 +51,22 @@ export class AggexEngine {
         this.pausePromise = null;
     }
 
+
+
+
     constructor(hooks: AggexHooks = {}) {
         this.hooks = hooks;
     }
 
+
+
+
     private getEventChannel(ctx: AggexEngine.ExecutionContext): Execution.Event.Channel{
         return Execution.Event.getChannel(ctx.executionId);
     }
+
+
+
 
     private projectOutputs(
         result: Record<string, any>,
@@ -69,8 +84,10 @@ export class AggexEngine {
     }
 
 
+
+
     private resolveRouterSignals(
-        ctx: AggexEngine.ExecutionContext,
+        ctx:    AggexEngine.ExecutionContext,
         nodeId: Workflow.Node.Id,
         result: Record<string, any>
     ): Set<Vertex.Id> {
@@ -89,8 +106,8 @@ export class AggexEngine {
 
 
     private resolveInputs(
-        ctx: AggexEngine.ExecutionContext,
-        nodeId: Workflow.Node.Id,
+        ctx:             AggexEngine.ExecutionContext,
+        nodeId:          Workflow.Node.Id,
         incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set(),
         keepMissingPorts = false,
     ): Record<Port.Input.Id, any> {
@@ -180,6 +197,7 @@ export class AggexEngine {
     
 
 
+
     private onNodeFired(
         ctx: AggexEngine.ExecutionContext, 
         nodeId: Vertex.Id
@@ -229,6 +247,8 @@ export class AggexEngine {
     }
 
 
+
+
     private async awaitPause(ctx: AggexEngine.ExecutionContext) {
         if(!this.pausePromise)
             return
@@ -241,10 +261,11 @@ export class AggexEngine {
         
 
 
+
     private onNodeExecuted = async (
-        ctx: AggexEngine.ExecutionContext,
+        ctx:      AggexEngine.ExecutionContext,
         vertexId: Vertex.Id, 
-        signals: Set<Workflow.Node.Id | Vertex.Id>
+        signals:  Set<Workflow.Node.Id | Vertex.Id>
     ): Promise<Set<Vertex.Id> | void> => {
         
         const entry = ctx.nodeRuntimeMap.get(vertexId);
@@ -284,9 +305,10 @@ export class AggexEngine {
 
 
 
+
     private async onNodeCompleted(
-        ctx: AggexEngine.ExecutionContext,
-        vertexId: Vertex.Id,
+        ctx:                AggexEngine.ExecutionContext,
+        vertexId:           Vertex.Id,
         resolvedOutSignals: Set<Vertex.Id> | void
     ) {
         const { session, nodeRuntimeMap, workflowCache } = ctx
@@ -345,11 +367,11 @@ export class AggexEngine {
 
 
     private onNodeWaiting(
-        ctx: AggexEngine.ExecutionContext,
-        vertexId: Vertex.Id,
-        arrivedSignals: Set<Vertex.Id>,
+        ctx:                     AggexEngine.ExecutionContext,
+        vertexId:                Vertex.Id,
+        arrivedSignals:          Set<Vertex.Id>,
         dependencyResolutionMap: Record<Vertex.Id, boolean>,
-        totalDeps: number
+        totalDeps:               number
     ) {
         const entry = ctx.nodeRuntimeMap.get(vertexId);
         if (!entry)
@@ -380,9 +402,9 @@ export class AggexEngine {
 
 
     private onNodeError(
-        ctx: AggexEngine.ExecutionContext, 
+        ctx:      AggexEngine.ExecutionContext, 
         vertexId: Vertex.Id, 
-        error: unknown
+        error:    unknown
     ) {
         console.error(`Error during node execution, ${vertexId}:`, error)
 
@@ -417,10 +439,12 @@ export class AggexEngine {
     }
 
 
+
+
     private canNodeRun(
-        ctx: AggexEngine.ExecutionContext,
-        vertexId: Vertex.Id,
-        receivedSignals: Set<Vertex.Id>,
+        ctx:               AggexEngine.ExecutionContext,
+        vertexId:          Vertex.Id,
+        receivedSignals:   Set<Vertex.Id>,
         s2EngineAssesment: boolean
     ): boolean {
         const entry = ctx.nodeRuntimeMap.get(vertexId);
@@ -430,7 +454,7 @@ export class AggexEngine {
         const { instance, wfNode } = entry;
 
         const signalDepField = instance.fields["signalDependency" as Field.Id];
-        const dataDepField = instance.fields["dataDependency" as Field.Id];
+        const dataDepField   = instance.fields["dataDependency" as Field.Id];
 
         // if(!signalDepField || !dataDepField)
         //     return true;
@@ -446,9 +470,13 @@ export class AggexEngine {
 
                 const incomingInputs = this.resolveInputs(ctx, wfNode.id, dependencies, true);
 
-                // If we find a undefined port, it means that not all data dependencies are resolved, and the node cannot run yet
-                for(const portId in incomingInputs){
-                    if(incomingInputs[portId as Port.Input.Id] === undefined)
+                const requiredPortIds = new Set(
+                    wfNode.inputs.filter(p => p.required).map(p => p.id)
+                );
+
+                // If a required port is undefined, not all data dependencies are resolved yet
+                for (const portId in incomingInputs) {
+                    if (requiredPortIds.has(portId as Port.Input.Id) && incomingInputs[portId as Port.Input.Id] === undefined)
                         return false;
                 }
                 return true;
@@ -514,10 +542,10 @@ export namespace AggexEngine {
     }
 
     export interface ExecutionContext extends RuntimeNode.ExecutionContext {
-        compiledGraph: S2Graph,
+        compiledGraph:   S2Graph,
         compileWorkflow: WorkflowCompiler["compile"]
-        runSubWorkflow: AggexEngine["run"]
-        activeNodes: Set<Workflow.Node.Id | Vertex.Id>;
+        runSubWorkflow:  AggexEngine["run"]
+        activeNodes:     Set<Workflow.Node.Id | Vertex.Id>;
         nodeRuntimeMap:  Map<
             Vertex.Id | Workflow.Node.Id, 
             { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> }
