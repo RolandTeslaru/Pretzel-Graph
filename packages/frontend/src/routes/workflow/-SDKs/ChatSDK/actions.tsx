@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { DialogSDK } from "@/SDKs/DialogSDK";
 import FullscreenChat from "./ui/FullscreenChat";
-import { AIMessage, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 import { ExecutionSDK } from "../ExecutionSDK/sdk";
 
 function deriveChatName(content: string, maxLength = 50): string {
@@ -70,21 +69,12 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                 }
 
                 try {
-                    await Chat.API.Message.add(api, { messages: [message] })
-
                     sdk.actions.message.upsert(message)
 
-                    // ExecutionSessionSDK.setState(s => {
-                    //     s.session.messages.push(new HumanMessage(message.content))
-                    // })
-                    // const jobId = await OrchestratorSDK.actions.run()
-
-                    // if (!jobId)
-                    //     throw new Error("No job id returned");
-
-                    // sdk.setState(s => {
-                    //     sdk.reducers.resolveJobId(s, message.id, jobId)
-                    // })
+                    await ExecutionSDK.actions.run({
+                        variant: "chat_message",
+                        message,
+                    });
                 }
                 catch (err) {
                     toast.error(SystemError.messageFrom(err));

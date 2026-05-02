@@ -4,6 +4,8 @@ import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferFields, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 
+// NOT INCLUDED IN PRODUCTION BUILD - FOR DEV PURPOSES ONLY. This node allows executing arbitrary JavaScript code, and is intended for testing and development only. It should not be used in production environments.
+
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 

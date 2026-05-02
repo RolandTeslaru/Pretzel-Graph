@@ -3,11 +3,8 @@ import { Blueprint } from "./blueprint"
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { HumanMessage } from "@langchain/core/messages";
-import { Webhook } from "@pretzel-graph/shared/domain";
+import { Chat, Webhook } from "@pretzel-graph/shared/domain";
 import { api } from "../../../services/AxiosService";
-import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
-import Redis from "ioredis";
-
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -19,11 +16,19 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private message: HumanMessage | null = null;
 
+    public injectMessage(chatMessage: Chat.Message): void {
+        this.message = new HumanMessage({ content: chatMessage.content });
+    }
+
     protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
-
-        if(!this.message)
-            this.message = await this.waitForMessage();
-
+        if (!this.message) {
+            try {
+                this.message = await this.waitForMessage();
+            } catch (e) {
+                console.error(`[ChatInputNode] Error while waiting for message:`, e);
+                throw new Error(`Failed to receive chat message within ${Node.WEBHOOK_TIMEOUT / 1000} seconds. Please ensure the webhook is being called correctly.`);
+            }
+        }
 
         return { response: this.message };
     }
@@ -35,39 +40,14 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         await Webhook.Test.API.register(api, { workflowId, path: Node.WEBHOOK_PATH, method: "POST" });
 
-        this.CreateSignalPromise()
+        const signal = await this.CreateSignalPromise(
+            Chat.Signal.MessageSent.getChannel(this.context.executionId),
+            Chat.Signal.MessageSent.Schema,
+            Node.WEBHOOK_TIMEOUT
+        )
 
-        return this.AbortablePromise<Webhook.Payload>((resolve, reject, abortSignal) => {
-            const channel = Webhook.Test.Signal.getChannel(workflowId);
-            const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
-
-            const cleanup = () => {
-                clearTimeout(timer);
-                redis.unsubscribe(channel).catch(() => {});
-                redis.disconnect();
-            };
-
-            const timer = setTimeout(() => {
-                cleanup();
-                this.context.abortExecution('Webhook test timed out after 2 minutes');
-                reject(new Error('Webhook test timed out'));
-            }, Node.WEBHOOK_TIMEOUT);
-
-            abortSignal.addEventListener('abort', cleanup, { once: true });
-
-            redis.subscribe(channel, (err) => {
-                if (err) { cleanup(); reject(err); }
-            });
-
-            redis.on('message', (_channel, raw) => {
-                cleanup();
-                try {
-                    const sig = Webhook.Test.Signal.Schema.parse(JSON.parse(raw));
-                    return resolve(sig.payload);
-                } catch (e) {
-                    reject(e);
-                }
-            });
-        });
+        return new HumanMessage({
+            content: signal.message.content,
+        })
     }
 }

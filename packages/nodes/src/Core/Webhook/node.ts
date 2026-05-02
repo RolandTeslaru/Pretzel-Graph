@@ -46,50 +46,23 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         };
     }
 
-    private async waitForTestPayload() {
+    private async waitForTestPayload(): Promise<Webhook.Payload> {
         const { workflowId } = this.context;
+
         const path   = this.fields.path   as Webhook.Path;
         const method = this.fields.method as Webhook.Method;
 
         console.log(`[WebhookNode] Registering test webhook [${method}] /${workflowId}/${path}`);
         await Webhook.Test.API.register(AxiosService.api, { workflowId, path, method });
-        console.log(`[WebhookNode] Waiting for test payload on channel=${Webhook.Test.Signal.getChannel(workflowId)}`);
+        console.log(`[WebhookNode] Waiting for test payload on channel=${Webhook.Test.ResolveSignal.getChannel(this.context.executionId)}`);
 
-        return this.AbortablePromise<Webhook.Payload>((resolve, reject, signal) => {
-            const channel = Webhook.Test.Signal.getChannel(workflowId);
-            const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+        const signal = await this.CreateSignalPromise(
+            Webhook.Test.ResolveSignal.getChannel(this.context.executionId),
+            Webhook.Test.ResolveSignal.Schema,
+            TEST_WAIT_MS
+        );
 
-            const cleanup = () => {
-                clearTimeout(timer);
-                redis.unsubscribe(channel).catch(() => {});
-                redis.disconnect();
-            };
-
-            const timer = setTimeout(() => {
-                cleanup();
-                this.context.abortExecution('Webhook test timed out after 2 minutes');
-                reject(new Error('Webhook test timed out'));
-            }, TEST_WAIT_MS);
-
-            signal.addEventListener('abort', cleanup, { once: true });
-
-            redis.subscribe(channel, (err) => {
-                if (err) { cleanup(); reject(err); }
-            });
-
-            redis.on('message', (_channel, raw) => {
-                cleanup();
-                try {
-                    const sig = Webhook.Test.Signal.Schema.parse(JSON.parse(raw));
-                    switch (sig.type) {
-                        case "resolve":
-                            console.log(`[WebhookNode] Test payload received on channel=${channel}`, JSON.stringify(sig.payload, null, 2));
-                            return resolve(sig.payload);
-                    }
-                } catch (e) {
-                    reject(e);
-                }
-            });
-        });
+        console.log(`[WebhookNode] Received test payload`);
+        return signal.payload;
     }
 }
