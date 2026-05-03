@@ -151,7 +151,7 @@ const BottomPanel = () => {
                         <Popover.Root>
                             <Popover.Trigger asChild>
                                 <motion.div
-                                    className='absolute right-[calc(100%+16px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/80 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'
+                                    className='absolute right-[calc(100%+16px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/90 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'
                                     initial={{ x: 24, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
                                     exit={{ x: 24, opacity: 0 }}
@@ -175,7 +175,7 @@ const BottomPanel = () => {
                         <Popover.Root>
                             <Popover.Trigger asChild>
                                 <motion.div
-                                    className='absolute left-[calc(100%+16px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/80 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'
+                                    className='absolute left-[calc(100%+16px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/90 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'
                                     initial={{ x: -24, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
                                     exit={{ x: -24, opacity: 0 }}
