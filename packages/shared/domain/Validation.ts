@@ -22,6 +22,8 @@ export namespace Validation {
                 nodeId: Workflow.Node.Id,
                 workflowData: Workflow.Data
             ): Issue.Field | null {
+                if (!field.required) return null;
+
                 const value = workflowData.staticValues[nodeId]?.[field.id];
 
                 if (value === undefined || value === null || value === "")
