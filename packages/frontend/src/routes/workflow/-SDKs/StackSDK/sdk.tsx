@@ -57,12 +57,14 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                         return (
                             <React.Fragment key={panelId}>
                                 {entry.renderer({ entry: { panelId: entry.panelId, isOpen: entry.isOpen }, stackSize, index })}
-                                
-                                {Array.from(entry.companions).map(([companionId, companion]) => (
-                                    <React.Fragment key={companionId}>
-                                        {companion.renderer({ stackSize, index, isFront, parentPanelId: panelId })}
-                                    </React.Fragment>
-                                ))}
+
+                                <AnimatePresence>
+                                    {Array.from(entry.companions).map(([companionId, companion]) => (
+                                        <React.Fragment key={companionId}>
+                                            {companion.renderer({ stackSize, index, isFront, parentPanelId: panelId })}
+                                        </React.Fragment>
+                                    ))}
+                                </AnimatePresence>
                             </React.Fragment>
                         )
                     })}
@@ -73,8 +75,16 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
 
     public readonly Template: StackSDK.Template = ({ children, entry, stackSize, index, className }) => {
 
+        const companionShift = this.useStore(s => {
+            const panel = s.panels.get(entry.panelId)
+            if (!panel) return 0
+            let total = 0
+            panel.companions.forEach(c => { total += c.shift ?? 0 })
+            return total
+        })
+
         const depth = index - (stackSize - 1);        // 0 = front, -1 = one behind, etc.
-        const xOffset = depth * -24;                      // shift right 24px per level
+        const xOffset = depth * -24 + companionShift;
         const yOffset = depth * 48;                      // shift right 24px per level
         const scale = 1 + depth * 0.03;                // shrink 3% per level
         const brightnessBase = depth === 0 ? 1 : 1 / -(depth - 1);  // darken behind panels
@@ -124,8 +134,16 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
 
     public readonly CompanionTemplate: StackSDK.CompanionTemplate = ({ children, stackSize, index, isFront, className, enter = "left", parentPanelId }) => {
 
+        const companionShift = this.useStore(s => {
+            const panel = s.panels.get(parentPanelId)
+            if (!panel) return 0
+            let total = 0
+            panel.companions.forEach(c => { total += c.shift ?? 0 })
+            return total
+        })
+
         const depth = index - (stackSize - 1)
-        const xOffset = depth * -24
+        const xOffset = depth * -24 + companionShift
         const yOffset = depth * 48
         const scale = 1 + depth * 0.03
         const brightnessBase = depth === 0 ? 1 : 1 / -(depth - 1)
@@ -184,6 +202,7 @@ export namespace StackSDK {
     export type CompanionEntry = {
         companionId: string
         renderer: CompanionRenderer
+        shift?: number
     }
 
     export type Renderer = (props: TemplateProps) => React.ReactNode
