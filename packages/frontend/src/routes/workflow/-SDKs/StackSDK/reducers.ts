@@ -45,10 +45,10 @@ export const stackReducers = {
         if (!entry) return
         entry.isOpen = isOpen
     },
-    pushCompanion: (s, panelId, companionId, renderer) => {
+    pushCompanion: (s, panelId, companionId, renderer, shift) => {
         const entry = s.panels.get(panelId)
         if (!entry) return
-        entry.companions.set(companionId, { companionId, renderer })
+        entry.companions.set(companionId, { companionId, renderer, shift })
     },
     popCompanion: (s, panelId, companionId) => {
         const entry = s.panels.get(panelId)
@@ -65,6 +65,6 @@ interface StackSDKReducers {
     bringToFront: (state: StackSDK.State, panelId: string) => void
     sendToBack: (state: StackSDK.State, panelId: string) => void
     setIsOpen: (state: StackSDK.State, panelId: string, isOpen: boolean) => void
-    pushCompanion: (state: StackSDK.State, panelId: string, companionId: string, renderer: StackSDK.CompanionRenderer) => void
+    pushCompanion: (state: StackSDK.State, panelId: string, companionId: string, renderer: StackSDK.CompanionRenderer, shift?: number) => void
     popCompanion: (state: StackSDK.State, panelId: string, companionId: string) => void
 }
