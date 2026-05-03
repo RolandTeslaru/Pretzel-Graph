@@ -17,7 +17,7 @@ export const NodeSidebarFooter = () => {
             StackSDK.actions.popCompanion("nodeSidebar", "incoming");
         } else {
             StackSDK.actions.pushCompanion("nodeSidebar", "incoming", (props) => (
-                <StackSDK.CompanionTemplate enter="right" {...props} className='right-100 top-24 bottom-24 w-62.5'>
+                <StackSDK.CompanionTemplate enter="right" {...props} className='right-full top-0 bottom-0 w-62.5 mr-5'>
                     <IncomingPanel />
                 </StackSDK.CompanionTemplate>
             ))
@@ -29,7 +29,7 @@ export const NodeSidebarFooter = () => {
             StackSDK.actions.popCompanion("nodeSidebar", "outgoing");
         } else {
             StackSDK.actions.pushCompanion("nodeSidebar", "outgoing", (props) => (
-                <StackSDK.CompanionTemplate {...props} className='-right-[260px] top-24 bottom-24 w-62.5'>
+                <StackSDK.CompanionTemplate {...props} className='left-full top-0 bottom-0 w-62.5 ml-5'>
                     <div className="p-2 h-full">
                         <div className='bg-card border border-border rounded-full p-1 flex flex-row gap-2 shadow-md shadow-black/10'>
                             <SystemIcons.LogOut size={20}/>
