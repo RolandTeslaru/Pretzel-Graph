@@ -57,14 +57,6 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                         return (
                             <React.Fragment key={panelId}>
                                 {entry.renderer({ entry: { panelId: entry.panelId, isOpen: entry.isOpen }, stackSize, index })}
-
-                                <AnimatePresence>
-                                    {Array.from(entry.companions).map(([companionId, companion]) => (
-                                        <React.Fragment key={companionId}>
-                                            {companion.renderer({ stackSize, index, isFront, parentPanelId: panelId })}
-                                        </React.Fragment>
-                                    ))}
-                                </AnimatePresence>
                             </React.Fragment>
                         )
                     })}
@@ -83,12 +75,16 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
             return total
         })
 
-        const depth = index - (stackSize - 1);        // 0 = front, -1 = one behind, etc.
-        const xOffset = depth * -24 + companionShift;
-        const yOffset = depth * 48;                      // shift right 24px per level
-        const scale = 1 + depth * 0.03;                // shrink 3% per level
-        const brightnessBase = depth === 0 ? 1 : 1 / -(depth - 1);  // darken behind panels
+        const companions = (this.useStore as any)(
+            (s: StackSDK.State) => s.panels.get(entry.panelId)?.companions ?? new Map(),
+            Object.is
+        ) as StackSDK.PanelEntry['companions']
 
+        const depth = index - (stackSize - 1);
+        const xOffset = depth * -24 + companionShift;
+        const yOffset = depth * 48;
+        const scale = 1 + depth * 0.03;
+        const brightnessBase = depth === 0 ? 1 : 1 / -(depth - 1);
         const isFront = depth === 0;
 
         const handleClick = () => {
@@ -98,29 +94,37 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
 
         return (
             <motion.div
-                layout
                 initial={{ x: "100%", opacity: 0 }}
-                animate={{
-                    x: xOffset,
-                    y: yOffset,
-                    opacity: 1,
-                    scale: scale,
-                    filter: `brightness(calc(1 - (1 - ${brightnessBase}) * var(--stack-depth-dim-mult, 0.08)))`,
-                }}
+                animate={{ x: xOffset, y: yOffset, opacity: 1, scale }}
                 exit={{ x: "100%", opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 style={{ zIndex: 20 + index }}
                 onClick={handleClick}
-                className={`
-                    overflow-hidden
-                    ${className || ''}
-                    fixed flex flex-col right-5 top-24 bottom-24 w-87.5 bg-card/80 backdrop-blur-lg 
-                    border border-border rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10
-                    [--stack-depth-dim-mult:0.3] dark:[--stack-depth-dim-mult:1]
-                    ${!isFront ? 'cursor-pointer' : ''}
-                `}
+                className={`fixed right-5 top-24 bottom-24 w-87.5 ${!isFront ? 'cursor-pointer' : ''}`}
             >
-                {children}
+                {/* filter lives here, not on the outer div — filter on an ancestor breaks backdrop-blur on descendants */}
+                <motion.div
+                    animate={{ filter: `brightness(calc(1 - (1 - ${brightnessBase}) * var(--stack-depth-dim-mult, 0.08)))` }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className={`
+                        overflow-hidden
+                        ${className || ''}
+                        flex flex-col w-full h-full bg-card/80 backdrop-blur-lg
+                        border border-border rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10
+                        [--stack-depth-dim-mult:0.3] dark:[--stack-depth-dim-mult:1]
+                    `}
+                >
+                    {children}
+                </motion.div>
+
+                {/* Companions — absolutely positioned relative to this motion.div */}
+                <AnimatePresence>
+                    {Array.from(companions).map(([companionId, companion]) => (
+                        <React.Fragment key={companionId}>
+                            {companion.renderer({ stackSize, index, isFront, parentPanelId: entry.panelId })}
+                        </React.Fragment>
+                    ))}
+                </AnimatePresence>
             </motion.div>
         )
     }
@@ -134,19 +138,6 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
 
     public readonly CompanionTemplate: StackSDK.CompanionTemplate = ({ children, stackSize, index, isFront, className, enter = "left", parentPanelId }) => {
 
-        const companionShift = this.useStore(s => {
-            const panel = s.panels.get(parentPanelId)
-            if (!panel) return 0
-            let total = 0
-            panel.companions.forEach(c => { total += c.shift ?? 0 })
-            return total
-        })
-
-        const depth = index - (stackSize - 1)
-        const xOffset = depth * -24 + companionShift
-        const yOffset = depth * 48
-        const scale = 1 + depth * 0.03
-        const brightnessBase = depth === 0 ? 1 : 1 / -(depth - 1)
         const enterVector = StackSDKImpl.ENTER_VECTORS[enter]
 
         const handleClick = () => {
@@ -156,23 +147,15 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
 
         return (
             <motion.div
-                layout
                 onClick={handleClick}
                 initial={{ ...enterVector, opacity: 0 }}
-                animate={{
-                    x: xOffset,
-                    y: yOffset,
-                    opacity: 1,
-                    scale: scale,
-                    filter: `brightness(calc(1 - (1 - ${brightnessBase}) * var(--stack-depth-dim-mult, 0.08)))`,
-                }}
+                animate={{ x: 0, y: 0, opacity: 1 }}
                 exit={{ ...enterVector, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                style={{ zIndex: 19 + index }}
                 className={`
-                    overflow-hidden
+                    overflow-hidden absolute
                     ${className || ''}
-                    fixed flex flex-col bg-card/80 backdrop-blur-lg
+                    flex flex-col bg-card/80 backdrop-blur-lg
                     border border-border rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10
                     [--stack-depth-dim-mult:0.3] dark:[--stack-depth-dim-mult:1]
                     ${!isFront ? 'cursor-pointer' : ''}
