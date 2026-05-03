@@ -141,6 +141,13 @@ const CanvasEdge = memo(({
                         keyTimes="0;0.12;0.88;1"
                         values="0;0.9;0.9;0"
                     />
+                    <animate
+                        attributeName="rx"
+                        dur="3s"
+                        repeatCount="indefinite"
+                        keyTimes="0;0.2;0.5;0.8;1"
+                        values={`0;${streakLen / 2};${streakLen / 2};${streakLen / 2};0`}
+                    />
                 </ellipse>
             )}
             <CanvasEdgeLabel
