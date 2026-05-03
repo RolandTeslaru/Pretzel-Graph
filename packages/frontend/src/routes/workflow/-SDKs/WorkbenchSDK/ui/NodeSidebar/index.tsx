@@ -35,7 +35,11 @@ const NodeSidebar = () => {
 export default NodeSidebar
 
 
-const Content = memo(({ clickedNode: node }: { clickedNode: Workflow.Node }) => {
+interface Props {
+    clickedNode: Workflow.Node
+}
+
+const Content = memo(({ clickedNode: node }: Props) => {
     const [isEditing, setIsEditing] = useState(false)
     const connectedPorts = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.getConnectedPorts(s, node.id))
 

@@ -1,6 +1,6 @@
 {
-  "version": "1777765035861",
-  "generatedAt": "2026-05-02T23:37:15.861Z",
+  "version": "1777806636330",
+  "generatedAt": "2026-05-03T11:10:36.330Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -2468,6 +2468,102 @@
           "polymorphicGroupId": "data",
           "variant": "UnresolvedScalar",
           "originalVariant": "UnresolvedScalar"
+        }
+      ]
+    },
+    "Core.Utils.List.Slice": {
+      "id": "Core.Utils.List.Slice",
+      "displayName": "Slice List",
+      "icon": "Scissors",
+      "accent": "utility",
+      "description": "Returns a sub-array from a list using start and end indices.",
+      "fields": [
+        {
+          "id": "start",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Start",
+          "tooltip": "Start index (inclusive). Negative values count from the end.",
+          "variant": "Integer",
+          "initialValue": 0,
+          "step": 1
+        },
+        {
+          "id": "end",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "End",
+          "tooltip": "End index (exclusive). Leave empty to slice to the end of the list. Negative values count from the end.",
+          "variant": "Integer",
+          "step": 1
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "list",
+          "displayName": "List",
+          "polymorphicGroupId": "data",
+          "internal": false,
+          "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "slice",
+          "displayName": "Slice",
+          "polymorphicGroupId": "data",
+          "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList"
         }
       ]
     },

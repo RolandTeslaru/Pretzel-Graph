@@ -107,7 +107,7 @@ export namespace FieldBuilder {
         return {
             ...buildBase(config),
             variant: "Integer",
-            initialValue: config.initialValue ?? 0,
+            initialValue: config.initialValue,
             min: config.min,
             max: config.max,
             step: config.step ?? 1,

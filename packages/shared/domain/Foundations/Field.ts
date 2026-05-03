@@ -46,7 +46,7 @@ export namespace Field {
 
     export const Integer = Field.Base.extend({
         variant: configLiteral("Integer"),
-        initialValue: z.int(),
+        initialValue: z.int().optional(),
         min: z.int().optional(),
         max: z.int().optional(),
         step: z.int().optional(),

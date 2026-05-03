@@ -73,8 +73,8 @@ const CanvasEdge = memo(({
     };
 
     const showGlint = !selected;
-    const streakLen = 90;
-    const streakThickness = 10;
+    const streakLen = 60;
+    const streakThickness = 6;
 
     return (
         <g>
