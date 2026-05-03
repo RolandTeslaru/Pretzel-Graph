@@ -1,4 +1,4 @@
-import { Foundations, Shelf, Workflow } from "@pretzel-graph/shared/domain";
+import { Foundations, Shelf } from "@pretzel-graph/shared/domain";
 import type { ShelfSDKImpl, ShelfSDK } from "./sdk";
 
 export type State = ShelfSDK.State
@@ -21,11 +21,11 @@ export function _createShelfReducers_(sdk: ShelfSDKImpl) {
     } satisfies DrawerReducers
 
     const checkIfDefintionHasHandles = (s: State, blueprint: Foundations.Blueprint, dataTypes: Set<Foundations.Port.Variant>) => {
-        return blueprint.outputs.some(output => {
-            return Array.from(dataTypes).some(
-                (type) => output.handleVariants.includes(type)
-            )
-        })
+        // return blueprint.outputs.some(output => {
+        //     return Array.from(dataTypes).some(
+        //         (type) => output.handleVariants.includes(type)
+        //     )
+        // })
     }
 
     const filterReducer = (s: State) => {
@@ -104,10 +104,10 @@ type DrawerReducers = {
 
 export type _ShelfReducers = {
     drawer: DrawerReducers,
-    setSection: (state: State, section: ShelfSDK.Section) => void,
+    setSection: (state: State, section: Shelf.Section) => void,
     searchFilter: {
         setQuery: (state: State, query: string) => void;
-        setDataTypes: (state: State, dataTypes: Set<Foundations.HandleVariant> | null) => void
-        toggleDataType: (state: State, dataType: Foundations.HandleVariant) => void
+        setDataTypes: (state: State, dataTypes: Set<Foundations.Port.Variant> | null) => void
+        toggleDataType: (state: State, dataType: Foundations.Port.Variant) => void
     }
 }

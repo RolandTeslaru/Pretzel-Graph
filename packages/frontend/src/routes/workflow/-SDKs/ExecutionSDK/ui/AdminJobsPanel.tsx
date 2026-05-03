@@ -7,7 +7,7 @@ import { api } from '@/SDKs/ApiInterceptorSDK'
 import { toast } from 'sonner'
 import { Execution } from '@pretzel-graph/shared/domain'
 
-type ActiveJob = Execution.API.Meta.ListActive.Response['jobs'][number]
+type ActiveJob = Execution.API.Meta.ListActive.Response["executions"][number]
 
 const statusColor = (status: string) => {
     if (status === 'running') return 'default'
@@ -26,8 +26,8 @@ export const AdminJobsPanel = () => {
     const fetchJobs = useCallback(async () => {
         setLoading(true)
         try {
-            const res = await Execution.API.listActive(api)
-            setJobs(res.jobs)
+            // const res = await Execution.API.Meta.ListActive(api)
+            // setJobs(res.jobs)
         } catch {
             toast.error('Failed to fetch active jobs')
         } finally {

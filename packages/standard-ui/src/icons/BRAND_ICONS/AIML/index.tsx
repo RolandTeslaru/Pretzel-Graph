@@ -1,5 +1,5 @@
-import { cn } from "@/utils/utils";
-
+import { cn } from "../../../utils/cn";
+// @ts-ignore
 export const AIMLComponent = ({ className, ...props }) => (
   <svg
     className={cn("dark:invert", className)}
