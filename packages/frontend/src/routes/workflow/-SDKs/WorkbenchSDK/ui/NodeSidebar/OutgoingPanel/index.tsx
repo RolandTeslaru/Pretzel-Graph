@@ -1,9 +1,13 @@
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import React from 'react'
 
 const OutgoingPanel = () => {
   return (
-    <div className='absolute left-[-300px]  z-[-10] h-full w-[250px] rounded-2xl bg-card/80 border border-border shadow-sm shadow-black/10 p-2 backdrop-blur-lg'>
-      <p>Outogiong Data</p>
+    <div className="p-2 h-full">
+      <div className='bg-card border border-border rounded-full p-1 flex flex-row gap-2 shadow-md shadow-black/10'>
+          <SystemIcons.LogOut size={20}/>
+          <p className='h-auto my-auto text-sm'>Outgoing Data</p>
+      </div>
     </div>
   )
 }
