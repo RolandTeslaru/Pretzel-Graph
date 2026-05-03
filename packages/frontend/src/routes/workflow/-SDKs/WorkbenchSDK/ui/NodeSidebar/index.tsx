@@ -1,5 +1,5 @@
 import { ScrollArea } from '@pretzel-graph/standard-ui/foundations'
-import { useMemo, memo, useEffect, useState } from 'react'
+import React, { useMemo, memo, useEffect, useState } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
@@ -12,6 +12,23 @@ import WebhookRenderer from './webhook-renderer';
 import { InputItem } from './input-renderer';
 import { NodeDescription } from './node-description';
 
+
+interface SidebarAccordionItemProps {
+    label: string
+    value: string
+    children: React.ReactNode
+}
+
+const SidebarAccordionItem = ({ label, value, children }: SidebarAccordionItemProps) => (
+    <Accordion.Item value={value} className='border-none'>
+        <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
+            <h4 className='text-sm font-semibold text-foreground tracking-tight'>{label}</h4>
+        </Accordion.Trigger>
+        <Accordion.Content className='flex flex-col gap-1 bg-background/60 py-2'>
+            {children}
+        </Accordion.Content>
+    </Accordion.Item>
+)
 
 const NodeSidebar = () => {
 
@@ -108,59 +125,37 @@ const Content = memo(({ clickedNode: node }: Props) => {
                     className='pb-14'
                 >
                     {inputs.length > 0 && (
-                        <Accordion.Item value='inputs' className='border-none'>
-                            <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
-                                <h4 className='text-sm font-semibold text-foreground tracking-tight'>Inputs</h4>
-                            </Accordion.Trigger>
-                            <Accordion.Content className='flex flex-col gap-1 bg-background/60 py-2'>
-                                {inputs.map(input => (
-                                    <InputItem key={input.id} input={input} nodeId={node.id} />
-                                ))}
-                            </Accordion.Content>
-                        </Accordion.Item>
+                        <SidebarAccordionItem label='Inputs' value='inputs'>
+                            {inputs.map(input => (
+                                <InputItem key={input.id} input={input} nodeId={node.id} />
+                            ))}
+                        </SidebarAccordionItem>
                     )}
-                    {/* Webhooks */}
                     {webhooks.length > 0 && (
-                        <Accordion.Item value='webhooks' className='border-none'>
-                            <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
-                                <h4 className='text-sm font-semibold text-foreground tracking-tight'>Webhooks</h4>
-                            </Accordion.Trigger>
-                            <Accordion.Content className='flex flex-col gap-1 bg-background/60 py-2'>
-                                {webhooks.map(webhook => 
-                                    <div key={webhook.id} className='px-4 py-1 min-w-0'>
-                                        <WebhookRenderer webhook={webhook} nodeId={node.id} />
-                                    </div>
-                                )}
-                            </Accordion.Content>
-                        </Accordion.Item>
+                        <SidebarAccordionItem label='Webhooks' value='webhooks'>
+                            {webhooks.map(webhook => (
+                                <div key={webhook.id} className='px-4 py-1 min-w-0'>
+                                    <WebhookRenderer webhook={webhook} nodeId={node.id} />
+                                </div>
+                            ))}
+                        </SidebarAccordionItem>
                     )}
-                    {/* Fields */}
                     {fields.length > 0 && (
-                        <Accordion.Item value='fields' className='border-none'>
-                            <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
-                                <h4 className='text-sm font-semibold text-foreground tracking-tight'>Fields</h4>
-                            </Accordion.Trigger>
-                            <Accordion.Content className='flex flex-col gap-1 bg-background/60 py-2'>
-                                {fields.map(field => field.hidden ? null : (
-                                    <div key={field.id} className='px-4 py-1 min-w-0'>
-                                        <FieldRenderer field={field} nodeId={node.id} />
-                                    </div>
-                                ))}
-                            </Accordion.Content>
-                        </Accordion.Item>
-                    )}
-                    <Accordion.Item value='execution-strategy' className='border-none'>
-                        <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
-                            <h4 className='text-sm font-semibold text-foreground tracking-tight'>Execution Strategy</h4>
-                        </Accordion.Trigger>
-                        <Accordion.Content className='flex flex-col gap-1 bg-background/60 py-2'>
-                            {executionStrategyFields.map(field => field.hidden ? null : (
-                                <div key={field.id} className='px-4 py-2'>
+                        <SidebarAccordionItem label='Fields' value='fields'>
+                            {fields.map(field => field.hidden ? null : (
+                                <div key={field.id} className='px-4 py-1 min-w-0'>
                                     <FieldRenderer field={field} nodeId={node.id} />
                                 </div>
                             ))}
-                        </Accordion.Content>
-                    </Accordion.Item>
+                        </SidebarAccordionItem>
+                    )}
+                    <SidebarAccordionItem label='Execution Strategy' value='execution-strategy'>
+                        {executionStrategyFields.map(field => field.hidden ? null : (
+                            <div key={field.id} className='px-4 py-2'>
+                                <FieldRenderer field={field} nodeId={node.id} />
+                            </div>
+                        ))}
+                    </SidebarAccordionItem>
                 </Accordion.Root>
             </ScrollArea.Root>
         </>

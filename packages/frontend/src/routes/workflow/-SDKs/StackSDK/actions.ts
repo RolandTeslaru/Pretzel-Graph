@@ -36,6 +36,6 @@ export interface _StackSDKActions_ {
     popAll: () => void
     bringToFront: DropFirstArg<StackSDK.Reducers['bringToFront']>
     sendToBack: DropFirstArg<StackSDK.Reducers['sendToBack']>
-    pushCompanion: DropFirstArg<StackSDK.Reducers['pushCompanion']>
+    pushCompanion: (panelId: string, companionId: string, renderer: StackSDK.CompanionRenderer, shift?: number) => void
     popCompanion: DropFirstArg<StackSDK.Reducers['popCompanion']>
 }
