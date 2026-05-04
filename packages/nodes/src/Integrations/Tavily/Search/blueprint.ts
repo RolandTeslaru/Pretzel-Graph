@@ -13,7 +13,8 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.Secret({
             id: "apiKey",
             displayName: "API Key",
-            tooltip: "Your Tavily API key. Falls back to TAVILY_API_KEY environment variable.",
+            required: true,
+            tooltip: "Your Tavily API key.",
         }),
         FieldBuilder.Integer({
             id: "maxResults",
@@ -69,7 +70,8 @@ export const ToolBlueprint = defineBlueprint({
         FieldBuilder.Secret({
             id: "apiKey",
             displayName: "API Key",
-            tooltip: "Your Tavily API key. Falls back to TAVILY_API_KEY environment variable.",
+            required: true,
+            tooltip: "Your Tavily API key.",
         }),
         FieldBuilder.Integer({
             id: "maxResults",
