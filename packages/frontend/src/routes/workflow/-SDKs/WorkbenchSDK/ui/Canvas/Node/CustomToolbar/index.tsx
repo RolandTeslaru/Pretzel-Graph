@@ -60,7 +60,7 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
 
 
 const ToolButton: React.FC<Props> = memo(({ node }) => {
-    const isTool = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.isTool(s, node.id));
+    const isTool = WorkbenchSDK.useStore(s => s.selectors.node.isTool(s, node.id));
 
     return (
         <Button variant="ghost" size="icon-xs" className={`h-6! ${isTool ? 'bg-(--port-Tool)/20 text-(--port-Tool) ' : ''}`}

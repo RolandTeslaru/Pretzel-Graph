@@ -39,7 +39,7 @@ const Content = memo(({ node }: { node: Workflow.Node }) => {
   let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
 
-  const nodeStatus = ExecutionSDK.useStore(s => ExecutionSDK.selectors.getNodeStatus(s, node.id));
+  const nodeStatus = ExecutionSDK.useStore(s => s.selectors.getNodeStatus(s, node.id));
 
   if (node.accent) {
     backgroundColor = `color-mix(in srgb, var(--${node.accent}) 40%, var(--node-accent-base))`;

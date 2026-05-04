@@ -32,7 +32,7 @@ const SidebarAccordionItem = ({ label, value, children }: SidebarAccordionItemPr
 
 const NodeSidebar = () => {
 
-    const clickedNode = WorkbenchSDK.useStore(WorkbenchSDK.selectors.getClickedNode);
+    const clickedNode = WorkbenchSDK.useStore(s => s.selectors.getClickedNode(s));
 
     useEffect(() => {
         if (clickedNode) {
@@ -58,7 +58,7 @@ interface Props {
 
 const Content = memo(({ clickedNode: node }: Props) => {
     const [isEditing, setIsEditing] = useState(false)
-    const connectedPorts = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.getConnectedPorts(s, node.id))
+    const connectedPorts = WorkbenchSDK.useStore(s => s.selectors.node.getConnectedPorts(s, node.id))
 
     const [ fields, executionStrategyFields, inputs, connectedInputs, webhooks ] = useMemo(() => {
         const connectedInputs: Foundations.Port.Input[] = [];
