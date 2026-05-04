@@ -1,6 +1,6 @@
 {
-  "version": "1777806636330",
-  "generatedAt": "2026-05-03T11:10:36.330Z",
+  "version": "1777913337354",
+  "generatedAt": "2026-05-04T16:48:57.354Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -3670,11 +3670,11 @@
           "reconcile": false,
           "displayName": "Model",
           "variant": "MultiOption",
-          "initialValue": "gemini-3-pro-preview",
+          "initialValue": "gemini-3.1-pro-preview",
           "options": [
             {
-              "value": "gemini-3-pro-preview",
-              "displayName": "Gemini 3 Pro Preview"
+              "value": "gemini-3.1-pro-preview",
+              "displayName": "Gemini 3.1 Pro Preview"
             },
             {
               "value": "gemini-2.5-pro",
@@ -3683,6 +3683,10 @@
             {
               "value": "gemini-3-flash-preview",
               "displayName": "Gemini 3 Flash Preview"
+            },
+            {
+              "value": "gemini-3.1-flash-lite-preview",
+              "displayName": "Gemini 3.1 Flash Lite Preview"
             },
             {
               "value": "gemini-2.5-flash",
@@ -3802,6 +3806,165 @@
           "displayName": "Language Model",
           "tooltip": "The language model instance used for this response, useful for chaining calls with the same model and settings.",
           "variant": "LanguageModel"
+        }
+      ]
+    },
+    "Integrations.Google.Search": {
+      "id": "Integrations.Google.Search",
+      "displayName": "Google Search",
+      "icon": "Google",
+      "accent": "port-DataList",
+      "toolCompatible": true,
+      "description": "Searches the web using Google Custom Search and returns the results as documents.",
+      "fields": [
+        {
+          "id": "apiKey",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "API Key",
+          "tooltip": "Your Google Custom Search API key.",
+          "variant": "Secret",
+          "initialValue": ""
+        },
+        {
+          "id": "searchEngineId",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Search Engine ID",
+          "tooltip": "Your Programmable Search Engine ID (cx).",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": ""
+        },
+        {
+          "id": "maxResults",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Max Results",
+          "tooltip": "Google Custom Search returns up to 10 results per request.",
+          "variant": "Integer",
+          "initialValue": 5,
+          "min": 1,
+          "max": 10,
+          "step": 1
+        },
+        {
+          "id": "searchType",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Search Type",
+          "variant": "MultiOption",
+          "initialValue": "web",
+          "options": [
+            {
+              "value": "web",
+              "displayName": "Web"
+            },
+            {
+              "value": "image",
+              "displayName": "Image"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "safeSearch",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Safe Search",
+          "variant": "MultiOption",
+          "initialValue": "off",
+          "options": [
+            {
+              "value": "off",
+              "displayName": "Off"
+            },
+            {
+              "value": "active",
+              "displayName": "Active"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "query",
+          "displayName": "Query",
+          "internal": false,
+          "variant": "Text",
+          "initialValue": "",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "documents",
+          "displayName": "Documents",
+          "tooltip": "Search results as Document objects (pageContent + metadata).",
+          "variant": "DataList"
         }
       ]
     },
@@ -4246,8 +4409,28 @@
           "reconcile": false,
           "displayName": "Model",
           "variant": "MultiOption",
-          "initialValue": "gpt-5.2",
+          "initialValue": "gpt-5.5",
           "options": [
+            {
+              "value": "gpt-5.5",
+              "displayName": "GPT-5.5"
+            },
+            {
+              "value": "gpt-5.4",
+              "displayName": "GPT-5.4"
+            },
+            {
+              "value": "gpt-5.4-pro",
+              "displayName": "GPT-5.4 Pro"
+            },
+            {
+              "value": "gpt-5.4-mini",
+              "displayName": "GPT-5.4 Mini"
+            },
+            {
+              "value": "gpt-5.4-nano",
+              "displayName": "GPT-5.4 Nano"
+            },
             {
               "value": "gpt-5.2",
               "displayName": "GPT-5.2"
@@ -4255,26 +4438,6 @@
             {
               "value": "gpt-5.2-pro",
               "displayName": "GPT-5.2 Pro"
-            },
-            {
-              "value": "gpt-5",
-              "displayName": "GPT-5"
-            },
-            {
-              "value": "gpt-5-mini",
-              "displayName": "GPT-5 Mini"
-            },
-            {
-              "value": "gpt-5-nano",
-              "displayName": "GPT-5 Nano"
-            },
-            {
-              "value": "gpt-4.5",
-              "displayName": "GPT-4.5"
-            },
-            {
-              "value": "o3-mini",
-              "displayName": "o3-mini"
             },
             {
               "value": "o3",
@@ -4594,10 +4757,10 @@
         {
           "id": "apiKey",
           "advanced": false,
-          "required": false,
+          "required": true,
           "reconcile": false,
           "displayName": "API Key",
-          "tooltip": "Your Tavily API key. Falls back to TAVILY_API_KEY environment variable.",
+          "tooltip": "Your Tavily API key.",
           "variant": "Secret",
           "initialValue": ""
         },
@@ -4711,10 +4874,10 @@
         {
           "id": "apiKey",
           "advanced": false,
-          "required": false,
+          "required": true,
           "reconcile": false,
           "displayName": "API Key",
-          "tooltip": "Your Tavily API key. Falls back to TAVILY_API_KEY environment variable.",
+          "tooltip": "Your Tavily API key.",
           "variant": "Secret",
           "initialValue": ""
         },

@@ -14,15 +14,19 @@ const ShelfSidebar = () => {
         >
             <Search />
 
-            <Separator />
+            <div className='w-full px-2'>
+                <Separator/>
+            </div>
 
             <FilterDataTypesIndicator />
 
-            <ScrollArea.Root className='mb-auto pt-2'>
+            <ScrollArea.Root className='flex-1 min-h-0'>
                 <Drawers />
             </ScrollArea.Root>
 
-            <Separator />
+            <div className='w-full px-2'>
+                <Separator/>
+            </div>
 
             <SectionTabs />
         </div>
