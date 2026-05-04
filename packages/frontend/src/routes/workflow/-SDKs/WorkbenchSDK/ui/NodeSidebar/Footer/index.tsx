@@ -2,6 +2,7 @@ import { StackSDK } from "@/routes/workflow/-SDKs/StackSDK";
 import { Button } from "@pretzel-graph/standard-ui/foundations";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 import IncomingPanel from "../IncomingPanel";
+import OutgoingPanel from "../OutgoingPanel";
 
 export const NodeSidebarFooter = () => {
 
@@ -30,12 +31,7 @@ export const NodeSidebarFooter = () => {
         } else {
             StackSDK.actions.pushCompanion("nodeSidebar", "outgoing", (props) => (
                 <StackSDK.CompanionTemplate {...props} className='left-full top-0 bottom-0 w-62.5 ml-5'>
-                    <div className="p-2 h-full">
-                        <div className='bg-card border border-border rounded-full p-1 flex flex-row gap-2 shadow-md shadow-black/10'>
-                            <SystemIcons.LogOut size={20}/>
-                            <p className='h-auto my-auto text-sm'>Outgoing Data</p>
-                        </div>
-                    </div>
+                    <OutgoingPanel/>
                 </StackSDK.CompanionTemplate>
             ), -280)
         }
