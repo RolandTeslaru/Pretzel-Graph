@@ -20,7 +20,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         const { apiKey, maxResults, searchDepth, includeAnswer } = this.fields;
     
         this.retriever = new TavilySearchAPIRetriever({
-            apiKey: apiKey || process.env.TAVILY_API_KEY,
+            apiKey,
             k: maxResults,
             searchDepth: searchDepth as "basic" | "advanced",
             includeGeneratedAnswer: includeAnswer,
