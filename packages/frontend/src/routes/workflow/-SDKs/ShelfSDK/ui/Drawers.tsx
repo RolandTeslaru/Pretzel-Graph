@@ -31,7 +31,7 @@ export const Drawers = () => {
     }))
 
     return (
-        <div className='flex flex-col gap-1 w-full h-full px-2'>
+        <div className='flex flex-col gap-1 w-full p-2'>
             {filteredDrawers === undefined ?
                 <div className='flex flex-row gap-2 text-foreground m-auto mt-1'>
                     <Spinner className='h-5' />
@@ -90,7 +90,7 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
     const isFetchingNodeDefinitions = shouldRender && !!!drawer.blueprintIds;
 
     return (
-        <div>
+        <div className='flex flex-col h-fit'>
             <div
                 className='flex flex-row gap-2 h-8 px-2 cursor-pointer hover:bg-primary/40 rounded-lg'
                 onClick={() => ShelfSDK.actions.drawer.toggle(drawer.id)}
