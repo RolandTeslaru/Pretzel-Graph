@@ -9,7 +9,7 @@ export const TooltipContent = ({ nodeId, value }: { nodeId: Workflow.Node.Id, va
     const [result, setResult] = useState<unknown>(undefined)
 
     const expressionCtx = WorkbenchSDK.useStore(s =>
-        WorkbenchSDK.selectors.node.getExpressionContext(s, nodeId, session)
+        s.selectors.node.getExpressionContext(s, nodeId, session)
     )
 
     useEffect(() => {
