@@ -14,7 +14,7 @@ const StatusIndicator = ({
   className = "",
   sessionStatus
 }: Props) => {
-  const hasIssues = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.hasIssues(s, nodeId))
+  const hasIssues = WorkbenchSDK.useStore(s => s.selectors.node.hasIssues(s, nodeId))
 
   if (hasIssues)
     return (

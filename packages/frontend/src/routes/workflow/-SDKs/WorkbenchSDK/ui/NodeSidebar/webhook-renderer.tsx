@@ -15,7 +15,7 @@ const WebhookRenderer: React.FC<Props> = memo(({ webhook, nodeId }) => {
 
     const session = ExecutionSDK.useStore(s => s.currentExecution?.session);
 
-    const expressionCtx = WorkbenchSDK.useStore(s => WorkbenchSDK.selectors.node.getExpressionContext(s, nodeId, session));
+    const expressionCtx = WorkbenchSDK.useStore(s => s.selectors.node.getExpressionContext(s, nodeId, session));
 
     const parsedWebhook = useMemo(() => {
         if (!expressionCtx)

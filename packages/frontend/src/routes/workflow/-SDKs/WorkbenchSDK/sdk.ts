@@ -52,7 +52,8 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                     nodes: new Set(),
                     edges: new Set(),
                     layout: {},
-                }
+                },
+                selectors: workbenchSelectors
             })), {
             limit: this.TEMPORAL_STACK_SIZE,
             partialize: (s) => ({
@@ -140,7 +141,8 @@ export namespace WorkbenchSDK {
         cyclesDirty: boolean
         issues: Validation.Issue.Workflow_
         cycles: Workflow.Node.Id[][]
-        stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>
+        stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>,
+        selectors: _WorkBenchSDKSelectors
     }
 
     export interface Handle {

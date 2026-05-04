@@ -27,26 +27,30 @@ const CanvasEdge = memo(({
         targetPosition,
     });
 
+    const edgeId = id as Workflow.Edge.Id;
+    const sourceNodeId = source as Workflow.Node.Id;
+    const sourcePortId = sourceHandleId as Foundations.Port.Output.Id;
+
     const markerId = useId();
     const glintGradientId = useId();
 
     const sourceNode = WorkbenchSDK.useStore(s => s.workflow.data.nodes[source as Workflow.Node.Id])
 
     const [edgeStatus, itemCount] = ExecutionSDK.useStore(s => [
-        ExecutionSDK.selectors.getEdgeStatus(s, id as Workflow.Edge.Id),
-        ExecutionSDK.selectors.getEdgeItemCount(s, source as Workflow.Node.Id, sourceHandleId as Foundations.Port.Output.Id),
+        s.selectors.getEdgeStatus(s, edgeId),
+        s.selectors.getEdgeItemCount(s, sourceNodeId, sourcePortId),
     ])
 
     const handleDelete = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
-        WorkbenchSDK.actions.edge.remove(id as Workflow.Edge.Id);
-    }, [id]);
+        WorkbenchSDK.actions.edge.remove(edgeId);
+    }, [edgeId]);
 
     if (!sourceNode) {
         return null;
     }
-    const output = sourceNode.outputs.find(o => o.id === sourceHandleId as Foundations.Port.Output.Id);
+    const output = sourceNode.outputs.find(o => o.id === sourcePortId);
     if (!output) {
         return null;
     }

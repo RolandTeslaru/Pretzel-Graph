@@ -20,6 +20,7 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         immer<ExecutionSDK.State>(() => ({
             currentExecution: undefined,
             awaitedConfirmation: new Set(),
+            selectors: executionSDKSelectors,
         })),
         shallow
     )
@@ -124,6 +125,7 @@ export namespace ExecutionSDK {
     export type State = {
         currentExecution?: Execution
         awaitedConfirmation: Set<AwaitedConfirmation>
+        selectors: ExecutionSDKSelectors
     }
 
     export type Reducers = _ExecutionSessionReducers
