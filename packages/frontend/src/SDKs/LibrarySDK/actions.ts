@@ -29,6 +29,7 @@ export type _LibrarySDKActions = {
         create: (payload: Library.API.Workflow.Create.Request) => Promise<Library.API.Workflow.Create.Response>;
         update: (payload: Library.API.Workflow.Update.Request) => Promise<Library.API.Workflow.Update.Response>;
         setVisibility: (id: Workflow.Id, isPublic: boolean) => Promise<Library.API.Workflow.Update.Response>;
+        setLock: (id: Workflow.Id, locked: boolean) => Promise<Library.API.Workflow.Update.Response>;
         delete: (id: Workflow.Id) => Promise<Library.API.Workflow.Remove.Response>;
     };
 };
@@ -215,6 +216,12 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
 
             setVisibility: async (id, isPublic) => {
                 const data = await Library.API.Workflow.update(api, { id, is_public: isPublic });
+                setState((s) => { s.workflowMetas[data.id] = data; });
+                return data;
+            },
+
+            setLock: async (id, locked) => {
+                const data = await Library.API.Workflow.update(api, { id, locked });
                 setState((s) => { s.workflowMetas[data.id] = data; });
                 return data;
             },

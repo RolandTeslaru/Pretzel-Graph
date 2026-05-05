@@ -108,6 +108,12 @@ export const Globe: React.FC<BaseIconProps> = (props) => (
 Globe.displayName = "Globe"
 
 
+export const GlobeOff: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon size={15} {...props}><path d="M10.114 4.462A14.5 14.5 0 0 1 12 2a10 10 0 0 1 9.313 13.643"></path><path d="M15.557 15.556A14.5 14.5 0 0 1 12 22 10 10 0 0 1 4.929 4.929"></path><path d="M15.892 10.234A14.5 14.5 0 0 0 12 2a10 10 0 0 0-3.643.687"></path><path d="M17.656 12H22"></path><path d="M19.071 19.071A10 10 0 0 1 12 22 14.5 14.5 0 0 1 8.44 8.45"></path><path d="M2 12h10"></path><path d="m2 2 20 20"></path></BaseIcon>
+)
+GlobeOff.displayName = "GlobeOff"
+
+
 export const SkipForward: React.FC<BaseIconProps> = (props) => (
     <BaseIcon {...props}><path d="M5 4l10 8-10 8V4zM19 5v14"></path></BaseIcon>
 )
@@ -502,11 +508,22 @@ GripVertical.displayName = "GripVertical"
 
 
 export const LockClosed: React.FC<BaseIconProps> = (props) => (
-    <BaseIcon strokeWidth={2} {...props}>
-        <path d="M5 4.63601C5 3.76031 5.24219 3.1054 5.64323 2.67357C6.03934 2.24705 6.64582 1.9783 7.5014 1.9783C8.35745 1.9783 8.96306 2.24652 9.35823 2.67208C9.75838 3.10299 10 3.75708 10 4.63325V5.99999H5V4.63601ZM4 5.99999V4.63601C4 3.58148 4.29339 2.65754 4.91049 1.99307C5.53252 1.32329 6.42675 0.978302 7.5014 0.978302C8.57583 0.978302 9.46952 1.32233 10.091 1.99162C10.7076 2.65557 11 3.57896 11 4.63325V5.99999H12C12.5523 5.99999 13 6.44771 13 6.99999V13C13 13.5523 12.5523 14 12 14H3C2.44772 14 2 13.5523 2 13V6.99999C2 6.44771 2.44772 5.99999 3 5.99999H4ZM3 6.99999H12V13H3V6.99999Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path>
-    </BaseIcon>
+    <BaseIcon size={15} {...props}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></BaseIcon>
 )
 LockClosed.displayName = "LockClosed"
+
+
+export const Lock: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon size={15} {...props}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></BaseIcon>
+)
+Lock.displayName = "Lock"
+
+
+export const LockOpen: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon size={15} {...props}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></BaseIcon>
+)
+LockOpen.displayName = "LockOpen"
+
 
 export const Key: React.FC<BaseIconProps> = (props) => (
     <BaseIcon strokeWidth={2} {...props}>
