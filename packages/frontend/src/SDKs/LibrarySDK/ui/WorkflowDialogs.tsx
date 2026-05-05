@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button, Dialog, Form, Input, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { Switch } from '@pretzel-graph/standard-ui/foundations/switch'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { LibrarySDK } from '../sdk'
@@ -17,6 +18,11 @@ const Schema = z.object({
     accent: z.string().trim().optional(),
 })
 type Values = z.infer<typeof Schema>
+
+const EditSchema = Schema.extend({
+    is_public: z.boolean(),
+})
+type EditValues = z.infer<typeof EditSchema>
 
 export function openCreateWorkflowDialog(args: { folder_id: Library.Folder.Id }) {
     const id = `create-workflow-${args.folder_id}`
@@ -49,6 +55,7 @@ function CreateWorkflowContent({ dialogId, folder_id }: { dialogId: string; fold
                 display_name: values.display_name,
                 description: values.description || null,
             })
+            toast.success('Workflow created')
             DialogSDK.actions.pop(dialogId)
         } catch (err) {
             console.error('Failed to create workflow', err)
@@ -97,17 +104,18 @@ function CreateWorkflowContent({ dialogId, folder_id }: { dialogId: string; fold
 }
 
 function EditWorkflowContent({ dialogId, workflow }: { dialogId: string; workflow: Library.WorkflowMeta }) {
-    const form = useForm<Values>({
-        resolver: zodResolver(Schema),
+    const form = useForm<EditValues>({
+        resolver: zodResolver(EditSchema),
         defaultValues: {
             display_name: workflow.display_name || '',
             description: workflow.description || '',
             icon: workflow.icon || '',
             accent: workflow.accent || '',
+            is_public: workflow.is_public ?? false,
         },
     })
 
-    const onSubmit = async (values: Values) => {
+    const onSubmit = async (values: EditValues) => {
         try {
             await LibrarySDK.actions.workflow.update({
                 id: workflow.id,
@@ -115,7 +123,9 @@ function EditWorkflowContent({ dialogId, workflow }: { dialogId: string; workflo
                 description: values.description || null,
                 icon: values.icon || null,
                 accent: values.accent || null,
+                is_public: values.is_public,
             })
+            toast.success('Workflow updated')
             DialogSDK.actions.pop(dialogId)
         } catch (err) {
             console.error('Failed to update workflow', err)
@@ -166,6 +176,19 @@ function EditWorkflowContent({ dialogId, workflow }: { dialogId: string; workflo
                             </Form.Item>
                         )} />
                     </div>
+                    <Form.Field control={form.control} name="is_public" render={({ field }) => (
+                        <Form.Item>
+                            <div className="flex items-center justify-between">
+                                <div className="flex flex-col gap-0.5">
+                                    <Form.Label>Is Public?</Form.Label>
+                                    <span className="text-xs text-muted-foreground">Anyone can view and use this workflow</span>
+                                </div>
+                                <Form.Control>
+                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                </Form.Control>
+                            </div>
+                        </Form.Item>
+                    )} />
                     <Dialog.Footer>
                         <Button type="button" variant="outline" onClick={() => DialogSDK.actions.pop(dialogId)}>Cancel</Button>
                         <Button type="submit" disabled={form.formState.isSubmitting}>

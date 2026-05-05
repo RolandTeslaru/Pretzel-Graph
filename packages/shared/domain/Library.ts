@@ -225,10 +225,11 @@ export namespace Library {
             export namespace Update {
                 export const Request = z.object({
                     id: DomainWorkflow.Id,
-                    display_name: z.string().min(1),
+                    display_name: z.string().min(1).optional(),
                     description: z.string().nullable().optional(),
                     icon: z.string().nullable().optional(),
                     accent: z.string().nullable().optional(),
+                    is_public: z.boolean().optional(),
                 });
                 export type Request = z.infer<typeof Request>;
                 export type Response = Library.WorkflowMeta;

@@ -51,11 +51,10 @@ export class WorkbenchDatabase {
             supabase: SupabaseClient,
             payload: Workbench.API.Workflow.Commit.Request,
         ) => {
-            const workflowId = payload.workflow.id;
             await supabase
                 .from('workflows')
-                .update(payload.workflow)
-                .eq('id', workflowId)
+                .update({ data: payload.data })
+                .eq('id', payload.workflowId)
                 .throwOnError();
         }),
     };
