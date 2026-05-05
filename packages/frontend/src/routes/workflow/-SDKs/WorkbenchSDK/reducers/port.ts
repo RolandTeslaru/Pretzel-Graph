@@ -5,7 +5,7 @@ import { edgeReducers } from "./edge";
 export const portReducers = {
     removeOutput: (s, nodeId, portId) => {
         s.isDirty = true;
-        const node = s.workflow.data.nodes[nodeId];
+        const node = s.data.nodes[nodeId];
         if (!node) return;
 
         const edgeId = s.cache.outputHandlesMap[nodeId]?.[portId];
@@ -16,14 +16,14 @@ export const portReducers = {
     },
     addOutput: (s, nodeId, port) => {
         s.isDirty = true;
-        const node = s.workflow.data.nodes[nodeId];
+        const node = s.data.nodes[nodeId];
         if (!node) return;
 
         node.outputs.push(port as typeof node.outputs[number]);
     },
     setOutputDisplayName: (s, nodeId, portId, displayName) => {
         s.isDirty = true;
-        const node = s.workflow.data.nodes[nodeId];
+        const node = s.data.nodes[nodeId];
         if (!node) return;
 
         const port = node.outputs.find(p => p.id === portId);

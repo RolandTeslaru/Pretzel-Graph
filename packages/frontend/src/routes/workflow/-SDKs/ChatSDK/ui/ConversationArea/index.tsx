@@ -17,7 +17,7 @@ interface Props {
 const ConversationArea: React.FC<Props> = ({ messagesAreaClassname}) => {
 
   const hasChatOutputNode = WorkbenchSDK.useStore(s => {
-        return Object.values(s.workflow.data.nodes).some(node => node.blueprintId === "Core.Chat.Output");
+        return Object.values(s.data.nodes).some(node => node.blueprintId === "Core.Chat.Output");
     })
     
 

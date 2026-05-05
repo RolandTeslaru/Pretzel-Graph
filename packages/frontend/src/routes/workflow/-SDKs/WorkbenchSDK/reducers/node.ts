@@ -22,8 +22,8 @@ const resolveFieldInitialValue = (field: Foundations.Field) => {
 export const nodeReducers = {
     remove: (s, deletedNodeId) => {
         s.isDirty = true;
-        const nodes = s.workflow.data.nodes
-        const staticValues = s.workflow.data.staticValues
+        const nodes = s.data.nodes
+        const staticValues = s.data.staticValues
 
         // IMPORTANT: remove incident edges BEFORE deleting the node.
         // Edge removal relies on node/port lookups for validation and cache cleanup.
@@ -78,7 +78,7 @@ export const nodeReducers = {
             throw new Error(`Node schema validation failed. Could not create node from blueprint id ${blueprint.id}.`)
         }
 
-        s.workflow.data.nodes[nodeId] = newNode;
+        s.data.nodes[nodeId] = newNode;
 
         const initialStaticValues: Record<Foundations.Field.Id | Foundations.Port.Input.Id, any> = {};
 
@@ -101,7 +101,7 @@ export const nodeReducers = {
             }
         }
 
-        s.workflow.data.staticValues[nodeId] = initialStaticValues;
+        s.data.staticValues[nodeId] = initialStaticValues;
 
         layoutReducers.node.add(s, nodeId, position);
         cacheReducers.createNode(s, newNode);
@@ -122,11 +122,11 @@ export const nodeReducers = {
         })
 
         // If the node has a polymorphic port group, unresolve it to restore the original variants of the polymorphic ports
-        const node = s.workflow.data.nodes[nodeId];
+        const node = s.data.nodes[nodeId];
         if (!node) return;        
     },
     recreate: (s, nodeId, blueprint) => {
-        const node = s.workflow.data.nodes[nodeId];
+        const node = s.data.nodes[nodeId];
         if (!node)
             throw new Error(`Node ${nodeId} not found`);
 
@@ -171,14 +171,14 @@ export const nodeReducers = {
         if (!result.success)
             throw new Error(`Node schema validation failed. Could not recreate node from blueprint id ${blueprint.id}`)
 
-        s.workflow.data.nodes[nodeId] = newNode;
+        s.data.nodes[nodeId] = newNode;
         cacheReducers.createNode(s, newNode);
         nodeReducers.validate(s, nodeId);
     },
     duplicate: (s, originalNode, position) => {
         s.isDirty = true
         if (!position) {
-            position = cloneDeep(s.workflow.data.ui.layout[originalNode.id])
+            position = cloneDeep(s.data.ui.layout[originalNode.id])
             position.x += 40
             position.y += 40
         }
@@ -201,8 +201,8 @@ export const nodeReducers = {
             toolCompatible: originalNode.toolCompatible,
         } satisfies Workflow.Node
 
-        s.workflow.data.nodes[newNodeId] = newNode;
-        s.workflow.data.staticValues[newNodeId] = cloneDeep(s.workflow.data.staticValues[originalNode.id]);
+        s.data.nodes[newNodeId] = newNode;
+        s.data.staticValues[newNodeId] = cloneDeep(s.data.staticValues[originalNode.id]);
 
         layoutReducers.node.add(s, newNodeId, position);
         cacheReducers.createNode(s, newNode);
@@ -212,7 +212,7 @@ export const nodeReducers = {
     },
     reconcile: (s, nodeId, blueprint) => {
         s.isDirty = true;
-        const node = s.workflow.data.nodes[nodeId];
+        const node = s.data.nodes[nodeId];
         if (!node)
             throw new Error(`Node ${blueprint.id} not found`);
 
@@ -251,7 +251,7 @@ export const nodeReducers = {
         node.accent = blueprint.accent;
 
         // Seed from existing values, then fill gaps with initialValue
-        const existing = s.workflow.data.staticValues[nodeId] ?? {};
+        const existing = s.data.staticValues[nodeId] ?? {};
         const next: Record<Foundations.Field.Id | Foundations.Port.Input.Id, any> = { ...existing };
 
         for (const field of blueprint.fields) {
@@ -266,12 +266,12 @@ export const nodeReducers = {
                 next[input.id] = input.initialValue;
         }
 
-        s.workflow.data.staticValues[nodeId] = next;
+        s.data.staticValues[nodeId] = next;
     },
     polymorphism: {
         resolveGroup: (s, nodeId, triggerPort, resolvedVariant) => {
             console.log("Resolving polymorphic group", { nodeId, triggerPort, resolvedVariant })
-            const node = s.workflow.data.nodes[nodeId];
+            const node = s.data.nodes[nodeId];
     
             if(!Port.isPolymorphic(triggerPort) || !triggerPort.polymorphicGroupId)
                 throw new Error(`Port ${triggerPort.id} is not polymorphic or does not have a polymorphicGroupId`);
@@ -307,7 +307,7 @@ export const nodeReducers = {
             })
         },
         unresolveGroup: (s, nodeId, polymorphicGroupId) => {
-            const node = s.workflow.data.nodes[nodeId];
+            const node = s.data.nodes[nodeId];
     
             const inputs = node.inputs.filter(i => Foundations.Port.isPolymorphic(i) && i.polymorphicGroupId === polymorphicGroupId) as Foundations.Port.Variants.UnresolvedLike[];
             const outputs = node.outputs.filter(o => Foundations.Port.isPolymorphic(o) && o.polymorphicGroupId === polymorphicGroupId) as Foundations.Port.Variants.UnresolvedLike[];
@@ -323,7 +323,7 @@ export const nodeReducers = {
     },
     setSignalStrategy: (s, nodeId, strategy) => {
         s.isDirty = true;
-        const node = s.workflow.data.nodes[nodeId];
+        const node = s.data.nodes[nodeId];
         if (!node) return;
 
         fieldReducers.setValue(s, nodeId, "signalDependency" as Foundations.Field.Id, strategy);
@@ -336,26 +336,26 @@ export const nodeReducers = {
     },
     setDisabled: (s, nodeId, isDisabled) => {
         s.isDirty = true;
-        s.workflow.data.nodes[nodeId].isDisabled = isDisabled;
+        s.data.nodes[nodeId].isDisabled = isDisabled;
     },
     setMinimized: (s, nodeId, isMinimized) => {
         s.isDirty = true;
-        s.workflow.data.nodes[nodeId].isMinimized = isMinimized;
+        s.data.nodes[nodeId].isMinimized = isMinimized;
     },
     setFlipped: (s, nodeId, isFlipped) => {
         s.isDirty = true;
-        s.workflow.data.nodes[nodeId].isFlipped = isFlipped;
+        s.data.nodes[nodeId].isFlipped = isFlipped;
     },
     setDisplayName: (s, nodeId, newDisplayName) => {
         s.isDirty = true;
-        s.workflow.data.nodes[nodeId].displayName = newDisplayName;
+        s.data.nodes[nodeId].displayName = newDisplayName;
     },
     setDescription: (s, nodeId, newDescription) => {
         s.isDirty = true;
-        s.workflow.data.nodes[nodeId].description = newDescription;
+        s.data.nodes[nodeId].description = newDescription;
     },
     validate: (s, nodeId) => {
-        const node = s.workflow.data.nodes[nodeId];
+        const node = s.data.nodes[nodeId];
         if (!node){
             if(nodeId in s.issues)
                 delete s.issues.nodes[nodeId];
@@ -363,7 +363,7 @@ export const nodeReducers = {
         }
             
 
-        const nodeIssues = Validation.Issue.Node.check(node, s.workflow.data, s.cache);
+        const nodeIssues = Validation.Issue.Node.check(node, s.data, s.cache);
 
         if(!nodeIssues)
             delete s.issues.nodes[nodeId];

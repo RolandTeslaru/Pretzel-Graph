@@ -31,7 +31,7 @@ const WebhookRenderer: React.FC<Props> = memo(({ webhook, nodeId }) => {
 
     }, [webhook, expressionCtx, session])
 
-    const workflowId = WorkbenchSDK.useStore(s => s.workflow.id);
+    const workflowId = WorkbenchSDK.useStore(s => s.workflowId);
 
     const [tab, setTab] = useState<'test' | 'production'>('test');
 

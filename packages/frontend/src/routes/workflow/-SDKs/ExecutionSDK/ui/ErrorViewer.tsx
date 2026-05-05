@@ -7,7 +7,7 @@ import { NodeBadgeFromNode } from '@/components/NodeBadge'
 
 const ErrorViewer = () => {
     const execution = ExecutionSDK.useStore(s => s.currentExecution)
-    const nodes = WorkbenchSDK.useStore(s => s.workflow.data.nodes)
+    const nodes = WorkbenchSDK.useStore(s => s.data.nodes)
 
     if (!execution) return null
 
