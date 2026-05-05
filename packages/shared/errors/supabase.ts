@@ -13,6 +13,7 @@ export function withSupabaseAssert<TArgs extends any[], TReturn>(
         try {
             return await fn(...args);
         } catch (err) {
+            if (err instanceof SystemError) throw err;
             const detail = err instanceof Error ? err.message : String(err);
             console.error(`Database error during ${operation}:`, err);
             throw new DatabaseError(

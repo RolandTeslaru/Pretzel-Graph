@@ -42,7 +42,8 @@ export namespace Workbench {
 
             export namespace Commit {
                 export const Request = z.object({
-                    workflow: DomainWorkflow.Schema,
+                    workflowId: DomainWorkflow.Id,
+                    data: DomainWorkflow.Data.Schema,
                 })
                 export type Request = z.infer<typeof Request>
 
