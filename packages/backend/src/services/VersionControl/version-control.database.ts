@@ -41,7 +41,7 @@ export class VersionControlDatabase {
         return (rows ?? []).map((r) => VersionControl.PublicationMeta.Schema.parse(r));
     });
 
-    public readonly listActive = withSupabaseAssert('publication.listActive', async (
+    public readonly listActiveWorkflows = withSupabaseAssert('versionControl.listActiveWorkflows', async (
         supabase: SupabaseClient,
     ): Promise<Record<Workflow.Id, VersionControl.PublicationMeta>> => {
         const user_id = await getUserId(supabase);

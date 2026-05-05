@@ -25,8 +25,8 @@ export const Route = createFileRoute('/home')({
                 staleTime: HOME_STALE_TIME,
             }),
             QuerySDK.client.fetchQuery({
-                queryKey: ['version-control', 'active-publications'],
-                queryFn: () => VersionControlSDK.actions.listActive(),
+                queryKey: ['version-control', 'active-workflows'],
+                queryFn: () => VersionControlSDK.actions.listActiveWorkflows(),
                 staleTime: HOME_STALE_TIME,
             }),
         ])
@@ -59,8 +59,8 @@ const NAV_BOTTOM: NavEntry[] = [
 
 function HomeLayout() {
     QuerySDK.useQuery(
-        ['version-control', 'active-publications'],
-        () => VersionControlSDK.actions.listActive(),
+        ['version-control', 'active-workflows'],
+        () => VersionControlSDK.actions.listActiveWorkflows(),
         { staleTime: HOME_STALE_TIME },
     )
 

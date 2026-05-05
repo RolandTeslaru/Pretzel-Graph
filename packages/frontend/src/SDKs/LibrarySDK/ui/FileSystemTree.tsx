@@ -9,6 +9,7 @@ import { openEditFolderDialog, openEditProjectDialog, openEditWorkflowDialog } f
 import { openDeleteFolderDialog } from '@/routes/home/projects/-components/FolderCard'
 import { openDeleteProjectDialog } from '@/routes/home/projects/-components/ProjectCard'
 import { openDeleteWorkflowDialog } from '@/routes/home/projects/-components/WorkflowCard'
+import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 
 type FileSystemTreeProps = {
     className?: string
@@ -78,85 +79,106 @@ export function FileSystemTree({
                     LibrarySDK.actions.preferences.setFolderExpanded(folderId, isExpanded)
                 }
             }}
-            renderItem={({ item, isOpen, isSelected }) => {
-                const Icon = isSelected && item.selectedIcon
-                    ? item.selectedIcon
-                    : isOpen && item.openIcon
-                      ? item.openIcon
-                      : item.icon
-
-                const handleDelete = () => {
-                    const s = LibrarySDK.useStore.getState()
-                    if (item.id.startsWith('folder:')) {
-                        const folderId = item.id.slice('folder:'.length) as Library.Folder.Id
-                        const folder = s.folders[folderId]
-                        if (!folder) return
-
-                        if (folder.is_root) {
-                            openDeleteProjectDialog(folder)
-                        } else {
-                            openDeleteFolderDialog(folder)
-                        }
-                        return
-                    }
-
-                    if (item.id.startsWith('workflow:')) {
-                        const workflowId = item.id.slice('workflow:'.length) as Workflow.Id
-                        const workflow = s.workflowMetas[workflowId]
-                        if (!workflow) return
-                        openDeleteWorkflowDialog(workflow)
-                    }
-                }
-
-                const handleEdit = () => {
-                    const s = LibrarySDK.useStore.getState()
-                    if (item.id.startsWith('folder:')) {
-                        const folderId = item.id.slice('folder:'.length) as Library.Folder.Id
-                        const folder = s.folders[folderId]
-                        if (!folder) return
-
-                        if (folder.is_root) {
-                            openEditProjectDialog({ project: folder })
-                        } else {
-                            openEditFolderDialog({ folder })
-                        }
-                        return
-                    }
-
-                    if (item.id.startsWith('workflow:')) {
-                        const workflowId = item.id.slice('workflow:'.length) as Workflow.Id
-                        const workflow = s.workflowMetas[workflowId]
-                        if (!workflow) return
-                        openEditWorkflowDialog({ workflow })
-                    }
-                }
-
-                return (
-                    <ContextMenu.Root>
-                        <ContextMenu.Trigger asChild>
-                            <div className='flex w-full min-w-0 items-center'>
-                                {Icon ? <Icon className='mr-2 h-4 w-4 shrink-0' /> : null}
-                                <span className='truncate text-sm'>{item.name}</span>
-                            </div>
-                        </ContextMenu.Trigger>
-                        <ContextMenu.Content>
-                            <ContextMenu.Item
-                                icon={<SystemIcons.SquarePen className='size-4' />}
-                                onClick={handleEdit}
-                            >
-                                Edit
-                            </ContextMenu.Item>
-                            <ContextMenu.Item
-                                variant='destructive'
-                                icon={<SystemIcons.Trash2 className='size-4' />}
-                                onClick={handleDelete}
-                            >
-                                Delete
-                            </ContextMenu.Item>
-                        </ContextMenu.Content>
-                    </ContextMenu.Root>
-                )
-            }}
+            renderItem={({ item, isOpen, isSelected }) => (
+                <FileSystemTreeItem item={item} isOpen={isOpen} isSelected={isSelected} />
+            )}
         />
+    )
+}
+
+function FileSystemTreeItem({
+    item,
+    isOpen,
+    isSelected,
+}: {
+    item: TreeDataItem
+    isOpen?: boolean
+    isSelected: boolean
+}) {
+    const workflowId = item.id.startsWith('workflow:')
+        ? (item.id.slice('workflow:'.length) as Workflow.Id)
+        : undefined
+    const isWorkflow = Boolean(workflowId)
+    const hasActiveWorkflow = VersionControlSDK.useStore((s) => (
+        workflowId ? Boolean(s.activeWorkflows[workflowId]) : false
+    ))
+
+    const Icon = isSelected && item.selectedIcon
+        ? item.selectedIcon
+        : isOpen && item.openIcon
+          ? item.openIcon
+          : item.icon
+
+    const handleDelete = () => {
+        const s = LibrarySDK.useStore.getState()
+        if (item.id.startsWith('folder:')) {
+            const folderId = item.id.slice('folder:'.length) as Library.Folder.Id
+            const folder = s.folders[folderId]
+            if (!folder) return
+
+            if (folder.is_root) {
+                openDeleteProjectDialog(folder)
+            } else {
+                openDeleteFolderDialog(folder)
+            }
+            return
+        }
+
+        if (workflowId) {
+            const workflow = s.workflowMetas[workflowId]
+            if (!workflow) return
+            openDeleteWorkflowDialog(workflow)
+        }
+    }
+
+    const handleEdit = () => {
+        const s = LibrarySDK.useStore.getState()
+        if (item.id.startsWith('folder:')) {
+            const folderId = item.id.slice('folder:'.length) as Library.Folder.Id
+            const folder = s.folders[folderId]
+            if (!folder) return
+
+            if (folder.is_root) {
+                openEditProjectDialog({ project: folder })
+            } else {
+                openEditFolderDialog({ folder })
+            }
+            return
+        }
+
+        if (workflowId) {
+            const workflow = s.workflowMetas[workflowId]
+            if (!workflow) return
+            openEditWorkflowDialog({ workflow })
+        }
+    }
+
+    return (
+        <ContextMenu.Root>
+            <ContextMenu.Trigger asChild>
+                <div className={isWorkflow ? 'flex w-full min-w-0 items-center' : 'flex min-w-0 items-center'}>
+                    {Icon ? <Icon className='mr-2 h-4 w-4 shrink-0' /> : null}
+                    <span className={isWorkflow ? 'min-w-0 flex-1 truncate text-sm' : 'truncate text-sm'}>{item.name}</span>
+                    {hasActiveWorkflow ? (
+                        <div className='my-auto mr-2 h-2 w-2 shrink-0 rounded-full bg-green-400' />
+                    ) : null}
+                </div>
+            </ContextMenu.Trigger>
+            <ContextMenu.Content>
+                <ContextMenu.Item
+                    icon={<SystemIcons.SquarePen className='size-4' />}
+                    onClick={handleEdit}
+                >
+                    Edit
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                    variant='destructive'
+                    icon={<SystemIcons.Trash2 className='size-4' />}
+                    onClick={handleDelete}
+                >
+                    Delete
+                </ContextMenu.Item>
+            </ContextMenu.Content>
+        </ContextMenu.Root>
     )
 }
