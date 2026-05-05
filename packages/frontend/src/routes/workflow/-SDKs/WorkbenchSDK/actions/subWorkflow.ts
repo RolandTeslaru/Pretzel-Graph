@@ -27,12 +27,11 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
             }
             
             const state = sdk.state;
-            const masterWorkflow = state.workflow;
             const selectedNodeIds = new Set(nodeIds);
 
             const hasInvalidSelection = nodeIds.some(nodeId => {
                 const node = sel.node.get(state, nodeId);
-                const nodePos = masterWorkflow.data.ui.layout[nodeId];
+                const nodePos = state.data.ui.layout[nodeId];
                 return !node || !nodePos;
             });
 
@@ -44,7 +43,7 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
             const subflow = cloneDeep(Workflow.INITIAL) as Workflow;
 
             subflow.display_name = displayName;
-            subflow.folder_id = masterWorkflow.folder_id;
+            subflow.folder_id = LibrarySDK.useStore.getState().workflowMetas[state.workflowId]?.folder_id ?? subflow.folder_id;
 
             const groupNodePos = { x: 0, y: 0 };
             const offsetPos = { x: 0, y: 0 };
@@ -80,7 +79,7 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
 
 
             edgeIds.forEach(edgeId => {
-                const edge = state.workflow.data.edges[edgeId];
+                const edge = state.data.edges[edgeId];
                 if (!edge)
                     return;
 
@@ -110,12 +109,12 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
 
             setState(withCyclesRecompute(s => {
                 nodeIds.forEach(nodeId => {
-                    if (s.workflow.data.nodes[nodeId])
+                    if (s.data.nodes[nodeId])
                         reducers.node.remove(s, nodeId)
                 })
 
                 edgeIds.forEach(edgeId => {
-                    if (s.workflow.data.edges[edgeId])
+                    if (s.data.edges[edgeId])
                         reducers.edge.remove(s, edgeId)
                 })
 

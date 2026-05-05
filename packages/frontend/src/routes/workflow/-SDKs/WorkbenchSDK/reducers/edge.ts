@@ -23,8 +23,8 @@ export const edgeReducers = {
         if (!sourcePortId || !targetPortId || !sourceNodeId || !targetNodeId) 
             throw new Error(`Invalid edge connection. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`);
 
-        const sourceNode = s.workflow.data.nodes[sourceNodeId];
-        const targetNode = s.workflow.data.nodes[targetNodeId];
+        const sourceNode = s.data.nodes[sourceNodeId];
+        const targetNode = s.data.nodes[targetNodeId];
         
         const sourcePort = sourceNode.outputs.find(o => o.id === sourcePortId);
         const targetPort = targetNode.inputs.find(i => i.id === targetPortId);
@@ -37,7 +37,7 @@ export const edgeReducers = {
 
         const edgeId = edgeReducers.createId(sourceNodeId, sourcePortId, targetNodeId, targetPortId)
         
-        const edges = s.workflow.data.edges
+        const edges = s.data.edges
 
         if (edges[edgeId])
             throw new Error(`Edge ${edgeId} already exists. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
@@ -78,7 +78,7 @@ export const edgeReducers = {
     },
     remove: (s, edgeId) => {
         s.isDirty = true;
-        const edges = s.workflow.data.edges
+        const edges = s.data.edges
 
         const edge = edges[edgeId];
         if (!edge)
@@ -97,8 +97,8 @@ export const edgeReducers = {
         const targetNodeId = edge.target.nodeId;
         const targetPortId = edge.target.portId;
 
-        const sourceNode = s.workflow.data.nodes[sourceNodeId]!;
-        const targetNode = s.workflow.data.nodes[targetNodeId]!;
+        const sourceNode = s.data.nodes[sourceNodeId]!;
+        const targetNode = s.data.nodes[targetNodeId]!;
 
         const sourcePort = sourceNode?.outputs.find(o => o.id === sourcePortId);
         const targetPort = targetNode?.inputs.find(i => i.id === targetPortId);

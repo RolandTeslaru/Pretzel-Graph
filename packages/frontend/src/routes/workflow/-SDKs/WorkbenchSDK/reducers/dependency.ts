@@ -9,6 +9,6 @@ export const dependencyReducers = {
         workflowId: Workflow.Id | ""
     ) => {
         s.isDirty = true
-        s.workflow.data.staticValues[nodeId][fieldId] = workflowId
+        s.data.staticValues[nodeId][fieldId] = workflowId
     }
 }

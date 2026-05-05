@@ -8,11 +8,11 @@ export const layoutReducers = {
                 return
 
             // Ensure layout
-            if(!s.workflow.data.ui.layout[nodeId]){
-                s.workflow.data.ui.layout[nodeId] = { x: 0, y: 0 }
+            if(!s.data.ui.layout[nodeId]){
+                s.data.ui.layout[nodeId] = { x: 0, y: 0 }
             }
 
-            const oldNodeLayout = s.workflow.data.ui.layout[nodeId];
+            const oldNodeLayout = s.data.ui.layout[nodeId];
 
             // If same dont change
             if (newLayout.x === oldNodeLayout.x && newLayout.y === oldNodeLayout.y) {
@@ -20,33 +20,33 @@ export const layoutReducers = {
             }
             
             s.isDirty = true
-            s.workflow.data.ui.layout[nodeId] = newLayout;
+            s.data.ui.layout[nodeId] = newLayout;
         },
         remove: (s, nodeId) => {
             s.isDirty = true;
-            const layout = s.workflow.data.ui.layout;
+            const layout = s.data.ui.layout;
             delete layout[nodeId];
         },
         add: (s, nodeId, position) => {
             s.isDirty = true;
-            s.workflow.data.ui.layout[nodeId] = position;
+            s.data.ui.layout[nodeId] = position;
         }
     },
     viewport: {
         setPosition: (s, position) => {
             s.isDirty = true;
-            const viewport = s.workflow.data.ui.viewport
+            const viewport = s.data.ui.viewport
             viewport.x = position.x;
             viewport.y = position.y;
         },
         setZoom: (s, zoom) => {
             s.isDirty = true;
-            const viewport = s.workflow.data.ui.viewport
+            const viewport = s.data.ui.viewport
             viewport.zoom = zoom;
         },
         set: (s, viewport) => {
             s.isDirty = true;
-            s.workflow.data.ui.viewport = viewport;
+            s.data.ui.viewport = viewport;
         }
     }
 } satisfies LayoutReducers

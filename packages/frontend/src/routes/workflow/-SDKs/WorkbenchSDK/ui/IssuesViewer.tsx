@@ -6,7 +6,7 @@ import { NodeBadgeFromNode } from '@/components/NodeBadge'
 
 const IssuesViewer = () => {
     const issues = WorkbenchSDK.useStore(s => s.issues)
-    const nodes = WorkbenchSDK.useStore(s => s.workflow.data.nodes)
+    const nodes = WorkbenchSDK.useStore(s => s.data.nodes)
 
     const nodeIssueEntries = Object.entries(issues.nodes) as [Workflow.Node.Id, Validation.Issue.Node][]
 

@@ -148,7 +148,7 @@ export const createCanvasCallbacks = (
             if (
                 Validation.Connection.isValid(
                     newConn as WorkbenchSDK.DriverConnection, 
-                    state.workflow.data, 
+                    state.data,
                     state.cache
                 ) === false
             )
@@ -275,7 +275,7 @@ export const createCanvasCallbacks = (
             }
 
 
-            const sourceNode = WorkbenchSDK.state.workflow.data.nodes[edge.source as Workflow.Node.Id];
+            const sourceNode = WorkbenchSDK.state.data.nodes[edge.source as Workflow.Node.Id];
             const output = sourceNode.outputs.find(o => o.id === edge.sourceHandle as Foundations.Port.Output.Id)
 
             if (!output) return;

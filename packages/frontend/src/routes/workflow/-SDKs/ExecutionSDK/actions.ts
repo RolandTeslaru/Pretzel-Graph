@@ -24,15 +24,13 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 return null
             }
 
-            const workflow = WorkbenchSDK.state.workflow;
-
             // Generate the ID eagerly
             const executionId = Execution.createId();
             sdk.subscribeToEvents(executionId);
 
             const executionCreationPromise = Execution.API.run(api, {
-                workflowId: workflow.id,
-                workflowData: workflow.data,
+                workflowId: WorkbenchSDK.state.workflowId,
+                workflowData: WorkbenchSDK.state.data,
                 executionId,
                 igniter,
                 chat_id: ChatSDK.state.currentChatId ?? undefined,

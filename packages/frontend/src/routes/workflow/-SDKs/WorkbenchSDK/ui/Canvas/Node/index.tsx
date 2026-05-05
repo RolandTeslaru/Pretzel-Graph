@@ -13,7 +13,7 @@ import { StatusBorder } from './StatusBorder';
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 
 const CanvasNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
-  const node = WorkbenchSDK.useStore(s => s.workflow.data.nodes[props.id as Workflow.Node.Id])
+  const node = WorkbenchSDK.useStore(s => s.data.nodes[props.id as Workflow.Node.Id])
 
   if (!node)
     return null;
@@ -29,7 +29,7 @@ const Content = memo(({ node }: { node: Workflow.Node }) => {
   const [isNodeClicked, isWorkflowLocked] = WorkbenchSDK.useStore(
     s => [
       s.clickedNodeId === node.id,
-      s.workflow.locked,
+      s.locked,
     ]
   );
 
