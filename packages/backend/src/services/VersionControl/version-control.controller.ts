@@ -28,10 +28,10 @@ export class VersionControlController {
     }
 
     @Get('active')
-    async listActive(
+    async listActiveWorkflows(
         @Req() req: AuthenticatedRequest,
     ) {
-        return this.service.listActive(req.token);
+        return this.service.listActiveWorkflows(req.token);
     }
 
     @Get(':publicationId')

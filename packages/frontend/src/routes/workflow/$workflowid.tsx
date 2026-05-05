@@ -216,13 +216,14 @@ const PathPanel = () => {
 
 
 export const TopRightPanel = () => {
+    const workflowId = WorkbenchSDK.useStore(s => s.workflow.id);
     const hasPublications = VersionControlSDK.useStore(s => s.currentWorkflowPublications.length > 0);
-    const hasActivePublication = VersionControlSDK.useStore(s => s.currentWorkflowPublications.some(p => p.is_active));
+    const isActive = VersionControlSDK.useStore(s => s.activeWorkflows[workflowId]!!);
     return (
         <div className='flex flex-row gap-2 fixed top-5 right-5 z-10 p-0.5 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
             <Button className='rounded-full' variant="ghost" size="sm" onClick={openPublishDialog}>
                 {hasPublications && (
-                    <div className={`content-[""] my-auto w-2 h-2 mr-2 rounded-full ${hasActivePublication ? "bg-green-400" : "bg-red-500"}`}/>
+                    <div className={`content-[""] my-auto w-2 h-2 mr-2 rounded-full ${isActive ? "bg-green-400" : "bg-red-500"}`}/>
                 )}
                 <SystemIcons.CloudUpload className='size-4 mr-1'/>
                 Publish

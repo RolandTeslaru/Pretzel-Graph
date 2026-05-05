@@ -14,7 +14,7 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
     public readonly useStore: BaseSDK.Store<VersionControlSDK.State> = create(
         immer<VersionControlSDK.State>(() => ({
             currentWorkflowPublications: [],
-            activePublications: {},
+            activeWorkflows: {},
             subscribedWorkflowId: null,
         }))
     )
@@ -44,25 +44,25 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
                 s.currentWorkflowPublications = s.currentWorkflowPublications.filter(p => p.id !== publicationId);
             },
         },
-        active: {
-            set: (s, publications) => {
-                s.activePublications = publications;
+        activeWorkflows: {
+            set: (s, activeWorkflows) => {
+                s.activeWorkflows = activeWorkflows;
             },
             upsert: (s, publication) => {
                 if (publication.is_active) {
-                    s.activePublications[publication.workflow_id] = publication;
-                } else if (s.activePublications[publication.workflow_id]?.id === publication.id) {
-                    delete s.activePublications[publication.workflow_id];
+                    s.activeWorkflows[publication.workflow_id] = publication;
+                } else if (s.activeWorkflows[publication.workflow_id]?.id === publication.id) {
+                    delete s.activeWorkflows[publication.workflow_id];
                 }
             },
             removeByWorkflowId: (s, workflowId) => {
-                delete s.activePublications[workflowId];
+                delete s.activeWorkflows[workflowId];
             },
             removeByPublicationId: (s, publicationId) => {
-                for (const workflowId in s.activePublications) {
-                    const publication = s.activePublications[workflowId as Workflow.Id];
+                for (const workflowId in s.activeWorkflows) {
+                    const publication = s.activeWorkflows[workflowId as Workflow.Id];
                     if (publication?.id === publicationId) {
-                        delete s.activePublications[workflowId as Workflow.Id];
+                        delete s.activeWorkflows[workflowId as Workflow.Id];
                         return;
                     }
                 }
@@ -80,7 +80,7 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
             const data = await VersionControl.API.publish(api, payload);
             this.setState(s => {
                 this.reducers.currentWorkflow.upsert(s, data.publication);
-                this.reducers.active.upsert(s, data.publication);
+                this.reducers.activeWorkflows.upsert(s, data.publication);
             });
             QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications", payload.workflowId] });
             return data;
@@ -92,9 +92,9 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
             return data;
         },
 
-        listActive: async () => {
-            const data = await VersionControl.API.listActive(api);
-            this.setState(s => { this.reducers.active.set(s, data.activePublications) });
+        listActiveWorkflows: async () => {
+            const data = await VersionControl.API.listActiveWorkflows(api);
+            this.setState(s => { this.reducers.activeWorkflows.set(s, data.activeWorkflows) });
             return data;
         },
 
@@ -107,7 +107,7 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
             this.setState(s => {
                 this.reducers.currentWorkflow.deactivateAll(s);
                 this.reducers.currentWorkflow.upsert(s, data.publication);
-                this.reducers.active.upsert(s, data.publication);
+                this.reducers.activeWorkflows.upsert(s, data.publication);
             });
             QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
             return data;
@@ -117,7 +117,7 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
             const data = await VersionControl.API.deactivate(api, { publicationId });
             this.setState(s => {
                 this.reducers.currentWorkflow.upsert(s, data.publication);
-                this.reducers.active.removeByWorkflowId(s, data.publication.workflow_id);
+                this.reducers.activeWorkflows.removeByWorkflowId(s, data.publication.workflow_id);
             });
             QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
             return data;
@@ -127,7 +127,7 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
             const data = await VersionControl.API.remove(api, { publicationId });
             this.setState(s => {
                 this.reducers.currentWorkflow.remove(s, publicationId);
-                this.reducers.active.removeByWorkflowId(s, data.workflowId);
+                this.reducers.activeWorkflows.removeByWorkflowId(s, data.workflowId);
             });
             QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
             return data;
@@ -145,20 +145,20 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
                         case "activated":
                             this.setState(s => {
                                 this.reducers.currentWorkflow.upsert(s, signal.publication);
-                                this.reducers.active.upsert(s, signal.publication);
+                                this.reducers.activeWorkflows.upsert(s, signal.publication);
                             });
                             break;
                         case "deactivated":
                             this.setState(s => {
                                 const pub = s.currentWorkflowPublications.find(p => p.id === signal.publicationId);
                                 if (pub) pub.is_active = false;
-                                this.reducers.active.removeByWorkflowId(s, signal.workflowId);
+                                this.reducers.activeWorkflows.removeByWorkflowId(s, signal.workflowId);
                             });
                             break;
                         case "removed":
                             this.setState(s => {
                                 this.reducers.currentWorkflow.remove(s, signal.publicationId);
-                                this.reducers.active.removeByWorkflowId(s, signal.workflowId);
+                                this.reducers.activeWorkflows.removeByWorkflowId(s, signal.workflowId);
                             });
                             break;
                     }
@@ -173,12 +173,12 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
             this.setState(s => { this.reducers.subscription.setWorkflow(s, null) });
         },
 
-        active: {
+        activeWorkflows: {
             removeByWorkflowId: (workflowId) => {
-                this.setState(s => { this.reducers.active.removeByWorkflowId(s, workflowId) });
+                this.setState(s => { this.reducers.activeWorkflows.removeByWorkflowId(s, workflowId) });
             },
             removeByPublicationId: (publicationId) => {
-                this.setState(s => { this.reducers.active.removeByPublicationId(s, publicationId) });
+                this.setState(s => { this.reducers.activeWorkflows.removeByPublicationId(s, publicationId) });
             },
         },
     }
@@ -195,7 +195,7 @@ export const VersionControlSDK = SDK.get<VersionControlSDKImpl>("VersionControl"
 export namespace VersionControlSDK {
     export type State = {
         currentWorkflowPublications: VersionControl.PublicationMeta[]
-        activePublications: Record<Workflow.Id, VersionControl.PublicationMeta>
+        activeWorkflows: Record<Workflow.Id, VersionControl.PublicationMeta>
         subscribedWorkflowId: Workflow.Id | null
     }
 
@@ -215,10 +215,10 @@ export namespace VersionControlSDK {
                 publicationId: VersionControl.Publication.Id,
             ) => void
         }
-        active: {
+        activeWorkflows: {
             set: (
                 state: VersionControlSDK.State,
-                publications: Record<Workflow.Id, VersionControl.PublicationMeta>,
+                activeWorkflows: Record<Workflow.Id, VersionControl.PublicationMeta>,
             ) => void
             upsert: (
                 state: VersionControlSDK.State,
@@ -244,14 +244,14 @@ export namespace VersionControlSDK {
     export type Actions = {
         publish: (payload: VersionControl.API.Publish.Request) => Promise<VersionControl.API.Publish.Response>
         list: (workflowId: Workflow.Id) => Promise<VersionControl.API.List.Response>
-        listActive: () => Promise<VersionControl.API.ListActive.Response>
+        listActiveWorkflows: () => Promise<VersionControl.API.ListActiveWorkflows.Response>
         get: (publicationId: VersionControl.Publication.Id) => Promise<VersionControl.API.Get.Response>
         activate: (publicationId: VersionControl.Publication.Id) => Promise<VersionControl.API.Activate.Response>
         deactivate: (publicationId: VersionControl.Publication.Id) => Promise<VersionControl.API.Deactivate.Response>
         remove: (publicationId: VersionControl.Publication.Id) => Promise<VersionControl.API.Remove.Response>
         subscribe: (workflowId: Workflow.Id) => void
         unsubscribe: () => void
-        active: {
+        activeWorkflows: {
             removeByWorkflowId: (workflowId: Workflow.Id) => void
             removeByPublicationId: (publicationId: VersionControl.Publication.Id) => void
         }
