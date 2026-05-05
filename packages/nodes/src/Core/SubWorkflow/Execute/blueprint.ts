@@ -7,7 +7,7 @@ export const Blueprint = defineBlueprint({
     icon: "Graph",
     accent: "utility",
     fields: [
-        FieldBuilder.String({
+        FieldBuilder.DependencySelector({
             id: "workflowId",
             displayName: "Sub-Workflow ID",
             placeholder: "workflow_...",

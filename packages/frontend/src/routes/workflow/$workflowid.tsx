@@ -216,8 +216,8 @@ const PathPanel = () => {
 
 
 export const TopRightPanel = () => {
-    const hasPublications = VersionControlSDK.useStore(s => s.publications.length > 0);
-    const hasActivePublication = VersionControlSDK.useStore(s => s.publications.some(p => p.is_active));
+    const hasPublications = VersionControlSDK.useStore(s => s.currentWorkflowPublications.length > 0);
+    const hasActivePublication = VersionControlSDK.useStore(s => s.currentWorkflowPublications.some(p => p.is_active));
     return (
         <div className='flex flex-row gap-2 fixed top-5 right-5 z-10 p-0.5 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
             <Button className='rounded-full' variant="ghost" size="sm" onClick={openPublishDialog}>

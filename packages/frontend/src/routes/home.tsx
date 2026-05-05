@@ -6,8 +6,10 @@ import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
+import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 // import { Preview } from 'shaders/react'
 
+const HOME_STALE_TIME = 60_000
 
 export const Route = createFileRoute('/home')({
     beforeLoad: ({ context }) => {
@@ -16,11 +18,18 @@ export const Route = createFileRoute('/home')({
         }
     },
     loader: async () => {
-        await QuerySDK.client.fetchQuery({
-            queryKey: ['library', 'bootstrap'],
-            queryFn: () => LibrarySDK.actions.bootstrap.get(),
-            staleTime: 60_000,
-        })
+        await Promise.all([
+            QuerySDK.client.fetchQuery({
+                queryKey: ['library', 'bootstrap'],
+                queryFn: () => LibrarySDK.actions.bootstrap.get(),
+                staleTime: HOME_STALE_TIME,
+            }),
+            QuerySDK.client.fetchQuery({
+                queryKey: ['version-control', 'active-publications'],
+                queryFn: () => VersionControlSDK.actions.listActive(),
+                staleTime: HOME_STALE_TIME,
+            }),
+        ])
 
         return null
     },
@@ -49,6 +58,12 @@ const NAV_BOTTOM: NavEntry[] = [
 
 
 function HomeLayout() {
+    QuerySDK.useQuery(
+        ['version-control', 'active-publications'],
+        () => VersionControlSDK.actions.listActive(),
+        { staleTime: HOME_STALE_TIME },
+    )
+
     return (
         <div className="flex min-h-screen relative">
             <Sidebar />
