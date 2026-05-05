@@ -37,6 +37,14 @@ export class VersionControlService {
         return { publications };
     }
 
+    async listActive(
+        token: string,
+    ): Promise<VersionControl.API.ListActive.Response> {
+        const supabase = createAuthenticatedClient(token);
+        const activePublications = await this.database.listActive(supabase);
+        return { activePublications };
+    }
+
     async get(
         token: string,
         payload: VersionControl.API.Get.Request,
@@ -89,6 +97,6 @@ export class VersionControlService {
             workflowId,
             publicationId: payload.publicationId,
         });
-        return { success: true };
+        return { success: true, workflowId };
     }
 }

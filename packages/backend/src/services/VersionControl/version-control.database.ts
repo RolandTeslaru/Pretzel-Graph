@@ -41,6 +41,28 @@ export class VersionControlDatabase {
         return (rows ?? []).map((r) => VersionControl.PublicationMeta.Schema.parse(r));
     });
 
+    public readonly listActive = withSupabaseAssert('publication.listActive', async (
+        supabase: SupabaseClient,
+    ): Promise<Record<Workflow.Id, VersionControl.PublicationMeta>> => {
+        const user_id = await getUserId(supabase);
+        if (!user_id) throw new Error('Unauthenticated');
+
+        const { data: rows } = await supabase
+            .from('version_control')
+            .select('id, workflow_id, version, name, description, is_active, published_at')
+            .eq('user_id', user_id)
+            .eq('is_active', true)
+            .order('published_at', { ascending: false })
+            .throwOnError();
+
+        return Object.fromEntries(
+            (rows ?? []).map((r) => {
+                const publication = VersionControl.PublicationMeta.Schema.parse(r);
+                return [publication.workflow_id, publication];
+            }),
+        ) as Record<Workflow.Id, VersionControl.PublicationMeta>;
+    });
+
     public readonly get = withSupabaseAssert('publication.get', async (
         supabase: SupabaseClient,
         { publicationId }: VersionControl.API.Get.Request,

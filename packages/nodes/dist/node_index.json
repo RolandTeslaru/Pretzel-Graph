@@ -1,6 +1,6 @@
 {
-  "version": "1777914038613",
-  "generatedAt": "2026-05-04T17:00:38.613Z",
+  "version": "1777981123906",
+  "generatedAt": "2026-05-05T11:38:43.906Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -2011,9 +2011,8 @@
           "reconcile": false,
           "displayName": "Sub-Workflow ID",
           "tooltip": "The ID of the sub-workflow to execute",
-          "variant": "String",
+          "variant": "DependencySelector",
           "initialValue": "",
-          "multiline": false,
           "placeholder": "workflow_..."
         },
         {

@@ -3,6 +3,7 @@ import { Foundations } from "./Foundations";
 import { Auth } from "./Auth";
 import { Blueprint } from "./Foundations/Blueprint";
 import { Webhook } from "./Webhook";
+import { VersionControlPublication } from "./VersionControlPublication";
 
 export namespace Workflow {
     export const Id = z.string().brand("WorkflowId");
@@ -18,17 +19,17 @@ export namespace Workflow {
         export type Id = z.infer<typeof Id>;
 
         export const Schema = Blueprint.Meta.Schema.extend({
-            id: Node.Id,
-            blueprintId: z.string().brand("BlueprintId"),
+            id:           Node.Id,
+            blueprintId:  z.string().brand("BlueprintId"),
 
-            fields: z.array(Foundations.Field.Schema),
-            inputs: z.array(Foundations.Port.Input.Schema),
-            outputs: z.array(Foundations.Port.Output.Schema),
-            webhooks: z.array(Webhook.Schema).optional(),
+            fields:       z.array(Foundations.Field.Schema),
+            inputs:       z.array(Foundations.Port.Input.Schema),
+            outputs:      z.array(Foundations.Port.Output.Schema),
+            webhooks:     z.array(Webhook.Schema).optional(),
 
-            isMinimized: z.boolean().default(false),
-            isFlipped: z.boolean().optional(),
-            isDisabled: z.boolean().optional(),
+            isMinimized:  z.boolean().default(false),
+            isFlipped:    z.boolean().optional(),
+            isDisabled:   z.boolean().optional(),
         });
 
         export function createId(blueprintId: Foundations.Blueprint.Id) {
@@ -97,7 +98,28 @@ export namespace Workflow {
     export const DEFAULT_ACCENT = "utility"
 
     export namespace Data {
-        export const Schema = z.object({
+        export interface Shape {
+            nodes: Record<Node.Id, Node>;
+            edges: Record<Edge.Id, Edge>;
+            staticValues: Record<
+                Node.Id,
+                Record<
+                    Foundations.Field.Id | Foundations.Port.Input.Id,
+                    string | number | boolean | string[] | unknown
+                >
+            >;
+            ui: {
+                layout: Layout;
+                viewport: Viewport;
+                icon_color?: string | null;
+            };
+            dependencies: Record<
+                VersionControlPublication.Id,
+                VersionControlPublication.Publication<Shape>
+            >;
+        }
+
+        export const Schema: z.ZodType<Shape> = z.object({
             nodes: z.record(Node.Id, Node.Schema),
             edges: z.record(Edge.Id, Edge.Schema),
             staticValues: z.record(
@@ -109,21 +131,26 @@ export namespace Workflow {
             ),
 
             ui: z.object({
-                layout: Layout.Schema,
-                viewport: Viewport.Schema,
+                layout:     Layout.Schema,
+                viewport:   Viewport.Schema,
                 icon_color: z.string().nullable().optional(),
             }),
+
+            dependencies: z.record(
+                VersionControlPublication.Id,
+                z.lazy(() => VersionControlPublication.createSchema(Schema))
+            ).default({}),
         })
     }
     export type Data = z.infer<typeof Data.Schema>;
 
     export const Schema = z.object({
-        id: Workflow.Id,
+        id:           Workflow.Id,
         display_name: z.string(),
-        locked: z.boolean(),
-        description: z.string().optional().nullable(),
-        icon: z.string().nullable().optional(),
-        accent: z.string().nullable().optional(),
+        locked:       z.boolean(),
+        description:  z.string().optional().nullable(),
+        icon:         z.string().nullable().optional(),
+        accent:       z.string().nullable().optional(),
 
         created_at: z.coerce.date(),
         updated_at: z.coerce.date(),
@@ -135,23 +162,24 @@ export namespace Workflow {
 
 
     export const INITIAL = {
-        id: "" as Workflow.Id,
-        locked: false,
-        display_name: "",
-        description: "",
-        icon: null,
-        accent: null,
-        folder_id: "" as Workflow["folder_id"],
-        created_at: new Date(),
-        updated_at: new Date(),
+        id:             "" as Workflow.Id,
+        locked:         false,
+        display_name:   "",
+        description:    "",
+        icon:           null,
+        accent:         null,
+        folder_id:      "" as Workflow["folder_id"],
+        created_at:     new Date(),
+        updated_at:     new Date(),
         data: {
-            nodes: {},
-            edges: {},
-            staticValues: {},
+            nodes:          {},
+            edges:          {},
+            staticValues:   {},
+            dependencies:   {},
             ui: {
-                layout: {},
-                viewport: { x: 0, y: 0, zoom: 1 },
-                icon_color: null,
+                layout:         {},
+                viewport:       { x: 0, y: 0, zoom: 1 },
+                icon_color:     null,
             }
         }
     } as const satisfies z.infer<typeof Schema>
