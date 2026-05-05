@@ -14,6 +14,7 @@ import { ConditionField } from './Condition'
 import { CaseListField } from './CaseList'
 import { JsonField } from './Json'
 import { VariadicField } from './Variadic'
+import { DependencySelectorField } from './DependencySelector'
 
 export { FieldLabel } from './FieldLabel'
 export type { RendererProps } from './FieldLabel'
@@ -29,6 +30,7 @@ export { ScriptField } from './Script'
 export { ConditionField } from './Condition'
 export { CaseListField } from './CaseList'
 export { JsonField } from './Json'
+export { DependencySelectorField } from './DependencySelector'
 
 // ── Dispatcher ──────────────────────────────────────────────
 
@@ -54,7 +56,8 @@ export const FIELD_RENDERER_MAP: FieldRendererMapType = {
     Json: JsonField,
     Condition: ConditionField,
     CaseList: CaseListField,
-    Variadic: VariadicField
+    Variadic: VariadicField,
+    DependencySelector: DependencySelectorField
 }
 
 /** Renders the appropriate field component based on variant */
