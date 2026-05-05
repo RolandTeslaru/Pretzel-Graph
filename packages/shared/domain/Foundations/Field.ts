@@ -1,6 +1,5 @@
 import { z } from "zod"
 import { evaluateRule as _evaluateRule, evaluateRuleGroup as _evaluateRuleGroup, evaluateCondition as _evaluateCondition } from "../../utils";
-import { VersionControlPublication } from "../VersionControlPublication";
 
 export namespace Field {
     export const Id = z.string().brand("FieldId");
@@ -131,7 +130,7 @@ export namespace Field {
 
     export const DependencySelector = Field.Base.extend({
         variant: configLiteral("DependencySelector"),
-        initialValue: VersionControlPublication.Id.or(z.literal("")),
+        initialValue: z.string().brand("WorkflowId").or(z.literal("")),
         placeholder: z.string().optional(),
     })
 
