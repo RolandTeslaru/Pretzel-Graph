@@ -25,7 +25,7 @@ export class LibraryDatabase {
                     .throwOnError(),
                 supabase
                     .from('workflows')
-                    .select('id, folder_id, display_name, description, icon, accent, locked, mcp_enabled, created_at, updated_at')
+                    .select('id, folder_id, display_name, description, icon, accent, locked, is_public, mcp_enabled, created_at, updated_at')
                     .order('created_at', { ascending: false })
                     .throwOnError(),
             ]);
@@ -144,7 +144,7 @@ export class LibraryDatabase {
                 supabase.from('folders').select('*').eq('parent_folder_id', id).throwOnError(),
                 supabase
                     .from('workflows')
-                    .select('id, folder_id, display_name, description, icon, accent, locked, mcp_enabled, created_at, updated_at')
+                    .select('id, folder_id, display_name, description, icon, accent, locked, is_public, mcp_enabled, created_at, updated_at')
                     .eq('folder_id', id)
                     .throwOnError(),
             ]);
@@ -187,13 +187,14 @@ export class LibraryDatabase {
             const { data: row } = await supabase
                 .from('workflows')
                 .update({
-                    display_name: payload.display_name,
-                    description: payload.description ?? null,
+                    ...(payload.display_name !== undefined && { display_name: payload.display_name }),
+                    ...(payload.description !== undefined && { description: payload.description ?? null }),
                     ...(payload.icon !== undefined && { icon: payload.icon }),
                     ...(payload.accent !== undefined && { accent: payload.accent }),
+                    ...(payload.is_public !== undefined && { is_public: payload.is_public }),
                 })
                 .eq('id', payload.id)
-                .select('id, folder_id, display_name, description, icon, accent, locked, mcp_enabled, created_at, updated_at')
+                .select('id, folder_id, display_name, description, icon, accent, locked, is_public, mcp_enabled, created_at, updated_at')
                 .single()
                 .throwOnError();
 
