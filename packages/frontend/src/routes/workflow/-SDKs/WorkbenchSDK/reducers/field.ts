@@ -27,13 +27,13 @@ const replaceCaseListEntry = (
 export const fieldReducers = {
     setValue: (s, nodeId, fieldId, value) => {
         s.isDirty = true;
-        const cur = s.workflow.data.staticValues[nodeId][fieldId]
+        const cur = s.data.staticValues[nodeId][fieldId]
 
         const next = typeof value === "function" ? value(cur as any) : value
-        s.workflow.data.staticValues[nodeId][fieldId] = next
+        s.data.staticValues[nodeId][fieldId] = next
     },
     validate: (s, nodeId, field) => {
-        const issue = Validation.Issue.Field.check(field, nodeId, s.workflow.data)
+        const issue = Validation.Issue.Field.check(field, nodeId, s.data)
 
         if (issue) {
             s.issues.nodes[nodeId].fields[field.id] = issue;
@@ -93,13 +93,13 @@ export const fieldReducers = {
     caseList: {
         addEntry: (s, nodeId, fieldId, entry) => {
             const caseList = workbenchSelectors.field.caseList.getValue(s, nodeId, fieldId)!
-            s.workflow.data.staticValues[nodeId][fieldId] = [...caseList, entry]
+            s.data.staticValues[nodeId][fieldId] = [...caseList, entry]
             s.isDirty = true
         },
         removeEntry: (s, nodeId, fieldId, portId) => {
             const caseList = workbenchSelectors.field.caseList.getValue(s, nodeId, fieldId)!
             const next = caseList.filter(entry => entry.portId !== portId)
-            s.workflow.data.staticValues[nodeId][fieldId] = next
+            s.data.staticValues[nodeId][fieldId] = next
             s.isDirty = true
         },
         setLabel: (s, nodeId, fieldId, portId, label) => {

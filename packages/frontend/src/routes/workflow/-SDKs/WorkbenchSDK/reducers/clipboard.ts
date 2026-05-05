@@ -13,10 +13,10 @@ export const clipboardReducers = {
         if (!selection)
             return
 
-        const layout = s.workflow.data.ui.layout
+        const layout = s.data.ui.layout
 
         selection.nodes.forEach(nodeDriver => {
-            const node = s.workflow.data.nodes[nodeDriver.id as Workflow.Node.Id];
+            const node = s.data.nodes[nodeDriver.id as Workflow.Node.Id];
             if (!node) {
                 console.error(`Node ${nodeDriver.id} not found`)
                 return
@@ -25,7 +25,7 @@ export const clipboardReducers = {
             s.clipboard.layout[node.id] = layout[node.id];
         })
         selection.edges.forEach(edgeDriver => {
-            const edge = s.workflow.data.edges[edgeDriver.id as Workflow.Edge.Id];
+            const edge = s.data.edges[edgeDriver.id as Workflow.Edge.Id];
             if (!edge) {
                 console.error(`Edge ${edgeDriver.id} not found`)
                 return
@@ -98,13 +98,13 @@ export const clipboardReducers = {
         s.clipboard.edges.clear()
         s.clipboard.layout = {}
 
-        const node = s.workflow.data.nodes[nodeId];
+        const node = s.data.nodes[nodeId];
         if (!node) {
             console.error(`Node ${nodeId} not found`)
             return
         }
         s.clipboard.nodes.add(node)
-        s.clipboard.layout[node.id] = s.workflow.data.ui.layout[node.id];
+        s.clipboard.layout[node.id] = s.data.ui.layout[node.id];
     },
     clear: (s) => {
         s.clipboard.nodes.clear()

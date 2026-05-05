@@ -30,7 +30,9 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public readonly useStore: BaseSDK.Store<WorkbenchSDK.State> = createWithEqualityFn(
         temporal(
             immer<WorkbenchSDK.State>(() => ({
-                workflow: cloneDeep(Workflow.INITIAL),
+                workflowId: '' as Workflow.Id,
+                data: cloneDeep(Workflow.INITIAL.data),
+                locked: false,
                 isDirty: false,
                 isDraggingNode: false,
                 lastSelection: null,
@@ -56,7 +58,8 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
             limit: this.TEMPORAL_STACK_SIZE,
             partialize: (s) => ({
                 isDirty: true,
-                workflow: s.workflow,
+                workflowId: s.workflowId,
+                data: s.data,
                 cyclesDirty: s.cyclesDirty,
             })
         }
@@ -70,13 +73,12 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
 
     public get isLocked(): boolean {
-        const workflow = this.state.workflow;
-        return workflow.locked;
+        return this.state.locked;
     }
 
     public useField<T>(nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) {
         return this.useStore(s => {
-            const staticVals = s.workflow.data.staticValues[nodeId]
+            const staticVals = s.data.staticValues[nodeId]
             if (!staticVals)
                 return [undefined, null, false] as const
 
@@ -93,7 +95,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
     public useInput(nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) {
         return this.useStore(s => {
-            const staticVals = s.workflow.data.staticValues[nodeId]
+            const staticVals = s.data.staticValues[nodeId]
             if (!staticVals)
                 return [null, null] as const
             const value = staticVals[inputId] as any
@@ -122,7 +124,9 @@ export const WorkbenchSDK = SDK.get<WorkbenchSDKImpl>("Workbench")
 
 export namespace WorkbenchSDK {
     export interface State {
-        workflow: Workflow;
+        workflowId: Workflow.Id;
+        data: Workflow.Data;
+        locked: boolean;
         isDirty: boolean;
         isDraggingNode: boolean;
         lastSelection: OnSelectionChangeParams<NodeDriver, EdgeDriver> | null;

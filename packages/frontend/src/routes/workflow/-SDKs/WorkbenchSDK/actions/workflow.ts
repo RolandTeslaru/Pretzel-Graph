@@ -3,6 +3,7 @@ import type { WorkbenchSDKImpl, WorkbenchSDK } from "../sdk"
 import { withCommit } from "../utils/actions"
 import { Workbench, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "@/SDKs/ApiInterceptorSDK";
+import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 
 export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
     const setState = sdk.useStore.setState;
@@ -20,6 +21,8 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
                     throw new Error("Workflow not found")
 
                 Workflow.Schema.parse(workflow);
+                const { data: _data, ...meta } = workflow;
+                LibrarySDK.actions.workflow.upsertMeta(meta as any);
                 setState(s => { reducers.workflow.open(s, workflow) })
             } catch (error) {
                 console.error("Failed to load workflow", error);

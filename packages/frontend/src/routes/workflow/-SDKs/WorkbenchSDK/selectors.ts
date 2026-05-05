@@ -11,7 +11,7 @@ const EMPTY_CONNECTED_PORTS: Record<string, Workflow.Edge.Id> = {}
 
 const conditionSelectors = {
     getValue: (s, nodeId, fieldId) =>
-        (s.workflow.data.staticValues[nodeId]?.[fieldId] as ConditionValue | undefined) ?? null,
+        (s.data.staticValues[nodeId]?.[fieldId] as ConditionValue | undefined) ?? null,
     getRule: (s, nodeId, fieldId, ruleId) => {
         const condition = conditionSelectors.getValue(s, nodeId, fieldId)
         if (!condition) return null
@@ -33,7 +33,7 @@ const conditionSelectors = {
 
 const caseListSelectors = {
     getValue: (s, nodeId, fieldId) =>
-        (s.workflow.data.staticValues[nodeId]?.[fieldId] as CaseListValue | undefined) ?? null,
+        (s.data.staticValues[nodeId]?.[fieldId] as CaseListValue | undefined) ?? null,
     getEntry: (s, nodeId, fieldId, portId) => {
         const caseList = caseListSelectors.getValue(s, nodeId, fieldId)
         if (!caseList) return null
@@ -51,9 +51,9 @@ const caseListSelectors = {
 } as CaseListSelectors
 
 export const workbenchSelectors = {
-    getClickedNode: (s) => s.clickedNodeId ? s.workflow.data.nodes[s.clickedNodeId] ?? null : null,
+    getClickedNode: (s) => s.clickedNodeId ? s.data.nodes[s.clickedNodeId] ?? null : null,
     node: {
-        get: (s, nodeId) => s.workflow.data.nodes[nodeId] ?? null,
+        get: (s, nodeId) => s.data.nodes[nodeId] ?? null,
         hasIssues: (s, nodeId) => {
             const nodeIssues = s.issues.nodes[nodeId];
             if (!nodeIssues)
@@ -65,10 +65,10 @@ export const workbenchSelectors = {
             );
         },
         isTool: (s, nodeId) => {
-            return s.workflow.data.staticValues[nodeId]?.["isConvertedToTool" as Field.Id] === true;
+            return s.data.staticValues[nodeId]?.["isConvertedToTool" as Field.Id] === true;
         },
         extractBlueprint: (s, nodeId) => {
-            const node = s.workflow.data.nodes[nodeId];
+            const node = s.data.nodes[nodeId];
             if (!node) return null;
 
             return {
@@ -110,11 +110,11 @@ export const workbenchSelectors = {
             return hasNoIncoming && hasNoOutgoing;
         },
         getConnectedPorts: (s, nodeId) => s.cache.inputHandlesMap[nodeId] ?? EMPTY_CONNECTED_PORTS,
-        getStaticValues: (s, nodeId) => s.workflow.data.staticValues[nodeId] ?? null,
+        getStaticValues: (s, nodeId) => s.data.staticValues[nodeId] ?? null,
         getExpressionContext: (s, nodeId, session) => {
             const ctx: Expression.Context = {
-                thisNode: s.workflow.data.nodes[nodeId],
-                thisNodeValues: s.workflow.data.staticValues[nodeId] ?? {},
+                thisNode: s.data.nodes[nodeId],
+                thisNodeValues: s.data.staticValues[nodeId] ?? {},
                 incoming: workbenchSelectors.execution.getNodeIncomingData(s, nodeId, session) ?? {},
             }
 
@@ -123,18 +123,18 @@ export const workbenchSelectors = {
     },
     field: {
         get: (s, nodeId, fieldId) => {
-            const node = s.workflow.data.nodes[nodeId]
+            const node = s.data.nodes[nodeId]
             if (!node) return null;
 
             return node.fields.find(f => f.id === fieldId) ?? null;
         },
-        getValue: (s, nodeId, fieldId) => s.workflow.data.staticValues[nodeId]?.[fieldId] ?? null,
+        getValue: (s, nodeId, fieldId) => s.data.staticValues[nodeId]?.[fieldId] ?? null,
         getValues: (s, nodeId) => {
-            const staticValues = s.workflow.data.staticValues[nodeId]
+            const staticValues = s.data.staticValues[nodeId]
             if (!staticValues)
                 return {};
 
-            const node = s.workflow.data.nodes[nodeId]
+            const node = s.data.nodes[nodeId]
             if (!node) return {};
 
             const fieldsValues: Record<Field.Id, any> = {}
@@ -149,7 +149,7 @@ export const workbenchSelectors = {
     },
     input: {
         get: (s, nodeId, inputId) => {
-            const node = s.workflow.data.nodes[nodeId]
+            const node = s.data.nodes[nodeId]
             if (!node) return null;
 
             return node.inputs.find(i => i.id === inputId) ?? null;
@@ -159,7 +159,7 @@ export const workbenchSelectors = {
             const edgeId = s.cache.inputHandlesMap[nodeId]?.[inputPortId];
             if (!edgeId) return undefined;
 
-            const edge = s.workflow.data.edges[edgeId];
+            const edge = s.data.edges[edgeId];
             if (!edge) return undefined;
 
             return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Port.Output.Id];
@@ -167,7 +167,7 @@ export const workbenchSelectors = {
     },
     output: {
         get: (s, nodeId, outputId) => {
-            const node = s.workflow.data.nodes[nodeId]
+            const node = s.data.nodes[nodeId]
             if (!node) return null;
 
             return node.outputs.find(o => o.id === outputId) ?? null;
@@ -177,7 +177,7 @@ export const workbenchSelectors = {
     port: {
         polymorphism: {
             getSiblings: (s, nodeId, portId) => {
-                const node = s.workflow.data.nodes[nodeId];
+                const node = s.data.nodes[nodeId];
                 let triggerPort;
     
                 if (node.inputs.find(port => port.id === portId))
@@ -207,7 +207,7 @@ export const workbenchSelectors = {
                 return siblings;
             },
             getResolvedVariantInGroup: (s, nodeId, polymorphicGroupId) => {
-                const node = s.workflow.data.nodes[nodeId];
+                const node = s.data.nodes[nodeId];
                 if (!node) return null;
     
                 const allPorts = [...node.inputs, ...node.outputs];
@@ -217,7 +217,7 @@ export const workbenchSelectors = {
                 return port.variant === "Unresolved" ? null : port.variant;
             },
             groupHasEdges: (s, nodeId, polymorphicGroupId) => {
-                const node = s.workflow.data.nodes[nodeId];
+                const node = s.data.nodes[nodeId];
                 const inputHandles = s.cache.inputHandlesMap[nodeId];
                 const outputHandles = s.cache.outputHandlesMap[nodeId];
     
@@ -239,7 +239,7 @@ export const workbenchSelectors = {
     },
     execution: {
         getNodeIncomingData: (s, nodeId, session) => {
-            const node = s.workflow.data.nodes[nodeId];
+            const node = s.data.nodes[nodeId];
             if (!node) return null;
 
             const incoming: Record<Port.Id, Foundations.Projection> = {};
@@ -250,7 +250,7 @@ export const workbenchSelectors = {
                         if (!edgeId) 
                             return undefined;
                         
-                        const edge = s.workflow.data.edges[edgeId];
+                        const edge = s.data.edges[edgeId];
                         if (!edge) 
                             return undefined;
                         if(!session) 

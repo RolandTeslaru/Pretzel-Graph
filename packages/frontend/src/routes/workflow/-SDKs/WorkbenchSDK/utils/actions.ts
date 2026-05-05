@@ -9,7 +9,7 @@ export const commit = async () => {
     if (WorkbenchSDK.state.isDirty === false) return;
     try {
         console.log("Committing")
-        await Workbench.API.Workflow.commit(api, { workflowId: WorkbenchSDK.state.workflow.id, data: WorkbenchSDK.state.workflow.data })
+        await Workbench.API.Workflow.commit(api, { workflowId: WorkbenchSDK.state.workflowId, data: WorkbenchSDK.state.data })
         WorkbenchSDK.actions.setDirty(false);
     } catch (error) {
         toast.error("Could not save to cloud")

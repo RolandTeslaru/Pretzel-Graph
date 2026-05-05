@@ -28,7 +28,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
     
         recreate:          withAsyncCommit( async (nodeId, ) => {
             const s = sdk.state;
-            const node = s.workflow.data.nodes[nodeId];
+            const node = s.data.nodes[nodeId];
             
             await ShelfSDK.actions.hydrateBlueprint(node.blueprintId)
 
@@ -37,7 +37,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             const blueprint = ShelfSDK.state.blueprints[node.blueprintId];
             
             if(blueprintId === "Core.SubWorkflow.Execute") {
-                const workflowId = s.workflow.data.staticValues[nodeId]["workflowId" as Field.Id] as Workflow.Id | undefined; 
+                const workflowId = s.data.staticValues[nodeId]["workflowId" as Field.Id] as Workflow.Id | undefined; 
                 if(!workflowId) {
                     toast.error("Cannot recreate node: missing workflowId static value");
                     return;

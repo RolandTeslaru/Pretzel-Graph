@@ -200,7 +200,11 @@ const BottomPanel = () => {
 
 const PathPanel = () => {
 
-    const [folder_id, display_name] = WorkbenchSDK.useStore(s => [s.workflow.folder_id, s.workflow.display_name])
+    const workflowId = WorkbenchSDK.useStore(s => s.workflowId)
+    const [folder_id, display_name] = LibrarySDK.useStore(s => {
+        const meta = s.workflowMetas[workflowId]
+        return [meta?.folder_id, meta?.display_name] as const
+    })
 
     const breadCrumbs = LibrarySDK.useStore(s => {
         return LibrarySDK.selectors.getBreadcrumbs(s, folder_id);
@@ -216,7 +220,7 @@ const PathPanel = () => {
 
 
 export const TopRightPanel = () => {
-    const workflowId = WorkbenchSDK.useStore(s => s.workflow.id);
+    const workflowId = WorkbenchSDK.useStore(s => s.workflowId);
     const hasPublications = VersionControlSDK.useStore(s => s.currentWorkflowPublications.length > 0);
     const isActive = VersionControlSDK.useStore(s => s.activeWorkflows[workflowId]!!);
     return (

@@ -31,16 +31,16 @@ export default WorkflowCanvas
 
 const CanvasRenderer = memo(() => {
 
-    const workflow = WorkbenchSDK.useStore(s => s.workflow)
+    const [workflowId, data] = WorkbenchSDK.useStore(s => [s.workflowId, s.data])
 
-    const baseDrivers = useMemo(() => WorkbenchSDK.createDrivers(workflow), [workflow.data.nodes, workflow.data.edges])
+    const baseDrivers = useMemo(() => WorkbenchSDK.createDrivers(data), [data.nodes, data.edges])
     const [nodeDrivers, setNodeDrivers] = useNodesState<NodeDriver>(baseDrivers.nodeDrivers)
     const [edgeDrivers, setEdgeDrivers] = useEdgesState<EdgeDriver>(baseDrivers.edgeDrivers)
 
     const cycleIssues = WorkbenchSDK.useStore(s => s.issues.cycles);
     const cycleSelectionDrivers = useMemo(
-        () => createCycleSelectionDrivers(cycleIssues, workflow),
-        [cycleIssues, workflow.data.ui.layout]
+        () => createCycleSelectionDrivers(cycleIssues, data),
+        [cycleIssues, data.ui.layout]
     );
 
     useEffect(() => {
@@ -51,9 +51,9 @@ const CanvasRenderer = memo(() => {
     useEffect(() => {
         const driver = WorkbenchSDK.runtime.canvasDriver
         if (driver)
-            driver.setViewport(workflow.data.ui.viewport);
+            driver.setViewport(data.ui.viewport);
 
-    }, [workflow.id])
+    }, [workflowId])
 
     const canvasCallbacks = useMemo(() =>
         createCanvasCallbacks(setNodeDrivers, setEdgeDrivers),
@@ -64,7 +64,7 @@ const CanvasRenderer = memo(() => {
         <ReactFlow
             nodes={[...cycleSelectionDrivers, ...nodeDrivers]}
             edges={edgeDrivers}
-            defaultViewport={workflow.data.ui.viewport}
+            defaultViewport={data.ui.viewport}
             // connectionLineComponent={NodeConnectionLine}
             {...canvasProps}
             {...canvasCallbacks}

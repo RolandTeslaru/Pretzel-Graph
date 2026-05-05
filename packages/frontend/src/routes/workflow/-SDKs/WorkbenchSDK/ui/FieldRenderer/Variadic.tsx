@@ -7,7 +7,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 export const VariadicField = memo<RendererProps<'Variadic'>>(({ field, nodeId, className }) => {
     const value = WorkbenchSDK.useStore(s => {
-        return s.workflow.data.nodes[nodeId]?.inputs.filter(i => i.groupId === field.groupId).length
+        return s.data.nodes[nodeId]?.inputs.filter(i => i.groupId === field.groupId).length
     })
 
     return (

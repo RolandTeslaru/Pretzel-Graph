@@ -5,13 +5,15 @@ import { Algorithms } from "@pretzel-graph/shared/domain/Algorithms";
 
 export const workflowReducers = {
     setLock: (s, lock) => {
-        if (s.workflow.locked === lock)
+        if (s.locked === lock)
             return
         s.isDirty = true;
-        s.workflow.locked = lock;
+        s.locked = lock;
     },
     open: (s, workflow) => {
-        s.workflow = workflow;
+        s.workflowId = workflow.id;
+        s.data = workflow.data;
+        s.locked = workflow.locked;
         s.cache = Workflow.createCache(workflow.data);
         s.cycles = [];
         s.stronglyConnectedComponents = [];
@@ -25,24 +27,26 @@ export const workflowReducers = {
         workflowReducers.validate(s);
     },
     close: (s) => {
-        s.workflow = cloneDeep(Workflow.INITIAL);
+        s.workflowId = '' as Workflow.Id;
+        s.data = cloneDeep(Workflow.INITIAL.data);
+        s.locked = false;
         s.cache = Workflow.createCache(cloneDeep(Workflow.INITIAL.data));
     },
     validate: (s) => {
-        const issues = Validation.Issue.checkWorkflow(s.workflow.data, s.cycles, s.cache);
+        const issues = Validation.Issue.checkWorkflow(s.data, s.cycles, s.cache);
         s.issues = issues;
     },
     recomputeAllCycles: (s) => {
         console.log("RECOMPUTING ALL CYCLES")
         const arcsMap = Workflow.deriveArcs(s.cache);
-        const sccs = Algorithms.Tarjan.deriveSCCs(s.workflow.data.nodes, arcsMap)[3]
+        const sccs = Algorithms.Tarjan.deriveSCCs(s.data.nodes, arcsMap)[3]
 
         s.stronglyConnectedComponents = sccs;
 
         const cycles = Algorithms.Johnson.getAllCycles(arcsMap, sccs);
-        s.cycles = cycles;  
+        s.cycles = cycles;
 
-        s.issues.cycles = Validation.Issue.Cycle.checkAll(cycles, s.workflow.data);
+        s.issues.cycles = Validation.Issue.Cycle.checkAll(cycles, s.data);
         s.cyclesDirty = false;
     }
 } satisfies WorkflowReducers

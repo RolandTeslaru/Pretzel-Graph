@@ -5,13 +5,13 @@ import { edgeReducers } from "./edge";
 export const inputReducers = {
     setValue: (s, nodeId, inputId, value) => {
         s.isDirty = true;
-        s.workflow.data.staticValues[nodeId] ??= {}
-        s.workflow.data.staticValues[nodeId][inputId] = value
+        s.data.staticValues[nodeId] ??= {}
+        s.data.staticValues[nodeId][inputId] = value
     },
     remove: (s, nodeId, inputId) => {
         s.isDirty = true;
-        const node = s.workflow.data.nodes[nodeId];
-        const staticValues = s.workflow.data.staticValues[nodeId];
+        const node = s.data.nodes[nodeId];
+        const staticValues = s.data.staticValues[nodeId];
 
         const edgeId = s.cache.inputHandlesMap[nodeId][inputId];
         if (edgeId)
@@ -34,7 +34,7 @@ export const inputReducers = {
         return false;
     },
     validate: (s, nodeId, input) => {
-        const issue = Validation.Issue.Input.check(input, nodeId, s.workflow.data, s.cache);
+        const issue = Validation.Issue.Input.check(input, nodeId, s.data, s.cache);
 
         if (issue){
             s.issues.nodes[nodeId] ??= { fields: {}, inputs: {} };
@@ -47,7 +47,7 @@ export const inputReducers = {
     },
     add: (s, nodeId, input) => {
         s.isDirty = true;
-        const node = s.workflow.data.nodes[nodeId];
+        const node = s.data.nodes[nodeId];
         if (!node) return;
 
         node.inputs.push(input);

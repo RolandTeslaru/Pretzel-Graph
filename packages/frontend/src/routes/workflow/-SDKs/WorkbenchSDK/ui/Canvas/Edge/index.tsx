@@ -34,7 +34,7 @@ const CanvasEdge = memo(({
     const markerId = useId();
     const glintGradientId = useId();
 
-    const sourceNode = WorkbenchSDK.useStore(s => s.workflow.data.nodes[source as Workflow.Node.Id])
+    const sourceNode = WorkbenchSDK.useStore(s => s.data.nodes[source as Workflow.Node.Id])
 
     const [edgeStatus, itemCount] = ExecutionSDK.useStore(s => [
         s.selectors.getEdgeStatus(s, edgeId),

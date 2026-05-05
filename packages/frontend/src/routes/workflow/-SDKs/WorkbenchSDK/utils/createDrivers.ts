@@ -2,21 +2,21 @@ import type { Foundations, Validation, Workflow } from "@pretzel-graph/shared/do
 import type { WorkbenchSDK } from "../sdk"
 import { MarkerType } from "@xyflow/react";
 
-export function createDrivers(wf: Workflow) {
+export function createDrivers(wfData: Workflow.Data) {
     const nodeDrivers = [] as WorkbenchSDK.NodeDriver[]
     const edgeDrivers = [] as WorkbenchSDK.EdgeDriver[]
 
-    Object.values(wf.data.nodes).forEach(node => {
+    Object.values(wfData.nodes).forEach(node => {
         nodeDrivers.push({
             id: node.id,
             type: "workflowNode",
-            position: wf.data.ui.layout[node.id] ?? { x: 0, y: 0 },
+            position: wfData.ui.layout[node.id] ?? { x: 0, y: 0 },
             data: {},
         })
     })
 
-    Object.values(wf.data.edges).forEach(edge => {
-        const node = wf.data.nodes[edge.source.nodeId]
+    Object.values(wfData.edges).forEach(edge => {
+        const node = wfData.nodes[edge.source.nodeId]
 
         const output = node.outputs.find((o: Foundations.Port.Output) => o.id === edge.source.portId);
 
@@ -46,14 +46,14 @@ const PADDING = 16;
 
 export function createCycleSelectionDrivers(
     cycleIssues: Validation.Issue.Cycle[],
-    wf: Workflow
+    wfData: Workflow.Data
 ): WorkbenchSDK.CycleSelectionNodeDriver[] {
     return cycleIssues.map((issue, i) => {
 
         let minX, minY, maxX, maxY;
 
         for (const nodeId of issue.nodes) {
-            const pos = wf.data.ui.layout[nodeId] ?? { x: 0, y: 0 };
+            const pos = wfData.ui.layout[nodeId] ?? { x: 0, y: 0 };
             const el = document.querySelector<HTMLElement>(`[data-id="${nodeId}"]`);
             const w = el?.offsetWidth ?? 250;
             const h = el?.offsetHeight ?? 150;
