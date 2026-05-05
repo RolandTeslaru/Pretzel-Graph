@@ -47,7 +47,7 @@ const SpotlightSearch: React.FC = memo(() => {
         }
     }, [open])
 
-    const nodes = WorkbenchSDK.useStore(s => s.workflow.data.nodes)
+    const nodes = WorkbenchSDK.useStore(s => s.data.nodes)
 
     const results: SearchResult[] = useMemo(() => {
         if (!query.trim()) return []

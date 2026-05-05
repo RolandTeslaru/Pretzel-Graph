@@ -31,7 +31,7 @@ const isValidConnectionCallback = (conn: Connection | Edge) => {
 
     return isLocked ? false : Validation.Connection.isValid(
         conn as WorkbenchSDK.DriverConnection,
-        state.workflow.data,
+        state.data,
         state.cache
     );
 }
@@ -68,7 +68,7 @@ export const Port: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, is
 
         return Validation.Connection.isValid(
             conn as WorkbenchSDK.DriverConnection,
-            state.workflow.data,
+            state.data,
             state.cache
         )
     }, [draggedHandle])
@@ -95,7 +95,7 @@ export const Port: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, is
                     isValidConnection={isValidConnectionCallback}
                     className="group transition-all outline-none"
                     onClick={() => {
-                        ShelfSDK.actions.searchFilter.setDataTypes(new Set(port.variant))
+                        // ShelfSDK.actions.searchFilter.setDataTypes(new Set(port.variant))
                     }}
                 >
                     {/* Visual Representation of the Handle */}

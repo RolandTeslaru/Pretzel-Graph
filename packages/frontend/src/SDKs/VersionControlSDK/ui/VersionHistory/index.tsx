@@ -1,4 +1,5 @@
 import { QuerySDK } from "@/SDKs/QuerySDK/sdk";
+import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { WorkbenchSDK } from "@/routes/workflow/-SDKs/WorkbenchSDK/sdk";
 import { Badge, Button, ScrollArea, Spinner } from "@pretzel-graph/standard-ui/foundations";
 import { Accordion } from "@pretzel-graph/standard-ui/foundations/accordion";
@@ -29,11 +30,8 @@ function formatTimelineTimestamp(value: Date | string | null | undefined): strin
 }
 
 function VersionHistory() {
-    const [workflowId, workflowUpdatedAt, isDirty] = WorkbenchSDK.useStore(s => [
-        s.workflow.id,
-        s.workflow.updated_at,
-        s.isDirty,
-    ]);
+    const [workflowId, isDirty] = WorkbenchSDK.useStore(s => [s.workflowId, s.isDirty]);
+    const workflowUpdatedAt = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.updated_at);
 
     const activePublication = VersionControlSDK.useStore(s => VersionControlSDK.selectors.getActive(s));
 
