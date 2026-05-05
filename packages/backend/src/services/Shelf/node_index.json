@@ -1,6 +1,6 @@
 {
-  "version": "1777913337354",
-  "generatedAt": "2026-05-04T16:48:57.354Z",
+  "version": "1777914038613",
+  "generatedAt": "2026-05-04T17:00:38.613Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -2997,7 +2997,7 @@
     "Integrations.Alpaca.Market": {
       "id": "Integrations.Alpaca.Market",
       "displayName": "Alpaca Market",
-      "icon": "Graph",
+      "icon": "Alpaca",
       "accent": "port-DataList",
       "toolCompatible": true,
       "description": "Reads US stock market data and news from Alpaca Market Data APIs.",
@@ -4221,7 +4221,7 @@
     "Integrations.Massive.Market": {
       "id": "Integrations.Massive.Market",
       "displayName": "Massive Market",
-      "icon": "Graph",
+      "icon": "Massive",
       "accent": "port-DataList",
       "toolCompatible": true,
       "description": "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search. Requires an API key.",

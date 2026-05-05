@@ -1,6 +1,8 @@
 // Export the lazy loading mapping for brand icons (lazy-loaded)
 export const lazyIconsMapping = {
   AIML: () => import("./BRAND_ICONS/AIML"),
+  Alpaca: () =>
+    import("./BRAND_ICONS/Alpaca"),
   AgentQL: () =>
     import("./BRAND_ICONS/AgentQL"),
   Agiled: () =>
@@ -225,6 +227,8 @@ export const lazyIconsMapping = {
     import("./BRAND_ICONS/Listennotes"),
   Maritalk: () =>
     import("./BRAND_ICONS/Maritalk"),
+  Massive: () =>
+    import("./BRAND_ICONS/Massive"),
   Mcp: () => import("./BRAND_ICONS/MCP"),
   Mem0: () => import("./BRAND_ICONS/Mem0"),
   Mem0Composio: () =>

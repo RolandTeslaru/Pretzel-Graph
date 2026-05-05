@@ -5,6 +5,8 @@
 // Export the lazy loading mapping for icons
 export const lazyIconMap = {
   AIML: () => import("@/icons/AIML").then((mod) => ({ default: mod.AIMLIcon })),
+  Alpaca: () =>
+    import("@/icons/Alpaca").then((mod) => ({ default: mod.AlpacaIcon })),
   AgentQL: () =>
     import("@/icons/AgentQL").then((mod) => ({ default: mod.AgentQLIcon })),
   Agiled: () =>
@@ -307,6 +309,8 @@ export const lazyIconMap = {
     })),
   Maritalk: () =>
     import("@/icons/Maritalk").then((mod) => ({ default: mod.MaritalkIcon })),
+  Massive: () =>
+    import("@/icons/Massive").then((mod) => ({ default: mod.MassiveIcon })),
   Mcp: () => import("@/icons/MCP").then((mod) => ({ default: mod.McpIcon })),
   Mem0: () => import("@/icons/Mem0").then((mod) => ({ default: mod.Mem0 })),
   Mem0Composio: () =>
