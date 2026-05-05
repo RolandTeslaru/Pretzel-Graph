@@ -1,25 +1,15 @@
 import z from "zod";
 import type { AxiosInstance } from "axios";
 import { Workflow } from "./Workflow";
-import { Auth } from "./Auth";
 import { Realtime } from "./Realtime";
+import { VersionControlPublication } from "./VersionControlPublication";
 
 export namespace VersionControl {
     export namespace Publication {
-        export const Id = z.uuid().brand("PublicationId");
+        export const Id = VersionControlPublication.Id;
         export type Id = z.infer<typeof Id>
 
-        export const Schema = z.object({
-            id: Publication.Id,
-            workflow_id: Workflow.Id,
-            version: z.number(),
-            name: z.string(),
-            description: z.string().nullable(),
-            workflow_data: Workflow.Data.Schema,
-            user_id: Auth.User.Id,
-            is_active: z.boolean(),
-            published_at: z.coerce.date(),
-        })
+        export const Schema = VersionControlPublication.createSchema(Workflow.Data.Schema)
     }
     export type Publication = z.infer<typeof Publication.Schema>
 
@@ -125,6 +115,17 @@ export namespace VersionControl {
             return data;
         }
 
+        export namespace ListActive {
+            export const Response = z.object({
+                activePublications: z.record(Workflow.Id, PublicationMeta.Schema),
+            })
+            export type Response = z.infer<typeof Response>
+        }
+        export async function listActive(api: AxiosInstance): Promise<ListActive.Response> {
+            const { data } = await api.get<ListActive.Response>("/api/version-control/active");
+            return data;
+        }
+
         export namespace Get {
             export const Request = z.object({
                 publicationId: Publication.Id,
@@ -181,6 +182,7 @@ export namespace VersionControl {
 
             export const Response = z.object({
                 success: z.boolean(),
+                workflowId: Workflow.Id,
             })
             export type Response = z.infer<typeof Response>
         }

@@ -27,6 +27,13 @@ export class VersionControlController {
         return this.service.list(req.token, payload);
     }
 
+    @Get('active')
+    async listActive(
+        @Req() req: AuthenticatedRequest,
+    ) {
+        return this.service.listActive(req.token);
+    }
+
     @Get(':publicationId')
     async get(
         @Req() req: AuthenticatedRequest,
