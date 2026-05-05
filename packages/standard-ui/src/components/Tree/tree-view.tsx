@@ -541,7 +541,7 @@ const Leaf = forwardRef<HTMLDivElement, TreeComponents.Leaf>(
             <div
                 ref={ref}
                 className={cn(
-                    'ml-3.5 flex cursor-pointer items-center py-1 text-left',
+                    'flex cursor-pointer items-center py-1 text-left',
                     treeVariants(),
                     className,
                     isSelected && selectedTreeVariants(),
@@ -573,7 +573,6 @@ const Leaf = forwardRef<HTMLDivElement, TreeComponents.Leaf>(
             >
                 {renderItem ? (
                     <>
-                        <div className='mr-1 h-4 w-4 shrink-0' />
                         {renderItem({
                             item,
                             level,

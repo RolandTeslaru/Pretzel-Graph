@@ -115,14 +115,14 @@ export namespace VersionControl {
             return data;
         }
 
-        export namespace ListActive {
+        export namespace ListActiveWorkflows {
             export const Response = z.object({
-                activePublications: z.record(Workflow.Id, PublicationMeta.Schema),
+                activeWorkflows: z.record(Workflow.Id, PublicationMeta.Schema),
             })
             export type Response = z.infer<typeof Response>
         }
-        export async function listActive(api: AxiosInstance): Promise<ListActive.Response> {
-            const { data } = await api.get<ListActive.Response>("/api/version-control/active");
+        export async function listActiveWorkflows(api: AxiosInstance): Promise<ListActiveWorkflows.Response> {
+            const { data } = await api.get<ListActiveWorkflows.Response>("/api/version-control/active");
             return data;
         }
 
