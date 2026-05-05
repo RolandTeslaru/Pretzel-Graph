@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import { WorkbenchSDK } from '../../../sdk';
+import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk';
 import { NodeHeader } from './Header';
 import NodeInputs from './Inputs';
 import NodeOutputs from './Outputs';
@@ -26,12 +27,12 @@ export default CanvasNode
 
 const Content = memo(({ node }: { node: Workflow.Node }) => {
 
-  const [isNodeClicked, isWorkflowLocked] = WorkbenchSDK.useStore(
-    s => [
-      s.clickedNodeId === node.id,
-      s.locked,
-    ]
-  );
+  const [workflowId, isNodeClicked] = WorkbenchSDK.useStore(s => [
+    s.workflowId,
+    s.clickedNodeId === node.id
+  ])
+
+  const isWorkflowLocked = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.locked ?? false);
 
   const isMinimized = node.isMinimized;
   const isDisabled = node.isDisabled
