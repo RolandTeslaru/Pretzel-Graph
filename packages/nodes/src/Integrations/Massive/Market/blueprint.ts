@@ -10,7 +10,7 @@ export const Blueprint = defineBlueprint({
     id: "Integrations.Massive.Market",
     displayName: "Massive Market",
     description: "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search. Requires an API key.",
-    icon: "Graph",
+    icon: "Massive",
     accent: "port-DataList",
     toolCompatible: true,
     fields: [
@@ -83,7 +83,7 @@ export const ToolBlueprint = defineBlueprint({
     id: "Integrations.Massive.Market",
     displayName: "Massive Market",
     description: "Exposes Massive (Polygon.io) stock-market data tools to an agent.",
-    icon: "Graph",
+    icon: "Massive",
     accent: "port-Tool",
     toolCompatible: true,
     fields: [

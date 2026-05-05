@@ -156,7 +156,7 @@ export const BUNDLE_DRAWERS = {
   alpaca: {
     displayName: "Alpaca",
     id: "alpaca",
-    icon: "Graph",
+    icon: "Alpaca",
     blueprintIds: ["Integrations.Alpaca.Market"]
   },
   anthropic: {
@@ -420,7 +420,7 @@ export const BUNDLE_DRAWERS = {
   massive: {
     displayName: "Massive",
     id: "massive",
-    icon: "Graph",
+    icon: "Massive",
     blueprintIds: ["Integrations.Massive.Market"]
   },
   mem0: {
