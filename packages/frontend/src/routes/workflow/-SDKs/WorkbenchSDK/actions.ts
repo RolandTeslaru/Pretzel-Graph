@@ -9,6 +9,7 @@ import { createNodeActions, type NodeActions } from './actions/node';
 import { createFieldActions, type FieldActions } from './actions/field';
 import { createToolActions, type ToolActions } from './actions/tool';
 import { createWorkflowActions, type WorkflowActions } from './actions/workflow';
+import { createDependencyActions, type DependencyActions } from './actions/dependency';
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
@@ -20,6 +21,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
     const toolActions = createToolActions(sdk, fieldActions);
     const workflowActions = createWorkflowActions(sdk);
     const subWorkflowActions = createSubWorkflowActions(sdk);
+    const dependencyActions = createDependencyActions(sdk);
 
     return {
         commit:                   commit,
@@ -81,7 +83,8 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             delete:    withCommit(() => setState(withCyclesRecompute(s => { reducers.selection.delete(s) }))),
             disable:   withCommit((...props) => setState(s => { reducers.selection.disable(s, ...props) })),
         },
-        subWorkflow: subWorkflowActions
+        subWorkflow: subWorkflowActions,
+        dependency: dependencyActions,
     } satisfies _WorkbenchSDKActions
 }
 
@@ -138,4 +141,5 @@ export interface _WorkbenchSDKActions {
         disable   : (isDisabled: boolean) => void;
     }
     subWorkflow: SubWorkflowActions;
+    dependency: DependencyActions;
 }
