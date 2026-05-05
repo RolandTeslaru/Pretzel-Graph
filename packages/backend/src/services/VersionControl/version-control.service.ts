@@ -37,12 +37,12 @@ export class VersionControlService {
         return { publications };
     }
 
-    async listActive(
+    async listActiveWorkflows(
         token: string,
-    ): Promise<VersionControl.API.ListActive.Response> {
+    ): Promise<VersionControl.API.ListActiveWorkflows.Response> {
         const supabase = createAuthenticatedClient(token);
-        const activePublications = await this.database.listActive(supabase);
-        return { activePublications };
+        const activeWorkflows = await this.database.listActiveWorkflows(supabase);
+        return { activeWorkflows };
     }
 
     async get(
