@@ -192,6 +192,7 @@ export class LibraryDatabase {
                     ...(payload.icon !== undefined && { icon: payload.icon }),
                     ...(payload.accent !== undefined && { accent: payload.accent }),
                     ...(payload.is_public !== undefined && { is_public: payload.is_public }),
+                    ...(payload.locked !== undefined && { locked: payload.locked }),
                 })
                 .eq('id', payload.id)
                 .select('id, folder_id, display_name, description, icon, accent, locked, is_public, mcp_enabled, created_at, updated_at')

@@ -10,6 +10,7 @@ import { temporal } from 'zundo';
 import { cloneDeep } from "lodash";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
+import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { workbenchReducers } from "./reducers";
 import { createDrivers } from "./utils/createDrivers";
 
@@ -32,7 +33,6 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
             immer<WorkbenchSDK.State>(() => ({
                 workflowId: '' as Workflow.Id,
                 data: cloneDeep(Workflow.INITIAL.data),
-                locked: false,
                 isDirty: false,
                 isDraggingNode: false,
                 lastSelection: null,
@@ -73,7 +73,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
 
     public get isLocked(): boolean {
-        return this.state.locked;
+        return LibrarySDK.state.workflowMetas[this.state.workflowId]?.locked ?? false;
     }
 
     public useField<T>(nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) {
@@ -126,7 +126,6 @@ export namespace WorkbenchSDK {
     export interface State {
         workflowId: Workflow.Id;
         data: Workflow.Data;
-        locked: boolean;
         isDirty: boolean;
         isDraggingNode: boolean;
         lastSelection: OnSelectionChangeParams<NodeDriver, EdgeDriver> | null;
