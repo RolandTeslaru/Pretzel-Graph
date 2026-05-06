@@ -1,4 +1,4 @@
-import type { Workflow, VersionControl } from '@pretzel-graph/shared/domain';
+import type { Workflow } from '@pretzel-graph/shared/domain';
 import { nodeSelectors, type NodeSelectors } from './node';
 import { fieldSelectors, type FieldSelectors } from './field';
 import { inputSelectors, type InputSelectors } from './input';
@@ -11,7 +11,7 @@ import type { WorkbenchSDK } from '../sdk';
 
 export interface WorkbenchSDKSelectors {
     getClickedNode : (state: WorkbenchSDK.State) => Workflow.Node | null
-    getDependency  : (state: WorkbenchSDK.State, workflowId: Workflow.Id) => VersionControl.Publication | null
+    getDependency  : (state: WorkbenchSDK.State, dependencyId: Workflow.Id) => Workflow.Dependency | null
     node           : NodeSelectors
     field          : FieldSelectors
     input          : InputSelectors
@@ -24,7 +24,7 @@ export interface WorkbenchSDKSelectors {
 
 export const workbenchSelectors = {
     getClickedNode : (s) => s.clickedNodeId ? s.data.nodes[s.clickedNodeId] ?? null : null,
-    getDependency  : (s, workflowId) => s.data.dependencies[workflowId] ?? null,
+    getDependency  : (s, dependencyId) => s.data.dependencies[dependencyId] ?? null,
     node           : nodeSelectors,
     field          : fieldSelectors,
     input          : inputSelectors,

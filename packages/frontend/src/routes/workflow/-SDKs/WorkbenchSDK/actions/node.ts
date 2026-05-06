@@ -37,21 +37,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             const blueprint = ShelfSDK.state.blueprints[node.blueprintId];
             
             if(blueprintId === "Core.SubWorkflow.Execute") {
-                const workflowId = s.data.staticValues[nodeId]["workflowId" as Field.Id] as Workflow.Id | undefined; 
-                if(!workflowId) {
-                    toast.error("Cannot recreate node: missing workflowId static value");
-                    return;
-                }
-                const { workflow: subWorkflow } = await Workbench.API.Workflow.get(api, { workflowId })
-
-                const exposedPortsBlueprint = {
-                    ...blueprint,
-                    ...extractExposedPorts(subWorkflow),
-                    displayName: subWorkflow.display_name,
-                    icon: subWorkflow.icon ?? blueprint.icon,
-                    accent: subWorkflow.accent ?? blueprint.accent,
-                } satisfies Foundations.Blueprint;
-                setState(withCyclesRecompute(s => { reducers.node.recreate(s, nodeId, exposedPortsBlueprint)}));
+                toast.error("Cannot manually set a subworkflow dependency. Please use the dependency selector field to select and load a workflow as a dependency.")
                 return;
             }
 

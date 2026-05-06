@@ -95,8 +95,9 @@ export namespace Workflow {
 
 
     export const DEFAULT_ICON = "graph"
-    export const DEFAULT_ACCENT = "utility"
-
+    export const DEFAULT_ACCENT = "utility"  
+    
+    
     export namespace Data {
         export interface Shape {
             nodes: Record<Node.Id, Node>;
@@ -115,7 +116,7 @@ export namespace Workflow {
             };
             dependencies: Record<
                 Workflow.Id,
-                VersionControlPublication.Publication<Shape>
+                Dependency
             >;
         }
 
@@ -138,11 +139,24 @@ export namespace Workflow {
 
             dependencies: z.record(
                 Workflow.Id,
-                z.lazy(() => VersionControlPublication.createSchema(Schema))
+                z.lazy(() => Dependency.Schema)
             ).default({}),
         })
     }
     export type Data = z.infer<typeof Data.Schema>;
+
+        
+    export namespace Dependency {
+        export const Schema = VersionControlPublication.createSchema(Workflow.Data.Schema)
+            .omit({ name: true })
+            .extend({
+                publication_name: z.string(),
+                display_name:     z.string(),
+                icon:             z.string().nullable().optional(),
+                accent:           z.string().nullable().optional(),
+            });
+    }
+    export type Dependency = z.infer<typeof Dependency.Schema>  
 
     export const Schema = z.object({
         id:           Workflow.Id,
