@@ -11,10 +11,16 @@ export namespace VersionControl {
 
         export const Schema = VersionControlPublication.createSchema(Workflow.Data.Schema)
 
+        export namespace Database {
+            export namespace Row {
+                export const Schema = VersionControlPublication.Database.createRowSchema(Workflow.Data.Schema)
+            }
+            export type Row = z.infer<typeof Row.Schema>
+        }
+
         export namespace Meta {
             export const Schema = Publication.Schema.omit({
                 workflow_data: true,
-                user_id: true,
             })
         }
         export type Meta = z.infer<typeof Meta.Schema>

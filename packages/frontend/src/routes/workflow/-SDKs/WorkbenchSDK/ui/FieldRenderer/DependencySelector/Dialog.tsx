@@ -21,7 +21,7 @@ interface Props {
 
 export const DependencySelectorDialogContent = memo<Props>(({ nodeId, field, dialogId, selectedWorkflowId }) => {
     const [query, setQuery] = useState("")
-    const [manualWorkflowId, setManualWorkflowId] = useState("")
+    const [manualWorkflowId, setManualWorkflowId] = useState<Workflow.Id>("" as Workflow.Id)
 
     const activeWorkflows = VersionControlSDK.useStore(s => s.activeWorkflows)
     const workflowMetas = LibrarySDK.useStore(s => s.workflowMetas)
@@ -60,13 +60,15 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, field, dia
     }, [activeWorkflows, query, workflowMetas])
 
     const handleSelect = (workflowId: Workflow.Id) => {
-        WorkbenchSDK.actions.dependency.setWorkflowId(nodeId, field, workflowId)
+        WorkbenchSDK.actions.field.setValue(nodeId, field, workflowId)
         DialogSDK.actions.pop(dialogId)
     }
 
-    const handleManualSet = () => {
-        WorkbenchSDK.actions.dependency.setWorkflowId(nodeId, field, manualWorkflowId as Workflow.Id)
-        DialogSDK.actions.pop(dialogId)
+    const handleManualSet = async () => {
+        
+        const success = await WorkbenchSDK.actions.dependency.resolveByWorkflowId(manualWorkflowId)
+        if(success)
+            DialogSDK.actions.pop(dialogId)
     }
 
     return (
@@ -105,13 +107,13 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, field, dia
             </div>
 
             <div className="flex flex-col gap-1 border-t border-border pt-2">
-                <span className="text-[10px] font-medium text-muted-foreground">or use a public workflow ID directly</span>
+                <span className="text-[10px] font-medium text-muted-foreground">or use a public workflow ID</span>
                 <div className="flex gap-1">
                     <Input
                         size="sm"
                         placeholder="Paste workflow id"
                         value={manualWorkflowId}
-                        onChange={(e) => setManualWorkflowId(e.target.value as Workflow.Id | "")}
+                        onChange={(e) => setManualWorkflowId(e.target.value as Workflow.Id)}
                     />
                     <Button
                         type="button"

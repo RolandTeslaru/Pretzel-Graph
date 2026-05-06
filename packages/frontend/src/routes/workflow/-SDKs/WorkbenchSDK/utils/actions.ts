@@ -23,8 +23,9 @@ export const debouncedCommit: () => void = debounce(async () => {
 export const withCommit = <TArgs extends any[]>(fn: (...args: TArgs) => void, message?: string): ((...args: TArgs) => void) => {
     return (...args) => {
         try {
-            fn(...args);
+            const val = fn(...args);
             debouncedCommit();
+            return val;
         } catch (error) {
             console.error(error);
             toast.error(message ?? `${error instanceof Error ? error.message : String(error)}`);
@@ -42,14 +43,16 @@ export const withCyclesRecompute = (fn: (s: WorkbenchSDK.State) => void): ((s: W
     }
 }
 
-export const withAsyncCommit = <TArgs extends any[]>(fn: (...args: TArgs) => Promise<void>, message?: string): ((...args: TArgs) => Promise<void>) => {
+export const withAsyncCommit = <TArgs extends any[], TReturn>(fn: (...args: TArgs) => Promise<TReturn>, message?: string): ((...args: TArgs) => Promise<TReturn>) => {
     return async (...args) => {
         try {
-            await fn(...args);
+            const val = await fn(...args);
             debouncedCommit();
+            return val; 
         } catch (error) {
             console.error(error);
             toast.error(message ?? `${error instanceof Error ? error.message : String(error)}`);
+            return void 0 as TReturn; // Return undefined on error, but cast to TReturn to satisfy the return type
         }
     };
 };

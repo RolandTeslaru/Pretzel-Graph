@@ -1,11 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { createAuthenticatedClient } from '@/utils/supabase';
+import { createAuthenticatedClient, createServiceClient, getUserId } from '@/utils/supabase';
 import { Workflow, Workbench } from '@pretzel-graph/shared/domain';
 import { WorkbenchDatabase } from './workbench.database';
+import { VersionControlDatabase } from '../VersionControl/version-control.database';
 
 @Injectable()
 export class WorkbenchService {
-    constructor(private readonly database: WorkbenchDatabase) {}
+    private readonly serviceSupabase = createServiceClient();
+
+    constructor(
+        private readonly database: WorkbenchDatabase,
+        private readonly versionControlDatabase: VersionControlDatabase,
+    ) {}
 
     public readonly workflow = {
         create: async (
@@ -33,6 +39,25 @@ export class WorkbenchService {
             const supabase = createAuthenticatedClient(token);
             await this.database.workflow.commit(supabase, payload);
             return {};
+        },
+    };
+
+    public readonly dependency = {
+        resolveWorkflow: async (
+            token: string,
+            payload: Workbench.API.Dependency.ResolveWorkflow.Request,
+        ): Promise<Workbench.API.Dependency.ResolveWorkflow.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            const requesterId = await getUserId(supabase);
+            if (!requesterId) throw new Error('Unauthenticated');
+
+            const publication = await this.versionControlDatabase.getActivePublicationForWorkflow(
+                this.serviceSupabase,
+                payload.workflowId,
+                requesterId,
+            );
+
+            return { publication };
         },
     };
 }
