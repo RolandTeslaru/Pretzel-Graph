@@ -26,4 +26,10 @@ export class WorkbenchController {
         const payload = Workbench.API.Workflow.Commit.Request.parse(body);
         return await this.workbenchService.workflow.commit(req.token, payload);
     }
+
+    @Get('dependencies/workflows/:workflowId')
+    async resolveWorkflowDependency(@Req() req: AuthenticatedRequest, @Param('workflowId') workflowId: string) {
+        const payload = Workbench.API.Dependency.ResolveWorkflow.Request.parse({ workflowId });
+        return await this.workbenchService.dependency.resolveWorkflow(req.token, payload);
+    }
 }

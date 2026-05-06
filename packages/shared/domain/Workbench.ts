@@ -2,6 +2,7 @@ import type { AxiosInstance } from "axios"
 import z from "zod"
 import { Foundations } from "./Foundations"
 import { Workflow as DomainWorkflow } from "./Workflow"
+import { VersionControl } from "./VersionControl"
 
 export namespace Workbench {
     export namespace API {
@@ -53,6 +54,25 @@ export namespace Workbench {
 
             export async function commit(api: AxiosInstance, request: Commit.Request): Promise<Commit.Response> {
                 const { data } = await api.post<Commit.Response>("/api/workbench/workflows/commit", request)
+                return data
+            }
+        }
+
+        export namespace Dependency {
+            export namespace ResolveWorkflow {
+                export const Request = z.object({
+                    workflowId: DomainWorkflow.Id,
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({
+                    publication: VersionControl.Publication.Schema,
+                })
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function resolveWorkflow(api: AxiosInstance, request: ResolveWorkflow.Request): Promise<ResolveWorkflow.Response> {
+                const { data } = await api.get<ResolveWorkflow.Response>(`/api/workbench/dependencies/workflows/${request.workflowId}`)
                 return data
             }
         }
