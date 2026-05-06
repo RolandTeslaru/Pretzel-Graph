@@ -3,7 +3,7 @@ import { shallow } from "zustand/shallow"
 import { immer } from "zustand/middleware/immer";
 import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance } from "@xyflow/react";
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
-import { workbenchSelectors, type _WorkBenchSDKSelectors } from "./selectors";
+import { workbenchSelectors, type WorkbenchSDKSelectors } from "./selectors";
 import React from "react";
 import { Foundations, Validation, Workflow } from "@pretzel-graph/shared/domain"
 import { temporal } from 'zundo';
@@ -143,7 +143,7 @@ export namespace WorkbenchSDK {
         issues: Validation.Issue.Workflow_
         cycles: Workflow.Node.Id[][]
         stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>,
-        selectors: _WorkBenchSDKSelectors
+        selectors: WorkbenchSDKSelectors
     }
 
     export interface Handle {
@@ -152,7 +152,7 @@ export namespace WorkbenchSDK {
         handleType: "source" | "target"
     }
 
-    export type Selectors = _WorkBenchSDKSelectors
+    export type Selectors = WorkbenchSDKSelectors
     export type Actions = _WorkbenchSDKActions
     export type Reducers = typeof workbenchReducers
 

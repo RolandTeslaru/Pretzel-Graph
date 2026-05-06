@@ -12,16 +12,16 @@ import { selectionReducers } from "./selection";
 import { dependencyReducers } from "./dependency";
 
 export const workbenchReducers = {
-    field: fieldReducers,
-    edge: edgeReducers,
-    node: nodeReducers,
-    port: portReducers,
-    input: inputReducers,
-    workflow: workflowReducers,
-    layout: layoutReducers,
-    clipboard: clipboardReducers,
-    selection: selectionReducers,
-    dependency: dependencyReducers,
-    setClickedNodeId: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id | null) => { state.clickedNodeId = nodeId; },
-    setSelectionContextMenu: (state: WorkbenchSDK.State, pos: { x: number, y: number } | null) => { state.selectionContextMenu = pos; },
+    field                   : fieldReducers,
+    edge                    : edgeReducers,
+    node                    : nodeReducers,
+    port                    : portReducers,
+    input                   : inputReducers,
+    workflow                : workflowReducers,
+    layout                  : layoutReducers,
+    clipboard               : clipboardReducers,
+    selection               : selectionReducers,
+    dependency              : dependencyReducers,
+    setClickedNodeId        : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id | null) => { state.clickedNodeId = nodeId; },
+    setSelectionContextMenu : (state: WorkbenchSDK.State, pos: { x: number, y: number } | null) => { state.selectionContextMenu = pos; },
 }

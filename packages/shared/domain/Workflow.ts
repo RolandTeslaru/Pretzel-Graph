@@ -114,7 +114,7 @@ export namespace Workflow {
                 icon_color?: string | null;
             };
             dependencies: Record<
-                VersionControlPublication.Id,
+                Workflow.Id,
                 VersionControlPublication.Publication<Shape>
             >;
         }
@@ -137,7 +137,7 @@ export namespace Workflow {
             }),
 
             dependencies: z.record(
-                VersionControlPublication.Id,
+                Workflow.Id,
                 z.lazy(() => VersionControlPublication.createSchema(Schema))
             ).default({}),
         })
