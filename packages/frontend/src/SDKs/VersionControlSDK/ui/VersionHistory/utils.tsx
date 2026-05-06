@@ -2,12 +2,12 @@ import { DialogSDK } from "@/SDKs/DialogSDK";
 import type { VersionControl } from "@pretzel-graph/shared/domain";
 import { toast } from "sonner";
 
-export function getPublicationLabel(publication: VersionControl.PublicationMeta): string {
+export function getPublicationLabel(publication: VersionControl.Publication.Meta): string {
     return publication.name?.trim() || `Version ${publication.id.slice(0, 8)}`;
 }
 
 export function openDeactivatePublicationDialog(
-    publication: VersionControl.PublicationMeta,
+    publication: VersionControl.Publication.Meta,
     action: () => Promise<unknown>,
 ) {
     const dialogId = `deactivate-publication-${publication.id}`;
@@ -42,7 +42,7 @@ export function openDeactivatePublicationDialog(
 }
 
 export function openDeletePublicationDialog(
-    publication: VersionControl.PublicationMeta,
+    publication: VersionControl.Publication.Meta,
     action: () => Promise<unknown>,
 ) {
     const dialogId = `delete-publication-${publication.id}`;

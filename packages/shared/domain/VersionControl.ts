@@ -10,16 +10,16 @@ export namespace VersionControl {
         export type Id = z.infer<typeof Id>
 
         export const Schema = VersionControlPublication.createSchema(Workflow.Data.Schema)
+
+        export namespace Meta {
+            export const Schema = Publication.Schema.omit({
+                workflow_data: true,
+                user_id: true,
+            })
+        }
+        export type Meta = z.infer<typeof Meta.Schema>
     }
     export type Publication = z.infer<typeof Publication.Schema>
-
-    export namespace PublicationMeta {
-        export const Schema = Publication.Schema.omit({
-            workflow_data: true,
-            user_id: true,
-        })
-    }
-    export type PublicationMeta = z.infer<typeof PublicationMeta.Schema>
 
     // Signals are emitted by the backend when a publication changes state.
     // Subscribers (e.g. the webhook server) use them to keep caches in sync.
@@ -106,7 +106,7 @@ export namespace VersionControl {
             export type Request = z.infer<typeof Request>
 
             export const Response = z.object({
-                publications: PublicationMeta.Schema.array(),
+                publications: Publication.Meta.Schema.array(),
             })
             export type Response = z.infer<typeof Response>
         }
@@ -117,7 +117,7 @@ export namespace VersionControl {
 
         export namespace ListActiveWorkflows {
             export const Response = z.object({
-                activeWorkflows: z.record(Workflow.Id, PublicationMeta.Schema),
+                activeWorkflows: z.record(Workflow.Id, Publication.Meta.Schema),
             })
             export type Response = z.infer<typeof Response>
         }

@@ -4,7 +4,7 @@ import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { Workflow, VersionControl, Library } from '@pretzel-graph/shared/domain'
 
 interface Props {
-    publication: VersionControl.PublicationMeta
+    publication: VersionControl.Publication.Meta
     workflow: Library.WorkflowMeta | undefined
     isSelected: boolean
     onSelect: (workflowId: Workflow.Id) => void

@@ -254,8 +254,10 @@ function openVisibilityDialog(workflowId: Workflow.Id, isPublic: boolean) {
 
 export const TopRightPanel = () => {
     const workflowId = WorkbenchSDK.useStore(s => s.workflowId);
-    const hasPublications = VersionControlSDK.useStore(s => s.currentWorkflowPublications.length > 0);
-    const isActive = VersionControlSDK.useStore(s => s.activeWorkflows[workflowId]!!);
+    const [hasPublications, hasActivePublication] = VersionControlSDK.useStore(s => [
+        s.currentWorkflowPublications.length > 0,
+        s.currentWorkflowPublications.some(p => p.is_active),
+    ]);
     const [isPublic, isLocked] = LibrarySDK.useStore(s => {
         const meta = s.workflowMetas[workflowId]
         return [meta?.is_public ?? false, meta?.locked ?? false] as const
@@ -276,7 +278,7 @@ export const TopRightPanel = () => {
             <div className='flex flex-row gap-2 z-10 p-0.5 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
                 <Button className='rounded-full' variant="ghost" size="sm" onClick={openPublishDialog}>
                     {hasPublications && (
-                        <div className={`content-[""] my-auto w-2 h-2 mr-2 rounded-full ${isActive ? "bg-green-400" : "bg-red-500"}`}/>
+                        <div className={`content-[""] my-auto w-2 h-2 mr-2 rounded-full ${hasActivePublication ? "bg-green-400" : "bg-red-500"}`}/>
                     )}
                     <SystemIcons.CloudUpload className='size-4 mr-1'/>
                     Publish
@@ -298,16 +300,16 @@ export const TopRightPanel = () => {
             <div className='p-0.5 z-10 flex flex-row gap-1 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
                 <Button variant="ghost" size="icon-sm" onClick={() => openVisibilityDialog(workflowId, isPublic)}>
                     {isPublic ?
-                        <SystemIcons.Globe className='size-4 text-sky-500'/> :
-                        <SystemIcons.GlobeOff className='size-4 text-red-600'/>
+                        <SystemIcons.Globe strokeWidth={2} className='size-4 text-sky-500'/> :
+                        <SystemIcons.GlobeOff strokeWidth={2} className='size-4 text-red-600'/>
                     }
                 </Button>
                 <Button variant="ghost" size="icon-sm" onClick={handleLockToggle} disabled={isLockPending}>
                     {isLockPending ?
                         <Spinner className='size-4'/> :
                         isLocked ?
-                            <SystemIcons.LockClosed className='size-4'/> :
-                            <SystemIcons.LockOpen className='size-4'/>
+                            <SystemIcons.LockClosed strokeWidth={2} className='size-4'/> :
+                            <SystemIcons.LockOpen strokeWidth={2} className='size-4'/>
                     }
                 </Button>
             </div>
