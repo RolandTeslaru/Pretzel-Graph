@@ -30,7 +30,7 @@ export class VersionControlDatabase {
     public readonly list = withSupabaseAssert('publication.list', async (
         supabase: SupabaseClient,
         { workflowId }: VersionControl.API.List.Request,
-    ): Promise<VersionControl.PublicationMeta[]> => {
+    ): Promise<VersionControl.Publication.Meta[]> => {
         const { data: rows } = await supabase
             .from('version_control')
             .select('id, workflow_id, version, name, description, is_active, published_at')
@@ -38,12 +38,12 @@ export class VersionControlDatabase {
             .order('version', { ascending: false })
             .throwOnError();
 
-        return (rows ?? []).map((r) => VersionControl.PublicationMeta.Schema.parse(r));
+        return (rows ?? []).map((r) => VersionControl.Publication.Meta.Schema.parse(r));
     });
 
     public readonly listActiveWorkflows = withSupabaseAssert('versionControl.listActiveWorkflows', async (
         supabase: SupabaseClient,
-    ): Promise<Record<Workflow.Id, VersionControl.PublicationMeta>> => {
+    ): Promise<Record<Workflow.Id, VersionControl.Publication.Meta>> => {
         const user_id = await getUserId(supabase);
         if (!user_id) throw new Error('Unauthenticated');
 
@@ -57,10 +57,10 @@ export class VersionControlDatabase {
 
         return Object.fromEntries(
             (rows ?? []).map((r) => {
-                const publication = VersionControl.PublicationMeta.Schema.parse(r);
+                const publication = VersionControl.Publication.Meta.Schema.parse(r);
                 return [publication.workflow_id, publication];
             }),
-        ) as Record<Workflow.Id, VersionControl.PublicationMeta>;
+        ) as Record<Workflow.Id, VersionControl.Publication.Meta>;
     });
 
     public readonly get = withSupabaseAssert('publication.get', async (

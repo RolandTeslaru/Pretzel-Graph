@@ -13,7 +13,7 @@ type TimelineItemProps = {
     highlighted?: boolean;
     label: string;
     marker: ReactNode;
-    publication?: VersionControl.PublicationMeta;
+    publication?: VersionControl.Publication.Meta;
     showLine?: boolean;
     subtitle: string;
 };
@@ -21,7 +21,7 @@ type TimelineItemProps = {
 function PublicationActions({
     publication,
 }: {
-    publication: VersionControl.PublicationMeta;
+    publication: VersionControl.Publication.Meta;
 }) {
     const [isPending, setIsPending] = useState(false);
 
