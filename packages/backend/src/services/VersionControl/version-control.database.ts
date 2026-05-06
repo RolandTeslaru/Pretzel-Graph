@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { getUserId } from '@/utils/supabase';
 import { withSupabaseAssert } from '@pretzel-graph/shared/errors/supabase';
-import { Auth, SystemError, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
+import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 
 @Injectable()
 export class VersionControlDatabase {
@@ -78,36 +78,6 @@ export class VersionControlDatabase {
             .eq('id', publicationId)
             .single()
             .throwOnError();
-
-        return this.toPublication(row);
-    });
-
-    // Resolves the active publication for a workflow when the requester owns the workflow or the workflow is public.
-    public readonly getActivePublicationForWorkflow = withSupabaseAssert('publication.getActivePublicationForWorkflow', async (
-        supabase: SupabaseClient,
-        workflowId: Workflow.Id,
-        requesterId: Auth.User.Id,
-    ): Promise<VersionControl.Publication> => {
-        const { data: workflow } = await supabase
-            .from('workflows')
-            .select('id, user_id, is_public')
-            .eq('id', workflowId)
-            .maybeSingle<{ id: Workflow.Id; user_id: Auth.User.Id; is_public: boolean }>()
-            .throwOnError();
-
-        if (!workflow || (workflow.user_id !== requesterId && !workflow.is_public))
-            throw new SystemError(SystemError.Code.NOT_FOUND, 'Workflow not found or not public');
-
-        const { data: row } = await supabase
-            .from('version_control')
-            .select('*')
-            .eq('workflow_id', workflowId)
-            .eq('is_active', true)
-            .maybeSingle()
-            .throwOnError();
-
-        if (!row)
-            throw new SystemError(SystemError.Code.NOT_FOUND, 'No active publication found for this public workflow');
 
         return this.toPublication(row);
     });

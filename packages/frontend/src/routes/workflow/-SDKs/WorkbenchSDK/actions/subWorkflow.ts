@@ -27,11 +27,12 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
             }
             
             const state = sdk.state;
+            const masterData = state.data;
             const selectedNodeIds = new Set(nodeIds);
 
             const hasInvalidSelection = nodeIds.some(nodeId => {
                 const node = sel.node.get(state, nodeId);
-                const nodePos = state.data.ui.layout[nodeId];
+                const nodePos = masterData.ui.layout[nodeId];
                 return !node || !nodePos;
             });
 
@@ -49,7 +50,7 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
             const offsetPos = { x: 0, y: 0 };
 
             nodeIds.forEach(nodeId => {
-                const nodePos = masterWorkflow.data.ui.layout[nodeId];
+                const nodePos = masterData.ui.layout[nodeId];
                 offsetPos.x += nodePos.x;
                 offsetPos.y += nodePos.y;
             })
@@ -61,8 +62,8 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
                 const node = sel.node.get(state, nodeId);
                 subflow.data.nodes[nodeId] = node;
 
-                subflow.data.staticValues[nodeId] = masterWorkflow.data.staticValues[nodeId];
-                const nodeOriginalPos = masterWorkflow.data.ui.layout[nodeId];
+                subflow.data.staticValues[nodeId] = masterData.staticValues[nodeId];
+                const nodeOriginalPos = masterData.ui.layout[nodeId];
 
                 const pos = { x: 0, y: 0 };
                 subflow.data.ui.layout[nodeId] = pos;
@@ -120,7 +121,7 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
 
                 const exposedSubWorkflowBlueprint = {
                     ...blueprint,
-                    ...extractExposedPorts(subflow),
+                    ...extractExposedPorts(subflow.data),
                     displayName: displayName,
                     icon: subflow.icon ?? blueprint.icon,
                     accent: subflow.accent ?? blueprint.accent,

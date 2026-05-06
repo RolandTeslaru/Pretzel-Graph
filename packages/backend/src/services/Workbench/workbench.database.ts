@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { createAuthenticatedClient, getUserId } from '@/utils/supabase';
+import { getUserId } from '@/utils/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { withSupabaseAssert } from '@pretzel-graph/shared/errors/supabase';
-import { Workflow, Workbench } from '@pretzel-graph/shared/domain';
+import { SystemError, VersionControl, Workflow, Workbench } from '@pretzel-graph/shared/domain';
 
 @Injectable()
 export class WorkbenchDatabase {
@@ -56,6 +56,47 @@ export class WorkbenchDatabase {
                 .update({ data: payload.data })
                 .eq('id', payload.workflowId)
                 .throwOnError();
+        }),
+    };
+
+    public readonly dependency = {
+        load: withSupabaseAssert('workbench.dependency.load', async (
+            supabase: SupabaseClient,
+            workflowId: Workflow.Id,
+        ): Promise<Workflow.Dependency> => {
+            const requesterId = await getUserId(supabase);
+            if (!requesterId) throw new Error('Unauthenticated');
+
+            const { data: workflow } = await supabase
+                .from('workflows')
+                .select('id, user_id, is_public, display_name, icon, accent')
+                .eq('id', workflowId)
+                .maybeSingle<Pick<Workflow.Database.Row, 'id' | 'user_id' | 'is_public' | 'display_name' | 'icon' | 'accent'>>()
+                .throwOnError();
+
+            if (!workflow || (workflow.user_id !== requesterId && !workflow.is_public))
+                throw new SystemError(SystemError.Code.NOT_FOUND, 'Workflow not found or not public');
+
+            const { data: row } = await supabase
+                .from('version_control')
+                .select('*')
+                .eq('workflow_id', workflowId)
+                .eq('is_active', true)
+                .maybeSingle()
+                .throwOnError();
+
+            if (!row)
+                throw new SystemError(SystemError.Code.NOT_FOUND, 'No active publication found for this public workflow');
+
+            const publication = VersionControl.Publication.Schema.parse(row);
+
+            return Workflow.Dependency.Schema.parse({
+                ...publication,
+                publication_name: publication.name,
+                display_name:     workflow.display_name,
+                icon:             workflow.icon,
+                accent:           workflow.accent,
+            });
         }),
     };
 }

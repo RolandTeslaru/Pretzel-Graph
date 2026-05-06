@@ -9,13 +9,12 @@ import { DialogSDK } from '@/SDKs/DialogSDK'
 import { FieldLabel } from '../FieldLabel'
 import type { RendererProps } from '../FieldLabel'
 import { DependencySelectorDialogContent } from './Dialog'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 const DIALOG_ID = "dependency-selector"
 
 export const DependencySelectorField = memo<RendererProps<'DependencySelector'>>(({ field, nodeId, className }) => {
     const [value, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field.id)
-    const selectedWorkflowId = ((value as string | undefined) ?? "") as Workflow.Id | ""
-
 
     const dependency = WorkbenchSDK.useStore(s => s.selectors.getDependency(s, value as Workflow.Id));
 
@@ -26,7 +25,7 @@ export const DependencySelectorField = memo<RendererProps<'DependencySelector'>>
                     nodeId={nodeId}
                     field={field}
                     dialogId={DIALOG_ID}
-                    selectedWorkflowId={selectedWorkflowId}
+                    selectedWorkflowId={value as Workflow.Id}
                 />
             </DialogSDK.Template>
         ))
@@ -35,6 +34,9 @@ export const DependencySelectorField = memo<RendererProps<'DependencySelector'>>
     let triggerClassName = ""
     if (issue)
         triggerClassName = "border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50"
+
+    const iconColor = dependency?.accent ? `var(--${dependency.accent}-foreground)` : undefined
+    const backgroundColor = dependency?.accent ? `color-mix(in srgb, var(--${dependency.accent}) 25%, transparent)` : 'var(--muted)'
 
     return (
         <div className={cn(className, "w-full nodrag cursor-auto flex flex-col gap-1")}>
@@ -46,32 +48,28 @@ export const DependencySelectorField = memo<RendererProps<'DependencySelector'>>
                 className={cn("h-auto min-h-7 w-full justify-between px-2 py-1 text-left", triggerClassName)}
                 onClick={openDialog}
             >
-                {/* <span className="flex min-w-0 items-center gap-2">
+                <span className="flex min-w-0 items-center gap-2">
                     <span
                         className="flex size-5 shrink-0 items-center justify-center rounded-full"
-                        style={{
-                            backgroundColor: dependency?.accent
-                                ? `color-mix(in srgb, var(--${selectedWorkflowMeta.accent}) 25%, transparent)`
-                                : 'var(--muted)',
-                        }}
+                        style={{ backgroundColor }}
                     >
                         <LazyIcon
                             name={"Graph"}
                             className="size-3"
-                            style={{ color: `var(--${selectedWorkflowMeta.accent}-foreground)` : undefined }}
+                            style={{ color: iconColor }}
                         />
                     </span>
                     <span className="min-w-0 flex flex-col">
                         <span className="truncate text-xs font-medium">
-                            {selectedWorkflowName ?? (selectedWorkflowId || field.placeholder || "Select workflow")}
+                            {dependency?.display_name ?? ( field.placeholder || "Select workflow")}
                         </span>
-                        {selectedWorkflowId && (
-                            <span className="truncate text-[10px] font-normal text-muted-foreground">
-                                {selectedWorkflowId}
-                            </span>
-                        )}
+
+                        <span className='flex text-[10px] font-normal text-muted-foreground'>
+                            {dependency?.publication_name}
+                        </span>
                     </span>
-                </span> */}
+                </span>
+                <SystemIcons.ChevronDown/>
             </Button>
         </div>
     )
