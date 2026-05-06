@@ -4,7 +4,6 @@ import { cn } from '@pretzel-graph/standard-ui/utils/cn'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { VersionControlSDK } from '@/SDKs/VersionControlSDK/sdk'
 import { WorkbenchSDK } from '../../../sdk'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { FieldLabel } from '../FieldLabel'
@@ -16,25 +15,9 @@ const DIALOG_ID = "dependency-selector"
 export const DependencySelectorField = memo<RendererProps<'DependencySelector'>>(({ field, nodeId, className }) => {
     const [value, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field.id)
     const selectedWorkflowId = ((value as string | undefined) ?? "") as Workflow.Id | ""
-    const requestedActiveWorkflowsRef = useRef(false)
 
-    const activeWorkflows = VersionControlSDK.useStore(s => s.activeWorkflows)
-    const workflowMetas = LibrarySDK.useStore(s => s.workflowMetas)
 
-    useEffect(() => {
-        if (requestedActiveWorkflowsRef.current) return
-        requestedActiveWorkflowsRef.current = true
-        void VersionControlSDK.actions.listActiveWorkflows().catch(console.error)
-    }, [])
-
-    const selectedOption = useMemo(() => {
-        return selectedWorkflowId ? activeWorkflows[selectedWorkflowId] : undefined
-    }, [activeWorkflows, selectedWorkflowId])
-
-    const selectedWorkflowName = selectedOption
-        ? workflowMetas[selectedOption.workflow_id]?.display_name ?? selectedOption.name
-        : null
-    const selectedWorkflowMeta = selectedOption ? workflowMetas[selectedOption.workflow_id] : undefined
+    const dependency = WorkbenchSDK.useStore(s => s.selectors.getDependency(s, value as Workflow.Id));
 
     const openDialog = () => {
         DialogSDK.actions.push(DIALOG_ID, (props) => (
@@ -63,19 +46,19 @@ export const DependencySelectorField = memo<RendererProps<'DependencySelector'>>
                 className={cn("h-auto min-h-7 w-full justify-between px-2 py-1 text-left", triggerClassName)}
                 onClick={openDialog}
             >
-                <span className="flex min-w-0 items-center gap-2">
+                {/* <span className="flex min-w-0 items-center gap-2">
                     <span
                         className="flex size-5 shrink-0 items-center justify-center rounded-full"
                         style={{
-                            backgroundColor: selectedWorkflowMeta?.accent
+                            backgroundColor: dependency?.accent
                                 ? `color-mix(in srgb, var(--${selectedWorkflowMeta.accent}) 25%, transparent)`
                                 : 'var(--muted)',
                         }}
                     >
                         <LazyIcon
-                            name={selectedWorkflowMeta?.icon ?? "Graph"}
+                            name={"Graph"}
                             className="size-3"
-                            style={{ color: selectedWorkflowMeta?.accent ? `var(--${selectedWorkflowMeta.accent}-foreground)` : undefined }}
+                            style={{ color: `var(--${selectedWorkflowMeta.accent}-foreground)` : undefined }}
                         />
                     </span>
                     <span className="min-w-0 flex flex-col">
@@ -88,8 +71,7 @@ export const DependencySelectorField = memo<RendererProps<'DependencySelector'>>
                             </span>
                         )}
                     </span>
-                </span>
-                <span className="pl-2 text-muted-foreground">v</span>
+                </span> */}
             </Button>
         </div>
     )

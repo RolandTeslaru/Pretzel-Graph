@@ -88,7 +88,7 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, field, dia
             </div>
 
             <div className="flex flex-col gap-1 border-t border-border pt-2">
-                <span className="text-[10px] font-medium text-muted-foreground">or use a workflow ID directly</span>
+                <span className="text-[10px] font-medium text-muted-foreground">or use a public workflow ID directly</span>
                 <div className="flex gap-1">
                     <Input
                         size="sm"
