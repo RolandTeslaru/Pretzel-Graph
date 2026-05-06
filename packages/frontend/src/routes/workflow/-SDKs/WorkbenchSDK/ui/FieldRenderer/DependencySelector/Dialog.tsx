@@ -5,8 +5,12 @@ import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK/sdk'
 import { WorkbenchSDK } from '../../../sdk'
 import { DialogSDK } from '@/SDKs/DialogSDK'
+import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field'
 import { ActiveWorkflowItem } from './ActiveWorkflowItem'
+import { Spinner } from '@pretzel-graph/standard-ui/foundations'
+
+const HOME_STALE_TIME = 60_000
 
 interface Props {
     nodeId: Workflow.Node.Id
@@ -21,6 +25,14 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, field, dia
 
     const activeWorkflows = VersionControlSDK.useStore(s => s.activeWorkflows)
     const workflowMetas = LibrarySDK.useStore(s => s.workflowMetas)
+
+    const activeWorkflowsQuery = QuerySDK.useQuery(
+        ['version-control', 'active-workflows'],
+        () => VersionControlSDK.actions.listActiveWorkflows(),
+        { staleTime: HOME_STALE_TIME },
+    )
+    const isActiveWorkflowsCacheEmpty = Object.keys(activeWorkflows).length === 0
+    const isLoadingActiveWorkflows = isActiveWorkflowsCacheEmpty && activeWorkflowsQuery.isFetching
 
     const activeOptions = useMemo(() => {
         const normalizedQuery = query.trim().toLowerCase()
@@ -70,7 +82,12 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, field, dia
             />
 
             <div className="max-h-64 overflow-y-auto rounded-md border border-border/60">
-                {activeOptions.length > 0 ? (
+                {isLoadingActiveWorkflows ? (
+                    <div className="flex items-center justify-center gap-2 px-2 py-4 text-xs text-muted-foreground">
+                        <Spinner className="size-3.5" />
+                        Loading published workflows
+                    </div>
+                ) : activeOptions.length > 0 ? (
                     activeOptions.map(({ publication, workflow }) => (
                         <ActiveWorkflowItem
                             key={publication.id}
