@@ -14,6 +14,11 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
     // workflowId maps to active publication
     private readonly publicationsMap = new Map<Workflow.Id, VersionControl.Publication>();
 
+    private toPublication(row: unknown): VersionControl.Publication {
+        const parsed = VersionControl.Publication.Database.Row.Schema.parse(row);
+        return VersionControl.Publication.Schema.parse(parsed);
+    }
+
     // ─────────────────────────────────────────────────────────
     // Public lookup
     // ─────────────────────────────────────────────────────────
@@ -35,8 +40,8 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
             return;
         }
 
-        const publications = (data ?? []).map((row: VersionControl.Publication) =>
-            VersionControl.Publication.Schema.parse(row),
+        const publications = (data ?? []).map((row: unknown) =>
+            this.toPublication(row),
         );
 
         for (const publication of publications) {

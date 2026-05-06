@@ -8,6 +8,6 @@ import { RealtimeModule } from '../Realtime/realtime.module';
     imports: [RealtimeModule],
     controllers: [VersionControlController],
     providers: [VersionControlService, VersionControlDatabase],
-    exports: [VersionControlService],
+    exports: [VersionControlService, VersionControlDatabase],
 })
 export class VersionControlModule {}

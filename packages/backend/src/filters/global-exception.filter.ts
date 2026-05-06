@@ -60,6 +60,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     private httpStatusFromCode(code: SystemError.Code): number {
+        if (code === SystemError.Code.NOT_FOUND) return 404;
+
         const prefix = Math.floor(code / 1000)
         switch (prefix) {
             case 1: return 422;  // compilation
