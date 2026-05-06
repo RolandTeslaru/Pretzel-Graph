@@ -59,14 +59,14 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, field, dia
             })
     }, [activeWorkflows, query, workflowMetas])
 
-    const handleSelect = (workflowId: Workflow.Id) => {
-        WorkbenchSDK.actions.field.setValue(nodeId, field, workflowId)
-        DialogSDK.actions.pop(dialogId)
+    const handleSelect = async (workflowId: Workflow.Id) => {
+        const success = await WorkbenchSDK.actions.dependency.attachWorkflowToNode(nodeId, field.id, workflowId)
+        if(success)
+            DialogSDK.actions.pop(dialogId)
     }
 
     const handleManualSet = async () => {
-        
-        const success = await WorkbenchSDK.actions.dependency.resolveByWorkflowId(manualWorkflowId)
+        const success = await WorkbenchSDK.actions.dependency.attachWorkflowToNode(nodeId, field.id, manualWorkflowId)
         if(success)
             DialogSDK.actions.pop(dialogId)
     }

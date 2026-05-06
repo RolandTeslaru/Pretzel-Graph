@@ -125,7 +125,7 @@ const SignUpPanel = () => {
                         )}
                     />
                     <Form.Item>
-                        <Button type="submit" disabled={disabled}>Login</Button>
+                        <Button type="submit" disabled={disabled}>Sign up</Button>
                     </Form.Item>
                 </form>
             </Form.Root>
