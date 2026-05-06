@@ -1,10 +1,10 @@
-import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
 import { Chat } from "@pretzel-graph/shared/domain";
 import { QuerySDK } from "@/SDKs/QuerySDK/sdk";
 import { createChatSDKActions, type ChatSDKActions } from "./actions";
+import { createChatSDKReducers, type ChatSDKReducers } from "./reducers";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { DialogSDK } from "@/SDKs/DialogSDK";
 import { createWithEqualityFn } from "zustand/traditional";
@@ -44,20 +44,7 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
         })),
         shallow
     )
-
-
-    public readonly reducers: ChatSDK.Reducers = {
-        upsertMessage: (s, message) => {
-            // If its not in the messages record then its not in the msessage stack aswell, so push it.
-            if (!s.messagesRecord[message.id]) {
-                s.messages.push(message.id);
-            }
-            s.messagesRecord[message.id] = message;
-        },
-        appendContent: (s, messageId, content) => {
-            s.messagesRecord[messageId].content += content;
-        },
-    }
+    public readonly reducers: ChatSDK.Reducers = createChatSDKReducers(this)
 
 
     public readonly actions = createChatSDKActions(this);
@@ -111,10 +98,7 @@ export namespace ChatSDK {
         chats: Record<Chat.Id, Chat>,
     }
 
-    export type Reducers = {
-        upsertMessage: (state: State, message: Chat.Message) => void
-        appendContent: (state: State, messageId: Chat.Message.Id, content: string) => void
-    }
+    export type Reducers = ChatSDKReducers
 
     export type Actions = ChatSDKActions
     export type Selectors = {}
