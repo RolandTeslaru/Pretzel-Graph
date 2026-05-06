@@ -15,12 +15,12 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
     const setState = sdk.useStore.setState;
     const reducers = sdk.reducers;
 
-    const nodeActions = createNodeActions(sdk);
-    const fieldActions = createFieldActions(sdk, nodeActions);
-    const toolActions = createToolActions(sdk, fieldActions);
-    const workflowActions = createWorkflowActions(sdk);
+    const nodeActions        = createNodeActions(sdk);
+    const fieldActions       = createFieldActions(sdk, nodeActions);
+    const toolActions        = createToolActions(sdk, fieldActions);
+    const workflowActions    = createWorkflowActions(sdk);
     const subWorkflowActions = createSubWorkflowActions(sdk);
-    const dependencyActions = createDependencyActions(sdk);
+    const dependencyActions  = createDependencyActions(sdk);
 
     return {
         commit:                   commit,
