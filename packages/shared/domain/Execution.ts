@@ -187,24 +187,24 @@ export namespace Execution {
             export const Started   = Base.extend({
                 type:          z.literal('node:started'),
                 nodeId:        Workflow.Node.Id,
-                sessionUpdate: Session.Update.optional(),
+                sessionUpdate: Session.Update,
             })
             export const Completed = Base.extend({
                 type:          z.literal('node:completed'),
                 nodeId:        Workflow.Node.Id,
                 output:        z.unknown(),
-                sessionUpdate: Session.Update.optional(),
+                sessionUpdate: Session.Update,
             })
             export const Error     = Base.extend({
-                type:   z.literal('node:error'),
-                nodeId: Workflow.Node.Id,
-                error:  SystemError.Schema,
+                type:          z.literal('node:error'),
+                nodeId:        Workflow.Node.Id,
+                error:         SystemError.Schema,
+                sessionUpdate: Session.Update,
             })
             export const Waiting   = Base.extend({
-                type:                    z.literal('node:waiting'),
-                nodeId:                  Workflow.Node.Id,
-                dependencyResolutionMap: z.record(Workflow.Node.Id, z.boolean()),
-                totalDeps:               z.number(),
+                type:          z.literal('node:waiting'),
+                nodeId:        Workflow.Node.Id,
+                sessionUpdate: Session.Update,
             })
 
             export type Started   = z.infer<typeof Started>

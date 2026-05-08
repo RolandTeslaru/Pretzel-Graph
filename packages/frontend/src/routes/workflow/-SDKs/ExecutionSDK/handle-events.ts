@@ -57,25 +57,21 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event)
         case "node:started":
             sdk.setState(s => {
                 sdk.reducers.applySessionUpdate(s, e.sessionUpdate);
-                
-                sdk.reducers.setNodeStatus(s, e.nodeId, {  status: "running", started_at: new Date().toISOString() })
             })
             break;
         case "node:completed":
             sdk.setState(s => {
                 sdk.reducers.applySessionUpdate(s, e.sessionUpdate);
-                sdk.reducers.setNodeOutput(s, e.nodeId, e.output);
-                sdk.reducers.setNodeStatus(s, e.nodeId, { status: "completed", completed_at: new Date().toISOString() })
             })
             break;
         case "node:waiting":
             sdk.setState(s => {
-                sdk.reducers.setNodeStatus(s, e.nodeId, { status: "waiting" })
+                sdk.reducers.applySessionUpdate(s, e.sessionUpdate);
             })
             break;
         case "node:error":
             sdk.setState(s => {
-                sdk.reducers.setNodeStatus(s, e.nodeId, { status: "failed", error: e.error, completed_at: new Date().toISOString() })
+                sdk.reducers.applySessionUpdate(s, e.sessionUpdate);
             })
             break;
         case "update":
