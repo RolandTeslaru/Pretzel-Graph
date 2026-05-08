@@ -13,6 +13,7 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
         close:    withCommit((...props) => setState(s => { reducers.workflow.close(s,    ...props) })),
         open:     (...props) => setState(s => { reducers.workflow.open(s,     ...props) }),
         validate: (...props) => setState(s => { reducers.workflow.validate(s, ...props) }),
+        setFields: withCommit((...props) => setState(s => { reducers.workflow.setFields(s, ...props) })),
         load: async (workflowId, abortSignal) => {
             try {
                 const { workflow } = await Workbench.API.Workflow.get(api, { workflowId }, abortSignal)
@@ -35,5 +36,6 @@ export type WorkflowActions = {
     close:    DropFirstArg<WorkbenchSDK.Reducers['workflow']['close']>;
     open:     DropFirstArg<WorkbenchSDK.Reducers['workflow']['open']>;
     validate: DropFirstArg<WorkbenchSDK.Reducers['workflow']['validate']>;
+    setFields: DropFirstArg<WorkbenchSDK.Reducers['workflow']['setFields']>;
     load: (workflowId: Workflow.Id, abortSignal: AbortSignal) => Promise<void>;
 };
