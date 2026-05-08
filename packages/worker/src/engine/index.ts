@@ -12,6 +12,7 @@ import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Execution } from "@pretzel-graph/shared/domain";
+import type { SubWorkflowNormalizer } from "src/compiler/normalizers/subworkflow";
 
 export interface AggexHooks {
     onPause?(): void;
@@ -61,7 +62,7 @@ export class AggexEngine {
 
 
 
-    private getEventChannel(ctx: AggexEngine.ExecutionContext): Execution.Event.Channel{
+    private getEventChannel(ctx: AggexEngine.Execution.Context): Execution.Event.Channel{
         return Execution.Event.getChannel(ctx.executionId);
     }
 
@@ -87,7 +88,7 @@ export class AggexEngine {
 
 
     private resolveRouterSignals(
-        ctx:    AggexEngine.ExecutionContext,
+        ctx:    AggexEngine.Execution.Context,
         nodeId: Workflow.Node.Id,
         result: Record<string, any>
     ): Set<Vertex.Id> {
@@ -106,7 +107,7 @@ export class AggexEngine {
 
 
     private resolveInputs(
-        ctx:             AggexEngine.ExecutionContext,
+        ctx:             AggexEngine.Execution.Context,
         nodeId:          Workflow.Node.Id,
         incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set(),
         keepMissingPorts = false,
@@ -165,7 +166,7 @@ export class AggexEngine {
      */
     private applyEdgeStateUpdate(
 
-        ctx:       AggexEngine.ExecutionContext,
+        ctx:       AggexEngine.Execution.Context,
         edgeIds:   Record<string, Workflow.Edge.Id>,
         status:    Execution.Session.EdgeState["status"],
 
@@ -199,7 +200,7 @@ export class AggexEngine {
 
 
     private onNodeFired(
-        ctx: AggexEngine.ExecutionContext, 
+        ctx: AggexEngine.Execution.Context, 
         nodeId: Vertex.Id
     ): void {
         const { workflowId, session, executionId, workflowCache, nodeRuntimeMap } = ctx
@@ -249,7 +250,7 @@ export class AggexEngine {
 
 
 
-    private async awaitPause(ctx: AggexEngine.ExecutionContext) {
+    private async awaitPause(ctx: AggexEngine.Execution.Context) {
         if(!this.pausePromise)
             return
 
@@ -263,7 +264,7 @@ export class AggexEngine {
 
 
     private onNodeExecuted = async (
-        ctx:      AggexEngine.ExecutionContext,
+        ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id, 
         signals:  Set<Workflow.Node.Id | Vertex.Id>
     ): Promise<Set<Vertex.Id> | void> => {
@@ -307,7 +308,7 @@ export class AggexEngine {
 
 
     private async onNodeCompleted(
-        ctx:                AggexEngine.ExecutionContext,
+        ctx:                AggexEngine.Execution.Context,
         vertexId:           Vertex.Id,
         resolvedOutSignals: Set<Vertex.Id> | void
     ) {
@@ -367,7 +368,7 @@ export class AggexEngine {
 
 
     private onNodeWaiting(
-        ctx:                     AggexEngine.ExecutionContext,
+        ctx:                     AggexEngine.Execution.Context,
         vertexId:                Vertex.Id,
         arrivedSignals:          Set<Vertex.Id>,
         dependencyResolutionMap: Record<Vertex.Id, boolean>,
@@ -402,7 +403,7 @@ export class AggexEngine {
 
 
     private onNodeError(
-        ctx:      AggexEngine.ExecutionContext, 
+        ctx:      AggexEngine.Execution.Context, 
         vertexId: Vertex.Id, 
         error:    unknown
     ) {
@@ -442,7 +443,7 @@ export class AggexEngine {
 
 
     private canNodeRun(
-        ctx:               AggexEngine.ExecutionContext,
+        ctx:               AggexEngine.Execution.Context,
         vertexId:          Vertex.Id,
         receivedSignals:   Set<Vertex.Id>,
         s2EngineAssesment: boolean
@@ -493,9 +494,9 @@ export class AggexEngine {
 
     public async run(
 
-        ctx: AggexEngine.ExecutionContext
+        ctx: AggexEngine.Execution.Context
     
-    ): Promise<AggexEngine.ExecutionResult> {
+    ): Promise<AggexEngine.Execution.Result> {
         ctx.activeNodes.clear();
 
         const hooks: S2Hooks = {
@@ -509,7 +510,7 @@ export class AggexEngine {
 
         const start = performance.now();
 
-        const result =  await Promise.race<AggexEngine.ExecutionResult>([
+        const result =  await Promise.race<AggexEngine.Execution.Result>([
 
             this.s2Engine.ignite(ctx.compiledGraph, hooks).then(
                 () => ({ 
@@ -536,19 +537,23 @@ export class AggexEngine {
 
 
 export namespace AggexEngine {
-    export type ExecutionResult = {
-        status: "completed" | "terminated";
-        duration: number;
-    }
+    export namespace Execution {
+        export type Result = {
+            status: "completed" | "terminated";
+            duration: number;
+        }
+    
+        export interface Context extends RuntimeNode.ExecutionContext {
+            compiledGraph:   S2Graph,
+            compileWorkflow: WorkflowCompiler["compile"]
+            runSubWorkflow:  AggexEngine["run"]
+            activeNodes:     Set<Workflow.Node.Id | Vertex.Id>;
+            runtimeMeta?:    SubWorkflowNormalizer.RuntimeMeta;
+            nodeRuntimeMap:  Map<
+                Vertex.Id | Workflow.Node.Id, 
+                { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> }
+            >
+        }
 
-    export interface ExecutionContext extends RuntimeNode.ExecutionContext {
-        compiledGraph:   S2Graph,
-        compileWorkflow: WorkflowCompiler["compile"]
-        runSubWorkflow:  AggexEngine["run"]
-        activeNodes:     Set<Workflow.Node.Id | Vertex.Id>;
-        nodeRuntimeMap:  Map<
-            Vertex.Id | Workflow.Node.Id, 
-            { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> }
-        >
     }
 }

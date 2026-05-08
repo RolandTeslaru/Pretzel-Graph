@@ -29,11 +29,7 @@ const ErrorViewer = () => {
                     <p className='text-xs font-semibold text-foreground'>
                         {topLevelError.message}
                     </p>
-                    {topLevelError.detail && (
-                        <p className='text-xs text-muted-foreground font-mono break-all whitespace-pre-wrap'>
-                            {topLevelError.detail}
-                        </p>
-                    )}
+
                     <p className='text-xs text-muted-foreground'>
                         Code <span className='text-destructive font-medium'>{topLevelError.code}</span>
                     </p>

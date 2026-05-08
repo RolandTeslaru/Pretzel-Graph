@@ -129,7 +129,7 @@ export class ExecutionService {
         
 
         try {
-            await SecretsResolver.resolveWorkflow(supabase, workflowData);
+            await SecretsResolver.resolveWorkflow(supabase, workflowData, workflowId);
 
             const queueItem: Execution.Queue.Item = {
                 execution,

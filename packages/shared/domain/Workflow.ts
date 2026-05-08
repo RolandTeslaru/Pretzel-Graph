@@ -1,5 +1,7 @@
 import { z } from "zod"
 import { Foundations } from "./Foundations";
+import { Field } from "./Foundations/Field";
+import { Port } from "./Foundations/Port";
 import { Auth } from "./Auth";
 import { Blueprint } from "./Foundations/Blueprint";
 import { Webhook } from "./Webhook";
@@ -22,9 +24,9 @@ export namespace Workflow {
             id:           Node.Id,
             blueprintId:  z.string().brand("BlueprintId"),
 
-            fields:       z.array(Foundations.Field.Schema),
-            inputs:       z.array(Foundations.Port.Input.Schema),
-            outputs:      z.array(Foundations.Port.Output.Schema),
+            fields:       z.array(Field.Schema),
+            inputs:       z.array(Port.Input.Schema),
+            outputs:      z.array(Port.Output.Schema),
             webhooks:     z.array(Webhook.Schema).optional(),
 
             isMinimized:  z.boolean().default(false),
@@ -32,7 +34,7 @@ export namespace Workflow {
             isDisabled:   z.boolean().optional(),
         });
 
-        export function createId(blueprintId: Foundations.Blueprint.Id) {
+        export function createId(blueprintId: Blueprint.Id) {
             return `${blueprintId}-${uid.randomUUID(5)}` as Workflow.Node.Id
         }
     }
@@ -46,19 +48,19 @@ export namespace Workflow {
             id: Edge.Id,
             source: z.object({
                 nodeId: Node.Id,
-                portId: Foundations.Port.Output.Id
+                portId: Port.Output.Id
             }),
             target: z.object({
                 nodeId: Node.Id,
-                portId: Foundations.Port.Input.Id,
+                portId: Port.Input.Id,
             })
         })
 
         export function createId(
             _sourceNodeId: Node.Id,
-            _sourcePortId: Foundations.Port.Output.Id,
+            _sourcePortId: Port.Output.Id,
             _targetNodeId: Node.Id,
-            _targetPortId: Foundations.Port.Input.Id
+            _targetPortId: Port.Input.Id
         ) {
             return `${_sourceNodeId}|${_sourcePortId}|${_targetNodeId}|${_targetPortId}` as Workflow.Edge.Id
         }
@@ -105,7 +107,7 @@ export namespace Workflow {
             staticValues: Record<
                 Node.Id,
                 Record<
-                    Foundations.Field.Id | Foundations.Port.Input.Id,
+                    Field.Id | Port.Input.Id,
                     string | number | boolean | string[] | unknown
                 >
             >;
@@ -126,7 +128,7 @@ export namespace Workflow {
             staticValues: z.record(
                 Node.Id,
                 z.record(
-                    z.union([Foundations.Field.Id, Foundations.Port.Input.Id]),
+                    z.union([Field.Id, Port.Input.Id]),
                     z.union([z.string(), z.number(), z.boolean(), z.array(z.string()), z.json()])
                 )
             ),
@@ -230,14 +232,14 @@ export namespace Workflow {
         inputHandlesMap: Record<
             Workflow.Node.Id,
             Record<
-                Foundations.Port.Input.Id,
+                Port.Input.Id,
                 Workflow.Edge.Id
             >
         >,
         outputHandlesMap: Record<
             Workflow.Node.Id,
             Record<
-                Foundations.Port.Output.Id,
+                Port.Output.Id,
                 Workflow.Edge.Id
             >
         >
@@ -292,9 +294,7 @@ export namespace Workflow {
     export function deriveArcs(cache: Cache) {
         const arcMap: Record<
             Workflow.Node.Id,       // Source node id
-            Set<
-                Workflow.Node.Id    // Target Node id
-                >
+            Set<Workflow.Node.Id>   // Target Node ids
         > = {} 
 
         for (const [src, targets] of Object.entries(cache.outgoingEdgesMap)){
@@ -307,9 +307,7 @@ export namespace Workflow {
     export function deriveReversedArcs(cache: Cache) {
         const reversedArcMap: Record<
             Workflow.Node.Id,       // Target node id
-            Set<
-                Workflow.Node.Id    // Source Node id
-                >
+            Set<Workflow.Node.Id>   // Source Node id
         > = {} 
 
         for (const [tgt, sources] of Object.entries(cache.incomingEdgesMap)){
