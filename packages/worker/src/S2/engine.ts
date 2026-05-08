@@ -37,7 +37,8 @@ export class S2Engine {
                 startTime: performance.now(),
                 resolve,
                 reject,
-                hooks
+                hooks,
+                pendingVertexChecks: new Set(),
             };
 
             for (const vertexId of graph.vertices.keys()) {
@@ -107,17 +108,31 @@ export class S2Engine {
         dependents.forEach(dep => {
             if (ctx.settled) return;
 
+            ctx.accumulatedSignals.get(dep)!.add(vertexId);
+            this.scheduleVertexCheck(dep, ctx);
+        })
+    }
+
+    
+    private scheduleVertexCheck(dep: Vertex.Id, ctx: S2Engine.ExecutionContext) {
+        if(ctx.pendingVertexChecks.has(dep)) 
+            return;
+
+        ctx.pendingVertexChecks.add(dep);
+
+        queueMicrotask(() => {
+            ctx.pendingVertexChecks.delete(dep);
+
+            if(ctx.settled) return;
+
             const signals = ctx.accumulatedSignals.get(dep)!;
-            signals.add(vertexId);
-            const canRun = this.canVertexRun(dep, ctx);
 
-            // console.log("Checking if dependent vertex", dep, "can run with accumulated signals", signals, "->", canRun);
-            const copiedSignals = new Set(signals);
-
-            if (canRun) {
+            if(this.canVertexRun(dep, ctx)){
+                const firingSignals = new Set(signals);
                 signals.clear();
-                this.fireVertex(dep, copiedSignals, ctx);
-            } else {
+                this.fireVertex(dep, firingSignals, ctx);
+            } 
+            else {
                 const allDeps = ctx.graph.dependenciesMap.get(dep)!;
                 const resolutionMap: Record<Vertex.Id, boolean> = {};
                 for (const depId of allDeps) {
@@ -127,7 +142,6 @@ export class S2Engine {
             }
         })
     }
-
 
 
 
@@ -182,10 +196,7 @@ export class S2Engine {
         finally {
             ctx.activeTasks--;
 
-            if (ctx.activeTasks === 0 && !ctx.settled) {
-                ctx.settled = true;
-                ctx.resolve("completed");
-            }
+            this.trySettle(ctx);
         }
     }
 
@@ -202,6 +213,15 @@ export class S2Engine {
 
         return vertex.deltaExecution < S2Engine.MAX_VERTEX_EXECUTION_DELTA && vertex.getRunCount() > S2Engine.MAX_VERTEX_RUN_COUNT;
     }
+
+
+
+    private trySettle(ctx: S2Engine.ExecutionContext): void {
+        if(!ctx.settled && ctx.activeTasks === 0 && ctx.pendingVertexChecks.size === 0){
+            ctx.settled = true;
+            ctx.resolve("completed");
+        }
+    }
 }
 
 export namespace S2Engine {
@@ -217,5 +237,6 @@ export namespace S2Engine {
         resolve: (value: ExecutionResult) => void;
         reject: (err: unknown) => void;
         hooks: S2Hooks;
+        pendingVertexChecks: Set<Vertex.Id>; 
     }
 }

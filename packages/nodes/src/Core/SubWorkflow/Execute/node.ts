@@ -14,7 +14,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public readonly Blueprint = Blueprint;
     
-    private localEngineCtx: AggexEngine.ExecutionContext | null = null;
+    private localEngineCtx: AggexEngine.Execution.Context | null = null;
 
     constructor(wfNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(wfNode, context);
@@ -23,7 +23,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     protected override async onCompile(
         compilationContext: CompilationContext,
     ): Promise<void> {
-        const globalEngineCtx = this.context as unknown as AggexEngine.ExecutionContext;
+        const globalEngineCtx = this.context as unknown as AggexEngine.Execution.Context;
         const { workflowsMap, compilePath } = compilationContext;
         const subWorkflowId = this.fields.workflowId as Workflow.Id;
 
@@ -77,13 +77,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const { workflowId: _workflowId } = this.fields;
 
-        if(!this.localEngineCtx) {
+        if(!this.localEngineCtx)
             throw new Error("SubWorkflow.Execute node not properly compiled");
-        }
 
         // Inject parent workflow data stream into node
         this.localEngineCtx.nodeRuntimeMap.forEach(({wfNode, instance}) => {
-            if(wfNode.blueprintId === "Core.SubWorkflow.ExposeInputPort" && "injectedData" in instance){
+            if(this.isExposedInputNode(wfNode) && "injectedData" in instance){
                 // The exposed port id is the same as the local node id of the ExposeInputPort node
                 const bridgeId = wfNode.id as keyof InferInputs<typeof Blueprint>;
                 instance.injectedData = inputs[bridgeId];
@@ -96,15 +95,22 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             const result: Partial<InferOutputs<typeof Blueprint>> = {};
             // Extract data from nodes
             this.localEngineCtx.nodeRuntimeMap.forEach(({wfNode, instance}) => {
-                if(wfNode.blueprintId === "Core.SubWorkflow.ExposeOutputPort" && "ejectedData" in instance){
+                if(this.isExposedOutputNode(wfNode) && "ejectedData" in instance)
                     // The exposed port id is the same as the local node id of the ExposeOutputPort node
                     (result as Record<string, unknown>)[wfNode.id] = instance.ejectedData;
-                }
             })
             return result;
         }
         catch (err) {
             throw new Error(`Error executing sub-workflow: ${(err as Error).message}`);
         }
+    }
+
+    private isExposedInputNode(wfNode: Workflow.Node): boolean {
+        return wfNode.blueprintId === "Core.SubWorkflow.ExposeInputPort"
+    }
+
+    private isExposedOutputNode(wfNode: Workflow.Node): boolean {
+        return wfNode.blueprintId === "Core.SubWorkflow.ExposeOutputPort"
     }
 }
