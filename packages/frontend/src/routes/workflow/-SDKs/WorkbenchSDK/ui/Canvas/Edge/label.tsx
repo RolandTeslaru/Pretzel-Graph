@@ -89,7 +89,7 @@ const CanvasEdgeLabel = ({
                             marginTop: 4,
                         }}
                     >
-                        {edgeStatus.runCount} runs
+                        {edgeStatus.runCount === 1 ? '1 run' : edgeStatus.runCount + ' runs'}
                     </span>
                 </div>
             )}

@@ -1,41 +1,45 @@
-import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { Foundations, Execution } from "@pretzel-graph/shared/domain";
-import { Node as ChatInputNode } from "@pretzel-graph/nodes/Core/Chat/Input/node";
-import { CatalogueService } from "@pretzel-graph/node-sdk";
+import { Execution, Foundations } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
+import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
+import { Node as ChatInputNode } from "@pretzel-graph/nodes/Core/Chat/Input/node";
+import { CatalogueService, RuntimeNode } from "@pretzel-graph/node-sdk";
+
 import { AggexCompilerError } from "../errors";
-import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { S2Graph, Vertex } from "../S2/graph";
 import { resolveFields } from "../utils";
-import { CompilationContext, createCompilationContext } from "./context";
-import { AggexEngine } from "src/engine";
-import { produce } from "immer";
+import { SubWorkflowNormalizer } from "./normalizers/subworkflow";
 
-export { CompilationContext, createCompilationContext, extendCompilePath } from "./context";
+import { produce } from "immer";
+import { AggexEngine } from "src/engine";
 
 
 export class WorkflowCompiler {
     constructor() { }
 
     public async compile(
-        workflowId:   Workflow.Id,
-        workflowData: Workflow.Data,
-        execution:    Execution,
-        emit:         RuntimeNode.ExecutionContext["emit"],
-        compilationContext: CompilationContext = createCompilationContext(workflowId),
-    ): Promise<AggexEngine.ExecutionContext> {
-        
-        const workflowCache = Workflow.createCache(workflowData);
+        workflowId:     Workflow.Id,
+        workflowData:   Workflow.Data,
+        execution:      Execution,
+        emit:           RuntimeNode.ExecutionContext["emit"],
+        compilationCtx: WorkflowCompiler.Compilation.Context = createCompilationContext(workflowId),
+    ): Promise<AggexEngine.Execution.Context> {
+        const normalizedWorkflow = SubWorkflowNormalizer.normalize(
+            workflowId,
+            workflowData,
+            { dependencyPath: compilationCtx.compilePath },
+        );
 
-        const graph = new S2Graph();
-        const nodes = workflowData.nodes;
-        const edges = workflowData.edges;
+        const normalizedWorkflowData = normalizedWorkflow.data;
+        const workflowCache = Workflow.createCache(normalizedWorkflowData);
+
+        const graph = new S2Graph();    
+    const nodes = normalizedWorkflowData.nodes;
+        const edges = normalizedWorkflowData.edges;
 
         // START vertex — S2Engine ignites from here
         graph.addVertex(S2Graph.START_VERTEX_ID);
 
-        const nodeRuntimeMap = new Map() as AggexEngine.ExecutionContext["nodeRuntimeMap"];
-
+        const nodeRuntimeMap = new Map() as AggexEngine.Execution.Context["nodeRuntimeMap"];
         
         // 
         // Build contexts
@@ -43,21 +47,21 @@ export class WorkflowCompiler {
         
         const abortController = new AbortController();
         
-        const abortExecution = (reason: string) => abortController.abort(reason);
-        const updateSession = (recipe: (draft: Execution.Session) => void) => {
-            execution.session = produce(execution.session, recipe);
+        const updateSession = (r: (draft: Execution.Session) => void) => {
+            execution.session = produce(execution.session, r);
         };
 
         const dummyEngine = new AggexEngine();
 
         const engineExecutionCtx = {
             get session()  { return execution.session; },
-            workflowData,
+            workflowData: normalizedWorkflowData,
             workflowCache,
+            runtimeMeta: normalizedWorkflow.runtimeMeta,
             emit,
             executionId: execution.id,
             chat_id: execution.chat_id,
-            abortExecution,
+            abortExecution: (reason: string) => abortController.abort(reason),
             updateSession,
             abortSignal: abortController.signal,
             workflowId,
@@ -66,14 +70,11 @@ export class WorkflowCompiler {
             activeNodes: new Set(),
             compileWorkflow: this.compile.bind(this),
             runSubWorkflow: dummyEngine.run.bind(dummyEngine),
-        } satisfies AggexEngine.ExecutionContext
-
-
-
+        } satisfies AggexEngine.Execution.Context
 
         // Add nodes to the graph
         for (const wfNode of Object.values(nodes))
-            await this.prepareNode(wfNode, engineExecutionCtx, compilationContext);
+            await this.prepareNode(engineExecutionCtx, wfNode, compilationCtx);
 
         // Add Edges. Might also get ran multiple times because nodes can have multiple edges between them because of ports.
         for (const edge of Object.values(edges)) {
@@ -100,10 +101,21 @@ export class WorkflowCompiler {
         startNodes.forEach(nodeId => {
             graph.addDependency(S2Graph.START_VERTEX_ID, nodeId);
         });
-
-        const igniter = execution.igniter
         
-        switch (igniter?.variant) {
+        await this.handleIgniter(engineExecutionCtx, execution.igniter);
+
+        return engineExecutionCtx;
+    }
+
+
+
+
+    private async handleIgniter(
+        engineExecutionCtx: AggexEngine.Execution.Context, 
+        igniter:            Execution.Igniter
+    ){
+        const { nodeRuntimeMap } = engineExecutionCtx;
+        switch (igniter.variant) {
             case "webhook": {
                 const entry = nodeRuntimeMap.get(igniter.nodeId as unknown as Vertex.Id);
                 if (entry)
@@ -118,14 +130,15 @@ export class WorkflowCompiler {
                 break;
             }
         }
-
-        return engineExecutionCtx;
     }
 
+
+
+
     private async prepareNode(
-        wfNode: Workflow.Node,
-        engineExecutionCtx: AggexEngine.ExecutionContext,
-        compilationContext: CompilationContext,
+        engineExecutionCtx: AggexEngine.Execution.Context,
+        wfNode:             Workflow.Node,
+        compilationCtx:     WorkflowCompiler.Compilation.Context,
     ): Promise<void> {
         const NodeConstructor = await CatalogueService.getNode(wfNode.blueprintId);
 
@@ -140,7 +153,7 @@ export class WorkflowCompiler {
 
         const nodeInstance = new NodeConstructor(wfNode, engineExecutionCtx);
 
-        await nodeInstance.compile(compilationContext)
+        await nodeInstance.compile(compilationCtx)
 
         const vertexId = wfNode.id as unknown as Vertex.Id;
 
@@ -159,6 +172,8 @@ export class WorkflowCompiler {
     }
     
 
+
+
     private findStartNodes(
         nodes: Workflow.Data["nodes"],
         edges: Workflow.Data["edges"]
@@ -176,3 +191,28 @@ export class WorkflowCompiler {
 
 
 
+export namespace WorkflowCompiler {
+    export namespace Compilation {
+        export type Unit = Pick<Workflow, "id" | "data">;
+
+        export interface Context {
+            workflowsMap: Map<Workflow.Id, Unit>;
+            compilePath: readonly Workflow.Id[];
+        }
+    }
+
+}
+
+export function createCompilationContext(rootId: Workflow.Id): WorkflowCompiler.Compilation.Context {
+    return { workflowsMap: new Map(), compilePath: [rootId] };
+}
+
+export function extendCompilePath(
+    ctx: WorkflowCompiler.Compilation.Context,
+    nextId: Workflow.Id,
+): WorkflowCompiler.Compilation.Context {
+    return {
+        workflowsMap: ctx.workflowsMap,
+        compilePath: [...ctx.compilePath, nextId],
+    };
+}

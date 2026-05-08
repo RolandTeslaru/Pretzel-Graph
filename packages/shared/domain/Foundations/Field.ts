@@ -5,7 +5,7 @@ export namespace Field {
     export const Id = z.string().brand("FieldId");
     export type Id = z.infer<typeof Id>;
 
-    export const Value = z.any;
+    export const Value = z.any();
     export type Value = z.infer<typeof Value>
 
     export const Base = z.object({

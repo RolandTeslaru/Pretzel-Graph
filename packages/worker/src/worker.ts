@@ -20,7 +20,7 @@ export class AggexWorkerImpl {
     private compiler = new WorkflowCompiler();  
 
     private runningEnginesMap           = new Map<Execution.Id, AggexEngine>();
-    private runningExecutionContextsMap = new Map<Execution.Id, AggexEngine.ExecutionContext>()
+    private runningExecutionContextsMap = new Map<Execution.Id, AggexEngine.Execution.Context>()
     private signalHandlersMap           = new Map<Execution.Signal.Channel, (signal: Execution.Signal) => void>();
 
     private redisPub    = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
