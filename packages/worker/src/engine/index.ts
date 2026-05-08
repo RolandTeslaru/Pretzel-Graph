@@ -7,12 +7,12 @@ import { S2Hooks } from "src/S2/types";
 import { AggexExecutionError } from "src/errors";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
-import { WorkflowCompiler } from "src/compiler";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Execution } from "@pretzel-graph/shared/domain";
 import type { SubWorkflowNormalizer } from "src/compiler/normalizers/subworkflow";
+import { NodeStatusManager } from "./node-status-manager";
 
 export interface AggexHooks {
     onPause?(): void;
@@ -200,10 +200,11 @@ export class AggexEngine {
 
 
     private onNodeFired(
-        ctx: AggexEngine.Execution.Context, 
-        nodeId: Vertex.Id
+        ctx:               AggexEngine.Execution.Context,
+        nodeStatusManager: NodeStatusManager,
+        nodeId:            Vertex.Id,
     ): void {
-        const { workflowId, session, executionId, workflowCache, nodeRuntimeMap } = ctx
+        const { workflowCache, nodeRuntimeMap } = ctx
 
         const entry = nodeRuntimeMap.get(nodeId);
         if (!entry)
@@ -232,18 +233,28 @@ export class AggexEngine {
 
         ctx.activeNodes.add(nodeId)
 
+        const nodeStatus: Execution.Session.NodeStatus = {
+            status: "running",
+            started_at: new Date().toISOString(),
+        };
+
+        const nodeStatusUpdate = nodeStatusManager.handleStatusSet(ctx.session, entry.wfNode.id, nodeStatus);
+
         ctx.updateSession(d => {
-            d.node_status[entry.wfNode.id] = { status: "running", started_at: new Date().toISOString() };
+            Object.assign(d.node_status, nodeStatusUpdate);
         });
 
         console.log(`[Engine] node:started  ${entry.wfNode.id}`);
         ctx.emit<Execution.Event.Node.Started>({
-            workflowId: workflowId,
-            type: "node:started",
-            executionId,
-            nodeId: entry.wfNode.id,
-            channel: this.getEventChannel(ctx),
-            sessionUpdate: { edge_state: edgeStateUpdate },
+            executionId:   ctx.executionId,
+            workflowId:    ctx.workflowId,
+            type:          "node:started",
+            nodeId:        entry.wfNode.id,
+            channel:       this.getEventChannel(ctx),
+            sessionUpdate: {
+                edge_state:  edgeStateUpdate,
+                node_status: nodeStatusUpdate,
+            },
         });
     }
 
@@ -308,9 +319,10 @@ export class AggexEngine {
 
 
     private async onNodeCompleted(
-        ctx:                AggexEngine.Execution.Context,
-        vertexId:           Vertex.Id,
-        resolvedOutSignals: Set<Vertex.Id> | void
+        ctx:               AggexEngine.Execution.Context,
+        nodeStatusManager: NodeStatusManager,
+        vertexId:          Vertex.Id,
+        resolvedOutSignals:Set<Vertex.Id> | void,
     ) {
         const { session, nodeRuntimeMap, workflowCache } = ctx
 
@@ -320,7 +332,6 @@ export class AggexEngine {
         if (!entry)
             return
 
-        const projectedOutput = session.node_output_projections[entry.wfNode.id];
 
         // Set outgoing edges to waiting and increment runCount
         // For router nodes, only update edges for the taken branches
@@ -340,25 +351,35 @@ export class AggexEngine {
             }
         }
 
+        const existing = ctx.session.node_status[entry.wfNode.id];
+        const nodeStatus: Execution.Session.NodeStatus = {
+            status:       "completed",
+            started_at:   existing?.started_at,
+            completed_at: new Date().toISOString(),
+        };
+        const projectedOutput = session.node_output_projections[entry.wfNode.id];
+        const nodeStatusUpdate = nodeStatusManager.handleStatusSet(ctx.session, entry.wfNode.id, nodeStatus);
+
         ctx.updateSession(d => {
             d.edge_state = { ...d.edge_state, ...edgeStateUpdate };
-            const existing = d.node_status[entry.wfNode.id];
-            d.node_status[entry.wfNode.id] = {
-                status: "completed",
-                started_at: existing?.started_at,
-                completed_at: new Date().toISOString(),
-            };
+            Object.assign(d.node_status, nodeStatusUpdate);
         });
 
         console.log(`[Engine] node:completed ${entry.wfNode.id}`);
         ctx.emit<Execution.Event.Node.Completed>({
-            executionId: ctx.executionId,
-            workflowId: ctx.workflowId,
-            type: "node:completed",
-            nodeId: entry.wfNode.id,
-            channel: this.getEventChannel(ctx),
-            output: projectedOutput,
-            sessionUpdate: { edge_state: edgeStateUpdate },
+            executionId:   ctx.executionId,
+            workflowId:    ctx.workflowId,
+            type:          "node:completed",
+            nodeId:        entry.wfNode.id,
+            channel:       this.getEventChannel(ctx),
+            output:        projectedOutput,
+            sessionUpdate: {
+                edge_state: edgeStateUpdate,
+                node_status: nodeStatusUpdate,
+                node_output_projections: {
+                    [entry.wfNode.id]: projectedOutput,
+                },
+            },
         });
 
         await this.awaitPause(ctx);
@@ -369,10 +390,11 @@ export class AggexEngine {
 
     private onNodeWaiting(
         ctx:                     AggexEngine.Execution.Context,
+        nodeStatusManager:       NodeStatusManager,
         vertexId:                Vertex.Id,
         arrivedSignals:          Set<Vertex.Id>,
         dependencyResolutionMap: Record<Vertex.Id, boolean>,
-        totalDeps:               number
+        _totalDeps:              number,
     ) {
         const entry = ctx.nodeRuntimeMap.get(vertexId);
         if (!entry)
@@ -385,14 +407,27 @@ export class AggexEngine {
             nodeDepMap[depId as unknown as Workflow.Node.Id] = resolved;
         }
 
+        const existing = ctx.session.node_status[wfNode.id];
+        const nodeStatus: Execution.Session.NodeStatus = {
+            status: "waiting",
+            started_at: existing?.started_at,
+        };
+
+        const nodeStatusUpdate = nodeStatusManager.handleStatusSet(ctx.session, wfNode.id, nodeStatus);
+
+        ctx.updateSession(d => {
+            Object.assign(d.node_status, nodeStatusUpdate);
+        });
+
         ctx.emit<Execution.Event.Node.Waiting>({
-            executionId: ctx.executionId,
-            workflowId: ctx.workflowId,
-            type: "node:waiting",
-            nodeId: wfNode.id,
-            channel: this.getEventChannel(ctx),
-            dependencyResolutionMap: nodeDepMap,
-            totalDeps
+            executionId:   ctx.executionId,
+            workflowId:    ctx.workflowId,
+            type:          "node:waiting",
+            nodeId:        wfNode.id,
+            channel:       this.getEventChannel(ctx),
+            sessionUpdate: {
+                node_status: nodeStatusUpdate,
+            },
         });
 
         const partialInputs = this.resolveInputs(ctx, wfNode.id, arrivedSignals);
@@ -403,9 +438,10 @@ export class AggexEngine {
 
 
     private onNodeError(
-        ctx:      AggexEngine.Execution.Context, 
-        vertexId: Vertex.Id, 
-        error:    unknown
+        ctx:               AggexEngine.Execution.Context,
+        nodeStatusManager: NodeStatusManager,
+        vertexId:          Vertex.Id,
+        error:             unknown,
     ) {
         console.error(`Error during node execution, ${vertexId}:`, error)
 
@@ -419,23 +455,30 @@ export class AggexEngine {
             )
 
         const nodeId = vertexId as unknown as Workflow.Node.Id;
+        const existing = ctx.session.node_status[nodeId];
+        const nodeStatus: Execution.Session.NodeStatus = {
+            status: "failed",
+            started_at: existing?.started_at,
+            completed_at: new Date().toISOString(),
+            error: aggexError.toJSON() as any,
+        };
+
+        const nodeStatusUpdate = nodeStatusManager.handleStatusSet(ctx.session, nodeId, nodeStatus);
+
         ctx.updateSession(d => {
-            const existing = d.node_status[nodeId];
-            d.node_status[nodeId] = {
-                status: "failed",
-                started_at: existing?.started_at,
-                completed_at: new Date().toISOString(),
-                error: aggexError.toJSON() as any,
-            };
+            Object.assign(d.node_status, nodeStatusUpdate);
         });
 
         ctx.emit<Execution.Event.Node.Error>({
-            executionId: ctx.executionId,
-            workflowId: ctx.workflowId,
-            type: "node:error",
-            nodeId,
-            channel: this.getEventChannel(ctx),
-            error: aggexError.toJSON()
+            executionId:   ctx.executionId,
+            workflowId:    ctx.workflowId,
+            type:          "node:error",
+            nodeId:        nodeId,
+            channel:       this.getEventChannel(ctx),
+            error:         aggexError.toJSON(),
+            sessionUpdate: {
+                node_status: nodeStatusUpdate,
+            },
         })
     }
 
@@ -498,13 +541,14 @@ export class AggexEngine {
     
     ): Promise<AggexEngine.Execution.Result> {
         ctx.activeNodes.clear();
+        const nodeStatusManager = new NodeStatusManager(ctx.inlineNodeMetaMap);
 
         const hooks: S2Hooks = {
             onVertexExecute:   (...props: Parameters<S2Hooks["onVertexExecute"]>)   => this.onNodeExecuted(ctx, ...props),
-            onVertexFired:     (...props: Parameters<S2Hooks["onVertexFired"]>)     => this.onNodeFired(ctx, ...props),
-            onVertexCompleted: (...props: Parameters<S2Hooks["onVertexCompleted"]>) => this.onNodeCompleted(ctx, ...props),
-            onVertexWaiting:   (...props: Parameters<S2Hooks["onVertexWaiting"]>)   => this.onNodeWaiting(ctx, ...props),
-            onVertexError:     (...props: Parameters<S2Hooks["onVertexError"]>)     => this.onNodeError(ctx, ...props),
+            onVertexFired:     (...props: Parameters<S2Hooks["onVertexFired"]>)     => this.onNodeFired(ctx, nodeStatusManager, ...props),
+            onVertexCompleted: (...props: Parameters<S2Hooks["onVertexCompleted"]>) => this.onNodeCompleted(ctx, nodeStatusManager, ...props),
+            onVertexWaiting:   (...props: Parameters<S2Hooks["onVertexWaiting"]>)   => this.onNodeWaiting(ctx, nodeStatusManager, ...props),
+            onVertexError:     (...props: Parameters<S2Hooks["onVertexError"]>)     => this.onNodeError(ctx, nodeStatusManager, ...props),
             canVertexRun:      (...props: Parameters<S2Hooks["canVertexRun"]>)      => this.canNodeRun(ctx, ...props),
         } as const
 
@@ -544,11 +588,9 @@ export namespace AggexEngine {
         }
     
         export interface Context extends RuntimeNode.ExecutionContext {
-            compiledGraph:   S2Graph,
-            compileWorkflow: WorkflowCompiler["compile"]
-            runSubWorkflow:  AggexEngine["run"]
-            activeNodes:     Set<Workflow.Node.Id | Vertex.Id>;
-            runtimeMeta?:    SubWorkflowNormalizer.RuntimeMeta;
+            compiledGraph:     S2Graph,
+            activeNodes:       Set<Workflow.Node.Id | Vertex.Id>;
+            inlineNodeMetaMap: SubWorkflowNormalizer.InlineNodeMetaMap;
             nodeRuntimeMap:  Map<
                 Vertex.Id | Workflow.Node.Id, 
                 { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> }

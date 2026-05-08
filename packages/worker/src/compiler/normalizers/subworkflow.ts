@@ -7,17 +7,17 @@ import { Blueprint as PassthroughBlueprint } from "@pretzel-graph/nodes/Core/Rou
 import { AggexCompilerError } from "../../errors";
 
 export namespace SubWorkflowNormalizer {
-    export interface RuntimeMetaEntry {
+    export interface InlineNodeMeta {
         parentNodeId: Workflow.Node.Id;
         sourceWorkflowId: Workflow.Id;
         bridge?: "input" | "output";
     }
 
-    export type RuntimeMeta = Record<Workflow.Node.Id, RuntimeMetaEntry>;
+    export type InlineNodeMetaMap = Record<Workflow.Node.Id, InlineNodeMeta>;
 
     export interface Result {
         data: Workflow.Data;
-        runtimeMeta: RuntimeMeta;
+        inlineNodeMetaMap: InlineNodeMetaMap;
     }
 
     interface Context {
@@ -34,27 +34,33 @@ export namespace SubWorkflowNormalizer {
     const INPUT_BRIDGE_ID = "__subworkflow_input" as Workflow.Node.Id;
     const OUTPUT_BRIDGE_ID = "__subworkflow_output" as Workflow.Node.Id;
 
+
+
+
     export function normalize(
         workflowId: Workflow.Id,
         workflowData: Workflow.Data,
         ctx: Context = { dependencyPath: [workflowId] },
     ): Result {
         const data = cloneWorkflowData(workflowData);
-        const runtimeMeta: RuntimeMeta = {};
+        const inlineNodeMetaMap: InlineNodeMetaMap = {};
 
         for (const node of [...Object.values(data.nodes)]) {
             if (node.blueprintId !== EXECUTE_SUB_WORKFLOW_BLUEPRINT_ID)
                 continue;
 
-            inlineExecuteSubWorkflowNode(data, runtimeMeta, node, ctx);
+            inlineExecuteSubWorkflowNode(data, inlineNodeMetaMap, node, ctx);
         }
 
-        return { data, runtimeMeta };
+        return { data, inlineNodeMetaMap };
     }
+
+
+
 
     function inlineExecuteSubWorkflowNode(
         parentData: Workflow.Data,
-        runtimeMeta: RuntimeMeta,
+        inlineNodeMetaMap: InlineNodeMetaMap,
         executeNode: Workflow.Node,
         ctx: Context,
     ): void {
@@ -87,12 +93,15 @@ export namespace SubWorkflowNormalizer {
         rewriteExposedOutputNodes(childData, executeNode);
 
         rewriteParentExecuteEdges(parentData, executeNode);
-        mergeChildWorkflow(parentData, runtimeMeta, child.runtimeMeta, childData, executeNode, dependencyWorkflowId);
+        mergeChildWorkflow(parentData, inlineNodeMetaMap, child.inlineNodeMetaMap, childData, executeNode, dependencyWorkflowId);
 
         delete parentData.nodes[executeNode.id];
         delete parentData.staticValues[executeNode.id];
         delete parentData.ui.layout[executeNode.id];
     }
+
+
+
 
     function getDependencyWorkflowId(
         workflowData: Workflow.Data,
@@ -110,9 +119,12 @@ export namespace SubWorkflowNormalizer {
         return rawWorkflowId as Workflow.Id;
     }
 
+
+
+
     function addBridgeNodes(
-        childData: Workflow.Data,
-        parentData: Workflow.Data,
+        childData:   Workflow.Data,
+        parentData:  Workflow.Data,
         executeNode: Workflow.Node,
     ): void {
         childData.nodes[INPUT_BRIDGE_ID] = createPassthroughNode(
@@ -139,6 +151,9 @@ export namespace SubWorkflowNormalizer {
             ["dataDependency" as Field.Id]: "OR",
         };
     }
+
+
+
 
     function rewriteExposedInputNodes(
         childData: Workflow.Data,
@@ -174,6 +189,9 @@ export namespace SubWorkflowNormalizer {
             delete childData.ui.layout[exposedNode.id];
         }
     }
+
+
+
 
     function rewriteExposedOutputNodes(
         childData: Workflow.Data,
@@ -227,6 +245,9 @@ export namespace SubWorkflowNormalizer {
         }
     }
 
+
+
+
     function rewriteParentExecuteEdges(
         parentData: Workflow.Data,
         executeNode: Workflow.Node,
@@ -266,10 +287,13 @@ export namespace SubWorkflowNormalizer {
         }
     }
 
+
+
+
     function mergeChildWorkflow(
         parentData: Workflow.Data,
-        runtimeMeta: RuntimeMeta,
-        childRuntimeMeta: RuntimeMeta,
+        inlineNodeMetaMap: InlineNodeMetaMap,
+        childInlineNodeMetaMap: InlineNodeMetaMap,
         childData: Workflow.Data,
         executeNode: Workflow.Node,
         dependencyWorkflowId: Workflow.Id,
@@ -289,17 +313,33 @@ export namespace SubWorkflowNormalizer {
                 id: nextNodeId,
             };
 
-            const childMeta = childRuntimeMeta[nodeId];
-            runtimeMeta[nextNodeId] = childMeta
-                ? {
+            const childMeta = childInlineNodeMetaMap[nodeId];
+            if (childMeta) {
+                const nextParentNodeId = scopedNodeId(executeNode.id, childMeta.parentNodeId);
+                inlineNodeMetaMap[nextNodeId] = {
                     ...childMeta,
-                    parentNodeId: scopedNodeId(executeNode.id, childMeta.parentNodeId),
+                    parentNodeId: nextParentNodeId,
+                };
+
+                if (!inlineNodeMetaMap[nextParentNodeId]) {
+                    const parentMeta = childInlineNodeMetaMap[childMeta.parentNodeId];
+                    inlineNodeMetaMap[nextParentNodeId] = parentMeta
+                        ? {
+                            ...parentMeta,
+                            parentNodeId: scopedNodeId(executeNode.id, parentMeta.parentNodeId),
+                        }
+                        : {
+                            parentNodeId: executeNode.id,
+                            sourceWorkflowId: dependencyWorkflowId,
+                        };
                 }
-                : {
+            } else {
+                inlineNodeMetaMap[nextNodeId] = {
                     parentNodeId: executeNode.id,
                     sourceWorkflowId: dependencyWorkflowId,
                     bridge: nodeId === INPUT_BRIDGE_ID ? "input" : nodeId === OUTPUT_BRIDGE_ID ? "output" : undefined,
                 };
+            }
         }
 
         for (const [edgeId, edge] of Object.entries(childData.edges) as [Workflow.Edge.Id, Workflow.Edge][]) {
@@ -326,6 +366,9 @@ export namespace SubWorkflowNormalizer {
 
         Object.assign(parentData.dependencies, childData.dependencies);
     }
+
+
+
 
     function createPassthroughNode(
         id:          Workflow.Node.Id,
