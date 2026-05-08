@@ -27,6 +27,8 @@ import { AnimatePresence, motion } from 'motion/react'
 import IssuesViewer from './-SDKs/WorkbenchSDK/ui/IssuesViewer'
 import ErrorViewer from './-SDKs/ExecutionSDK/ui/ErrorViewer'
 import { ExecutionSDK } from './-SDKs/ExecutionSDK/sdk'
+import Tipped from '@/components/Tipped'
+import { openWorkflowConfigurationDialog } from './-SDKs/WorkbenchSDK/ui/WorkflowConfigurationDialog'
 
 
 export const Route = createFileRoute('/workflow/$workflowid')({
@@ -298,20 +300,31 @@ export const TopRightPanel = () => {
                 </Popover.Root>
             </div>
             <div className='p-0.5 z-10 flex flex-row gap-1 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
-                <Button variant="ghost" size="icon-sm" onClick={() => openVisibilityDialog(workflowId, isPublic)}>
-                    {isPublic ?
-                        <SystemIcons.Globe strokeWidth={2} className='size-4 text-sky-500'/> :
-                        <SystemIcons.GlobeOff strokeWidth={2} className='size-4 text-red-600'/>
-                    }
-                </Button>
-                <Button variant="ghost" size="icon-sm" onClick={handleLockToggle} disabled={isLockPending}>
-                    {isLockPending ?
-                        <Spinner className='size-4'/> :
-                        isLocked ?
-                            <SystemIcons.LockClosed strokeWidth={2} className='size-4'/> :
-                            <SystemIcons.LockOpen strokeWidth={2} className='size-4'/>
-                    }
-                </Button>
+                <Tipped label="Visibility">
+                    <Button variant="ghost" size="icon-sm" onClick={() => openVisibilityDialog(workflowId, isPublic)}>
+                        {isPublic ?
+                            <SystemIcons.Globe strokeWidth={2} className='size-4 text-sky-500'/> :
+                            <SystemIcons.GlobeOff strokeWidth={2} className='size-4 text-red-600'/>
+                        }
+                    </Button>
+                </Tipped>
+                <Tipped label="Lock">
+                    <Button variant="ghost" size="icon-sm" onClick={handleLockToggle} disabled={isLockPending}>
+                        {isLockPending ?
+                            <Spinner className='size-4'/> :
+                            isLocked ?
+                                <SystemIcons.LockClosed strokeWidth={2} className='size-4'/> :
+                                <SystemIcons.LockOpen strokeWidth={2} className='size-4'/>
+                        }
+                    </Button>
+                </Tipped>
+            </div>
+            <div className='p-0.5 z-10 flex flex-row gap-1 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
+                <Tipped label="Workflow Config">
+                    <Button variant="ghost" size="icon-sm" onClick={openWorkflowConfigurationDialog}>
+                        <SystemIcons.Settings className='size-5'/>
+                    </Button>
+                </Tipped>
             </div>
         </div>
     )
