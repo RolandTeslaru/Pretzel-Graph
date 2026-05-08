@@ -3,6 +3,8 @@ import type { WorkbenchSDK } from "../sdk"
 
 export const dependencyReducers = {
     registerDependency: (s, dependency) => {
+        dependencyReducers.removeUnused(s)
+
         s.data.dependencies = s.data.dependencies ?? {}
         s.data.dependencies[dependency.workflow_id] = dependency
     },
