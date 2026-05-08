@@ -73,6 +73,15 @@ export class Synthesizer {
 
 
     private static projectMessage(msg: any): Foundations.Projection.Message {
+        if (typeof msg === "string") {
+            return {
+                type:              "human",
+                content:           msg,
+                additional_kwargs: {},
+                response_metadata: {},
+            };
+        }
+
         if (!(msg instanceof LC.BaseMessage))
             return msg;
 

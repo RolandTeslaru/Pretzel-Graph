@@ -1,22 +1,5 @@
-import { Workflow } from "@pretzel-graph/shared/domain";
+import type { WorkflowCompiler } from "./index";
 
-export type WorkflowCompilationUnit = Pick<Workflow, "id" | "data">;
+export type CompilationContext = WorkflowCompiler.Compilation.Context;
 
-export interface CompilationContext {
-    workflowsMap: Map<Workflow.Id, WorkflowCompilationUnit>;
-    compilePath: readonly Workflow.Id[];
-}
-
-export function createCompilationContext(rootId: Workflow.Id): CompilationContext {
-    return { workflowsMap: new Map(), compilePath: [rootId] };
-}
-
-export function extendCompilePath(
-    ctx: CompilationContext,
-    nextId: Workflow.Id,
-): CompilationContext {
-    return {
-        workflowsMap: ctx.workflowsMap,
-        compilePath: [...ctx.compilePath, nextId],
-    };
-}
+export { extendCompilePath } from "./index";
