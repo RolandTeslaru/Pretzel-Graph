@@ -1,6 +1,6 @@
 import { Foundations, SystemError, Workbench, type Workflow } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDKImpl } from "../sdk"
-import { withCommit, withAsyncCommit, withCyclesRecompute, debouncedValidateField } from "../utils/actions"
+import { withCommit, withAsyncCommit, withCyclesRecompute } from "../utils/actions"
 import { api } from "@/SDKs/ApiInterceptorSDK"
 import { toast } from "sonner"
 import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field"
@@ -37,10 +37,12 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
                 const { dependency } = await Workbench.API.Dependency.load(api, { dependencyId: workflowId })
                 
                 const blueprint = ShelfSDK.state.blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]
+                const dependencyFields = dependency.workflow_data.fields ?? []
 
                 const subflowBlueprint = {
                     ...blueprint,
                     ... extractExposedPorts(dependency.workflow_data),
+                    fields: mergeFieldsById(blueprint.fields, dependencyFields),
                     displayName: dependency.display_name,
                     icon: dependency.icon ?? blueprint.icon,
                     accent: dependency.accent ?? blueprint.accent,
@@ -53,9 +55,14 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
 
                     reducers.field.setValue(s, nodeId, fieldId, workflowId)
 
-                    const field = s.data.nodes[nodeId].fields.find(f => f.id === fieldId)
-                    if(field)
-                        reducers.field.validate(s, nodeId, field)
+                    s.data.staticValues[nodeId] ??= {}
+                    for (const field of dependencyFields) {
+                        if (field.id in s.data.staticValues[nodeId]) continue
+                        if ("initialValue" in field)
+                            s.data.staticValues[nodeId][field.id] = field.initialValue
+                    }
+
+                    reducers.node.validate(s, nodeId)
                 }))
             } catch (err) {
                 const error = SystemError.fromUnknown(err)
@@ -73,4 +80,20 @@ export type DependencyActions = {
     registerDependency: (dependency: Workflow.Dependency) => void
     load: (dependencyId: Workflow.Id) => Promise<boolean>
     attachWorkflowToNode: (nodeId: Workflow.Node.Id, fieldId: Field.Id, workflowId: Workflow.Id) => Promise<boolean>
+}
+
+function mergeFieldsById(
+    baseFields: readonly Foundations.Field[],
+    dependencyFields: readonly Foundations.Field[],
+): Foundations.Field[] {
+    const fieldsById = new Map<Foundations.Field.Id, Foundations.Field>()
+
+    for (const field of baseFields)
+        fieldsById.set(field.id, field)
+
+    for (const field of dependencyFields)
+        if (!fieldsById.has(field.id))
+            fieldsById.set(field.id, field)
+
+    return [...fieldsById.values()]
 }

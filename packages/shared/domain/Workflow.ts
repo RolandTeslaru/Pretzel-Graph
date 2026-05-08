@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { Foundations } from "./Foundations";
 import { Field } from "./Foundations/Field";
 import { Port } from "./Foundations/Port";
 import { Auth } from "./Auth";
@@ -102,6 +101,7 @@ export namespace Workflow {
     
     export namespace Data {
         export interface Shape {
+            fields: Field[];
             nodes: Record<Node.Id, Node>;
             edges: Record<Edge.Id, Edge>;
             staticValues: Record<
@@ -123,6 +123,7 @@ export namespace Workflow {
         }
 
         export const Schema: z.ZodType<Shape> = z.object({
+            fields: z.array(Field.Schema).default([]),
             nodes: z.record(Node.Id, Node.Schema),
             edges: z.record(Edge.Id, Edge.Schema),
             staticValues: z.record(
@@ -190,6 +191,7 @@ export namespace Workflow {
         created_at:     new Date(),
         updated_at:     new Date(),
         data: {
+            fields:         [],
             nodes:          {},
             edges:          {},
             staticValues:   {},
