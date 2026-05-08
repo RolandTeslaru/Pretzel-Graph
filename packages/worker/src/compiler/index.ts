@@ -33,7 +33,7 @@ export class WorkflowCompiler {
         const workflowCache = Workflow.createCache(normalizedWorkflowData);
 
         const graph = new S2Graph();    
-    const nodes = normalizedWorkflowData.nodes;
+        const nodes = normalizedWorkflowData.nodes;
         const edges = normalizedWorkflowData.edges;
 
         // START vertex — S2Engine ignites from here
@@ -51,30 +51,41 @@ export class WorkflowCompiler {
             execution.session = produce(execution.session, r);
         };
 
-        const dummyEngine = new AggexEngine();
-
-        const engineExecutionCtx = {
-            get session()  { return execution.session; },
+        const nodeExecutionCtx = {
+            executionId: execution.id,
+            workflowId,
+            chat_id: execution.chat_id,
             workflowData: normalizedWorkflowData,
             workflowCache,
-            runtimeMeta: normalizedWorkflow.runtimeMeta,
+            get session() { return execution.session; },
             emit,
-            executionId: execution.id,
-            chat_id: execution.chat_id,
             abortExecution: (reason: string) => abortController.abort(reason),
-            updateSession,
             abortSignal: abortController.signal,
+            updateSession,
+        } satisfies RuntimeNode.ExecutionContext
+
+        const engineExecutionCtx = {
+            executionId: execution.id,
             workflowId,
+            chat_id: execution.chat_id,
+            workflowData: normalizedWorkflowData,
+            workflowCache,
+            get session() { return execution.session; },
+            emit,
+            abortExecution: (reason: string) => abortController.abort(reason),
+            abortSignal: abortController.signal,
+            updateSession,
+            inlineNodeMetaMap: normalizedWorkflow.inlineNodeMetaMap,
             compiledGraph: graph,
             nodeRuntimeMap,
             activeNodes: new Set(),
-            compileWorkflow: this.compile.bind(this),
-            runSubWorkflow: dummyEngine.run.bind(dummyEngine),
         } satisfies AggexEngine.Execution.Context
+
+
 
         // Add nodes to the graph
         for (const wfNode of Object.values(nodes))
-            await this.prepareNode(engineExecutionCtx, wfNode, compilationCtx);
+            await this.prepareNode(engineExecutionCtx, nodeExecutionCtx, wfNode, compilationCtx);
 
         // Add Edges. Might also get ran multiple times because nodes can have multiple edges between them because of ports.
         for (const edge of Object.values(edges)) {
@@ -137,6 +148,7 @@ export class WorkflowCompiler {
 
     private async prepareNode(
         engineExecutionCtx: AggexEngine.Execution.Context,
+        nodeExecutionCtx:   RuntimeNode.ExecutionContext,
         wfNode:             Workflow.Node,
         compilationCtx:     WorkflowCompiler.Compilation.Context,
     ): Promise<void> {
@@ -151,7 +163,7 @@ export class WorkflowCompiler {
                 { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
             )
 
-        const nodeInstance = new NodeConstructor(wfNode, engineExecutionCtx);
+        const nodeInstance = new NodeConstructor(wfNode, nodeExecutionCtx);
 
         await nodeInstance.compile(compilationCtx)
 
