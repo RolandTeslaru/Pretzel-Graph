@@ -4,7 +4,12 @@ import { Expression, Workflow } from '@pretzel-graph/shared/domain'
 import { useState, useEffect } from 'react'
 import JsonView from 'react18-json-view'
 
-export const TooltipContent = ({ nodeId, value }: { nodeId: Workflow.Node.Id, value: string }) => {
+interface Props { 
+    nodeId: Workflow.Node.Id,
+    value: string 
+}
+
+export const TooltipContent: React.FC<Props> = ({ nodeId, value }) => {
     const session = ExecutionSDK.useStore(s => s.currentExecution?.session);
     const [result, setResult] = useState<unknown>(undefined)
 

@@ -53,6 +53,18 @@ export const fieldReducers = {
     unmarkAsReconciling: (s, nodeId, fieldId) => {
         s.reconcilingFields[nodeId]?.delete(fieldId);
     },
+    setIsExpression: (s, nodeId, fieldId, value) => {
+        const field = s.selectors.field.get(s, nodeId, fieldId)
+        if (!field) return;
+
+        if(field.variant === "String" || field.variant === "UniqueString") {
+            field.isExpression = value
+            s.isDirty = true;
+        } else {
+            console.warn(`Tried to set isExpression on non-string field ${fieldId} on node ${nodeId}`)
+            return;
+        }
+    },
     condition: {
         setLeftValue: (s, nodeId, fieldId, ruleId, value) => {
             const condition = workbenchSelectors.field.condition.getValue(s, nodeId, fieldId)!
@@ -177,6 +189,12 @@ type FieldReducers = {
         state: WorkbenchSDK.State,
         nodeId: Workflow.Node.Id,
         fieldId: Foundations.Field.Id
+    ) => void
+    setIsExpression: (
+        state: WorkbenchSDK.State,
+        nodeId: Workflow.Node.Id,
+        fieldId: Foundations.Field.Id,
+        value: boolean
     ) => void
     condition: {
         setLeftValue: (
