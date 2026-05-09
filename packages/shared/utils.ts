@@ -128,7 +128,12 @@ export function resolveWebhook(
     node: Workflow.Node,
     staticValues: Record<Field.Id, unknown>,
 ): Webhook.Resolved {
-    const ctx: Expression.Context = { thisNode: node, thisNodeValues: staticValues, incoming: {} };
+    const ctx: Expression.Context = {
+        node,
+        fields: staticValues,
+        incoming: {},
+        workflowConfig: {},
+    };
     return Webhook.ResolvedSchema.parse({
         id: webhook.id,
         path: Expression.evaluate(webhook.path, ctx),

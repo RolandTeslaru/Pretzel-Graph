@@ -6,7 +6,7 @@ import { CatalogueService, RuntimeNode } from "@pretzel-graph/node-sdk";
 
 import { AggexCompilerError } from "../errors";
 import { S2Graph, Vertex } from "../S2/graph";
-import { resolveFields } from "../utils";
+import { mapFieldValues } from "../utils";
 import { SubWorkflowNormalizer } from "./normalizers/subworkflow";
 
 import { produce } from "immer";
@@ -163,6 +163,7 @@ export class WorkflowCompiler {
                 { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
             )
 
+        const fieldValues = mapFieldValues(wfNode.id, engineExecutionCtx.workflowData);
         const nodeInstance = new NodeConstructor(wfNode, nodeExecutionCtx);
 
         await nodeInstance.compile(compilationCtx)
@@ -173,7 +174,6 @@ export class WorkflowCompiler {
 
         nodeRuntimeMap.set(vertexId, { wfNode, instance: nodeInstance });
 
-        const fieldValues = resolveFields(wfNode.id, engineExecutionCtx.workflowData);
 
         // Set vertex execution strategy based on node fields. Default is "AND"
         if (Object.hasOwn(fieldValues, "signalDependency"))
