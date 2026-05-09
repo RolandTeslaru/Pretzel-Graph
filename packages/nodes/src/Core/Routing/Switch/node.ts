@@ -1,6 +1,6 @@
 import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
-import { RuntimeNode, RuntimeRouterNode } from "@pretzel-graph/node-sdk";
+import { RuntimeRouterNode } from "@pretzel-graph/node-sdk";
 import { InferInputs, InferOutputs, OneOf } from "@pretzel-graph/node-sdk";
 import { Expression, Foundations } from "@pretzel-graph/shared/domain";
 
@@ -16,11 +16,12 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
         const { cases } = this.fields;
         const { input } = inputs;
 
-        const expressionCtx: Expression.Context = {
-            thisNode: this.workflowNode,
-            thisNodeValues: this.fields,
-            incoming: inputs
-        }
+        const expressionCtx = Expression.createContext(
+            this.workflowNode,
+            this.fields,
+            inputs,
+            Expression.resolveWorkflowConfig(this.context.workflowData.fields ?? {}),
+        )
 
         for (const { condition, portId } of cases) {
             const result = Foundations.Field.Condition.evaluate(condition, expressionCtx);
