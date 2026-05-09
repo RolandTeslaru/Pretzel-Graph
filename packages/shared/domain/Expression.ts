@@ -11,15 +11,61 @@ export namespace Expression {
 
     /**
      * Standardised evaluation context. Every expression runs against this
-     * shape — `@thisNode` and `@incoming` are always available.
+     * shape — `@node`, `@fields`, `@incoming`, and `@workflowConfig` are always available.
      */
     export interface Context {
         /** The node the expression is being evaluated for. */
-        thisNode: Workflow.Node
+        node: Workflow.Node
         /** Static field values on the current node, keyed by field id. */
-        thisNodeValues: Record<Foundations.Field.Id, unknown>
+        fields: Record<Foundations.Field.Id, unknown>
         /** Incoming port projections, keyed by input port id. */
         incoming: Record<Foundations.Port.Id, Foundations.Projection>
+        /** Workflow configuration values, keyed by workflow field id. */
+        workflowConfig: Record<Foundations.Field.Id, unknown>
+    }
+
+    export function createContext(
+        node: Workflow.Node,
+        fields: Record<Foundations.Field.Id, unknown>,
+        incoming: Record<Foundations.Port.Id, Foundations.Projection>,
+        workflowConfig: Record<Foundations.Field.Id, unknown> = {},
+    ): Context {
+        return {
+            node,
+            fields,
+            incoming,
+            workflowConfig,
+        };
+    }
+
+    export function evaluateNodeFields(args: {
+        node: Workflow.Node
+        fields: Record<Foundations.Field.Id, unknown>
+        incoming: Record<Foundations.Port.Id, Foundations.Projection>
+        workflowConfig?: Record<Foundations.Field.Id, unknown>
+    }): Record<Foundations.Field.Id, unknown> {
+        const evaluated = { ...args.fields };
+
+        for (const field of args.node.fields) {
+            if (!("isExpression" in field) || field.isExpression !== true)
+                continue;
+
+            const value = evaluated[field.id as Foundations.Field.Id];
+            if (typeof value !== "string")
+                continue;
+
+            evaluated[field.id as Foundations.Field.Id] = evaluate(
+                value,
+                createContext(
+                    args.node,
+                    evaluated,
+                    args.incoming,
+                    args.workflowConfig ?? {},
+                ),
+            );
+        }
+
+        return evaluated;
     }
 
     /**
@@ -30,8 +76,10 @@ export namespace Expression {
      * property traversal, method calls, and operators are all supported.
      *
      * @example
-     *   evaluate("${{ @thisNode.id }}", ctx)
+     *   evaluate("${{ @node.id }}", ctx)
+     *   evaluate("${{ @fields['model'] }}", ctx)
      *   evaluate("${{ @incoming['port-1'].value + 5 }}", ctx)
+     *   evaluate("${{ @workflowConfig['apiKey'] }}", ctx)
      *
      * Returns the raw string unchanged if it contains no `${{ }}` wrapper.
      */
@@ -64,5 +112,21 @@ export namespace Expression {
             super(message);
             this.name = "ExpressionError";
         }
+    }
+
+    export function resolveWorkflowConfig(
+        fields: readonly Foundations.Field[],
+        values: Record<Foundations.Field.Id, unknown> = {},
+    ): Record<Foundations.Field.Id, unknown> {
+        const config: Record<Foundations.Field.Id, unknown> = {};
+
+        for (const field of fields) {
+            if (field.id in values)
+                config[field.id] = values[field.id];
+            else if ("initialValue" in field)
+                config[field.id] = field.initialValue;
+        }
+
+        return config;
     }
 }

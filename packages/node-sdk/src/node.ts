@@ -1,13 +1,17 @@
-import { Chat, Execution, Foundations, Realtime, Workflow } from "@pretzel-graph/shared/domain";
-import { InferFields, InferFieldsWithInitial, InferInputs, InferOutputs } from "./types";
+import { Chat, Execution, Expression, Realtime, Workflow } from "@pretzel-graph/shared/domain";
+import { InferFields, InferInputs, InferOutputs } from "./types";
 import type { CompilationContext } from "./compiler-context";
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
+import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
+import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
+import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import Redis from "ioredis";
+import { mapFieldValues } from "./utils/mapFieldValues";
 
 export abstract class RuntimeNode<
 
-    T_Blueprint extends Foundations.Blueprint, 
-    T_ToolBlueprint extends Foundations.Blueprint = any
+    T_Blueprint extends Blueprint, 
+    T_ToolBlueprint extends Blueprint = any
 
 > {
 
@@ -23,7 +27,7 @@ export abstract class RuntimeNode<
         public readonly workflowNode: Workflow.Node,
         protected readonly context: RuntimeNode.ExecutionContext
     ) {
-        this.fields = RuntimeNode.resolveFields<T_Blueprint>(this.workflowNode.id, context.workflowData)
+        this.fields = mapFieldValues<T_Blueprint>(this.workflowNode.id, context.workflowData);
         this.emit = context.emit;
     }
 
@@ -38,6 +42,7 @@ export abstract class RuntimeNode<
         inputs: InferInputs<T_Blueprint>
     ): Promise<Partial<InferOutputs<T_Blueprint>>> {
         this.isWaiting = false;
+        this.fields = this.evaluateFields(inputs);
 
         return this.onRun(inputs);
     }
@@ -49,6 +54,19 @@ export abstract class RuntimeNode<
         inputs: InferInputs<T_Blueprint>
     ): Promise<Partial<InferOutputs<T_Blueprint>>>;
 
+    protected evaluateFields(
+        incoming: Record<Port.Id, Projection> | Record<string, unknown>
+    ): InferFields<T_Blueprint> {
+        const fields = mapFieldValues<T_Blueprint>(this.workflowNode.id, this.context.workflowData);
+
+        return Expression.evaluateNodeFields({
+            node: this.workflowNode,
+            fields,
+            incoming: incoming as Record<Port.Id, Projection>,
+            workflowConfig: Expression.resolveWorkflowConfig(this.context.workflowData.fields ?? {}),
+        }) as InferFields<T_Blueprint>;
+    }
+
 
 
 
@@ -57,6 +75,7 @@ export abstract class RuntimeNode<
         inputs: InferInputs<T_ToolBlueprint>
     ): Promise<InferOutputs<T_ToolBlueprint>> {
         this.isWaiting = false;
+        this.fields = this.evaluateFields(inputs);
         return this.onBuildTool(inputs);
     }
 
@@ -78,6 +97,7 @@ export abstract class RuntimeNode<
         dependencyResolutionMap: Record<Workflow.Node.Id, boolean>
     ): Promise<void> {
         this.isWaiting = true;
+        this.fields = this.evaluateFields(partialInputs);
         return this.onWait(partialInputs);
     }
     
@@ -120,54 +140,6 @@ export abstract class RuntimeNode<
         webhookPaylod: Record<string, unknown>
     ): Promise<void> { }
 
-
-
-
-
-
-
-    public static resolveInitialFieldValues<T_Blueprint extends Foundations.Blueprint>(
-        blueprint: T_Blueprint,
-        fields: Record<Foundations.Field.Id, Foundations.Field.Value>
-    ): InferFieldsWithInitial<T_Blueprint> {
-
-        const resolved: Record<Foundations.Field.Id, Foundations.Field.Value> = {}
-
-        for (const field of blueprint.fields) {
-            resolved[field.id] = field.initialValue as Foundations.Field.Value;
-        }
-
-        for (const [fieldId, fieldValue] of Object.entries(fields)) {
-            resolved[fieldId as Foundations.Field.Id] = fieldValue;
-        }
-
-        return resolved as InferFieldsWithInitial<T_Blueprint>
-    }
-
-
-
-    // Checks if a field has static values
-    // And if not, it uses the initialValue
-    private static resolveFields<T_Blueprint extends Foundations.Blueprint>(
-        nodeId: Workflow.Node.Id,
-        workflowData: Workflow.Data
-    ): InferFields<T_Blueprint> {
-        const node = workflowData.nodes[nodeId];
-        const staticValues = workflowData.staticValues[nodeId] ?? {};
-
-        const resolved: Record<Foundations.Field.Id, Foundations.Field.Value> = {};
-
-        for (const field of node.fields) {
-            const fieldId = field.id as Foundations.Field.Id;
-
-            if (fieldId in staticValues)
-                resolved[fieldId] = staticValues[fieldId] as Foundations.Field.Value;
-            else
-                resolved[fieldId] = field.initialValue as Foundations.Field.Value;
-        }
-
-        return resolved as InferFields<T_Blueprint>
-    }
 
 
 
@@ -236,7 +208,7 @@ export abstract class RuntimeNode<
     }
 }
 
-export abstract class RuntimeRouterNode<T_Blueprint extends Foundations.Blueprint> extends RuntimeNode<T_Blueprint> {
+export abstract class RuntimeRouterNode<T_Blueprint extends Blueprint> extends RuntimeNode<T_Blueprint> {
 
     public readonly isRouterNode: true = true;
 
@@ -250,6 +222,7 @@ export abstract class RuntimeRouterNode<T_Blueprint extends Foundations.Blueprin
         inputs: InferInputs<T_Blueprint>
     ): Promise<InferOutputs<T_Blueprint>> {
         this.isWaiting = false;
+        this.fields = this.evaluateFields(inputs);
         return this.onRun(inputs) as Promise<InferOutputs<T_Blueprint>>;
     }
 
@@ -261,7 +234,7 @@ export abstract class RuntimeRouterNode<T_Blueprint extends Foundations.Blueprin
 
 export namespace RuntimeNode {
     export type ConstructorProps = ConstructorParameters<typeof RuntimeNode>[0]
-    export type CompileProps = Parameters<RuntimeNode<Foundations.Blueprint>["compile"]>[0]
+    export type CompileProps = Parameters<RuntimeNode<Blueprint>["compile"]>[0]
     
     export interface ExecutionContext {
         readonly executionId: Execution.Id,
@@ -276,4 +249,3 @@ export namespace RuntimeNode {
         readonly workflowCache: Workflow.Cache,
     }
 }
-
