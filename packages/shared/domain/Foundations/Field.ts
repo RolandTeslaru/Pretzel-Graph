@@ -68,11 +68,13 @@ export namespace Field {
         initialValue: z.string(),
         multiline: z.boolean(),
         placeholder: z.string().optional(),
+        isExpression: z.boolean().optional(),
     })
 
     export const UniqueString = Field.Base.extend({
         variant: configLiteral("UniqueString"),
         initialValue: z.string(),
+        isExpression: z.boolean().optional(),
         prefix: z.string().optional(),
         length: z.number().optional(),
         placeholder: z.string().optional(),
