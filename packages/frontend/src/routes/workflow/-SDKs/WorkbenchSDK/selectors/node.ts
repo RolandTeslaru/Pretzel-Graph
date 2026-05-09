@@ -1,4 +1,4 @@
-import type { Execution, Expression, Foundations, Workflow } from '@pretzel-graph/shared/domain';
+import { Expression, type Execution, type Foundations, type Workflow } from '@pretzel-graph/shared/domain';
 import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 import type { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
 import type { WorkbenchSDK } from "../sdk";
@@ -71,9 +71,10 @@ export const nodeSelectors = {
     getStaticValues: (s, nodeId) => s.data.staticValues[nodeId] ?? null,
     getExpressionContext: (s, nodeId, session) => {
         const ctx: Expression.Context = {
-            thisNode: s.data.nodes[nodeId],
-            thisNodeValues: s.data.staticValues[nodeId] ?? {},
+            node: s.data.nodes[nodeId],
+            fields: s.data.staticValues[nodeId] ?? {},
             incoming: executionSelectors.getNodeIncomingData(s, nodeId, session) ?? {},
+            workflowConfig: Expression.resolveWorkflowConfig(s.data.fields ?? {}),
         }
 
         return ctx;

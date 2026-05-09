@@ -1,5 +1,5 @@
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
-import { InferFields } from "./types";
+import { InferFields } from "../types";
 
 export const uid = {
     randomUUID: (length: number) => Math.random().toString(36).substring(2, 2 + length)

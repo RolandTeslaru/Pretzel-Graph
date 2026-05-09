@@ -1,6 +1,6 @@
 {
-  "version": "1778249099467",
-  "generatedAt": "2026-05-08T14:04:59.467Z",
+  "version": "1778323564182",
+  "generatedAt": "2026-05-09T10:46:04.182Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -2987,9 +2987,9 @@
       "webhooks": [
         {
           "id": "req",
-          "method": "${{ @thisNodeValues[\"method\"] }}",
-          "path": "${{ @thisNodeValues[\"path\"] }}",
-          "responseMode": "${{ @thisNodeValues[\"responseMode\"] }}"
+          "method": "${{ @fields[\"method\"] }}",
+          "path": "${{ @fields[\"path\"] }}",
+          "responseMode": "${{ @fields[\"responseMode\"] }}"
         }
       ]
     },

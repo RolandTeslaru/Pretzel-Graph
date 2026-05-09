@@ -18,11 +18,12 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
 
         const result: Partial<InferOutputs<typeof Blueprint>> = {};
 
-        const expressionCtx: Expression.Context = {
-            thisNode: this.workflowNode,
-            thisNodeValues: this.fields,
-            incoming: inputs
-        }
+        const expressionCtx = Expression.createContext(
+            this.workflowNode,
+            this.fields,
+            inputs,
+            Expression.resolveWorkflowConfig(this.context.workflowData.fields ?? {}),
+        )
 
         for (const { condition, portId } of cases) {
             if (Foundations.Field.Condition.evaluate(condition, expressionCtx))
