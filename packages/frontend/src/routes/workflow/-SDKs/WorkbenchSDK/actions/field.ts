@@ -1,4 +1,4 @@
-import { cloneDeep } from "lodash";
+import { cloneDeep, set } from "lodash";
 import { ShelfSDK } from "../../ShelfSDK/sdk";
 import type { WorkbenchSDKImpl, WorkbenchSDK } from "../sdk";
 import { debouncedValidateField, withAsyncCommit, withCommit, withCyclesRecompute } from "../utils/actions";
@@ -150,6 +150,7 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
                 })
             })
         },
+        setIsExpression: withCommit((...props) => { setState(s => { reducers.field.setIsExpression(s, ...props) }) }),
         condition: {
             setLeftValue: withCommit((...props) => {
                 const [nodeId, fieldId] = props
@@ -271,6 +272,7 @@ export type FieldActions = {
         add: (nodeId: Workflow.Node.Id, fieldId: Field.Id) => void
         remove: (nodeId: Workflow.Node.Id, fieldId: Field.Id) => void
     }
+    setIsExpression: DropFirstArg<WorkbenchSDK.Reducers['field']['setIsExpression']>
     condition           : {
         setLeftValue    : (
             nodeId: Workflow.Node.Id,
