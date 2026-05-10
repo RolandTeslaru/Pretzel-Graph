@@ -13,7 +13,42 @@ export class S2Engine {
     public static readonly MAX_VERTEX_EXECUTION_DELTA = 1;
     public static readonly MAX_VERTEX_RUN_COUNT = 20;
 
+    private ctx!: S2Engine.ExecutionContext;
+
     constructor() { }
+
+
+
+
+    public addSignal(
+        targetVertexId: Vertex.Id,
+        sourceVertexId: Vertex.Id,
+    ): void {
+        if (this.ctx.settled)
+            throw new S2EngineError("Engine is not running");
+
+        this.assertVertexExists(targetVertexId);
+        this.assertVertexExists(sourceVertexId);
+
+        this.ctx.accumulatedSignals.get(targetVertexId)!.add(sourceVertexId);
+        this.scheduleVertexCheck(targetVertexId);
+    }
+
+
+
+
+    public removeSignal(
+        targetVertexId: Vertex.Id,
+        sourceVertexId: Vertex.Id,
+    ): void {
+        if (this.ctx.settled)
+            throw new S2EngineError("Engine is not running");
+
+        this.assertVertexExists(targetVertexId);
+        this.assertVertexExists(sourceVertexId);
+
+        this.ctx.accumulatedSignals.get(targetVertexId)!.delete(sourceVertexId);
+    }
 
 
 
@@ -22,13 +57,16 @@ export class S2Engine {
         graph: S2Graph, 
         hooks: S2Hooks
     ): Promise<S2Engine.ExecutionResult> {
+        if (this.ctx && !this.ctx.settled)
+            throw new S2EngineError("Engine is already running");
+
         return new Promise<S2Engine.ExecutionResult>((resolve, reject) => {
             const startVertex = graph.vertices.get("__START__" as Vertex.Id);
 
             if (!startVertex)
                 throw new S2EngineError("Engine ignited without a __START__ vertex");
 
-            const ctx: S2Engine.ExecutionContext = {
+            this.ctx = {
                 graph,
                 accumulatedSignals: new Map(),
                 activeTasks: 0,
@@ -42,27 +80,37 @@ export class S2Engine {
             };
 
             for (const vertexId of graph.vertices.keys()) {
-                ctx.accumulatedSignals.set(vertexId, new Set());
+                this.ctx.accumulatedSignals.set(vertexId, new Set());
             }
 
-            this.fireVertex(startVertex.id, new Set(), ctx);
+            this.fireVertex(startVertex.id, new Set());
         })
     }
 
 
 
 
+    private assertVertexExists(
+        vertexId: Vertex.Id,
+    ): void {
+        if (!this.ctx.graph.vertices.has(vertexId))
+            throw new S2EngineError(`Vertex ${vertexId} not found`);
+    }
+
+
+
+
+
     private canVertexRun(
         vertexId: Vertex.Id,
-        ctx:      S2Engine.ExecutionContext
     ): boolean {
-        const dependencies = ctx.graph.dependenciesMap.get(vertexId)!;
-        const vertex = ctx.graph.vertices.get(vertexId);
+        const dependencies = this.ctx.graph.dependenciesMap.get(vertexId)!;
+        const vertex = this.ctx.graph.vertices.get(vertexId);
 
         if (!vertex)
             throw new S2EngineError(`Could not verify vertex ${vertexId}.`);
 
-        const receivedSignals = ctx.accumulatedSignals.get(vertexId)!;
+        const receivedSignals = this.ctx.accumulatedSignals.get(vertexId)!;
 
         let assesment: boolean = false;
 
@@ -74,7 +122,7 @@ export class S2Engine {
 
             case "XOR":
                 if (receivedSignals.size > 1) {
-                    ctx.reject(new S2EngineXORCollisionError(Array.from(receivedSignals), vertexId));
+                    this.ctx.reject(new S2EngineXORCollisionError(Array.from(receivedSignals), vertexId));
                     assesment = false;
                 }
                 assesment = receivedSignals.size === 1;
@@ -87,8 +135,8 @@ export class S2Engine {
                 throw new S2EngineError(`Vertex ${vertexId} has an unknown signal execution strategy: ${vertex.getStrategy()}`)        
         }
 
-        if(ctx.hooks.canVertexRun)
-            assesment = assesment && ctx.hooks.canVertexRun(vertexId, new Set(receivedSignals), assesment);
+        if(this.ctx.hooks.canVertexRun)
+            assesment = assesment && this.ctx.hooks.canVertexRun(vertexId, new Set(receivedSignals), assesment);
         
         return assesment
     }
@@ -99,46 +147,45 @@ export class S2Engine {
     private fireVertexDependents(
         vertexId:  Vertex.Id,
         signalSet: Set<Vertex.Id> | void,
-        ctx:       S2Engine.ExecutionContext
     ) { 
-        const allDependents = ctx.graph.dependentsMap.get(vertexId)!;
+        const allDependents = this.ctx.graph.dependentsMap.get(vertexId)!;
         const dependents = signalSet ?? allDependents;
         // console.log("Firing dependents of vertex", vertexId, "with signal set", signalSet, "resulting in dependents", dependents);
 
         dependents.forEach(dep => {
-            if (ctx.settled) return;
+            if (this.ctx.settled) return;
 
-            ctx.accumulatedSignals.get(dep)!.add(vertexId);
-            this.scheduleVertexCheck(dep, ctx);
+            this.ctx.accumulatedSignals.get(dep)!.add(vertexId);
+            this.scheduleVertexCheck(dep);
         })
     }
 
     
-    private scheduleVertexCheck(dep: Vertex.Id, ctx: S2Engine.ExecutionContext) {
-        if(ctx.pendingVertexChecks.has(dep)) 
+    private scheduleVertexCheck(dep: Vertex.Id) {
+        if(this.ctx.pendingVertexChecks.has(dep)) 
             return;
 
-        ctx.pendingVertexChecks.add(dep);
+        this.ctx.pendingVertexChecks.add(dep);
 
         queueMicrotask(() => {
-            ctx.pendingVertexChecks.delete(dep);
+            this.ctx.pendingVertexChecks.delete(dep);
 
-            if(ctx.settled) return;
+            if(this.ctx.settled) return;
 
-            const signals = ctx.accumulatedSignals.get(dep)!;
+            const signals = this.ctx.accumulatedSignals.get(dep)!;
 
-            if(this.canVertexRun(dep, ctx)){
+            if(this.canVertexRun(dep)){
                 const firingSignals = new Set(signals);
                 signals.clear();
-                this.fireVertex(dep, firingSignals, ctx);
+                this.fireVertex(dep, firingSignals);
             } 
             else {
-                const allDeps = ctx.graph.dependenciesMap.get(dep)!;
+                const allDeps = this.ctx.graph.dependenciesMap.get(dep)!;
                 const resolutionMap: Record<Vertex.Id, boolean> = {};
                 for (const depId of allDeps) {
                     resolutionMap[depId] = signals.has(depId);
                 }
-                ctx.hooks.onVertexWaiting?.(dep, new Set(signals), resolutionMap, allDeps.size);
+                this.ctx.hooks.onVertexWaiting?.(dep, new Set(signals), resolutionMap, allDeps.size);
             }
         })
     }
@@ -148,55 +195,54 @@ export class S2Engine {
     private async fireVertex(
         vertexId: Vertex.Id,
         signals:  Set<Vertex.Id>, // incoming signals that triggered this vertex to fire. For AND strategy, this will be the complete set of dependencies. For OR/XOR, this will be a subset of dependencies.
-        ctx:      S2Engine.ExecutionContext
     ) {
         // console.log("Attempting to fire vertex", vertexId, "with incoming signals", signals);
-        if (ctx.settled) return;
+        if (this.ctx.settled) return;
 
-        ctx.activeTasks++;
-        ctx.activeVertexes ++;
-        ctx.hooks.onVertexFired?.(vertexId);
+        this.ctx.activeTasks++;
+        this.ctx.activeVertexes ++;
+        this.ctx.hooks.onVertexFired?.(vertexId);
 
-        const vertex = ctx.graph.vertices.get(vertexId);
+        const vertex = this.ctx.graph.vertices.get(vertexId);
         if (!vertex)
             throw new S2EngineError(`Attempted to fire non-existent vertex ${vertexId}.`);
 
         vertex.track();
 
-        if(this.isShortCircuiting(vertexId, ctx)) {
-            ctx.settled = true;
+        if(this.isShortCircuiting(vertexId)) {
+            this.ctx.settled = true;
             const err = new S2EngineShortCircuitError(vertexId, vertex.getRunCount());
-            ctx.hooks.onVertexError?.(vertexId, err);
-            ctx.reject(err);
+            this.ctx.hooks.onVertexError?.(vertexId, err);
+            this.ctx.reject(err);
             return;
         }
 
         try {
-            const signalSet = await ctx.hooks.onVertexExecute(vertexId, signals);
+            const signalSet = await this.ctx.hooks.onVertexExecute(vertexId, signals);
 
-            ctx.activeVertexes --;
+            this.ctx.activeVertexes --;
 
-            if (ctx.settled) 
+            if (this.ctx.settled) 
                 return;
 
-            await ctx.hooks.onVertexCompleted?.(vertexId, signalSet);
+            await this.ctx.hooks.onVertexCompleted?.(vertexId, signalSet);
 
             // Dependents are fired without await — this is intentional.                                                                                                               
             // Parallel branches run concurrently; `activeTasks` tracks settlement.                                                                                                    
             // All code paths check `ctx.settled` to guard against post-resolution side effects. 
-            this.fireVertexDependents(vertexId, signalSet, ctx);
+            this.fireVertexDependents(vertexId, signalSet);
         }
         catch (err) {
-            if (!ctx.settled) {
-                ctx.settled = true;
-                ctx.hooks.onVertexError?.(vertexId, err);
-                ctx.reject(err);
+            if (!this.ctx.settled) {
+                this.ctx.settled = true;
+                this.ctx.hooks.onVertexError?.(vertexId, err);
+                this.ctx.reject(err);
             }
         }
         finally {
-            ctx.activeTasks--;
+            this.ctx.activeTasks--;
 
-            this.trySettle(ctx);
+            this.trySettle();
         }
     }
 
@@ -205,9 +251,8 @@ export class S2Engine {
 
     private isShortCircuiting(
         vertexId: Vertex.Id, 
-        ctx:      S2Engine.ExecutionContext
     ): boolean {
-        const vertex = ctx.graph.vertices.get(vertexId);
+        const vertex = this.ctx.graph.vertices.get(vertexId);
         if (!vertex)
             throw new S2EngineError(`Attempted to assess short-circuiting on non-existent vertex ${vertexId}.`);
 
@@ -216,10 +261,10 @@ export class S2Engine {
 
 
 
-    private trySettle(ctx: S2Engine.ExecutionContext): void {
-        if(!ctx.settled && ctx.activeTasks === 0 && ctx.pendingVertexChecks.size === 0){
-            ctx.settled = true;
-            ctx.resolve("completed");
+    private trySettle(): void {
+        if(!this.ctx.settled && this.ctx.activeTasks === 0 && this.ctx.pendingVertexChecks.size === 0){
+            this.ctx.settled = true;
+            this.ctx.resolve("completed");
         }
     }
 }

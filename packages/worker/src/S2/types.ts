@@ -18,5 +18,6 @@ export interface S2Hooks {
     onVertexError(vertexId: Vertex.Id, error: unknown): void;
     canVertexRun(vertexId: Vertex.Id, signals: Set<Vertex.Id>, s2EngineAssesment: boolean): boolean;
     // onKilled(): void;
+    
 }
 
