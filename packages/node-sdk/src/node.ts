@@ -247,5 +247,13 @@ export namespace RuntimeNode {
         readonly workflowData: Workflow.Data,
         readonly workflowId: Workflow.Id,
         readonly workflowCache: Workflow.Cache,
+        readonly compileWorkflow?: (
+            workflowId: Workflow.Id,
+            workflowData: Workflow.Data,
+            execution: Execution,
+            emit: ExecutionContext["emit"],
+            compilationCtx: CompilationContext,
+        ) => Promise<unknown>,
+        readonly runSubWorkflow?: (ctx: any) => Promise<unknown>,
     }
 }
