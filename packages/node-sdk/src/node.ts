@@ -1,4 +1,4 @@
-import { Chat, Execution, Expression, Realtime, Workflow } from "@pretzel-graph/shared/domain";
+import { Chat, Execution, Expression, Foundations, Realtime, Workflow } from "@pretzel-graph/shared/domain";
 import { InferFields, InferInputs, InferOutputs } from "./types";
 import type { CompilationContext } from "./compiler-context";
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
@@ -128,6 +128,22 @@ export abstract class RuntimeNode<
 
 
 
+    public async handleIgniter(
+        igniter: Execution.Igniter,
+    ): Promise<void> {
+        return this.onIgniter(igniter);
+    }
+
+
+
+
+    protected onIgniter(
+        igniter: Execution.Igniter,
+    ): Promise<void> | void { }
+
+
+
+
     public async triggerWebhook(
         webhookPaylod: Record<string, unknown>
     ): Promise<void> {
@@ -247,13 +263,38 @@ export namespace RuntimeNode {
         readonly workflowData: Workflow.Data,
         readonly workflowId: Workflow.Id,
         readonly workflowCache: Workflow.Cache,
-        readonly compileWorkflow?: (
-            workflowId: Workflow.Id,
-            workflowData: Workflow.Data,
-            execution: Execution,
-            emit: ExecutionContext["emit"],
-            compilationCtx: CompilationContext,
-        ) => Promise<unknown>,
-        readonly runSubWorkflow?: (ctx: any) => Promise<unknown>,
+        readonly subworkflowHooks: {
+            createEnv: () => {
+                compile: (
+                    workflowId: Workflow.Id,
+                    workflowData: Workflow.Data,
+                    execution: Execution,
+                    emit: ExecutionContext["emit"],
+                    compilationCtx: CompilationContext,
+                    parentBridgeHooks?: ExecutionContext["parentBridgeHooks"],
+                ) => Promise<unknown>,
+                run: (ctx: unknown) => Promise<unknown>,
+            }
+        },
+        readonly portHooks: {
+            writeToOutputPort: (
+                nodeId: Workflow.Node.Id,
+                outputId: Port.Output.Id,
+                value: unknown,
+            ) => void,
+            propagateFromOutputPort: (
+                nodeId: Workflow.Node.Id,
+                outputId: Port.Output.Id,
+            ) => void,
+        },
+        readonly parentBridgeHooks?: {
+            writeToOutputPort: (
+                outputId: Port.Output.Id,
+                value: unknown,
+            ) => void,
+            propagateFromOutputPort: (
+                outputId: Port.Output.Id,
+            ) => void,
+        },
     }
 }

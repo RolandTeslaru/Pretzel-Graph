@@ -1,7 +1,6 @@
 import { Execution, Foundations } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { Node as ChatInputNode } from "@pretzel-graph/nodes/Core/Chat/Input/node";
 import { CatalogueService, RuntimeNode } from "@pretzel-graph/node-sdk";
 
 import { AggexCompilerError } from "../errors";
@@ -10,6 +9,7 @@ import { mapFieldValues } from "../utils";
 
 import { produce } from "immer";
 import { AggexEngine } from "src/engine";
+import { CompilationContext } from "./context";
 
 
 export class WorkflowCompiler {
@@ -20,7 +20,9 @@ export class WorkflowCompiler {
         workflowData:   Workflow.Data,
         execution:      Execution,
         emit:           RuntimeNode.ExecutionContext["emit"],
+        engine:         AggexEngine,
         compilationCtx: WorkflowCompiler.Compilation.Context = createCompilationContext(workflowId),
+        parentBridgeHooks?: RuntimeNode.ExecutionContext["parentBridgeHooks"],
     ): Promise<AggexEngine.Execution.Context> {
         const workflowCache = Workflow.createCache(workflowData);
 
@@ -43,7 +45,44 @@ export class WorkflowCompiler {
             execution.session = produce(execution.session, r);
         };
 
-        const dummyEngine = new AggexEngine();
+        let engineExecutionCtx!: AggexEngine.Execution.Context;
+
+        const portHooks = {
+            writeToOutputPort: (nodeId, outputId, value) => {
+                engine.writeToOutputPort(engineExecutionCtx, nodeId, outputId, value);
+            },
+            propagateFromOutputPort: (nodeId, outputId) => {
+                engine.propagatePort(engineExecutionCtx, nodeId, outputId);
+            }
+        } satisfies RuntimeNode.ExecutionContext["portHooks"];
+
+
+        const subworkflowHooks = {
+            createEnv: () => {
+                const engine = new AggexEngine();
+                const compiler = new WorkflowCompiler();
+
+                return {
+                    compile: (
+                        workflowId,
+                        workflowData,
+                        execution,
+                        emit,
+                        compilationCtx,
+                        parentBridgeHooks,
+                    ) => compiler.compile(
+                        workflowId,
+                        workflowData,
+                        execution,
+                        emit,
+                        engine,
+                        compilationCtx,
+                        parentBridgeHooks,
+                    ),
+                    run: (ctx: unknown) => engine.run(ctx as AggexEngine.Execution.Context),
+                }
+            }
+        } satisfies RuntimeNode.ExecutionContext["subworkflowHooks"];
 
         const nodeExecutionCtx = {
             executionId: execution.id,
@@ -56,11 +95,21 @@ export class WorkflowCompiler {
             abortExecution: (reason: string) => abortController.abort(reason),
             abortSignal: abortController.signal,
             updateSession,
-            compileWorkflow: this.compile.bind(this),
-            runSubWorkflow: (ctx: unknown) => dummyEngine.run(ctx as AggexEngine.Execution.Context),
+            portHooks,
+            parentBridgeHooks,
+            subworkflowHooks,
+            // bridgeHooks: {
+            //     writeToPort: () => {
+
+            //     },
+            //     propagatePort: () => {
+
+            //     }
+            // }
+
         } satisfies RuntimeNode.ExecutionContext
 
-        const engineExecutionCtx = {
+        engineExecutionCtx = {
             executionId: execution.id,
             workflowId,
             chat_id: execution.chat_id,
@@ -71,11 +120,13 @@ export class WorkflowCompiler {
             abortExecution: (reason: string) => abortController.abort(reason),
             abortSignal: abortController.signal,
             updateSession,
-            compileWorkflow: this.compile.bind(this),
-            runSubWorkflow: (ctx: unknown) => dummyEngine.run(ctx as AggexEngine.Execution.Context),
             compiledGraph: graph,
             nodeRuntimeMap,
             activeNodes: new Set(),
+            propagatedOutputPorts: new Set(),
+            portHooks,
+            parentBridgeHooks,
+            subworkflowHooks,
         } satisfies AggexEngine.Execution.Context
 
 
@@ -131,10 +182,8 @@ export class WorkflowCompiler {
                 break;
             }
             case "chat_message": {
-                for (const entry of nodeRuntimeMap.values()) {
-                    if (entry.instance instanceof ChatInputNode)
-                        entry.instance.injectMessage(igniter.message);
-                }
+                for (const entry of nodeRuntimeMap.values())
+                    await entry.instance.handleIgniter(igniter);
                 break;
             }
         }

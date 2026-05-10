@@ -116,9 +116,8 @@ export class AggexWorkerImpl {
         });
 
         try {
-            // Compile and register execution context
-            const engineExecutionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.emit);
-            this.runningExecutionContextsMap.set(executionId, engineExecutionCtx);
+            let engineExecutionCtx!: AggexEngine.Execution.Context;
+            let engine!: AggexEngine;
 
             const onPauseTimeout = () => {
                 console.log(`[Worker] Max pause duration reached for job ${bullJob.id}, terminating`);
@@ -152,8 +151,12 @@ export class AggexWorkerImpl {
             };
 
             // Create and register engine
-            const engine = new AggexEngine(aggexHooks);
+            engine = new AggexEngine(aggexHooks);
             this.runningEnginesMap.set(executionId, engine);
+
+            // Compile and register execution context
+            engineExecutionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.emit, engine);
+            this.runningExecutionContextsMap.set(executionId, engineExecutionCtx);
 
             const result = await engine.run(engineExecutionCtx);
 
