@@ -3,7 +3,7 @@ import { Blueprint } from "./blueprint"
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { HumanMessage } from "@langchain/core/messages";
-import { Chat, Webhook } from "@pretzel-graph/shared/domain";
+import { Chat, Execution, Webhook } from "@pretzel-graph/shared/domain";
 import { api } from "../../../services/AxiosService";
 import { InternalChatAPI } from "../internal-api";
 
@@ -16,6 +16,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
     private message: HumanMessage | null = null;
+
+    protected override onIgniter(igniter: Execution.Igniter): void {
+        if (igniter.variant === "chat_message")
+            this.injectMessage(igniter.message);
+    }
 
     public injectMessage(chatMessage: Chat.Message): void {
         this.message = new HumanMessage({ content: chatMessage.content });

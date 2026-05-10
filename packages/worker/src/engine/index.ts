@@ -61,6 +61,97 @@ export class AggexEngine {
 
 
 
+    public writeToOutputPort(
+        ctx:      AggexEngine.Execution.Context,
+        nodeId:   Workflow.Node.Id,
+        outputId: Port.Output.Id,
+        value:    unknown,
+    ): void {
+        const node = ctx.workflowData.nodes[nodeId];
+        if (!node)
+            throw new AggexExecutionError(
+                SystemError.Code.EXECUTION_NODE_FAILED,
+                `Cannot write output for unknown node "${nodeId}"`,
+            );
+
+        const output = node.outputs.find(output => output.id === outputId);
+        if (!output)
+            throw new AggexExecutionError(
+                SystemError.Code.EXECUTION_NODE_FAILED,
+                `Cannot write unknown output port "${outputId}" on node "${nodeId}"`,
+            );
+
+        const projection = Synthesizer.project(value, output.variant);
+
+        ctx.updateSession(d => {
+            d.node_output_instances[nodeId] ??= {};
+            d.node_output_projections[nodeId] ??= {};
+
+            d.node_output_instances[nodeId][outputId] = value;
+            d.node_output_projections[nodeId][outputId] = projection;
+        });
+
+        ctx.emit<Execution.Event.SessionUpdate>({
+            executionId: ctx.executionId,
+            workflowId:  ctx.workflowId,
+            type:        "update",
+            channel:     this.getEventChannel(ctx),
+            sessionUpdate: {
+                node_output_projections: {
+                    [nodeId]: {
+                        [outputId]: projection,
+                    },
+                },
+            },
+        });
+    }
+
+
+
+
+    public propagatePort(
+        ctx:      AggexEngine.Execution.Context,
+        nodeId:   Workflow.Node.Id,
+        outputId: Port.Output.Id,
+    ): void {
+        ctx.propagatedOutputPorts.add(outputPortKey(nodeId, outputId));
+
+        const edges = Object.values(ctx.workflowData.edges).filter(edge =>
+            edge.source.nodeId === nodeId &&
+            edge.source.portId === outputId
+        );
+
+        const edgeIds: Record<string, Workflow.Edge.Id> = {};
+        for (const edge of edges)
+            edgeIds[edge.id] = edge.id;
+
+        const edgeStateUpdate = this.applyEdgeStateUpdate(
+            ctx,
+            edgeIds,
+            "waiting",
+            state => { state.runCount += 1; },
+        );
+
+        for (const edge of edges)
+            this.s2Engine.addSignal(
+                edge.target.nodeId as unknown as Vertex.Id,
+                nodeId as unknown as Vertex.Id,
+            );
+
+        ctx.emit<Execution.Event.SessionUpdate>({
+            executionId: ctx.executionId,
+            workflowId:  ctx.workflowId,
+            type:        "update",
+            channel:     this.getEventChannel(ctx),
+            sessionUpdate: {
+                edge_state: edgeStateUpdate,
+            },
+        });
+    }
+
+
+
+
     private getEventChannel(ctx: AggexEngine.Execution.Context): Execution.Event.Channel{
         return Execution.Event.getChannel(ctx.executionId);
     }
@@ -304,9 +395,17 @@ export class AggexEngine {
         else
             result = await nodeInstance.run(inputs);
 
+        const projectedResult = this.projectOutputs(result, wfNode);
+
         ctx.updateSession(d => {
-            d.node_output_instances[wfNode.id] = result;
-            d.node_output_projections[wfNode.id] = this.projectOutputs(result, wfNode);
+            d.node_output_instances[wfNode.id] = {
+                ...(d.node_output_instances[wfNode.id] ?? {}),
+                ...result,
+            };
+            d.node_output_projections[wfNode.id] = {
+                ...(d.node_output_projections[wfNode.id] ?? {}),
+                ...projectedResult,
+            };
         });
         console.log(`[Engine] node:executed ${wfNode.id} — session node_output_projections keys: ${Object.keys(ctx.session.node_output_projections).join(', ') || '(none)'}`);
             
@@ -346,7 +445,19 @@ export class AggexEngine {
                 }
                 edgeStateUpdate = this.applyEdgeStateUpdate(ctx, takenEdges, "waiting", s => { s.runCount += 1; });
             } else {
-                edgeStateUpdate = this.applyEdgeStateUpdate(ctx, allOutgoingEdges, "waiting", s => { s.runCount += 1; });
+                const unpropagatedEdges: Record<string, Workflow.Edge.Id> = {};
+                for (const [targetId, edgeId] of Object.entries(allOutgoingEdges)) {
+                    const edge = ctx.workflowData.edges[edgeId];
+                    if (!edge)
+                        continue;
+
+                    if (ctx.propagatedOutputPorts.has(outputPortKey(entry.wfNode.id, edge.source.portId)))
+                        continue;
+
+                    unpropagatedEdges[targetId] = edgeId;
+                }
+
+                edgeStateUpdate = this.applyEdgeStateUpdate(ctx, unpropagatedEdges, "waiting", s => { s.runCount += 1; });
             }
         }
 
@@ -589,6 +700,7 @@ export namespace AggexEngine {
         export interface Context extends RuntimeNode.ExecutionContext {
             compiledGraph:     S2Graph,
             activeNodes:       Set<Workflow.Node.Id | Vertex.Id>;
+            propagatedOutputPorts: Set<string>;
             nodeRuntimeMap:  Map<
                 Vertex.Id | Workflow.Node.Id, 
                 { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> }
@@ -598,4 +710,11 @@ export namespace AggexEngine {
     }
 
     export type ExecutionContext = Execution.Context;
+}
+
+function outputPortKey(
+    nodeId: Workflow.Node.Id,
+    outputId: Port.Output.Id,
+): string {
+    return `${nodeId}:${outputId}`;
 }
