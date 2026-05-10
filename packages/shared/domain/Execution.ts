@@ -70,6 +70,12 @@ export namespace Execution {
             variant: z.literal("workbench_manual"),
         })
 
+        export const SubWorkflow = z.object({
+            variant: z.literal("sub_workflow"),
+            parentNodeId: Workflow.Node.Id,
+            subWorkflowPath: z.array(Workflow.Id),
+        })
+
         export const ChatMessage = z.object({
             variant: z.literal("chat_message"),
             message: Chat.Message.Schema,
@@ -101,6 +107,7 @@ export namespace Execution {
 
         export const Schema = z.discriminatedUnion("variant", [
             WorkbenchManual,
+            SubWorkflow,
             ChatMessage,
             Webhook,
             Scheduled,
