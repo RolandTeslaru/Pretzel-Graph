@@ -11,7 +11,6 @@ import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Execution } from "@pretzel-graph/shared/domain";
-import type { SubWorkflowNormalizer } from "src/compiler/normalizers/subworkflow";
 import { NodeStatusManager } from "./node-status-manager";
 
 export interface AggexHooks {
@@ -541,7 +540,7 @@ export class AggexEngine {
     
     ): Promise<AggexEngine.Execution.Result> {
         ctx.activeNodes.clear();
-        const nodeStatusManager = new NodeStatusManager(ctx.inlineNodeMetaMap);
+        const nodeStatusManager = new NodeStatusManager();
 
         const hooks: S2Hooks = {
             onVertexExecute:   (...props: Parameters<S2Hooks["onVertexExecute"]>)   => this.onNodeExecuted(ctx, ...props),
@@ -590,7 +589,6 @@ export namespace AggexEngine {
         export interface Context extends RuntimeNode.ExecutionContext {
             compiledGraph:     S2Graph,
             activeNodes:       Set<Workflow.Node.Id | Vertex.Id>;
-            inlineNodeMetaMap: SubWorkflowNormalizer.InlineNodeMetaMap;
             nodeRuntimeMap:  Map<
                 Vertex.Id | Workflow.Node.Id, 
                 { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> }
@@ -598,4 +596,6 @@ export namespace AggexEngine {
         }
 
     }
+
+    export type ExecutionContext = Execution.Context;
 }
