@@ -47,6 +47,8 @@ export class Synthesizer {
                 return this.projectTool(value);
 
             case "ToolList":
+                if(!value)
+                    return [];
                 if (Array.isArray(value))
                     return value.map(v => this.projectTool(v));
                 return [this.projectTool(value)];
@@ -158,7 +160,7 @@ export class Synthesizer {
     }
 
 
-    private static projectTool(t: any): Foundations.Projection.Tool {
+    private static projectTool(t: LC.Tool): Foundations.Projection.Tool {
         return {
             name:        t.name,
             description: t.description,
