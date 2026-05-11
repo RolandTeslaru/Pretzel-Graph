@@ -83,6 +83,7 @@ export namespace Projection {
         ToolList,
         LanguageModel,
         Embeddings,
+        z.undefined()
     ])
 }
 export type Projection = z.infer<typeof Projection.Schema>

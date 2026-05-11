@@ -167,8 +167,12 @@ export class AggexEngine {
 
         for (const output of wfNode.outputs) {
             const key = output.id;
-            if (key in result)
-                projected[key] = Synthesizer.project(result[key], output.variant);
+            if (key in result){
+                if(result[key] === undefined)
+                    projected[key] = undefined as unknown as Projection;
+                else
+                    projected[key] = Synthesizer.project(result[key], output.variant);
+            }
         }
 
         return projected;
@@ -196,20 +200,20 @@ export class AggexEngine {
 
 
 
-    private resolveInputs(
+    private resolveIncomingData(
         ctx:             AggexEngine.Execution.Context,
         nodeId:          Workflow.Node.Id,
         incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set(),
         keepMissingPorts = false,
     ): Record<Port.Input.Id, any> {
-        const node = ctx.workflowData.nodes[nodeId];
+        const wfNode = ctx.workflowData.nodes[nodeId];
         const staticValues = ctx.workflowData.staticValues[nodeId] ?? {};
 
         const resolved: Record<Port.Input.Id, any> = {};
 
         const incomingEdgeByPort = ctx.workflowCache.inputHandlesMap[nodeId]
 
-        for (const input of node.inputs) {
+        for (const input of wfNode.inputs) {
             const edgeId = incomingEdgeByPort[input.id]
             const edge = ctx.workflowData.edges[edgeId];
 
@@ -223,7 +227,10 @@ export class AggexEngine {
                 const sourceOutputs = ctx.session.node_output_instances[edge.source.nodeId];
                 if (sourceOutputs) {
                     const rawReference = sourceOutputs[edge.source.portId as string];
-                    resolved[input.id] = Synthesizer.ensureReference(rawReference, input.variant);
+                    if(!rawReference)
+                        resolved[input.id] = undefined;
+                    else 
+                        resolved[input.id] = Synthesizer.ensureReference(rawReference, input.variant);
                 }
                 else {
                     resolved[input.id] = undefined;
@@ -381,7 +388,7 @@ export class AggexEngine {
 
         const dataDependency = entry.instance.fields["dataDependency" as Field.Id];
         
-        const inputs = this.resolveInputs(
+        const inputs = this.resolveIncomingData(
             ctx, 
             wfNode.id, 
             dataDependency === "AND" ? allDependencies : signals
@@ -407,7 +414,6 @@ export class AggexEngine {
                 ...projectedResult,
             };
         });
-        console.log(`[Engine] node:executed ${wfNode.id} — session node_output_projections keys: ${Object.keys(ctx.session.node_output_projections).join(', ') || '(none)'}`);
             
         if ('isRouterNode' in nodeInstance)
             return this.resolveRouterSignals(ctx, wfNode.id, result);
@@ -540,7 +546,7 @@ export class AggexEngine {
             },
         });
 
-        const partialInputs = this.resolveInputs(ctx, wfNode.id, arrivedSignals);
+        const partialInputs = this.resolveIncomingData(ctx, wfNode.id, arrivedSignals);
         instance.wait(partialInputs, nodeDepMap);
     }
 
@@ -601,41 +607,58 @@ export class AggexEngine {
         receivedSignals:   Set<Vertex.Id>,
         s2EngineAssesment: boolean
     ): boolean {
+        console.log(`[canNodeRun] vertexId=${vertexId} s2Assessment=${s2EngineAssesment} receivedSignals=[${[...receivedSignals].join(", ")}]`);
+
         const entry = ctx.nodeRuntimeMap.get(vertexId);
-        if (!entry)
+        if (!entry) {
+            console.log(`[canNodeRun] vertexId=${vertexId} → no runtime entry, returning true`);
             return true;
+        }
 
         const { instance, wfNode } = entry;
 
         const signalDepField = instance.fields["signalDependency" as Field.Id];
         const dataDepField   = instance.fields["dataDependency" as Field.Id];
 
+        console.log(`[canNodeRun] vertexId=${vertexId} signalDep=${signalDepField} dataDep=${dataDepField}`);
+
         // if(!signalDepField || !dataDepField)
         //     return true;
 
         // If it is set to strict AND, the S2 engine assessment is sufficient to determine if the node can run
         // Because its expected that the data will be provided on time
-        if(signalDepField === "AND")
+        if(signalDepField === "AND") {
+            console.log(`[canNodeRun] vertexId=${vertexId} → signalDep=AND, returning true`);
             return true;
+        }
         else{
             if(dataDepField === "AND"){
                 // In non-AND signal dependency mode, we need to check if all data dependencies are resolved before allowing the node to run
                 const dependencies = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
 
-                const incomingInputs = this.resolveInputs(ctx, wfNode.id, dependencies, true);
+                const incomingInputs = this.resolveIncomingData(ctx, wfNode.id, dependencies, true);
 
                 const requiredPortIds = new Set(
                     wfNode.inputs.filter(p => p.required).map(p => p.id)
                 );
 
+                console.log(`[canNodeRun] vertexId=${vertexId} requiredPorts=[${[...requiredPortIds].join(", ")}] incomingInputs=${JSON.stringify(incomingInputs)}`);
+
                 // If a required port is undefined, not all data dependencies are resolved yet
                 for (const portId in incomingInputs) {
-                    if (requiredPortIds.has(portId as Port.Input.Id) && incomingInputs[portId as Port.Input.Id] === undefined)
+                    if (
+                        requiredPortIds.has(portId as Port.Input.Id)
+                        && incomingInputs[portId as Port.Input.Id] === undefined
+                    ) {
+                        console.log(`[canNodeRun] vertexId=${vertexId} → required port "${portId}" is undefined, returning false`);
                         return false;
+                    }
                 }
+                console.log(`[canNodeRun] vertexId=${vertexId} → all required ports resolved, returning true`);
                 return true;
             }
             else {
+                console.log(`[canNodeRun] vertexId=${vertexId} → dataDep=${dataDepField} (not AND), returning true`);
                 return true;
             }
         }
