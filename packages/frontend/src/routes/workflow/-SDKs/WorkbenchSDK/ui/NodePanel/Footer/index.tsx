@@ -6,19 +6,24 @@ import OutgoingPanel from "../OutgoingPanel";
 
 export const NodeSidebarFooter = () => {
 
+    const panelId = "nodeSidebar" as StackSDK.Panel.Id;
+
+    const outgoingCompanionId = "outgoing" as StackSDK.Companion.Id;
+    const incomingCompanionId = "incoming" as StackSDK.Companion.Id;
+
     const [isInputsOpen, isOutputsOpen] = StackSDK.useStore(s => {
         return [
-            StackSDK.selectors.doesEntryHaveCompanion(s, "nodeSidebar", "incoming"), 
-            StackSDK.selectors.doesEntryHaveCompanion(s, "nodeSidebar", "outgoing")
+            StackSDK.selectors.doesEntryHaveCompanion(s, panelId, incomingCompanionId), 
+            StackSDK.selectors.doesEntryHaveCompanion(s, panelId, outgoingCompanionId)
         ]
     })
 
     const toggleInputs = () => {
         if (isInputsOpen) {
-            StackSDK.actions.popCompanion("nodeSidebar", "incoming");
+            StackSDK.actions.popCompanion(panelId, incomingCompanionId);
         } else {
-            StackSDK.actions.pushCompanion("nodeSidebar", "incoming", (props) => (
-                <StackSDK.CompanionTemplate enter="right" {...props} className='right-full top-0 bottom-0 w-62.5 mr-5'>
+            StackSDK.actions.pushCompanion(panelId, incomingCompanionId, "left", 250, (props) => (
+                <StackSDK.CompanionTemplate enter="right" {...props} className='right-100 top-24 bottom-24 w-62.5'>
                     <IncomingPanel />
                 </StackSDK.CompanionTemplate>
             ))
@@ -27,13 +32,13 @@ export const NodeSidebarFooter = () => {
 
     const toggleOutputs = () => {
         if (isOutputsOpen) {
-            StackSDK.actions.popCompanion("nodeSidebar", "outgoing");
+            StackSDK.actions.popCompanion(panelId, outgoingCompanionId);
         } else {
-            StackSDK.actions.pushCompanion("nodeSidebar", "outgoing", (props) => (
-                <StackSDK.CompanionTemplate {...props} className='left-full top-0 bottom-0 w-62.5 ml-5'>
+            StackSDK.actions.pushCompanion(panelId, outgoingCompanionId, "right", 250, (props) => (
+                <StackSDK.CompanionTemplate enter="right" {...props} className='right-5 top-24 bottom-24 w-62.5'>
                     <OutgoingPanel/>
                 </StackSDK.CompanionTemplate>
-            ), -280)
+            ))
         }
     }
 

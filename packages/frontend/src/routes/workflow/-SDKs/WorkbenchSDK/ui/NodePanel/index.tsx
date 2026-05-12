@@ -2,6 +2,7 @@ import { ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import React, { useMemo, memo, useEffect, useState } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
+import { DialogSDK } from '@/SDKs/DialogSDK'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { Accordion } from '@pretzel-graph/standard-ui/foundations/accordion';
 import { FieldRenderer } from '../FieldRenderer';
@@ -33,18 +34,19 @@ const SidebarAccordionItem = ({ label, value, children }: SidebarAccordionItemPr
 const NodeSidebar = () => {
 
     const clickedNode = WorkbenchSDK.useStore(s => s.selectors.getClickedNode(s));
+    const isFullscreen = DialogSDK.useStore(s => s.selectors.isDialogOpen(s, "fullscreen-node-panel"));
 
     useEffect(() => {
-        if (clickedNode) {
-            StackSDK.actions.push("nodeSidebar", (props) => (
+        if (clickedNode && !isFullscreen) {
+            StackSDK.actions.push("nodeSidebar" as StackSDK.Panel.Id, (props) => (
                 <StackSDK.Template {...props}>
                     <Content clickedNode={clickedNode} />
                 </StackSDK.Template>
             ))
         } else {
-            StackSDK.actions.pop("nodeSidebar")
+            StackSDK.actions.pop("nodeSidebar" as StackSDK.Panel.Id)
         }
-    }, [clickedNode])
+    }, [clickedNode, isFullscreen])
 
     return null
 }
@@ -54,9 +56,10 @@ export default NodeSidebar
 
 interface Props {
     clickedNode: Workflow.Node
+    showFooter?: boolean
 }
 
-const Content = memo(({ clickedNode: node }: Props) => {
+export const Content = memo(({ clickedNode: node, showFooter = true }: Props) => {
     const [isEditing, setIsEditing] = useState(false)
     const connectedPorts = WorkbenchSDK.useStore(s => s.selectors.node.getConnectedPorts(s, node.id))
 
@@ -114,8 +117,6 @@ const Content = memo(({ clickedNode: node }: Props) => {
                 onEditFinish={() => setIsEditing(false)}
             />
 
-            <NodeSidebarFooter />
-
             {/* Sections */}
             <ScrollArea.Root className='mask-[linear-gradient(to_bottom,transparent,black_48px,black_calc(100%-48px),transparent)]'>
                 <NodeDescription node={node} isEditing={isEditing} />
@@ -158,6 +159,8 @@ const Content = memo(({ clickedNode: node }: Props) => {
                     </SidebarAccordionItem>
                 </Accordion.Root>
             </ScrollArea.Root>
+
+            {showFooter && <NodeSidebarFooter />}
         </>
     )
 })

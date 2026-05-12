@@ -31,11 +31,11 @@ export function _createStackActions_(sdk: StackSDKImpl) {
 
 
 export interface _StackSDKActions_ {
-    push: DropFirstArg<StackSDK.Reducers['push']>
-    pop: (panelId: string) => void
-    popAll: () => void
-    bringToFront: DropFirstArg<StackSDK.Reducers['bringToFront']>
-    sendToBack: DropFirstArg<StackSDK.Reducers['sendToBack']>
-    pushCompanion: (panelId: string, companionId: string, renderer: StackSDK.CompanionRenderer, shift?: number) => void
-    popCompanion: DropFirstArg<StackSDK.Reducers['popCompanion']>
+    push:           DropFirstArg<StackSDK.Reducers['push']>
+    pop:            DropFirstArg<StackSDK.Reducers['pop']>
+    popAll:         DropFirstArg<StackSDK.Reducers['popAll']>
+    bringToFront:   DropFirstArg<StackSDK.Reducers['bringToFront']>
+    sendToBack:     DropFirstArg<StackSDK.Reducers['sendToBack']>
+    pushCompanion:  DropFirstArg<StackSDK.Reducers['pushCompanion']>
+    popCompanion:   DropFirstArg<StackSDK.Reducers['popCompanion']>
 }
