@@ -160,7 +160,7 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
                 </Accordion.Root>
             </ScrollArea.Root>
 
-            {showFooter && <NodeSidebarFooter />}
+            {showFooter && <NodeSidebarFooter node={node} />}
         </>
     )
 })

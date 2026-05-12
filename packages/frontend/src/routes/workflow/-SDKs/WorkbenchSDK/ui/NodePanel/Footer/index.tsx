@@ -3,8 +3,9 @@ import { Button } from "@pretzel-graph/standard-ui/foundations";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 import IncomingPanel from "../IncomingPanel";
 import OutgoingPanel from "../OutgoingPanel";
+import type { Workflow } from "@pretzel-graph/shared/domain";
 
-export const NodeSidebarFooter = () => {
+export const NodeSidebarFooter = ({ node }: { node: Workflow.Node }) => {
 
     const panelId = "nodeSidebar" as StackSDK.Panel.Id;
 
@@ -13,7 +14,7 @@ export const NodeSidebarFooter = () => {
 
     const [isInputsOpen, isOutputsOpen] = StackSDK.useStore(s => {
         return [
-            StackSDK.selectors.doesEntryHaveCompanion(s, panelId, incomingCompanionId), 
+            StackSDK.selectors.doesEntryHaveCompanion(s, panelId, incomingCompanionId),
             StackSDK.selectors.doesEntryHaveCompanion(s, panelId, outgoingCompanionId)
         ]
     })
@@ -36,7 +37,7 @@ export const NodeSidebarFooter = () => {
         } else {
             StackSDK.actions.pushCompanion(panelId, outgoingCompanionId, "right", 250, (props) => (
                 <StackSDK.CompanionTemplate enter="right" {...props} className='right-5 top-24 bottom-24 w-62.5'>
-                    <OutgoingPanel/>
+                    <OutgoingPanel />
                 </StackSDK.CompanionTemplate>
             ))
         }
