@@ -9,6 +9,9 @@ import { createFieldActions, type FieldActions } from './field';
 import { createToolActions, type ToolActions } from './tool';
 import { createWorkflowActions, type WorkflowActions } from './workflow';
 import { createDependencyActions, type DependencyActions } from './dependency';
+import { DialogSDK } from '@/SDKs/DialogSDK';
+import React from 'react';
+import FullScreenNodePanel from '../ui/FullScreenNodePanel';
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
@@ -84,6 +87,18 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         },
         subWorkflow: subWorkflowActions,
         dependency: dependencyActions,
+        ui: {
+            openNodePanelFullscreen: () => {
+                DialogSDK.actions.push("fullscreen-node-panel", (props) => (
+                    React.createElement(DialogSDK.Template, { className: "border-none! shadow-none! bg-white/0!", ...props },
+                        React.createElement(FullScreenNodePanel)
+                    )
+                ))
+            },
+            closeNodePanelFullscreen: () => {
+                DialogSDK.actions.pop("fullscreen-node-panel")
+            },
+        },
     } satisfies _WorkbenchSDKActions
 }
 
@@ -141,4 +156,8 @@ export interface _WorkbenchSDKActions {
     }
     subWorkflow: SubWorkflowActions;
     dependency: DependencyActions;
+    ui: {
+        openNodePanelFullscreen: () => void;
+        closeNodePanelFullscreen: () => void;
+    };
 }

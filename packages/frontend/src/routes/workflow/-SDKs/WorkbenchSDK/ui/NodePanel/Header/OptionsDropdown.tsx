@@ -3,14 +3,18 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../sdk'
 
-export const OptionsDropdown = ({ node }: { node: Workflow.Node }) => (
+export const OptionsDropdown = ({ node, onEdit }: { node: Workflow.Node; onEdit: () => void }) => (
     <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
             <Button size="icon-xs" variant="ghost">
                 <SystemIcons.Ellipsis className='text-secondary-foreground' />
             </Button>
         </DropdownMenu.Trigger>
-        <DropdownMenu.Content align="end">
+        <DropdownMenu.Content align="end" sideOffset={6}>
+            <DropdownMenu.Item onClick={onEdit}>
+                <SystemIcons.SquarePen />
+                Edit
+            </DropdownMenu.Item>
             <DropdownMenu.Item onClick={() => { WorkbenchSDK.actions.node.recreate(node.id) }}>
                 <SystemIcons.Undo />
                 Recreate

@@ -8,6 +8,7 @@ import { AlertDialog, Dialog } from "@pretzel-graph/standard-ui/foundations";
 import { SDK } from "@/SDKs/SDKManager";
 import { type _DialogSDKActions_, createDialogSDKActions } from "./actions";
 import { AlertTriangle } from "@pretzel-graph/standard-ui/icons/system";
+import { dialogSelectors, type DialogSDKSelectors } from "./selectors";
 
 enableMapSet()
 
@@ -49,9 +50,12 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
 
     public readonly useStore = create<DialogSDK.State>()(
         immer(() => ({
-            dialogs: new Map()
+            dialogs: new Map(),
+            selectors: dialogSelectors,
         }))
     )
+
+    public readonly selectors: DialogSDK.Selectors = dialogSelectors
 
     public readonly UIOverlay: DialogSDK.UILayer = memo(() => {
 
@@ -170,7 +174,9 @@ export const DialogSDK = SDK.get<DialogSDKImpl>("Dialog")
 export namespace DialogSDK {
     export type State = {
         dialogs: Map<string, Entry>
+        selectors: DialogSDKSelectors
     }
+    export type Selectors = DialogSDKSelectors
     export type actions = _DialogSDKActions_
 
     export type UILayer = React.FC
