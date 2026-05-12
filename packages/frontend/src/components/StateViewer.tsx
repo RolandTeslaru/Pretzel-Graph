@@ -10,8 +10,9 @@ import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK/sdk'
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk'
+import { DialogSDK } from '@/SDKs/DialogSDK'
 
-const SDK_OPTIONS = ['WorkbenchSDK', 'ExecutionSDK', 'ChatSDK', 'LibrarySDK', 'ShelfSDK', 'VersionControlSDK'] as const
+const SDK_OPTIONS = ['WorkbenchSDK', 'ExecutionSDK', 'ChatSDK', 'LibrarySDK', 'ShelfSDK', 'VersionControlSDK', 'DialogSDK'] as const
 type SDKOption = typeof SDK_OPTIONS[number]
 
 function setsToArrays(value: unknown): unknown {
@@ -33,6 +34,7 @@ function useSDKState(selected: SDKOption) {
     const library = LibrarySDK.useStore(s => s);
     const shelf = ShelfSDK.useStore(s => s);
     const versionControl = VersionControlSDK.useStore(s => s);
+    const dialog = DialogSDK.useStore(s => s);
 
     const raw = (() => {
         switch (selected) {
@@ -42,6 +44,7 @@ function useSDKState(selected: SDKOption) {
             case 'LibrarySDK': return library;
             case 'ShelfSDK': return shelf;
             case 'VersionControlSDK': return versionControl;
+            case 'DialogSDK': return dialog;
         }
     })();
 
