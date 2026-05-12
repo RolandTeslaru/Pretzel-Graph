@@ -12,7 +12,7 @@ const COLORS = [
 ]
 
 const pushDummy = () => {
-    const id = `dummy-${counter++}`
+    const id = `dummy-${counter++}` as StackSDK.Panel.Id
     const color = COLORS[counter % COLORS.length]
 
     StackSDK.actions.push(id, (props) => (

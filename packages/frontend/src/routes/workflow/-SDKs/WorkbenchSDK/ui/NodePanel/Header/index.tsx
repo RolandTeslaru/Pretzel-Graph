@@ -4,6 +4,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../sdk'
 import { OptionsDropdown } from './OptionsDropdown'
+import { DialogSDK } from '@/SDKs/DialogSDK'
 
 interface HeaderProps {
     node: Workflow.Node
@@ -13,6 +14,7 @@ interface HeaderProps {
 }
 
 export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }: HeaderProps) => {
+    const isFullscreen = DialogSDK.useStore(s => s.selectors.isDialogOpen(s, "fullscreen-node-panel"))
 
     return (
         <div className='absolute z-10 top-2 left-2 right-2 flex flex-row gap-2'>
@@ -44,7 +46,6 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                     </h4>
                 )}
             </div>
-
             <div className='ml-auto z-10 flex flex-row bg-card-float w-fit p-0.5 rounded-xl border border-border shadow-md shadow-black/10'>
                 {isEditing ? (
                     <div className='flex flex-row gap-2 ml-auto my-auto h-auto'>
@@ -53,19 +54,25 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                         </Button>
                     </div>
                 ) : (
-                    <div className='flex flex-row gap-2 ml-auto my-auto h-auto'>
-                        <Button size="icon-xs" variant="ghost" onClick={onEditStart}>
-                            <SystemIcons.SquarePen />
+                    <div className='flex flex-row gap-2'>
+                        <Button size="icon-xs" variant="ghost-success">
+                            <SystemIcons.Play />
                         </Button>
                         <Button size="icon-xs" variant="ghost" onClick={() => WorkbenchSDK.actions.node.setDisabled(node.id, !node.isDisabled)}
                             className={`${node.isDisabled ? `bg-red-500/40` : ``}`}
                         >
                             <SystemIcons.Power className='stroke-2' />
                         </Button>
-                        <Button size="icon-xs" variant="ghost-success">
-                            <SystemIcons.Play />
-                        </Button>
-                        <OptionsDropdown node={node} />
+                        {isFullscreen ? (
+                            <Button size="icon-xs" variant="ghost" onClick={() => WorkbenchSDK.actions.ui.closeNodePanelFullscreen()}>
+                                <SystemIcons.Minimize2 />
+                            </Button>
+                        ) : (
+                            <Button size="icon-xs" variant="ghost" onClick={() => WorkbenchSDK.actions.ui.openNodePanelFullscreen()}>
+                                <SystemIcons.Maximize2 />
+                            </Button>
+                        )}
+                        <OptionsDropdown node={node} onEdit={onEditStart} />
                     </div>
                 )}
             </div>

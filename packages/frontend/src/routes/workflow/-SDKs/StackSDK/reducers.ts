@@ -8,10 +8,11 @@ export const stackReducers = {
             s.panels.delete(panelId)
 
         s.panels.set(panelId, {
-            panelId,
+            id: panelId,
             isOpen: true,
             renderer,
             companions: existing?.companions ?? new Map(),
+            offset: { x: 0, y: 0 }
         })
     },
     pop: (s, panelId) => {
@@ -24,7 +25,7 @@ export const stackReducers = {
         const entry = s.panels.get(panelId)
         if (!entry) return
 
-        const reordered = new Map<string, StackSDK.PanelEntry>()
+        const reordered = new Map<StackSDK.Panel.Id, StackSDK.Panel>()
         s.panels.forEach((v, k) => { if (k !== panelId) reordered.set(k, v) })
         reordered.set(panelId, entry)
         s.panels = reordered
@@ -45,26 +46,33 @@ export const stackReducers = {
         if (!entry) return
         entry.isOpen = isOpen
     },
-    pushCompanion: (s, panelId, companionId, renderer, shift) => {
-        const entry = s.panels.get(panelId)
-        if (!entry) return
-        entry.companions.set(companionId, { companionId, renderer, shift })
+    pushCompanion: (s, panelId, companionId, side, width, renderer) => {
+        const panel = s.panels.get(panelId)
+        if (!panel) return
+
+        panel.companions.set(companionId, { id: companionId, renderer, side, width })
     },
     popCompanion: (s, panelId, companionId) => {
+        const panel = s.panels.get(panelId)
+        if (!panel) return
+        panel.companions.delete(companionId)
+    },
+    setOffset: (s, panelId, offset) => {
         const entry = s.panels.get(panelId)
         if (!entry) return
-        entry.companions.delete(companionId)
-    },
+        entry.offset = offset
+    }
 } satisfies StackSDKReducers
 
 
 interface StackSDKReducers {
-    push: (state: StackSDK.State, panelId: string, renderer: StackSDK.Renderer) => void
-    pop: (state: StackSDK.State, panelId: string) => void
-    popAll: (state: StackSDK.State) => void
-    bringToFront: (state: StackSDK.State, panelId: string) => void
-    sendToBack: (state: StackSDK.State, panelId: string) => void
-    setIsOpen: (state: StackSDK.State, panelId: string, isOpen: boolean) => void
-    pushCompanion: (state: StackSDK.State, panelId: string, companionId: string, renderer: StackSDK.CompanionRenderer, shift?: number) => void
-    popCompanion: (state: StackSDK.State, panelId: string, companionId: string) => void
+    push:           (state: StackSDK.State, panelId: StackSDK.Panel.Id, renderer: StackSDK.Panel.Renderer) => void
+    pop:            (state: StackSDK.State, panelId: StackSDK.Panel.Id) => void
+    popAll:         (state: StackSDK.State) => void
+    bringToFront:   (state: StackSDK.State, panelId: StackSDK.Panel.Id) => void
+    sendToBack:     (state: StackSDK.State, panelId: StackSDK.Panel.Id) => void
+    setIsOpen:      (state: StackSDK.State, panelId: StackSDK.Panel.Id, isOpen: boolean) => void
+    pushCompanion:  (state: StackSDK.State, panelId: StackSDK.Panel.Id, companionId: StackSDK.Companion.Id, side: StackSDK.Side, width: number, renderer: StackSDK.Companion.Renderer) => void
+    popCompanion:   (state: StackSDK.State, panelId: StackSDK.Panel.Id, companionId: StackSDK.Companion.Id) => void
+    setOffset:      (state: StackSDK.State, panelId: StackSDK.Panel.Id, offset: { x: number, y: number }) => void
 }
