@@ -1,6 +1,6 @@
 {
-  "version": "1778323564182",
-  "generatedAt": "2026-05-09T10:46:04.182Z",
+  "version": "1778698595913",
+  "generatedAt": "2026-05-13T18:56:35.913Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -5135,6 +5135,161 @@
           "variant": "ToolList"
         }
       ]
+    },
+    "b993f175-a07e-4d6e-bbdc-700ffb6b83a0": {
+      "id": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0",
+      "displayName": "Agent",
+      "icon": "Bot",
+      "accent": "port-LanguageModel",
+      "description": "Executes a saved sub-workflow and returns its output.",
+      "fields": [
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "output_all_messages",
+          "variant": "Boolean",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "description": "",
+          "displayName": "Output All Messages",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "ExposedInputPort-7r7r9",
+          "displayName": "System Message",
+          "variant": "Message",
+          "required": false
+        },
+        {
+          "id": "ExposedInputPort-u3mi6",
+          "displayName": "Language Model",
+          "variant": "LanguageModel",
+          "required": true
+        },
+        {
+          "id": "ToolsPort",
+          "displayName": "Tools",
+          "variant": "ToolList",
+          "required": false
+        },
+        {
+          "id": "ExposedInputPort-nyb7u",
+          "displayName": "Messages",
+          "variant": "MessageList",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "Core.SubWorkflow.ExposeOutputPort-cfa4s",
+          "displayName": "Output",
+          "variant": "MessageList"
+        }
+      ]
+    },
+    "a397c87d-4ede-4ae8-beaf-e2d432782e44": {
+      "id": "a397c87d-4ede-4ae8-beaf-e2d432782e44",
+      "displayName": "Basic Agent Test",
+      "icon": "Graph",
+      "accent": "utility",
+      "description": "Executes a saved sub-workflow and returns its output.",
+      "fields": [
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": []
     }
   }
 }
