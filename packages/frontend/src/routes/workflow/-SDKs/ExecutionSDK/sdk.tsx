@@ -19,6 +19,7 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
     public readonly useStore: BaseSDK.Store<ExecutionSDK.State> = createWithEqualityFn(
         immer<ExecutionSDK.State>(() => ({
             currentExecution: undefined,
+            executionHistory: [],
             awaitedConfirmation: new Set(),
             selectors: executionSDKSelectors,
         })),
@@ -124,6 +125,7 @@ export namespace ExecutionSDK {
 
     export type State = {
         currentExecution?: Execution
+        executionHistory: Execution.Meta[] 
         awaitedConfirmation: Set<AwaitedConfirmation>
         selectors: ExecutionSDKSelectors
     }

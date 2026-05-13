@@ -1,4 +1,4 @@
-import { Execution, Validation } from "@pretzel-graph/shared/domain";
+import { Execution, Validation, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { ExecutionSDK, type ExecutionSDKImpl } from "./sdk"
 import { toast } from "sonner";
@@ -119,8 +119,19 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             confirmEvent()
             return success;
         },
+        setCurrentExecution: (execution: Execution) => {
+            sdk.setState(s => { sdk.reducers.setCurrentExecution(s, execution) });
+        },
+        loadHistory: async (workflowId: Workflow.Id) => {
+            const { executions } = await Execution.API.Meta.list(api, { workflowId });
+            sdk.setState(s => { s.executionHistory = executions });
+            return executions;
+        },
         clear: () => {
             sdk.setState(s => { s.currentExecution = undefined })
+        },
+        clearHistory: () => {
+            sdk.setState(s => { s.executionHistory = [] })
         },
         addAwaitedConfirmation: (event) => {
             sdk.setState(s => {
@@ -137,7 +148,10 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
 export type ExecutionSDKActions = {
 
-    run:   (igniter?: Execution.Igniter) => Promise<Execution.Id | null>,
+    run:                 (igniter?: Execution.Igniter) => Promise<Execution.Id | null>,
+    setCurrentExecution: (execution: Execution) => void,
+    loadHistory:         (workflowId: Workflow.Id) => Promise<Execution.Meta[]>,
+    clearHistory:        () => void,
     clear: () => void,
     pause:     (executionId: Execution.Id) => Promise<boolean>,
     terminate: (executionId: Execution.Id) => Promise<boolean>,
