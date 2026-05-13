@@ -73,6 +73,8 @@ export const Route = createFileRoute('/workflow/$workflowid')({
             staleTime: 30_000,
         })
 
+        ExecutionSDK.actions.clearHistory();
+
         // QuerySDK.client.prefetchQuery({
         //     queryKey: ['execution-session-metas', workflowId],
         //     queryFn: () => ExecutionSDK.actions.meta.list(workflowId),
