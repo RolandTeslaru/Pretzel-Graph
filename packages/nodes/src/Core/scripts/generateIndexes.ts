@@ -1,14 +1,33 @@
 import "reflect-metadata";
 import * as fs from "fs";
 import * as path from "path";
+import { config } from "dotenv";
 
-import { Foundations, Shelf } from "@pretzel-graph/shared/domain"
+config({ path: path.resolve(__dirname, "../../../../../.env") });
+
+import { Foundations, Shelf, Workflow } from "@pretzel-graph/shared/domain"
+import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow"
+import { createClient } from "@supabase/supabase-js";
 
 const NODES_ROOT = path.resolve(__dirname, "../../..");
 const OUTPUT_PATH = path.resolve(__dirname, "../../../dist/node_index.json")
 const BACKEND_TARGET = path.resolve(__dirname, "../../../../backend/src/services/Shelf/node_index.json");
 const BACKEND_SERVICE_FILE = path.resolve(__dirname, "../../../../backend/src/services/Shelf/service.ts");
 
+const DEV_USER_ID = "9a0a1560-ac61-4ce8-a468-3f717588d838";
+
+function mergeFieldsById(
+    baseFields: readonly Foundations.Field[],
+    dependencyFields: readonly Foundations.Field[],
+): Foundations.Field[] {
+    const fieldsById = new Map<Foundations.Field.Id, Foundations.Field>()
+    for (const field of baseFields)
+        fieldsById.set(field.id, field)
+    for (const field of dependencyFields)
+        if (!fieldsById.has(field.id))
+            fieldsById.set(field.id, field)
+    return [...fieldsById.values()]
+}
 
 async function traverseDir(dir: string, callback: (filePath: string) => Promise<void>) {
     const entries = fs.readdirSync(dir, { withFileTypes: true })
@@ -24,7 +43,10 @@ async function traverseDir(dir: string, callback: (filePath: string) => Promise<
     }
 }
 
-async function generateIndex() {
+
+const db_pretzel_blueprints: Record<string, Foundations.Blueprint> = {}
+
+export async function generateIndex(includeDbBlueprints = false) {
     const blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint> = {}
     const drawers: Record<Shelf.Drawer.Id, Shelf.Drawer> = {}
 
@@ -45,6 +67,49 @@ async function generateIndex() {
         blueprints,
     }
 
+    if (includeDbBlueprints) {
+        const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+
+        const { data, error } = await supabase
+            .from("workflows")
+            .select("id, display_name, icon, accent, data")
+            .eq("user_id", DEV_USER_ID)
+            .eq("is_public", true)
+
+        if (error) throw error;
+
+        const baseBlueprint = blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id];
+
+        for (const row of data ?? []) {
+            const workflowData = row.data as Workflow.Data;
+            const dependencyFields = workflowData.fields ?? [];
+            const { inputs, outputs } = extractExposedPorts(workflowData);
+
+            console.log(`Processing public workflow: ${row.display_name} (${row.id}) with ${inputs.length} inputs, ${outputs.length} outputs, and ${dependencyFields.length} dependency fields`)
+
+            const baseFieldsWithoutSelector = baseBlueprint.fields.filter(f => f.variant !== "DependencySelector");
+
+            const bp: Foundations.Blueprint = {
+                ...baseBlueprint,
+                id: row.id as Foundations.Blueprint.Id,
+                displayName: row.display_name,
+                icon: row.icon ?? baseBlueprint.icon,
+                accent: row.accent ?? baseBlueprint.accent,
+                fields: mergeFieldsById(baseFieldsWithoutSelector, dependencyFields),
+                inputs,
+                outputs,
+            };
+
+            db_pretzel_blueprints[bp.id] = bp;
+        }
+
+        index.blueprints = {
+            ...index.blueprints,
+            ...db_pretzel_blueprints,
+        }
+        console.log(`Fetched ${Object.keys(db_pretzel_blueprints).length} public blueprints from DB`)
+    }
+
     fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true })
     fs.writeFileSync(OUTPUT_PATH, JSON.stringify(index, null, 2))
     console.log(`Successfully indexed ${Object.keys(blueprints).length} nodes in ${Object.keys(drawers).length} drawers`)
@@ -61,6 +126,8 @@ async function generateIndex() {
     }
 }
 
-generateIndex().catch(err => {
-    console.error(err);
-})
+if (require.main === module) {
+    generateIndex(true).catch(err => {
+        console.error(err);
+    })
+}
