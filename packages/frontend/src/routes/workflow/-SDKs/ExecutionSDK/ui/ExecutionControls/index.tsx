@@ -4,7 +4,8 @@ import Tipped from '@/components/Tipped'
 import { handlePause, handleResume, handleRun, handleSuspend, handleTerminate, handleClear } from './utils'
 import { AnimatePresence, motion } from 'motion/react'
 import { ControlButton } from './control-button'
-import { Button } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Popover } from '@pretzel-graph/standard-ui/foundations'
+import ExecutionHistoryPanel from '../ExecutionHistoryPanel'
 
 const spring = { type: "spring", stiffness: 500, damping: 28 } as const
 
@@ -17,7 +18,7 @@ const ExecutionControls = ({ canRun }: Props) => {
   const [currentExecution, awaitedConfirmation] = ExecutionSDK.useStore(s => [s.currentExecution, s.awaitedConfirmation]);
 
   let status = "idle"
-  if (currentExecution){
+  if (currentExecution) {
     const executionStatus = currentExecution.status;
     if (executionStatus === "failed" || executionStatus === "completed") {
       status = executionStatus;
@@ -40,15 +41,17 @@ const ExecutionControls = ({ canRun }: Props) => {
         transition={spring}
       >
         {status === "idle" || status === "failed" || status === "completed" ? (
-          <ControlButton
-            disabled={!canRun}
-            loading={awaitedConfirmation.has("started")}
-            icon={SystemIcons.Play}
-            iconClassName="mr-auto"
-            label="Run"
-            variant="success"
-            onClick={handleRun}
-          />
+          <>
+            <ControlButton
+              disabled={!canRun}
+              loading={awaitedConfirmation.has("started")}
+              icon={SystemIcons.Play}
+              iconClassName="mr-auto"
+              label="Run"
+              variant="success"
+              onClick={handleRun}
+            />
+          </>
         ) : null}
         {status === "running" && (
           <>
@@ -106,15 +109,37 @@ const ExecutionControls = ({ canRun }: Props) => {
           </>
         )}
         {currentExecution && (status === "completed" || status === "failed" || status === "terminated") && (
-          <Tipped label="Clear Execution">
-            <Button size="icon-sm" variant="ghost-destructive" onClick={handleClear}>
-              <SystemIcons.Trash2 className='scale-80'/>
-            </Button>
-          </Tipped>
+          <>
+            <Tipped label="Clear Execution">
+              <Button size="icon-sm" variant="ghost-destructive" onClick={handleClear}>
+                <SystemIcons.Trash2 className='scale-80' />
+              </Button>
+            </Tipped>
+          </>
         )}
+
+        {(status === "running" || status === "paused") ? null : <HistoryPopoverButton />}
       </motion.div>
     </AnimatePresence>
   )
 }
 
 export default ExecutionControls
+
+
+const HistoryPopoverButton = () => {
+  return (
+    <Tipped label="Show Execution History">
+      <Popover.Root>
+        <Popover.Trigger asChild>
+          <Button size="icon-sm" variant="ghost">
+            <SystemIcons.History className='scale-80' />
+          </Button>
+        </Popover.Trigger>
+        <Popover.Content className='px-0 pb-0 rounded-xl overflow-hidden'>
+          <ExecutionHistoryPanel />
+        </Popover.Content>
+      </Popover.Root>
+    </Tipped>
+  )
+}

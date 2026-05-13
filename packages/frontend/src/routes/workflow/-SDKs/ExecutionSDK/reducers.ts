@@ -27,13 +27,17 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
         setError: (s, error) => {
             if (!s.currentExecution) return;
             s.currentExecution.error = error;
-        }
+        },
+        setCurrentExecution: (s, execution) => {
+            s.currentExecution = execution;
+        },
     } satisfies _ExecutionSessionReducers;
 }
 
 export interface _ExecutionSessionReducers {
-    setSession:         (state: State, session: Execution.Session) => void;
-    applySessionUpdate: (state: State, update?: Execution.Session.Update) => void
-    setStatus:          (state: State, status: Execution.Status) => void;
-    setError:           (state: State, error: any) => void;
+    setSession:          (state: State, session: Execution.Session) => void;
+    applySessionUpdate:  (state: State, update?: Execution.Session.Update) => void
+    setStatus:           (state: State, status: Execution.Status) => void;
+    setError:            (state: State, error: any) => void;
+    setCurrentExecution: (state: State, execution: Execution) => void;
 };
