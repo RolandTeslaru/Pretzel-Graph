@@ -3,12 +3,12 @@ import type { StackSDK } from "./sdk";
 export const stackReducers = {
     push: (s, panelId, renderer) => {
         // If already exists, delete first (brings to front on re-insert)
-        const existing = s.panels.get(panelId)
+        const existing = s.panels.get(panelId as StackSDK.Panel.Id)
         if (existing)
-            s.panels.delete(panelId)
+            s.panels.delete(panelId as StackSDK.Panel.Id)
 
-        s.panels.set(panelId, {
-            id: panelId,
+        s.panels.set(panelId as StackSDK.Panel.Id, {
+            id: panelId as StackSDK.Panel.Id,
             isOpen: true,
             renderer,
             companions: existing?.companions ?? new Map(),
@@ -16,7 +16,7 @@ export const stackReducers = {
         })
     },
     pop: (s, panelId) => {
-        s.panels.delete(panelId)
+        s.panels.delete(panelId as StackSDK.Panel.Id)
     },
     popAll: (s) => {
         s.panels.clear()
@@ -66,8 +66,8 @@ export const stackReducers = {
 
 
 interface StackSDKReducers {
-    push:           (state: StackSDK.State, panelId: StackSDK.Panel.Id, renderer: StackSDK.Panel.Renderer) => void
-    pop:            (state: StackSDK.State, panelId: StackSDK.Panel.Id) => void
+    push:           (state: StackSDK.State, panelId: string, renderer: StackSDK.Panel.Renderer) => void
+    pop:            (state: StackSDK.State, panelId: string) => void
     popAll:         (state: StackSDK.State) => void
     bringToFront:   (state: StackSDK.State, panelId: StackSDK.Panel.Id) => void
     sendToBack:     (state: StackSDK.State, panelId: StackSDK.Panel.Id) => void

@@ -9,7 +9,7 @@ export function _createStackActions_(sdk: StackSDKImpl) {
     return {
         push: (...props) => { setState(s => { reducers.push(s, ...props) }) },
         pop: (panelId) => {
-            setState(s => { reducers.setIsOpen(s, panelId, false) });
+            setState(s => { reducers.setIsOpen(s, panelId as StackSDK.Panel.Id, false) });
             setTimeout(() => {
                 setState(s => { reducers.pop(s, panelId) });
             }, sdk.EXIT_ANIMATION_MS);

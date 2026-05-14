@@ -16,8 +16,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: Inputs
     ): Promise<Outputs> {
 
-        const isStreaming = this.fields.stream;
-
         const { systemMessage } = inputs;
 
         const languageModel = inputs.tools?.length && inputs.languageModel.bindTools

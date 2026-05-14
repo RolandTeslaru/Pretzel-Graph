@@ -93,7 +93,19 @@ export const Maximize2: React.FC<BaseIconProps> = (props) => (
 )
 Maximize2.displayName = "Maximize2"
 
+export const Expand: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="m15 15 6 6"/><path d="m15 9 6-6"/><path d="M21 16v5h-5"/><path d="M21 8V3h-5"/><path d="M3 16v5h5"/><path d="m3 21 6-6"/><path d="M3 8V3h5"/><path d="M9 9 3 3"/>
+    </BaseIcon>
+)
+Expand.displayName = "Expand"
 
+export const Minimize: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>
+    </BaseIcon>
+)
+Minimize.displayName = "Minimize"
 
 export const Minimize2: React.FC<BaseIconProps> = (props) => (
     <BaseIcon size={15} {...props}><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"></path></BaseIcon>

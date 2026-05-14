@@ -57,35 +57,35 @@ export function StateViewer() {
     const state = useSDKState(selected);
 
     return (
-        <div className={`fixed left-[20px] bottom-[20px] z-50 w-[400px] bg-card/80 backdrop-blur-sm border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto ${minimized ? 'h-auto' : 'bottom-20 h-[500px]'}`}>
-            <div className="flex items-center justify-between px-2 py-1 border-b border-border bg-muted/30">
-                <h3 className="text-sm font-semibold text-foreground">
-                    State Viewer
-                </h3>
-                <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => setMinimized(m => !m)}
-                    aria-label={minimized ? 'Expand state viewer' : 'Minimize state viewer'}
-                >
-                    {minimized ? <SystemIcons.Maximize2 /> : <SystemIcons.Minimize2 />}
-                </Button>
+        <div className={`fixed left-[20px] bottom-[20px] z-50 w-[400px] bg-card/80 backdrop-blur-sm border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto ${minimized ? 'h-[44px]' : 'bottom-20 h-[500px]'}`}>
+            <div className='absolute p-1 w-full'>
+                <div className="w-full flex px-1 py-1 gap-2 border rounded-xl border-border bg-card shadow-md shadow-black/10">
+                    <h3 className="text-sm font-semibold pl-1 text-foreground">
+                        State Viewer
+                    </h3>
+                    <Select.Root value={selected} onValueChange={(v) => setSelected(v as SDKOption)}>
+                        <Select.Trigger size="xs" className='max-w-[150px] ml-auto'>
+                            <Select.Value />
+                        </Select.Trigger>
+                        <Select.Content>
+                            {SDK_OPTIONS.map(sdk => (
+                                <Select.Item key={sdk} value={sdk}>{sdk}</Select.Item>
+                            ))}
+                        </Select.Content>
+                    </Select.Root>
+                    <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={() => setMinimized(m => !m)}
+                        aria-label={minimized ? 'Expand state viewer' : 'Minimize state viewer'}
+                    >
+                        {minimized ? <SystemIcons.Maximize2 /> : <SystemIcons.Minimize2 />}
+                    </Button>
+                </div>
             </div>
             {!minimized && (
                 <>
-                    <div className="p-2 border-b border-border">
-                        <Select.Root value={selected} onValueChange={(v) => setSelected(v as SDKOption)}>
-                            <Select.Trigger size="xs">
-                                <Select.Value />
-                            </Select.Trigger>
-                            <Select.Content>
-                                {SDK_OPTIONS.map(sdk => (
-                                    <Select.Item key={sdk} value={sdk}>{sdk}</Select.Item>
-                                ))}
-                            </Select.Content>
-                        </Select.Root>
-                    </div>
-                    <div className="flex-1 overflow-auto p-4 custom-scrollbar text-[11px] leading-relaxed">
+                    <div className="flex-1 overflow-auto p-4 pt-12 custom-scrollbar text-[11px] leading-relaxed">
                         <JsonView
                             src={state}
                             collapsed={3}

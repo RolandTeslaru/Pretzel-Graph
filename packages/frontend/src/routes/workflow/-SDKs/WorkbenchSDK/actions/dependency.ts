@@ -62,6 +62,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
                             s.data.staticValues[nodeId][field.id] = field.initialValue
                     }
 
+                    reducers.node.setWorkflowDependency(s, nodeId, workflowId)
                     reducers.node.validate(s, nodeId)
                 }))
             } catch (err) {

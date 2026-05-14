@@ -107,6 +107,10 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     }
 
 
+    public openWorkflowWindow(workflowId: Workflow.Id): void {
+        window.open(`/workflow/${workflowId}`, "_blank");
+    }
+
     public readonly canvasWrapper = React.createRef<HTMLDivElement>();
 
     public readonly createDrivers = createDrivers
