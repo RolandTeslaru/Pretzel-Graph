@@ -158,12 +158,12 @@ export const GlowingAlertTriangle = () => {
       viewBox="-6 -4 36 36"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="cursor-pointer overflow-visible"
+      className="alert-triangle-root cursor-pointer overflow-visible"
       style={{ margin: '-6px' }}
     >
       <defs>
         <filter id="alert-glow-far" x="-150%" y="-150%" width="400%" height="400%">
-          <feFlood floodColor="#f59e0b" floodOpacity="1" result="color" />
+          <feFlood floodColor="var(--at-far)" floodOpacity="1" result="color" />
           <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
           <feGaussianBlur in="colored" stdDeviation="9" result="blur1" />
           <feMerge>
@@ -173,7 +173,7 @@ export const GlowingAlertTriangle = () => {
           </feMerge>
         </filter>
         <filter id="alert-glow-mid" x="-100%" y="-100%" width="300%" height="300%">
-          <feFlood floodColor="#fbbf24" floodOpacity="1" result="color" />
+          <feFlood floodColor="var(--at-mid)" floodOpacity="1" result="color" />
           <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
           <feGaussianBlur in="colored" stdDeviation="2.5" result="blur2" />
           <feMerge>
@@ -182,7 +182,7 @@ export const GlowingAlertTriangle = () => {
           </feMerge>
         </filter>
         <filter id="alert-glow-tight" x="-50%" y="-50%" width="200%" height="200%">
-          <feFlood floodColor="#fde68a" floodOpacity="0.9" result="color" />
+          <feFlood floodColor="var(--at-tight)" floodOpacity="0.9" result="color" />
           <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
           <feGaussianBlur in="colored" stdDeviation="1" result="blur3" />
           <feMerge>
@@ -197,6 +197,26 @@ export const GlowingAlertTriangle = () => {
         </mask>
       </defs>
       <style>{`
+        .alert-triangle-root {
+          --at-far: var(--color-yellow-100);
+          --at-mid: var(--color-yellow-200);
+          --at-tight: var(--color-yellow-200);
+          --at-ping: var(--color-yellow-200);
+          --at-l1: var(--color-yellow-100);
+          --at-l2: var(--color-yellow-200);
+          --at-l3: var(--color-yellow-300);
+          --at-core: var(--color-yellow-400);
+        }
+        .dark .alert-triangle-root {
+          --at-far: var(--color-amber-500);
+          --at-mid: var(--color-amber-400);
+          --at-tight: var(--color-amber-200);
+          --at-ping: var(--color-amber-500);
+          --at-l1: var(--color-amber-500);
+          --at-l2: var(--color-amber-400);
+          --at-l3: var(--color-amber-200);
+          --at-core: var(--color-amber-100);
+        }
         @keyframes alertGlowPulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
@@ -206,25 +226,19 @@ export const GlowingAlertTriangle = () => {
           75%, 100% { transform: scale(1.6); opacity: 0; }
         }
       `}</style>
-      {/* Ping layer: expands outward and fades */}
       <g style={{ animation: 'alertPing 1.2s cubic-bezier(0, 0, 0.2, 1) infinite', transformOrigin: '12px 14px' }}>
-        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="#f59e0b" />
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="var(--at-ping)" />
       </g>
-      {/* Triangle path + exclamation mark (filled alert-triangle) */}
-      {/* Layer 1: far amber glow */}
       <g filter="url(#alert-glow-far)" style={{ animation: 'alertGlowPulse 1.2s ease-in-out infinite' }}>
-        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="#f59e0b" />
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="var(--at-l1)" />
       </g>
-      {/* Layer 2: mid glow */}
       <g filter="url(#alert-glow-mid)">
-        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="#fbbf24" />
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="var(--at-l2)" />
       </g>
-      {/* Layer 3: tight glow */}
       <g filter="url(#alert-glow-tight)">
-        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="#fde68a" />
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="var(--at-l3)" />
       </g>
-      {/* Layer 4: crisp core */}
-      <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="#fef3c7" />
+      <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-mark-cutout)" fill="var(--at-core)" />
     </svg>
   )
 }
@@ -237,12 +251,12 @@ export const GlowingAlertTriangleRed = () => {
       viewBox="-6 -4 36 36"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="cursor-pointer overflow-visible"
+      className="alert-red-triangle-root cursor-pointer overflow-visible"
       style={{ margin: '-6px' }}
     >
       <defs>
         <filter id="alert-red-glow-far" x="-150%" y="-150%" width="400%" height="400%">
-          <feFlood floodColor="#ef4444" floodOpacity="1" result="color" />
+          <feFlood floodColor="var(--art-far)" floodOpacity="1" result="color" />
           <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
           <feGaussianBlur in="colored" stdDeviation="9" result="blur1" />
           <feMerge>
@@ -252,7 +266,7 @@ export const GlowingAlertTriangleRed = () => {
           </feMerge>
         </filter>
         <filter id="alert-red-glow-mid" x="-100%" y="-100%" width="300%" height="300%">
-          <feFlood floodColor="#f87171" floodOpacity="1" result="color" />
+          <feFlood floodColor="var(--art-mid)" floodOpacity="1" result="color" />
           <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
           <feGaussianBlur in="colored" stdDeviation="2.5" result="blur2" />
           <feMerge>
@@ -261,7 +275,7 @@ export const GlowingAlertTriangleRed = () => {
           </feMerge>
         </filter>
         <filter id="alert-red-glow-tight" x="-50%" y="-50%" width="200%" height="200%">
-          <feFlood floodColor="#fca5a5" floodOpacity="0.9" result="color" />
+          <feFlood floodColor="var(--art-tight)" floodOpacity="0.9" result="color" />
           <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
           <feGaussianBlur in="colored" stdDeviation="1" result="blur3" />
           <feMerge>
@@ -276,6 +290,26 @@ export const GlowingAlertTriangleRed = () => {
         </mask>
       </defs>
       <style>{`
+        .alert-red-triangle-root {
+          --art-far: var(--color-red-50);
+          --art-mid: var(--color-red-100);
+          --art-tight: var(--color-red-100);
+          --art-ping: var(--color-red-100);
+          --art-l1: var(--color-red-100);
+          --art-l2: var(--color-red-200);
+          --art-l3: var(--color-red-300);
+          --art-core: var(--color-red-400);
+        }
+        .dark .alert-red-triangle-root {
+          --art-far: var(--color-red-500);
+          --art-mid: var(--color-red-400);
+          --art-tight: var(--color-red-300);
+          --art-ping: var(--color-red-500);
+          --art-l1: var(--color-red-500);
+          --art-l2: var(--color-red-400);
+          --art-l3: var(--color-red-300);
+          --art-core: var(--color-red-100);
+        }
         @keyframes alertRedGlowPulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
@@ -286,18 +320,18 @@ export const GlowingAlertTriangleRed = () => {
         }
       `}</style>
       <g style={{ animation: 'alertRedPing 1.2s cubic-bezier(0, 0, 0.2, 1) infinite', transformOrigin: '12px 14px' }}>
-        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="#ef4444" />
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="var(--art-ping)" />
       </g>
       <g filter="url(#alert-red-glow-far)" style={{ animation: 'alertRedGlowPulse 1.2s ease-in-out infinite' }}>
-        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="#ef4444" />
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="var(--art-l1)" />
       </g>
       <g filter="url(#alert-red-glow-mid)">
-        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="#f87171" />
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="var(--art-l2)" />
       </g>
       <g filter="url(#alert-red-glow-tight)">
-        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="#fca5a5" />
+        <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="var(--art-l3)" />
       </g>
-      <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="#fee2e2" />
+      <path d="M12 1.67c.955 0 1.845 .467 2.39 1.247l.105 .16l8.114 13.548a2.914 2.914 0 0 1 -2.307 4.363l-.195 .008h-16.225a2.914 2.914 0 0 1 -2.582 -4.2l.099 -.185l8.11 -13.538a2.914 2.914 0 0 1 2.491 -1.403z" mask="url(#alert-red-mark-cutout)" fill="var(--art-core)" />
     </svg>
   )
 }

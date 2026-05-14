@@ -1,6 +1,6 @@
 {
-  "version": "1778698595913",
-  "generatedAt": "2026-05-13T18:56:35.913Z",
+  "version": "1778761707848",
+  "generatedAt": "2026-05-14T12:28:27.848Z",
   "drawers": {},
   "blueprints": {
     "Core.LanguageModel": {
@@ -5136,8 +5136,8 @@
         }
       ]
     },
-    "b993f175-a07e-4d6e-bbdc-700ffb6b83a0": {
-      "id": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0",
+    "Core.Agent": {
+      "id": "Core.Agent",
       "displayName": "Agent",
       "icon": "Bot",
       "accent": "port-LanguageModel",
@@ -5232,10 +5232,10 @@
           "displayName": "Output",
           "variant": "MessageList"
         }
-      ]
+      ],
+      "workflowDependencyId": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0"
     },
-    "a397c87d-4ede-4ae8-beaf-e2d432782e44": {
-      "id": "a397c87d-4ede-4ae8-beaf-e2d432782e44",
+    "undefined": {
       "displayName": "Basic Agent Test",
       "icon": "Graph",
       "accent": "utility",
@@ -5289,7 +5289,8 @@
         }
       ],
       "inputs": [],
-      "outputs": []
+      "outputs": [],
+      "workflowDependencyId": "a397c87d-4ede-4ae8-beaf-e2d432782e44"
     }
   }
 }

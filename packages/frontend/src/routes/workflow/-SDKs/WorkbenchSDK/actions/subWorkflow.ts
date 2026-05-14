@@ -119,7 +119,7 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
                         reducers.edge.remove(s, edgeId)
                 })
 
-                const exposedSubWorkflowBlueprint = {
+                const executeSubWorkflowBlueprint = {
                     ...blueprint,
                     ...extractExposedPorts(subflow.data),
                     displayName: displayName,
@@ -128,7 +128,7 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
                 } satisfies Foundations.Blueprint;
 
                 reducers.node.create(
-                    s, exposedSubWorkflowBlueprint, groupNodePos,
+                    s, executeSubWorkflowBlueprint, groupNodePos,
                     { ["workflowId" as Foundations.Field.Id]: workflowId }
                 )
             }))

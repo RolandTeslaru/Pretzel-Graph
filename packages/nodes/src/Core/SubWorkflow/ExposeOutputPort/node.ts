@@ -14,9 +14,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ): Promise<InferOutputs<typeof Blueprint>> {
 
         const outputId = this.workflowNode.id as unknown as Port.Output.Id;
+        console.log(`[ExposeOutputPort:onRun] nodeId=${this.workflowNode.id} outputId=${outputId} hasParentBridgeHooks=${!!this.context.parentBridgeHooks} input=${JSON.stringify(inputs.input)?.slice(0, 100)}`);
+
         this.context.parentBridgeHooks?.writeToOutputPort(outputId, inputs.input);
         this.context.parentBridgeHooks?.propagateFromOutputPort(outputId);
 
+        console.log(`[ExposeOutputPort:onRun] wrote and propagated outputId=${outputId}`);
         return {};
     }
 }

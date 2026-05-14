@@ -510,6 +510,7 @@ export const getLucideIconName = (name: string): string => {
     .replace(/(\d)/g, "-$1")
     .replace(/\s+/g, "-")
     .toLowerCase();
+    // @ts-expect-error
   return map[name] || kebabCaseName;
 };
 

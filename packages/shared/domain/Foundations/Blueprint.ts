@@ -37,6 +37,7 @@ export namespace Blueprint {
             accent: z.string().optional(),
             toolCompatible: z.boolean().optional(),
             description: z.string().nullable().optional(),
+            workflowDependencyId: z.string().brand("WorkflowId").optional(),
         })
     }
     export type Meta = z.infer<typeof Meta.Schema>

@@ -99,6 +99,7 @@ export namespace SystemError {
         // Configuration (3xxx)
         CONFIG_MISSING_CREDENTIAL = 3001,
         CONFIG_INVALID_FIELD = 3002,
+        COMPILATION_MISSING_SUBWORKFLOW_DEPENDENCY = 3003,
 
         // Provider / External (4xxx)
         PROVIDER_API_ERROR = 4001,

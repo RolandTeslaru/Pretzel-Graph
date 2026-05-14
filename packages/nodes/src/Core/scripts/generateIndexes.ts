@@ -8,6 +8,8 @@ config({ path: path.resolve(__dirname, "../../../../../.env") });
 import { Foundations, Shelf, Workflow } from "@pretzel-graph/shared/domain"
 import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow"
 import { createClient } from "@supabase/supabase-js";
+import { cloneDeep } from "lodash";
+import { PUBLIC_WORKFLOW_BLUEPRINTS, PUBLIC_WORKFLOW_BLUEPRINTS_REVERSE } from "@pretzel-graph/shared/constants/publicWorkflows";
 
 const NODES_ROOT = path.resolve(__dirname, "../../..");
 const OUTPUT_PATH = path.resolve(__dirname, "../../../dist/node_index.json")
@@ -78,29 +80,32 @@ export async function generateIndex(includeDbBlueprints = false) {
 
         if (error) throw error;
 
-        const baseBlueprint = blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id];
+        const baseBlueprint = cloneDeep(blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]);
 
         for (const row of data ?? []) {
             const workflowData = row.data as Workflow.Data;
             const dependencyFields = workflowData.fields ?? [];
             const { inputs, outputs } = extractExposedPorts(workflowData);
 
-            console.log(`Processing public workflow: ${row.display_name} (${row.id}) with ${inputs.length} inputs, ${outputs.length} outputs, and ${dependencyFields.length} dependency fields`)
-
+            
             const baseFieldsWithoutSelector = baseBlueprint.fields.filter(f => f.variant !== "DependencySelector");
-
+            
+            const blueprintId = PUBLIC_WORKFLOW_BLUEPRINTS_REVERSE[row.id];
+            
             const bp: Foundations.Blueprint = {
                 ...baseBlueprint,
-                id: row.id as Foundations.Blueprint.Id,
+                id: blueprintId,
                 displayName: row.display_name,
                 icon: row.icon ?? baseBlueprint.icon,
                 accent: row.accent ?? baseBlueprint.accent,
                 fields: mergeFieldsById(baseFieldsWithoutSelector, dependencyFields),
                 inputs,
                 outputs,
+                workflowDependencyId: row.id,
             };
-
-            db_pretzel_blueprints[bp.id] = bp;
+            console.log(`Processing public workflow: ${bp.id} (${bp.workflowDependencyId}) with ${inputs.length} inputs, ${outputs.length} outputs, and ${dependencyFields.length} dependency fields`)
+            
+            db_pretzel_blueprints[blueprintId] = bp;
         }
 
         index.blueprints = {

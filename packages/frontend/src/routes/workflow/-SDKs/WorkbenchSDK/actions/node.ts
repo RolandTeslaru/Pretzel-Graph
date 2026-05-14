@@ -2,7 +2,7 @@ import type { DropFirstArg } from "@/SDKs/types";
 import { type WorkbenchSDKImpl, WorkbenchSDK } from "../sdk"
 import { withAsyncCommit, withCommit, withCyclesRecompute } from "../utils/actions"
 import { ShelfSDK } from "../../ShelfSDK/sdk";
-import { Foundations, Workbench, type Workflow } from "@pretzel-graph/shared/domain";
+import { Foundations, SystemError, Workbench, type Workflow } from "@pretzel-graph/shared/domain";
 import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
@@ -13,8 +13,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
     const reducers = sdk.reducers;
 
     return {
-        remove:            withCommit((...props) => setState(withCyclesRecompute(s => { reducers.node.remove(s, ...props) }))),
-        create:            withCommit((...props) => setState(s => { reducers.node.create(s,            ...props) })),
+        remove:            withCommit((...props) => {setState(withCyclesRecompute(s => { reducers.node.remove(s, ...props) })) }),
         duplicate:         withCommit((...props) => setState(s => { reducers.node.duplicate(s,         ...props) })),
         setDisabled:       withCommit((...props) => setState(s => { reducers.node.setDisabled(s,       ...props) })),
         setMinimized:      withCommit((...props) => setState(s => { reducers.node.setMinimized(s,      ...props) })),
@@ -22,16 +21,16 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
         setDisplayName:    withCommit((...props) => setState(s => { reducers.node.setDisplayName(s,    ...props) })),
         setDescription:    withCommit((...props) => setState(s => { reducers.node.setDescription(s,    ...props) })),
         setSignalStrategy: withCommit((...props) => setState(s => { reducers.node.setSignalStrategy(s, ...props) })),
-    
+        
         validate:          (...props) => { setState(s => { reducers.node.validate(s,       ...props) }) },
         clearIssues:       (...props) => { setState(s => { reducers.node.clearIssues(s,    ...props) }) },
-    
+        
         recreate:          withAsyncCommit( async (nodeId, ) => {
             const s = sdk.state;
             const node = s.data.nodes[nodeId];
             
             await ShelfSDK.actions.hydrateBlueprint(node.blueprintId)
-
+            
             const blueprintId = node.blueprintId;
             
             const blueprint = ShelfSDK.state.blueprints[node.blueprintId];
@@ -40,10 +39,41 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
                 toast.error("Cannot manually set a subworkflow dependency. Please use the dependency selector field to select and load a workflow as a dependency.")
                 return;
             }
-
-
+            
+            
             setState(withCyclesRecompute(s => { reducers.node.recreate(s, nodeId, blueprint)}));
         }),
+        create:        withAsyncCommit( async (...props) => { 
+            const blueprint = props[0];
+
+            let nodeId: Workflow.Node.Id | null = null;
+            
+            // Handle nodes that are actually subworkflows;
+            let fetchDepPromise: Promise<Workbench.API.Dependency.Load.Response> | null = null;
+
+            if(blueprint.workflowDependencyId){
+                if(!sdk.state.data.dependencies[blueprint.workflowDependencyId]){
+                    fetchDepPromise = Workbench.API.Dependency.load(api, { dependencyId: blueprint.workflowDependencyId});
+
+                    fetchDepPromise.then(({ dependency }) => {
+                        sdk.actions.dependency.registerDependency(dependency);
+                    })
+                    // Catch and cleanup
+                    fetchDepPromise.catch(err => {
+                        const error = SystemError.fromUnknown(err)
+                        console.error("Failed to load dependency for node", error)
+                        toast.error(`Failed to load dependency for node: ${error.message}`)
+
+                        if(nodeId)
+                            sdk.actions.node.remove(nodeId)
+                    })
+                }
+            }
+
+            setState(s => { 
+                nodeId = reducers.node.create(s,...props) 
+            })
+}),
     } satisfies NodeActions;
 }
 

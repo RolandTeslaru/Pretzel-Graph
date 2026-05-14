@@ -20,6 +20,8 @@ export const dependencyReducers = {
                         usedDependencyIds.add(value as Workflow.Id)
                 }
             })
+            if(node.workflowDependencyId)
+                usedDependencyIds.add(node.workflowDependencyId)
         })
 
         Object.keys(s.data.dependencies).forEach(_depId => {
