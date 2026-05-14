@@ -10,8 +10,8 @@ const IncomingPanel = () => {
   const node = WorkbenchSDK.useStore(s => s.selectors.getClickedNode(s))
   const execution = ExecutionSDK.useStore(s => s.currentExecution)
   return (
-    <div className='p-2 h-full'>
-      <div className='bg-card border border-border rounded-full p-1 flex flex-row gap-2 shadow-md shadow-black/10'>
+    <div className='p-2 h-full overflow-auto relative'>
+      <div className='fixed z-10 top-2 left-2 w-[calc(100%-1rem)] bg-card border border-border rounded-full p-1 flex flex-row gap-2 shadow-md shadow-black/10 dark:shadow-black/20 dark:shadow-lg'>
         <SystemIcons.LogIn size={20} />
         <p className='h-auto my-auto text-sm'>Incoming Data</p>
       </div>
@@ -71,7 +71,7 @@ const Content = ({ node, execution }: { node: Workflow.Node; execution: Executio
   }
 
   return (
-    <div className='mt-2'>
+    <div className='mt-2 pt-8'>
       <PortDataTree root={root} keyNameMap={keyNameMap} portVariantMap={portVariantMap} />
     </div>
   )

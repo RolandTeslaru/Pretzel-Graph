@@ -82,4 +82,10 @@ export class LibraryController {
     async deleteWorkflow(@Req() req: AuthenticatedRequest, @Param('id') id: Workflow.Id) {
         return await this.libraryService.workflow.delete(req.token, id);
     }
+
+    @Post('workflows/:id/duplicate')
+    @HttpCode(200)
+    async duplicateWorkflow(@Req() req: AuthenticatedRequest, @Param('id') id: Workflow.Id) {
+        return await this.libraryService.workflow.duplicate(req.token, id);
+    }
 }
