@@ -38,20 +38,22 @@ const ExecutionHistoryPanel = () => {
     )
 
     return (
-        <div className='w-[300px]  flex flex-col gap-1 p-1 pb-0'>
-            <div className='flex flex-row w-full'>
-                <h3 className='text-sm font-semibold my-auto h-auto'>Execution History</h3>
-                <Button size="icon-xs" variant="ghost" className='ml-auto' onClick={() => {
-                    QuerySDK.client.invalidateQueries({ queryKey: [`execution-history`, workflowId] })
-                }}>
-                    <SystemIcons.RefreshCcw className='scale-75'/>
-                </Button>
+        <div className='w-[300px]  flex flex-col gap-1 pb-0'>
+            <div className='px-2 py-1 flex flex-col gap-2'>
+                <div className='flex flex-row w-full'>
+                    <h3 className='text-sm font-semibold my-auto h-auto'>Execution History</h3>
+                    <Button size="icon-xs" variant="ghost" className='ml-auto' onClick={() => {
+                        QuerySDK.client.invalidateQueries({ queryKey: [`execution-history`, workflowId] })
+                    }}>
+                        <SystemIcons.RefreshCcw className='scale-75'/>
+                    </Button>
+                </div>
+                <Input
+                    placeholder="Search by execution ID..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                />
             </div>
-            <Input
-                placeholder="Search by execution ID..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-            />
             <div className='flex flex-col gap-1 max-h-[400px] overflow-auto'>
                 {executionHistory.length === 0 && (
                     <p className='text-xs text-muted-foreground'>No executions yet.</p>
@@ -59,7 +61,7 @@ const ExecutionHistoryPanel = () => {
                 {executionHistory
                     .filter(meta => meta.id.includes(debouncedSearchQuery))
                     .map(meta => (
-                    <div key={meta.id} className='p-2 rounded-lg bg-card border border-border relative cursor-pointer hover:bg-accent/50'
+                    <div key={meta.id} className='p-2  relative cursor-pointer hover:bg-accent/50'
                         onClick={async () =>{
                             try {
                                 const data = await Execution.API.get(api, { executionId: meta.id})

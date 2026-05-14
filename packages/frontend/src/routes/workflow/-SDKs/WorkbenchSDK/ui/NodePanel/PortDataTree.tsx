@@ -37,9 +37,9 @@ function PortBranchRenderer({ branch, level, isExpanded, isLeaf, onToggle, keyNa
             ) : (
                 <span className="h-3.5 w-3.5 shrink-0" />
             )}
-            <span className="truncate text-foreground">{label}</span>
+            <span className="whitespace-nowrap text-foreground">{label}</span>
             {isLeaf && branch.data !== undefined && (
-                <span className="ml-auto truncate text-muted-foreground text-xs pl-2">{String(branch.data)}</span>
+                <span className="ml-auto whitespace-nowrap text-muted-foreground text-xs pl-2">{String(branch.data)}</span>
             )}
         </div>
     )

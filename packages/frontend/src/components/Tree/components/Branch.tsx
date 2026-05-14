@@ -44,7 +44,7 @@ const Branch = ({ branch }: Props) => {
             {canBeExpanded && isExpanded && (
                 <ul role='tree' className='ml-4'>
                     {children.map((child) => (
-                        <Branch key={child.key} branch={child} />
+                        <Branch key={child.path.join('.')} branch={child} />
                     ))}
                 </ul>
             )}
