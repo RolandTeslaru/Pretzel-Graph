@@ -36,6 +36,10 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
                             <SystemIcons.SquarePen />
                             Edit
                         </DropdownMenu.Item>
+                        <DropdownMenu.Item onClick={() => LibrarySDK.actions.workflow.duplicate(workflow.id)}>
+                            <SystemIcons.Copy />
+                            Duplicate
+                        </DropdownMenu.Item>
                         <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(workflow.id)}>
                             <SystemIcons.Copy />
                             Copy ID

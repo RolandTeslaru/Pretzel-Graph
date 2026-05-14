@@ -136,7 +136,7 @@ const HistoryPopoverButton = () => {
             <SystemIcons.History className='scale-80' />
           </Button>
         </Popover.Trigger>
-        <Popover.Content className='px-0 pb-0 rounded-xl overflow-hidden'>
+        <Popover.Content sideOffset={14} className='px-0 pb-0 rounded-xl overflow-hidden'>
           <ExecutionHistoryPanel />
         </Popover.Content>
       </Popover.Root>
