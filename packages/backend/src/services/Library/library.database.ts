@@ -216,5 +216,36 @@ export class LibraryDatabase {
         delete: withSupabaseAssert('workflow.delete', async (supabase: SupabaseClient, id: Workflow.Id) => {
             await supabase.from('workflows').delete().eq('id', id).throwOnError();
         }),
+
+        duplicate: withSupabaseAssert('workflow.duplicate', async (supabase: SupabaseClient, id: Workflow.Id) => {
+            const user_id = await getUserId(supabase);
+            if (!user_id) throw new Error('Unauthenticated');
+
+            const { data: source } = await supabase
+                .from('workflows')
+                .select('*')
+                .eq('id', id)
+                .single<Workflow.Database.Row>()
+                .throwOnError();
+
+            const { data: row } = await supabase
+                .from('workflows')
+                .insert({
+                    folder_id: source.folder_id,
+                    display_name: `Copy of ${source.display_name}`,
+                    description: source.description,
+                    icon: source.icon,
+                    accent: source.accent,
+                    data: source.data,
+                    user_id,
+                    locked: false,
+                    is_public: false,
+                })
+                .select()
+                .single<Workflow.Database.Row>()
+                .throwOnError();
+
+            return Workflow.Schema.parse(row);
+        }),
     };
 }

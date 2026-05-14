@@ -270,6 +270,20 @@ export namespace Library {
                 const { data } = await api.delete<Remove.Response>(`/api/library/workflows/${req.id}`);
                 return data;
             }
+
+            export namespace Duplicate {
+                export const Request = z.object({ id: DomainWorkflow.Id });
+                export type Request = z.infer<typeof Request>;
+                export type Response = DomainWorkflow;
+            }
+
+            export async function duplicate(
+                api: AxiosInstance,
+                req: Duplicate.Request,
+            ): Promise<Duplicate.Response> {
+                const { data } = await api.post<Duplicate.Response>(`/api/library/workflows/${req.id}/duplicate`);
+                return data;
+            }
         }
     }
 }

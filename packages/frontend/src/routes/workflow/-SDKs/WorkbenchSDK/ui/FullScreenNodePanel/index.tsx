@@ -14,7 +14,7 @@ const FullScreenNodePanel = () => {
   if (!clickedNode) return null
 
   return (
-    <div className="flex flex-row gap-5 h-[85vh] lg:min-w-[90vw] min-w-[97vw]">
+    <div className="flex flex-row gap-5 h-[85vh] w-[90vw]">
       <FullScreenContent clickedNode={clickedNode} />
     </div>
   )

@@ -108,6 +108,14 @@ export class LibraryService {
             const supabase = createAuthenticatedClient(token);
             await this.database.workflow.delete(supabase, id);
             return { ok: true };
-        }
+        },
+
+        duplicate: async (
+            token: string,
+            id: Workflow.Id,
+        ): Promise<Library.API.Workflow.Duplicate.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            return await this.database.workflow.duplicate(supabase, id);
+        },
     };
 }
