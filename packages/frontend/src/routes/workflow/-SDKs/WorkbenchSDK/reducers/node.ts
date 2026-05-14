@@ -7,6 +7,7 @@ import { layoutReducers } from "./layout";
 import { fieldReducers } from "./field";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import uid from "../../../../../utils/uid";
+import { dependencyReducers } from "./dependency";
 
 const generateUniqueString = (field: Foundations.Field): string => {
     if (field.variant !== "UniqueString") return "";
@@ -24,6 +25,8 @@ export const nodeReducers = {
         s.isDirty = true;
         const nodes = s.data.nodes
         const staticValues = s.data.staticValues
+
+        const workflowDependencyId = nodes[deletedNodeId]?.workflowDependencyId;
 
         // IMPORTANT: remove incident edges BEFORE deleting the node.
         // Edge removal relies on node/port lookups for validation and cache cleanup.
@@ -48,6 +51,9 @@ export const nodeReducers = {
         cacheReducers.deleteNode(s, deletedNodeId);
         layoutReducers.node.remove(s, deletedNodeId);
         nodeReducers.clearIssues(s, deletedNodeId);
+
+        if(workflowDependencyId)
+            dependencyReducers.removeUnused(s);
     },
     create: (s, blueprint, position, staticValues) => {
         s.isDirty = true;
@@ -67,6 +73,8 @@ export const nodeReducers = {
             isMinimized : false,
             isFlipped   : false,
             accent      : blueprint.accent ? blueprint.accent : undefined,
+
+            workflowDependencyId: blueprint.workflowDependencyId,
 
             toolCompatible: blueprint.toolCompatible,
         } satisfies Workflow.Node
@@ -106,6 +114,8 @@ export const nodeReducers = {
         layoutReducers.node.add(s, nodeId, position);
         cacheReducers.createNode(s, newNode);
         nodeReducers.validate(s, nodeId);
+
+        return nodeId;
     },
     disconnect: (s, nodeId) => {
         s.isDirty = true;
@@ -372,12 +382,16 @@ export const nodeReducers = {
     },
     clearIssues: (s, nodeId) => {
         delete s.issues.nodes[nodeId];
+    },
+    setWorkflowDependency: (s, nodeId, workflowDependencyId) => {
+        s.isDirty = true;
+        s.data.nodes[nodeId].workflowDependencyId = workflowDependencyId;
     }
 } satisfies NodeReducers
 
 interface NodeReducers {
     remove         : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
-    create         : (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }, staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>) => void;
+    create         : (state: WorkbenchSDK.State, blueprint: Foundations.Blueprint, position: { x: number, y: number }, staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>) => Workflow.Node.Id;
     disconnect     : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;  
     recreate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
     duplicate      : (state: WorkbenchSDK.State, originalNode: Workflow.Node, position?: { x: number, y: number }) => Workflow.Node;
@@ -390,7 +404,9 @@ interface NodeReducers {
     setDescription : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, newDescription: string) => void;
     validate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
     clearIssues    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
-
+    
+    setWorkflowDependency: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, workflowDependencyId: Workflow.Id | undefined) => void;
+    
     polymorphism: {
         resolveGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, triggerPort: Foundations.Port.Input | Foundations.Port.Output, resolvedVariant: Foundations.Port.Variant) => void
         unresolveGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => void

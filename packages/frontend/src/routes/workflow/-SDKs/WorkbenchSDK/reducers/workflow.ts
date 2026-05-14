@@ -2,6 +2,7 @@ import { Foundations, Validation, Workflow } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDK } from "../sdk";
 import { cloneDeep } from 'lodash';
 import { Algorithms } from "@pretzel-graph/shared/domain/Algorithms";
+import { dependencyReducers } from "./dependency";
 
 export const workflowReducers = {
     open: (s, workflow) => {
@@ -16,6 +17,8 @@ export const workflowReducers = {
             nodes: {},
             cycles: []
         }
+
+        dependencyReducers.removeUnused(s);
 
         workflowReducers.recomputeAllCycles(s);
 
