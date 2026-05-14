@@ -4,52 +4,54 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 import React, { memo } from 'react'
 import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field'
-import { useRouter } from '@tanstack/react-router'
 import { OptionsDropdown } from './OptionsDropdown'
+import Tipped from '@/components/Tipped'
 
 interface Props {
     node: Workflow.Node
 }
 
 export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
-    const router = useRouter()
-    const isSubWorkflowNode = node.blueprintId === "Core.SubWorkflow.Execute"
+    const hasWorkflowDependency = !!node.workflowDependencyId
 
     return (
         <div className='bg-card border border-border rounded-lg p-0.5 gap-1 flex flex-row shadow-md shadow-black/10'>
-            <Button variant="ghost" size="icon-xs" className='h-6!'
-                onClick={() => {
-                    WorkbenchSDK.actions.node.setMinimized(node.id, !node.isMinimized)
-                }}
-            >
-                {node.isMinimized ?
-                    <SystemIcons.Maximize2 />
-                    :
-                    <SystemIcons.Minimize2 />
-                }
-            </Button>
-            <Button variant="ghost" size="icon-xs" className='h-6!'
-                onClick={() => {
-                    WorkbenchSDK.actions.node.setFlipped(node.id, !node.isFlipped)
-                }}
-            >
-                <SystemIcons.ArrowLeftRight />
-            </Button>
-            {isSubWorkflowNode && (
-                <Button variant="ghost-active" size="icon-xs" className='h-6!'
+            <Tipped label={node.isMinimized ? "Expand" : "Collapse"}>
+                <Button variant="ghost" size="icon-xs" className='h-6!'
                     onClick={() => {
-                        const state = WorkbenchSDK.state;
-                        const workflowId =WorkbenchSDK.selectors.field.getValue(state, node.id, "workflowId" as Field.Id) as Workflow.Id | null
-                        const href = router.buildLocation({ to: "/workflow/$workflowid", params: { workflowid: workflowId || ""  } }).href;
-                        window.open(href, "_blank");
+                        WorkbenchSDK.actions.node.setMinimized(node.id, !node.isMinimized)
                     }}
                 >
-                    <SystemIcons.Graph/>
+                    {node.isMinimized ?
+                        <SystemIcons.Maximize2 />
+                        :
+                        <SystemIcons.Minimize2 />
+                    }
                 </Button>
+            </Tipped>
+            <Tipped label="Flip">
+                <Button variant="ghost" size="icon-xs" className='h-6!'
+                    onClick={() => {
+                        WorkbenchSDK.actions.node.setFlipped(node.id, !node.isFlipped)
+                    }}
+                >
+                    <SystemIcons.ArrowLeftRight />
+                </Button>
+            </Tipped>
+            {hasWorkflowDependency && (
+                <Tipped label="Open workflow">
+                    <Button variant="ghost-active" size="icon-xs" className='h-6!'
+                        onClick={() => WorkbenchSDK.openWorkflowWindow(node.workflowDependencyId!)}
+                    >
+                        <SystemIcons.Graph/>
+                    </Button>
+                </Tipped>
             )}
-            <Button variant="ghost-success" size="icon-xs" className='text-xs'>
-                <SystemIcons.Play />
-            </Button>
+            <Tipped label="Run">
+                <Button variant="ghost-success" size="icon-xs" className='text-xs'>
+                    <SystemIcons.Play />
+                </Button>
+            </Tipped>
             {node.toolCompatible && (
                 <ToolButton node={node} />
             )}
@@ -63,13 +65,15 @@ const ToolButton: React.FC<Props> = memo(({ node }) => {
     const isTool = WorkbenchSDK.useStore(s => s.selectors.node.isTool(s, node.id));
 
     return (
-        <Button variant="ghost" size="icon-xs" className={`h-6! ${isTool ? 'bg-(--port-Tool)/20 text-(--port-Tool) ' : ''}`}
-            onClick={() => {
-                if (isTool) WorkbenchSDK.actions.tool.revert(node.id);
-                else WorkbenchSDK.actions.tool.convert(node.id);
-            }}
-        >
-            <SystemIcons.Hammer />
-        </Button>
+        <Tipped label={isTool ? "Revert to node" : "Convert to tool"}>
+            <Button variant="ghost" size="icon-xs" className={`h-6! ${isTool ? 'bg-(--port-Tool)/20 text-(--port-Tool) ' : ''}`}
+                onClick={() => {
+                    if (isTool) WorkbenchSDK.actions.tool.revert(node.id);
+                    else WorkbenchSDK.actions.tool.convert(node.id);
+                }}
+            >
+                <SystemIcons.Hammer />
+            </Button>
+        </Tipped>
     );
 });

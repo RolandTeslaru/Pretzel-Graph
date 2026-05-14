@@ -44,7 +44,7 @@ export const CORE_DRAWERS = {
     id: "models_and_agents",
     icon: "Bot",
     blueprintIds: [
-      "b993f175-a07e-4d6e-bbdc-700ffb6b83a0", // agent
+      "Core.Agent",
       "Core.LanguageModel"
     ],
   },

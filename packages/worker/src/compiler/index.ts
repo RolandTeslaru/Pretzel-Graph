@@ -5,7 +5,7 @@ import { CatalogueService, RuntimeNode } from "@pretzel-graph/node-sdk";
 
 import { AggexCompilerError } from "../errors";
 import { S2Graph, Vertex } from "../S2/graph";
-import { mapFieldValues } from "../utils";
+import { isUUID, mapFieldValues } from "../utils";
 
 import { produce } from "immer";
 import { AggexEngine } from "src/engine";
@@ -198,19 +198,29 @@ export class WorkflowCompiler {
         wfNode:             Workflow.Node,
         compilationCtx:     WorkflowCompiler.Compilation.Context,
     ): Promise<void> {
-        const NodeConstructor = await CatalogueService.getNode(wfNode.blueprintId);
+        let RuntimeNode = await CatalogueService.getNode(wfNode.blueprintId);
 
         const { compiledGraph: graph, nodeRuntimeMap } = engineExecutionCtx;
 
-        if (!NodeConstructor)
-            throw new AggexCompilerError(
+        if (!RuntimeNode) {
+            if(wfNode.workflowDependencyId){
+                if(!engineExecutionCtx.workflowData.dependencies?.[wfNode.workflowDependencyId])
+                    throw new AggexCompilerError(
+                        SystemError.Code.COMPILATION_MISSING_SUBWORKFLOW_DEPENDENCY,
+                        `Missing dependency "${wfNode.workflowDependencyId}" for node "${wfNode.id}"`,
+                        { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId, missingDependencyId: wfNode.workflowDependencyId } }
+                    );
+                RuntimeNode =  await CatalogueService.getNode("Core.SubWorkflow.Execute" as Foundations.Blueprint.Id);
+            }
+            else throw new AggexCompilerError(
                 SystemError.Code.COMPILATION_NODE_NOT_FOUND,
                 `Could not find node with blueprintId "${wfNode.blueprintId}" in the catalogue`,
                 { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
             )
+        }
 
         const fieldValues = mapFieldValues(wfNode.id, engineExecutionCtx.workflowData);
-        const nodeInstance = new NodeConstructor(wfNode, nodeExecutionCtx);
+        const nodeInstance = new RuntimeNode!(wfNode, nodeExecutionCtx);
 
         await nodeInstance.compile(compilationCtx)
 
