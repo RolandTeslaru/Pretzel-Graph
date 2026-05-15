@@ -27,9 +27,10 @@ export default CanvasNode
 
 const Content = memo(({ node }: { node: Workflow.Node }) => {
 
-  const [workflowId, isNodeClicked] = WorkbenchSDK.useStore(s => [
+  const [workflowId, isNodeClicked, hasUpdate] = WorkbenchSDK.useStore(s => [
     s.workflowId,
-    s.clickedNodeId === node.id
+    s.clickedNodeId === node.id,
+    s.selectors.dependency.doesNodeHaveUpdate(s, node.id)
   ])
 
   const isWorkflowLocked = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.locked ?? false);
@@ -40,7 +41,7 @@ const Content = memo(({ node }: { node: Workflow.Node }) => {
   let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
 
-  const nodeStatus = ExecutionSDK.useStore(s => s.selectors.getNodeStatus(s, node.id));
+  const executionStatus = ExecutionSDK.useStore(s => s.selectors.getNodeStatus(s, node.id));
 
   if (node.accent) {
     backgroundColor = `color-mix(in srgb, var(--${node.accent}) 40%, var(--node-accent-base))`;
@@ -66,7 +67,7 @@ const Content = memo(({ node }: { node: Workflow.Node }) => {
         style={{ backgroundColor, borderColor, borderWidth: 2 }}
         id={node.id}
       >
-        <NodeHeader sessionStatus={nodeStatus} node={node} isWorkflowLocked={isWorkflowLocked} />
+        <NodeHeader executionStatus={executionStatus} node={node} isWorkflowLocked={isWorkflowLocked} hasUpdate={hasUpdate} />
 
         {node.isMinimized === false &&
           <div className='dark:bg-black/50 bg-card/80 py-2 border gap-2 flex flex-col border-border/50 rounded-b-[22px] rounded-t-lg shadow-md shadow-black/10 min-h-8'>
@@ -75,7 +76,7 @@ const Content = memo(({ node }: { node: Workflow.Node }) => {
           </div>
         }
 
-        <StatusBorder status={nodeStatus?.status} backgroundColor={backgroundColor} isClicked={isNodeClicked} />
+        <StatusBorder status={executionStatus?.status} backgroundColor={backgroundColor} isClicked={isNodeClicked} />
 
       </div>
     </>

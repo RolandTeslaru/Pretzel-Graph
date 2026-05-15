@@ -74,7 +74,7 @@ export const nodeSelectors = {
             node: s.data.nodes[nodeId],
             fields: s.data.staticValues[nodeId] ?? {},
             incoming: executionSelectors.getNodeIncomingData(s, nodeId, session) ?? {},
-            workflowConfig: Expression.resolveWorkflowConfig(s.data.fields ?? {}),
+            workflowConfig: Expression.resolveWorkflowConfig(s.data),
         }
 
         return ctx;

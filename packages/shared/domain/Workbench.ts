@@ -1,19 +1,19 @@
 import type { AxiosInstance } from "axios"
 import z from "zod"
-import { Foundations } from "./Foundations"
-import { Workflow as DomainWorkflow } from "./Workflow"
+import { Workflow as WorkflowNs } from "./Workflow"
+import { VersionControlPublication } from "./VersionControlPublication"
 
 export namespace Workbench {
     export namespace API {
         export namespace Workflow {
             export namespace Create {
                 export const Request = z.object({
-                    workflow: DomainWorkflow.Schema,
+                    workflow: WorkflowNs.Schema,
                 })
                 export type Request = z.infer<typeof Request>
 
                 export const Response = z.object({
-                    workflow_id: DomainWorkflow.Id,
+                    workflow_id: WorkflowNs.Id,
                 })
                 export type Response = z.infer<typeof Response>
             }
@@ -25,12 +25,12 @@ export namespace Workbench {
 
             export namespace Get {
                 export const Request = z.object({
-                    workflowId: DomainWorkflow.Id,
+                    workflowId: WorkflowNs.Id,
                 })
                 export type Request = z.infer<typeof Request>
 
                 export const Response = z.object({
-                    workflow: DomainWorkflow.Schema,
+                    workflow: WorkflowNs.Schema,
                 })
                 export type Response = z.infer<typeof Response>
             }
@@ -42,8 +42,8 @@ export namespace Workbench {
 
             export namespace Commit {
                 export const Request = z.object({
-                    workflowId: DomainWorkflow.Id,
-                    data: DomainWorkflow.Data.Schema,
+                    workflowId: WorkflowNs.Id,
+                    data: WorkflowNs.Data.Schema,
                 })
                 export type Request = z.infer<typeof Request>
 
@@ -60,18 +60,38 @@ export namespace Workbench {
         export namespace Dependency {
             export namespace Load {
                 export const Request = z.object({
-                    dependencyId: DomainWorkflow.Id,
+                    dependencyId: WorkflowNs.Id,
                 })
                 export type Request = z.infer<typeof Request>
 
                 export const Response = z.object({
-                    dependency: DomainWorkflow.Dependency.Schema,
+                    dependency: WorkflowNs.Dependency.Schema,
                 })
                 export type Response = z.infer<typeof Response>
             }
 
             export async function load(api: AxiosInstance, request: Load.Request): Promise<Load.Response> {
                 const { data } = await api.get<Load.Response>(`/api/workbench/dependencies/workflows/${request.dependencyId}`)
+                return data
+            }
+
+            export namespace CheckUpdates {
+                export const Request = z.object({
+                    dependencies: z.array(z.object({
+                        workflowId:    WorkflowNs.Id,
+                        publicationId: VersionControlPublication.Id,
+                    })),
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({
+                    updates: z.record(WorkflowNs.Id, WorkflowNs.Dependency.UpdateInfo),
+                })
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function checkUpdates(api: AxiosInstance, request: CheckUpdates.Request): Promise<CheckUpdates.Response> {
+                const { data } = await api.post<CheckUpdates.Response>(`/api/workbench/dependencies/check-updates`, request)
                 return data
             }
         }

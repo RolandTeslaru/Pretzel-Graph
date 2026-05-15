@@ -115,14 +115,14 @@ export namespace Expression {
     }
 
     export function resolveWorkflowConfig(
-        fields: readonly Foundations.Field[],
-        values: Record<Foundations.Field.Id, unknown> = {},
+        workflowData: Workflow.Data,
     ): Record<Foundations.Field.Id, unknown> {
         const config: Record<Foundations.Field.Id, unknown> = {};
+        const overrides = workflowData.staticValues[Workflow.WORKFLOW_CONFIG_NODE_ID] ?? {};
 
-        for (const field of fields) {
-            if (field.id in values)
-                config[field.id] = values[field.id];
+        for (const field of workflowData.fields ?? []) {
+            if (field.id in overrides)
+                config[field.id] = overrides[field.id as Foundations.Field.Id];
             else if ("initialValue" in field)
                 config[field.id] = field.initialValue;
         }

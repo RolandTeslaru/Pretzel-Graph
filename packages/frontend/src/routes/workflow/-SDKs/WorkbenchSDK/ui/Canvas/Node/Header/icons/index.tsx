@@ -429,6 +429,92 @@ export const GlowingCompletedCheck = () => {
   )
 }
 
+export const GlowingUpdateArrow = () => {
+  return (
+    <svg
+      width="36"
+      height="36"
+      viewBox="-6 -6 36 36"
+      xmlns="http://www.w3.org/2000/svg"
+      className="update-arrow-root cursor-pointer overflow-visible"
+      style={{ margin: '-6px' }}
+    >
+      <defs>
+        <filter id="update-glow-far" x="-150%" y="-150%" width="400%" height="400%">
+          <feFlood floodColor="var(--ua-far)" floodOpacity="1" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="9" result="blur1" />
+          <feMerge>
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur1" />
+          </feMerge>
+        </filter>
+        <filter id="update-glow-mid" x="-100%" y="-100%" width="300%" height="300%">
+          <feFlood floodColor="var(--ua-mid)" floodOpacity="1" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="2.5" result="blur2" />
+          <feMerge>
+            <feMergeNode in="blur2" />
+            <feMergeNode in="blur2" />
+          </feMerge>
+        </filter>
+        <filter id="update-glow-tight" x="-50%" y="-50%" width="200%" height="200%">
+          <feFlood floodColor="var(--ua-tight)" floodOpacity="0.9" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="1" result="blur3" />
+          <feMerge>
+            <feMergeNode in="blur3" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <style>{`
+        .update-arrow-root {
+          --ua-far:   var(--color-sky-100);
+          --ua-mid:   var(--color-sky-100);
+          --ua-tight: var(--color-sky-200);
+          --ua-l1:    var(--color-sky-100);
+          --ua-l2:    var(--color-sky-200);
+          --ua-l3:    var(--color-sky-200);
+          --ua-core:  var(--color-sky-300);
+        }
+        .dark .update-arrow-root {
+          --ua-far:   var(--color-sky-500);
+          --ua-mid:   var(--color-sky-400);
+          --ua-tight: var(--color-sky-300);
+          --ua-l1:    var(--color-sky-500);
+          --ua-l2:    var(--color-sky-400);
+          --ua-l3:    var(--color-sky-300);
+          --ua-core:  var(--color-sky-200);
+        }
+        @keyframes updateGlowPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+      `}</style>
+      {/* Layer 1: far glow */}
+      <g filter="url(#update-glow-far)" style={{ animation: 'updateGlowPulse 2s ease-in-out infinite' }}>
+        <path d="M9 15V9H5l7-7 7 7h-4v6H9z" fill="var(--ua-l1)" stroke="none" />
+        <path d="M9 21h6" stroke="var(--ua-l1)" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+      </g>
+      {/* Layer 2: mid glow */}
+      <g filter="url(#update-glow-mid)">
+        <path d="M9 15V9H5l7-7 7 7h-4v6H9z" fill="var(--ua-l2)" stroke="none" />
+        <path d="M9 21h6" stroke="var(--ua-l2)" strokeWidth="2" strokeLinecap="round" fill="none" />
+      </g>
+      {/* Layer 3: tight glow */}
+      <g filter="url(#update-glow-tight)">
+        <path d="M9 15V9H5l7-7 7 7h-4v6H9z" fill="var(--ua-l3)" stroke="none" />
+        <path d="M9 21h6" stroke="var(--ua-l3)" strokeWidth="2" strokeLinecap="round" fill="none" />
+      </g>
+      {/* Layer 4: crisp core */}
+      <path d="M9 15V9H5l7-7 7 7h-4v6H9z" fill="var(--ua-core)" stroke="none" />
+      <path d="M9 21h6" stroke="var(--ua-core)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+    </svg>
+  )
+}
+
 export const GlowingRunningSpinner = () => {
   return (
     <div className="relative flex items-center justify-center w-6 h-6">

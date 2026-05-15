@@ -5,7 +5,7 @@ import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFl
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
 import { workbenchSelectors, type WorkbenchSDKSelectors } from "./selectors";
 import React from "react";
-import { Foundations, Validation, Workflow } from "@pretzel-graph/shared/domain"
+import { Foundations, Validation, Workflow, Workbench } from "@pretzel-graph/shared/domain"
 import { temporal } from 'zundo';
 import { cloneDeep } from "lodash";
 import { BaseSDK } from "@/SDKs/Base";
@@ -53,6 +53,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                     edges: new Set(),
                     layout: {},
                 },
+                dependencyUpdates: {},
                 selectors: workbenchSelectors
             })), {
             limit: this.TEMPORAL_STACK_SIZE,
@@ -147,6 +148,7 @@ export namespace WorkbenchSDK {
         issues: Validation.Issue.Workflow_
         cycles: Workflow.Node.Id[][]
         stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>,
+        dependencyUpdates: Record<Workflow.Id, Workflow.Dependency.UpdateInfo>
         selectors: WorkbenchSDKSelectors
     }
 

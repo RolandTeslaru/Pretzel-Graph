@@ -22,8 +22,16 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
 
                 Workflow.Schema.parse(workflow);
                 const { data: _data, ...meta } = workflow;
-                LibrarySDK.actions.workflow.upsertMeta(meta as any);
-                setState(s => { reducers.workflow.open(s, workflow) })
+                
+                // Also update the library metadata cache
+                LibrarySDK.actions.workflow.upsertMeta(meta);
+
+                setState(s => {
+                    reducers.workflow.open(s, workflow)
+                })
+
+                // Fire and forget
+                sdk.actions.dependency.checkUpdates()
             } catch (error) {
                 console.error("Failed to load workflow", error);
                 throw error;
