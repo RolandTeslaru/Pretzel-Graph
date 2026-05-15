@@ -19,7 +19,7 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
             this.workflowNode,
             this.fields,
             inputs,
-            Expression.resolveWorkflowConfig(this.context.workflowData.fields ?? {}),
+            Expression.resolveWorkflowConfig(this.context.workflowData),
         )
 
         const result = Foundations.Field.Condition.evaluate(condition, expressionCtx);

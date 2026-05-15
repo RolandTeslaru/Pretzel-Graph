@@ -7,10 +7,11 @@ import StatusIndicator from './StatusIndicator';
 interface Props {
   node: Workflow.Node
   isWorkflowLocked: boolean
-  sessionStatus: Execution.Session.NodeStatus
+  executionStatus: Execution.Session.NodeStatus
+  hasUpdate: boolean
 }
 
-export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, sessionStatus }) => {
+export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionStatus, hasUpdate }) => {
   const isMinimized = node.isMinimized;
   const isFlipped = node.isFlipped;
   if (isMinimized)
@@ -24,7 +25,7 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, sessionSta
           />
         </div>
         <div className='absolute -bottom-1 -right-5'>
-          <StatusIndicator sessionStatus={sessionStatus} nodeId={node.id} />
+          <StatusIndicator executionStatus={executionStatus} nodeId={node.id} hasUpdate={hasUpdate} />
         </div>
         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 truncate text-xs font-semibold text-foreground/80">
           {node.displayName}
@@ -42,7 +43,7 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, sessionSta
       <div className="flex-1 truncate font-semibold text-foreground/80">
         {node.displayName}
       </div>
-      <StatusIndicator sessionStatus={sessionStatus} nodeId={node.id} />
+      <StatusIndicator executionStatus={executionStatus} nodeId={node.id} hasUpdate={hasUpdate} />
 
     </div>
   )

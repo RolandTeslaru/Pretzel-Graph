@@ -659,7 +659,9 @@ Option.displayName = "Option"
 
 export const Split: React.FC<BaseIconProps> = (props) => (
     <BaseIcon strokeWidth={2} {...props}>
-        <path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/>
+        <g transform="rotate(90, 12, 12)">
+            <path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/>
+        </g>
     </BaseIcon>
 )
 Split.displayName = "Split"
@@ -854,6 +856,14 @@ export const LogOut: React.FC<BaseIconProps> = (props) => (
     </BaseIcon>
 )
 LogOut.displayName = "LogOut"
+
+export const ArrowBigUpDash: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M14 16a1 1 0 0 0 1-1v-2a1 1 0 0 1 1-1h3.293a.707.707 0 0 0 .5-1.207l-6.939-6.939a1.207 1.207 0 0 0-1.708 0l-6.94 6.94a.707.707 0 0 0 .5 1.206H8a1 1 0 0 1 1 1v2a1 1 0 0 0 1 1z"/>
+        <path d="M9 20h6"/>
+    </BaseIcon>
+)
+ArrowBigUpDash.displayName = "ArrowBigUpDash"
 
 export const CloudUpload: React.FC<BaseIconProps> = (props) => (
     <BaseIcon strokeWidth={2} {...props}>

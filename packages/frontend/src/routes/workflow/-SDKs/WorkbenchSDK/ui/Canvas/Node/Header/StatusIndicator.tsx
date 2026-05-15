@@ -1,18 +1,20 @@
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import { Tooltip } from '@pretzel-graph/standard-ui/foundations'
 import type { Execution, Validation, Workflow } from '@pretzel-graph/shared/domain'
-import { GlowingAlertTriangle, GlowingCompletedCheck, GlowingFailedX, GlowingRunningSpinner, GlowingWaitingClock } from './icons'
+import { GlowingAlertTriangle, GlowingCompletedCheck, GlowingFailedX, GlowingRunningSpinner, GlowingUpdateArrow, GlowingWaitingClock } from './icons'
 
 interface Props {
   nodeId: Workflow.Node.Id,
   className?: string,
-  sessionStatus: Execution.Session.NodeStatus
+  executionStatus: Execution.Session.NodeStatus
+  hasUpdate?: boolean
 }
 
 const StatusIndicator = ({
   nodeId,
   className = "",
-  sessionStatus
+  executionStatus,
+  hasUpdate = false,
 }: Props) => {
   const hasIssues = WorkbenchSDK.useStore(s => s.selectors.node.hasIssues(s, nodeId))
 
@@ -30,18 +32,18 @@ const StatusIndicator = ({
       </Tooltip.Root>
     )
 
-  if (sessionStatus.status === "idle")
-    return null;
+  if (executionStatus.status === "idle")
+    return hasUpdate ? <GlowingUpdateArrow /> : null;
 
-  if (sessionStatus.status === "running")
+  if (executionStatus.status === "running")
     return (
       <GlowingRunningSpinner />
     )
-  else if (sessionStatus.status === "waiting")
+  else if (executionStatus.status === "waiting")
     return (
       <GlowingWaitingClock />
     )
-  else if (sessionStatus.status === "failed")
+  else if (executionStatus.status === "failed")
     return (
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
@@ -50,11 +52,11 @@ const StatusIndicator = ({
           </div>
         </Tooltip.Trigger>
         <Tooltip.Content align="center" side="right" sideOffset={10}>
-          <FailedTooltipContent error={sessionStatus.error} />
+          <FailedTooltipContent error={executionStatus.error} />
         </Tooltip.Content>
       </Tooltip.Root>
     )
-  else if (sessionStatus.status === "completed") {
+  else if (executionStatus.status === "completed") {
     return (
       <GlowingCompletedCheck />
     )
