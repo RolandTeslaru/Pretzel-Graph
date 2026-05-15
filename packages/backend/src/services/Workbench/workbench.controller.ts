@@ -32,4 +32,11 @@ export class WorkbenchController {
         const payload = Workbench.API.Dependency.Load.Request.parse({ dependencyId });
         return await this.workbenchService.dependency.load(req.token, payload);
     }
+
+    @Post('dependencies/check-updates')
+    @HttpCode(200)
+    async checkDependencyUpdates(@Req() req: AuthenticatedRequest, @Body() body: Workbench.API.Dependency.CheckUpdates.Request) {
+        const payload = Workbench.API.Dependency.CheckUpdates.Request.parse(body);
+        return await this.workbenchService.dependency.checkUpdates(req.token, payload);
+    }
 }

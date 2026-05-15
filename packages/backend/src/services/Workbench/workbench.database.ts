@@ -98,5 +98,37 @@ export class WorkbenchDatabase {
                 accent:           workflow.accent,
             });
         }),
+
+        checkUpdates: withSupabaseAssert('workbench.dependency.checkUpdates', async (
+            supabase: SupabaseClient,
+            dependencies: Workbench.API.Dependency.CheckUpdates.Request["dependencies"],
+        ): Promise<Record<Workflow.Id, Workflow.Dependency.UpdateInfo>> => {
+            if (dependencies.length === 0) return {};
+
+            const workflowIds = dependencies.map(d => d.workflowId);
+            const currentPublicationById = new Map(dependencies.map(d => [d.workflowId, d.publicationId]));
+
+            const { data: rows } = await supabase
+                .from('version_control')
+                .select('id, workflow_id, version, name, description')
+                .in('workflow_id', workflowIds)
+                .eq('is_active', true)
+                .throwOnError();
+
+            const updates: Record<Workflow.Id, Workflow.Dependency.UpdateInfo> = {};
+            for (const row of rows ?? []) {
+                const stored = currentPublicationById.get(row.workflow_id as Workflow.Id);
+                if (stored && stored !== row.id)
+                    updates[row.workflow_id as Workflow.Id] = {
+                        workflowId:    row.workflow_id as Workflow.Id,
+                        publicationId: row.id,
+                        version:       row.version,
+                        name:          row.name,
+                        description:   row.description ?? null,
+                    };
+            }
+
+            return updates;
+        }),
     };
 }

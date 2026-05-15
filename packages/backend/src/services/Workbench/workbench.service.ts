@@ -48,5 +48,15 @@ export class WorkbenchService {
 
             return { dependency };
         },
+
+        checkUpdates: async (
+            token: string,
+            payload: Workbench.API.Dependency.CheckUpdates.Request,
+        ): Promise<Workbench.API.Dependency.CheckUpdates.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            const updates = await this.database.dependency.checkUpdates(supabase, payload.dependencies);
+
+            return { updates };
+        },
     };
 }

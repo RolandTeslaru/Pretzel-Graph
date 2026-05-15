@@ -10,6 +10,9 @@ export namespace Workflow {
     export const Id = z.string().brand("WorkflowId");
     export type Id = z.infer<typeof Id>;
 
+    /** Dummy node ID used as the staticValues key for workflow-level config fields. */
+    export const WORKFLOW_CONFIG_NODE_ID = "__workflow_config__" as Workflow.Node.Id;
+
     export function createId() {
         return crypto.randomUUID() as Workflow.Id
     }
@@ -123,7 +126,7 @@ export namespace Workflow {
         }
 
         export const Schema: z.ZodType<Shape> = z.object({
-            fields: z.array(Field.Schema).default([]),
+            fields: z.array(Field.Schema).default([]), //config
             nodes: z.record(Node.Id, Node.Schema),
             edges: z.record(Edge.Id, Edge.Schema),
             staticValues: z.record(
@@ -158,6 +161,15 @@ export namespace Workflow {
                 icon:             z.string().nullable().optional(),
                 accent:           z.string().nullable().optional(),
             });
+
+        export const UpdateInfo = z.object({
+            workflowId:    Workflow.Id,
+            publicationId: VersionControlPublication.Id,
+            version:       z.number(),
+            name:          z.string(),
+            description:   z.string().nullable(),
+        })
+        export type UpdateInfo = z.infer<typeof UpdateInfo>
     }
     export type Dependency = z.infer<typeof Dependency.Schema>  
 
