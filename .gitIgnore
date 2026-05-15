@@ -2,3 +2,4 @@ node_modules/
 profiling/
 .env
 packages/research/
+SPECS/
