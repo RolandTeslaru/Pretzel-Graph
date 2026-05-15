@@ -7,6 +7,7 @@ import { portSelectors, type PortSelectors } from './port';
 import { cacheSelectors, type CacheSelectors } from './cache';
 import { executionSelectors, type ExecutionSelectors } from './execution';
 import { graphSelectors, type GraphSelectors } from './graph';
+import { dependencySelectors, type DependencySelectors } from './dependency';
 import type { WorkbenchSDK } from '../sdk';
 
 export interface WorkbenchSDKSelectors {
@@ -20,6 +21,7 @@ export interface WorkbenchSDKSelectors {
     cache          : CacheSelectors
     execution      : ExecutionSelectors
     graph          : GraphSelectors
+    dependency     : DependencySelectors
 }
 
 export const workbenchSelectors = {
@@ -33,4 +35,5 @@ export const workbenchSelectors = {
     cache          : cacheSelectors,
     execution      : executionSelectors,
     graph          : graphSelectors,
+    dependency     : dependencySelectors,
 } satisfies WorkbenchSDKSelectors

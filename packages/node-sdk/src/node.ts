@@ -63,7 +63,7 @@ export abstract class RuntimeNode<
             node: this.workflowNode,
             fields,
             incoming: incoming as Record<Port.Id, Projection>,
-            workflowConfig: Expression.resolveWorkflowConfig(this.context.workflowData.fields ?? {}),
+            workflowConfig: Expression.resolveWorkflowConfig(this.context.workflowData),
         }) as InferFields<T_Blueprint>;
     }
 

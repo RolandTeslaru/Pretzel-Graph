@@ -7,10 +7,15 @@ import { Node as ExposeInputPortNode } from "../ExposeInputPort/node";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeRouterNode<typeof Blueprint> {
+
     public readonly Blueprint = Blueprint;
+
+
 
     private subEnvironment!: ReturnType<RuntimeNode.ExecutionContext["subworkflowHooks"]["createEnv"]>;
     private subEngineCtx!: AggexEngine.Execution.Context;
+
+
 
     protected override async onCompile(
         compilationContext: CompilationContext,
@@ -65,10 +70,15 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
             },
         };
 
+        const childWorkflowData = structuredClone(dependency.workflow_data);
+
+        this.injectWorkflowConfigValues(childWorkflowData);
+
+
         console.log(`[ExecuteSubWorkflow:onCompile] compiling sub-workflow dependency.workflow_id=${dependency.workflow_id}`);
         this.subEngineCtx = await this.subEnvironment.compile(
             dependency.workflow_id,
-            dependency.workflow_data,
+            childWorkflowData,
             subExecution,
             this.context.emit,
             childCompilationCtx,
@@ -77,21 +87,14 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
         console.log(`[ExecuteSubWorkflow:onCompile] done — nodeRuntimeMap size=${this.subEngineCtx.nodeRuntimeMap.size}`);
     }
 
+
+
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         console.log(`[ExecuteSubWorkflow:onRun] nodeId=${this.workflowNode.id} inputs keys=${Object.keys(inputs).join(", ")}`);
 
-        // Inject inputs into sub-workflow
-        this.subEngineCtx.nodeRuntimeMap.forEach(({ wfNode, instance }) => {
-            if(instance instanceof ExposeInputPortNode === false)
-                return
-
-            const exposeNodeId = instance.fields.exposed_port_id;
-            console.log(`[ExecuteSubWorkflow:onRun] injecting exposed_port_id=${exposeNodeId} value=${JSON.stringify(inputs[exposeNodeId])?.slice(0, 100)}`);
-            // @ts-expect-error
-            instance.injectedData = inputs[exposeNodeId];
-        });
+        this.injectInputNodeValues(inputs);
 
         try {
             console.log(`[ExecuteSubWorkflow:onRun] running sub-environment`);
@@ -106,5 +109,25 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
             console.error(`[ExecuteSubWorkflow:onRun] sub-environment threw:`, err);
             throw new Error(`Error executing sub-workflow: ${err instanceof Error ? err.message : String(err)}`);
         }
+    }
+
+
+
+    private injectWorkflowConfigValues(childWorkflowData: Workflow.Data): void {
+        childWorkflowData.staticValues[Workflow.WORKFLOW_CONFIG_NODE_ID] = this.fields;
+    }
+
+
+
+    private injectInputNodeValues(inputs: InferInputs<typeof Blueprint>): void {
+        this.subEngineCtx.nodeRuntimeMap.forEach(({ wfNode, instance }) => {
+            if (instance instanceof ExposeInputPortNode === false)
+                return;
+
+            const exposeNodeId = instance.fields.exposed_port_id;
+            console.log(`[ExecuteSubWorkflow:onRun] injecting exposed_port_id=${exposeNodeId} value=${JSON.stringify(inputs[exposeNodeId])?.slice(0, 100)}`);
+            // @ts-expect-error
+            instance.injectedData = inputs[exposeNodeId];
+        });
     }
 }
