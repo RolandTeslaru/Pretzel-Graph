@@ -61,6 +61,19 @@ export class VaultDatabase {
             return data!.blob;
         }),
 
+        listByIds: withSupabaseAssert('vault.credentialInstance.listByIds', async (
+            supabase: SupabaseClient,
+            ids: Vault.Credential.Instance.Id[],
+        ) => {
+            if (ids.length === 0) return [];
+            const { data } = await supabase
+                .from('credential_instance')
+                .select<string, Vault.Credential.Instance>('id, name, template_id, created_at, updated_at, blob')
+                .in('id', ids)
+                .throwOnError();
+            return (data ?? []).map(row => Vault.Credential.Instance.Schema.parse(row));
+        }),
+
         updateName: withSupabaseAssert('vault.credentialInstance.updateName', async (
             supabase: SupabaseClient,
             req: Vault.API.CredentialInstance.UpdateName.Request,

@@ -8,6 +8,7 @@ import { SystemError } from "./SystemError"
 import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
 import { type AxiosInstance } from "axios"
+import { Vault } from "./Vault"
 
 export namespace Execution {
 
@@ -122,9 +123,10 @@ export namespace Execution {
     export namespace Queue {
         export const ID = 'workflow-execution'
         export const Item = z.object({
-            execution:    Execution.Schema,
-            workflowId:   Workflow.Id,
-            workflowData: Workflow.Data.Schema,
+            execution:           Execution.Schema,
+            workflowId:          Workflow.Id,
+            workflowData:        Workflow.Data.Schema,
+            credentialInstances: z.record(Vault.Credential.Instance.Id, Vault.Credential.Instance.Schema),
         })
         export type Item = z.infer<typeof Item>
     }

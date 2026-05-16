@@ -6,6 +6,7 @@ export type CredentialTemplate<
     TFields extends readonly Field[] = readonly Field[]
 > = {
     readonly id: TId & Vault.Credential.Template.Id
+    readonly __literalId?: TId
     readonly displayName: string
     readonly fields: TFields
     readonly icon?: string

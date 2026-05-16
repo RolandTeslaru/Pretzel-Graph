@@ -41,7 +41,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onCompile() {
-        const { cdpKeyId, cdpKeySecret, walletSecret, networkId, walletAddress } = this.fields;
+        const { cdpKeyId, cdpKeySecret, walletSecret } = this.context.getDecryptedCredentialValues(this.credentials.coinbaseApi.blob);
+        const { networkId, walletAddress } = this.fields;
 
         if (!cdpKeyId || !cdpKeySecret || !walletSecret)
             throw new Error("ERC-20 Token: CDP Key ID, CDP Key Secret, and Wallet Secret are all required.");

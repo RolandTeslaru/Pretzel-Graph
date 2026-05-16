@@ -1,3 +1,4 @@
+import type { Vault } from "@pretzel-graph/shared/domain"
 
 /**
  * Infer static config values from a Blueprint.
@@ -85,6 +86,35 @@ export type InferOutputs<D> = 0 extends (1 & D) ? any
     }
     : never
     : never;
+
+/**
+ * Decrypted field values for one credential template, keyed by field literal id.
+ */
+export type InferCredentialValues<C> = 0 extends (1 & C) ? any
+    : C extends { fields: infer F }
+    ? F extends readonly { id: string }[]
+    ? { [K in F[number] as K extends { __literalId?: infer Id extends string }
+            ? Id
+            : K extends { id: infer Id extends string } ? Id : never
+        ]: string
+      }
+    : Record<string, string>
+    : Record<string, string>;
+
+/**
+ * Infer credential instances from a Blueprint, keyed by credential template id.
+ * Each value is the resolved Vault.Credential.Instance at runtime, with its
+ * `blob` phantom-branded with the template type so that
+ * `context.getDecryptedCredentialValues(instance.blob)` returns a typed record.
+ */
+export type InferCredentials<D> = 0 extends (1 & D) ? any
+    : D extends { credentials?: infer T }
+    ? T extends readonly { id: string }[]
+    ? { [K in T[number] as K extends { __literalId?: infer Id extends string } ? Id : K extends { id: infer Id extends string } ? Id : never]:
+            Omit<Vault.Credential.Instance, "blob"> & { readonly blob: Vault.Credential.Instance.EncryptedBlob<K> }
+      }
+    : Record<string, never>
+    : Record<string, never>;
 
 /**
  * Infer webhook definitions from a Blueprint into a record keyed by webhook id.

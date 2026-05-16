@@ -25,7 +25,8 @@ type DefineBlueprintReturn<
     TInputs extends readonly Port.Input[],
     TOutputs extends readonly Port.Output[],
     TWebhooks extends readonly Webhook[] = readonly [],
-    TToolCompatible extends boolean = false
+    TToolCompatible extends boolean = false,
+    TCredentials extends readonly CredentialTemplate[] = readonly []
 > = {
     readonly id: TId & Blueprint.Id;
     readonly displayName: string;
@@ -39,7 +40,7 @@ type DefineBlueprintReturn<
     readonly outputs: TOutputs;
     readonly webhooks?: TWebhooks;
     readonly toolCompatible: TToolCompatible;
-    readonly credentials: readonly Vault.Credential.Template[];
+    readonly credentials: TCredentials;
 }
 
 const hiddenToolField = FieldBuilder.Boolean({
@@ -84,7 +85,8 @@ export function defineBlueprint<
     const TInputs extends readonly Port.Input[],
     const TOutputs extends readonly Port.Output[],
     const TWebhooks extends readonly Webhook[] = readonly [],
-    const TToolCompatible extends boolean = false
+    const TToolCompatible extends boolean = false,
+    const TCredentials extends readonly CredentialTemplate[] = readonly []
 >(config: {
     id: TId;
     displayName: string;
@@ -96,8 +98,8 @@ export function defineBlueprint<
     outputs: TOutputs;
     webhooks?: TWebhooks;
     toolCompatible?: TToolCompatible;
-    credentials?: readonly CredentialTemplate[];
-}): DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TWebhooks, TToolCompatible> {
+    credentials?: TCredentials;
+}): DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TWebhooks, TToolCompatible, TCredentials> {
 
     const baseFields = [
         ...config.fields,
@@ -120,11 +122,6 @@ export function defineBlueprint<
         outputs: config.outputs,
         webhooks: config.webhooks,
         toolCompatible: config.toolCompatible as TToolCompatible,
-        credentials: (config.credentials ?? []).map(cred => ({
-            id:          cred.id,
-            displayName: cred.displayName,
-            icon:        cred.icon,
-            fields:      cred.fields,
-        })),
+        credentials: (config.credentials ?? []) as unknown as TCredentials,
     };
 }

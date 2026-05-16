@@ -1,5 +1,5 @@
-import { Chat, Execution, Expression, Foundations, Realtime, Workflow } from "@pretzel-graph/shared/domain";
-import { InferFields, InferInputs, InferOutputs } from "./types";
+import { Chat, Execution, Expression, Foundations, Realtime, Vault, Workflow } from "@pretzel-graph/shared/domain";
+import { InferCredentials, InferCredentialValues, InferFields, InferInputs, InferOutputs } from "./types";
 import type { CompilationContext } from "./compiler-context";
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
@@ -7,7 +7,7 @@ import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection"
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import Redis from "ioredis";
 import { mapFieldValues } from "./utils/mapFieldValues";
-
+ 
 export abstract class RuntimeNode<
 
     T_Blueprint extends Blueprint, 
@@ -17,6 +17,7 @@ export abstract class RuntimeNode<
 
     public readonly emit: RuntimeNode.ExecutionContext["emit"];
     public fields: InferFields<T_Blueprint>
+    public readonly credentials: InferCredentials<T_Blueprint>
 
     protected isWaiting: boolean = false;
 
@@ -28,7 +29,18 @@ export abstract class RuntimeNode<
         protected readonly context: RuntimeNode.ExecutionContext
     ) {
         this.fields = mapFieldValues<T_Blueprint>(this.workflowNode.id, context.workflowData);
+        this.credentials = this.mapCredentials();
         this.emit = context.emit;
+    }
+
+    private mapCredentials(): InferCredentials<T_Blueprint> {
+        const nodeCredIds = this.context.workflowData.credentialInstanceIds[this.workflowNode.id] ?? {};
+        const result: Record<string, Vault.Credential.Instance> = {};
+        for (const [templateId, instanceId] of Object.entries(nodeCredIds) as [Vault.Credential.Template.Id, Vault.Credential.Instance.Id][]) {
+            const instance = this.context.credentialInstances[instanceId];
+            if (instance) result[templateId] = instance;
+        }
+        return result as InferCredentials<T_Blueprint>;
     }
 
 
@@ -256,6 +268,8 @@ export namespace RuntimeNode {
         readonly executionId: Execution.Id,
         readonly chat_id: Chat.Id | undefined,
         readonly session: Execution.Session,
+        readonly credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
+        readonly getDecryptedCredentialValues: <T = unknown>(blob: Vault.Credential.Instance.EncryptedBlob<T>) => InferCredentialValues<T>,
         readonly updateSession: (recipe: (draft: Execution.Session) => void) => void,
         readonly abortSignal: AbortSignal,
         readonly abortExecution: (reason?: any) => void,

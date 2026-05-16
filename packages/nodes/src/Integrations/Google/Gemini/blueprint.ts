@@ -1,4 +1,5 @@
 import { FieldBuilder, defineBlueprint, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { OpenAI } from "@pretzel-graph/nodes/Credentials";
 import { GoogleGemini } from "@pretzel-graph/nodes/Credentials/GoogleGemini";
 
 export const Blueprint = defineBlueprint({
