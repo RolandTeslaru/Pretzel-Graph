@@ -1,4 +1,5 @@
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { Coinbase } from "@pretzel-graph/nodes/Credentials/Coinbase";
 
 const networkOptions = [
     { value: "base-mainnet", displayName: "Base" },
@@ -9,22 +10,6 @@ const networkOptions = [
 ] as const;
 
 const walletFields = [
-    FieldBuilder.String({
-        id: "cdpKeyId",
-        displayName: "CDP Key ID",
-        placeholder: "your-cdp-key-id",
-        tooltip: "Coinbase Developer Platform API key ID. Not sensitive on its own.",
-    }),
-    FieldBuilder.Secret({
-        id: "cdpKeySecret",
-        displayName: "CDP Key Secret",
-        tooltip: "Coinbase Developer Platform API key secret.",
-    }),
-    FieldBuilder.Secret({
-        id: "walletSecret",
-        displayName: "Wallet Secret",
-        tooltip: "CDP wallet encryption secret. Together with the key ID and secret, this identifies your managed wallet.",
-    }),
     FieldBuilder.MultiOption({
         id: "networkId",
         displayName: "Network",
@@ -43,6 +28,7 @@ const walletFields = [
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Coinbase.Token",
+    credentials: [Coinbase],
     displayName: "ERC-20 Token",
     description: "Read ERC-20 token balances and allowances, or transfer and approve tokens using a Coinbase-managed CDP wallet. No private key — Coinbase handles signing.",
     icon: "Coinbase",
@@ -80,6 +66,7 @@ export const Blueprint = defineBlueprint({
 
 export const ToolBlueprint = defineBlueprint({
     id: "Integrations.Coinbase.Token",
+    credentials: [Coinbase],
     displayName: "ERC-20 Token",
     description: "Exposes ERC-20 token tools to an agent via a Coinbase-managed CDP wallet.",
     icon: "Coinbase",

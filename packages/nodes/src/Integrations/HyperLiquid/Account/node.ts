@@ -2,9 +2,7 @@ import axios from "axios";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { RegisterNode } from "@pretzel-graph/node-sdk";
-import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint, ToolBlueprint } from "./blueprint";

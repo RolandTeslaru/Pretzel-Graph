@@ -1,4 +1,5 @@
 import { FieldBuilder, defineBlueprint, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { Anthropic } from "@pretzel-graph/nodes/Credentials/Anthropic";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Anthropic.Chat",
@@ -6,11 +7,8 @@ export const Blueprint = defineBlueprint({
     description: "This node talks to Anthropic Claude models",
     icon: "Anthropic",
     accent: "port-LanguageModel",
+    credentials: [Anthropic],
     fields: [
-        FieldBuilder.Secret({
-            id: "apiKey",
-            displayName: "API Key",
-        }),
         FieldBuilder.MultiOption({
             id: "model",
             displayName: "Model",

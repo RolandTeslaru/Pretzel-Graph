@@ -15,6 +15,7 @@ const NODES_ROOT = path.resolve(__dirname, "../../..");
 const OUTPUT_PATH = path.resolve(__dirname, "../../../dist/node_index.json")
 const BACKEND_TARGET = path.resolve(__dirname, "../../../../backend/src/services/Shelf/node_index.json");
 const BACKEND_SERVICE_FILE = path.resolve(__dirname, "../../../../backend/src/services/Shelf/service.ts");
+const GLOBAL_WORKFLOWS_CACHE = path.resolve(__dirname, "../../../globalPretzelWorkflows.json");
 
 const DEV_USER_ID = "9a0a1560-ac61-4ce8-a468-3f717588d838";
 
@@ -113,6 +114,12 @@ export async function generateIndex(includeDbBlueprints = false) {
             ...db_pretzel_blueprints,
         }
         console.log(`Fetched ${Object.keys(db_pretzel_blueprints).length} public blueprints from DB`)
+        fs.writeFileSync(GLOBAL_WORKFLOWS_CACHE, JSON.stringify(db_pretzel_blueprints, null, 2))
+        console.log(`Cached global workflow blueprints to ${GLOBAL_WORKFLOWS_CACHE}`)
+    } else if (fs.existsSync(GLOBAL_WORKFLOWS_CACHE)) {
+        const cached = JSON.parse(fs.readFileSync(GLOBAL_WORKFLOWS_CACHE, 'utf-8')) as Record<string, Foundations.Blueprint>
+        index.blueprints = { ...index.blueprints, ...cached }
+        console.log(`Merged ${Object.keys(cached).length} cached global workflow blueprints`)
     }
 
     fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true })

@@ -1,4 +1,5 @@
 import { FieldBuilder, defineBlueprint, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { OpenRouter } from "@pretzel-graph/nodes/Credentials/OpenRouter";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.OpenRouter.Chat",
@@ -6,11 +7,8 @@ export const Blueprint = defineBlueprint({
     description: "Connect to hundreds of models via OpenRouter's unified API",
     icon: "OpenRouter",
     accent: "port-LanguageModel",
+    credentials: [OpenRouter],
     fields: [
-        FieldBuilder.Secret({
-            id: "openrouterApiKey",
-            displayName: "OpenRouter API Key",
-        }),
         FieldBuilder.MultiOption({
             id: "provider",
             displayName: "Provider",

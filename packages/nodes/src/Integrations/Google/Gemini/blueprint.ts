@@ -1,16 +1,14 @@
 import { FieldBuilder, defineBlueprint, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { GoogleGemini } from "@pretzel-graph/nodes/Credentials/GoogleGemini";
 
 export const Blueprint = defineBlueprint({
-    id: "Integrations.Google.GenerativeAI",
-    displayName: "Google Gen AI",
+    id: "Integrations.Google.Gemini",
+    displayName: "Google Gemini",
     description: "This node talks to google generative ai api",
-    icon: "Google",
+    icon: "GoogleGemini",
     accent: "port-LanguageModel",
+    credentials: [GoogleGemini],
     fields: [
-        FieldBuilder.Secret({
-            id: "apiKey",
-            displayName: "API Key",
-        }),
         FieldBuilder.MultiOption({
             id: "model",
             displayName: "Model",

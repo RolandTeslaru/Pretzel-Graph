@@ -1,119 +1,15 @@
 {
-  "version": "1778761707848",
-  "generatedAt": "2026-05-14T12:28:27.848Z",
+  "version": "1778959173186",
+  "generatedAt": "2026-05-16T19:19:33.186Z",
   "drawers": {},
   "blueprints": {
-    "Core.LanguageModel": {
-      "id": "Core.LanguageModel",
-      "displayName": "Language Model",
-      "icon": "BrainCircuit",
-      "accent": "port-LanguageModel",
-      "description": "Runs a language model given a specified provider.",
-      "fields": [
-        {
-          "id": "stream",
-          "advanced": true,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Stream",
-          "tooltip": "Whether to stream the response",
-          "variant": "Boolean",
-          "initialValue": false
-        },
-        {
-          "id": "signalDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Signal Dependency",
-          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All signals required"
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one signal required"
-            },
-            {
-              "value": "XOR",
-              "displayName": "(XOR) Exactly one signal required"
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready"
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one data dependency ready"
-            }
-          ],
-          "kind": "select"
-        }
-      ],
-      "inputs": [
-        {
-          "id": "tools",
-          "displayName": "Tools",
-          "internal": false,
-          "variant": "ToolList",
-          "required": false
-        },
-        {
-          "id": "languageModel",
-          "displayName": "Language Model",
-          "internal": false,
-          "variant": "LanguageModel",
-          "required": true
-        },
-        {
-          "id": "systemMessage",
-          "displayName": "System Message",
-          "tooltip": "A system message that helps set the behavior of the assistant",
-          "internal": false,
-          "variant": "Message",
-          "initialValue": "",
-          "required": false
-        },
-        {
-          "id": "messages",
-          "displayName": "Messages",
-          "internal": false,
-          "variant": "MessageList",
-          "required": true
-        }
-      ],
-      "outputs": [
-        {
-          "id": "response",
-          "displayName": "Response",
-          "tooltip": "The response from the model",
-          "variant": "Message"
-        }
-      ]
-    },
     "Core.Chat.History": {
       "id": "Core.Chat.History",
       "displayName": "Chat History",
       "icon": "History",
       "accent": "port-Message",
       "description": "Outputs the message history accumulated in the current chat session.",
+      "credentials": [],
       "fields": [
         {
           "id": "signalDependency",
@@ -193,6 +89,7 @@
       "icon": "MessagesSquare",
       "accent": "port-Message",
       "description": "This node is a chat input",
+      "credentials": [],
       "fields": [
         {
           "id": "signalDependency",
@@ -266,6 +163,7 @@
       "icon": "MessagesSquare",
       "accent": "port-Message",
       "description": "This node is a chat output",
+      "credentials": [],
       "fields": [
         {
           "id": "signalDependency",
@@ -331,6 +229,7 @@
       "icon": "Rocket",
       "accent": "utility",
       "description": "A developer node showcasing all available field, input, and output builders.",
+      "credentials": [],
       "fields": [
         {
           "id": "stringField",
@@ -486,12 +385,12 @@
           }
         },
         {
-          "id": "secretField",
+          "id": "passwordField",
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "displayName": "Secret Field",
-          "variant": "Secret",
+          "displayName": "Password Field",
+          "variant": "Password",
           "initialValue": ""
         },
         {
@@ -752,6 +651,7 @@
       "icon": "SquareTerminal",
       "accent": "utility",
       "description": "Logs input data to the console with a specified log level.",
+      "credentials": [],
       "fields": [
         {
           "id": "level",
@@ -864,6 +764,7 @@
       "icon": "Bug",
       "accent": "utility",
       "description": "Throws a configured error when the node is executed.",
+      "credentials": [],
       "fields": [
         {
           "id": "error",
@@ -943,6 +844,7 @@
       "icon": "SquareTerminal",
       "accent": "utility",
       "description": "Dangerously executes a JavaScript script at node runtime.",
+      "credentials": [],
       "fields": [
         {
           "id": "code",
@@ -1024,6 +926,7 @@
       "icon": "Globe",
       "accent": "utility",
       "description": "Makes an HTTP request.",
+      "credentials": [],
       "fields": [
         {
           "id": "method",
@@ -1157,6 +1060,7 @@
       "icon": "Clock",
       "accent": "utility",
       "description": "Pauses execution for a specified duration.",
+      "credentials": [],
       "fields": [
         {
           "id": "duration",
@@ -1240,12 +1144,119 @@
         }
       ]
     },
+    "Core.LanguageModel": {
+      "id": "Core.LanguageModel",
+      "displayName": "Language Model",
+      "icon": "BrainCircuit",
+      "accent": "port-LanguageModel",
+      "description": "Runs a language model given a specified provider.",
+      "credentials": [],
+      "fields": [
+        {
+          "id": "stream",
+          "advanced": true,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Stream",
+          "tooltip": "Whether to stream the response",
+          "variant": "Boolean",
+          "initialValue": false
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "tools",
+          "displayName": "Tools",
+          "internal": false,
+          "variant": "ToolList",
+          "required": false
+        },
+        {
+          "id": "languageModel",
+          "displayName": "Language Model",
+          "internal": false,
+          "variant": "LanguageModel",
+          "required": true
+        },
+        {
+          "id": "systemMessage",
+          "displayName": "System Message",
+          "tooltip": "A system message that helps set the behavior of the assistant",
+          "internal": false,
+          "variant": "Message",
+          "initialValue": "",
+          "required": false
+        },
+        {
+          "id": "messages",
+          "displayName": "Messages",
+          "internal": false,
+          "variant": "MessageList",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "response",
+          "displayName": "Response",
+          "tooltip": "The response from the model",
+          "variant": "Message"
+        }
+      ]
+    },
     "Core.Routing.Accumulator": {
       "id": "Core.Routing.Accumulator",
       "displayName": "Accumulator",
       "icon": "GitPullRequestArrow",
       "accent": "group-routing",
       "description": "Collects inputs over multiple executions and emits the accumulated result.",
+      "credentials": [],
       "fields": [
         {
           "id": "signalDependency",
@@ -1339,6 +1350,7 @@
       "icon": "Split",
       "accent": "group-routing",
       "description": "Routes input to one of multiple outputs based on a condition.",
+      "credentials": [],
       "fields": [
         {
           "id": "condition",
@@ -1452,6 +1464,7 @@
       "icon": "Merge",
       "accent": "group-routing",
       "description": "Merges multiple inputs into a single output.",
+      "credentials": [],
       "fields": [
         {
           "id": "inputPorts",
@@ -1548,6 +1561,7 @@
       "icon": "ArrowRightRight",
       "accent": "group-routing",
       "description": "Forwards each input directly to the output at the same index.",
+      "credentials": [],
       "fields": [
         {
           "id": "ports",
@@ -1653,6 +1667,7 @@
       "icon": "ListTree",
       "accent": "group-routing",
       "description": "Routes input to all outputs whose condition evaluates to true.",
+      "credentials": [],
       "fields": [
         {
           "id": "cases",
@@ -1828,6 +1843,7 @@
       "icon": "Option",
       "accent": "group-routing",
       "description": "Routes input to one of multiple outputs based on a condition.",
+      "credentials": [],
       "fields": [
         {
           "id": "cases",
@@ -2003,6 +2019,7 @@
       "icon": "Graph",
       "accent": "utility",
       "description": "Executes a saved sub-workflow and returns its output.",
+      "credentials": [],
       "fields": [
         {
           "id": "workflowId",
@@ -2071,6 +2088,7 @@
       "icon": "LogIn",
       "accent": "utility",
       "description": "Exposes an unresolved output port for external workflow input wiring.",
+      "credentials": [],
       "fields": [
         {
           "id": "required",
@@ -2157,6 +2175,7 @@
       "icon": "LogOut",
       "accent": "utility",
       "description": "Accepts an unresolved input port for external workflow output wiring.",
+      "credentials": [],
       "fields": [
         {
           "id": "signalDependency",
@@ -2224,6 +2243,7 @@
       "icon": "Type",
       "accent": "port-Text",
       "description": "This node is a Text input",
+      "credentials": [],
       "fields": [
         {
           "id": "signalDependency",
@@ -2297,6 +2317,7 @@
       "icon": "Braces",
       "accent": "utility",
       "description": "Injects JSON data into the flow.",
+      "credentials": [],
       "fields": [
         {
           "id": "data",
@@ -2369,6 +2390,7 @@
       "icon": "Brackets",
       "accent": "utility",
       "description": "Selects a single element from a list input.",
+      "credentials": [],
       "fields": [
         {
           "id": "strategy",
@@ -2476,6 +2498,7 @@
       "icon": "Scissors",
       "accent": "utility",
       "description": "Returns a sub-array from a list using start and end indices.",
+      "credentials": [],
       "fields": [
         {
           "id": "start",
@@ -2572,6 +2595,7 @@
       "icon": "Mail",
       "accent": "port-Message",
       "description": "Converts any data into a Human, System, or Tool message by serializing it into the message content.",
+      "credentials": [],
       "fields": [
         {
           "id": "role",
@@ -2666,6 +2690,7 @@
       "icon": "SwatchBook",
       "accent": "port-Tool",
       "description": "Utility node for managing a catalog of tools.",
+      "credentials": [],
       "fields": [
         {
           "id": "tools_num",
@@ -2764,6 +2789,7 @@
       "icon": "Hammer",
       "accent": "port-Tool",
       "description": "Executes a tool with the provided input and returns the result.",
+      "credentials": [],
       "fields": [
         {
           "id": "signalDependency",
@@ -2844,6 +2870,7 @@
       "icon": "Webhook",
       "accent": "utility",
       "description": "Starts the workflow from inbound webhook requests.",
+      "credentials": [],
       "fields": [
         {
           "id": "path",
@@ -3000,6 +3027,33 @@
       "accent": "port-DataList",
       "toolCompatible": true,
       "description": "Reads US stock market data and news from Alpaca Market Data APIs.",
+      "credentials": [
+        {
+          "id": "alpacaApi",
+          "displayName": "Alpaca",
+          "fields": [
+            {
+              "id": "apiKeyId",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key ID",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "apiSecret",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Secret",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Alpaca"
+        }
+      ],
       "fields": [
         {
           "id": "environment",
@@ -3021,26 +3075,6 @@
             }
           ],
           "kind": "select"
-        },
-        {
-          "id": "apiKeyId",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "API Key ID",
-          "tooltip": "Alpaca API Key ID. Falls back to ALPACA_API_KEY_ID env var.",
-          "variant": "Secret",
-          "initialValue": ""
-        },
-        {
-          "id": "apiSecret",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "API Secret",
-          "tooltip": "Alpaca API Secret. Falls back to ALPACA_API_SECRET_KEY env var.",
-          "variant": "Secret",
-          "initialValue": ""
         },
         {
           "id": "timespan",
@@ -3201,16 +3235,25 @@
       "icon": "Anthropic",
       "accent": "port-LanguageModel",
       "description": "This node talks to Anthropic Claude models",
-      "fields": [
+      "credentials": [
         {
-          "id": "apiKey",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "API Key",
-          "variant": "Secret",
-          "initialValue": ""
-        },
+          "id": "anthropicApi",
+          "displayName": "Anthropic",
+          "fields": [
+            {
+              "id": "apiKey",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Anthropic"
+        }
+      ],
+      "fields": [
         {
           "id": "model",
           "advanced": false,
@@ -3364,6 +3407,7 @@
       "accent": "port-Json",
       "toolCompatible": true,
       "description": "Fetches live DeFi market data. Pyth for real-time asset prices, DeFiLlama for protocol TVL and analytics. No API key required.",
+      "credentials": [],
       "fields": [
         {
           "id": "dataSource",
@@ -3476,39 +3520,48 @@
       "accent": "port-Json",
       "toolCompatible": true,
       "description": "Read ERC-20 token balances and allowances, or transfer and approve tokens using a Coinbase-managed CDP wallet. No private key — Coinbase handles signing.",
+      "credentials": [
+        {
+          "id": "coinbaseApi",
+          "displayName": "Coinbase",
+          "fields": [
+            {
+              "id": "cdpKeyId",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "CDP Key ID",
+              "tooltip": "Coinbase Developer Platform API key ID. Not sensitive on its own.",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "cdpKeySecret",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "CDP Key Secret",
+              "tooltip": "Coinbase Developer Platform API key secret.",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "walletSecret",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Wallet Secret",
+              "tooltip": "CDP wallet encryption secret.",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Coinbase"
+        }
+      ],
       "fields": [
-        {
-          "id": "cdpKeyId",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "CDP Key ID",
-          "tooltip": "Coinbase Developer Platform API key ID. Not sensitive on its own.",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": "your-cdp-key-id"
-        },
-        {
-          "id": "cdpKeySecret",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "CDP Key Secret",
-          "tooltip": "Coinbase Developer Platform API key secret.",
-          "variant": "Secret",
-          "initialValue": ""
-        },
-        {
-          "id": "walletSecret",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Wallet Secret",
-          "tooltip": "CDP wallet encryption secret. Together with the key ID and secret, this identifies your managed wallet.",
-          "variant": "Secret",
-          "initialValue": ""
-        },
         {
           "id": "networkId",
           "advanced": false,
@@ -3646,22 +3699,32 @@
         }
       ]
     },
-    "Integrations.Google.GenerativeAI": {
-      "id": "Integrations.Google.GenerativeAI",
-      "displayName": "Google Gen AI",
-      "icon": "Google",
+    "Integrations.Google.Gemini": {
+      "id": "Integrations.Google.Gemini",
+      "displayName": "Google Gemini",
+      "icon": "GoogleGemini",
       "accent": "port-LanguageModel",
       "description": "This node talks to google generative ai api",
-      "fields": [
+      "credentials": [
         {
-          "id": "apiKey",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "API Key",
-          "variant": "Secret",
-          "initialValue": ""
-        },
+          "id": "googleGeminiApi",
+          "displayName": "Google Gemini",
+          "fields": [
+            {
+              "id": "apiKey",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key",
+              "tooltip": "Google AI Studio API key.",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "GoogleGemini"
+        }
+      ],
+      "fields": [
         {
           "id": "model",
           "advanced": false,
@@ -3811,33 +3874,42 @@
     "Integrations.Google.Search": {
       "id": "Integrations.Google.Search",
       "displayName": "Google Search",
-      "icon": "Google",
+      "icon": "GoogleSearch",
       "accent": "port-DataList",
       "toolCompatible": true,
       "description": "Searches the web using Google Custom Search and returns the results as documents.",
+      "credentials": [
+        {
+          "id": "googleSearchApi",
+          "displayName": "Google Search",
+          "fields": [
+            {
+              "id": "apiKey",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key",
+              "tooltip": "Google Custom Search API key.",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "searchEngineId",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Search Engine ID",
+              "tooltip": "The cx parameter from your Programmable Search Engine.",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            }
+          ],
+          "icon": "Google"
+        }
+      ],
       "fields": [
-        {
-          "id": "apiKey",
-          "advanced": false,
-          "required": true,
-          "reconcile": false,
-          "displayName": "API Key",
-          "tooltip": "Your Google Custom Search API key.",
-          "variant": "Secret",
-          "initialValue": ""
-        },
-        {
-          "id": "searchEngineId",
-          "advanced": false,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Search Engine ID",
-          "tooltip": "Your Programmable Search Engine ID (cx).",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": ""
-        },
         {
           "id": "maxResults",
           "advanced": false,
@@ -3974,6 +4046,7 @@
       "accent": "port-Json",
       "toolCompatible": true,
       "description": "Reads HyperLiquid account state for a wallet address: positions, balance, open orders, fills. Public read-only — only a wallet address is required, never a private key.",
+      "credentials": [],
       "fields": [
         {
           "id": "defaultAddress",
@@ -4083,6 +4156,7 @@
       "accent": "port-DataList",
       "toolCompatible": true,
       "description": "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata. No API key required.",
+      "credentials": [],
       "fields": [
         {
           "id": "interval",
@@ -4224,17 +4298,26 @@
       "accent": "port-DataList",
       "toolCompatible": true,
       "description": "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search. Requires an API key.",
-      "fields": [
+      "credentials": [
         {
-          "id": "apiKey",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "API Key",
-          "tooltip": "Your Massive (Polygon.io) API key. Falls back to MASSIVE_API_KEY or POLY_API_KEY environment variables.",
-          "variant": "Secret",
-          "initialValue": ""
-        },
+          "id": "massiveApi",
+          "displayName": "Massive",
+          "fields": [
+            {
+              "id": "apiKey",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key",
+              "tooltip": "Massive (Polygon.io) API key.",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Massive"
+        }
+      ],
+      "fields": [
         {
           "id": "timespan",
           "advanced": false,
@@ -4391,16 +4474,37 @@
       "icon": "OpenAI",
       "accent": "port-LanguageModel",
       "description": "This node talks to OpenAI's GPT chat models via the Chat Completions API",
-      "fields": [
+      "credentials": [
         {
-          "id": "apiKey",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "API Key",
-          "variant": "Secret",
-          "initialValue": ""
-        },
+          "id": "openAiApi",
+          "displayName": "OpenAI",
+          "fields": [
+            {
+              "id": "apiKey",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "organizationId",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Organization ID",
+              "tooltip": "Optional. Found in your OpenAI account settings.",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            }
+          ],
+          "icon": "OpenAI"
+        }
+      ],
+      "fields": [
         {
           "id": "model",
           "advanced": false,
@@ -4574,16 +4678,25 @@
       "icon": "OpenRouter",
       "accent": "port-LanguageModel",
       "description": "Connect to hundreds of models via OpenRouter's unified API",
-      "fields": [
+      "credentials": [
         {
-          "id": "openrouterApiKey",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "OpenRouter API Key",
-          "variant": "Secret",
-          "initialValue": ""
-        },
+          "id": "openRouterApi",
+          "displayName": "OpenRouter",
+          "fields": [
+            {
+              "id": "apiKey",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "OpenRouter"
+        }
+      ],
+      "fields": [
         {
           "id": "provider",
           "advanced": false,
@@ -4752,17 +4865,25 @@
       "icon": "Tavily",
       "accent": "port-Retriever",
       "description": "Configures a Tavily search retriever. Connect its output to a Search node or an agent.",
-      "fields": [
+      "credentials": [
         {
-          "id": "apiKey",
-          "advanced": false,
-          "required": true,
-          "reconcile": false,
-          "displayName": "API Key",
-          "tooltip": "Your Tavily API key.",
-          "variant": "Secret",
-          "initialValue": ""
-        },
+          "id": "tavilyApi",
+          "displayName": "Tavily",
+          "fields": [
+            {
+              "id": "apiKey",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Tavily"
+        }
+      ],
+      "fields": [
         {
           "id": "maxResults",
           "advanced": false,
@@ -4869,17 +4990,25 @@
       "accent": "port-Retriever",
       "toolCompatible": true,
       "description": "Searches the web using Tavily and returns the results as documents.",
-      "fields": [
+      "credentials": [
         {
-          "id": "apiKey",
-          "advanced": false,
-          "required": true,
-          "reconcile": false,
-          "displayName": "API Key",
-          "tooltip": "Your Tavily API key.",
-          "variant": "Secret",
-          "initialValue": ""
-        },
+          "id": "tavilyApi",
+          "displayName": "Tavily",
+          "fields": [
+            {
+              "id": "apiKey",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Tavily"
+        }
+      ],
+      "fields": [
         {
           "id": "maxResults",
           "advanced": false,
@@ -5005,27 +5134,36 @@
       "icon": "Uniswap",
       "accent": "port-ToolList",
       "description": "Provides Uniswap tools for token swapping on EVM chains. Exposes check_approval, get_quote and swap_tokens as a tool list for agents. Requires a Uniswap API key and an EVM private key for signing transactions.",
+      "credentials": [
+        {
+          "id": "uniswapApi",
+          "displayName": "Uniswap",
+          "fields": [
+            {
+              "id": "apiKey",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key",
+              "tooltip": "Uniswap Trading API key.",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "privateKey",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "EVM Private Key",
+              "tooltip": "Private key used to sign approvals and swap transactions.",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Uniswap"
+        }
+      ],
       "fields": [
-        {
-          "id": "uniswapApiKey",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Uniswap API Key",
-          "tooltip": "API key for the Uniswap Trading API.",
-          "variant": "Secret",
-          "initialValue": ""
-        },
-        {
-          "id": "privateKey",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "EVM Private Key",
-          "tooltip": "Private key used to sign approvals and swap transactions. Never stored outside the workflow vault.",
-          "variant": "Secret",
-          "initialValue": ""
-        },
         {
           "id": "chain",
           "advanced": false,
@@ -5136,12 +5274,171 @@
         }
       ]
     },
+    "Integrations.xAI.Chat": {
+      "id": "Integrations.xAI.Chat",
+      "displayName": "xAI Grok Chat",
+      "icon": "Grok",
+      "accent": "port-LanguageModel",
+      "description": "This node talks to xAI's Grok models via the xAI API",
+      "credentials": [
+        {
+          "id": "xAiApi",
+          "displayName": "xAI",
+          "fields": [
+            {
+              "id": "apiKey",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "xAI"
+        }
+      ],
+      "fields": [
+        {
+          "id": "model",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Model",
+          "variant": "MultiOption",
+          "initialValue": "grok-4.3",
+          "options": [
+            {
+              "value": "grok-4.3",
+              "displayName": "Grok 4.3"
+            },
+            {
+              "value": "grok-4.20-0309-reasoning",
+              "displayName": "Grok 4.20 Reasoning"
+            },
+            {
+              "value": "grok-4.20-0309-non-reasoning",
+              "displayName": "Grok 4.20 Non-Reasoning"
+            },
+            {
+              "value": "grok-4.20-multi-agent-0309",
+              "displayName": "Grok 4.20 Multi-Agent"
+            },
+            {
+              "value": "grok-3",
+              "displayName": "Grok 3"
+            },
+            {
+              "value": "grok-3-mini",
+              "displayName": "Grok 3 Mini"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "temperature",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Temperature",
+          "tooltip": "Controls randomness in the output. Higher values make output more random, lower values make it more focused and deterministic.",
+          "variant": "Float",
+          "initialValue": 0.7,
+          "min": 0,
+          "max": 2,
+          "step": 0.1,
+          "slider": true
+        },
+        {
+          "id": "maxTokens",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Max Tokens",
+          "tooltip": "The maximum number of tokens to generate in the chat completion.",
+          "variant": "Integer",
+          "initialValue": 2048,
+          "min": 1,
+          "step": 1
+        },
+        {
+          "id": "topP",
+          "advanced": true,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Top P",
+          "tooltip": "Nucleus sampling: considers the tokens with top_p probability mass.",
+          "variant": "Float",
+          "initialValue": 1,
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "slider": true
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "languageModel",
+          "displayName": "Language Model",
+          "tooltip": "The language model instance, useful for chaining calls with the same model and settings.",
+          "variant": "LanguageModel"
+        }
+      ]
+    },
     "Core.Agent": {
       "id": "Core.Agent",
       "displayName": "Agent",
       "icon": "Bot",
       "accent": "port-LanguageModel",
       "description": "Executes a saved sub-workflow and returns its output.",
+      "credentials": [],
       "fields": [
         {
           "id": "signalDependency",
@@ -5240,6 +5537,7 @@
       "icon": "Graph",
       "accent": "utility",
       "description": "Executes a saved sub-workflow and returns its output.",
+      "credentials": [],
       "fields": [
         {
           "id": "signalDependency",

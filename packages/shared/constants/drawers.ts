@@ -349,7 +349,7 @@ export const BUNDLE_DRAWERS = {
     displayName: "Google",
     id: "google",
     icon: "Google",
-    blueprintIds: ["Integrations.Google.GenerativeAI", "Integrations.Google.Search"]
+    blueprintIds: ["Integrations.Google.Gemini", "Integrations.Google.Search"]
   },
   groq: {
     displayName: "Groq",
@@ -649,7 +649,7 @@ export const BUNDLE_DRAWERS = {
     displayName: "xAI",
     id: "xai",
     icon: "xAI",
-    blueprintIds: []
+    blueprintIds: ["Integrations.xAI.Chat"]
   },
   yahoosearch: {
     displayName: "Yahoo! Finance",

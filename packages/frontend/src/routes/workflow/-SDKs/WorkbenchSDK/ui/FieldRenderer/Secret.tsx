@@ -10,13 +10,13 @@ import type { RendererProps } from './FieldLabel'
 
 export const SecretField = memo<RendererProps<'Secret'>>(({ field, nodeId, className }) => {
     const [value, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field.id);
-    const credentials = VaultSDK.useStore(s => s.credentials)
+    const credentials = VaultSDK.useStore(s => s.credentialInstances)
 
-    useEffect(() => {
-        if (credentials.length === 0) {
-            VaultSDK.actions.refreshAll().catch(() => { })
-        }
-    }, [])
+    // useEffect(() => {
+    //     if (credentials.length === 0) {
+    //         VaultSDK.actions.refreshAll().catch(() => { })
+    //     }
+    // }, [])
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
@@ -33,14 +33,14 @@ export const SecretField = memo<RendererProps<'Secret'>>(({ field, nodeId, class
                     <Select.Value placeholder={"Select a credential..."} />
                 </Select.Trigger>
                 <Select.Content>
-                    {credentials.map(c => (
+                    {/* {credentials.map(c => (
                         <Select.Item key={c.id} value={c.id}>
                             <div className="flex items-center justify-between w-full gap-2 min-w-[200px]">
                                 <span>{c.name}</span>
                                 <Badge variant="secondary" className="text-[10px] h-4 py-0 px-1">{c.provider}</Badge>
                             </div>
                         </Select.Item>
-                    ))}
+                    ))} */}
                     <button className='text-center w-full p-1 cursor-pointer text-sm'
                         onPointerDown={(e) => e.stopPropagation()}
                         onClick={(e) => {
