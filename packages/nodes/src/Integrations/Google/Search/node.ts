@@ -69,31 +69,22 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
     public readonly Blueprint = Blueprint;
 
-    private readonly apiKey: string;
-    private readonly searchEngineId: string;
-
-    constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
-        super(workflowNode, context);
-
-        this.apiKey = this.fields.apiKey;
-        this.searchEngineId = this.fields.searchEngineId;
-
-        if (!this.apiKey)
-            throw new Error("Google Search: API key is required.");
-
-        if (!this.searchEngineId)
-            throw new Error("Google Search: Search Engine ID is required.");
-    }
-
     private async search(query: string) {
+        const { apiKey, searchEngineId } = this.context.getDecryptedCredentialValues(this.credentials.googleSearchApi.blob);
+
+        if (!apiKey)
+            throw new Error("Google Search: API key is required.");
+        if (!searchEngineId)
+            throw new Error("Google Search: Search Engine ID is required.");
+
         const searchType = this.fields.searchType as GoogleSearchType;
         const safeSearch = this.fields.safeSearch as GoogleSafeSearch;
         const num = clampMaxResults(this.fields.maxResults);
 
         const response = await axios.get<GoogleCustomSearchResponse>("https://www.googleapis.com/customsearch/v1", {
             params: {
-                key: this.apiKey,
-                cx: this.searchEngineId,
+                key: apiKey,
+                cx: searchEngineId,
                 q: query,
                 num,
                 safe: safeSearch,

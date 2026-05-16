@@ -67,7 +67,7 @@ export class AggexWorkerImpl {
         bullJob: BullJob<Execution.Queue.Item>,
         token?: string
     ) => {
-        const { workflowId, workflowData, execution } = bullJob.data;
+        const { workflowId, workflowData, execution, credentialInstances } = bullJob.data;
         const executionId = execution.id;
         console.log(`Processing job ${bullJob.id} for workflow ${workflowId} with execution id ${execution.id}`);
 
@@ -155,7 +155,7 @@ export class AggexWorkerImpl {
             this.runningEnginesMap.set(executionId, engine);
 
             // Compile and register execution context
-            engineExecutionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.emit, engine);
+            engineExecutionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.emit, engine, credentialInstances);
             this.runningExecutionContextsMap.set(executionId, engineExecutionCtx);
 
             const result = await engine.run(engineExecutionCtx);

@@ -15,8 +15,9 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
-        const { apiKey, maxResults, searchDepth, includeAnswer } = this.fields;
-    
+        const { apiKey } = this.context.getDecryptedCredentialValues(this.credentials.tavilyApi.blob);
+        const { maxResults, searchDepth, includeAnswer } = this.fields;
+
         this.retriever = new TavilySearchAPIRetriever({
             apiKey,
             k: maxResults,
