@@ -15,6 +15,7 @@ import { VersionControlModule } from './services/VersionControl/version-control.
 import { WebhookTestModule } from './services/WebhookTest/webhook-test.module';
 import { PermissionModule } from './services/Permission/permission.module';
 import { ApiKeysModule } from './services/ApiKeys/api-keys.module';
+import { VaultModule } from './services/Vault/vault.module';
 
 @Module({
     imports: [
@@ -43,6 +44,7 @@ import { ApiKeysModule } from './services/ApiKeys/api-keys.module';
         WebhookTestModule,
         PermissionModule,
         ApiKeysModule,
+        VaultModule,
     ],
     controllers: [],
     providers: [

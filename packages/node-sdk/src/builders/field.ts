@@ -255,6 +255,18 @@ export namespace FieldBuilder {
 
 
 
+    export function Password<TId extends string, TReq extends boolean = false>(config: {
+        placeholder?: string;
+    } & BaseProps<TId, TReq>
+    ): Ret<TId, "Password", Foundations.Field.Password, TReq, false> {
+        return {
+            ...buildBase(config),
+            variant: "Password",
+            initialValue: "",
+            placeholder: config.placeholder,
+        };
+    }
+
     export function Secret<TId extends string, TReq extends boolean = false>(config: {
         initialValue: string;
     } & BaseProps<TId, TReq>): Ret<TId, "Secret", Foundations.Field.Secret, TReq, true>;

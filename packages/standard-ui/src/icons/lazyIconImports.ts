@@ -168,6 +168,8 @@ export const lazyIconsMapping = {
     import("./BRAND_ICONS/globe-ok"),
   Google: () =>
     import("./BRAND_ICONS/Google"),
+  GoogleSearch: () =>
+    import("./BRAND_ICONS/GoogleSearch"),
   GoogleDrive: () =>
     import("./BRAND_ICONS/GoogleDrive"),
   Googlemeet: () =>
@@ -176,6 +178,8 @@ export const lazyIconsMapping = {
     import("./BRAND_ICONS/GoogleTasks"),
   GoogleGenerativeAI: () =>
     import("./BRAND_ICONS/GoogleGenerativeAI"),
+  GoogleGemini: () =>
+    import("./BRAND_ICONS/GoogleGemini"),
   Gmail: () =>
     import("./BRAND_ICONS/gmail"),
   Outlook: () =>
@@ -346,6 +350,7 @@ export const lazyIconsMapping = {
   Wolfram: () =>
     import("./BRAND_ICONS/Wolfram"),
   xAI: () => import("./BRAND_ICONS/xAI"),
+  Grok: () => import("./BRAND_ICONS/Grok"),
   youTube: () =>
     import("./BRAND_ICONS/Youtube"),
   ZepMemory: () =>

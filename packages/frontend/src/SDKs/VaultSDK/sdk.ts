@@ -1,59 +1,27 @@
-import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+import { createWithEqualityFn } from "zustand/traditional";
+import { shallow } from "zustand/shallow";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
 import { Vault } from "@pretzel-graph/shared/domain";
-import { supabase } from "@/libs/supabase";
+import { _createVaultActions_, type _VaultSDKActions } from "./actions";
+import { _vaultSelectors_, type _VaultSDKSelectors } from "./selectors";
 
 @SDK("Vault")
 export class VaultSDKImpl extends BaseSDK<VaultSDK.State> {
     constructor() { super() }
 
-    public readonly useStore: BaseSDK.Store<VaultSDK.State> = create(
+    public readonly useStore: BaseSDK.Store<VaultSDK.State> = createWithEqualityFn(
         immer<VaultSDK.State>(() => ({
-            credentials: [],
-        }))
+            credentialInstances: {},
+            selectors: _vaultSelectors_,
+        })),
+        shallow
     )
 
     public readonly reducers: VaultSDK.Reducers = {}
-
-    public readonly actions: VaultSDK.Actions = {
-        create: async (config) => {
-            await Vault.API.Credential.create(supabase, config);
-        },
-        remove: async (id) => {
-            await Vault.API.Credential.remove(supabase, { id });
-        },
-        reveal: async (id) => {
-            const { value } = await Vault.API.Credential.reveal(supabase, { id });
-            return value;
-        },
-        refreshAll: async () => {
-            const credentials = await Vault.API.Credential.getAll(supabase);
-            this.setState(s => {
-                s.credentials = credentials;
-            })
-        },
-        getAll: async () => {
-            const credentials = await Vault.API.Credential.getAll(supabase);
-            this.setState(s => {
-                s.credentials = credentials;
-            })
-        },
-        update: {
-            secret: async (config) => {
-                await Vault.API.Credential.updateSecret(supabase, config);
-            },
-            meta: async (config) => {
-                await Vault.API.Credential.updateMeta(supabase, config);
-            }
-        }
-    }
-
-    public readonly selectors: VaultSDK.Selectors = {
-
-    }
-
+    public readonly selectors: VaultSDK.Selectors = _vaultSelectors_
+    public readonly actions:   VaultSDK.Actions   = _createVaultActions_(this)
 }
 
 export const VaultSDK = SDK.get<VaultSDKImpl>("Vault")
@@ -61,21 +29,11 @@ export const VaultSDK = SDK.get<VaultSDKImpl>("Vault")
 export namespace VaultSDK {
 
     export type State = {
-        credentials: Vault.Credential[]
+        credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>
+        selectors:           VaultSDK.Selectors
     }
 
-    export type Reducers = {
-    }
-    export type Actions = {
-        create: (config: { name: string, provider: string, value: string }) => Promise<void>,
-        remove: (id: Vault.Credential.Id) => Promise<void>,
-        reveal: (id: Vault.Credential.Id) => Promise<Vault.Secret>,
-        refreshAll: () => Promise<void>,
-        getAll: () => Promise<void>,
-        update: {
-            secret: (config: { id: Vault.Credential.Id, newValue: string }) => Promise<void>,
-            meta: (config: { id: Vault.Credential.Id, name?: string, provider?: string }) => Promise<void>
-        }
-    }
-    export type Selectors = {}
+    export type Reducers = {}
+    export type Selectors = _VaultSDKSelectors
+    export type Actions   = _VaultSDKActions
 }

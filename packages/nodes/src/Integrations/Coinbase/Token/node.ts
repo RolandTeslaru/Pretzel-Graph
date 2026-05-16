@@ -6,9 +6,7 @@ import {
 } from "@coinbase/agentkit";
 import { tool } from "@langchain/core/tools";
 
-import { RegisterNode } from "@pretzel-graph/node-sdk";
-import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint, ToolBlueprint } from "./blueprint";
