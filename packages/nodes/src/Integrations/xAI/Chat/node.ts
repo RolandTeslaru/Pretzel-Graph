@@ -1,24 +1,22 @@
-import { RegisterNode } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
+import { ChatXAI } from "@langchain/xai";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;
 
-    private readonly llm: ChatGoogleGenerativeAI;
+    private readonly llm: ChatXAI;
 
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
-        this.llm = new ChatGoogleGenerativeAI(this.fields);
+        this.llm = new ChatXAI(this.fields);
     }
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        inputs: InferInputs<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {
         return {
             languageModel: this.llm

@@ -1,4 +1,5 @@
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { Alpaca } from "@pretzel-graph/nodes/Credentials/Alpaca";
 
 const envOptions = [
     { value: "live", displayName: "Live" },
@@ -13,6 +14,7 @@ const timespanOptions = [
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Alpaca.Market",
+    credentials: [Alpaca],
     displayName: "Alpaca Market",
     description: "Reads US stock market data and news from Alpaca Market Data APIs.",
     icon: "Alpaca",
@@ -26,16 +28,6 @@ export const Blueprint = defineBlueprint({
             initialValue: "live",
             tooltip: "Used for trading endpoints (assets). Market data endpoints are the same for both.",
             advanced: true,
-        }),
-        FieldBuilder.Secret({
-            id: "apiKeyId",
-            displayName: "API Key ID",
-            tooltip: "Alpaca API Key ID. Falls back to ALPACA_API_KEY_ID env var.",
-        }),
-        FieldBuilder.Secret({
-            id: "apiSecret",
-            displayName: "API Secret",
-            tooltip: "Alpaca API Secret. Falls back to ALPACA_API_SECRET_KEY env var.",
         }),
         FieldBuilder.MultiOption({
             id: "timespan",
@@ -100,6 +92,7 @@ export const Blueprint = defineBlueprint({
 
 export const ToolBlueprint = defineBlueprint({
     id: "Integrations.Alpaca.Market",
+    credentials: [Alpaca],
     displayName: "Alpaca Market",
     description: "Exposes Alpaca market data and news tools to an agent.",
     icon: "Alpaca",
@@ -113,16 +106,6 @@ export const ToolBlueprint = defineBlueprint({
             initialValue: "live",
             tooltip: "Used for trading endpoints (assets). Market data endpoints are the same for both.",
             advanced: true,
-        }),
-        FieldBuilder.Secret({
-            id: "apiKeyId",
-            displayName: "API Key ID",
-            tooltip: "Alpaca API Key ID. Falls back to ALPACA_API_KEY_ID env var.",
-        }),
-        FieldBuilder.Secret({
-            id: "apiSecret",
-            displayName: "API Secret",
-            tooltip: "Alpaca API Secret. Falls back to ALPACA_API_SECRET_KEY env var.",
         }),
         FieldBuilder.MultiOption({
             id: "timespan",

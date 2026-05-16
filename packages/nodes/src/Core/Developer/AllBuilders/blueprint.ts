@@ -86,9 +86,9 @@ export const Blueprint = defineBlueprint({
             displayName: "JSON Field",
             initialValue: { key: "value" },
         }),
-        FieldBuilder.Secret({
-            id: "secretField",
-            displayName: "Secret Field",
+        FieldBuilder.Password({
+            id: "passwordField",
+            displayName: "Password Field",
         }),
         FieldBuilder.Script({
             id: "scriptField",

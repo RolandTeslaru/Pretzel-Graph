@@ -1,4 +1,5 @@
 import { FieldBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { OpenAI } from "@pretzel-graph/nodes/Credentials/OpenAI";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.OpenAI.Chat",
@@ -6,11 +7,8 @@ export const Blueprint = defineBlueprint({
     description: "This node talks to OpenAI's GPT chat models via the Chat Completions API",
     icon: "OpenAI",
     accent: "port-LanguageModel",
+    credentials: [OpenAI],
     fields: [
-        FieldBuilder.Secret({
-            id: "apiKey",
-            displayName: "API Key",
-        }),
         FieldBuilder.MultiOption({
             id: "model",
             displayName: "Model",

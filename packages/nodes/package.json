@@ -19,6 +19,7 @@
         "@langchain/google-genai": "*",
         "@langchain/openai": "*",
         "@langchain/openrouter": "*",
+        "@langchain/xai": "*",
         "@pretzel-graph/node-sdk": "*",
         "@pretzel-graph/shared": "*",
         "@pretzel-graph/worker": "*",

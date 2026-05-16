@@ -1,13 +1,16 @@
-import { Foundations } from "@pretzel-graph/shared/domain";
+import type { Foundations, Vault } from "@pretzel-graph/shared/domain";
 import type { Webhook } from "@pretzel-graph/shared/domain/Webhook";
 import type { Port }  from "@pretzel-graph/shared/domain/Foundations/Port";
 import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
+import type { CredentialTemplate } from "./credential";
 import { FieldBuilder } from "./field";
 export { FieldBuilder } from "./field"
 export { InputBuilder } from "./input"
 export { OutputBuilder } from "./output"
 export { WebhookBuilder } from "./webhook"
+export { defineCredential } from "./credential"
+export type { CredentialTemplate } from "./credential"
 
 
 // ============================================
@@ -36,6 +39,7 @@ type DefineBlueprintReturn<
     readonly outputs: TOutputs;
     readonly webhooks?: TWebhooks;
     readonly toolCompatible: TToolCompatible;
+    readonly credentials: readonly Vault.Credential.Template[];
 }
 
 const hiddenToolField = FieldBuilder.Boolean({
@@ -91,7 +95,8 @@ export function defineBlueprint<
     inputs: TInputs;
     outputs: TOutputs;
     webhooks?: TWebhooks;
-    toolCompatible?: TToolCompatible
+    toolCompatible?: TToolCompatible;
+    credentials?: readonly CredentialTemplate[];
 }): DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TWebhooks, TToolCompatible> {
 
     const baseFields = [
@@ -115,5 +120,11 @@ export function defineBlueprint<
         outputs: config.outputs,
         webhooks: config.webhooks,
         toolCompatible: config.toolCompatible as TToolCompatible,
+        credentials: (config.credentials ?? []).map(cred => ({
+            id:          cred.id,
+            displayName: cred.displayName,
+            icon:        cred.icon,
+            fields:      cred.fields,
+        })),
     };
 }

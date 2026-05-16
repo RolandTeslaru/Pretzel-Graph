@@ -5,6 +5,7 @@ import { Auth } from "./Auth";
 import { Blueprint } from "./Foundations/Blueprint";
 import { Webhook } from "./Webhook";
 import { VersionControlPublication } from "./VersionControlPublication";
+import { Vault } from "./Vault";
 
 export namespace Workflow {
     export const Id = z.string().brand("WorkflowId");
@@ -114,6 +115,10 @@ export namespace Workflow {
                     string | number | boolean | string[] | unknown
                 >
             >;
+            credentialInstanceIds: Record<
+                Node.Id,
+                Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>
+            >;
             ui: {
                 layout: Layout;
                 viewport: Viewport;
@@ -136,6 +141,10 @@ export namespace Workflow {
                     z.union([z.string(), z.number(), z.boolean(), z.array(z.string()), z.json()])
                 )
             ),
+            credentialInstanceIds: z.record(
+                Node.Id,
+                z.record(Vault.Credential.Template.Id, Vault.Credential.Instance.Id)
+            ).default({}),
 
             ui: z.object({
                 layout:     Layout.Schema,
@@ -203,11 +212,12 @@ export namespace Workflow {
         created_at:     new Date(),
         updated_at:     new Date(),
         data: {
-            fields:         [],
-            nodes:          {},
-            edges:          {},
-            staticValues:   {},
-            dependencies:   {},
+            fields:                [],
+            nodes:                 {},
+            edges:                 {},
+            staticValues:          {},
+            credentialInstanceIds: {},
+            dependencies:          {},
             ui: {
                 layout:         {},
                 viewport:       { x: 0, y: 0, zoom: 1 },

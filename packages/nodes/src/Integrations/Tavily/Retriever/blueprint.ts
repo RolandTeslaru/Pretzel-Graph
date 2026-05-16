@@ -1,4 +1,5 @@
 import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { Tavily } from "@pretzel-graph/nodes/Credentials/Tavily";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Tavily.Retriever",
@@ -6,13 +7,8 @@ export const Blueprint = defineBlueprint({
     description: "Configures a Tavily search retriever. Connect its output to a Search node or an agent.",
     icon: "Tavily",
     accent: "port-Retriever",
+    credentials: [Tavily],
     fields: [
-        FieldBuilder.Secret({
-            id: "apiKey",
-            displayName: "API Key",
-            required: true,
-            tooltip: "Your Tavily API key.",
-        }),
         FieldBuilder.Integer({
             id: "maxResults",
             displayName: "Max Results",

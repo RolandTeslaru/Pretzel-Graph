@@ -1,4 +1,5 @@
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { Massive } from "@pretzel-graph/nodes/Credentials/Massive";
 
 const timespanOptions = [
     { value: "minute", displayName: "Minute" },
@@ -8,17 +9,13 @@ const timespanOptions = [
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Massive.Market",
+    credentials: [Massive],
     displayName: "Massive Market",
     description: "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search. Requires an API key.",
     icon: "Massive",
     accent: "port-DataList",
     toolCompatible: true,
     fields: [
-        FieldBuilder.Secret({
-            id: "apiKey",
-            displayName: "API Key",
-            tooltip: "Your Massive (Polygon.io) API key. Falls back to MASSIVE_API_KEY or POLY_API_KEY environment variables.",
-        }),
         FieldBuilder.MultiOption({
             id: "timespan",
             displayName: "Timespan",
@@ -81,17 +78,13 @@ export const Blueprint = defineBlueprint({
 
 export const ToolBlueprint = defineBlueprint({
     id: "Integrations.Massive.Market",
+    credentials: [Massive],
     displayName: "Massive Market",
     description: "Exposes Massive (Polygon.io) stock-market data tools to an agent.",
     icon: "Massive",
     accent: "port-Tool",
     toolCompatible: true,
     fields: [
-        FieldBuilder.Secret({
-            id: "apiKey",
-            displayName: "API Key",
-            tooltip: "Your Massive (Polygon.io) API key. Falls back to MASSIVE_API_KEY or POLY_API_KEY environment variables.",
-        }),
         FieldBuilder.MultiOption({
             id: "timespan",
             displayName: "Default Timespan",

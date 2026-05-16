@@ -1,4 +1,5 @@
 import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { Uniswap } from "@pretzel-graph/nodes/Credentials/Uniswap";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Uniswap.Swap",
@@ -6,17 +7,8 @@ export const Blueprint = defineBlueprint({
     description: "Provides Uniswap tools for token swapping on EVM chains. Exposes check_approval, get_quote and swap_tokens as a tool list for agents. Requires a Uniswap API key and an EVM private key for signing transactions.",
     icon: "Uniswap",
     accent: "port-ToolList",
+    credentials: [Uniswap],
     fields: [
-        FieldBuilder.Secret({
-            id: "uniswapApiKey",
-            displayName: "Uniswap API Key",
-            tooltip: "API key for the Uniswap Trading API.",
-        }),
-        FieldBuilder.Secret({
-            id: "privateKey",
-            displayName: "EVM Private Key",
-            tooltip: "Private key used to sign approvals and swap transactions. Never stored outside the workflow vault.",
-        }),
 
         
         FieldBuilder.MultiOption({

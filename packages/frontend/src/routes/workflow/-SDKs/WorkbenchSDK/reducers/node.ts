@@ -1,4 +1,4 @@
-import { Foundations, Validation, Workflow } from "@pretzel-graph/shared/domain";
+import { Foundations, Validation, Vault, Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { cloneDeep } from 'lodash';
 import { edgeReducers } from "./edge";
@@ -47,6 +47,7 @@ export const nodeReducers = {
             delete nodes[deletedNodeId];
 
         delete staticValues[deletedNodeId];
+        delete s.data.credentialInstanceIds[deletedNodeId];
 
         cacheReducers.deleteNode(s, deletedNodeId);
         layoutReducers.node.remove(s, deletedNodeId);
@@ -77,6 +78,8 @@ export const nodeReducers = {
             workflowDependencyId: blueprint.workflowDependencyId,
 
             toolCompatible: blueprint.toolCompatible,
+
+            credentials: blueprint.credentials?.length ? cloneDeep(blueprint.credentials) as Workflow.Node['credentials'] : undefined,
         } satisfies Workflow.Node
 
         try {
@@ -209,10 +212,14 @@ export const nodeReducers = {
             isFlipped    : originalNode.isFlipped,
             accent       : originalNode.accent,
             toolCompatible: originalNode.toolCompatible,
+
+            credentials: originalNode.credentials ? cloneDeep(originalNode.credentials) as Workflow.Node['credentials'] : undefined,
         } satisfies Workflow.Node
 
         s.data.nodes[newNodeId] = newNode;
         s.data.staticValues[newNodeId] = cloneDeep(s.data.staticValues[originalNode.id]);
+        if (s.data.credentialInstanceIds[originalNode.id])
+            s.data.credentialInstanceIds[newNodeId] = cloneDeep(s.data.credentialInstanceIds[originalNode.id]);
 
         layoutReducers.node.add(s, newNodeId, position);
         cacheReducers.createNode(s, newNode);
@@ -386,7 +393,17 @@ export const nodeReducers = {
     setWorkflowDependency: (s, nodeId, workflowDependencyId) => {
         s.isDirty = true;
         s.data.nodes[nodeId].workflowDependencyId = workflowDependencyId;
-    }
+    },
+    setCredential: (s, nodeId, templateId, instanceId) => {
+        s.isDirty = true;
+        if (!s.data.credentialInstanceIds[nodeId])
+            s.data.credentialInstanceIds[nodeId] = {};
+        if (instanceId === null) {
+            delete s.data.credentialInstanceIds[nodeId][templateId];
+        } else {
+            s.data.credentialInstanceIds[nodeId][templateId] = instanceId;
+        }
+    },
 } satisfies NodeReducers
 
 interface NodeReducers {
@@ -405,8 +422,9 @@ interface NodeReducers {
     validate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
     clearIssues    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
     
-    setWorkflowDependency: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, workflowDependencyId: Workflow.Id | undefined) => void;
-    
+    setWorkflowDependency : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, workflowDependencyId: Workflow.Id | undefined) => void;
+    setCredential         : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, templateId: Vault.Credential.Template.Id, instanceId: Vault.Credential.Instance.Id | null) => void;
+
     polymorphism: {
         resolveGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, triggerPort: Foundations.Port.Input | Foundations.Port.Output, resolvedVariant: Foundations.Port.Variant) => void
         unresolveGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => void

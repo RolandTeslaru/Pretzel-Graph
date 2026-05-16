@@ -11,7 +11,8 @@ import { NodeSidebarHeader } from './Header';
 import { NodeSidebarFooter } from './Footer';
 import WebhookRenderer from './webhook-renderer';
 import { InputItem } from './input-renderer';
-import { NodeDescription } from './node-description';
+import { NodeDescription } from './node-description'
+import { CredentialPicker } from './CredentialPicker';
 
 
 interface SidebarAccordionItemProps {
@@ -96,9 +97,13 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
         ];
     }, [connectedPorts, node.inputs, node.fields]);
 
+    const credentials = node.credentials ?? []
+
     const defaultOpen = useMemo(() => {
         const sections: string[] = ["execution-strategy", "output", "webhooks"];
 
+        if (credentials.length > 0)
+            sections.push("credentials");
         if (fields.length > 0)
             sections.push("fields");
         if (inputs.length > 0)
@@ -137,6 +142,15 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
                             {webhooks.map(webhook => (
                                 <div key={webhook.id} className='px-4 py-1 min-w-0'>
                                     <WebhookRenderer webhook={webhook} nodeId={node.id} />
+                                </div>
+                            ))}
+                        </SidebarAccordionItem>
+                    )}
+                    {credentials.length > 0 && (
+                        <SidebarAccordionItem label='Credentials' value='credentials'>
+                            {credentials.map(cred => (
+                                <div key={cred.id} className='px-4 py-1 min-w-0'>
+                                    <CredentialPicker credentialTemplate={cred} nodeId={node.id} />
                                 </div>
                             ))}
                         </SidebarAccordionItem>
