@@ -54,7 +54,10 @@ export namespace Vault {
             export const Schema = Database.Row.CredentialInstance.Schema.omit({ user_id: true })
 
             export const EncryptedBlob = z.string().brand("EncryptedBlob")
-            export type EncryptedBlob = z.infer<typeof EncryptedBlob>
+            type EncryptedBlobBase = z.infer<typeof EncryptedBlob>
+            // Phantom-typed: T carries the credential template ref so consumers
+            // can infer the decrypted field shape from the blob alone.
+            export type EncryptedBlob<T = unknown> = EncryptedBlobBase & { readonly __template?: T }
 
             export const DecryptedValues = z.record(Field.Id, z.string())
             export type DecryptedValues = z.infer<typeof DecryptedValues>

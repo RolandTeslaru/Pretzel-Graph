@@ -12,7 +12,17 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
-        this.llm = new ChatGoogleGenerativeAI(this.fields);
+
+        const { apiKey } = this.context.getDecryptedCredentialValues(this.credentials.googleGeminiApi.blob);
+
+        this.llm = new ChatGoogleGenerativeAI({
+            model: this.fields.model,
+            temperature: this.fields.temperature,
+            maxOutputTokens: this.fields.maxOutputTokens,
+            topP: this.fields.topP,
+            topK: this.fields.topK,
+            apiKey
+        });
     }
 
     protected override async onRun(

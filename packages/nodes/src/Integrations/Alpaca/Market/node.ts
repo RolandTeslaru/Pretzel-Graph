@@ -34,7 +34,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
 
-        const credentials = requireAlpacaCredentials(this.fields.apiKeyId, this.fields.apiSecret);
+        const { apiKeyId, apiSecret } = this.context.getDecryptedCredentialValues(this.credentials.alpacaApi.blob);
+        const credentials = requireAlpacaCredentials(apiKeyId, apiSecret);
         this.dataClient = createAlpacaDataClient(credentials);
         this.tradingClient = createAlpacaTradingClient(this.fields.environment as AlpacaEnvironment, credentials);
     }
