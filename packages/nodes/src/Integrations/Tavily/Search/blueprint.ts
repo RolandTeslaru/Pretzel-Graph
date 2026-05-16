@@ -1,21 +1,16 @@
 import { cloneDeep } from "lodash";
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
-import { InferOutputs } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder, InferOutputs } from "@pretzel-graph/node-sdk";
+import { Tavily } from "@pretzel-graph/nodes/Credentials/Tavily";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Tavily.Search",
+    credentials: [Tavily],
     displayName: "Tavily Search",
     description: "Searches the web using Tavily and returns the results as documents.",
     icon: "Tavily",
     accent: "port-Retriever",
     toolCompatible: true,
     fields: [
-        FieldBuilder.Secret({
-            id: "apiKey",
-            displayName: "API Key",
-            required: true,
-            tooltip: "Your Tavily API key.",
-        }),
         FieldBuilder.Integer({
             id: "maxResults",
             displayName: "Max Results",
@@ -61,18 +56,13 @@ export const Blueprint = defineBlueprint({
 
 export const ToolBlueprint = defineBlueprint({
     id: "Integrations.Tavily.Search",
+    credentials: [Tavily],
     displayName: "Tavily Search",
     description: "Searches the web using Tavily and returns the results as documents.",
     icon: "Tavily",
     accent: "port-Tool",
     toolCompatible: true,
     fields: [
-        FieldBuilder.Secret({
-            id: "apiKey",
-            displayName: "API Key",
-            required: true,
-            tooltip: "Your Tavily API key.",
-        }),
         FieldBuilder.Integer({
             id: "maxResults",
             displayName: "Max Results",

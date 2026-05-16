@@ -85,7 +85,7 @@ code {
   --primary-foreground: theme(--color-white);
   --primary-accent: theme(--color-orange-300);
   --primary-hover: theme(--color-amber-500);
-  --ring: theme(--color-orange-500);
+  --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
 
   --secondary: var(--color-neutral-200);
   --secondary-foreground:var(--color-neutral-700);
@@ -291,7 +291,7 @@ code {
 
   /* --border: theme(--color-stone-800); */
   --input: theme(--color-neutral-800);
-  --ring: theme(--color-orange-500);
+  --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
 
 
   /* Success states */

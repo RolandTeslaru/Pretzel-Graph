@@ -1,18 +1,7 @@
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { GoogleSearch } from "@pretzel-graph/nodes/Credentials/GoogleSearch";
 
 const fields = [
-    FieldBuilder.Secret({
-        id: "apiKey",
-        displayName: "API Key",
-        required: true,
-        tooltip: "Your Google Custom Search API key.",
-    }),
-    FieldBuilder.String({
-        id: "searchEngineId",
-        displayName: "Search Engine ID",
-        required: true,
-        tooltip: "Your Programmable Search Engine ID (cx).",
-    }),
     FieldBuilder.Integer({
         id: "maxResults",
         displayName: "Max Results",
@@ -43,9 +32,10 @@ const fields = [
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Google.Search",
+    credentials: [GoogleSearch],
     displayName: "Google Search",
     description: "Searches the web using Google Custom Search and returns the results as documents.",
-    icon: "Google",
+    icon: "GoogleSearch",
     accent: "port-DataList",
     toolCompatible: true,
     fields,
@@ -68,9 +58,10 @@ export const Blueprint = defineBlueprint({
 
 export const ToolBlueprint = defineBlueprint({
     id: "Integrations.Google.Search",
+    credentials: [GoogleSearch],
     displayName: "Google Search",
     description: "Searches the web using Google Custom Search and returns the results as documents.",
-    icon: "Google",
+    icon: "GoogleSearch",
     accent: "port-Tool",
     toolCompatible: true,
     fields,

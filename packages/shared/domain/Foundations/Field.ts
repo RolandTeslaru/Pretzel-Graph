@@ -27,6 +27,7 @@ export namespace Field {
         "Float",
         "String",
         "UniqueString",
+        "Password",
         "Secret",
         "Boolean",
         "MultiOption",
@@ -77,6 +78,12 @@ export namespace Field {
         isExpression: z.boolean().optional(),
         prefix: z.string().optional(),
         length: z.number().optional(),
+        placeholder: z.string().optional(),
+    })
+
+    export const Password = Field.Base.extend({
+        variant: configLiteral("Password"),
+        initialValue: z.string(),
         placeholder: z.string().optional(),
     })
 
@@ -318,6 +325,7 @@ export namespace Field {
     export interface Float extends z.infer<typeof Float> { }
     export interface String extends z.infer<typeof String> { }
     export interface UniqueString extends z.infer<typeof UniqueString> { }
+    export interface Password extends z.infer<typeof Password> { }
     export interface Secret extends z.infer<typeof Secret> { }
     export interface Boolean extends z.infer<typeof Boolean> { }
     export interface MultiOption extends z.infer<typeof MultiOption> { }
@@ -335,6 +343,7 @@ export namespace Field {
         Float,
         String,
         UniqueString,
+        Password,
         Secret,
         Boolean,
         MultiOption,

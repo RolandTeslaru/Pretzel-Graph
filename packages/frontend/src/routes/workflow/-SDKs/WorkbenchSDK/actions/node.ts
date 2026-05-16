@@ -24,6 +24,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
         
         validate:          (...props) => { setState(s => { reducers.node.validate(s,       ...props) }) },
         clearIssues:       (...props) => { setState(s => { reducers.node.clearIssues(s,    ...props) }) },
+        setCredential:     withCommit((...props) => setState(s => { reducers.node.setCredential(s, ...props) })),
         
         recreate:          withAsyncCommit( async (nodeId, ) => {
             const s = sdk.state;
@@ -90,4 +91,5 @@ export type NodeActions = {
     validate            : DropFirstArg<WorkbenchSDK.Reducers['node']['validate']>;
     clearIssues         : DropFirstArg<WorkbenchSDK.Reducers['node']['clearIssues']>;
     recreate            : (nodeId: Workflow.Node.Id) => void;
+    setCredential       : DropFirstArg<WorkbenchSDK.Reducers['node']['setCredential']>;
 };
