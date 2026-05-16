@@ -8,7 +8,6 @@ import { IntegerField } from './Integer'
 import { FloatField } from './Float'
 import { FileField } from './File'
 import { OtherField } from './Other'
-import { SecretField } from './Secret'
 import { ScriptField } from './Script'
 import { ConditionField } from './Condition'
 import { CaseListField } from './CaseList'
@@ -25,7 +24,6 @@ export { IntegerField } from './Integer'
 export { FloatField } from './Float'
 export { FileField } from './File'
 export { OtherField } from './Other'
-export { SecretField } from './Secret'
 export { ScriptField } from './Script'
 export { ConditionField } from './Condition'
 export { CaseListField } from './CaseList'
@@ -50,7 +48,6 @@ export const FIELD_RENDERER_MAP: FieldRendererMapType = {
     Integer: IntegerField,
     Float: FloatField,
     MultiOption: MultiOptionField,
-    Secret: SecretField,
     File: FileField,
     Script: ScriptField,
     Json: JsonField,

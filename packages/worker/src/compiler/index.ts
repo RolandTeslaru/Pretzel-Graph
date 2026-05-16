@@ -1,7 +1,8 @@
-import { Execution, Foundations } from "@pretzel-graph/shared/domain";
+import { Execution, Foundations, Vault } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { CatalogueService, RuntimeNode } from "@pretzel-graph/node-sdk";
+import { decryptCredentialBlob } from "src/credentials";
 
 import { AggexCompilerError } from "../errors";
 import { S2Graph, Vertex } from "../S2/graph";
@@ -16,13 +17,14 @@ export class WorkflowCompiler {
     constructor() { }
 
     public async compile(
-        workflowId:     Workflow.Id,
-        workflowData:   Workflow.Data,
-        execution:      Execution,
-        emit:           RuntimeNode.ExecutionContext["emit"],
-        engine:         AggexEngine,
-        compilationCtx: WorkflowCompiler.Compilation.Context = createCompilationContext(workflowId),
-        parentBridgeHooks?: RuntimeNode.ExecutionContext["parentBridgeHooks"],
+        workflowId:          Workflow.Id,
+        workflowData:        Workflow.Data,
+        execution:           Execution,
+        emit:                RuntimeNode.ExecutionContext["emit"],
+        engine:              AggexEngine,
+        credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
+        compilationCtx:      WorkflowCompiler.Compilation.Context = createCompilationContext(workflowId),
+        parentBridgeHooks?:  RuntimeNode.ExecutionContext["parentBridgeHooks"],
     ): Promise<AggexEngine.Execution.Context> {
         const workflowCache = Workflow.createCache(workflowData);
 
@@ -76,6 +78,7 @@ export class WorkflowCompiler {
                         execution,
                         emit,
                         engine,
+                        credentialInstances,
                         compilationCtx,
                         parentBridgeHooks,
                     ),
@@ -83,6 +86,9 @@ export class WorkflowCompiler {
                 }
             }
         } satisfies RuntimeNode.ExecutionContext["subworkflowHooks"];
+
+        const getDecryptedCredentialValues: RuntimeNode.ExecutionContext["getDecryptedCredentialValues"] =
+            (blob) => decryptCredentialBlob(blob) as any;
 
         const nodeExecutionCtx = {
             executionId: execution.id,
@@ -98,15 +104,8 @@ export class WorkflowCompiler {
             portHooks,
             parentBridgeHooks,
             subworkflowHooks,
-            // bridgeHooks: {
-            //     writeToPort: () => {
-
-            //     },
-            //     propagatePort: () => {
-
-            //     }
-            // }
-
+            credentialInstances,
+            getDecryptedCredentialValues,
         } satisfies RuntimeNode.ExecutionContext
 
         engineExecutionCtx = {
@@ -127,6 +126,8 @@ export class WorkflowCompiler {
             portHooks,
             parentBridgeHooks,
             subworkflowHooks,
+            credentialInstances,
+            getDecryptedCredentialValues,
         } satisfies AggexEngine.Execution.Context
 
 

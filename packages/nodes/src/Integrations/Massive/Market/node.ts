@@ -31,8 +31,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
-        const apiKey = requireMassiveApiKey(this.fields.apiKey);
-        this.client = createMassiveClient(apiKey);
+        const { apiKey } = this.context.getDecryptedCredentialValues(this.credentials.massiveApi.blob);
+        this.client = createMassiveClient(requireMassiveApiKey(apiKey));
     }
 
     protected override async onRun(

@@ -4,15 +4,15 @@ import { Queue, QueueEvents } from 'bullmq';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { createAuthenticatedClient, createServiceClient } from '@/utils/supabase';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
-import { Auth, Execution, Validation, Workflow } from '@pretzel-graph/shared/domain';
+import { Auth, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
 import { RealtimeService } from '../Realtime/realtime.service';
-import { SecretsResolver } from './utils';
 import { PermissionService } from '../Permission/permission.service';
 import { Token } from '@/domain/Token';
 import { ExecutionDatabase } from './execution.database';
 import { ChatDatabase } from '../Chat/chat.database';
+import { VaultDatabase } from '../Vault/vault.database';
 
 @Injectable()
 export class ExecutionService {
@@ -33,6 +33,7 @@ export class ExecutionService {
         private readonly ownership:      PermissionService,
         private readonly database:       ExecutionDatabase,
         private readonly chatDatabase:   ChatDatabase,
+        private readonly vaultDatabase:  VaultDatabase,
     ) {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
             console.error(`[Execution] ${jobId} failed:`, failedReason);
@@ -129,12 +130,15 @@ export class ExecutionService {
         
 
         try {
-            await SecretsResolver.resolveWorkflow(supabase, workflowData, workflowId);
+            const credentialInstanceIds = collectCredentialInstanceIds(workflowData);
+            const instances = await this.vaultDatabase.credentialInstance.listByIds(supabase, [...credentialInstanceIds]);
+            const credentialInstances = Object.fromEntries(instances.map(i => [i.id, i])) as Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>;
 
             const queueItem: Execution.Queue.Item = {
                 execution,
                 workflowId,
                 workflowData,
+                credentialInstances,
             };
 
             await this.executionQueue.add('run', queueItem, { jobId: executionId });
@@ -414,7 +418,7 @@ export class ExecutionService {
 
 
         listActive: async (
-            token:  Token.UserSupabaseJWT, 
+            token:  Token.UserSupabaseJWT,
             userId: Auth.User.Id
         ): Promise<Execution.API.Meta.ListActive.Response> => {
             const supabase = createAuthenticatedClient(token);
@@ -425,4 +429,14 @@ export class ExecutionService {
             return { executions: executions };
         }
     }
+}
+
+function collectCredentialInstanceIds(workflowData: Workflow.Data): Set<Vault.Credential.Instance.Id> {
+    const ids = new Set<Vault.Credential.Instance.Id>();
+    for (const nodeMap of Object.values(workflowData.credentialInstanceIds))
+        for (const instanceId of Object.values(nodeMap) as Vault.Credential.Instance.Id[])
+            ids.add(instanceId);
+    for (const dep of Object.values(workflowData.dependencies))
+        collectCredentialInstanceIds(dep as unknown as Workflow.Data).forEach(id => ids.add(id));
+    return ids;
 }

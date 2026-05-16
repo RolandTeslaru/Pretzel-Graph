@@ -10,7 +10,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const { apiKey, maxResults, searchDepth, includeAnswer } = this.fields;
+        const { apiKey } = this.context.getDecryptedCredentialValues(this.credentials.tavilyApi.blob);
+        const { maxResults, searchDepth, includeAnswer } = this.fields;
 
         const retriever = new TavilySearchAPIRetriever({
             apiKey,

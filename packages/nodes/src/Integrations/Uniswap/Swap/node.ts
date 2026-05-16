@@ -36,7 +36,6 @@ type UniswapClients = {
     wallet: WalletClient;
     public: PublicClient;
     chainId: number;
-    apiKey: string;
 };
 
 const uniswapPost = async <T>(apiKey: string, endpoint: string, body: unknown): Promise<T> => {
@@ -53,12 +52,9 @@ const buildClients = (fields: {
     privateKey: string;
     chain: string;
     rpcUrl: string;
-    uniswapApiKey: string;
 }): UniswapClients => {
     if (!fields.privateKey)
         throw new Error("Uniswap: a private key is required to sign transactions.");
-    if (!fields.uniswapApiKey)
-        throw new Error("Uniswap: a Uniswap API key is required.");
 
     const chain = CHAIN_MAP[fields.chain];
     if (!chain)
@@ -71,7 +67,6 @@ const buildClients = (fields: {
         wallet: createWalletClient({ account, chain, transport }),
         public: createPublicClient({ chain, transport }),
         chainId: chain.id,
-        apiKey: fields.uniswapApiKey,
     };
 };
 
@@ -85,13 +80,15 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
-        this.clients = buildClients(this.fields);
+        const { privateKey } = this.context.getDecryptedCredentialValues(this.credentials.uniswapApi.blob);
+        this.clients = buildClients({ ...this.fields, privateKey });
     }
 
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const { wallet, public: publicClient, chainId, apiKey } = this.clients;
+        const { wallet, public: publicClient, chainId } = this.clients;
+        const { apiKey } = this.context.getDecryptedCredentialValues(this.credentials.uniswapApi.blob);
         const address = wallet.account!.address;
 
         const checkApproval = tool(
