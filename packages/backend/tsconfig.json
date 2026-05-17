@@ -13,6 +13,12 @@
             "@pretzel-graph/node-sdk/*": [
                 "../node-sdk/src/*"
             ],
+            "@pretzel-graph/nodes": [
+                "../nodes/src/index.ts"
+            ],
+            "@pretzel-graph/nodes/*": [
+                "../nodes/src/*"
+            ],
             "@pretzel-graph/worker": [
                 "../worker/src/index.ts"
             ],
