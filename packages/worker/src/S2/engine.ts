@@ -19,40 +19,6 @@ export class S2Engine {
 
 
 
-
-    public addSignal(
-        targetVertexId: Vertex.Id,
-        sourceVertexId: Vertex.Id,
-    ): void {
-        if (this.ctx.settled)
-            throw new S2EngineError("Engine is not running");
-
-        this.assertVertexExists(targetVertexId);
-        this.assertVertexExists(sourceVertexId);
-
-        this.ctx.accumulatedSignals.get(targetVertexId)!.add(sourceVertexId);
-        this.scheduleVertexCheck(targetVertexId);
-    }
-
-
-
-
-    public removeSignal(
-        targetVertexId: Vertex.Id,
-        sourceVertexId: Vertex.Id,
-    ): void {
-        if (this.ctx.settled)
-            throw new S2EngineError("Engine is not running");
-
-        this.assertVertexExists(targetVertexId);
-        this.assertVertexExists(sourceVertexId);
-
-        this.ctx.accumulatedSignals.get(targetVertexId)!.delete(sourceVertexId);
-    }
-
-
-
-
     public async ignite(
         graph: S2Graph, 
         hooks: S2Hooks
@@ -247,6 +213,60 @@ export class S2Engine {
     }
 
 
+
+    public readonly overrides = {
+        fireVertex: (
+            vertexId: Vertex.Id, 
+            signals: Set<Vertex.Id> = new Set()
+        ) => {
+            this.fireVertex(vertexId, signals);
+        },
+        addSignal: (
+            targetVertexId: Vertex.Id,
+            sourceVertexId: Vertex.Id,
+        ) => {
+            if (this.ctx.settled)
+                throw new S2EngineError("Engine is not running");
+
+            this.assertVertexExists(targetVertexId);
+            this.assertVertexExists(sourceVertexId);
+
+            this.ctx.accumulatedSignals.get(targetVertexId)!.add(sourceVertexId);
+            this.scheduleVertexCheck(targetVertexId);
+        },
+        removeSignal: (
+            targetVertexId: Vertex.Id,
+            sourceVertexId: Vertex.Id,
+        ) => {
+            if (this.ctx.settled)
+                throw new S2EngineError("Engine is not running");
+
+            this.assertVertexExists(targetVertexId);
+            this.assertVertexExists(sourceVertexId);
+
+            this.ctx.accumulatedSignals.get(targetVertexId)!.delete(sourceVertexId);
+        },
+        clearSignals: (
+            vertexId: Vertex.Id,
+        ) => {
+            if (this.ctx.settled)
+                throw new S2EngineError("Engine is not running");
+
+            this.assertVertexExists(vertexId);
+
+            this.ctx.accumulatedSignals.get(vertexId)!.clear();
+        },
+        scheduleCheck: (
+            vertexId: Vertex.Id,
+        ) => {
+            if (this.ctx.settled)
+                throw new S2EngineError("Engine is not running");
+
+            this.assertVertexExists(vertexId);
+
+            this.scheduleVertexCheck(vertexId);
+        },
+    }
 
 
     private isShortCircuiting(

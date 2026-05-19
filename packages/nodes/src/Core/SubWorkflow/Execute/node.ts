@@ -61,12 +61,12 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
 
         this.subEnvironment = this.context.subWorkflowAPI.createEnv();
 
-        const parentBridgeHooks: RuntimeNode.ExecutionContext["parentBridgeHooks"] = {
-            writeOutputPort: (outputId, value) => {
-                this.context.portHooks.writeOutputPort(this.workflowNode.id, outputId, value);
+        const enclosingNodeAPI: RuntimeNode.ExecutionContext["enclosingNodeAPI"] = {
+            writePort: (outputId, value) => {
+                this.context.portAPI.write(this.workflowNode.id, outputId, value);
             },
-            propagateOutputPort: (outputId) => {
-                this.context.portHooks.propagateOutputPort(this.workflowNode.id, outputId);
+            emitPort: (outputId) => {
+                this.context.propagationAPI.emitPort(this.workflowNode.id, outputId);
             },
         };
 
@@ -82,9 +82,9 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
             subExecution,
             this.context.emit,
             childCompilationCtx,
-            parentBridgeHooks,
+            enclosingNodeAPI,
         ) as AggexEngine.ExecutionContext;
-        console.log(`[ExecuteSubWorkflow:onCompile] done — nodeRuntimeMap size=${this.subEngineCtx.nodeRuntimeMap.size}`);
+        console.log(`[ExecuteSubWorkflow:onCompile] done — nodes=${Object.keys(this.subEngineCtx.workflowData.nodes).length}`);
     }
 
 
@@ -120,14 +120,18 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
 
 
     private injectInputNodeValues(inputs: InferInputs<typeof Blueprint>): void {
-        this.subEngineCtx.nodeRuntimeMap.forEach(({ wfNode, instance }) => {
-            if (instance instanceof ExposeInputPortNode === false)
-                return;
+        const exposeInputNodes = this.subEngineCtx.workflowQueryAPI
+            .getNodesByBlueprint("Core.SubWorkflow.ExposeInputPort" as any);
+
+        for (const { node } of exposeInputNodes) {
+            const instance = this.subEngineCtx.instanceRegistryAPI.get(node.id);
+            if (!(instance instanceof ExposeInputPortNode))
+                continue;
 
             const exposeNodeId = instance.fields.exposed_port_id;
             console.log(`[ExecuteSubWorkflow:onRun] injecting exposed_port_id=${exposeNodeId} value=${JSON.stringify(inputs[exposeNodeId])?.slice(0, 100)}`);
             // @ts-expect-error
             instance.injectedData = inputs[exposeNodeId];
-        });
+        }
     }
 }

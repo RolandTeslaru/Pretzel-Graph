@@ -288,17 +288,40 @@ export namespace RuntimeNode {
                 outputId: Port.Output.Id,
                 value: unknown,
             ) => void,
-            propagate: (
+        },
+        readonly propagationAPI: {
+            emitPort: (
                 nodeId: Workflow.Node.Id,
                 outputId: Port.Output.Id,
             ) => void,
+            emitNode: (
+                nodeId: Workflow.Node.Id,
+            ) => void,
         },
-        readonly parentPortAPI?: {
-            write: (
+        readonly instanceRegistryAPI: {
+            get:    (nodeId: Workflow.Node.Id) => RuntimeNode<Blueprint> | undefined,
+            getAll: () => RuntimeNode<Blueprint>[],
+        },
+        readonly workflowQueryAPI: {
+            getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: Foundations.Blueprint.Id) => Array<{
+                node: Workflow.Node,
+                fields: InferFields<T_Blueprint>,
+            }>,
+            getNodeOutput: (nodeId: Workflow.Node.Id, portId: Port.Output.Id) => unknown,
+        },
+        readonly schedulerAPI: {
+            fireNode: (nodeId: Workflow.Node.Id, signals?: Set<Workflow.Node.Id>) => void,
+            signalNode: (nodeId: Workflow.Node.Id, fromNodeId: Workflow.Node.Id) => void,
+            removeSignal: (nodeId: Workflow.Node.Id, fromNodeId: Workflow.Node.Id) => void,
+            clearSignals: (nodeId: Workflow.Node.Id) => void,
+            scheduleCheck: (nodeId: Workflow.Node.Id) => void,
+        },
+        readonly enclosingNodeAPI?: {
+            writePort: (
                 outputId: Port.Output.Id,
                 value: unknown,
             ) => void,
-            propagate: (
+            emitPort: (
                 outputId: Port.Output.Id,
             ) => void,
         },
@@ -310,7 +333,7 @@ export namespace RuntimeNode {
                     execution: Execution,
                     emit: ExecutionContext["emit"],
                     compilationCtx: CompilationContext,
-                    parentPortAPI?: ExecutionContext["parentPortAPI"],
+                    enclosingNodeAPI?: ExecutionContext["enclosingNodeAPI"],
                 ) => Promise<unknown>,
                 run: (ctx: unknown) => Promise<unknown>,
             }
