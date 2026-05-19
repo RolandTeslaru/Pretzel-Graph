@@ -25,8 +25,6 @@ export const Route = createFileRoute('/home/projects/$folderId')({
 
 
 function FolderNotFound() {
-    const { folderId } = Route.useParams()
-
     return (
         <div className="p-6 max-w-6xl">
             <div className="flex flex-col items-center justify-center py-20 text-center opacity-80">

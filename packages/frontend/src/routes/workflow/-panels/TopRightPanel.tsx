@@ -5,11 +5,11 @@ import { DialogSDK } from '@/SDKs/DialogSDK'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { openPublishDialog } from '@/SDKs/VersionControlSDK/ui/PublishDialog'
 import VersionHistory from '@/SDKs/VersionControlSDK/ui/VersionHistory'
-import { openWorkflowConfigurationDialog } from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/WorkflowConfigurationDialog'
 import { Button, Popover, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import Tipped from '@/components/Tipped'
+import { openWorkflowSettingsDialog } from '../-SDKs/WorkbenchSDK/ui/WorkflowSettings'
 
 function openVisibilityDialog(workflowId: Workflow.Id, isPublic: boolean) {
     const DIALOG_ID = "workflow-visibility"
@@ -110,8 +110,8 @@ export const TopRightPanel = () => {
             </div>
             <div className='p-0.5 z-10 flex flex-row gap-1 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
                 <Tipped label="Workflow Config">
-                    <Button variant="ghost" size="icon-sm" onClick={openWorkflowConfigurationDialog}>
-                        <SystemIcons.Settings className='size-5'/>
+                    <Button variant="ghost" size="icon-sm" onClick={openWorkflowSettingsDialog}>
+                        <SystemIcons.Cog className='size-5'/>
                     </Button>
                 </Tipped>
             </div>
