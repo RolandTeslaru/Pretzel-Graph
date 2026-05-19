@@ -1,12 +1,13 @@
 import { Execution, Foundations, Vault } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { CatalogueService, RuntimeNode } from "@pretzel-graph/node-sdk";
+import { CatalogueService, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
+import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { decryptCredentialBlob } from "src/credentials";
 
 import { AggexCompilerError } from "../errors";
 import { S2Graph, Vertex } from "../S2/graph";
-import { isUUID, mapFieldValues } from "../utils";
+import { isUUID } from "../utils";
 
 import { produce } from "immer";
 import { AggexEngine } from "src/engine";
@@ -22,8 +23,8 @@ export class WorkflowCompiler {
         emit:                RuntimeNode.ExecutionContext["emit"],
         engine:              AggexEngine,
         credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
-        compilationCtx:      WorkflowCompiler.Compilation.Context = createCompilationContext(workflowId),
-        parentPortAPI?:      RuntimeNode.ExecutionContext["parentPortAPI"],
+        compilationCtx:    WorkflowCompiler.Compilation.Context = createCompilationContext(workflowId),
+        enclosingNodeAPI?: RuntimeNode.ExecutionContext["enclosingNodeAPI"],
     ): Promise<AggexEngine.Execution.Context> {
         const workflowCache = Workflow.createCache(workflowData);
 
@@ -34,11 +35,9 @@ export class WorkflowCompiler {
         // START vertex — S2Engine ignites from here
         graph.addVertex(S2Graph.START_VERTEX_ID);
 
-        const nodeRuntimeMap = new Map() as AggexEngine.Execution.Context["nodeRuntimeMap"];
-        
-        // 
+        //
         // Build contexts
-        // 
+        //
         
         const abortController = new AbortController();
         
@@ -52,10 +51,40 @@ export class WorkflowCompiler {
             write: (nodeId, outputId, value) => {
                 engine.portAPI.write(engineExecutionCtx, nodeId, outputId, value);
             },
-            propagate: (nodeId, outputId) => {
-                engine.portAPI.propogate(engineExecutionCtx, nodeId, outputId);
-            }
         } satisfies RuntimeNode.ExecutionContext["portAPI"];
+
+        const propagationAPI = {
+            emitPort: (nodeId, outputId) => {
+                engine.propagationAPI.emitPort(engineExecutionCtx, nodeId, outputId);
+            },
+            emitNode: (nodeId) => {
+                engine.propagationAPI.emitNode(engineExecutionCtx, nodeId);
+            },
+        } satisfies RuntimeNode.ExecutionContext["propagationAPI"];
+
+        const instanceRegistryAPI = {
+            get:    (nodeId: Workflow.Node.Id) => engine.instanceRegistryAPI.get(nodeId),
+            getAll: ()                         => engine.instanceRegistryAPI.getAll(),
+        } satisfies RuntimeNode.ExecutionContext["instanceRegistryAPI"];
+
+        const workflowQueryAPI = {
+            getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: T_Blueprint["id"]) => Object.values(engineExecutionCtx.workflowData.nodes)
+                .filter(n => n.blueprintId === blueprintId)
+                .map(n => ({
+                    node:   n,
+                    fields: mapFieldValues<T_Blueprint>(n.id, engineExecutionCtx.workflowData),
+                })),
+            getNodeOutput: (nodeId, portId) =>
+                engineExecutionCtx.session.node_output_instances[nodeId]?.[portId],
+        } satisfies RuntimeNode.ExecutionContext["workflowQueryAPI"];
+
+        const schedulerAPI = {
+            fireNode:      (nodeId, signals) => engine.schedulerAPI.fireNode(engineExecutionCtx, nodeId, signals),
+            signalNode:    (nodeId, fromNodeId) => engine.schedulerAPI.signalNode(engineExecutionCtx, nodeId, fromNodeId),
+            removeSignal:  (nodeId, fromNodeId) => engine.schedulerAPI.removeSignal(engineExecutionCtx, nodeId, fromNodeId),
+            clearSignals:  (nodeId) => engine.schedulerAPI.clearSignals(engineExecutionCtx, nodeId),
+            scheduleCheck: (nodeId) => engine.schedulerAPI.scheduleCheck(engineExecutionCtx, nodeId),
+        } satisfies RuntimeNode.ExecutionContext["schedulerAPI"];
 
 
         const subWorkflowAPI = {
@@ -70,7 +99,7 @@ export class WorkflowCompiler {
                         execution,
                         emit,
                         compilationCtx,
-                        parentBridgeHooks,
+                        enclosingNodeAPI,
                     ) => compiler.compile(
                         workflowId,
                         workflowData,
@@ -79,7 +108,7 @@ export class WorkflowCompiler {
                         engine,
                         credentialInstances,
                         compilationCtx,
-                        parentBridgeHooks,
+                        enclosingNodeAPI,
                     ),
                     run: (ctx: unknown) => engine.run(ctx as AggexEngine.Execution.Context),
                 }
@@ -101,7 +130,11 @@ export class WorkflowCompiler {
             abortSignal: abortController.signal,
             updateSession,
             portAPI,
-            parentPortAPI,
+            propagationAPI,
+            instanceRegistryAPI,
+            workflowQueryAPI,
+            schedulerAPI,
+            enclosingNodeAPI,
             subWorkflowAPI,
             credentialInstances,
             getDecryptedCredentialValues,
@@ -119,11 +152,13 @@ export class WorkflowCompiler {
             abortSignal: abortController.signal,
             updateSession,
             compiledGraph: graph,
-            nodeRuntimeMap,
             activeNodes: new Set(),
-            propagatedOutputPorts: new Set(),
             portAPI,
-            parentPortAPI,
+            propagationAPI,
+            instanceRegistryAPI,
+            workflowQueryAPI,
+            schedulerAPI,
+            enclosingNodeAPI,
             subWorkflowAPI,
             credentialInstances,
             getDecryptedCredentialValues,
@@ -133,7 +168,7 @@ export class WorkflowCompiler {
 
         // Add nodes to the graph
         for (const wfNode of Object.values(nodes))
-            await this.prepareNode(engineExecutionCtx, nodeExecutionCtx, wfNode, compilationCtx);
+            await this.prepareNode(engine, engineExecutionCtx, nodeExecutionCtx, wfNode, compilationCtx);
 
         // Add Edges. Might also get ran multiple times because nodes can have multiple edges between them because of ports.
         for (const edge of Object.values(edges)) {
@@ -150,7 +185,7 @@ export class WorkflowCompiler {
         }
 
         // Set Entry Points (Start Nodes)
-        const startNodes = this.findStartNodes(nodes, edges, nodeRuntimeMap);
+        const startNodes = this.findStartNodes(nodes, edges, (id) => engine.instanceRegistryAPI.get(id));
         if (startNodes.length === 0)
             throw new AggexCompilerError(
                 SystemError.Code.COMPILATION_NO_START_NODES,
@@ -161,7 +196,7 @@ export class WorkflowCompiler {
             graph.addDependency(S2Graph.START_VERTEX_ID, nodeId);
         });
         
-        await this.handleIgniter(engineExecutionCtx, execution.igniter);
+        await this.handleIgniter(engine, execution.igniter);
 
         return engineExecutionCtx;
     }
@@ -170,20 +205,19 @@ export class WorkflowCompiler {
 
 
     private async handleIgniter(
-        engineExecutionCtx: AggexEngine.Execution.Context, 
-        igniter:            Execution.Igniter
+        engine:  AggexEngine,
+        igniter: Execution.Igniter,
     ){
-        const { nodeRuntimeMap } = engineExecutionCtx;
         switch (igniter.variant) {
             case "webhook": {
-                const entry = nodeRuntimeMap.get(igniter.nodeId as unknown as Vertex.Id);
-                if (entry)
-                    await entry.instance.triggerWebhook(igniter.payload as Record<string, unknown>);
+                const instance = engine.instanceRegistryAPI.get(igniter.nodeId as Workflow.Node.Id);
+                if (instance)
+                    await instance.triggerWebhook(igniter.payload as Record<string, unknown>);
                 break;
             }
             case "chat_message": {
-                for (const entry of nodeRuntimeMap.values())
-                    await entry.instance.handleIgniter(igniter);
+                for (const instance of engine.instanceRegistryAPI.getAll())
+                    await instance.handleIgniter(igniter);
                 break;
             }
         }
@@ -193,6 +227,7 @@ export class WorkflowCompiler {
 
 
     private async prepareNode(
+        engine:             AggexEngine,
         engineExecutionCtx: AggexEngine.Execution.Context,
         nodeExecutionCtx:   RuntimeNode.ExecutionContext,
         wfNode:             Workflow.Node,
@@ -200,7 +235,7 @@ export class WorkflowCompiler {
     ): Promise<void> {
         let RuntimeNode = await CatalogueService.getNode(wfNode.blueprintId);
 
-        const { compiledGraph: graph, nodeRuntimeMap } = engineExecutionCtx;
+        const { compiledGraph: graph } = engineExecutionCtx;
 
         if (!RuntimeNode) {
             if(wfNode.workflowDependencyId){
@@ -228,7 +263,7 @@ export class WorkflowCompiler {
 
         graph.addVertex(wfNode.id);
 
-        nodeRuntimeMap.set(vertexId, { wfNode, instance: nodeInstance });
+        engine.registerNode(vertexId, wfNode, nodeInstance);
 
 
         // Set vertex execution strategy based on node fields. Default is "AND"
@@ -243,18 +278,18 @@ export class WorkflowCompiler {
 
 
     private findStartNodes(
-        nodes:          Workflow.Data["nodes"],
-        edges:          Workflow.Data["edges"],
-        nodeRuntimeMap: AggexEngine.Execution.Context["nodeRuntimeMap"],
+        nodes:       Workflow.Data["nodes"],
+        edges:       Workflow.Data["edges"],
+        getInstance: (id: Workflow.Node.Id) => RuntimeNode<Blueprint> | undefined,
     ): Workflow.Node.Id[] {
         const targetNodeIds = new Set<Workflow.Node.Id>();
         Object.values(edges).forEach(edge => targetNodeIds.add(edge.target.nodeId));
 
         return Object.keys(nodes).filter(id => {
-            if (targetNodeIds.has(id as Workflow.Node.Id)) 
+            if (targetNodeIds.has(id as Workflow.Node.Id))
                 return false;
-            const entry = nodeRuntimeMap.get(id as unknown as Vertex.Id);
-            if (entry && "isFloatingNode" in entry.instance) 
+            const instance = getInstance(id as Workflow.Node.Id);
+            if (instance && "isFloatingNode" in instance)
                 return false;
             return true;
         }) as Workflow.Node.Id[];

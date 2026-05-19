@@ -14,13 +14,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ): Promise<InferOutputs<typeof Blueprint>> {
 
         const outputId = this.workflowNode.id as unknown as Port.Output.Id;
-        console.log(`[ExposeOutputPort:onRun] nodeId=${this.workflowNode.id} outputId=${outputId} hasParentPortAPI=${!!this.context.parentPortAPI} input=${JSON.stringify(inputs.input)?.slice(0, 100)}`);
+        console.log(`[ExposeOutputPort:onRun] nodeId=${this.workflowNode.id} outputId=${outputId} input=${JSON.stringify(inputs.input)?.slice(0, 100)}`);
 
-        if (!this.context.parentPortAPI) 
-            throw new Error("No parent port API available. This node can only be used within a subworkflow.");
+        if (!this.context.enclosingNodeAPI)
+            throw new Error("No enclosing node API available. This node can only be used within a subworkflow.");
 
-        this.context.parentPortAPI.write(outputId, inputs.input);
-        this.context.parentPortAPI.propagate(outputId);
+        this.context.enclosingNodeAPI.writePort(outputId, inputs.input);
+        this.context.enclosingNodeAPI.emitPort(outputId);
 
         console.log(`[ExposeOutputPort:onRun] wrote and propagated outputId=${outputId}`);
         return {};

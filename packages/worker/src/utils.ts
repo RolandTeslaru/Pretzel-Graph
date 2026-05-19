@@ -1,26 +1,28 @@
-import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
+import { Workflow } from "@pretzel-graph/shared/domain";
 import { InferFields } from "./types";
+import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
+import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 
 export const uid = {
     randomUUID: (length: number) => Math.random().toString(36).substring(2, 2 + length)
 }
 
-export function mapFieldValues<T_Blueprint extends Foundations.Blueprint>(
+export function mapFieldValues<T_Blueprint extends Blueprint>(
     nodeId: Workflow.Node.Id,
     workflowData: Workflow.Data
 ): InferFields<T_Blueprint> {
     const node = workflowData.nodes[nodeId];
     const staticValues = workflowData.staticValues[nodeId] ?? {};
 
-    const resolved: Record<Foundations.Field.Id, Foundations.Field.Value> = {};
+    const resolved: Record<Field.Id, Field.Value> = {};
 
     for (const field of node.fields) {
-        const fieldId = field.id as Foundations.Field.Id;
+        const fieldId = field.id as Field.Id;
 
         if (fieldId in staticValues)
-            resolved[fieldId] = staticValues[fieldId] as Foundations.Field.Value;
+            resolved[fieldId] = staticValues[fieldId] as Field.Value;
         else
-            resolved[fieldId] = field.initialValue as Foundations.Field.Value;
+            resolved[fieldId] = field.initialValue as Field.Value;
     }
 
     return resolved as InferFields<T_Blueprint>
