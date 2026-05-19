@@ -28,6 +28,52 @@ export class AggexEngine {
 
 
 
+    // Lifecycle
+
+
+
+    public async run(
+
+        ctx: AggexEngine.Execution.Context
+    
+    ): Promise<AggexEngine.Execution.Result> {
+        ctx.activeNodes.clear();
+        const nodeStatusManager = new NodeStatusManager();
+
+        const hooks: S2Hooks = {
+            onVertexExecute:   (...props: Parameters<S2Hooks["onVertexExecute"]>)   => this.onNodeExecuted(ctx, ...props),
+            onVertexFired:     (...props: Parameters<S2Hooks["onVertexFired"]>)     => this.onNodeFired(ctx, nodeStatusManager, ...props),
+            onVertexCompleted: (...props: Parameters<S2Hooks["onVertexCompleted"]>) => this.onNodeCompleted(ctx, nodeStatusManager, ...props),
+            onVertexWaiting:   (...props: Parameters<S2Hooks["onVertexWaiting"]>)   => this.onNodeWaiting(ctx, nodeStatusManager, ...props),
+            onVertexError:     (...props: Parameters<S2Hooks["onVertexError"]>)     => this.onNodeError(ctx, nodeStatusManager, ...props),
+            canVertexRun:      (...props: Parameters<S2Hooks["canVertexRun"]>)      => this.canNodeRun(ctx, ...props),
+        } as const
+
+        const start = performance.now();
+
+        const result =  await Promise.race<AggexEngine.Execution.Result>([
+
+            this.s2Engine.ignite(ctx.compiledGraph, hooks).then(
+                () => ({ 
+                    status: "completed" as const, 
+                    duration: (performance.now() - start) / 1000 
+                })
+            ),
+
+            new Promise((resolve, reject) => {
+                ctx.abortSignal.addEventListener("abort", () => {
+                    resolve({
+                        status: "terminated" as const,
+                        duration: (performance.now() - start) / 1000
+                });
+                }, { once: true })
+            })
+        ])
+
+        return result;
+    }
+
+
 
     public pause(){
         if(this.pausePromise)
@@ -39,8 +85,7 @@ export class AggexEngine {
     }
 
 
-
-
+    
     public resume(){
         if(!this.pausePromise || !this.pauseResolve)
             return;
@@ -59,94 +104,80 @@ export class AggexEngine {
     }
 
 
+    // Port API
 
+    public readonly portAPI = {
+        write: (
+            ctx:      AggexEngine.Execution.Context,
+            nodeId:   Workflow.Node.Id,
+            outputId: Port.Output.Id,
+            value:    unknown,
+        ) => {
+            const outputPort = this.getOutputPort(ctx, nodeId, outputId);
 
-    public writeToOutputPort(
-        ctx:      AggexEngine.Execution.Context,
-        nodeId:   Workflow.Node.Id,
-        outputId: Port.Output.Id,
-        value:    unknown,
-    ): void {
-        const node = ctx.workflowData.nodes[nodeId];
-        if (!node)
-            throw new AggexExecutionError(
-                SystemError.Code.EXECUTION_NODE_FAILED,
-                `Cannot write output for unknown node "${nodeId}"`,
-            );
+            const projection = Synthesizer.project(value, outputPort.variant);
 
-        const output = node.outputs.find(output => output.id === outputId);
-        if (!output)
-            throw new AggexExecutionError(
-                SystemError.Code.EXECUTION_NODE_FAILED,
-                `Cannot write unknown output port "${outputId}" on node "${nodeId}"`,
-            );
+            ctx.updateSession(d => {
+                d.node_output_instances[nodeId] ??= {};
+                d.node_output_projections[nodeId] ??= {};
 
-        const projection = Synthesizer.project(value, output.variant);
+                d.node_output_instances[nodeId][outputId] = value;
+                d.node_output_projections[nodeId][outputId] = projection;
+            });
 
-        ctx.updateSession(d => {
-            d.node_output_instances[nodeId] ??= {};
-            d.node_output_projections[nodeId] ??= {};
-
-            d.node_output_instances[nodeId][outputId] = value;
-            d.node_output_projections[nodeId][outputId] = projection;
-        });
-
-        ctx.emit<Execution.Event.SessionUpdate>({
-            executionId: ctx.executionId,
-            workflowId:  ctx.workflowId,
-            type:        "update",
-            channel:     this.getEventChannel(ctx),
-            sessionUpdate: {
-                node_output_projections: {
-                    [nodeId]: {
-                        [outputId]: projection,
+            ctx.emit<Execution.Event.SessionUpdate>({
+                executionId: ctx.executionId,
+                workflowId:  ctx.workflowId,
+                type:        "update",
+                channel:     this.getEventChannel(ctx),
+                sessionUpdate: {
+                    node_output_projections: {
+                        [nodeId]: {
+                            [outputId]: projection,
+                        },
                     },
                 },
-            },
-        });
-    }
+            });
+        },
+        propogate: (
+            ctx:      AggexEngine.Execution.Context,
+            nodeId:   Workflow.Node.Id,
+            outputId: Port.Output.Id,
+        ) => {
+            ctx.propagatedOutputPorts.add(outputPortKey(nodeId, outputId));
 
-
-
-
-    public propagatePort(
-        ctx:      AggexEngine.Execution.Context,
-        nodeId:   Workflow.Node.Id,
-        outputId: Port.Output.Id,
-    ): void {
-        ctx.propagatedOutputPorts.add(outputPortKey(nodeId, outputId));
-
-        const edges = Object.values(ctx.workflowData.edges).filter(edge =>
-            edge.source.nodeId === nodeId &&
-            edge.source.portId === outputId
-        );
-
-        const edgeIds: Record<string, Workflow.Edge.Id> = {};
-        for (const edge of edges)
-            edgeIds[edge.id] = edge.id;
-
-        const edgeStateUpdate = this.applyEdgeStateUpdate(
-            ctx,
-            edgeIds,
-            "waiting",
-            state => { state.runCount += 1; },
-        );
-
-        for (const edge of edges)
-            this.s2Engine.addSignal(
-                edge.target.nodeId as unknown as Vertex.Id,
-                nodeId as unknown as Vertex.Id,
+            const edges = Object.values(ctx.workflowData.edges).filter(edge =>
+                edge.source.nodeId === nodeId &&
+                edge.source.portId === outputId
             );
 
-        ctx.emit<Execution.Event.SessionUpdate>({
-            executionId: ctx.executionId,
-            workflowId:  ctx.workflowId,
-            type:        "update",
-            channel:     this.getEventChannel(ctx),
-            sessionUpdate: {
-                edge_state: edgeStateUpdate,
-            },
-        });
+            const edgeIds: Record<string, Workflow.Edge.Id> = {};
+            for (const edge of edges)
+                edgeIds[edge.id] = edge.id;
+
+            const edgeStateUpdate = this.session.createEdgeStateUpdate(
+                ctx,
+                edgeIds,
+                "waiting",
+                state => { state.runCount += 1; },
+            );
+
+            for (const edge of edges)
+                this.s2Engine.addSignal(
+                    edge.target.nodeId as unknown as Vertex.Id,
+                    nodeId as unknown as Vertex.Id,
+                );
+
+            ctx.emit<Execution.Event.SessionUpdate>({
+                executionId: ctx.executionId,
+                workflowId:  ctx.workflowId,
+                type:        "update",
+                channel:     this.getEventChannel(ctx),
+                sessionUpdate: {
+                    edge_state: edgeStateUpdate,
+                },
+            });
+        }
     }
 
 
@@ -154,28 +185,6 @@ export class AggexEngine {
 
     private getEventChannel(ctx: AggexEngine.Execution.Context): Execution.Event.Channel{
         return Execution.Event.getChannel(ctx.executionId);
-    }
-
-
-
-
-    private projectOutputs(
-        result: Record<string, any>,
-        wfNode: Workflow.Node
-    ): Record<Port.Output.Id, Projection> {
-        const projected: Record<Port.Output.Id, Projection> = {};
-
-        for (const output of wfNode.outputs) {
-            const key = output.id;
-            if (key in result){
-                if(result[key] === undefined)
-                    projected[key] = undefined as unknown as Projection;
-                else
-                    projected[key] = Synthesizer.project(result[key], output.variant);
-            }
-        }
-
-        return projected;
     }
 
 
@@ -199,100 +208,117 @@ export class AggexEngine {
 
 
 
+    private readonly node = {
+        getIncomingData: (
+            ctx:             AggexEngine.Execution.Context,
+            nodeId:          Workflow.Node.Id,
+            incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set(),
+            keepMissingPorts = false,
+        ): Record<Port.Input.Id, any> => {
+            const wfNode = ctx.workflowData.nodes[nodeId];
+            const staticValues = ctx.workflowData.staticValues[nodeId] ?? {};
 
-    private resolveIncomingData(
-        ctx:             AggexEngine.Execution.Context,
-        nodeId:          Workflow.Node.Id,
-        incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set(),
-        keepMissingPorts = false,
-    ): Record<Port.Input.Id, any> {
-        const wfNode = ctx.workflowData.nodes[nodeId];
-        const staticValues = ctx.workflowData.staticValues[nodeId] ?? {};
+            const resolved: Record<Port.Input.Id, any> = {};
 
-        const resolved: Record<Port.Input.Id, any> = {};
+            const incomingEdgeByPort = ctx.workflowCache.inputHandlesMap[nodeId]
 
-        const incomingEdgeByPort = ctx.workflowCache.inputHandlesMap[nodeId]
+            for (const input of wfNode.inputs) {
+                const edgeId = incomingEdgeByPort[input.id]
+                const edge = ctx.workflowData.edges[edgeId];
 
-        for (const input of wfNode.inputs) {
-            const edgeId = incomingEdgeByPort[input.id]
-            const edge = ctx.workflowData.edges[edgeId];
+                if (edge) {
+                    if(incomingSignals.has(edge.source.nodeId) === false){
+                        if(keepMissingPorts)
+                            resolved[input.id] = undefined;
+                        continue;
+                    }
 
-            if (edge) {
-                if(incomingSignals.has(edge.source.nodeId) === false){
-                    if(keepMissingPorts)
+                    const sourceOutputs = ctx.session.node_output_instances[edge.source.nodeId];
+                    if (sourceOutputs) {
+                        const rawReference = sourceOutputs[edge.source.portId as string];
+                        if(!rawReference)
+                            resolved[input.id] = undefined;
+                        else 
+                            resolved[input.id] = Synthesizer.ensureReference(rawReference, input.variant);
+                    }
+                    else {
                         resolved[input.id] = undefined;
-                    continue;
-                }
+                    }
+                } else {
+                    const staticValue = staticValues[input.id];
+                    const fallback = "initialValue" in input ? input.initialValue : undefined;
+                    const raw = staticValue ?? fallback;
 
-                const sourceOutputs = ctx.session.node_output_instances[edge.source.nodeId];
-                if (sourceOutputs) {
-                    const rawReference = sourceOutputs[edge.source.portId as string];
-                    if(!rawReference)
+                    if (raw !== undefined) {
+                        resolved[input.id] = raw as Field.Value;
+                    }
+                    else {
                         resolved[input.id] = undefined;
-                    else 
-                        resolved[input.id] = Synthesizer.ensureReference(rawReference, input.variant);
-                }
-                else {
-                    resolved[input.id] = undefined;
-                }
-            } else {
-                const staticValue = staticValues[input.id];
-                const fallback = "initialValue" in input ? input.initialValue : undefined;
-                const raw = staticValue ?? fallback;
-
-                if (raw !== undefined) {
-                    resolved[input.id] = raw as Field.Value;
-                }
-                else {
-                    resolved[input.id] = undefined;
+                    }
                 }
             }
+
+            return resolved;
+        },
+        projectOutputs: (
+            result: Record<string, any>,
+            wfNode: Workflow.Node
+        ): Record<Port.Output.Id, Projection> => {
+            const projected: Record<Port.Output.Id, Projection> = {};
+
+            for (const output of wfNode.outputs) {
+                const key = output.id;
+                if (key in result){
+                    if(result[key] === undefined)
+                        projected[key] = undefined as unknown as Projection;
+                    else
+                        projected[key] = Synthesizer.project(result[key], output.variant);
+                }
+            }
+
+            return projected;
         }
-
-        return resolved;
     }
 
 
 
+    private readonly session = {
+        /**
+         * Mutates edge states in the session and returns the updated entries for event emission.
+         * @param edgeIds   — edge ID map from the workflow cache
+         * @param status    — the status to set on each edge
+         * @param onUpdate  — optional callback applied to each edge state after status is set (e.g. runCount increment)
+         */
+        createEdgeStateUpdate: (
+            
+            ctx:       AggexEngine.Execution.Context,
+            edgeIds:   Record<string, Workflow.Edge.Id>,
+            status:    Execution.Session.EdgeState["status"],
+            onUpdate?: (state: Execution.Session.EdgeState) => void,
 
-    /**
-     * Mutates edge states in the session and returns the updated entries for event emission.
-     * @param edgeIds   — edge ID map from the workflow cache
-     * @param status    — the status to set on each edge
-     * @param onUpdate  — optional callback applied to each edge state after status is set (e.g. runCount increment)
-     */
-    private applyEdgeStateUpdate(
+        ): Execution.Session["edge_state"] => {
+            ctx.updateSession(d => {
+                if (!d.edge_state)
+                    d.edge_state = {};
 
-        ctx:       AggexEngine.Execution.Context,
-        edgeIds:   Record<string, Workflow.Edge.Id>,
-        status:    Execution.Session.EdgeState["status"],
+                for (const edgeId of Object.values(edgeIds)) {
+                    if (!d.edge_state[edgeId])
+                        d.edge_state[edgeId] = { status, runCount: 0 };
+                    else
+                        d.edge_state[edgeId].status = status;
 
-        onUpdate?: (state: Execution.Session.EdgeState) => void,
-    
-    ): Execution.Session["edge_state"] {
-    
-        ctx.updateSession(d => {
-            if (!d.edge_state)
-                d.edge_state = {};
+                    if (onUpdate)
+                        onUpdate(d.edge_state[edgeId]);
+                }
+            });
 
-            for (const edgeId of Object.values(edgeIds)) {
-                if (!d.edge_state[edgeId])
-                    d.edge_state[edgeId] = { status, runCount: 0 };
-                else
-                    d.edge_state[edgeId].status = status;
+            const update: Execution.Session["edge_state"] = {};
+            for (const edgeId of Object.values(edgeIds))
+                update[edgeId] = ctx.session.edge_state[edgeId];
 
-                if (onUpdate)
-                    onUpdate(d.edge_state[edgeId]);
-            }
-        });
-
-        const update: Execution.Session["edge_state"] = {};
-        for (const edgeId of Object.values(edgeIds))
-            update[edgeId] = ctx.session.edge_state[edgeId];
-
-        return update;
+            return update;
+        }
     }
-    
 
 
 
@@ -314,17 +340,17 @@ export class AggexEngine {
         if (incomingEdges)
             Object.assign(
                 edgeStateUpdate, 
-                this.applyEdgeStateUpdate(ctx, incomingEdges, "completed")
+                this.session.createEdgeStateUpdate(ctx, incomingEdges, "completed")
             );
 
         // Set all outgoing edges to preparing (skip for router nodes — only the taken branch should light up)
-        if (!('isRouterNode' in entry.instance)) {
+        if (this.isRouterNode(entry.instance) === false){
             const outgoingEdges = workflowCache.outgoingEdgesMap[entry.wfNode.id];
 
             if (outgoingEdges)
                 Object.assign(
                     edgeStateUpdate, 
-                    this.applyEdgeStateUpdate(ctx, outgoingEdges, "preparing")
+                    this.session.createEdgeStateUpdate(ctx, outgoingEdges, "preparing")
                 );
         }
 
@@ -388,7 +414,7 @@ export class AggexEngine {
 
         const dataDependency = entry.instance.fields["dataDependency" as Field.Id];
         
-        const inputs = this.resolveIncomingData(
+        const inputs = this.node.getIncomingData(
             ctx, 
             wfNode.id, 
             dataDependency === "AND" ? allDependencies : signals
@@ -402,7 +428,7 @@ export class AggexEngine {
         else
             result = await nodeInstance.run(inputs);
 
-        const projectedResult = this.projectOutputs(result, wfNode);
+        const projectedResult = this.node.projectOutputs(result, wfNode);
 
         ctx.updateSession(d => {
             d.node_output_instances[wfNode.id] = {
@@ -415,7 +441,7 @@ export class AggexEngine {
             };
         });
             
-        if ('isRouterNode' in nodeInstance)
+        if (this.isRouterNode(nodeInstance))
             return this.resolveRouterSignals(ctx, wfNode.id, result);
     }
 
@@ -436,20 +462,19 @@ export class AggexEngine {
         if (!entry)
             return
 
-
         // Set outgoing edges to waiting and increment runCount
         // For router nodes, only update edges for the taken branches
         const allOutgoingEdges = workflowCache.outgoingEdgesMap[entry.wfNode.id];
         let edgeStateUpdate: Execution.Session["edge_state"] = {};
 
         if (allOutgoingEdges) {
-            if ('isRouterNode' in entry.instance && resolvedOutSignals) {
+            if (this.isRouterNode(entry.instance) && resolvedOutSignals) {
                 const takenEdges: Record<string, Workflow.Edge.Id> = {};
                 for (const [targetId, edgeId] of Object.entries(allOutgoingEdges)) {
                     if (resolvedOutSignals.has(targetId as unknown as Vertex.Id))
                         takenEdges[targetId] = edgeId;
                 }
-                edgeStateUpdate = this.applyEdgeStateUpdate(ctx, takenEdges, "waiting", s => { s.runCount += 1; });
+                edgeStateUpdate = this.session.createEdgeStateUpdate(ctx, takenEdges, "waiting", s => { s.runCount += 1; });
             } else {
                 const unpropagatedEdges: Record<string, Workflow.Edge.Id> = {};
                 for (const [targetId, edgeId] of Object.entries(allOutgoingEdges)) {
@@ -463,7 +488,7 @@ export class AggexEngine {
                     unpropagatedEdges[targetId] = edgeId;
                 }
 
-                edgeStateUpdate = this.applyEdgeStateUpdate(ctx, unpropagatedEdges, "waiting", s => { s.runCount += 1; });
+                edgeStateUpdate = this.session.createEdgeStateUpdate(ctx, unpropagatedEdges, "waiting", s => { s.runCount += 1; });
             }
         }
 
@@ -519,9 +544,11 @@ export class AggexEngine {
         const { instance, wfNode } = entry;
 
         const nodeDepMap: Record<Workflow.Node.Id, boolean> = {};
-        for (const [depId, resolved] of Object.entries(dependencyResolutionMap)) {
-            nodeDepMap[depId as unknown as Workflow.Node.Id] = resolved;
-        }
+
+        Object.entries(dependencyResolutionMap).forEach(([_depId, resolved]) => {
+            const depId = _depId as unknown as Workflow.Node.Id;
+            nodeDepMap[depId] = resolved;
+        })
 
         const existing = ctx.session.node_status[wfNode.id];
         const nodeStatus: Execution.Session.NodeStatus = {
@@ -546,7 +573,7 @@ export class AggexEngine {
             },
         });
 
-        const partialInputs = this.resolveIncomingData(ctx, wfNode.id, arrivedSignals);
+        const partialInputs = this.node.getIncomingData(ctx, wfNode.id, arrivedSignals);
         instance.wait(partialInputs, nodeDepMap);
     }
 
@@ -636,7 +663,7 @@ export class AggexEngine {
                 // In non-AND signal dependency mode, we need to check if all data dependencies are resolved before allowing the node to run
                 const dependencies = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
 
-                const incomingInputs = this.resolveIncomingData(ctx, wfNode.id, dependencies, true);
+                const incomingInputs = this.node.getIncomingData(ctx, wfNode.id, dependencies, true);
 
                 const requiredPortIds = new Set(
                     wfNode.inputs.filter(p => p.required).map(p => p.id)
@@ -666,47 +693,45 @@ export class AggexEngine {
 
 
 
+    // Selectors
 
 
-    public async run(
+    private getNode(ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id): Workflow.Node {
+        const node = ctx.workflowData.nodes[nodeId];
+            if (!node)
+                throw new AggexExecutionError(
+                    SystemError.Code.EXECUTION_NODE_FAILED,
+                    `Cannot write output for unknown node "${nodeId}"`,
+                );
+        return node;
+    }
 
-        ctx: AggexEngine.Execution.Context
-    
-    ): Promise<AggexEngine.Execution.Result> {
-        ctx.activeNodes.clear();
-        const nodeStatusManager = new NodeStatusManager();
+    private getOutputPort(ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id, outputId: Port.Output.Id): Port.Output {
+        const node = this.getNode(ctx, nodeId);
 
-        const hooks: S2Hooks = {
-            onVertexExecute:   (...props: Parameters<S2Hooks["onVertexExecute"]>)   => this.onNodeExecuted(ctx, ...props),
-            onVertexFired:     (...props: Parameters<S2Hooks["onVertexFired"]>)     => this.onNodeFired(ctx, nodeStatusManager, ...props),
-            onVertexCompleted: (...props: Parameters<S2Hooks["onVertexCompleted"]>) => this.onNodeCompleted(ctx, nodeStatusManager, ...props),
-            onVertexWaiting:   (...props: Parameters<S2Hooks["onVertexWaiting"]>)   => this.onNodeWaiting(ctx, nodeStatusManager, ...props),
-            onVertexError:     (...props: Parameters<S2Hooks["onVertexError"]>)     => this.onNodeError(ctx, nodeStatusManager, ...props),
-            canVertexRun:      (...props: Parameters<S2Hooks["canVertexRun"]>)      => this.canNodeRun(ctx, ...props),
-        } as const
+        const output = node.outputs.find(output => output.id === outputId);
+        if (!output)
+            throw new AggexExecutionError(
+                SystemError.Code.EXECUTION_NODE_FAILED,
+                `Cannot write unknown output port "${outputId}" on node "${nodeId}"`,
+            );
+        return output;
+    }
 
-        const start = performance.now();
+    private getInputPort(ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id, inputId: Port.Input.Id): Port.Input {
+        const node = this.getNode(ctx, nodeId);
 
-        const result =  await Promise.race<AggexEngine.Execution.Result>([
+        const input = node.inputs.find(input => input.id === inputId);
+        if (!input)
+            throw new AggexExecutionError(
+                SystemError.Code.EXECUTION_NODE_FAILED,
+                `Cannot read unknown input port "${inputId}" on node "${nodeId}"`,
+            );
+        return input;
+    }
 
-            this.s2Engine.ignite(ctx.compiledGraph, hooks).then(
-                () => ({ 
-                    status: "completed" as const, 
-                    duration: (performance.now() - start) / 1000 
-                })
-            ),
-
-            new Promise((resolve, reject) => {
-                ctx.abortSignal.addEventListener("abort", () => {
-                    resolve({
-                        status: "terminated" as const,
-                        duration: (performance.now() - start) / 1000
-                });
-                }, { once: true })
-            })
-        ])
-
-        return result;
+    private isRouterNode(instance: RuntimeNode<Blueprint>): boolean {
+        return "isRouterNode" in instance;
     }
 }
 

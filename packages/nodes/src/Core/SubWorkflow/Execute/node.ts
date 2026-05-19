@@ -12,7 +12,7 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
 
 
 
-    private subEnvironment!: ReturnType<RuntimeNode.ExecutionContext["subworkflowHooks"]["createEnv"]>;
+    private subEnvironment!: ReturnType<RuntimeNode.ExecutionContext["subWorkflowAPI"]["createEnv"]>;
     private subEngineCtx!: AggexEngine.Execution.Context;
 
 
@@ -59,14 +59,14 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
             updated_at:  new Date().toISOString(),
         };
 
-        this.subEnvironment = this.context.subworkflowHooks.createEnv();
+        this.subEnvironment = this.context.subWorkflowAPI.createEnv();
 
         const parentBridgeHooks: RuntimeNode.ExecutionContext["parentBridgeHooks"] = {
-            writeToOutputPort: (outputId, value) => {
-                this.context.portHooks.writeToOutputPort(this.workflowNode.id, outputId, value);
+            writeOutputPort: (outputId, value) => {
+                this.context.portHooks.writeOutputPort(this.workflowNode.id, outputId, value);
             },
-            propagateFromOutputPort: (outputId) => {
-                this.context.portHooks.propagateFromOutputPort(this.workflowNode.id, outputId);
+            propagateOutputPort: (outputId) => {
+                this.context.portHooks.propagateOutputPort(this.workflowNode.id, outputId);
             },
         };
 
