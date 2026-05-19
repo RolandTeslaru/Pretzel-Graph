@@ -853,6 +853,26 @@ export const LogOut: React.FC<BaseIconProps> = (props) => (
 )
 LogOut.displayName = "LogOut"
 
+export const PortalIn: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="m7 15 3-3-3-3"/>
+        <path d="M10 12H4"/>
+        <path d="M15 3 C22 3 22 21 15 21"/>
+        <path d="M10 3 C17 3 17 21 10 21"/>
+    </BaseIcon>
+)
+PortalIn.displayName = "PortalIn"
+
+export const PortalOut: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="m18 15 3-3-3-3"/>
+        <path d="M14 12H20"/>
+        <path d="M9 3 C2 3 2 21 9 21"/>
+        <path d="M14 3 C7 3 7 21 14 21"/>
+    </BaseIcon>
+)
+PortalOut.displayName = "PortalOut"
+
 export const ArrowBigUpDash: React.FC<BaseIconProps> = (props) => (
     <BaseIcon strokeWidth={2} {...props}>
         <path d="M14 16a1 1 0 0 0 1-1v-2a1 1 0 0 1 1-1h3.293a.707.707 0 0 0 .5-1.207l-6.939-6.939a1.207 1.207 0 0 0-1.708 0l-6.94 6.94a.707.707 0 0 0 .5 1.206H8a1 1 0 0 1 1 1v2a1 1 0 0 0 1 1z"/>

@@ -236,6 +236,11 @@ export abstract class RuntimeNode<
     }
 }
 
+export abstract class RuntimeFloatingNode<T_Blueprint extends Blueprint> extends RuntimeNode<T_Blueprint> {
+
+    public readonly isFloatingNode: true = true;
+}
+
 export abstract class RuntimeRouterNode<T_Blueprint extends Blueprint> extends RuntimeNode<T_Blueprint> {
 
     public readonly isRouterNode: true = true;
@@ -277,7 +282,27 @@ export namespace RuntimeNode {
         readonly workflowData: Workflow.Data,
         readonly workflowId: Workflow.Id,
         readonly workflowCache: Workflow.Cache,
-        readonly subworkflowHooks: {
+        readonly portAPI: {
+            write: (
+                nodeId: Workflow.Node.Id,
+                outputId: Port.Output.Id,
+                value: unknown,
+            ) => void,
+            propagate: (
+                nodeId: Workflow.Node.Id,
+                outputId: Port.Output.Id,
+            ) => void,
+        },
+        readonly parentPortAPI?: {
+            write: (
+                outputId: Port.Output.Id,
+                value: unknown,
+            ) => void,
+            propagate: (
+                outputId: Port.Output.Id,
+            ) => void,
+        },
+        readonly subWorkflowAPI: {
             createEnv: () => {
                 compile: (
                     workflowId: Workflow.Id,
@@ -285,30 +310,10 @@ export namespace RuntimeNode {
                     execution: Execution,
                     emit: ExecutionContext["emit"],
                     compilationCtx: CompilationContext,
-                    parentBridgeHooks?: ExecutionContext["parentBridgeHooks"],
+                    parentPortAPI?: ExecutionContext["parentPortAPI"],
                 ) => Promise<unknown>,
                 run: (ctx: unknown) => Promise<unknown>,
             }
-        },
-        readonly portHooks: {
-            writeToOutputPort: (
-                nodeId: Workflow.Node.Id,
-                outputId: Port.Output.Id,
-                value: unknown,
-            ) => void,
-            propagateFromOutputPort: (
-                nodeId: Workflow.Node.Id,
-                outputId: Port.Output.Id,
-            ) => void,
-        },
-        readonly parentBridgeHooks?: {
-            writeToOutputPort: (
-                outputId: Port.Output.Id,
-                value: unknown,
-            ) => void,
-            propagateFromOutputPort: (
-                outputId: Port.Output.Id,
-            ) => void,
         },
     }
 }
