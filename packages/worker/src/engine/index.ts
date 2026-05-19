@@ -26,6 +26,19 @@ export class AggexEngine {
 
     private hooks: AggexHooks;
 
+    private nodeRuntimeMap = new Map<Vertex.Id, { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> }>();
+
+    public registerNode(vertexId: Vertex.Id, wfNode: Workflow.Node, instance: RuntimeNode<Blueprint>): void {
+        this.nodeRuntimeMap.set(vertexId, { wfNode, instance });
+    }
+
+    public readonly instanceRegistryAPI = {
+        get:    (nodeId: Workflow.Node.Id): RuntimeNode<Blueprint> | undefined =>
+            this.nodeRuntimeMap.get(nodeId as unknown as Vertex.Id)?.instance,
+        getAll: (): RuntimeNode<Blueprint>[] =>
+            Array.from(this.nodeRuntimeMap.values()).map(e => e.instance),
+    }
+
 
 
     // Lifecycle
@@ -139,13 +152,14 @@ export class AggexEngine {
                 },
             });
         },
-        propogate: (
+    }
+
+    public readonly propagationAPI = {
+        emitPort: (
             ctx:      AggexEngine.Execution.Context,
             nodeId:   Workflow.Node.Id,
             outputId: Port.Output.Id,
         ) => {
-            ctx.propagatedOutputPorts.add(outputPortKey(nodeId, outputId));
-
             const edges = Object.values(ctx.workflowData.edges).filter(edge =>
                 edge.source.nodeId === nodeId &&
                 edge.source.portId === outputId
@@ -163,10 +177,7 @@ export class AggexEngine {
             );
 
             for (const edge of edges)
-                this.s2Engine.addSignal(
-                    edge.target.nodeId as unknown as Vertex.Id,
-                    nodeId as unknown as Vertex.Id,
-                );
+                this.schedulerAPI.signalNode(ctx, edge.target.nodeId, nodeId);
 
             ctx.emit<Execution.Event.SessionUpdate>({
                 executionId: ctx.executionId,
@@ -177,9 +188,67 @@ export class AggexEngine {
                     edge_state: edgeStateUpdate,
                 },
             });
-        }
+        },
+        emitNode: (
+            ctx:    AggexEngine.Execution.Context,
+            nodeId: Workflow.Node.Id,
+        ) => {
+            const node = ctx.workflowData.nodes[nodeId];
+            if (!node) return;
+
+            const allEdgeIds: Record<string, Workflow.Edge.Id> = {};
+
+            for (const output of node.outputs) {
+                for (const edge of Object.values(ctx.workflowData.edges)) {
+                    if (edge.source.nodeId === nodeId && edge.source.portId === output.id)
+                        allEdgeIds[edge.id] = edge.id;
+                }
+            }
+
+            const edgeStateUpdate = this.session.createEdgeStateUpdate(
+                ctx,
+                allEdgeIds,
+                "waiting",
+                state => { state.runCount += 1; },
+            );
+
+            for (const edgeId of Object.values(allEdgeIds)) {
+                const edge = ctx.workflowData.edges[edgeId];
+
+                this.schedulerAPI.signalNode(ctx,edge.target.nodeId,nodeId,);
+            }
+
+            ctx.emit<Execution.Event.SessionUpdate>({
+                executionId: ctx.executionId,
+                workflowId:  ctx.workflowId,
+                type:        "update",
+                channel:     this.getEventChannel(ctx),
+                sessionUpdate: {
+                    edge_state: edgeStateUpdate,
+                },
+            });
+        },
     }
 
+
+
+    public readonly schedulerAPI = {
+        fireNode: (ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id, signals: Set<Workflow.Node.Id | Vertex.Id> = new Set()) => {
+            this.s2Engine.overrides.fireVertex(nodeId as unknown as Vertex.Id, signals as Set<Vertex.Id>);
+        },
+        signalNode: (ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id, fromNodeId: Workflow.Node.Id) => {
+            this.s2Engine.overrides.addSignal(nodeId as unknown as Vertex.Id, fromNodeId as unknown as Vertex.Id);
+        },
+        removeSignal: (ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id, fromNodeId: Workflow.Node.Id) => {
+            this.s2Engine.overrides.removeSignal(nodeId as unknown as Vertex.Id, fromNodeId as unknown as Vertex.Id);
+        },
+        clearSignals: (ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id) => {
+            this.s2Engine.overrides.clearSignals(nodeId as unknown as Vertex.Id);
+        },
+        scheduleCheck: (ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id) => {
+            this.s2Engine.overrides.scheduleCheck(nodeId as unknown as Vertex.Id);
+        },
+    }
 
 
 
@@ -327,9 +396,9 @@ export class AggexEngine {
         nodeStatusManager: NodeStatusManager,
         nodeId:            Vertex.Id,
     ): void {
-        const { workflowCache, nodeRuntimeMap } = ctx
+        const { workflowCache } = ctx
 
-        const entry = nodeRuntimeMap.get(nodeId);
+        const entry = this.nodeRuntimeMap.get(nodeId);
         if (!entry)
             return;
 
@@ -403,10 +472,10 @@ export class AggexEngine {
         signals:  Set<Workflow.Node.Id | Vertex.Id>
     ): Promise<Set<Vertex.Id> | void> => {
         
-        const entry = ctx.nodeRuntimeMap.get(vertexId);
+        const entry = this.nodeRuntimeMap.get(vertexId);
         if (!entry)
             return;
-        
+
         const wfNode = entry.wfNode;
         const nodeInstance = entry.instance;
 
@@ -454,11 +523,11 @@ export class AggexEngine {
         vertexId:          Vertex.Id,
         resolvedOutSignals:Set<Vertex.Id> | void,
     ) {
-        const { session, nodeRuntimeMap, workflowCache } = ctx
+        const { session, workflowCache } = ctx
 
         ctx.activeNodes.delete(vertexId);
 
-        const entry = nodeRuntimeMap.get(vertexId);
+        const entry = this.nodeRuntimeMap.get(vertexId);
         if (!entry)
             return
 
@@ -476,19 +545,7 @@ export class AggexEngine {
                 }
                 edgeStateUpdate = this.session.createEdgeStateUpdate(ctx, takenEdges, "waiting", s => { s.runCount += 1; });
             } else {
-                const unpropagatedEdges: Record<string, Workflow.Edge.Id> = {};
-                for (const [targetId, edgeId] of Object.entries(allOutgoingEdges)) {
-                    const edge = ctx.workflowData.edges[edgeId];
-                    if (!edge)
-                        continue;
-
-                    if (ctx.propagatedOutputPorts.has(outputPortKey(entry.wfNode.id, edge.source.portId)))
-                        continue;
-
-                    unpropagatedEdges[targetId] = edgeId;
-                }
-
-                edgeStateUpdate = this.session.createEdgeStateUpdate(ctx, unpropagatedEdges, "waiting", s => { s.runCount += 1; });
+                edgeStateUpdate = this.session.createEdgeStateUpdate(ctx, allOutgoingEdges, "waiting", s => { s.runCount += 1; });
             }
         }
 
@@ -537,7 +594,7 @@ export class AggexEngine {
         dependencyResolutionMap: Record<Vertex.Id, boolean>,
         _totalDeps:              number,
     ) {
-        const entry = ctx.nodeRuntimeMap.get(vertexId);
+        const entry = this.nodeRuntimeMap.get(vertexId);
         if (!entry)
             return
 
@@ -636,7 +693,7 @@ export class AggexEngine {
     ): boolean {
         console.log(`[canNodeRun] vertexId=${vertexId} s2Assessment=${s2EngineAssesment} receivedSignals=[${[...receivedSignals].join(", ")}]`);
 
-        const entry = ctx.nodeRuntimeMap.get(vertexId);
+        const entry = this.nodeRuntimeMap.get(vertexId);
         if (!entry) {
             console.log(`[canNodeRun] vertexId=${vertexId} → no runtime entry, returning true`);
             return true;
@@ -746,13 +803,8 @@ export namespace AggexEngine {
         }
     
         export interface Context extends RuntimeNode.ExecutionContext {
-            compiledGraph:     S2Graph,
-            activeNodes:       Set<Workflow.Node.Id | Vertex.Id>;
-            propagatedOutputPorts: Set<string>;
-            nodeRuntimeMap:  Map<
-                Vertex.Id | Workflow.Node.Id, 
-                { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> }
-            >
+            compiledGraph: S2Graph,
+            activeNodes:   Set<Workflow.Node.Id | Vertex.Id>;
         }
 
     }
@@ -760,9 +812,3 @@ export namespace AggexEngine {
     export type ExecutionContext = Execution.Context;
 }
 
-function outputPortKey(
-    nodeId: Workflow.Node.Id,
-    outputId: Port.Output.Id,
-): string {
-    return `${nodeId}:${outputId}`;
-}

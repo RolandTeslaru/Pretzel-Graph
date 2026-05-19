@@ -1,9 +1,8 @@
 import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
-import { mapFieldValues } from "@pretzel-graph/node-sdk/src/utils/mapFieldValues";
-import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
+import { Blueprint as PortalOutBlueprint } from "../Out/blueprint";
+import { Node as PortalOutNode } from "../Out/node";
 import { Workflow } from "@pretzel-graph/shared/domain";
-import { Blueprint as PortOutBlueprint } from "../Out/blueprint";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -13,27 +12,16 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const myPortalId = this.fields.portalId;
+        const outNodes = this.context.workflowQueryAPI
+            .getNodesByBlueprint<typeof PortalOutBlueprint>(PortalOutBlueprint.id)
+            .filter(({ fields }) => fields["portalId"] === this.fields.portalId);
 
-        const outNodes = Object.values(this.context.workflowData.nodes).filter(n => {
-            if (n.blueprintId !== "Core.Routing.Portal.Out") 
-                return false;
+        for (const { node } of outNodes) {
+            const instance = this.context.instanceRegistryAPI.get(node.id);
+            if (!(instance instanceof PortalOutNode)) continue;
 
-            const fields = mapFieldValues<typeof PortOutBlueprint>(n.id, this.context.workflowData);
-
-            return fields["portalId"] === myPortalId;
-        });
-
-        for (const outNode of outNodes) {
-            this.context.portAPI.write(
-                outNode.id,
-                "output" as Port.Output.Id,
-                inputs.input,
-            );
-            this.context.portAPI.propagate(
-                outNode.id,
-                "output" as Port.Output.Id,
-            );
+            instance.injectedData = inputs.input;
+            this.context.schedulerAPI.fireNode(node.id as Workflow.Node.Id);
         }
 
         return {};

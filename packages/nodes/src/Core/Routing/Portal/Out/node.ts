@@ -6,11 +6,11 @@ export class Node extends RuntimeFloatingNode<typeof Blueprint> {
 
     public readonly Blueprint = Blueprint;
 
-    // Data and signal are pushed by Portal.In via portAPI — this node never actually executes.
+    public injectedData: unknown = undefined;
+
     protected override async onRun(
         _inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        // @ts-expect-error
-        return {};
+        return { output: this.injectedData }
     }
 }
