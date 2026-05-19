@@ -182,10 +182,6 @@ export const RefreshCcw: React.FC<BaseIconProps> = (props) => (
     <BaseIcon {...props}><path d="M1 4v6h6M23 20v-6h-6"></path><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"></path></BaseIcon>
 )
 RefreshCcw.displayName = "RefreshCcw"
-export const Lambda: React.FC<BaseIconProps> = (props) => (
-    <BaseIcon {...props}><path d="M6.998 3.5c-.216 0-.364.142-.364.314 0 .171.146.315.337.315l.228.002c.902.016 1.41.135 1.833.437.416.298.784.798 1.277 1.724l.227.44 1.591 3.543-.137.225-6.445 10.528a.299.299 0 00-.005.306c.057.1.167.164.288.166a.338.338 0 00.295-.158l6.334-10.347.392.852 3.042 6.627.496 1.126.11.236c.2.424.373.714.575.944.429.49.98.692 1.88.717l.182.004.08-.004a.321.321 0 00.286-.312c0-.17-.147-.314-.34-.314l-.193-.003c-.728-.02-1.094-.16-1.392-.501l-.06-.073a3.994 3.994 0 01-.41-.715c-.048-.1-.098-.208-.155-.336l-.447-1.017-3.696-8.052-1.662-3.698-.158-.31c-.574-1.103-1.016-1.714-1.553-2.098-.551-.396-1.19-.548-2.208-.566L6.998 3.5z"></path></BaseIcon>
-)
-Lambda.displayName = "Lambda"
 
 
 
@@ -919,3 +915,109 @@ export const TableOfContents: React.FC<BaseIconProps> = (props) => (
 TableOfContents.displayName = "TableOfContents"
 
 LogOut.displayName = "LogOut"
+
+export const Lambda: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M6 20l6.5 -9" />
+        <path d="M19 20c-6 0 -6 -16 -12 -16" />
+    </BaseIcon>
+)
+Lambda.displayName = "Lambda"
+
+export const MathFunction: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M3 19a2 2 0 0 0 2 2c2 0 2 -4 3 -9s1 -9 3 -9a2 2 0 0 1 2 2" />
+        <path d="M5 12h6" />
+        <path d="M15 12l6 6" />
+        <path d="M15 18l6 -6" />
+    </BaseIcon>
+)
+MathFunction.displayName = "MathFunction"
+
+export const AdjustmentsHorizontal: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M12 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+        <path d="M4 6l8 0" />
+        <path d="M16 6l4 0" />
+        <path d="M6 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+        <path d="M4 12l2 0" />
+        <path d="M10 12l10 0" />
+        <path d="M15 18a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+        <path d="M4 18l11 0" />
+        <path d="M19 18l1 0" />
+    </BaseIcon>
+)
+AdjustmentsHorizontal.displayName = "AdjustmentsHorizontal"
+
+export const ToggleRight: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon viewBox="0 0 15 15" size={15} fill="currentColor" stroke="none" {...props}>
+        <path d="M7.67133 11C6.65183 10.175 6 8.91363 6 7.5C6 6.08637 6.65183 4.82498 7.67133 4H4.5C2.567 4 1 5.567 1 7.5C1 9.433 2.567 11 4.5 11H7.67133ZM0 7.5C0 5.01472 2.01472 3 4.5 3H10.5C12.9853 3 15 5.01472 15 7.5C15 9.98528 12.9853 12 10.5 12H4.5C2.01472 12 0 9.98528 0 7.5Z" fillRule="evenodd" clipRule="evenodd" />
+        <circle cx="10.5" cy="7.5" r="3.5" />
+    </BaseIcon>
+)
+ToggleRight.displayName = "ToggleRight"
+
+export const Users: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <path d="M16 3.128a4 4 0 0 1 0 7.744" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <circle cx="9" cy="7" r="4" />
+    </BaseIcon>
+)
+Users.displayName = "Users"
+
+export const Link: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </BaseIcon>
+)
+Link.displayName = "Link"
+
+export const Unlink: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71" />
+        <path d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71" />
+        <line x1="8" x2="8" y1="2" y2="5" />
+        <line x1="2" x2="5" y1="8" y2="8" />
+        <line x1="16" x2="16" y1="19" y2="22" />
+        <line x1="19" x2="22" y1="16" y2="16" />
+    </BaseIcon>
+)
+Unlink.displayName = "Unlink"
+
+export const SlidersHorizontal: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M10 5H3" />
+        <path d="M12 19H3" />
+        <path d="M14 3v4" />
+        <path d="M16 17v4" />
+        <path d="M21 12h-9" />
+        <path d="M21 19h-5" />
+        <path d="M21 5h-7" />
+        <path d="M8 10v4" />
+        <path d="M8 12H3" />
+    </BaseIcon>
+)
+SlidersHorizontal.displayName = "SlidersHorizontal"
+
+export const Cog: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M11 10.27 7 3.34" />
+        <path d="m11 13.73-4 6.93" />
+        <path d="M12 22v-2" />
+        <path d="M12 2v2" />
+        <path d="M14 12h8" />
+        <path d="m17 20.66-1-1.73" />
+        <path d="m17 3.34-1 1.73" />
+        <path d="M2 12h2" />
+        <path d="m20.66 17-1.73-1" />
+        <path d="m20.66 7-1.73 1" />
+        <path d="m3.34 17 1.73-1" />
+        <path d="m3.34 7 1.73 1" />
+        <circle cx="12" cy="12" r="2" />
+        <circle cx="12" cy="12" r="8" />
+    </BaseIcon>
+)
+Cog.displayName = "Cog"

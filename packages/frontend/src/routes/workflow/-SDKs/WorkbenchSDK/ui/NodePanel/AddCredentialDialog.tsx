@@ -111,10 +111,10 @@ export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }:
                     ))}
 
                     <div className='pt-2 mt-auto flex justify-end gap-2'>
-                        <Button type='button' variant='outline' onClick={() => DialogSDK.actions.pop(dialogId)}>
+                        <Button type='button' variant='ghost' className='rounded-full' onClick={() => DialogSDK.actions.pop(dialogId)}>
                             Cancel
                         </Button>
-                        <Button type='submit' disabled={form.formState.isSubmitting}>
+                        <Button type='submit' className='rounded-full' disabled={form.formState.isSubmitting}>
                             {form.formState.isSubmitting && <Spinner className='mr-2 h-4 w-4' />}
                             Save
                         </Button>

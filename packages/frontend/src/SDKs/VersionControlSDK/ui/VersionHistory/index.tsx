@@ -1,3 +1,4 @@
+import { cn } from "@/utils/styleUtils";
 import { QuerySDK } from "@/SDKs/QuerySDK/sdk";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { WorkbenchSDK } from "@/routes/workflow/-SDKs/WorkbenchSDK/sdk";
@@ -29,7 +30,7 @@ function formatTimelineTimestamp(value: Date | string | null | undefined): strin
     return `${day} at ${time}`;
 }
 
-function VersionHistory() {
+function VersionHistory({ className, hideHeader }: { className?: string; hideHeader?: boolean }) {
     const [workflowId, isDirty] = WorkbenchSDK.useStore(s => [s.workflowId, s.isDirty]);
     const workflowUpdatedAt = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.updated_at);
 
@@ -52,8 +53,8 @@ function VersionHistory() {
     const olderPublications = publications.slice(RECENT_GROUP_SIZE);
 
     return (
-        <div className="w-[340px] overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border/70 py-2 px-3">
+        <div className={cn("w-[340px] overflow-hidden", className)}>
+            {!hideHeader && <div className="flex items-center justify-between border-b border-border/70 py-2 px-3">
                 <div className="flex items-center gap-2">
                     <div className="text-sm font-medium">
                         Version history
@@ -61,7 +62,7 @@ function VersionHistory() {
                 </div>
                 {activePublication &&
                     <Button
-                        variant="ghost-warning"
+                        variant={activePublication ? "ghost-success" : "ghost-destructive"}
                         size="icon-xs"
                         className="gap-2"
                         disabled={!activePublication}
@@ -76,7 +77,7 @@ function VersionHistory() {
                         <SystemIcons.Power />
                     </Button>
                 }
-            </div>
+            </div>}
 
             <ScrollArea.Root className="max-h-[420px]">
                 <div className="space-y-3 p-2">
