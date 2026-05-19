@@ -1,6 +1,6 @@
 {
-  "version": "1778973533152",
-  "generatedAt": "2026-05-16T23:18:53.152Z",
+  "version": "1779202649975",
+  "generatedAt": "2026-05-19T14:57:29.975Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -1656,6 +1656,160 @@
           "displayName": "Output 1",
           "polymorphicGroupId": "passthrough_1",
           "groupId": "passthrough",
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
+        }
+      ]
+    },
+    "Core.Routing.Portal.In": {
+      "id": "Core.Routing.Portal.In",
+      "displayName": "Portal In",
+      "icon": "PortalIn",
+      "accent": "group-routing",
+      "description": "Sends data to all Portal Out nodes sharing the same Portal ID, without a visible edge.",
+      "credentials": [],
+      "fields": [
+        {
+          "id": "portalId",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Portal ID",
+          "variant": "UniqueString",
+          "initialValue": "",
+          "placeholder": ""
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "polymorphicGroupId": "portal",
+          "internal": false,
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved",
+          "required": false
+        }
+      ],
+      "outputs": []
+    },
+    "Core.Routing.Portal.Out": {
+      "id": "Core.Routing.Portal.Out",
+      "displayName": "Portal Out",
+      "icon": "PortalOut",
+      "accent": "group-routing",
+      "description": "Receives data from a Portal In node sharing the same Portal ID.",
+      "credentials": [],
+      "fields": [
+        {
+          "id": "portalId",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Portal ID",
+          "variant": "UniqueString",
+          "initialValue": "",
+          "placeholder": ""
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "output",
+          "displayName": "Output",
+          "polymorphicGroupId": "portal",
           "variant": "Unresolved",
           "originalVariant": "Unresolved"
         }

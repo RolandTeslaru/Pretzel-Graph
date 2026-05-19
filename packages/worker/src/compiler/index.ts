@@ -10,7 +10,6 @@ import { isUUID, mapFieldValues } from "../utils";
 
 import { produce } from "immer";
 import { AggexEngine } from "src/engine";
-import { CompilationContext } from "./context";
 
 
 export class WorkflowCompiler {
@@ -24,7 +23,7 @@ export class WorkflowCompiler {
         engine:              AggexEngine,
         credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
         compilationCtx:      WorkflowCompiler.Compilation.Context = createCompilationContext(workflowId),
-        parentBridgeHooks?:  RuntimeNode.ExecutionContext["parentBridgeHooks"],
+        parentPortAPI?:      RuntimeNode.ExecutionContext["parentPortAPI"],
     ): Promise<AggexEngine.Execution.Context> {
         const workflowCache = Workflow.createCache(workflowData);
 
@@ -49,17 +48,17 @@ export class WorkflowCompiler {
 
         let engineExecutionCtx!: AggexEngine.Execution.Context;
 
-        const portHooks = {
-            writeToOutputPort: (nodeId, outputId, value) => {
-                engine.writeToOutputPort(engineExecutionCtx, nodeId, outputId, value);
+        const portAPI = {
+            write: (nodeId, outputId, value) => {
+                engine.portAPI.write(engineExecutionCtx, nodeId, outputId, value);
             },
-            propagateFromOutputPort: (nodeId, outputId) => {
-                engine.propagatePort(engineExecutionCtx, nodeId, outputId);
+            propagate: (nodeId, outputId) => {
+                engine.portAPI.propogate(engineExecutionCtx, nodeId, outputId);
             }
-        } satisfies RuntimeNode.ExecutionContext["portHooks"];
+        } satisfies RuntimeNode.ExecutionContext["portAPI"];
 
 
-        const subworkflowHooks = {
+        const subWorkflowAPI = {
             createEnv: () => {
                 const engine = new AggexEngine();
                 const compiler = new WorkflowCompiler();
@@ -85,7 +84,7 @@ export class WorkflowCompiler {
                     run: (ctx: unknown) => engine.run(ctx as AggexEngine.Execution.Context),
                 }
             }
-        } satisfies RuntimeNode.ExecutionContext["subworkflowHooks"];
+        } satisfies RuntimeNode.ExecutionContext["subWorkflowAPI"];
 
         const getDecryptedCredentialValues: RuntimeNode.ExecutionContext["getDecryptedCredentialValues"] =
             (blob) => decryptCredentialBlob(blob) as any;
@@ -101,9 +100,9 @@ export class WorkflowCompiler {
             abortExecution: (reason: string) => abortController.abort(reason),
             abortSignal: abortController.signal,
             updateSession,
-            portHooks,
-            parentBridgeHooks,
-            subworkflowHooks,
+            portAPI,
+            parentPortAPI,
+            subWorkflowAPI,
             credentialInstances,
             getDecryptedCredentialValues,
         } satisfies RuntimeNode.ExecutionContext
@@ -123,9 +122,9 @@ export class WorkflowCompiler {
             nodeRuntimeMap,
             activeNodes: new Set(),
             propagatedOutputPorts: new Set(),
-            portHooks,
-            parentBridgeHooks,
-            subworkflowHooks,
+            portAPI,
+            parentPortAPI,
+            subWorkflowAPI,
             credentialInstances,
             getDecryptedCredentialValues,
         } satisfies AggexEngine.Execution.Context
@@ -151,7 +150,7 @@ export class WorkflowCompiler {
         }
 
         // Set Entry Points (Start Nodes)
-        const startNodes = this.findStartNodes(nodes, edges);
+        const startNodes = this.findStartNodes(nodes, edges, nodeRuntimeMap);
         if (startNodes.length === 0)
             throw new AggexCompilerError(
                 SystemError.Code.COMPILATION_NO_START_NODES,
@@ -244,17 +243,21 @@ export class WorkflowCompiler {
 
 
     private findStartNodes(
-        nodes: Workflow.Data["nodes"],
-        edges: Workflow.Data["edges"]
+        nodes:          Workflow.Data["nodes"],
+        edges:          Workflow.Data["edges"],
+        nodeRuntimeMap: AggexEngine.Execution.Context["nodeRuntimeMap"],
     ): Workflow.Node.Id[] {
-        const targetNodeIds: Set<Workflow.Node.Id> = new Set();
-        Object.values(edges).forEach(edge => {
-            targetNodeIds.add(edge.target.nodeId);
-        })
+        const targetNodeIds = new Set<Workflow.Node.Id>();
+        Object.values(edges).forEach(edge => targetNodeIds.add(edge.target.nodeId));
 
-        return Object.keys(nodes).filter(
-            id => !targetNodeIds.has(id as Workflow.Node.Id)
-        ) as Workflow.Node.Id[];
+        return Object.keys(nodes).filter(id => {
+            if (targetNodeIds.has(id as Workflow.Node.Id)) 
+                return false;
+            const entry = nodeRuntimeMap.get(id as unknown as Vertex.Id);
+            if (entry && "isFloatingNode" in entry.instance) 
+                return false;
+            return true;
+        }) as Workflow.Node.Id[];
     }
 }
 
