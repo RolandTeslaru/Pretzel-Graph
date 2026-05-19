@@ -6,3 +6,4 @@ export * from "./types";
 export * from "./builders/index";
 export { LC } from "./langchain";
 export { Synthesizer } from "./synthesizer";
+export { mapFieldValues } from "./utils/mapFieldValues";
