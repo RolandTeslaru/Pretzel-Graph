@@ -1,4 +1,4 @@
-export { RuntimeNode, RuntimeRouterNode } from "./node";
+export { RuntimeNode, RuntimeRouterNode, RuntimeFloatingNode } from "./node";
 export { CatalogueService, RegisterNode } from "./catalogue";
 export type { NodeConstructor } from "./catalogue";
 export type { CompilationContext } from "./compiler-context";
