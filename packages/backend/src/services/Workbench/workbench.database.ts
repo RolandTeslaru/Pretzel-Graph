@@ -63,7 +63,7 @@ export class WorkbenchDatabase {
         loadPublished: withSupabaseAssert('workbench.dependency.loadPublished', async (
             supabase: SupabaseClient,
             workflowId: Workflow.Id,
-        ): Promise<Workflow.Dependency> => {
+        ): Promise<Workflow.Dependency.Publication> => {
             const requesterId = await getUserId(supabase);
             if (!requesterId) throw new Error('Unauthenticated');
 
@@ -90,7 +90,7 @@ export class WorkbenchDatabase {
 
             const publication = VersionControl.Publication.Schema.parse(row);
 
-            return Workflow.Dependency.Schema.parse({
+            return Workflow.Dependency.Publication.Schema.parse({
                 ...publication,
                 publication_name: publication.name,
                 display_name:     workflow.display_name,
@@ -102,7 +102,7 @@ export class WorkbenchDatabase {
         loadDraft: withSupabaseAssert('workbench.dependency.loadDraft', async (
             supabase: SupabaseClient,
             workflowId: Workflow.Id,
-        ): Promise<Workflow.DraftDependency> => {
+        ): Promise<Workflow.Dependency.Draft> => {
             const requesterId = await getUserId(supabase);
             if (!requesterId) throw new Error('Unauthenticated');
 
@@ -116,7 +116,7 @@ export class WorkbenchDatabase {
             if (!row || (row.user_id !== requesterId && !row.is_public))
                 throw new SystemError(SystemError.Code.NOT_FOUND, 'Workflow not found or not accessible');
 
-            return Workflow.DraftDependency.Schema.parse({
+            return Workflow.Dependency.Draft.Schema.parse({
                 workflow_id:         row.id,
                 workflow_data:       Workflow.Data.Schema.parse(row.data),
                 display_name:        row.display_name,
@@ -129,7 +129,7 @@ export class WorkbenchDatabase {
         checkUpdates: withSupabaseAssert('workbench.dependency.checkUpdates', async (
             supabase: SupabaseClient,
             dependencies: Workbench.API.Dependency.Published.CheckUpdates.Request["dependencies"],
-        ): Promise<Record<Workflow.Id, Workflow.Dependency.UpdateInfo>> => {
+        ): Promise<Record<Workflow.Id, Workflow.Dependency.Publication.UpdateInfo>> => {
             if (dependencies.length === 0) return {};
 
             const workflowIds = dependencies.map(d => d.workflowId);
@@ -142,7 +142,7 @@ export class WorkbenchDatabase {
                 .eq('is_active', true)
                 .throwOnError();
 
-            const updates: Record<Workflow.Id, Workflow.Dependency.UpdateInfo> = {};
+            const updates: Record<Workflow.Id, Workflow.Dependency.Publication.UpdateInfo> = {};
             for (const row of rows ?? []) {
                 const stored = currentPublicationById.get(row.workflow_id as Workflow.Id);
                 if (stored && stored !== row.id)
@@ -161,7 +161,7 @@ export class WorkbenchDatabase {
         checkDraftUpdates: withSupabaseAssert('workbench.dependency.checkDraftUpdates', async (
             supabase: SupabaseClient,
             dependencies: Workbench.API.Dependency.Draft.CheckUpdates.Request["dependencies"],
-        ): Promise<Record<Workflow.Id, Workflow.DraftDependency.UpdateInfo>> => {
+        ): Promise<Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>> => {
             if (dependencies.length === 0) return {};
 
             const workflowIds = dependencies.map(d => d.workflowId);
@@ -173,7 +173,7 @@ export class WorkbenchDatabase {
                 .in('id', workflowIds)
                 .throwOnError();
 
-            const updates: Record<Workflow.Id, Workflow.DraftDependency.UpdateInfo> = {};
+            const updates: Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo> = {};
             for (const row of rows ?? []) {
                 const stored = currentUpdatedAt.get(row.id as Workflow.Id);
                 const rowDate = new Date(row.updated_at);

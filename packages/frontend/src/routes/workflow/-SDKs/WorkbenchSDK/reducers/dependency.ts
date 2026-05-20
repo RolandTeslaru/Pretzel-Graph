@@ -47,10 +47,10 @@ export const dependencyReducers = {
 
 export interface DependencyReducers {
     published: {
-        register: (state: WorkbenchSDK.State, dependency: Workflow.Dependency) => void
+        register: (state: WorkbenchSDK.State, dependency: Workflow.Dependency.Publication) => void
     }
     draft: {
-        register: (state: WorkbenchSDK.State, draftDependency: Workflow.DraftDependency) => void
+        register: (state: WorkbenchSDK.State, draftDependency: Workflow.Dependency.Draft) => void
     }
     removeUnused: (state: WorkbenchSDK.State) => void
 }
