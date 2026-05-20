@@ -30,7 +30,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
                     reducers.node.validate(s, affectedNodeId)
                 }
 
-                delete s.dependencyUpdates[updateInfo.workflowId]
+                delete s.dependencyUpdates.published[updateInfo.workflowId]
             }))
         } catch (err) {
             const error = SystemError.fromUnknown(err)
@@ -59,7 +59,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
                     reducers.node.validate(s, affectedNodeId)
                 }
 
-                delete s.draftDependencyUpdates[updateInfo.workflowId]
+                delete s.dependencyUpdates.draft[updateInfo.workflowId]
             }))
         } catch (err) {
             const error = SystemError.fromUnknown(err)
@@ -101,8 +101,8 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
             ])
 
             setState(s => {
-                if (publishedResult.status === 'fulfilled') s.dependencyUpdates = publishedResult.value.updates
-                if (draftResult.status    === 'fulfilled') s.draftDependencyUpdates = draftResult.value.updates
+                if (publishedResult.status === 'fulfilled') s.dependencyUpdates.published = publishedResult.value.updates
+                if (draftResult.status    === 'fulfilled') s.dependencyUpdates.draft    = draftResult.value.updates
             })
 
             const count =
@@ -180,8 +180,8 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
         },
 
         updateAll: withAsyncCommit(async () => {
-            const publishedUpdates = Object.values(sdk.state.dependencyUpdates)
-            const draftUpdates     = Object.values(sdk.state.draftDependencyUpdates)
+            const publishedUpdates = Object.values(sdk.state.dependencyUpdates.published)
+            const draftUpdates     = Object.values(sdk.state.dependencyUpdates.draft)
             const results = await Promise.all([
                 ...publishedUpdates.map(applyPublishedUpdate),
                 ...draftUpdates.map(applyDraftUpdate),
