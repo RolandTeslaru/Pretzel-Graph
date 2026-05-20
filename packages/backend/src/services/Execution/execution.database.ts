@@ -109,6 +109,23 @@ export class ExecutionDatabase {
         return Workflow.Data.Schema.parse(row.workflow_data);
     });
 
+    public readonly getDraftData = withSupabaseAssert('execution.getDraftData', async (
+        supabase:   SupabaseClient,
+        workflowId: Workflow.Id
+    ): Promise<Workflow.Data> => {
+        const { data: row } = await supabase
+            .from('workflows')
+            .select('data')
+            .eq('id', workflowId)
+            .single()
+            .throwOnError();
+
+        if (!row)
+            throw new SystemError(SystemError.Code.NOT_FOUND, `Draft workflow "${workflowId}" not found`);
+
+        return Workflow.Data.Schema.parse(row.data);
+    });
+
     public readonly listActiveIds = withSupabaseAssert('execution.listActiveIds', async (
         supabase: SupabaseClient
     ): Promise<Execution.Id[]> => {
