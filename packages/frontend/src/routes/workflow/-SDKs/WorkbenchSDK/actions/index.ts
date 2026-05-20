@@ -154,7 +154,7 @@ export interface _WorkbenchSDKActions {
         delete    : () => void;
         disable   : (isDisabled: boolean) => void;
     }
-    subWorkflow: SubWorkflowActions;
+    subWorkflow: SubWorkflowActions
     dependency: DependencyActions;
     ui: {
         openNodePanelFullscreen: () => void;
