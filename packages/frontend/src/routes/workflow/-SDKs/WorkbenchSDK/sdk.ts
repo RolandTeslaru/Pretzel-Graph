@@ -54,6 +54,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                     layout: {},
                 },
                 dependencyUpdates: {},
+                draftDependencyUpdates: {},
                 selectors: workbenchSelectors
             })), {
             limit: this.TEMPORAL_STACK_SIZE,
@@ -149,6 +150,7 @@ export namespace WorkbenchSDK {
         cycles: Workflow.Node.Id[][]
         stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>,
         dependencyUpdates: Record<Workflow.Id, Workflow.Dependency.UpdateInfo>
+        draftDependencyUpdates: Record<Workflow.Id, Workflow.DraftDependency.UpdateInfo>
         selectors: WorkbenchSDKSelectors
     }
 
