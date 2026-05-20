@@ -20,28 +20,23 @@ export const dependencyReducers = {
     published: {
         register: (s, dependency) => {
             dependencyReducers.removeUnused(s)
-            s.data.dependencies = s.data.dependencies ?? {}
-            s.data.dependencies[dependency.workflow_id] = dependency
+            s.data.dependencies.published[dependency.workflow_id] = dependency
         },
     },
     draft: {
         register: (s, draftDependency) => {
             dependencyReducers.removeUnused(s)
-            s.data.draftDependencies = s.data.draftDependencies ?? {}
-            s.data.draftDependencies[draftDependency.workflow_id] = draftDependency
+            s.data.dependencies.draft[draftDependency.workflow_id] = draftDependency
         },
     },
     removeUnused: (s) => {
         const usedIds = collectUsedDependencyIds(s)
 
-        if (s.data.dependencies) {
-            for (const id of Object.keys(s.data.dependencies) as Workflow.Id[])
-                if (!usedIds.has(id)) delete s.data.dependencies[id]
-        }
-        if (s.data.draftDependencies) {
-            for (const id of Object.keys(s.data.draftDependencies) as Workflow.Id[])
-                if (!usedIds.has(id)) delete s.data.draftDependencies[id]
-        }
+        for (const id of Object.keys(s.data.dependencies.published) as Workflow.Id[])
+            if (!usedIds.has(id)) delete s.data.dependencies.published[id]
+
+        for (const id of Object.keys(s.data.dependencies.draft) as Workflow.Id[])
+            if (!usedIds.has(id)) delete s.data.dependencies.draft[id]
     },
 } satisfies DependencyReducers
 
