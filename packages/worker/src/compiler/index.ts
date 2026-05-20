@@ -117,12 +117,12 @@ export class WorkflowCompiler {
 
         const dependencyAPI = {
             getPublished: (wfId: Workflow.Id) => {
-                const dep = workflowData.dependencies?.[wfId];
+                const dep = workflowData.dependencies?.published?.[wfId];
                 if (!dep) throw new Error(`Missing published dependency "${wfId}"`);
                 return dep;
             },
             getDraft: (wfId: Workflow.Id) => {
-                const draft = workflowData.draftDependencies?.[wfId];
+                const draft = workflowData.dependencies?.draft?.[wfId];
                 if (!draft) throw new Error(`Missing draft dependency "${wfId}"`);
                 return draft;
             },
@@ -254,8 +254,8 @@ export class WorkflowCompiler {
 
         if (!RuntimeNode) {
             if(wfNode.workflowDependencyId){
-                const { dependencies, draftDependencies } = engineExecutionCtx.workflowData;
-                const hasDep = dependencies?.[wfNode.workflowDependencyId] || draftDependencies?.[wfNode.workflowDependencyId];
+                const { dependencies } = engineExecutionCtx.workflowData;
+                const hasDep = dependencies?.published?.[wfNode.workflowDependencyId] || dependencies?.draft?.[wfNode.workflowDependencyId];
                 if (!hasDep)
                     throw new AggexCompilerError(
                         SystemError.Code.COMPILATION_MISSING_SUBWORKFLOW_DEPENDENCY,
