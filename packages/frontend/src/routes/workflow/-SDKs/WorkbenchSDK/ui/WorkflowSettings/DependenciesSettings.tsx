@@ -6,8 +6,8 @@ import { WorkbenchSDK } from '../../sdk'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 
 export const DependenciesSettings = () => {
-    const dependencies       = WorkbenchSDK.useStore(s => Object.values(s.data.dependencies ?? {}))
-    const draftDependencies  = WorkbenchSDK.useStore(s => Object.values(s.data.draftDependencies ?? {}))
+    const publishedDependencies = WorkbenchSDK.useStore(s => Object.values(s.data.dependencies ?? {}))
+    const draftDependencies     = WorkbenchSDK.useStore(s => Object.values(s.data.draftDependencies ?? {}))
     const dependencyUpdates      = WorkbenchSDK.useStore(s => s.dependencyUpdates)
     const draftDependencyUpdates = WorkbenchSDK.useStore(s => s.draftDependencyUpdates)
     const [updatingAll, setUpdatingAll] = useState(false)
@@ -25,7 +25,7 @@ export const DependenciesSettings = () => {
         }
     }
 
-    const isEmpty = dependencies.length === 0 && draftDependencies.length === 0
+    const isEmpty = publishedDependencies.length === 0 && draftDependencies.length === 0
 
     return (
         <>
@@ -44,7 +44,7 @@ export const DependenciesSettings = () => {
                 </div>
             ) : (
                 <div className='flex flex-col gap-2'>
-                    {dependencies.map(dep => (
+                    {publishedDependencies.map(dep => (
                         <PublishedDependencyRow
                             key={dep.workflow_id}
                             dep={dep}
