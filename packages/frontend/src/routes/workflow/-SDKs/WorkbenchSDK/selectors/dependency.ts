@@ -3,8 +3,12 @@ import type { WorkbenchSDK } from '../sdk';
 
 export interface DependencySelectors {
     doesNodeHaveUpdate: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
-    getUpdateInfo:      (state: WorkbenchSDK.State, workflowDependencyId: Workflow.Id) => Workflow.Dependency.Publication.UpdateInfo | null
-    getDraftUpdateInfo: (state: WorkbenchSDK.State, workflowDependencyId: Workflow.Id) => Workflow.Dependency.Draft.UpdateInfo | null
+    published: {
+        getUpdateInfo: (state: WorkbenchSDK.State, workflowDependencyId: Workflow.Id) => Workflow.Dependency.Publication.UpdateInfo | null
+    }
+    draft: {
+        getUpdateInfo: (state: WorkbenchSDK.State, workflowDependencyId: Workflow.Id) => Workflow.Dependency.Draft.UpdateInfo | null
+    }
 }
 
 export const dependencySelectors = {
@@ -14,10 +18,10 @@ export const dependencySelectors = {
         return node.workflowDependencyId in s.dependencyUpdates.published ||
                node.workflowDependencyId in s.dependencyUpdates.draft;
     },
-    getUpdateInfo: (s, workflowDependencyId) => {
-        return s.dependencyUpdates.published[workflowDependencyId] ?? null;
+    published: {
+        getUpdateInfo: (s, workflowDependencyId) => s.dependencyUpdates.published[workflowDependencyId] ?? null,
     },
-    getDraftUpdateInfo: (s, workflowDependencyId) => {
-        return s.dependencyUpdates.draft[workflowDependencyId] ?? null;
+    draft: {
+        getUpdateInfo: (s, workflowDependencyId) => s.dependencyUpdates.draft[workflowDependencyId] ?? null,
     },
 } satisfies DependencySelectors
