@@ -39,40 +39,44 @@ export class WorkbenchService {
     };
 
     public readonly dependency = {
-        loadPublished: async (
-            token: string,
-            payload: Workbench.API.Dependency.Published.Load.Request,
-        ): Promise<Workbench.API.Dependency.Published.Load.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            const dependency = await this.database.dependency.loadPublished(supabase, payload.dependencyId);
-            return { dependency };
+        published: {
+            load: async (
+                token: string,
+                payload: Workbench.API.Dependency.Published.Load.Request,
+            ): Promise<Workbench.API.Dependency.Published.Load.Response> => {
+                const supabase = createAuthenticatedClient(token);
+                const dependency = await this.database.dependency.published.load(supabase, payload.dependencyId);
+                return { dependency };
+            },
+
+            checkUpdates: async (
+                token: string,
+                payload: Workbench.API.Dependency.Published.CheckUpdates.Request,
+            ): Promise<Workbench.API.Dependency.Published.CheckUpdates.Response> => {
+                const supabase = createAuthenticatedClient(token);
+                const updates = await this.database.dependency.published.checkUpdates(supabase, payload.dependencies);
+                return { updates };
+            },
         },
 
-        loadDraft: async (
-            token: string,
-            payload: Workbench.API.Dependency.Draft.Load.Request,
-        ): Promise<Workbench.API.Dependency.Draft.Load.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            const dependency = await this.database.dependency.loadDraft(supabase, payload.dependencyId);
-            return { dependency };
-        },
+        draft: {
+            load: async (
+                token: string,
+                payload: Workbench.API.Dependency.Draft.Load.Request,
+            ): Promise<Workbench.API.Dependency.Draft.Load.Response> => {
+                const supabase = createAuthenticatedClient(token);
+                const dependency = await this.database.dependency.draft.load(supabase, payload.dependencyId);
+                return { dependency };
+            },
 
-        checkPublishedUpdates: async (
-            token: string,
-            payload: Workbench.API.Dependency.Published.CheckUpdates.Request,
-        ): Promise<Workbench.API.Dependency.Published.CheckUpdates.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            const updates = await this.database.dependency.checkUpdates(supabase, payload.dependencies);
-            return { updates };
-        },
-
-        checkDraftUpdates: async (
-            token: string,
-            payload: Workbench.API.Dependency.Draft.CheckUpdates.Request,
-        ): Promise<Workbench.API.Dependency.Draft.CheckUpdates.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            const updates = await this.database.dependency.checkDraftUpdates(supabase, payload.dependencies);
-            return { updates };
+            checkUpdates: async (
+                token: string,
+                payload: Workbench.API.Dependency.Draft.CheckUpdates.Request,
+            ): Promise<Workbench.API.Dependency.Draft.CheckUpdates.Response> => {
+                const supabase = createAuthenticatedClient(token);
+                const updates = await this.database.dependency.draft.checkUpdates(supabase, payload.dependencies);
+                return { updates };
+            },
         },
     };
 }
