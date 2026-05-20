@@ -177,7 +177,8 @@ export const nodeReducers = {
             isFlipped   : isFlipped,
             accent      : blueprint.accent ? blueprint.accent : undefined,
 
-            toolCompatible: blueprint.toolCompatible,
+            toolCompatible:       blueprint.toolCompatible,
+            workflowDependencyId: node.workflowDependencyId ?? blueprint.workflowDependencyId,
         } satisfies Workflow.Node
 
         const result = Workflow.Node.Schema.safeParse(newNode)
