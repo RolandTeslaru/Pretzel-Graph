@@ -26,7 +26,7 @@ export interface WorkbenchSDKSelectors {
 
 export const workbenchSelectors = {
     getClickedNode : (s) => s.clickedNodeId ? s.data.nodes[s.clickedNodeId] ?? null : null,
-    getDependency  : (s, dependencyId) => s.data.dependencies[dependencyId] ?? null,
+    getDependency  : (s, dependencyId) => s.data.dependencies.published[dependencyId] ?? null,
     node           : nodeSelectors,
     field          : fieldSelectors,
     input          : inputSelectors,
