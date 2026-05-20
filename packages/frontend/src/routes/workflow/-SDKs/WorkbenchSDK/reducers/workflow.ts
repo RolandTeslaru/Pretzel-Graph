@@ -17,7 +17,7 @@ export const workflowReducers = {
             nodes: {},
             cycles: []
         }
-        s.dependencyUpdates = {}
+        s.dependencyUpdates = { published: {}, draft: {} }
 
         dependencyReducers.removeUnused(s);
 
