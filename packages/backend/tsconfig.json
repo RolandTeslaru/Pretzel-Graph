@@ -7,6 +7,12 @@
             "@/*": [
                 "./src/*"
             ],
+            "@pretzel-graph/shared": [
+                "../shared/index.ts"
+            ],
+            "@pretzel-graph/shared/*": [
+                "../shared/*"
+            ],
             "@pretzel-graph/node-sdk": [
                 "../node-sdk/src/index.ts"
             ],
