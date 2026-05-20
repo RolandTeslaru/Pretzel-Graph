@@ -39,23 +39,39 @@ export class WorkbenchService {
     };
 
     public readonly dependency = {
-        load: async (
+        loadPublished: async (
             token: string,
-            payload: Workbench.API.Dependency.Load.Request,
-        ): Promise<Workbench.API.Dependency.Load.Response> => {
+            payload: Workbench.API.Dependency.Published.Load.Request,
+        ): Promise<Workbench.API.Dependency.Published.Load.Response> => {
             const supabase = createAuthenticatedClient(token);
-            const dependency = await this.database.dependency.load(supabase, payload.dependencyId);
-
+            const dependency = await this.database.dependency.loadPublished(supabase, payload.dependencyId);
             return { dependency };
         },
 
-        checkUpdates: async (
+        loadDraft: async (
             token: string,
-            payload: Workbench.API.Dependency.CheckUpdates.Request,
-        ): Promise<Workbench.API.Dependency.CheckUpdates.Response> => {
+            payload: Workbench.API.Dependency.Draft.Load.Request,
+        ): Promise<Workbench.API.Dependency.Draft.Load.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            const dependency = await this.database.dependency.loadDraft(supabase, payload.dependencyId);
+            return { dependency };
+        },
+
+        checkPublishedUpdates: async (
+            token: string,
+            payload: Workbench.API.Dependency.Published.CheckUpdates.Request,
+        ): Promise<Workbench.API.Dependency.Published.CheckUpdates.Response> => {
             const supabase = createAuthenticatedClient(token);
             const updates = await this.database.dependency.checkUpdates(supabase, payload.dependencies);
+            return { updates };
+        },
 
+        checkDraftUpdates: async (
+            token: string,
+            payload: Workbench.API.Dependency.Draft.CheckUpdates.Request,
+        ): Promise<Workbench.API.Dependency.Draft.CheckUpdates.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            const updates = await this.database.dependency.checkDraftUpdates(supabase, payload.dependencies);
             return { updates };
         },
     };
