@@ -12,7 +12,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     const setState = sdk.useStore.setState
     const reducers = sdk.reducers
 
-    const applyPublishedUpdate = async (updateInfo: Workflow.Dependency.UpdateInfo): Promise<boolean> => {
+    const applyPublishedUpdate = async (updateInfo: Workflow.Dependency.Publication.UpdateInfo): Promise<boolean> => {
         try {
             const { dependency } = await Workbench.API.Dependency.Published.load(api, { dependencyId: updateInfo.workflowId })
 
@@ -41,7 +41,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
         return true
     }
 
-    const applyDraftUpdate = async (updateInfo: Workflow.DraftDependency.UpdateInfo): Promise<boolean> => {
+    const applyDraftUpdate = async (updateInfo: Workflow.Dependency.Draft.UpdateInfo): Promise<boolean> => {
         try {
             const { dependency } = await Workbench.API.Dependency.Draft.load(api, { dependencyId: updateInfo.workflowId })
 
@@ -94,10 +94,10 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
             const [publishedResult, draftResult] = await Promise.allSettled([
                 publishedEntries.length > 0
                     ? Workbench.API.Dependency.Published.checkUpdates(api, { dependencies: publishedEntries })
-                    : Promise.resolve({ updates: {} as Record<Workflow.Id, Workflow.Dependency.UpdateInfo> }),
+                    : Promise.resolve({ updates: {} as Record<Workflow.Id, Workflow.Dependency.Publication.UpdateInfo> }),
                 draftEntries.length > 0
                     ? Workbench.API.Dependency.Draft.checkUpdates(api, { dependencies: draftEntries })
-                    : Promise.resolve({ updates: {} as Record<Workflow.Id, Workflow.DraftDependency.UpdateInfo> }),
+                    : Promise.resolve({ updates: {} as Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo> }),
             ])
 
             setState(s => {
@@ -194,20 +194,20 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
 }
 
 export type DependencyActions = {
-    registerDependency: (dependency: Workflow.Dependency) => void
+    registerDependency: (dependency: Workflow.Dependency.Publication) => void
     checkUpdates:       () => Promise<void>
     updateAll:          () => Promise<boolean>
     published: {
         attachToNode: (nodeId: Workflow.Node.Id, fieldId: Field.Id, workflowId: Workflow.Id) => Promise<boolean>
-        update:       (updateInfo: Workflow.Dependency.UpdateInfo) => Promise<boolean>
+        update:       (updateInfo: Workflow.Dependency.Publication.UpdateInfo) => Promise<boolean>
     }
     draft: {
         attachToNode: (nodeId: Workflow.Node.Id, fieldId: Field.Id, workflowId: Workflow.Id) => Promise<boolean>
-        update:       (updateInfo: Workflow.DraftDependency.UpdateInfo) => Promise<boolean>
+        update:       (updateInfo: Workflow.Dependency.Draft.UpdateInfo) => Promise<boolean>
     }
 }
 
-export function createBlueprintFromDependency(dependency: Workflow.Dependency, keepDependencySelector = false): Foundations.Blueprint {
+export function createBlueprintFromDependency(dependency: Workflow.Dependency.Publication, keepDependencySelector = false): Foundations.Blueprint {
     const base = ShelfSDK.state.blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]
     const dependencyFields = dependency.workflow_data.fields ?? []
     const baseFields = keepDependencySelector
@@ -224,7 +224,7 @@ export function createBlueprintFromDependency(dependency: Workflow.Dependency, k
     } satisfies Foundations.Blueprint
 }
 
-export function createBlueprintFromDraftDependency(dependency: Workflow.DraftDependency, keepDependencySelector = false): Foundations.Blueprint {
+export function createBlueprintFromDraftDependency(dependency: Workflow.Dependency.Draft, keepDependencySelector = false): Foundations.Blueprint {
     const base = ShelfSDK.state.blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]
     const dependencyFields = dependency.workflow_data.fields ?? []
     const baseFields = keepDependencySelector

@@ -124,8 +124,8 @@ export namespace Workflow {
                 viewport: Viewport;
                 icon_color?: string | null;
             };
-            dependencies:      Record<Workflow.Id, Dependency>;
-            draftDependencies?: Record<Workflow.Id, DraftDependency>;
+            dependencies:      Record<Workflow.Id, Dependency.Publication>;
+            draftDependencies?: Record<Workflow.Id, Dependency.Draft>;
         }
 
         export const Schema: z.ZodType<Shape> = z.object({
@@ -152,12 +152,12 @@ export namespace Workflow {
 
             dependencies: z.record(
                 Workflow.Id,
-                z.lazy(() => Dependency.Schema)
+                z.lazy(() => Dependency.Publication.Schema)
             ).default({}),
 
             draftDependencies: z.record(
                 Workflow.Id,
-                z.lazy(() => DraftDependency.Schema)
+                z.lazy(() => Dependency.Draft.Schema)
             ).default({}),
         })
     }
@@ -165,43 +165,45 @@ export namespace Workflow {
 
         
     export namespace Dependency {
-        export const Schema = VersionControlPublication.createSchema(Workflow.Data.Schema)
-            .omit({ name: true })
-            .extend({
-                publication_name: z.string(),
-                display_name:     z.string(),
-                icon:             z.string().nullable().optional(),
-                accent:           z.string().nullable().optional(),
+        export namespace Publication {
+            export const Schema = VersionControlPublication.createSchema(Workflow.Data.Schema)
+                .omit({ name: true })
+                .extend({
+                    publication_name: z.string(),
+                    display_name:     z.string(),
+                    icon:             z.string().nullable().optional(),
+                    accent:           z.string().nullable().optional(),
+                });
+
+            export const UpdateInfo = z.object({
+                workflowId:    Workflow.Id,
+                publicationId: VersionControlPublication.Id,
+                version:       z.number(),
+                name:          z.string(),
+                description:   z.string().nullable(),
+            })
+            export type UpdateInfo = z.infer<typeof UpdateInfo>
+        }
+        export type Publication = z.infer<typeof Publication.Schema>
+
+        export namespace Draft {
+            export const Schema = z.object({
+                workflow_id:         Workflow.Id,
+                workflow_data:       z.lazy(() => Data.Schema),
+                display_name:        z.string(),
+                icon:                z.string().nullable().optional(),
+                accent:              z.string().nullable().optional(),
+                workflow_updated_at: z.coerce.date(),
             });
 
-        export const UpdateInfo = z.object({
-            workflowId:    Workflow.Id,
-            publicationId: VersionControlPublication.Id,
-            version:       z.number(),
-            name:          z.string(),
-            description:   z.string().nullable(),
-        })
-        export type UpdateInfo = z.infer<typeof UpdateInfo>
+            export const UpdateInfo = z.object({
+                workflowId:          Workflow.Id,
+                workflow_updated_at: z.coerce.date(),
+            });
+            export type UpdateInfo = z.infer<typeof UpdateInfo>;
+        }
+        export type Draft = z.infer<typeof Draft.Schema>
     }
-    export type Dependency = z.infer<typeof Dependency.Schema>
-
-    export namespace DraftDependency {
-        export const Schema = z.object({
-            workflow_id:          Workflow.Id,
-            workflow_data:        z.lazy(() => Data.Schema),
-            display_name:         z.string(),
-            icon:                 z.string().nullable().optional(),
-            accent:               z.string().nullable().optional(),
-            workflow_updated_at:  z.coerce.date(),
-        });
-
-        export const UpdateInfo = z.object({
-            workflowId:          Workflow.Id,
-            workflow_updated_at: z.coerce.date(),
-        });
-        export type UpdateInfo = z.infer<typeof UpdateInfo>;
-    }
-    export type DraftDependency = z.infer<typeof DraftDependency.Schema>;
 
     export const Schema = z.object({
         id:           Workflow.Id,
