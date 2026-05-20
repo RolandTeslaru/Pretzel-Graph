@@ -38,7 +38,7 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
         const isDraft = dependencyMode === "latest-draft";
 
         const childWorkflowData = isDraft
-            ? structuredClone(this.context.dependencyAPI.getDraft(subWorkflowId))
+            ? structuredClone(this.context.dependencyAPI.getDraft(subWorkflowId).workflow_data)
             : structuredClone(this.context.dependencyAPI.getPublished(subWorkflowId).workflow_data);
 
         console.log(`[ExecuteSubWorkflow:onCompile] mode=${dependencyMode} dependency resolved for subWorkflowId=${subWorkflowId}`);
