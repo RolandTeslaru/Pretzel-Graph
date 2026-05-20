@@ -15,12 +15,12 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
     const hasWorkflowDependency = !!node.workflowDependencyId
     const dependencyUpdate = WorkbenchSDK.useStore(s =>
         node.workflowDependencyId
-            ? s.selectors.dependency.getUpdateInfo(s, node.workflowDependencyId)
+            ? s.selectors.dependency.published.getUpdateInfo(s, node.workflowDependencyId)
             : null
     )
     const draftDependencyUpdate = WorkbenchSDK.useStore(s =>
         node.workflowDependencyId
-            ? s.selectors.dependency.getDraftUpdateInfo(s, node.workflowDependencyId)
+            ? s.selectors.dependency.draft.getUpdateInfo(s, node.workflowDependencyId)
             : null
     )
 
