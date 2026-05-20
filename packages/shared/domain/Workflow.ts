@@ -124,8 +124,8 @@ export namespace Workflow {
                 viewport: Viewport;
                 icon_color?: string | null;
             };
-            dependencies: Record<Workflow.Id, Dependency>;
-            draftDependencies?: Record<Workflow.Id, Data>;
+            dependencies:      Record<Workflow.Id, Dependency>;
+            draftDependencies?: Record<Workflow.Id, DraftDependency>;
         }
 
         export const Schema: z.ZodType<Shape> = z.object({
@@ -157,7 +157,7 @@ export namespace Workflow {
 
             draftDependencies: z.record(
                 Workflow.Id,
-                z.lazy(() => Schema)
+                z.lazy(() => DraftDependency.Schema)
             ).default({}),
         })
     }
@@ -183,7 +183,25 @@ export namespace Workflow {
         })
         export type UpdateInfo = z.infer<typeof UpdateInfo>
     }
-    export type Dependency = z.infer<typeof Dependency.Schema>  
+    export type Dependency = z.infer<typeof Dependency.Schema>
+
+    export namespace DraftDependency {
+        export const Schema = z.object({
+            workflow_id:          Workflow.Id,
+            workflow_data:        z.lazy(() => Data.Schema),
+            display_name:         z.string(),
+            icon:                 z.string().nullable().optional(),
+            accent:               z.string().nullable().optional(),
+            workflow_updated_at:  z.coerce.date(),
+        });
+
+        export const UpdateInfo = z.object({
+            workflowId:          Workflow.Id,
+            workflow_updated_at: z.coerce.date(),
+        });
+        export type UpdateInfo = z.infer<typeof UpdateInfo>;
+    }
+    export type DraftDependency = z.infer<typeof DraftDependency.Schema>;
 
     export const Schema = z.object({
         id:           Workflow.Id,

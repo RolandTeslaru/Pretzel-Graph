@@ -27,16 +27,29 @@ export class WorkbenchController {
         return await this.workbenchService.workflow.commit(req.token, payload);
     }
 
-    @Get('dependencies/workflows/:dependencyId')
-    async loadWorkflowDependency(@Req() req: AuthenticatedRequest, @Param('dependencyId') dependencyId: string) {
-        const payload = Workbench.API.Dependency.Load.Request.parse({ dependencyId });
-        return await this.workbenchService.dependency.load(req.token, payload);
+    @Get('dependencies/workflows/:dependencyId/published')
+    async loadPublishedDependency(@Req() req: AuthenticatedRequest, @Param('dependencyId') dependencyId: string) {
+        const payload = Workbench.API.Dependency.Published.Load.Request.parse({ dependencyId });
+        return await this.workbenchService.dependency.loadPublished(req.token, payload);
+    }
+
+    @Get('dependencies/workflows/:dependencyId/draft')
+    async loadDraftDependency(@Req() req: AuthenticatedRequest, @Param('dependencyId') dependencyId: string) {
+        const payload = Workbench.API.Dependency.Draft.Load.Request.parse({ dependencyId });
+        return await this.workbenchService.dependency.loadDraft(req.token, payload);
     }
 
     @Post('dependencies/check-updates')
     @HttpCode(200)
-    async checkDependencyUpdates(@Req() req: AuthenticatedRequest, @Body() body: Workbench.API.Dependency.CheckUpdates.Request) {
-        const payload = Workbench.API.Dependency.CheckUpdates.Request.parse(body);
-        return await this.workbenchService.dependency.checkUpdates(req.token, payload);
+    async checkPublishedDependencyUpdates(@Req() req: AuthenticatedRequest, @Body() body: Workbench.API.Dependency.Published.CheckUpdates.Request) {
+        const payload = Workbench.API.Dependency.Published.CheckUpdates.Request.parse(body);
+        return await this.workbenchService.dependency.checkPublishedUpdates(req.token, payload);
+    }
+
+    @Post('dependencies/check-draft-updates')
+    @HttpCode(200)
+    async checkDraftDependencyUpdates(@Req() req: AuthenticatedRequest, @Body() body: Workbench.API.Dependency.Draft.CheckUpdates.Request) {
+        const payload = Workbench.API.Dependency.Draft.CheckUpdates.Request.parse(body);
+        return await this.workbenchService.dependency.checkDraftUpdates(req.token, payload);
     }
 }
