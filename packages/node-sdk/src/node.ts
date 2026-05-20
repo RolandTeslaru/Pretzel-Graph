@@ -338,5 +338,9 @@ export namespace RuntimeNode {
                 run: (ctx: unknown) => Promise<unknown>,
             }
         },
+        readonly dependencyAPI: {
+            getPublished: (workflowId: Workflow.Id) => Workflow.Dependency,
+            getDraft:     (workflowId: Workflow.Id) => Workflow.Data,
+        },
     }
 }
