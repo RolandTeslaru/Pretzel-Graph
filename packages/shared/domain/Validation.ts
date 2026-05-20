@@ -134,7 +134,7 @@ export namespace Validation {
 
         export interface Cycle {
             nodes: Workflow.Node.Id[]
-            type: "cycle_without_route_branching_node"
+            type: "cycle_without_route_branching_node" | "cycle_gridlock"
         }
         export namespace Cycle {
             const RouteBranchingNodeTypes = new Set([
@@ -146,6 +146,7 @@ export namespace Validation {
             export function check(cycle: Workflow.Node.Id[], workflowData: Workflow.Data) {
 
                 let hasRouteBranchingNode = false;
+                let hasCycleEscapeNode = false;
 
                 cycle.forEach(nodeId => {
                     const node = workflowData.nodes[nodeId];
@@ -154,9 +155,24 @@ export namespace Validation {
 
                     if (RouteBranchingNodeTypes.has(node.blueprintId))
                         hasRouteBranchingNode = true;
+
+                    const staticValues = workflowData.staticValues[nodeId];
+                    const signalDep = staticValues?.["signalDependency" as Foundations.Field.Id];
+                    const dataDep   = staticValues?.["dataDependency"   as Foundations.Field.Id];
+
+                    // A node can escape the cycle only if it fires on a partial signal
+                    // (OR/XOR) AND does not re-block waiting for all data (dataDep !== AND).
+                    if ((signalDep === "OR" || signalDep === "XOR") && dataDep !== "AND")
+                        hasCycleEscapeNode = true;
                 })
 
-                if(!hasRouteBranchingNode)
+                if (!hasRouteBranchingNode && !hasCycleEscapeNode)
+                    return {
+                        nodes: cycle,
+                        type: "cycle_gridlock" as const,
+                    }
+
+                if (!hasRouteBranchingNode)
                     return {
                         nodes: cycle,
                         type: "cycle_without_route_branching_node" as const,
