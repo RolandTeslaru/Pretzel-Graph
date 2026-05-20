@@ -340,7 +340,7 @@ export namespace RuntimeNode {
         },
         readonly dependencyAPI: {
             getPublished: (workflowId: Workflow.Id) => Workflow.Dependency,
-            getDraft:     (workflowId: Workflow.Id) => Workflow.Data,
+            getDraft:     (workflowId: Workflow.Id) => Workflow.DraftDependency,
         },
     }
 }

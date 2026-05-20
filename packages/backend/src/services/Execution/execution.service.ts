@@ -95,7 +95,7 @@ export class ExecutionService {
         igniter:  Execution.Igniter,
     ): Promise<Execution.API.Run.Response> {
         const { workflowId, chat_id } = payload;
-        const workflowData = await this.injectLazyDraftDependencies(supabase, payload.workflowData);
+        const workflowData = payload.workflowData;
 
         const wfCache = Workflow.createCache(workflowData);
         // Validation
@@ -432,43 +432,6 @@ export class ExecutionService {
     }
 
 
-
-    // Walks the workflow tree before enqueue and populates `draftDependencies` for any
-    // Execute Sub-Workflow node running in "latest-draft" mode. Fetches the live workflow
-    // data from the DB (not a pinned publication) and recurses into each draft sub-workflow
-    // so nested latest-draft nodes are resolved too. Throws on circular references.
-    private async injectLazyDraftDependencies(
-        supabase:     SupabaseClient,
-        workflowData: Workflow.Data,
-        visited:      Set<Workflow.Id> = new Set(),
-    ): Promise<Workflow.Data> {
-        const draftIds = new Set<Workflow.Id>();
-
-        // Search nodes with "latest-draft" dependency mode and collect their workflow IDs
-        for (const node of Object.values(workflowData.nodes)) {
-            const nodeStatics = workflowData.staticValues[node.id] as Record<string, unknown> | undefined;
-            if (nodeStatics?.["dependencyMode"] !== "latest-draft") 
-                continue;
-            const workflowId = (node.workflowDependencyId ?? nodeStatics?.["workflowId"]) as Workflow.Id | undefined;
-            
-            if (!workflowId) continue;
-            if (visited.has(workflowId))
-                throw new SystemError(SystemError.Code.CONFIG_INVALID_FIELD, `Circular draft dependency detected: "${workflowId}" is already in the resolution chain`);
-            draftIds.add(workflowId);
-        }
-
-        if (draftIds.size === 0) return workflowData;
-
-        const enriched = { ...workflowData, draftDependencies: { ...(workflowData.draftDependencies ?? {}) } };
-
-        for (const workflowId of draftIds) {
-            visited.add(workflowId);
-            const draftData = await this.database.getDraftData(supabase, workflowId);
-            enriched.draftDependencies[workflowId] = await this.injectLazyDraftDependencies(supabase, draftData, visited);
-        }
-
-        return enriched;
-    }
 }
 
 function collectCredentialInstanceIds(workflowData: Workflow.Data): Set<Vault.Credential.Instance.Id> {

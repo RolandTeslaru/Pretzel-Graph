@@ -18,6 +18,11 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
             ? s.selectors.dependency.getUpdateInfo(s, node.workflowDependencyId)
             : null
     )
+    const draftDependencyUpdate = WorkbenchSDK.useStore(s =>
+        node.workflowDependencyId
+            ? s.selectors.dependency.getDraftUpdateInfo(s, node.workflowDependencyId)
+            : null
+    )
 
     return (
         <div className='bg-card border border-border rounded-lg p-0.5 gap-1 flex flex-row shadow-md shadow-black/10'>
@@ -55,7 +60,16 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
             {dependencyUpdate && (
                 <Tipped label="Update workflow">
                     <Button variant="ghost-active" size="icon-xs" className='h-6!'
-                        onClick={() => WorkbenchSDK.actions.dependency.update(dependencyUpdate)}
+                        onClick={() => WorkbenchSDK.actions.dependency.published.update(dependencyUpdate)}
+                    >
+                        <SystemIcons.ArrowBigUpDash />
+                    </Button>
+                </Tipped>
+            )}
+            {draftDependencyUpdate && (
+                <Tipped label="Update draft workflow">
+                    <Button variant="ghost-active" size="icon-xs" className='h-6!'
+                        onClick={() => WorkbenchSDK.actions.dependency.draft.update(draftDependencyUpdate)}
                     >
                         <SystemIcons.ArrowBigUpDash />
                     </Button>

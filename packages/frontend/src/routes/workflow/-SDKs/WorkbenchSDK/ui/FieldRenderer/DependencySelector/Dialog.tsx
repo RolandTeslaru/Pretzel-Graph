@@ -19,15 +19,21 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, field, dia
     const [manualWorkflowId, setManualWorkflowId] = useState<Workflow.Id>("" as Workflow.Id)
 
     const dependencyMode = WorkbenchSDK.useStore(s => s.data.staticValues[nodeId]?.["dependencyMode" as Field.Id] as string | undefined)
-    const isDraft = dependencyMode === "latest-draft"
+    const isDraftMode = dependencyMode === "latest-draft"
 
     const handleSelect = async (workflowId: Workflow.Id) => {
-        const success = await WorkbenchSDK.actions.dependency.attachWorkflowToNode(nodeId, field.id, workflowId)
+        const action = isDraftMode
+            ? WorkbenchSDK.actions.dependency.draft.attachToNode
+            : WorkbenchSDK.actions.dependency.published.attachToNode
+        const success = await action(nodeId, field.id, workflowId)
         if (success) DialogSDK.actions.pop(dialogId)
     }
 
     const handleManualSet = async () => {
-        const success = await WorkbenchSDK.actions.dependency.attachWorkflowToNode(nodeId, field.id, manualWorkflowId)
+        const action = isDraftMode
+            ? WorkbenchSDK.actions.dependency.draft.attachToNode
+            : WorkbenchSDK.actions.dependency.published.attachToNode
+        const success = await action(nodeId, field.id, manualWorkflowId)
         if (success) DialogSDK.actions.pop(dialogId)
     }
 
@@ -35,18 +41,18 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, field, dia
         <div className="flex flex-col gap-3 p-4 w-[360px]">
             <Dialog.Title className="text-sm font-semibold">Select Workflow</Dialog.Title>
             <Dialog.Description className="sr-only">
-                {isDraft ? "Search and select a draft workflow" : "Search and select an active published workflow"}
+                {isDraftMode ? "Search and select a draft workflow" : "Search and select an active published workflow"}
             </Dialog.Description>
 
             <Input
                 size="sm"
-                placeholder={isDraft ? "Search workflows" : "Search published workflows"}
+                placeholder={isDraftMode ? "Search workflows" : "Search published workflows"}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
             />
 
             <div className="max-h-64 overflow-y-auto rounded-md border border-border/60">
-                {isDraft
+                {isDraftMode
                     ? <DraftSelector searchQuery={searchQuery} selectedWorkflowId={selectedWorkflowId} onSelect={handleSelect} />
                     : <PublicationSelector searchQuery={searchQuery} selectedWorkflowId={selectedWorkflowId} onSelect={handleSelect} />
                 }
