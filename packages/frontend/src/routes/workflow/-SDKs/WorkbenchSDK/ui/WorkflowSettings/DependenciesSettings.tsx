@@ -6,8 +6,8 @@ import { WorkbenchSDK } from '../../sdk'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 
 export const DependenciesSettings = () => {
-    const publishedDependencies = WorkbenchSDK.useStore(s => Object.values(s.data.dependencies ?? {}))
-    const draftDependencies     = WorkbenchSDK.useStore(s => Object.values(s.data.draftDependencies ?? {}))
+    const publishedDependencies = WorkbenchSDK.useStore(s => Object.values(s.data.dependencies.published))
+    const draftDependencies     = WorkbenchSDK.useStore(s => Object.values(s.data.dependencies.draft))
     const dependencyUpdates = WorkbenchSDK.useStore(s => s.dependencyUpdates)
     const [updatingAll, setUpdatingAll] = useState(false)
 

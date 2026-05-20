@@ -53,7 +53,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             let fetchDepPromise: Promise<Workbench.API.Dependency.Published.Load.Response> | null = null;
 
             if(blueprint.workflowDependencyId){
-                if(!sdk.state.data.dependencies[blueprint.workflowDependencyId]){
+                if(!sdk.state.data.dependencies.published[blueprint.workflowDependencyId]){
                     fetchDepPromise = Workbench.API.Dependency.Published.load(api, { dependencyId: blueprint.workflowDependencyId});
 
                     fetchDepPromise.then(({ dependency }) => {

@@ -54,7 +54,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
 
                 for (const affectedNodeId of affectedNodeIds) {
                     const keepSelector = !!(s.data.staticValues[affectedNodeId]?.["workflowId" as Field.Id])
-                    const subflowBlueprint = createBlueprintFromDraftDependency(dependency, keepSelector)
+                    const subflowBlueprint = createBlueprintFromDependency(dependency, keepSelector)
                     reducers.node.recreate(s, affectedNodeId, subflowBlueprint)
                     reducers.node.validate(s, affectedNodeId)
                 }
@@ -73,13 +73,12 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     const actions = {
         registerDependency: withCommit((dependency) => {
             setState(s => {
-                s.data.dependencies = s.data.dependencies ?? {}
-                s.data.dependencies[dependency.workflow_id] = dependency
+                s.data.dependencies.published[dependency.workflow_id] = dependency
             })
         }),
         checkUpdates: async () => {
-            const dependencies      = sdk.state.data.dependencies ?? {}
-            const draftDependencies = sdk.state.data.draftDependencies ?? {}
+            const dependencies      = sdk.state.data.dependencies.published
+            const draftDependencies = sdk.state.data.dependencies.draft
 
             const publishedEntries = Object.values(dependencies).map(dep => ({
                 workflowId:    dep.workflow_id as Workflow.Id,
@@ -150,7 +149,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
             attachToNode: withAsyncCommit(async (nodeId: Workflow.Node.Id, fieldId: Field.Id, workflowId: Workflow.Id) => {
                 try {
                     const { dependency } = await Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId })
-                    const subflowBlueprint = createBlueprintFromDraftDependency(dependency, true)
+                    const subflowBlueprint = createBlueprintFromDependency(dependency, true)
                     const dependencyFields = dependency.workflow_data.fields ?? []
 
                     setState(withCyclesRecompute(s => {
@@ -207,24 +206,14 @@ export type DependencyActions = {
     }
 }
 
-export function createBlueprintFromDependency(dependency: Workflow.Dependency.Publication, keepDependencySelector = false): Foundations.Blueprint {
-    const base = ShelfSDK.state.blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]
-    const dependencyFields = dependency.workflow_data.fields ?? []
-    const baseFields = keepDependencySelector
-        ? base.fields
-        : base.fields.filter(f => f.variant !== "DependencySelector")
-
-    return {
-        ...base,
-        ...extractExposedPorts(dependency.workflow_data),
-        fields: mergeFieldsById(baseFields, dependencyFields),
-        displayName: dependency.display_name,
-        icon: dependency.icon ?? base.icon,
-        accent: dependency.accent ?? base.accent,
-    } satisfies Foundations.Blueprint
+type DependencyLike = {
+    workflow_data: Workflow.Data
+    display_name: string
+    icon?: string | null
+    accent?: string | null
 }
 
-export function createBlueprintFromDraftDependency(dependency: Workflow.Dependency.Draft, keepDependencySelector = false): Foundations.Blueprint {
+export function createBlueprintFromDependency(dependency: DependencyLike, keepDependencySelector = false): Foundations.Blueprint {
     const base = ShelfSDK.state.blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]
     const dependencyFields = dependency.workflow_data.fields ?? []
     const baseFields = keepDependencySelector
