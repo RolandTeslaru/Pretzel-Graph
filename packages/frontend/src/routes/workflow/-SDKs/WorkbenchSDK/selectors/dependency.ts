@@ -3,8 +3,8 @@ import type { WorkbenchSDK } from '../sdk';
 
 export interface DependencySelectors {
     doesNodeHaveUpdate:   (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
-    getUpdateInfo:        (state: WorkbenchSDK.State, workflowDependencyId: Workflow.Id) => Workflow.Dependency.UpdateInfo | null
-    getDraftUpdateInfo:   (state: WorkbenchSDK.State, workflowDependencyId: Workflow.Id) => Workflow.DraftDependency.UpdateInfo | null
+    getUpdateInfo:        (state: WorkbenchSDK.State, workflowDependencyId: Workflow.Id) => Workflow.Dependency.Publication.UpdateInfo | null
+    getDraftUpdateInfo:   (state: WorkbenchSDK.State, workflowDependencyId: Workflow.Id) => Workflow.Dependency.Draft.UpdateInfo | null
 }
 
 export const dependencySelectors = {
