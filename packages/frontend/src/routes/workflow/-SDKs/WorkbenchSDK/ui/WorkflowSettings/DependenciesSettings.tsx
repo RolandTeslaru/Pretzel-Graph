@@ -65,8 +65,8 @@ export const DependenciesSettings = () => {
 }
 
 function PublishedDependencyRow({ dep, updateInfo }: {
-    dep: Workflow.Dependency
-    updateInfo: Workflow.Dependency.UpdateInfo | null
+    dep: Workflow.Dependency.Publication
+    updateInfo: Workflow.Dependency.Publication.UpdateInfo | null
 }) {
     const [isUpdating, setIsUpdating] = useState(false)
 
@@ -110,8 +110,8 @@ function PublishedDependencyRow({ dep, updateInfo }: {
 }
 
 function DraftDependencyRow({ dep, updateInfo }: {
-    dep: Workflow.DraftDependency
-    updateInfo: Workflow.DraftDependency.UpdateInfo | null
+    dep: Workflow.Dependency.Draft
+    updateInfo: Workflow.Dependency.Draft.UpdateInfo | null
 }) {
     const [isUpdating, setIsUpdating] = useState(false)
 

@@ -66,7 +66,7 @@ export namespace Workbench {
                     export type Request = z.infer<typeof Request>
 
                     export const Response = z.object({
-                        dependency: WorkflowNs.Dependency.Schema,
+                        dependency: WorkflowNs.Dependency.Publication.Schema,
                     })
                     export type Response = z.infer<typeof Response>
                 }
@@ -86,7 +86,7 @@ export namespace Workbench {
                     export type Request = z.infer<typeof Request>
 
                     export const Response = z.object({
-                        updates: z.record(WorkflowNs.Id, WorkflowNs.Dependency.UpdateInfo),
+                        updates: z.record(WorkflowNs.Id, WorkflowNs.Dependency.Publication.UpdateInfo),
                     })
                     export type Response = z.infer<typeof Response>
                 }
@@ -105,7 +105,7 @@ export namespace Workbench {
                     export type Request = z.infer<typeof Request>
 
                     export const Response = z.object({
-                        dependency: WorkflowNs.DraftDependency.Schema,
+                        dependency: WorkflowNs.Dependency.Draft.Schema,
                     })
                     export type Response = z.infer<typeof Response>
                 }
@@ -125,7 +125,7 @@ export namespace Workbench {
                     export type Request = z.infer<typeof Request>
 
                     export const Response = z.object({
-                        updates: z.record(WorkflowNs.Id, WorkflowNs.DraftDependency.UpdateInfo),
+                        updates: z.record(WorkflowNs.Id, WorkflowNs.Dependency.Draft.UpdateInfo),
                     })
                     export type Response = z.infer<typeof Response>
                 }
