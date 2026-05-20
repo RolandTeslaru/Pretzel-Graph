@@ -149,8 +149,8 @@ export namespace WorkbenchSDK {
         issues: Validation.Issue.Workflow_
         cycles: Workflow.Node.Id[][]
         stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>,
-        dependencyUpdates: Record<Workflow.Id, Workflow.Dependency.UpdateInfo>
-        draftDependencyUpdates: Record<Workflow.Id, Workflow.DraftDependency.UpdateInfo>
+        dependencyUpdates: Record<Workflow.Id, Workflow.Dependency.Publication.UpdateInfo>
+        draftDependencyUpdates: Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>
         selectors: WorkbenchSDKSelectors
     }
 
