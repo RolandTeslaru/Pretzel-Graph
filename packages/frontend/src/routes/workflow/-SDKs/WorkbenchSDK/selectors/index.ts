@@ -12,7 +12,7 @@ import type { WorkbenchSDK } from '../sdk';
 
 export interface WorkbenchSDKSelectors {
     getClickedNode : (state: WorkbenchSDK.State) => Workflow.Node | null
-    getDependency  : (state: WorkbenchSDK.State, dependencyId: Workflow.Id) => Workflow.Dependency | null
+    getDependency  : (state: WorkbenchSDK.State, dependencyId: Workflow.Id) => Workflow.Dependency.Publication | null
     node           : NodeSelectors
     field          : FieldSelectors
     input          : InputSelectors
