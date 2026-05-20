@@ -40,7 +40,7 @@ export const TooltipContent = ({ issue }: { issue: Validation.Issue.Cycle}) => {
             </div>
             { issue.type === "cycle_without_route_branching_node" && (
                 <>
-                    
+
                     <p>This cycle has no exit condition.</p>
                     <p className='flex flex-wrap items-center gap-x-1'>
                         Add a branching node like
@@ -57,6 +57,17 @@ export const TooltipContent = ({ issue }: { issue: Validation.Issue.Cycle}) => {
                             Router
                         </span>
                         to break out of the loop.
+                    </p>
+                </>
+            )}
+            { issue.type === "cycle_gridlock" && (
+                <>
+                    <p>This cycle will never execute.</p>
+                    <p>
+                        Every node is waiting for signals or data that can only arrive after the cycle completes.
+                        Set at least one node's signal dependency to <span className='font-semibold'>OR</span> and
+                        its data dependency to <span className='font-semibold'>OR</span> so it can fire first and
+                        unblock the rest.
                     </p>
                 </>
             )}
