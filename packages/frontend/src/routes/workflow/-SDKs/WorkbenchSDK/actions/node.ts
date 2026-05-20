@@ -52,6 +52,8 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             // Handle nodes that are actually subworkflows;
             let fetchDepPromise: Promise<Workbench.API.Dependency.Published.Load.Response> | null = null;
 
+            // If the blueprint is pre-wired to a dependency not yet in the store, fetch it lazily.
+            // On failure, remove the node — it can't function without its dependency data.
             if(blueprint.workflowDependencyId){
                 if(!sdk.state.data.dependencies.published[blueprint.workflowDependencyId]){
                     fetchDepPromise = Workbench.API.Dependency.Published.load(api, { dependencyId: blueprint.workflowDependencyId});
