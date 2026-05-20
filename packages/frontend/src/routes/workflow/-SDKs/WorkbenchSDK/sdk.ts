@@ -53,8 +53,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                     edges: new Set(),
                     layout: {},
                 },
-                dependencyUpdates: {},
-                draftDependencyUpdates: {},
+                dependencyUpdates: { published: {}, draft: {} },
                 selectors: workbenchSelectors
             })), {
             limit: this.TEMPORAL_STACK_SIZE,
@@ -149,8 +148,10 @@ export namespace WorkbenchSDK {
         issues: Validation.Issue.Workflow_
         cycles: Workflow.Node.Id[][]
         stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>,
-        dependencyUpdates: Record<Workflow.Id, Workflow.Dependency.Publication.UpdateInfo>
-        draftDependencyUpdates: Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>
+        dependencyUpdates: {
+            published: Record<Workflow.Id, Workflow.Dependency.Publication.UpdateInfo>
+            draft:     Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>
+        }
         selectors: WorkbenchSDKSelectors
     }
 

@@ -8,13 +8,12 @@ import type { Workflow } from '@pretzel-graph/shared/domain'
 export const DependenciesSettings = () => {
     const publishedDependencies = WorkbenchSDK.useStore(s => Object.values(s.data.dependencies ?? {}))
     const draftDependencies     = WorkbenchSDK.useStore(s => Object.values(s.data.draftDependencies ?? {}))
-    const dependencyUpdates      = WorkbenchSDK.useStore(s => s.dependencyUpdates)
-    const draftDependencyUpdates = WorkbenchSDK.useStore(s => s.draftDependencyUpdates)
+    const dependencyUpdates = WorkbenchSDK.useStore(s => s.dependencyUpdates)
     const [updatingAll, setUpdatingAll] = useState(false)
 
     const hasAnyUpdate =
-        Object.keys(dependencyUpdates).length > 0 ||
-        Object.keys(draftDependencyUpdates).length > 0
+        Object.keys(dependencyUpdates.published).length > 0 ||
+        Object.keys(dependencyUpdates.draft).length > 0
 
     const updateAll = async () => {
         setUpdatingAll(true)
@@ -48,14 +47,14 @@ export const DependenciesSettings = () => {
                         <PublishedDependencyRow
                             key={dep.workflow_id}
                             dep={dep}
-                            updateInfo={dependencyUpdates[dep.workflow_id as Workflow.Id] ?? null}
+                            updateInfo={dependencyUpdates.published[dep.workflow_id as Workflow.Id] ?? null}
                         />
                     ))}
                     {draftDependencies.map(dep => (
                         <DraftDependencyRow
                             key={dep.workflow_id}
                             dep={dep}
-                            updateInfo={draftDependencyUpdates[dep.workflow_id as Workflow.Id] ?? null}
+                            updateInfo={dependencyUpdates.draft[dep.workflow_id as Workflow.Id] ?? null}
                         />
                     ))}
                 </div>
