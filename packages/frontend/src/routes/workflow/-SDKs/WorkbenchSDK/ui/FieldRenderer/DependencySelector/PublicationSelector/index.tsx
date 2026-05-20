@@ -1,22 +1,29 @@
-import { memo, useMemo } from 'react'
-import { Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { memo, useMemo, useState } from 'react'
+import { Button, Input, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK/sdk'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import { WorkbenchSDK } from '../../../../sdk'
+import { DialogSDK } from '@/SDKs/DialogSDK'
 import { PublicationSelectorItem } from './Item'
+import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field'
 
 const STALE_TIME = 60_000
 
 interface Props {
+    nodeId: Workflow.Node.Id
+    fieldId: Field.Id
+    dialogId: string
     searchQuery: string
     selectedWorkflowId: Workflow.Id | ""
-    onSelect: (workflowId: Workflow.Id) => void
 }
 
-export const PublicationSelector = memo<Props>(({ searchQuery, selectedWorkflowId, onSelect }) => {
+export const PublicationSelector = memo<Props>(({ nodeId, fieldId, dialogId, searchQuery, selectedWorkflowId }) => {
+    const [manualWorkflowId, setManualWorkflowId] = useState<Workflow.Id>("" as Workflow.Id)
+
     const activeWorkflows = VersionControlSDK.useStore(s => s.activeWorkflows)
-    const workflowMetas = LibrarySDK.useStore(s => s.workflowMetas)
+    const workflowMetas   = LibrarySDK.useStore(s => s.workflowMetas)
 
     const query = QuerySDK.useQuery(
         ['version-control', 'active-workflows'],
@@ -47,28 +54,48 @@ export const PublicationSelector = memo<Props>(({ searchQuery, selectedWorkflowI
             })
     }, [activeWorkflows, searchQuery, workflowMetas])
 
-    if (isLoading)
-        return (
-            <div className="flex items-center justify-center gap-2 px-2 py-4 text-xs text-muted-foreground">
-                <Spinner className="size-3.5" />
-                Loading published workflows
-            </div>
-        )
-
-    if (options.length === 0)
-        return <div className="px-2 py-4 text-center text-xs text-muted-foreground">No published workflows found</div>
+    const attach = async (workflowId: Workflow.Id) => {
+        const success = await WorkbenchSDK.actions.dependency.published.attachToNode(nodeId, fieldId, workflowId)
+        if (success) DialogSDK.actions.pop(dialogId)
+    }
 
     return (
         <>
-            {options.map(({ publication, workflow }) => (
-                <PublicationSelectorItem
-                    key={publication.id}
-                    publication={publication}
-                    workflow={workflow}
-                    isSelected={publication.workflow_id === selectedWorkflowId}
-                    onSelect={onSelect}
-                />
-            ))}
+            <div className="max-h-64 overflow-y-auto rounded-md border border-border/60">
+                {isLoading ? (
+                    <div className="flex items-center justify-center gap-2 px-2 py-4 text-xs text-muted-foreground">
+                        <Spinner className="size-3.5" />
+                        Loading published workflows
+                    </div>
+                ) : options.length === 0 ? (
+                    <div className="px-2 py-4 text-center text-xs text-muted-foreground">No published workflows found</div>
+                ) : (
+                    options.map(({ publication, workflow }) => (
+                        <PublicationSelectorItem
+                            key={publication.id}
+                            publication={publication}
+                            workflow={workflow}
+                            isSelected={publication.workflow_id === selectedWorkflowId}
+                            onSelect={attach}
+                        />
+                    ))
+                )}
+            </div>
+
+            <div className="flex flex-col gap-1 border-t border-border pt-2">
+                <span className="text-[10px] font-medium text-muted-foreground">or use a public workflow ID</span>
+                <div className="flex gap-1">
+                    <Input
+                        size="sm"
+                        placeholder="Paste workflow id"
+                        value={manualWorkflowId}
+                        onChange={(e) => setManualWorkflowId(e.target.value as Workflow.Id)}
+                    />
+                    <Button type="button" size="sm" variant="outline" disabled={!manualWorkflowId} onClick={() => attach(manualWorkflowId)}>
+                        Set
+                    </Button>
+                </div>
+            </div>
         </>
     )
 })
