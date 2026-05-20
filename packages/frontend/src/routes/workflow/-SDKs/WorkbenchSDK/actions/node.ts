@@ -50,11 +50,11 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             let nodeId: Workflow.Node.Id | null = null;
             
             // Handle nodes that are actually subworkflows;
-            let fetchDepPromise: Promise<Workbench.API.Dependency.Load.Response> | null = null;
+            let fetchDepPromise: Promise<Workbench.API.Dependency.Published.Load.Response> | null = null;
 
             if(blueprint.workflowDependencyId){
                 if(!sdk.state.data.dependencies[blueprint.workflowDependencyId]){
-                    fetchDepPromise = Workbench.API.Dependency.load(api, { dependencyId: blueprint.workflowDependencyId});
+                    fetchDepPromise = Workbench.API.Dependency.Published.load(api, { dependencyId: blueprint.workflowDependencyId});
 
                     fetchDepPromise.then(({ dependency }) => {
                         sdk.actions.dependency.registerDependency(dependency);

@@ -12,12 +12,12 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     const setState = sdk.useStore.setState
     const reducers = sdk.reducers
 
-    const applyUpdate = async (updateInfo: Workflow.Dependency.UpdateInfo): Promise<boolean> => {
+    const applyPublishedUpdate = async (updateInfo: Workflow.Dependency.UpdateInfo): Promise<boolean> => {
         try {
-            const { dependency } = await Workbench.API.Dependency.load(api, { dependencyId: updateInfo.workflowId })
+            const { dependency } = await Workbench.API.Dependency.Published.load(api, { dependencyId: updateInfo.workflowId })
 
             setState(withCyclesRecompute(s => {
-                reducers.dependency.registerDependency(s, dependency)
+                reducers.dependency.published.register(s, dependency)
 
                 const affectedNodeIds = Object.values(s.data.nodes)
                     .filter(n => n.workflowDependencyId === updateInfo.workflowId)
@@ -41,6 +41,35 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
         return true
     }
 
+    const applyDraftUpdate = async (updateInfo: Workflow.DraftDependency.UpdateInfo): Promise<boolean> => {
+        try {
+            const { dependency } = await Workbench.API.Dependency.Draft.load(api, { dependencyId: updateInfo.workflowId })
+
+            setState(withCyclesRecompute(s => {
+                reducers.dependency.draft.register(s, dependency)
+
+                const affectedNodeIds = Object.values(s.data.nodes)
+                    .filter(n => n.workflowDependencyId === updateInfo.workflowId)
+                    .map(n => n.id)
+
+                for (const affectedNodeId of affectedNodeIds) {
+                    const keepSelector = !!(s.data.staticValues[affectedNodeId]?.["workflowId" as Field.Id])
+                    const subflowBlueprint = createBlueprintFromDraftDependency(dependency, keepSelector)
+                    reducers.node.recreate(s, affectedNodeId, subflowBlueprint)
+                    reducers.node.validate(s, affectedNodeId)
+                }
+
+                delete s.draftDependencyUpdates[updateInfo.workflowId]
+            }))
+        } catch (err) {
+            const error = SystemError.fromUnknown(err)
+            console.error("Failed to update draft dependency", error)
+            toast.error(`Failed to update draft dependency: ${error.message}`)
+            return false
+        }
+        return true
+    }
+
     const actions = {
         registerDependency: withCommit((dependency) => {
             setState(s => {
@@ -48,96 +77,154 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
                 s.data.dependencies[dependency.workflow_id] = dependency
             })
         }),
-        load: withAsyncCommit(async (dependencyId) => {
-            try {
-                const { dependency } = await Workbench.API.Dependency.load(api, { dependencyId })
-                setState(s => {
-                    reducers.dependency.registerDependency(s, dependency)
-                })
-            } catch (err) {
-                const error = SystemError.fromUnknown(err)
-                console.error("Failed to resolve dependency", error)
-                toast.error(`Failed to resolve dependency: ${error.message}`)
-                return false
-            }
-            return true
-        }),
         checkUpdates: async () => {
-            const dependencies = sdk.state.data.dependencies ?? {};
+            const dependencies      = sdk.state.data.dependencies ?? {}
+            const draftDependencies = sdk.state.data.draftDependencies ?? {}
 
-            const entries = Object.values(dependencies).map(dep => ({
+            const publishedEntries = Object.values(dependencies).map(dep => ({
                 workflowId:    dep.workflow_id as Workflow.Id,
                 publicationId: dep.id as VersionControlPublication.Id,
             }))
 
-            if (entries.length === 0) {
-                setState(s => { s.dependencyUpdates = {} })
-                return
-            }
+            const draftEntries = Object.values(draftDependencies).map(dep => ({
+                workflowId:          dep.workflow_id as Workflow.Id,
+                workflow_updated_at: dep.workflow_updated_at,
+            }))
 
-            try {
-                const { updates } = await Workbench.API.Dependency.checkUpdates(api, { dependencies: entries })
-                setState(s => { s.dependencyUpdates = updates })
-                const count = Object.keys(updates).length
-                if (count > 0)
-                    toast.info(`${count} dependency update${count === 1 ? '' : 's'} available`)
-            } catch (err) {
-                console.error("Failed to check dependency updates", err)
-            }
+            const [publishedResult, draftResult] = await Promise.allSettled([
+                publishedEntries.length > 0
+                    ? Workbench.API.Dependency.Published.checkUpdates(api, { dependencies: publishedEntries })
+                    : Promise.resolve({ updates: {} as Record<Workflow.Id, Workflow.Dependency.UpdateInfo> }),
+                draftEntries.length > 0
+                    ? Workbench.API.Dependency.Draft.checkUpdates(api, { dependencies: draftEntries })
+                    : Promise.resolve({ updates: {} as Record<Workflow.Id, Workflow.DraftDependency.UpdateInfo> }),
+            ])
+
+            setState(s => {
+                if (publishedResult.status === 'fulfilled') s.dependencyUpdates = publishedResult.value.updates
+                if (draftResult.status    === 'fulfilled') s.draftDependencyUpdates = draftResult.value.updates
+            })
+
+            const count =
+                (publishedResult.status === 'fulfilled' ? Object.keys(publishedResult.value.updates).length : 0) +
+                (draftResult.status    === 'fulfilled' ? Object.keys(draftResult.value.updates).length    : 0)
+
+            if (count > 0)
+                toast.info(`${count} dependency update${count === 1 ? '' : 's'} available`)
         },
 
-        attachWorkflowToNode: withAsyncCommit(async (nodeId: Workflow.Node.Id, fieldId: Field.Id, workflowId: Workflow.Id) => {
-            try {
-                const { dependency } = await Workbench.API.Dependency.load(api, { dependencyId: workflowId })
-                const subflowBlueprint = createBlueprintFromDependency(dependency, true)
-                const dependencyFields = dependency.workflow_data.fields ?? []
+        published: {
+            attachToNode: withAsyncCommit(async (nodeId: Workflow.Node.Id, fieldId: Field.Id, workflowId: Workflow.Id) => {
+                try {
+                    const { dependency } = await Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
+                    const subflowBlueprint = createBlueprintFromDependency(dependency, true)
+                    const dependencyFields = dependency.workflow_data.fields ?? []
 
-                setState(withCyclesRecompute(s => {
-                    reducers.dependency.registerDependency(s, dependency)
-                    reducers.node.recreate(s, nodeId, subflowBlueprint)
-                    reducers.field.setValue(s, nodeId, fieldId, workflowId)
+                    setState(withCyclesRecompute(s => {
+                        reducers.dependency.published.register(s, dependency)
+                        reducers.node.recreate(s, nodeId, subflowBlueprint)
+                        reducers.field.setValue(s, nodeId, fieldId, workflowId)
 
-                    s.data.staticValues[nodeId] ??= {}
-                    for (const field of dependencyFields) {
-                        if (field.id in s.data.staticValues[nodeId]) continue
-                        if ("initialValue" in field)
-                            s.data.staticValues[nodeId][field.id] = field.initialValue
-                    }
+                        s.data.staticValues[nodeId] ??= {}
+                        for (const field of dependencyFields) {
+                            if (field.id in s.data.staticValues[nodeId]) continue
+                            if ("initialValue" in field)
+                                s.data.staticValues[nodeId][field.id] = field.initialValue
+                        }
 
-                    reducers.node.setWorkflowDependency(s, nodeId, workflowId)
-                    reducers.node.validate(s, nodeId)
-                }))
-            } catch (err) {
-                const error = SystemError.fromUnknown(err)
-                console.error("Failed to resolve dependency", error)
-                toast.error(`Failed to resolve dependency: ${error.message}`)
-                return false
-            }
-            return true
-        }),
+                        reducers.node.setWorkflowDependency(s, nodeId, workflowId)
+                        reducers.node.validate(s, nodeId)
+                    }))
+                } catch (err) {
+                    const error = SystemError.fromUnknown(err)
+                    console.error("Failed to resolve published dependency", error)
+                    toast.error(`Failed to resolve dependency: ${error.message}`)
+                    return false
+                }
+                return true
+            }),
+            update:    withAsyncCommit(applyPublishedUpdate),
+        },
 
-        update: withAsyncCommit(applyUpdate),
+        draft: {
+            attachToNode: withAsyncCommit(async (nodeId: Workflow.Node.Id, fieldId: Field.Id, workflowId: Workflow.Id) => {
+                try {
+                    const { dependency } = await Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId })
+                    const subflowBlueprint = createBlueprintFromDraftDependency(dependency, true)
+                    const dependencyFields = dependency.workflow_data.fields ?? []
+
+                    setState(withCyclesRecompute(s => {
+                        reducers.dependency.draft.register(s, dependency)
+                        reducers.node.recreate(s, nodeId, subflowBlueprint)
+                        reducers.field.setValue(s, nodeId, fieldId, workflowId)
+
+                        s.data.staticValues[nodeId] ??= {}
+                        for (const field of dependencyFields) {
+                            if (field.id in s.data.staticValues[nodeId]) continue
+                            if ("initialValue" in field)
+                                s.data.staticValues[nodeId][field.id] = field.initialValue
+                        }
+
+                        reducers.node.setWorkflowDependency(s, nodeId, workflowId)
+                        reducers.node.validate(s, nodeId)
+                    }))
+                } catch (err) {
+                    const error = SystemError.fromUnknown(err)
+                    console.error("Failed to resolve draft dependency", error)
+                    toast.error(`Failed to resolve draft dependency: ${error.message}`)
+                    return false
+                }
+                return true
+            }),
+            update: withAsyncCommit(applyDraftUpdate),
+        },
 
         updateAll: withAsyncCommit(async () => {
-            const updates = Object.values(sdk.state.dependencyUpdates)
-            const results = await Promise.all(updates.map(applyUpdate))
+            const publishedUpdates = Object.values(sdk.state.dependencyUpdates)
+            const draftUpdates     = Object.values(sdk.state.draftDependencyUpdates)
+            const results = await Promise.all([
+                ...publishedUpdates.map(applyPublishedUpdate),
+                ...draftUpdates.map(applyDraftUpdate),
+            ])
             return results.every(Boolean)
         }),
     } satisfies DependencyActions
 
     return actions
-}   
+}
 
 export type DependencyActions = {
     registerDependency: (dependency: Workflow.Dependency) => void
-    load: (dependencyId: Workflow.Id) => Promise<boolean>
-    checkUpdates: () => Promise<void>
-    attachWorkflowToNode: (nodeId: Workflow.Node.Id, fieldId: Field.Id, workflowId: Workflow.Id) => Promise<boolean>
-    update: (updateInfo: Workflow.Dependency.UpdateInfo) => Promise<boolean>
-    updateAll: () => Promise<boolean>
+    checkUpdates:       () => Promise<void>
+    updateAll:          () => Promise<boolean>
+    published: {
+        attachToNode: (nodeId: Workflow.Node.Id, fieldId: Field.Id, workflowId: Workflow.Id) => Promise<boolean>
+        update:       (updateInfo: Workflow.Dependency.UpdateInfo) => Promise<boolean>
+    }
+    draft: {
+        attachToNode: (nodeId: Workflow.Node.Id, fieldId: Field.Id, workflowId: Workflow.Id) => Promise<boolean>
+        update:       (updateInfo: Workflow.DraftDependency.UpdateInfo) => Promise<boolean>
+    }
 }
 
 export function createBlueprintFromDependency(dependency: Workflow.Dependency, keepDependencySelector = false): Foundations.Blueprint {
+    const base = ShelfSDK.state.blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]
+    const dependencyFields = dependency.workflow_data.fields ?? []
+    const baseFields = keepDependencySelector
+        ? base.fields
+        : base.fields.filter(f => f.variant !== "DependencySelector")
+
+    return {
+        ...base,
+        ...extractExposedPorts(dependency.workflow_data),
+        fields: mergeFieldsById(baseFields, dependencyFields),
+        displayName: dependency.display_name,
+        icon: dependency.icon ?? base.icon,
+        accent: dependency.accent ?? base.accent,
+    } satisfies Foundations.Blueprint
+}
+
+export function createBlueprintFromDraftDependency(dependency: Workflow.DraftDependency, keepDependencySelector = false): Foundations.Blueprint {
     const base = ShelfSDK.state.blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]
     const dependencyFields = dependency.workflow_data.fields ?? []
     const baseFields = keepDependencySelector
