@@ -34,12 +34,14 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
         if(!subWorkflowId)
             throw new Error(`Missing workflowId field in Execute Sub-Workflow node ${this.workflowNode.id}`);
 
-        const dependency = this.context.workflowData.dependencies?.[subWorkflowId];
+        const dependencyMode = this.fields.dependencyMode as string;
+        const isDraft = dependencyMode === "latest-draft";
 
-        console.log(`[ExecuteSubWorkflow:onCompile] dependency found=${!!dependency} availableDependencies=${Object.keys(this.context.workflowData.dependencies ?? {}).join(", ")}`);
+        const childWorkflowData = isDraft
+            ? structuredClone(this.context.dependencyAPI.getDraft(subWorkflowId))
+            : structuredClone(this.context.dependencyAPI.getPublished(subWorkflowId).workflow_data);
 
-        if (!dependency)
-            throw new Error(`Missing dependency "${subWorkflowId}" for Execute Sub-Workflow node`);
+        console.log(`[ExecuteSubWorkflow:onCompile] mode=${dependencyMode} dependency resolved for subWorkflowId=${subWorkflowId}`);
 
         const childCompilationCtx = extendCompilePath(compilationContext, subWorkflowId);
 
@@ -70,14 +72,11 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
             },
         };
 
-        const childWorkflowData = structuredClone(dependency.workflow_data);
-
         this.injectWorkflowConfigValues(childWorkflowData);
 
-
-        console.log(`[ExecuteSubWorkflow:onCompile] compiling sub-workflow dependency.workflow_id=${dependency.workflow_id}`);
+        console.log(`[ExecuteSubWorkflow:onCompile] compiling sub-workflow subWorkflowId=${subWorkflowId}`);
         this.subEngineCtx = await this.subEnvironment.compile(
-            dependency.workflow_id,
+            subWorkflowId,
             childWorkflowData,
             subExecution,
             this.context.emit,

@@ -115,6 +115,19 @@ export class WorkflowCompiler {
             }
         } satisfies RuntimeNode.ExecutionContext["subWorkflowAPI"];
 
+        const dependencyAPI = {
+            getPublished: (wfId: Workflow.Id) => {
+                const dep = workflowData.dependencies?.[wfId];
+                if (!dep) throw new Error(`Missing published dependency "${wfId}"`);
+                return dep;
+            },
+            getDraft: (wfId: Workflow.Id) => {
+                const draft = workflowData.draftDependencies?.[wfId];
+                if (!draft) throw new Error(`Missing draft dependency "${wfId}"`);
+                return draft;
+            },
+        } satisfies RuntimeNode.ExecutionContext["dependencyAPI"];
+
         const getDecryptedCredentialValues: RuntimeNode.ExecutionContext["getDecryptedCredentialValues"] =
             (blob) => decryptCredentialBlob(blob) as any;
 
@@ -136,6 +149,7 @@ export class WorkflowCompiler {
             schedulerAPI,
             enclosingNodeAPI,
             subWorkflowAPI,
+            dependencyAPI,
             credentialInstances,
             getDecryptedCredentialValues,
         } satisfies RuntimeNode.ExecutionContext
@@ -160,6 +174,7 @@ export class WorkflowCompiler {
             schedulerAPI,
             enclosingNodeAPI,
             subWorkflowAPI,
+            dependencyAPI,
             credentialInstances,
             getDecryptedCredentialValues,
         } satisfies AggexEngine.Execution.Context
@@ -239,7 +254,9 @@ export class WorkflowCompiler {
 
         if (!RuntimeNode) {
             if(wfNode.workflowDependencyId){
-                if(!engineExecutionCtx.workflowData.dependencies?.[wfNode.workflowDependencyId])
+                const { dependencies, draftDependencies } = engineExecutionCtx.workflowData;
+                const hasDep = dependencies?.[wfNode.workflowDependencyId] || draftDependencies?.[wfNode.workflowDependencyId];
+                if (!hasDep)
                     throw new AggexCompilerError(
                         SystemError.Code.COMPILATION_MISSING_SUBWORKFLOW_DEPENDENCY,
                         `Missing dependency "${wfNode.workflowDependencyId}" for node "${wfNode.id}"`,

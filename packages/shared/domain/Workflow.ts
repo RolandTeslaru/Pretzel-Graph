@@ -124,10 +124,8 @@ export namespace Workflow {
                 viewport: Viewport;
                 icon_color?: string | null;
             };
-            dependencies: Record<
-                Workflow.Id,
-                Dependency
-            >;
+            dependencies: Record<Workflow.Id, Dependency>;
+            draftDependencies?: Record<Workflow.Id, Data>;
         }
 
         export const Schema: z.ZodType<Shape> = z.object({
@@ -155,6 +153,11 @@ export namespace Workflow {
             dependencies: z.record(
                 Workflow.Id,
                 z.lazy(() => Dependency.Schema)
+            ).default({}),
+
+            draftDependencies: z.record(
+                Workflow.Id,
+                z.lazy(() => Schema)
             ).default({}),
         })
     }
