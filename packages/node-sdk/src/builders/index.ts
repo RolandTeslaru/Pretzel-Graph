@@ -26,7 +26,8 @@ type DefineBlueprintReturn<
     TOutputs extends readonly Port.Output[],
     TWebhooks extends readonly Webhook[] = readonly [],
     TToolCompatible extends boolean = false,
-    TCredentials extends readonly CredentialTemplate[] = readonly []
+    TCredentials extends readonly CredentialTemplate[] = readonly [],
+    TFlags extends Record<string, unknown> = Record<string, unknown>,
 > = {
     readonly id: TId & Blueprint.Id;
     readonly displayName: string;
@@ -41,6 +42,7 @@ type DefineBlueprintReturn<
     readonly webhooks?: TWebhooks;
     readonly toolCompatible: TToolCompatible;
     readonly credentials: TCredentials;
+    readonly flags?: TFlags;
 }
 
 const hiddenToolField = FieldBuilder.Boolean({
@@ -86,7 +88,8 @@ export function defineBlueprint<
     const TOutputs extends readonly Port.Output[],
     const TWebhooks extends readonly Webhook[] = readonly [],
     const TToolCompatible extends boolean = false,
-    const TCredentials extends readonly CredentialTemplate[] = readonly []
+    const TCredentials extends readonly CredentialTemplate[] = readonly [],
+    const TFlags extends Record<string, unknown> = Record<string, unknown>,
 >(config: {
     id: TId;
     displayName: string;
@@ -99,7 +102,8 @@ export function defineBlueprint<
     webhooks?: TWebhooks;
     toolCompatible?: TToolCompatible;
     credentials?: TCredentials;
-}): DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TWebhooks, TToolCompatible, TCredentials> {
+    flags?: TFlags;
+}): DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TWebhooks, TToolCompatible, TCredentials, TFlags> {
 
     const baseFields = [
         ...config.fields,
@@ -123,5 +127,6 @@ export function defineBlueprint<
         webhooks: config.webhooks,
         toolCompatible: config.toolCompatible as TToolCompatible,
         credentials: (config.credentials ?? []) as unknown as TCredentials,
+        flags: config.flags,
     };
 }

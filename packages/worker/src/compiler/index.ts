@@ -253,14 +253,17 @@ export class WorkflowCompiler {
         const { compiledGraph: graph } = engineExecutionCtx;
 
         if (!RuntimeNode) {
-            if(wfNode.workflowDependencyId){
+            if (wfNode.dependency) {
                 const { dependencies } = engineExecutionCtx.workflowData;
-                const hasDep = dependencies?.published?.[wfNode.workflowDependencyId] || dependencies?.draft?.[wfNode.workflowDependencyId];
+                const { workflowId, mode } = wfNode.dependency;
+                const hasDep = mode === "publication"
+                    ? !!dependencies?.published?.[workflowId]
+                    : !!dependencies?.draft?.[workflowId];
                 if (!hasDep)
                     throw new AggexCompilerError(
                         SystemError.Code.COMPILATION_MISSING_SUBWORKFLOW_DEPENDENCY,
-                        `Missing dependency "${wfNode.workflowDependencyId}" for node "${wfNode.id}"`,
-                        { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId, missingDependencyId: wfNode.workflowDependencyId } }
+                        `Missing dependency "${workflowId}" for node "${wfNode.id}"`,
+                        { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId, missingDependencyId: workflowId } }
                     );
                 RuntimeNode =  await CatalogueService.getNode("Core.SubWorkflow.Execute" as Foundations.Blueprint.Id);
             }
