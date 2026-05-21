@@ -2,16 +2,19 @@ import { memo } from 'react'
 import { cn } from '@pretzel-graph/standard-ui/utils/cn'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { Workflow, VersionControl, Library } from '@pretzel-graph/shared/domain'
+import { Button } from '@pretzel-graph/standard-ui/foundations'
+import { WorkbenchSDK } from '../../../../sdk'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 interface Props {
     publication: VersionControl.Publication.Meta
-    workflow: Library.WorkflowMeta | undefined
+    workflowMeta: Library.WorkflowMeta | undefined
     isSelected: boolean
     onSelect: (workflowId: Workflow.Id) => void
 }
 
-export const PublicationSelectorItem = memo<Props>(({ publication, workflow, isSelected, onSelect }) => {
-    const workflowName = workflow?.display_name ?? publication.name
+export const PublicationSelectorItem = memo<Props>(({ publication, workflowMeta, isSelected, onSelect }) => {
+    const workflowName = workflowMeta?.display_name ?? publication.name
     return (
         <button
             type="button"
@@ -24,21 +27,29 @@ export const PublicationSelectorItem = memo<Props>(({ publication, workflow, isS
             <span
                 className="flex size-6 shrink-0 items-center justify-center rounded-full"
                 style={{
-                    backgroundColor: workflow?.accent
-                        ? `color-mix(in srgb, var(--${workflow.accent}) 25%, transparent)`
+                    backgroundColor: workflowMeta?.accent
+                        ? `color-mix(in srgb, var(--${workflowMeta.accent}) 25%, transparent)`
                         : 'var(--muted)',
                 }}
             >
                 <LazyIcon
-                    name={workflow?.icon ?? "Graph"}
+                    name={workflowMeta?.icon ?? "Graph"}
                     className="size-3.5"
-                    style={{ color: workflow?.accent ? `var(--${workflow.accent}-foreground)` : undefined }}
+                    style={{ color: workflowMeta?.accent ? `var(--${workflowMeta.accent}-foreground)` : undefined }}
                 />
             </span>
             <span className="min-w-0 flex flex-1 gap-2 flex-row items-center">
                 <span className="truncate text-xs font-medium">{workflowName}</span>
                 <span className="truncate text-[10px] ml-auto text-muted-foreground">{publication.name}</span>
-                <div className="content-[''] my-auto w-2 h-2 mr-2 rounded-full bg-green-400" />
+                <div className="content-[''] my-auto w-2 h-2 rounded-full bg-green-400" />
+                <Button size="icon-xs" variant="ghost" className='rounded-full'
+                    onClick={(e) => {
+                        WorkbenchSDK.openWorkflowWindow(workflowMeta!.id)
+                        e.stopPropagation()
+                    }}
+                >
+                    <SystemIcons.ExternalLink  className='size-3 text-muted-foreground'/>
+                </Button>
             </span>
         </button>
     )

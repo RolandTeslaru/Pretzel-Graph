@@ -2,6 +2,9 @@ import { memo } from 'react'
 import { cn } from '@pretzel-graph/standard-ui/utils/cn'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { Library, Workflow } from '@pretzel-graph/shared/domain'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
+import { Button } from '@pretzel-graph/standard-ui/foundations'
+import { WorkbenchSDK } from '../../../../sdk'
 
 interface Props {
     workflow: Library.WorkflowMeta
@@ -34,8 +37,15 @@ export const DraftSelectorItem = memo<Props>(({ workflow, isSelected, onSelect }
         </span>
         <span className="min-w-0 flex flex-1 flex-row items-center">
             <span className="truncate text-xs font-medium">{workflow.display_name}</span>
-            <span className="truncate text-[10px] ml-auto text-muted-foreground">draft</span>
         </span>
+        <Button size="icon-xs" variant="ghost" className='rounded-full'
+            onClick={(e) => {
+                WorkbenchSDK.openWorkflowWindow(workflow.id)
+                e.stopPropagation()
+            }}
+        >
+            <SystemIcons.ExternalLink  className='size-3 text-muted-foreground'/>
+        </Button>
     </button>
 ))
 DraftSelectorItem.displayName = "DraftSelectorItem"

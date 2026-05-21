@@ -987,6 +987,42 @@ export const Users: React.FC<BaseIconProps> = (props) => (
 )
 Users.displayName = "Users"
 
+export const ShieldCheck: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+        <path d="m9 12 2 2 4-4" />
+    </BaseIcon>
+)
+ShieldCheck.displayName = "ShieldCheck"
+
+export const BookCheck: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
+        <path d="m9 9.5 2 2 4-4" />
+    </BaseIcon>
+)
+BookCheck.displayName = "BookCheck"
+
+export const DraftingCompass: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="m12.99 6.74 1.93 3.44" />
+        <path d="M19.136 12a10 10 0 0 1-14.271 0" />
+        <path d="m21 21-2.16-3.84" />
+        <path d="m3 21 8.02-14.26" />
+        <circle cx="12" cy="5" r="2" />
+    </BaseIcon>
+)
+DraftingCompass.displayName = "DraftingCompass"
+
+export const ExternalLink: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="M15 3h6v6" />
+        <path d="M10 14 21 3" />
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    </BaseIcon>
+)
+ExternalLink.displayName = "ExternalLink"
+
 export const Link: React.FC<BaseIconProps> = (props) => (
     <BaseIcon strokeWidth={2} {...props}>
         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
