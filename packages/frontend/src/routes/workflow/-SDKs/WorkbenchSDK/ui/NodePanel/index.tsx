@@ -156,10 +156,10 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
                             ))}
                         </SidebarAccordionItem>
                     )}
+                            {node.flags?.SHOW_DEPENDENCY_SELECTOR ? <DependencySelector node={node} /> : null}
                     {fields.length > 0 && (
                         <SidebarAccordionItem label='Fields' value='fields'>
                             
-                            {node.flags?.SHOW_DEPENDENCY_SELECTOR ? <DependencySelector node={node} /> : null}
 
                             {fields.map(field => field.hidden ? null : (
                                 <div key={field.id} className='px-4 py-1 min-w-0'>
