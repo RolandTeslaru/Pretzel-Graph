@@ -148,17 +148,7 @@ export const nodeReducers = {
         const isFlipped = node.isFlipped;
         s.isDirty = true;
 
-        // Delete the edges coming into the node 
-        const inNodes = cacheReducers.ensureIncomingNodeEdges(s, nodeId)
-        Object.entries(inNodes).forEach(([_inNodeId, _edgeId]) => {
-            edgeReducers.remove(s, _edgeId as Workflow.Edge.Id);
-        })
-
-        // Delete the edges going out of the node
-        const outNodes = cacheReducers.ensureOutgoingNodeEdges(s, nodeId)
-        Object.entries(outNodes).forEach(([_outNodeId, _edgeId]) => {
-            edgeReducers.remove(s, _edgeId as Workflow.Edge.Id);
-        })
+        nodeReducers.disconnect(s, nodeId);
 
         cacheReducers.deleteNode(s, nodeId);
 
@@ -414,6 +404,7 @@ export const nodeReducers = {
             isMinimized : replace.isMinimized ?? false,
             isFlipped   : replace.isFlipped ?? false,
             dependency  : replace.dependency,
+            accent      : replace.accent ?? "utility", 
             flags       : replace.flags,
             toolCompatible: replace.toolCompatible,
             credentials: replace.credentials,
@@ -458,7 +449,7 @@ interface NodeReducers {
     validate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
     clearIssues    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
     
-    wipe          : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, replace: Partial<Workflow.Node>) => void;
+    wipe          : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, replace?: Partial<Workflow.Node>) => void;
     setDependency : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, dependency: Workflow.Node['dependency']) => void;
     setCredential         : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, templateId: Vault.Credential.Template.Id, instanceId: Vault.Credential.Instance.Id | null) => void;
 
