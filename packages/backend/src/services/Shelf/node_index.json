@@ -1,6 +1,6 @@
 {
-  "version": "1779222531468",
-  "generatedAt": "2026-05-19T20:28:51.468Z",
+  "version": "1779356556969",
+  "generatedAt": "2026-05-21T09:42:36.969Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -2173,19 +2173,11 @@
       "icon": "Graph",
       "accent": "utility",
       "description": "Executes a saved sub-workflow and returns its output.",
+      "flags": {
+        "SHOW_DEPENDENCY_SELECTOR": true
+      },
       "credentials": [],
       "fields": [
-        {
-          "id": "workflowId",
-          "advanced": false,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Sub-Workflow ID",
-          "tooltip": "The ID of the sub-workflow to execute",
-          "variant": "DependencySelector",
-          "initialValue": "",
-          "placeholder": "workflow_..."
-        },
         {
           "id": "signalDependency",
           "advanced": false,
@@ -5592,6 +5584,9 @@
       "icon": "Bot",
       "accent": "port-LanguageModel",
       "description": "Executes a saved sub-workflow and returns its output.",
+      "flags": {
+        "SHOW_DEPENDENCY_SELECTOR": true
+      },
       "credentials": [],
       "fields": [
         {
@@ -5684,13 +5679,19 @@
           "variant": "MessageList"
         }
       ],
-      "workflowDependencyId": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0"
+      "dependency": {
+        "workflowId": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0",
+        "mode": "publication"
+      }
     },
     "undefined": {
       "displayName": "Basic Agent Test",
       "icon": "Graph",
       "accent": "utility",
       "description": "Executes a saved sub-workflow and returns its output.",
+      "flags": {
+        "SHOW_DEPENDENCY_SELECTOR": true
+      },
       "credentials": [],
       "fields": [
         {
@@ -5742,7 +5743,10 @@
       ],
       "inputs": [],
       "outputs": [],
-      "workflowDependencyId": "a397c87d-4ede-4ae8-beaf-e2d432782e44"
+      "dependency": {
+        "workflowId": "a397c87d-4ede-4ae8-beaf-e2d432782e44",
+        "mode": "publication"
+      }
     }
   }
 }
