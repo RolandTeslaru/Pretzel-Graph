@@ -6,15 +6,16 @@ import { PublicationSelector } from './PublicationSelector'
 import { DraftSelector } from './DraftSelector'
 
 interface Props {
-    nodeId: Workflow.Node.Id
+    node: Workflow.Node
     dialogId: string
     selectedWorkflowId: Workflow.Id | ""
 }
 
-export const DependencySelectorDialogContent = memo<Props>(({ nodeId, dialogId, selectedWorkflowId }) => {
+export const DependencySelectorDialogContent = memo<Props>(({ node, dialogId, selectedWorkflowId }) => {
     const [searchQuery, setSearchQuery] = useState("")
 
-    const isDraftMode = WorkbenchSDK.useStore(s => s.data.nodes[nodeId]?.dependency?.mode === "draft")
+    const isDraft = node.dependency?.mode === "draft"
+    const isDraftMode = isDraft || !node.dependency
 
     return (
         <div className="flex flex-col gap-3 p-4 w-[360px]">
@@ -31,8 +32,8 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, dialogId, 
             />
 
             {isDraftMode
-                ? <DraftSelector nodeId={nodeId} dialogId={dialogId} searchQuery={searchQuery} selectedWorkflowId={selectedWorkflowId} />
-                : <PublicationSelector nodeId={nodeId} dialogId={dialogId} searchQuery={searchQuery} selectedWorkflowId={selectedWorkflowId} />
+                ? <DraftSelector nodeId={node.id} dialogId={dialogId} searchQuery={searchQuery} selectedWorkflowId={selectedWorkflowId} />
+                : <PublicationSelector nodeId={node.id} dialogId={dialogId} searchQuery={searchQuery} selectedWorkflowId={selectedWorkflowId} />
             }
         </div>
     )
