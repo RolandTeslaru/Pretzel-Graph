@@ -89,22 +89,20 @@ export async function generateIndex(includeDbBlueprints = false) {
             const { inputs, outputs } = extractExposedPorts(workflowData);
 
             
-            const baseFieldsWithoutSelector = baseBlueprint.fields.filter(f => f.variant !== "DependencySelector");
-            
             const blueprintId = PUBLIC_WORKFLOW_BLUEPRINTS_REVERSE[row.id];
-            
+
             const bp: Foundations.Blueprint = {
                 ...baseBlueprint,
                 id: blueprintId,
                 displayName: row.display_name,
                 icon: row.icon ?? baseBlueprint.icon,
                 accent: row.accent ?? baseBlueprint.accent,
-                fields: mergeFieldsById(baseFieldsWithoutSelector, dependencyFields),
+                fields: mergeFieldsById(baseBlueprint.fields, dependencyFields),
                 inputs,
                 outputs,
-                workflowDependencyId: row.id,
+                dependency: { workflowId: row.id, mode: "publication" as const },
             };
-            console.log(`Processing public workflow: ${bp.id} (${bp.workflowDependencyId}) with ${inputs.length} inputs, ${outputs.length} outputs, and ${dependencyFields.length} dependency fields`)
+            console.log(`Processing public workflow: ${bp.id} (${bp.dependency?.workflowId}) with ${inputs.length} inputs, ${outputs.length} outputs, and ${dependencyFields.length} dependency fields`)
             
             db_pretzel_blueprints[blueprintId] = bp;
         }

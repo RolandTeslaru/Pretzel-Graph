@@ -38,7 +38,11 @@ export namespace Blueprint {
             accent:               z.string().optional(),
             toolCompatible:       z.boolean().optional(),
             description:          z.string().nullable().optional(),
-            workflowDependencyId: z.string().brand("WorkflowId").optional(),
+            dependency: z.object({
+                workflowId: z.string().brand("WorkflowId").nullable(),
+                mode:       z.enum(["publication", "draft"]),
+            }).optional(),
+            flags:                z.record(z.string(), z.unknown()).optional(),
             credentials:          z.array(Vault.Credential.Template.Schema).readonly().optional(),
         })
     }
