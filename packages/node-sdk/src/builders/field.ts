@@ -326,26 +326,6 @@ export namespace FieldBuilder {
         };
     }
 
-    export function DependencySelector<TId extends string, TReq extends boolean = false>(config: {
-        initialValue: Foundations.Field.DependencySelector["initialValue"];
-        placeholder?: string;
-    } & BaseProps<TId, TReq>): Ret<TId, "DependencySelector", Foundations.Field.DependencySelector, TReq, true>;
-    export function DependencySelector<TId extends string, TReq extends boolean = false>(config: {
-        placeholder?: string;
-    } & BaseProps<TId, TReq>): Ret<TId, "DependencySelector", Foundations.Field.DependencySelector, TReq, false>;
-    export function DependencySelector<TId extends string, TReq extends boolean = false>(config: {
-        initialValue?: Foundations.Field.DependencySelector["initialValue"];
-        placeholder?: string;
-    } & BaseProps<TId, TReq>
-    ): Ret<TId, "DependencySelector", Foundations.Field.DependencySelector, TReq, boolean> {
-        return {
-            ...buildBase(config),
-            variant: "DependencySelector",
-            initialValue: config.initialValue ?? "",
-            placeholder: config.placeholder ?? "",
-        };
-    }
-
     export function Condition<TId extends string, TReq extends boolean = false>(config: {
         initialValue: Foundations.Field.Condition.Value;
     } & BaseProps<TId, TReq>): Ret<TId, "Condition", Foundations.Field.Condition, TReq, true>;

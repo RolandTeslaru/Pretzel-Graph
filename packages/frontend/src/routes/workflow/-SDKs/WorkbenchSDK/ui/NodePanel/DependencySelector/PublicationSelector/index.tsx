@@ -7,19 +7,17 @@ import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { WorkbenchSDK } from '../../../../sdk'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { PublicationSelectorItem } from './Item'
-import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field'
 
 const STALE_TIME = 60_000
 
 interface Props {
     nodeId: Workflow.Node.Id
-    fieldId: Field.Id
     dialogId: string
     searchQuery: string
     selectedWorkflowId: Workflow.Id | ""
 }
 
-export const PublicationSelector = memo<Props>(({ nodeId, fieldId, dialogId, searchQuery, selectedWorkflowId }) => {
+export const PublicationSelector = memo<Props>(({ nodeId, dialogId, searchQuery, selectedWorkflowId }) => {
     const [manualWorkflowId, setManualWorkflowId] = useState<Workflow.Id>("" as Workflow.Id)
 
     const activeWorkflows = VersionControlSDK.useStore(s => s.activeWorkflows)
@@ -55,7 +53,7 @@ export const PublicationSelector = memo<Props>(({ nodeId, fieldId, dialogId, sea
     }, [activeWorkflows, searchQuery, workflowMetas])
 
     const attach = async (workflowId: Workflow.Id) => {
-        const success = await WorkbenchSDK.actions.dependency.published.attachToNode(nodeId, fieldId, workflowId)
+        const success = await WorkbenchSDK.actions.dependency.attachToNode(nodeId, workflowId, "publication")
         if (success) DialogSDK.actions.pop(dialogId)
     }
 

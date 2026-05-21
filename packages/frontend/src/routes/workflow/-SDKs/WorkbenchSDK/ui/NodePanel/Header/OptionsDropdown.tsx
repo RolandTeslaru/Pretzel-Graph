@@ -22,8 +22,8 @@ export const OptionsDropdown = ({ node, onEdit }: { node: Workflow.Node; onEdit:
                     <SystemIcons.Undo />
                     Recreate
                 </DropdownMenu.Item>
-                {node.workflowDependencyId && (
-                    <DropdownMenu.Item onClick={() => WorkbenchSDK.openWorkflowWindow(node.workflowDependencyId!)}>
+                {node.dependency && (
+                    <DropdownMenu.Item onClick={() => WorkbenchSDK.openWorkflowWindow(node.dependency!.workflowId)}>
                         <SystemIcons.Graph />
                         Open workflow
                     </DropdownMenu.Item>
