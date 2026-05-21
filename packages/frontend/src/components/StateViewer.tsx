@@ -57,35 +57,33 @@ export function StateViewer() {
     const state = useSDKState(selected);
 
     return (
-        <div className={`fixed left-[20px] bottom-[20px] z-50 w-[400px] bg-card/80 backdrop-blur-sm border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto ${minimized ? 'h-[44px]' : 'bottom-20 h-[500px]'}`}>
-            <div className='absolute p-1 w-full'>
-                <div className="w-full flex px-1 py-1 gap-2 border rounded-xl border-border bg-card shadow-md shadow-black/10">
-                    <h3 className="text-sm font-semibold pl-1 text-foreground">
-                        State Viewer
-                    </h3>
-                    <Select.Root value={selected} onValueChange={(v) => setSelected(v as SDKOption)}>
-                        <Select.Trigger size="xs" className='max-w-[150px] ml-auto'>
-                            <Select.Value />
-                        </Select.Trigger>
-                        <Select.Content>
-                            {SDK_OPTIONS.map(sdk => (
-                                <Select.Item key={sdk} value={sdk}>{sdk}</Select.Item>
-                            ))}
-                        </Select.Content>
-                    </Select.Root>
-                    <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={() => setMinimized(m => !m)}
-                        aria-label={minimized ? 'Expand state viewer' : 'Minimize state viewer'}
-                    >
-                        {minimized ? <SystemIcons.Maximize2 /> : <SystemIcons.Minimize2 />}
-                    </Button>
-                </div>
+        <div className={`fixed transition-all left-[20px] bottom-[20px] z-50 w-[400px] bg-card/80 backdrop-blur-sm border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto ${minimized ? 'h-[34px] border-0' : 'bottom-20 h-[500px]'}`}>
+            <div className={`absolute z-10 transition-all ${minimized ? 'left-0 top-0 right-0' : 'left-1 top-1 right-1'}  flex px-1 py-1 gap-2 border rounded-xl border-border bg-card shadow-md shadow-black/10`}>
+                <h3 className="text-sm font-semibold pl-1 text-foreground">
+                    State Viewer
+                </h3>
+                <Select.Root value={selected} onValueChange={(v) => setSelected(v as SDKOption)}>
+                    <Select.Trigger size="xs" className='max-w-[150px] ml-auto'>
+                        <Select.Value />
+                    </Select.Trigger>
+                    <Select.Content>
+                        {SDK_OPTIONS.map(sdk => (
+                            <Select.Item key={sdk} value={sdk}>{sdk}</Select.Item>
+                        ))}
+                    </Select.Content>
+                </Select.Root>
+                <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => setMinimized(m => !m)}
+                    aria-label={minimized ? 'Expand state viewer' : 'Minimize state viewer'}
+                >
+                    {minimized ? <SystemIcons.Maximize2 /> : <SystemIcons.Minimize2 />}
+                </Button>
             </div>
             {!minimized && (
                 <>
-                    <div className="flex-1 overflow-auto p-4 pt-12 custom-scrollbar text-[11px] leading-relaxed">
+                    <div className="flex-1 overflow-auto p-4 pt-12 custom-scrollbar text-[11px] leading-relaxed [mask-image:linear-gradient(to_bottom,transparent,black_48px,black_calc(100%-48px),transparent)]">
                         <JsonView
                             src={state}
                             collapsed={3}
