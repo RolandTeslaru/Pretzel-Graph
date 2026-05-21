@@ -11,13 +11,12 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 const DIALOG_ID = "dependency-selector"
 
 interface Props {
-    node: Workflow.Node
+    nodeId: Workflow.Node.Id
     className?: string
 }
 
-export const DependencySelector = memo<Props>(({ node, className }) => {
-    const nodeDep    = node.dependency;
-
+export const DependencySelector = memo<Props>(({ nodeId, className }) => {
+    const nodeDep    = WorkbenchSDK.useStore(s => s.data.nodes[nodeId]?.dependency)
     const dependency = WorkbenchSDK.useStore(s => {
         if (!nodeDep?.workflowId) return null
         return nodeDep.mode === "publication"
@@ -25,15 +24,12 @@ export const DependencySelector = memo<Props>(({ node, className }) => {
             : s.selectors.dependency.draft.get(s, nodeDep.workflowId)
     })
 
-    const selectedWorkflowId = nodeDep?.workflowId ?? "" as Workflow.Id
-
     const openDialog = () => {
         DialogSDK.actions.push(DIALOG_ID, (props) => (
             <DialogSDK.Template {...props}>
                 <DependencySelectorDialogContent
-                    node={node}
+                    nodeId={nodeId}
                     dialogId={DIALOG_ID}
-                    selectedWorkflowId={selectedWorkflowId}
                 />
             </DialogSDK.Template>
         ))
@@ -67,7 +63,6 @@ export const DependencySelector = memo<Props>(({ node, className }) => {
                             {dependency?.display_name ?? "Select workflow"}
                         </span>
                         <span className='flex text-[10px] font-normal text-muted-foreground'>
-                            
                             {
                             // @ts-expect-error
                             dependency?.publication_name
