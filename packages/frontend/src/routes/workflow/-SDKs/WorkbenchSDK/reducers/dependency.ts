@@ -71,12 +71,18 @@ export const dependencyReducers = {
     },
     setMode: (s, nodeId, mode) => {
         s.isDirty = true
-        nodeReducers.wipe(s, nodeId, {
-            dependency: {
-                workflowId: null,
-                mode
+        nodeReducers.recreate(s, nodeId, ShelfSDK.state.blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id])
+        const node = s.data.nodes[nodeId]
+        if (!node.dependency) {
+            node.dependency = {
+                workflowId: "" as Workflow.Id,
+                mode,
             }
-        })
+        }
+
+        node.dependency.mode = mode;
+
+        nodeReducers.validate(s, nodeId)
     },
     removeUnused: (s) => {
         const usedIds = collectUsedDependencyIds(s)
