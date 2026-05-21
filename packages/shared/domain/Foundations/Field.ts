@@ -38,7 +38,6 @@ export namespace Field {
         "Condition",
         "CaseList",
         "Variadic",
-        "DependencySelector",
     ])
     export type Variant = z.infer<typeof Variant>
 
@@ -135,12 +134,6 @@ export namespace Field {
         variant: configLiteral("Variadic"),
         initialValue: z.array(z.string()),
         groupId: z.string().brand("GroupId"),
-    })
-
-    export const DependencySelector = Field.Base.extend({
-        variant: configLiteral("DependencySelector"),
-        initialValue: z.string().brand("WorkflowId").or(z.literal("")),
-        placeholder: z.string().optional(),
     })
 
     export namespace Condition {
@@ -336,7 +329,6 @@ export namespace Field {
     export interface Condition extends z.infer<typeof Condition.Schema> { }
     export interface CaseList extends z.infer<typeof CaseList.Schema> { }
     export interface Variadic extends z.infer<typeof Variadic> { }
-    export interface DependencySelector extends z.infer<typeof DependencySelector> { }
 
     export const Schema = z.discriminatedUnion("variant", [
         Integer,
@@ -354,7 +346,6 @@ export namespace Field {
         Condition.Schema,
         CaseList.Schema,
         Variadic,
-        DependencySelector,
     ]);
 
     export type Schema = z.infer<typeof Schema>;
