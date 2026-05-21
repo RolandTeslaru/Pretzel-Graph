@@ -1,10 +1,11 @@
 import { memo, useMemo, useState } from 'react'
-import { Button, Input } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Input, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { WorkbenchSDK } from '../../../../sdk'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { DraftSelectorItem } from './Item'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 interface Props {
     nodeId: Workflow.Node.Id
@@ -33,7 +34,7 @@ export const DraftSelector = memo<Props>(({ nodeId, dialogId, searchQuery, selec
 
     return (
         <>
-            <div className="max-h-64 overflow-y-auto rounded-md border border-border/60">
+            <ScrollArea.Root className="h-64 rounded-md border border-border/60">
                 {options.length === 0 ? (
                     <div className="px-2 py-4 text-center text-xs text-muted-foreground">No workflows found</div>
                 ) : (
@@ -46,22 +47,7 @@ export const DraftSelector = memo<Props>(({ nodeId, dialogId, searchQuery, selec
                         />
                     ))
                 )}
-            </div>
-
-            <div className="flex flex-col gap-1 border-t border-border pt-2">
-                <span className="text-[10px] font-medium text-muted-foreground">or paste a workflow ID</span>
-                <div className="flex gap-1">
-                    <Input
-                        size="sm"
-                        placeholder="Paste workflow id"
-                        value={manualWorkflowId}
-                        onChange={(e) => setManualWorkflowId(e.target.value as Workflow.Id)}
-                    />
-                    <Button type="button" size="sm" variant="outline" disabled={!manualWorkflowId} onClick={() => attach(manualWorkflowId)}>
-                        Set
-                    </Button>
-                </div>
-            </div>
+            </ScrollArea.Root>
         </>
     )
 })
