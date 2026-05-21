@@ -11,21 +11,27 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 const DIALOG_ID = "dependency-selector"
 
 interface Props {
-    nodeId: Workflow.Node.Id
+    node: Workflow.Node
     className?: string
 }
 
-export const DependencySelectorField = memo<Props>(({ nodeId, className }) => {
-    const dep        = WorkbenchSDK.useStore(s => s.data.nodes[nodeId]?.dependency)
-    const dependency = WorkbenchSDK.useStore(s => dep ? s.selectors.getDependency(s, dep.workflowId) : null)
+export const DependencySelector = memo<Props>(({ node, className }) => {
+    const nodeDep    = node.dependency;
 
-    const selectedWorkflowId = dep?.workflowId ?? "" as Workflow.Id
+    const dependency = WorkbenchSDK.useStore(s => {
+        if (!nodeDep?.workflowId) return null
+        return nodeDep.mode === "publication"
+            ? s.selectors.dependency.published.get(s, nodeDep.workflowId)
+            : s.selectors.dependency.draft.get(s, nodeDep.workflowId)
+    })
+
+    const selectedWorkflowId = nodeDep?.workflowId ?? "" as Workflow.Id
 
     const openDialog = () => {
         DialogSDK.actions.push(DIALOG_ID, (props) => (
             <DialogSDK.Template {...props}>
                 <DependencySelectorDialogContent
-                    nodeId={nodeId}
+                    node={node}
                     dialogId={DIALOG_ID}
                     selectedWorkflowId={selectedWorkflowId}
                 />
@@ -61,7 +67,11 @@ export const DependencySelectorField = memo<Props>(({ nodeId, className }) => {
                             {dependency?.display_name ?? "Select workflow"}
                         </span>
                         <span className='flex text-[10px] font-normal text-muted-foreground'>
-                            {dependency?.publication_name}
+                            
+                            {
+                            // @ts-expect-error
+                            dependency?.publication_name
+                            }
                         </span>
                     </span>
                 </span>
@@ -70,4 +80,4 @@ export const DependencySelectorField = memo<Props>(({ nodeId, className }) => {
         </div>
     )
 })
-DependencySelectorField.displayName = "DependencySelectorField"
+DependencySelector.displayName = "DependencySelector"
