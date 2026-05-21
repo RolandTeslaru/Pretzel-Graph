@@ -13,6 +13,7 @@ import WebhookRenderer from './webhook-renderer';
 import { InputItem } from './input-renderer';
 import { NodeDescription } from './node-description'
 import { CredentialPicker } from './CredentialPicker';
+import { DependencySelector } from './DependencySelector'
 
 
 interface SidebarAccordionItemProps {
@@ -157,6 +158,9 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
                     )}
                     {fields.length > 0 && (
                         <SidebarAccordionItem label='Fields' value='fields'>
+                            
+                            {node.flags?.SHOW_DEPENDENCY_SELECTOR ? <DependencySelector node={node} /> : null}
+
                             {fields.map(field => field.hidden ? null : (
                                 <div key={field.id} className='px-4 py-1 min-w-0'>
                                     <FieldRenderer field={field} nodeId={node.id} />
