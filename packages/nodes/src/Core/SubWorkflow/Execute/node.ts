@@ -21,9 +21,10 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
         compilationContext: CompilationContext,
     ): Promise<void> {
         const { compilePath } = compilationContext;
-        const subWorkflowId = (this.workflowNode.workflowDependencyId ?? this.fields.workflowId) as Workflow.Id;
+        const subWorkflowId  = this.workflowNode.dependency?.workflowId as Workflow.Id;
+        const dependencyMode = this.workflowNode.dependency?.mode ?? "publication";
 
-        console.log(`[ExecuteSubWorkflow:onCompile] nodeId=${this.workflowNode.id} workflowDependencyId=${this.workflowNode.workflowDependencyId} fields.workflowId=${this.fields.workflowId} resolved subWorkflowId=${subWorkflowId}`);
+        console.log(`[ExecuteSubWorkflow:onCompile] nodeId=${this.workflowNode.id} dependency=${JSON.stringify(this.workflowNode.dependency)} resolved subWorkflowId=${subWorkflowId}`);
         console.log(`[ExecuteSubWorkflow:onCompile] compilePath=${compilePath.join(" -> ")}`);
 
         if (compilePath.includes(subWorkflowId)) {
@@ -31,11 +32,10 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
             throw new Error(`Recursive sub-workflow: ${cyclePath.join(" -> ")}`);
         }
 
-        if(!subWorkflowId)
-            throw new Error(`Missing workflowId field in Execute Sub-Workflow node ${this.workflowNode.id}`);
+        if (!subWorkflowId)
+            throw new Error(`Missing dependency in Execute Sub-Workflow node ${this.workflowNode.id}`);
 
-        const dependencyMode = this.fields.dependencyMode as string;
-        const isDraft = dependencyMode === "latest-draft";
+        const isDraft = dependencyMode === "draft";
 
         const childWorkflowData = isDraft
             ? structuredClone(this.context.dependencyAPI.getDraft(subWorkflowId).workflow_data)
@@ -128,9 +128,9 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
                 continue;
 
             const exposeNodeId = instance.fields.exposed_port_id;
-            console.log(`[ExecuteSubWorkflow:onRun] injecting exposed_port_id=${exposeNodeId} value=${JSON.stringify(inputs[exposeNodeId])?.slice(0, 100)}`);
-            // @ts-expect-error
-            instance.injectedData = inputs[exposeNodeId];
+            const dynamicInputs = inputs as Record<string, unknown>;
+            console.log(`[ExecuteSubWorkflow:onRun] injecting exposed_port_id=${exposeNodeId} value=${JSON.stringify(dynamicInputs[exposeNodeId])?.slice(0, 100)}`);
+            instance.injectedData = dynamicInputs[exposeNodeId];
         }
     }
 }
