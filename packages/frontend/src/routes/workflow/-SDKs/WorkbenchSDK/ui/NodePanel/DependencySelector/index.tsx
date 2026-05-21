@@ -35,6 +35,8 @@ export const DependencySelector = memo<Props>(({ nodeId, className }) => {
         ))
     }
 
+    const mode = nodeDep?.mode === "publication" ? "publication" : "draft"
+
     const iconColor       = dependency?.accent ? `var(--${dependency.accent}-foreground)` : undefined
     const backgroundColor = dependency?.accent ? `color-mix(in srgb, var(--${dependency.accent}) 25%, transparent)` : 'var(--muted)'
 
@@ -44,10 +46,10 @@ export const DependencySelector = memo<Props>(({ nodeId, className }) => {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-auto min-h-7 w-full justify-between px-2 py-1 text-left"
+                className="h-auto min-h-7 w-full px-2 py-1 text-left"
                 onClick={openDialog}
             >
-                <span className="flex min-w-0 items-center gap-2">
+                <span className="flex min-w-0 items-center gap-2 mr-auto">
                     <span
                         className="flex size-5 shrink-0 items-center justify-center rounded-full"
                         style={{ backgroundColor }}
@@ -70,6 +72,8 @@ export const DependencySelector = memo<Props>(({ nodeId, className }) => {
                         </span>
                     </span>
                 </span>
+                {mode === "publication" && <SystemIcons.ShieldCheck className='size-3 text-muted-foreground'/>}
+                {mode === "draft" && <SystemIcons.DraftingCompass className='size-3 text-muted-foreground'/>}
                 <SystemIcons.ChevronDown />
             </Button>
         </div>
