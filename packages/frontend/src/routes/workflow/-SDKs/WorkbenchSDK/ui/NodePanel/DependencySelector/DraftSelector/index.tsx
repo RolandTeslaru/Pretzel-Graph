@@ -5,17 +5,15 @@ import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { WorkbenchSDK } from '../../../../sdk'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { DraftSelectorItem } from './Item'
-import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field'
 
 interface Props {
     nodeId: Workflow.Node.Id
-    fieldId: Field.Id
     dialogId: string
     searchQuery: string
     selectedWorkflowId: Workflow.Id | ""
 }
 
-export const DraftSelector = memo<Props>(({ nodeId, fieldId, dialogId, searchQuery, selectedWorkflowId }) => {
+export const DraftSelector = memo<Props>(({ nodeId, dialogId, searchQuery, selectedWorkflowId }) => {
     const [manualWorkflowId, setManualWorkflowId] = useState<Workflow.Id>("" as Workflow.Id)
 
     const workflowMetas = LibrarySDK.useStore(s => s.workflowMetas)
@@ -29,7 +27,7 @@ export const DraftSelector = memo<Props>(({ nodeId, fieldId, dialogId, searchQue
     }, [workflowMetas, searchQuery])
 
     const attach = async (workflowId: Workflow.Id) => {
-        const success = await WorkbenchSDK.actions.dependency.draft.attachToNode(nodeId, fieldId, workflowId)
+        const success = await WorkbenchSDK.actions.dependency.attachToNode(nodeId, workflowId, "draft")
         if (success) DialogSDK.actions.pop(dialogId)
     }
 
