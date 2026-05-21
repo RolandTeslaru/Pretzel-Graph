@@ -26,7 +26,7 @@ export const nodeReducers = {
         const nodes = s.data.nodes
         const staticValues = s.data.staticValues
 
-        const workflowDependencyId = nodes[deletedNodeId]?.workflowDependencyId;
+        const dependency = nodes[deletedNodeId]?.dependency;
 
         // IMPORTANT: remove incident edges BEFORE deleting the node.
         // Edge removal relies on node/port lookups for validation and cache cleanup.
@@ -53,7 +53,7 @@ export const nodeReducers = {
         layoutReducers.node.remove(s, deletedNodeId);
         nodeReducers.clearIssues(s, deletedNodeId);
 
-        if(workflowDependencyId)
+        if(dependency)
             dependencyReducers.removeUnused(s);
     },
     create: (s, blueprint, position, staticValues) => {
@@ -75,7 +75,8 @@ export const nodeReducers = {
             isFlipped   : false,
             accent      : blueprint.accent ? blueprint.accent : undefined,
 
-            workflowDependencyId: blueprint.workflowDependencyId,
+            dependency:     blueprint.dependency,
+            flags:          blueprint.flags,
 
             toolCompatible: blueprint.toolCompatible,
 
@@ -177,8 +178,9 @@ export const nodeReducers = {
             isFlipped   : isFlipped,
             accent      : blueprint.accent ? blueprint.accent : undefined,
 
-            toolCompatible:       blueprint.toolCompatible,
-            workflowDependencyId: node.workflowDependencyId ?? blueprint.workflowDependencyId,
+            toolCompatible: blueprint.toolCompatible,
+            dependency:     node.dependency ?? blueprint.dependency,
+            flags:          blueprint.flags,
         } satisfies Workflow.Node
 
         const result = Workflow.Node.Schema.safeParse(newNode)
@@ -213,6 +215,8 @@ export const nodeReducers = {
             isFlipped    : originalNode.isFlipped,
             accent       : originalNode.accent,
             toolCompatible: originalNode.toolCompatible,
+            dependency:     originalNode.dependency,
+            flags:          originalNode.flags,
 
             credentials: originalNode.credentials ? cloneDeep(originalNode.credentials) as Workflow.Node['credentials'] : undefined,
         } satisfies Workflow.Node
@@ -391,9 +395,40 @@ export const nodeReducers = {
     clearIssues: (s, nodeId) => {
         delete s.issues.nodes[nodeId];
     },
-    setWorkflowDependency: (s, nodeId, workflowDependencyId) => {
+    wipe: (s, nodeId, replace) => {
+        const node = s.data.nodes[nodeId];
+        if (!node) return;
         s.isDirty = true;
-        s.data.nodes[nodeId].workflowDependencyId = workflowDependencyId;
+
+        nodeReducers.disconnect(s, nodeId);
+        cacheReducers.deleteNode(s, nodeId);
+
+        const wiped: Workflow.Node = {
+            id          : nodeId,
+            blueprintId : node.blueprintId,
+            displayName : replace.displayName ?? "Wiped Node",
+            icon        : "",
+            fields      : replace.fields ?? [],
+            inputs      : replace.inputs ?? [],
+            outputs     : replace.outputs ?? [],
+            isMinimized : replace.isMinimized ?? false,
+            isFlipped   : replace.isFlipped ?? false,
+            dependency  : replace.dependency,
+            flags       : replace.flags,
+            toolCompatible: replace.toolCompatible,
+            credentials: replace.credentials,
+        };
+
+        s.data.nodes[nodeId]    = wiped;
+        s.data.staticValues[nodeId] = {};
+        delete s.data.credentialInstanceIds[nodeId];
+
+        cacheReducers.createNode(s, wiped);
+        nodeReducers.clearIssues(s, nodeId);
+    },
+    setDependency: (s, nodeId, dependency) => {
+        s.isDirty = true;
+        s.data.nodes[nodeId].dependency = dependency;
     },
     setCredential: (s, nodeId, templateId, instanceId) => {
         s.isDirty = true;
@@ -423,7 +458,8 @@ interface NodeReducers {
     validate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
     clearIssues    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
     
-    setWorkflowDependency : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, workflowDependencyId: Workflow.Id | undefined) => void;
+    wipe          : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, replace: Partial<Workflow.Node>) => void;
+    setDependency : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, dependency: Workflow.Node['dependency']) => void;
     setCredential         : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, templateId: Vault.Credential.Template.Id, instanceId: Vault.Credential.Instance.Id | null) => void;
 
     polymorphism: {
