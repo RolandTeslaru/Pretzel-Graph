@@ -49,26 +49,27 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
 
             let nodeId: Workflow.Node.Id | null = null;
             
-            // Handle nodes that are actually subworkflows;
-            let fetchDepPromise: Promise<Workbench.API.Dependency.Published.Load.Response> | null = null;
-
             // If the blueprint is pre-wired to a dependency not yet in the store, fetch it lazily.
             // On failure, remove the node — it can't function without its dependency data.
-            if(blueprint.workflowDependencyId){
-                if(!sdk.state.data.dependencies.published[blueprint.workflowDependencyId]){
-                    fetchDepPromise = Workbench.API.Dependency.Published.load(api, { dependencyId: blueprint.workflowDependencyId});
+            if (blueprint.dependency) {
+                const { workflowId, mode } = blueprint.dependency;
+                const depStore = mode === "publication"
+                    ? sdk.state.data.dependencies.published
+                    : sdk.state.data.dependencies.draft;
+
+                if (!depStore[workflowId]) {
+                    const fetchDepPromise = mode === "publication"
+                        ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
+                        : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId });
 
                     fetchDepPromise.then(({ dependency }) => {
-                        sdk.actions.dependency.registerDependency(dependency);
+                        sdk.actions.dependency.registerDependency(dependency as any);
                     })
-                    // Catch and cleanup
                     fetchDepPromise.catch(err => {
                         const error = SystemError.fromUnknown(err)
                         console.error("Failed to load dependency for node", error)
                         toast.error(`Failed to load dependency for node: ${error.message}`)
-
-                        if(nodeId)
-                            sdk.actions.node.remove(nodeId)
+                        if (nodeId) sdk.actions.node.remove(nodeId)
                     })
                 }
             }

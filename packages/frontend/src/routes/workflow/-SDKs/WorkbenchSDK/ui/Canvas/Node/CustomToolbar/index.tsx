@@ -12,15 +12,16 @@ interface Props {
 }
 
 export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
-    const hasWorkflowDependency = !!node.workflowDependencyId
+    const dep = node.dependency
+    const hasWorkflowDependency = !!dep
     const dependencyUpdate = WorkbenchSDK.useStore(s =>
-        node.workflowDependencyId
-            ? s.selectors.dependency.published.getUpdateInfo(s, node.workflowDependencyId)
+        dep?.mode === "publication"
+            ? s.selectors.dependency.published.getUpdateInfo(s, dep.workflowId)
             : null
     )
     const draftDependencyUpdate = WorkbenchSDK.useStore(s =>
-        node.workflowDependencyId
-            ? s.selectors.dependency.draft.getUpdateInfo(s, node.workflowDependencyId)
+        dep?.mode === "draft"
+            ? s.selectors.dependency.draft.getUpdateInfo(s, dep.workflowId)
             : null
     )
 
@@ -51,7 +52,7 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
             {hasWorkflowDependency && (
                 <Tipped label="Open workflow">
                     <Button variant="ghost-active" size="icon-xs" className='h-6!'
-                        onClick={() => WorkbenchSDK.openWorkflowWindow(node.workflowDependencyId!)}
+                        onClick={() => WorkbenchSDK.openWorkflowWindow(dep!.workflowId)}
                     >
                         <SystemIcons.Graph/>
                     </Button>
