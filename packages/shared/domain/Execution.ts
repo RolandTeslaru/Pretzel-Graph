@@ -160,6 +160,7 @@ export namespace Execution {
     export const Meta = Schema.omit({ session: true })
     export type Meta = z.infer<typeof Meta>
 
+
     // ─── Events ───────────────────────────────────────────────────────────────
     // Single channel per execution: execution:<executionId>
     // Carries both lifecycle events and per-node progress events.

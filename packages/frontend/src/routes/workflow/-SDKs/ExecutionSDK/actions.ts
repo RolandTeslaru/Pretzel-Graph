@@ -1,4 +1,4 @@
-import { Execution, Validation, Workflow } from "@pretzel-graph/shared/domain";
+import { Execution, Recording, Validation, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { ExecutionSDK, type ExecutionSDKImpl } from "./sdk"
 import { toast } from "sonner";
@@ -143,6 +143,23 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 s.awaitedConfirmation.delete(event)
             })
         },
+        loadRecording: async (executionId) => {
+            try {
+                const { recording } = await Recording.API.get(api, { executionId });
+                sdk.setState(s => { sdk.reducers.setRecording(s, recording) });
+            } catch {
+                sdk.setState(s => { sdk.reducers.setRecording(s, null) });
+            }
+        },
+        selectUoW: (id) => {
+            sdk.setState(s => { sdk.reducers.setSelectedUoW(s, id) });
+        },
+        setZoom: (zoom) => {
+            sdk.setState(s => { sdk.reducers.setZoom(s, zoom) });
+        },
+        toggleRemnants: () => {
+            sdk.setState(s => { sdk.reducers.toggleRemnants(s) });
+        },
     } satisfies ExecutionSDKActions
 }
 
@@ -158,6 +175,11 @@ export type ExecutionSDKActions = {
     resume:    (executionId: Execution.Id) => Promise<boolean>,
     suspend:   (executionId: Execution.Id) => Promise<boolean>,
 
-    addAwaitedConfirmation: (event: ExecutionSDK.AwaitedConfirmation) => void,
+    addAwaitedConfirmation:    (event: ExecutionSDK.AwaitedConfirmation) => void,
     removeAwaitedConfirmation: (event: ExecutionSDK.AwaitedConfirmation) => void,
+
+    loadRecording:  (executionId: Execution.Id) => Promise<void>,
+    selectUoW:      (id: Recording.UnitOfWork.Id | null) => void,
+    setZoom:        (zoom: number) => void,
+    toggleRemnants: () => void,
 }

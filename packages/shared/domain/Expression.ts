@@ -1,4 +1,7 @@
 import { Foundations } from "./Foundations"
+import { Port } from "./Foundations/Port"
+import { Field } from "./Foundations/Field"
+import { Projection } from "./Foundations/Projection"
 import { Workflow } from "./Workflow"
 
 export namespace Expression {
@@ -17,18 +20,18 @@ export namespace Expression {
         /** The node the expression is being evaluated for. */
         node: Workflow.Node
         /** Static field values on the current node, keyed by field id. */
-        fields: Record<Foundations.Field.Id, unknown>
+        fields: Record<Field.Id, unknown>
         /** Incoming port projections, keyed by input port id. */
-        incoming: Record<Foundations.Port.Id, Foundations.Projection>
+        incoming: Record<Port.Id, Projection>
         /** Workflow configuration values, keyed by workflow field id. */
-        workflowConfig: Record<Foundations.Field.Id, unknown>
+        workflowConfig: Record<Field.Id, unknown>
     }
 
     export function createContext(
         node: Workflow.Node,
-        fields: Record<Foundations.Field.Id, unknown>,
-        incoming: Record<Foundations.Port.Id, Foundations.Projection>,
-        workflowConfig: Record<Foundations.Field.Id, unknown> = {},
+        fields: Record<Field.Id, unknown>,
+        incoming: Record<Port.Id, Projection>,
+        workflowConfig: Record<Field.Id, unknown> = {},
     ): Context {
         return {
             node,
@@ -40,21 +43,21 @@ export namespace Expression {
 
     export function evaluateNodeFields(args: {
         node: Workflow.Node
-        fields: Record<Foundations.Field.Id, unknown>
-        incoming: Record<Foundations.Port.Id, Foundations.Projection>
-        workflowConfig?: Record<Foundations.Field.Id, unknown>
-    }): Record<Foundations.Field.Id, unknown> {
+        fields: Record<Field.Id, unknown>
+        incoming: Record<Port.Id, Projection>
+        workflowConfig?: Record<Field.Id, unknown>
+    }): Record<Field.Id, unknown> {
         const evaluated = { ...args.fields };
 
         for (const field of args.node.fields) {
             if (!("isExpression" in field) || field.isExpression !== true)
                 continue;
 
-            const value = evaluated[field.id as Foundations.Field.Id];
+            const value = evaluated[field.id as Field.Id];
             if (typeof value !== "string")
                 continue;
 
-            evaluated[field.id as Foundations.Field.Id] = evaluate(
+            evaluated[field.id as Field.Id] = evaluate(
                 value,
                 createContext(
                     args.node,
@@ -116,13 +119,13 @@ export namespace Expression {
 
     export function resolveWorkflowConfig(
         workflowData: Workflow.Data,
-    ): Record<Foundations.Field.Id, unknown> {
-        const config: Record<Foundations.Field.Id, unknown> = {};
+    ): Record<Field.Id, unknown> {
+        const config: Record<Field.Id, unknown> = {};
         const overrides = workflowData.staticValues[Workflow.WORKFLOW_CONFIG_NODE_ID] ?? {};
 
         for (const field of workflowData.fields ?? []) {
             if (field.id in overrides)
-                config[field.id] = overrides[field.id as Foundations.Field.Id];
+                config[field.id] = overrides[field.id as Field.Id];
             else if ("initialValue" in field)
                 config[field.id] = field.initialValue;
         }

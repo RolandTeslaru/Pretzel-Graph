@@ -1,7 +1,7 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
-import { Execution } from "@pretzel-graph/shared/domain";
+import { Execution, Recording } from "@pretzel-graph/shared/domain";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { createExecutionSDKActions, type ExecutionSDKActions } from "./actions";
@@ -21,6 +21,10 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
             currentExecution: undefined,
             executionHistory: [],
             awaitedConfirmation: new Set(),
+            currentRecording: null,
+            zoom: 0.2,
+            selectedUoW: null,
+            showRemnants: true,
             selectors: executionSDKSelectors,
         })),
         shallow
@@ -125,8 +129,12 @@ export namespace ExecutionSDK {
 
     export type State = {
         currentExecution?: Execution
-        executionHistory: Execution.Meta[] 
+        executionHistory: Execution.Meta[]
         awaitedConfirmation: Set<AwaitedConfirmation>
+        currentRecording: Recording | null
+        zoom: number
+        selectedUoW: Recording.UnitOfWork.Id | null
+        showRemnants: boolean
         selectors: ExecutionSDKSelectors
     }
 
