@@ -662,7 +662,7 @@ export class AggexEngine {
 
         const nodeId = vertexId as unknown as Workflow.Node.Id;
 
-        this.flightRecorder?.onNodeFailed(nodeId);
+        this.flightRecorder?.onNodeFailed(nodeId, ctx);
 
         const existing = ctx.session.node_status[nodeId];
         const nodeStatus: Execution.Session.NodeStatus = {

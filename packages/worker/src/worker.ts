@@ -70,6 +70,7 @@ export class AggexWorkerImpl {
     ) => {
         const { workflowId, workflowData, execution, credentialInstances } = bullJob.data;
         const executionId = execution.id;
+        const { igniter } = execution;
         console.log(`Processing job ${bullJob.id} for workflow ${workflowId} with execution id ${execution.id}`);
 
         const eventChannel  = Execution.Event.getChannel(execution.id);
@@ -119,12 +120,12 @@ export class AggexWorkerImpl {
         let recorder: FlightRecorderService | null = null;
 
         try {
-            let engineExecutionCtx!: AggexEngine.Execution.Context;
+            let executionCtx!: AggexEngine.Execution.Context;
             let engine!: AggexEngine;
 
             const onPauseTimeout = () => {
                 console.log(`[Worker] Max pause duration reached for job ${bullJob.id}, terminating`);
-                engineExecutionCtx.abortExecution()
+                executionCtx.abortExecution()
                 engine.resume();
             };
 
@@ -138,7 +139,7 @@ export class AggexWorkerImpl {
                         workflowId,
                         type: "paused",
                         channel: eventChannel,
-                        session: engineExecutionCtx.session,
+                        session: executionCtx.session,
                     });
                 },
                 onResume: () => {
@@ -148,7 +149,7 @@ export class AggexWorkerImpl {
                         workflowId,
                         type: "resumed",
                         channel: eventChannel,
-                        session: engineExecutionCtx.session,
+                        session: executionCtx.session,
                     });
                 },
             };
@@ -159,26 +160,38 @@ export class AggexWorkerImpl {
 
             const origin = Date.now();
             recorder = new FlightRecorderService(executionId, workflowId, workflowData, origin);
-            engine.attachFlightRecorder(recorder);
+            if(igniter.record)
+                engine.attachFlightRecorder(recorder);
 
             // Compile and register execution context
-            engineExecutionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.emit, engine, credentialInstances);
-            this.runningExecutionContextsMap.set(executionId, engineExecutionCtx);
+            executionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.emit, engine, credentialInstances);
+            this.runningExecutionContextsMap.set(executionId, executionCtx);
 
-            const result = await engine.run(engineExecutionCtx);
+            const result = await engine.run(executionCtx);
 
-            const session = engineExecutionCtx.session;
+            const session = executionCtx.session;
             const status = result.status === 'terminated' ? 'terminated' : 'completed';
 
             await Execution.API.update(AxiosService.api, { executionId, status, session });
 
-            await Recording.API.upsert(AxiosService.api, { recording: recorder.getRecording() })
-                .catch(err => console.error('[Worker] Failed to save recording:', err));
-
-            if (status === 'terminated')
+            if (status === 'terminated') {
                 this.emit<Execution.Event.Terminated>({ executionId, workflowId, type: "terminated", channel: eventChannel });
-            else
+            } else {
                 this.emit<Execution.Event.Completed>({ executionId, workflowId, type: "completed", channel: eventChannel, session });
+            }
+
+            if(igniter.record && recorder){
+                await this.redisPub.set(
+                    Execution.Event.getChannel(executionId),
+                    JSON.stringify(recorder.getRecording()),
+                    'EX', 60 * 60 // expire in 1 hour
+                )
+                this.emit<Recording.Event.FullyUploaded>({
+                    channel:     Execution.Event.getChannel(executionId),
+                    executionId: executionId,
+                    type:        "recording:fullyUploaded",
+                })
+            }
 
             return { status };
 
@@ -187,8 +200,8 @@ export class AggexWorkerImpl {
 
             console.error("Error during execution of job", execution.id, systemError.message, systemError.detail || "");
 
-            const engineExecutionCtx = this.runningExecutionContextsMap.get(execution.id)!;
-            const session = engineExecutionCtx?.session ?? Execution.Session.createInitial();
+            const executionCtx = this.runningExecutionContextsMap.get(execution.id)!;
+            const session = executionCtx?.session ?? Execution.Session.createInitial();
 
             await Execution.API.update(AxiosService.api, { executionId: execution.id, status: 'failed', session }).catch(() => {});
 

@@ -17,7 +17,7 @@ const STATUS_CLASSES: Record<Recording.UnitOfWork.Status, string> = {
 }
 
 const UoWBlock = ({ unit, zoom, accent }: UoWBlockProps) => {
-    const selectedUoW = ExecutionSDK.useStore(s => s.selectedUoW)
+    const selectedUoW = ExecutionSDK.useStore(s => s.recordingViewer.selectedUoW)
     const isSelected = selectedUoW === unit.id
 
     const x = unit.startedAt * zoom
@@ -32,8 +32,8 @@ const UoWBlock = ({ unit, zoom, accent }: UoWBlockProps) => {
         <div
             role="button"
             tabIndex={0}
-            onClick={() => ExecutionSDK.actions.selectUoW(isSelected ? null : unit.id)}
-            onKeyDown={e => e.key === "Enter" && ExecutionSDK.actions.selectUoW(isSelected ? null : unit.id)}
+            onClick={() => ExecutionSDK.actions.recordingViewer.selectUoW(isSelected ? null : unit.id)}
+            onKeyDown={e => e.key === "Enter" && ExecutionSDK.actions.recordingViewer.selectUoW(isSelected ? null : unit.id)}
             style={{
                 position: "absolute",
                 left: x,

@@ -987,6 +987,84 @@ export const Users: React.FC<BaseIconProps> = (props) => (
 )
 Users.displayName = "Users"
 
+export const Video: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5" />
+        <rect x="2" y="6" width="14" height="12" rx="2" />
+    </BaseIcon>
+)
+Video.displayName = "Video"
+
+export const Videotape: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <rect width="20" height="16" x="2" y="4" rx="2" />
+        <path d="M2 8h20" />
+        <circle cx="8" cy="14" r="2" />
+        <path d="M8 12h8" />
+        <circle cx="16" cy="14" r="2" />
+    </BaseIcon>
+)
+Videotape.displayName = "Videotape"
+
+export const DiscAlbum: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <rect width="18" height="18" x="3" y="3" rx="2" />
+        <circle cx="12" cy="12" r="5" />
+        <path d="M12 12h.01" />
+    </BaseIcon>
+)
+DiscAlbum.displayName = "DiscAlbum"
+
+export const Disc3: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <circle cx="12" cy="12" r="10" />
+        <path d="M6 12c0-1.7.7-3.2 1.8-4.2" />
+        <circle cx="12" cy="12" r="2" />
+        <path d="M18 12c0 1.7-.7 3.2-1.8 4.2" />
+    </BaseIcon>
+)
+Disc3.displayName = "Disc3"
+
+export const Voicemail: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <circle cx="6" cy="12" r="4" />
+        <circle cx="18" cy="12" r="4" />
+        <line x1="6" x2="18" y1="16" y2="16" />
+    </BaseIcon>
+)
+Voicemail.displayName = "Voicemail"
+
+export const Clapperboard: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path d="m12.296 3.464 3.02 3.956" />
+        <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3z" />
+        <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <path d="m6.18 5.276 3.1 3.899" />
+    </BaseIcon>
+)
+Clapperboard.displayName = "Clapperboard"
+
+export const Film: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <rect width="18" height="18" x="3" y="3" rx="2" />
+        <path d="M7 3v18" />
+        <path d="M3 7.5h4" />
+        <path d="M3 12h18" />
+        <path d="M3 16.5h4" />
+        <path d="M17 3v18" />
+        <path d="M17 7.5h4" />
+        <path d="M17 16.5h4" />
+    </BaseIcon>
+)
+Film.displayName = "Film"
+
+export const Zap: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon strokeWidth={2} {...props}>
+        <path fill="currentColor" stroke="none" d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+    </BaseIcon>
+)
+Zap.displayName = "Zap"
+
 export const TimerReset: React.FC<BaseIconProps> = (props) => (
     <BaseIcon strokeWidth={2} {...props}>
         <path d="M10 2h4" />
