@@ -1,5 +1,6 @@
 import z from "zod"
 import { type AxiosInstance } from "axios"
+import { supabaseTimestamp } from "./zod-utils"
 import { Auth } from "./Auth"
 import { Execution } from "./Execution"
 import { Workflow } from "./Workflow"
@@ -114,7 +115,7 @@ export namespace Recording {
         id:          Id,
         executionId: Execution.Id,
         workflowId:  Workflow.Id,
-        createdAt:   z.iso.datetime({ offset: true }),
+        createdAt:   supabaseTimestamp,
     })
     export type Meta = z.infer<typeof Meta>
 
@@ -139,7 +140,7 @@ export namespace Recording {
                 execution_id: Execution.Id,
                 workflow_id:  Workflow.Id,
                 user_id:      Auth.User.Id,
-                created_at:   z.iso.datetime({ offset: true }),
+                created_at:   supabaseTimestamp,
                 data:         z.object({
                     workflowDataSnapshot: Workflow.Data.Schema,
                     tracks:    z.record(Track.Id,      Track.Schema     ).default({}),

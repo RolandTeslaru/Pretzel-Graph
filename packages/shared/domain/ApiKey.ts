@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { Auth } from "./Auth"
+import { supabaseTimestamp } from "./zod-utils"
 
 export namespace ApiKey {
 
@@ -16,10 +17,10 @@ export namespace ApiKey {
         user_id:      Auth.User.Id,
         name:         z.string(),
         prefix:       z.string(),
-        last_used_at: z.iso.datetime({ offset: true }).nullable(),
-        expires_at:   z.iso.datetime({ offset: true }).nullable(),
-        revoked_at:   z.iso.datetime({ offset: true }).nullable(),
-        created_at:   z.iso.datetime({ offset: true }),
+        last_used_at: supabaseTimestamp.nullable(),
+        expires_at:   supabaseTimestamp.nullable(),
+        revoked_at:   supabaseTimestamp.nullable(),
+        created_at:   supabaseTimestamp,
     })
     export type Schema = z.infer<typeof Schema>
 

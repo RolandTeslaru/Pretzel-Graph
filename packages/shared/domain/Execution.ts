@@ -1,5 +1,6 @@
 import z from "zod"
 import { Workflow } from "./Workflow"
+import { supabaseTimestamp } from "./zod-utils"
 import { BaseMessage } from "langchain"
 import { Port } from "./Foundations/Port"
 import { Projection } from "./Foundations/Projection"
@@ -31,8 +32,8 @@ export namespace Execution {
             export const Schema = z.object({
                 status: z.enum(["idle", "running", "completed", "waiting", "failed"]),
                 error: SystemError.Schema.optional(),
-                started_at: z.iso.datetime({ offset: true }).optional(),
-                completed_at: z.iso.datetime({ offset: true }).optional(),
+                started_at: supabaseTimestamp.optional(),
+                completed_at: supabaseTimestamp.optional(),
             })
             export type Type = z.infer<typeof Schema>
         }
@@ -97,7 +98,7 @@ export namespace Execution {
         export const Scheduled = z.object({
             variant: z.literal("scheduled"),
             scheduleId:  z.string().optional(),
-            scheduledAt: z.iso.datetime({ offset: true }),
+            scheduledAt: supabaseTimestamp,
         })
 
         // Added by the api-keys spec.
@@ -143,8 +144,8 @@ export namespace Execution {
         error:       SystemError.Schema.optional(),
         session:     Session.Schema,     // embedded; no separate id
         chat_id:     Chat.Id.optional(), // if applicable
-        created_at:  z.iso.datetime({ offset: true }),
-        updated_at:  z.iso.datetime({ offset: true }),
+        created_at:  supabaseTimestamp,
+        updated_at:  supabaseTimestamp,
     })
 
     export namespace Database {
