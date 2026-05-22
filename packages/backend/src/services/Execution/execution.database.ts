@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Auth, Chat, Execution, Workflow } from '@pretzel-graph/shared/domain';
-import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
+import { Auth, Chat, Execution, Recording, Workflow } from '@pretzel-graph/shared/domain';
 import { withSupabaseAssert } from '@pretzel-graph/shared/errors/supabase';
 
 @Injectable()
@@ -61,41 +60,35 @@ export class ExecutionDatabase {
         supabase:    SupabaseClient,
         executionId: Execution.Id
     ): Promise<Execution.Status> => {
-        const { data, error } = await supabase
+        const { data } = await supabase
             .from('executions')
-            .select('status')
+            .select<'status', { status: string }>('status')
             .eq('id', executionId)
             .single()
             .throwOnError();
 
-        if (error)
-            throw error;
-
-        return data?.status ?? null;
+        return Execution.Status.parse(data!.status);
     });
 
     public readonly get = withSupabaseAssert('execution.get', async (
         supabase:    SupabaseClient,
         executionId: Execution.Id
     ): Promise<Execution> => {
-        const { data, error } = await supabase
+        const { data } = await supabase
             .from('executions')
             .select('id, workflow_id, igniter, status, duration, error, session, chat_id, created_at, updated_at')
             .eq('id', executionId)
             .single()
             .throwOnError();
 
-        if (error || !data)
-            throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
-
-        return data as Execution;
+        return Execution.Schema.parse(data);
     });
 
     public readonly getActivePublishedWorkflowData = withSupabaseAssert('execution.sdk.getActivePublishedWorkflowData', async (
         supabase:   SupabaseClient,
         workflowId: Workflow.Id
     ): Promise<Workflow.Data> => {
-        const { data: row, error } = await supabase
+        const { data: row } = await supabase
             .from('version_control')
             .select('workflow_data')
             .eq('workflow_id', workflowId)
@@ -103,23 +96,19 @@ export class ExecutionDatabase {
             .single()
             .throwOnError();
 
-        if (error || !row)
-            throw new SystemError(SystemError.Code.NOT_FOUND, 'No active published version found for this workflow');
-
-        return Workflow.Data.Schema.parse(row.workflow_data);
+        return Workflow.Data.Schema.parse(row!.workflow_data);
     });
 
     public readonly listActiveIds = withSupabaseAssert('execution.listActiveIds', async (
         supabase: SupabaseClient
     ): Promise<Execution.Id[]> => {
-        const { data, error } = await supabase
+        const { data } = await supabase
             .from('executions')
             .select('id')
-            .in('status', ['pending', 'running']);
+            .in('status', ['pending', 'running'])
+            .throwOnError();
 
-        if (error) throw new SystemError(SystemError.Code.INFRA_DATABASE_ERROR, error.message);
-
-        return (data ?? []).map(row => row.id as Execution.Id);
+        return (data ?? []).map(row => Execution.Id.parse(row.id));
     });
 
     public readonly terminateMany = withSupabaseAssert('execution.terminateMany', async (
@@ -136,50 +125,100 @@ export class ExecutionDatabase {
             .throwOnError();
     });
 
+    public readonly recording = {
+        upsert: withSupabaseAssert('recording.upsert', async (
+            supabase:  SupabaseClient,
+            recording: Recording,
+            userId:    Auth.User.Id,
+        ) => {
+            const { workflowDataSnapshot, tracks, units, relations, dataBank } = recording;
+            await supabase
+                .from('execution_recordings')
+                .upsert({
+                    id:           recording.id,
+                    execution_id: recording.executionId,
+                    workflow_id:  recording.workflowId,
+                    user_id:      userId,
+                    data:         { workflowDataSnapshot, tracks, units, relations, dataBank },
+                    created_at:   recording.createdAt,
+                }, { onConflict: 'execution_id' })
+                .throwOnError();
+        }),
+
+        get: withSupabaseAssert('recording.get', async (
+            supabase:    SupabaseClient,
+            executionId: Execution.Id,
+        ): Promise<Recording> => {
+            const { data } = await supabase
+                .from('execution_recordings')
+                .select('id, execution_id, workflow_id, user_id, data, created_at')
+                .eq('execution_id', executionId)
+                .single()
+                .throwOnError();
+
+            return Recording.Database.fromRow(Recording.Database.Row.Schema.parse(data));
+        }),
+
+        listByWorkflow: withSupabaseAssert('recording.listByWorkflow', async (
+            supabase:   SupabaseClient,
+            workflowId: Workflow.Id,
+        ): Promise<Recording.Meta[]> => {
+            const { data } = await supabase
+                .from('execution_recordings')
+                .select('id, execution_id, workflow_id, created_at')
+                .eq('workflow_id', workflowId)
+                .order('created_at', { ascending: false })
+                .throwOnError();
+
+            return (data ?? []).map(row => ({
+                id:          row.id,
+                executionId: row.execution_id,
+                workflowId:  row.workflow_id,
+                createdAt:   row.created_at,
+            }));
+        }),
+    };
+
     public readonly meta = {
         get: withSupabaseAssert('execution.meta.get', async (
             supabase:    SupabaseClient,
             executionId: Execution.Id
         ): Promise<Execution.Meta> => {
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('executions')
                 .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at')
                 .eq('id', executionId)
                 .single()
                 .throwOnError();
 
-            if (error || !data)
-                throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
-            return data as Execution.Meta;
+            return Execution.Meta.parse(data);
         }),
 
         list: withSupabaseAssert('execution.meta.list', async (
             supabase:   SupabaseClient,
             workflowId: Workflow.Id
         ): Promise<Execution.Meta[]> => {
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('executions')
                 .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at')
                 .eq('workflow_id', workflowId)
                 .order('created_at', { ascending: false })
                 .throwOnError();
 
-            if (error) throw new SystemError(SystemError.Code.INFRA_DATABASE_ERROR, error);
-            return data as Execution.Meta[] ?? [];
+            return (data ?? []).map(row => Execution.Meta.parse(row));
         }),
 
         listActive: withSupabaseAssert('execution.meta.listActive', async (
             supabase: SupabaseClient,
         ): Promise<Execution.Meta[]> => {
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('executions')
                 .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at')
                 .in('status', ['pending', 'running'])
                 .order('created_at', { ascending: false })
                 .throwOnError();
 
-            if (error) throw new SystemError(SystemError.Code.INFRA_DATABASE_ERROR, error);
-            return data as Execution.Meta[] ?? [];
+            return (data ?? []).map(row => Execution.Meta.parse(row));
         }),
     };
 }

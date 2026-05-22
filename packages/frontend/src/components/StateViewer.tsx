@@ -2,7 +2,7 @@ import { useState } from 'react'
 import JsonView from 'react18-json-view'
 import 'react18-json-view/src/style.css'
 import 'react18-json-view/src/dark.css'
-import { Button, Select } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Select, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import { ChatSDK } from '@/routes/workflow/-SDKs/ChatSDK/sdk'
@@ -57,8 +57,8 @@ export function StateViewer() {
     const state = useSDKState(selected);
 
     return (
-        <div className={`fixed transition-all left-[20px] bottom-[20px] z-50 w-[400px] bg-card/80 backdrop-blur-sm border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto ${minimized ? 'h-[34px] border-0' : 'bottom-20 h-[500px]'}`}>
-            <div className={`absolute z-10 transition-all ${minimized ? 'left-0 top-0 right-0' : 'left-1 top-1 right-1'}  flex px-1 py-1 gap-2 border rounded-xl border-border bg-card shadow-md shadow-black/10`}>
+        <div className={`fixed transition-all top-[20px] left-1/2 -translate-x-1/2 z-50 w-[400px] bg-card/80 backdrop-blur-sm border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto ${minimized ? 'h-[34px] border-0' : ' h-[400px]'}`}>
+            <div className={`absolute z-10 transition-all ${minimized ? 'left-0 bottom-0 right-0' : 'left-1 bottom-1 right-1'}  flex px-1 py-1 gap-2 border rounded-xl border-border bg-card shadow-md shadow-black/10`}>
                 <h3 className="text-sm font-semibold pl-1 text-foreground">
                     State Viewer
                 </h3>
@@ -83,13 +83,13 @@ export function StateViewer() {
             </div>
             {!minimized && (
                 <>
-                    <div className="flex-1 overflow-auto p-4 pt-12 custom-scrollbar text-[11px] leading-relaxed [mask-image:linear-gradient(to_bottom,transparent,black_48px,black_calc(100%-48px),transparent)]">
+                    <ScrollArea.Root className="flex-1 px-4 pb-8 text-[11px] leading-relaxed [mask-image:linear-gradient(to_bottom,transparent,black_48px,black_calc(100%-48px),transparent)]">
                         <JsonView
                             src={state}
                             collapsed={3}
                             theme="default"
                         />
-                    </div>
+                    </ScrollArea.Root>
                 </>
             )}
         </div>
