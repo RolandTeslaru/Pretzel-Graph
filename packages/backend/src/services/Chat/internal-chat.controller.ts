@@ -3,6 +3,7 @@ import { Chat } from '@pretzel-graph/shared/domain';
 import { RuntimeNodeAuthGuard } from '../../auth/runtime-node-auth.guard';
 import { createServiceClient } from '../../utils/supabase';
 import { ChatDatabase } from './chat.database';
+import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('internal/chat')
 @UseGuards(RuntimeNodeAuthGuard)
@@ -11,21 +12,21 @@ export class InternalChatController {
 
     @Post('message/add')
     @HttpCode(200)
-    async addMessage(@Body() body: Chat.API.Message.Add.Request) {
-        const payload = Chat.API.Message.Add.Request.parse(body);
+    async addMessage(
+        @ZodBody(Chat.API.Message.Add.Request) body: Chat.API.Message.Add.Request,
+    ) {
         const supabase = createServiceClient();
-        await this.database.message.add(supabase, payload.messages);
-
+        await this.database.message.add(supabase, body.messages);
         return {};
     }
 
     @Post('message/update')
     @HttpCode(200)
-    async updateMessage(@Body() body: Chat.API.Message.Update.Request) {
-        const payload = Chat.API.Message.Update.Request.parse(body);
+    async updateMessage(
+        @ZodBody(Chat.API.Message.Update.Request) body: Chat.API.Message.Update.Request,
+    ) {
         const supabase = createServiceClient();
-        await this.database.message.update(supabase, payload.messageId, payload.content);
-
+        await this.database.message.update(supabase, body.messageId, body.content);
         return {};
     }
 

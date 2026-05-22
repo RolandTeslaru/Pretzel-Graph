@@ -2,6 +2,7 @@ import { Controller, Post, Get, Delete, Body, Param, UseGuards, Req, HttpCode, P
 import { LibraryService } from './library.service';
 import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
+import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('library')
 @UseGuards(SupabaseAuthGuard)
@@ -17,9 +18,11 @@ export class LibraryController {
     // ── Projects ──────────────────────────────────────────
     @Post('projects')
     @HttpCode(200)
-    async createProject(@Req() req: AuthenticatedRequest, @Body() body: Library.API.Project.Create.Request) {
-        const payload = Library.API.Project.Create.Request.parse(body);
-        return await this.libraryService.project.create(req.token, payload);
+    async createProject(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Library.API.Project.Create.Request) body: Library.API.Project.Create.Request,
+    ) {
+        return await this.libraryService.project.create(req.token, body);
     }
 
     @Get('projects')
@@ -28,7 +31,11 @@ export class LibraryController {
     }
 
     @Patch('projects/:id')
-    async updateProject(@Req() req: AuthenticatedRequest, @Param('id') id: Library.Folder.Id, @Body() body: Omit<Library.API.Project.Update.Request, 'id'>) {
+    async updateProject(
+        @Req() req: AuthenticatedRequest, 
+        @Param('id') id: Library.Folder.Id, 
+        @Body() body: Omit<Library.API.Project.Update.Request, 'id'>
+    ) {
         const payload = Library.API.Project.Update.Request.parse({ ...body, id });
         return await this.libraryService.project.update(req.token, payload);
     }
@@ -37,9 +44,11 @@ export class LibraryController {
     // ── Folders ───────────────────────────────────────────
     @Post('folders')
     @HttpCode(200)
-    async createFolder(@Req() req: AuthenticatedRequest, @Body() body: Library.API.Folder.Create.Request) {
-        const payload = Library.API.Folder.Create.Request.parse(body);
-        return await this.libraryService.folder.create(req.token, payload);
+    async createFolder(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Library.API.Folder.Create.Request) body: Library.API.Folder.Create.Request,
+    ) {
+        return await this.libraryService.folder.create(req.token, body);
     }
 
     @Patch('folders/:id')
@@ -62,9 +71,11 @@ export class LibraryController {
     // ── Workflows ─────────────────────────────────────────
     @Post('workflows')
     @HttpCode(200)
-    async createWorkflow(@Req() req: AuthenticatedRequest, @Body() body: Library.API.Workflow.Create.Request) {
-        const payload = Library.API.Workflow.Create.Request.parse(body);
-        return await this.libraryService.workflow.create(req.token, payload);
+    async createWorkflow(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Library.API.Workflow.Create.Request) body: Library.API.Workflow.Create.Request,
+    ) {
+        return await this.libraryService.workflow.create(req.token, body);
     }
 
     @Get('workflows/:id')

@@ -1,6 +1,7 @@
-import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
+import { Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { RuntimeNodeAuthGuard } from '@/auth/runtime-node-auth.guard';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
+import { ZodBody } from '@/pipes/zod.pipe';
 import axios from 'axios';
 
 // Proxy for worker → webhook server registration.
@@ -16,9 +17,10 @@ export class WebhookTestController {
 
     @Post('register')
     @HttpCode(200)
-    async register(@Body() body: unknown) {
-        const payload = Webhook.Test.API.Register.Request.parse(body);
-        await axios.post(`${this.webhookServerUrl}/webhooks/test/register`, payload);
+    async register(
+        @ZodBody(Webhook.Test.API.Register.Request) body: Webhook.Test.API.Register.Request,
+    ) {
+        await axios.post(`${this.webhookServerUrl}/webhooks/test/register`, body);
         return { ok: true };
     }
 }
