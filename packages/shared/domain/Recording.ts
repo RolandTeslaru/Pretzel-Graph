@@ -107,6 +107,7 @@ export namespace Recording {
             dataSnapshotId: DataBank.PortSnapshot.Id,
         })
     }
+    export type Relation = z.infer<typeof Relation.Schema>
 
     // ─── Top-level ───────────────────────────────────────────────────────────
 
@@ -120,7 +121,7 @@ export namespace Recording {
     export type Meta = z.infer<typeof Meta>
 
     export const Schema = Meta.extend({
-        workflowDataSnapshot: Workflow.Data.Schema, // workflow state at execution time;
+        // workflowDataSnapshot: Workflow.Data.Schema, // workflow state at execution time;
                                                     // insulates the timeline from subsequent edits
         tracks:    z.record(Track.Id,      Track.Schema     ).default({}),
         units:     z.record(UnitOfWork.Id, UnitOfWork.Schema).default({}),
@@ -162,49 +163,70 @@ export namespace Recording {
     }
 
     // ─── Streaming events ────────────────────────────────────────────────────
-    // Channel: recording:<executionId>
+    // Sent on the main execution channel (execution:<executionId>).
     // Frontend applies each event as a direct patch to its local Recording state.
 
     export namespace Event {
-        export const getChannel = (executionId: Execution.Id) =>
-            `recording:${executionId}` as Realtime.Channel
-
-        const Base = z.object({ executionId: Execution.Id })
-
-        export const UnitStarted = Base.extend({
-            type: z.literal("unit:started"),
-            unit: UnitOfWork.Schema,
+        const Base = Realtime.Event.Base.extend({
+            channel:     Execution.Event.Channel,
+            executionId: Execution.Id,
         })
-        export type UnitStarted = z.infer<typeof UnitStarted>
 
-        export const UnitCompleted = Base.extend({
-            type:           z.literal("unit:completed"),
-            unitId:         UnitOfWork.Id,
-            duration:       z.number(),
-            outputSnapshot: z.record(Port.Output.Id, DataBank.PortSnapshot.Id),
-            snapshots:      z.array(DataBank.PortSnapshot.Schema),
-        })
-        export type UnitCompleted = z.infer<typeof UnitCompleted>
+        export namespace Unit {
+            export const Started = Base.extend({
+                type: z.literal("unit:started"),
+                unit: UnitOfWork.Schema,
+            })
+            export type Started = z.infer<typeof Started>
 
-        export const UnitFailed = Base.extend({
-            type:     z.literal("unit:failed"),
-            unitId:   UnitOfWork.Id,
-            duration: z.number(),
-        })
-        export type UnitFailed = z.infer<typeof UnitFailed>
+            export const Completed = Base.extend({
+                type:           z.literal("unit:completed"),
+                unitId:         UnitOfWork.Id,
+                duration:       z.number(),
+                outputSnapshot: z.record(Port.Output.Id, DataBank.PortSnapshot.Id),
+            })
+            export type Completed = z.infer<typeof Completed>
 
-        export const RelationCreated = Base.extend({
-            type:     z.literal("relation:created"),
-            relation: Relation.Schema,
-            snapshot: DataBank.PortSnapshot.Schema.optional(),
+            export const Failed = Base.extend({
+                type:     z.literal("unit:failed"),
+                unitId:   UnitOfWork.Id,
+                duration: z.number(),
+            })
+            export type Failed = z.infer<typeof Failed>
+        }
+
+        export namespace Relation {
+            export const Created = Base.extend({
+                type:     z.literal("relation:created"),
+                relation: Recording.Relation.Schema,
+            })
+            export type Created = z.infer<typeof Created>
+
+            export const CreateBatch = Base.extend({
+                type: z.literal("relation:createBatch"),
+                relations: z.array(Recording.Relation.Schema),
+            })
+            export type CreateBatch = z.infer<typeof CreateBatch>
+        }
+
+        export const Completed = Base.extend({
+            type: z.literal("recording:completed"),
         })
-        export type RelationCreated = z.infer<typeof RelationCreated>
+        export type Completed = z.infer<typeof Completed>
+        
+        export const FullyUploaded = Base.extend({
+            type:      z.literal("recording:fullyUploaded"),
+        })
+        export type FullyUploaded = z.infer<typeof FullyUploaded>
 
         export const Schema = z.discriminatedUnion("type", [
-            UnitStarted,
-            UnitCompleted,
-            UnitFailed,
-            RelationCreated,
+            Unit.Started,
+            Unit.Completed,
+            Unit.Failed,
+            Relation.Created,
+            Relation.CreateBatch,
+            Completed,
+            FullyUploaded
         ])
     }
     export type Event = z.infer<typeof Event.Schema>
@@ -233,6 +255,18 @@ export namespace Recording {
         }
         export async function get(api: AxiosInstance, req: Get.Request): Promise<Get.Response> {
             const { data } = await api.post<Get.Response>('/api/execution/recording/get', req)
+            return data
+        }
+
+        // Reads the ephemeral recording from Redis (written at end of execution, TTL-expiring).
+        export namespace GetLive {
+            export const Request  = z.object({ executionId: Execution.Id })
+            export const Response = z.object({ recording: Recording.Schema })
+            export type Request   = z.infer<typeof Request>
+            export type Response  = z.infer<typeof Response>
+        }
+        export async function getLive(api: AxiosInstance, req: GetLive.Request): Promise<GetLive.Response> {
+            const { data } = await api.post<GetLive.Response>('/api/execution/recording/get-live', req)
             return data
         }
 

@@ -15,6 +15,7 @@ namespace DropdownMenu {
     inset?: boolean
     variant?: "default" | "destructive"
   }
+  export type StaticItem = React.ComponentProps<"div">
   export type CheckboxItem = React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem>
   export type RadioGroup = React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>
   export type RadioItem = React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem>
@@ -116,6 +117,25 @@ function Item({ className, inset, variant = "default", ...rest }: DropdownMenu.I
           [&_svg]:shrink-0
           [&_svg]:text-accent-foreground/80
         `,
+        className
+      )}
+      {...rest}
+    />
+  )
+}
+
+function StaticItem({ className, ...rest }: DropdownMenu.StaticItem) {
+  return (
+    <div
+      data-slot="dropdown-menu-static-item"
+      className={cn(
+        `border border-transparent
+         gap-1.5 rounded-sm px-1.5 py-1 text-sm
+         relative flex items-center select-none
+         [&_svg:not([class*='size-'])]:size-4
+         [&_svg]:pointer-events-none
+         [&_svg]:shrink-0
+         [&_svg]:text-accent-foreground/80`,
         className
       )}
       {...rest}
@@ -294,6 +314,7 @@ export const DropdownMenu = {
   Group,
   Label,
   Item,
+  StaticItem,
   CheckboxItem,
   RadioGroup,
   RadioItem,

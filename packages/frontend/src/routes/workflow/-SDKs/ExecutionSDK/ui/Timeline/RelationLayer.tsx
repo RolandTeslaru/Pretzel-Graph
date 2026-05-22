@@ -1,9 +1,10 @@
 import React, { useMemo } from "react"
-import type { Recording } from "@pretzel-graph/shared/domain"
+import type { Recording, Workflow } from "@pretzel-graph/shared/domain"
 import { MIN_BLOCK_W, RUNNING_BLOCK_W, TRACK_HEIGHT } from "./constants"
 
 interface RelationLayerProps {
     recording: Recording
+    nodes: Record<Workflow.Node.Id, Workflow.Node>
     zoom: number
     trackIndexMap: Map<string, number>
     showRemnants: boolean
@@ -13,6 +14,7 @@ interface RelationLayerProps {
 
 const RelationLayer = ({
     recording,
+    nodes,
     zoom,
     trackIndexMap,
     showRemnants,
@@ -46,10 +48,10 @@ const RelationLayer = ({
                 id: rel.id,
                 type: rel.type,
                 d: `M ${sx},${sy} C ${midX},${sy} ${midX},${ty} ${tx},${ty}`,
-                accent: recording.workflowDataSnapshot.nodes[srcUnit.trackId]?.accent,
+                accent: nodes[srcUnit.trackId]?.accent,
             }]
         })
-    }, [recording, zoom, trackIndexMap, showRemnants])
+    }, [recording, nodes, zoom, trackIndexMap, showRemnants])
 
     if (arrows.length === 0) return null
 

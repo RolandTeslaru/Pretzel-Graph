@@ -25,7 +25,7 @@ export class FlightRecorderService {
             id:                   Recording.createId(executionId),
             executionId,
             workflowId,
-            workflowDataSnapshot: workflowData,
+            // workflowDataSnapshot: workflowData,
             createdAt:            new Date().toISOString(),
             units:                {},
             relations:            {},
@@ -81,6 +81,15 @@ export class FlightRecorderService {
 
         const inputHandles = ctx.workflowCache.inputHandlesMap[nodeId] ?? {}
 
+        ctx.emit<Recording.Event.Unit.Started>({
+            channel:     Execution.Event.getChannel(this.executionId),
+            executionId: this.executionId,
+            type:        "unit:started",
+            unit,
+        })
+
+        const incomingRelations: Recording.Relation[] = []
+
         for (const [portIdStr, edgeId] of Object.entries(inputHandles)) {
             const portId = portIdStr as Port.Input.Id
             const edge   = ctx.workflowData.edges[edgeId]
@@ -101,15 +110,26 @@ export class FlightRecorderService {
             unit.inputSnapshot[portId] = snapshotId
 
             const relationId = Recording.Relation.formatId(sourceUoWId, edge.id, unitId)
-            this.recording.relations[relationId] = {
+            const relation = {
                 id:           relationId,
                 source:       sourceUoWId,
                 target:       unitId,
                 edge:         edge.id,
                 type:         isSignal ? "signal" : "dataRemnant",
                 dataSnapshotId: snapshotId,
-            }
+            } satisfies Recording.Relation
+            this.recording.relations[relationId] = relation
+
+            incomingRelations.push(relation)
         }
+
+        if (incomingRelations.length > 0)
+            ctx.emit<Recording.Event.Relation.CreateBatch>({
+                channel:     Execution.Event.getChannel(this.executionId),
+                executionId: this.executionId,
+                type:        "relation:createBatch",
+                relations:   incomingRelations,
+            })
     }
 
 
@@ -142,13 +162,25 @@ export class FlightRecorderService {
             }
             unit.outputSnapshot[portId] = snapId
         }
+
+        ctx.emit<Recording.Event.Unit.Completed>({
+            channel:        Execution.Event.getChannel(this.executionId),
+            executionId:    this.executionId,
+            type:           "unit:completed",
+            unitId:         unit.id,
+            duration:       unit.duration!,
+            outputSnapshot: unit.outputSnapshot,
+        })
     }
 
 
 
     // Called from AggexEngine.onNodeError.
     // Sets status to failed and duration.
-    public onNodeFailed(nodeId: Workflow.Node.Id): void {
+    public onNodeFailed(
+        nodeId: Workflow.Node.Id, 
+        ctx: AggexEngine.Execution.Context
+    ): void {
         const unitId = this.mostRecentUoW.get(nodeId)
         if (!unitId) return
 
@@ -157,9 +189,33 @@ export class FlightRecorderService {
 
         unit.status   = "failed"
         unit.duration = Date.now() - this.origin - unit.startedAt
+
+        ctx.emit<Recording.Event.Unit.Failed>({
+            channel:     Execution.Event.getChannel(this.executionId),
+            executionId: this.executionId,
+            type:        "unit:failed",
+            unitId:      unit.id,
+            duration:    unit.duration!,
+        })
     }
 
 
+
+    public onCompleted(emit: (event: Recording.Event) => void): void {
+        emit({
+            channel:     Execution.Event.getChannel(this.executionId),
+            executionId: this.executionId,
+            type:        "recording:fullyUploaded",
+        })
+    }
+
+    public onTerminated(emit: (event: Recording.Event) => void): void {
+        emit({
+            channel:     Execution.Event.getChannel(this.executionId),
+            executionId: this.executionId,
+            type:        "recording:fullyUploaded",
+        })
+    }
 
     public getRecording(): Recording {
         return this.recording
