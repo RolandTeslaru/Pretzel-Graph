@@ -11,7 +11,7 @@ import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Execution } from "@pretzel-graph/shared/domain";
-import { NodeStatusManager } from "./node-status-manager";
+import { FlightRecorderService } from "./flight-recorder-service";
 
 export interface AggexHooks {
     onPause?(): void;
@@ -19,7 +19,8 @@ export interface AggexHooks {
 }
 
 export class AggexEngine {
-    private s2Engine: S2Engine = new S2Engine();
+    private s2Engine:        S2Engine = new S2Engine();
+    private flightRecorder:  FlightRecorderService | null = null;
 
     private pausePromise: Promise<void> | null = null;
     private pauseResolve: (() => void) | null = null;
@@ -51,14 +52,13 @@ export class AggexEngine {
     
     ): Promise<AggexEngine.Execution.Result> {
         ctx.activeNodes.clear();
-        const nodeStatusManager = new NodeStatusManager();
 
         const hooks: S2Hooks = {
             onVertexExecute:   (...props: Parameters<S2Hooks["onVertexExecute"]>)   => this.onNodeExecuted(ctx, ...props),
-            onVertexFired:     (...props: Parameters<S2Hooks["onVertexFired"]>)     => this.onNodeFired(ctx, nodeStatusManager, ...props),
-            onVertexCompleted: (...props: Parameters<S2Hooks["onVertexCompleted"]>) => this.onNodeCompleted(ctx, nodeStatusManager, ...props),
-            onVertexWaiting:   (...props: Parameters<S2Hooks["onVertexWaiting"]>)   => this.onNodeWaiting(ctx, nodeStatusManager, ...props),
-            onVertexError:     (...props: Parameters<S2Hooks["onVertexError"]>)     => this.onNodeError(ctx, nodeStatusManager, ...props),
+            onVertexFired:     (...props: Parameters<S2Hooks["onVertexFired"]>)     => this.onNodeFired(ctx, ...props),
+            onVertexCompleted: (...props: Parameters<S2Hooks["onVertexCompleted"]>) => this.onNodeCompleted(ctx, ...props),
+            onVertexWaiting:   (...props: Parameters<S2Hooks["onVertexWaiting"]>)   => this.onNodeWaiting(ctx, ...props),
+            onVertexError:     (...props: Parameters<S2Hooks["onVertexError"]>)     => this.onNodeError(ctx, ...props),
             canVertexRun:      (...props: Parameters<S2Hooks["canVertexRun"]>)      => this.canNodeRun(ctx, ...props),
         } as const
 
@@ -114,6 +114,10 @@ export class AggexEngine {
 
     constructor(hooks: AggexHooks = {}) {
         this.hooks = hooks;
+    }
+
+    public attachFlightRecorder(recorder: FlightRecorderService): void {
+        this.flightRecorder = recorder;
     }
 
 
@@ -392,9 +396,8 @@ export class AggexEngine {
 
 
     private onNodeFired(
-        ctx:               AggexEngine.Execution.Context,
-        nodeStatusManager: NodeStatusManager,
-        nodeId:            Vertex.Id,
+        ctx:    AggexEngine.Execution.Context,
+        nodeId: Vertex.Id,
     ): void {
         const { workflowCache } = ctx
 
@@ -423,6 +426,8 @@ export class AggexEngine {
                 );
         }
 
+        this.flightRecorder?.onNodeFired(entry.wfNode.id);
+
         ctx.activeNodes.add(nodeId)
 
         const nodeStatus: Execution.Session.NodeStatus = {
@@ -430,7 +435,7 @@ export class AggexEngine {
             started_at: new Date().toISOString(),
         };
 
-        const nodeStatusUpdate = nodeStatusManager.handleStatusSet(ctx.session, entry.wfNode.id, nodeStatus);
+        const nodeStatusUpdate = { [entry.wfNode.id]: nodeStatus };
 
         ctx.updateSession(d => {
             Object.assign(d.node_status, nodeStatusUpdate);
@@ -510,6 +515,8 @@ export class AggexEngine {
             };
         });
             
+        this.flightRecorder?.onNodeExecuted(wfNode.id, signals, allDependencies, ctx);
+
         if (this.isRouterNode(nodeInstance))
             return this.resolveRouterSignals(ctx, wfNode.id, result);
     }
@@ -519,7 +526,6 @@ export class AggexEngine {
 
     private async onNodeCompleted(
         ctx:               AggexEngine.Execution.Context,
-        nodeStatusManager: NodeStatusManager,
         vertexId:          Vertex.Id,
         resolvedOutSignals:Set<Vertex.Id> | void,
     ) {
@@ -556,7 +562,7 @@ export class AggexEngine {
             completed_at: new Date().toISOString(),
         };
         const projectedOutput = session.node_output_projections[entry.wfNode.id];
-        const nodeStatusUpdate = nodeStatusManager.handleStatusSet(ctx.session, entry.wfNode.id, nodeStatus);
+        const nodeStatusUpdate = { [entry.wfNode.id]: nodeStatus };
 
         ctx.updateSession(d => {
             d.edge_state = { ...d.edge_state, ...edgeStateUpdate };
@@ -580,6 +586,8 @@ export class AggexEngine {
             },
         });
 
+        this.flightRecorder?.onNodeCompleted(entry.wfNode.id, ctx);
+
         await this.awaitPause(ctx);
     }
 
@@ -588,7 +596,6 @@ export class AggexEngine {
 
     private onNodeWaiting(
         ctx:                     AggexEngine.Execution.Context,
-        nodeStatusManager:       NodeStatusManager,
         vertexId:                Vertex.Id,
         arrivedSignals:          Set<Vertex.Id>,
         dependencyResolutionMap: Record<Vertex.Id, boolean>,
@@ -613,7 +620,7 @@ export class AggexEngine {
             started_at: existing?.started_at,
         };
 
-        const nodeStatusUpdate = nodeStatusManager.handleStatusSet(ctx.session, wfNode.id, nodeStatus);
+        const nodeStatusUpdate = { [wfNode.id]: nodeStatus };
 
         ctx.updateSession(d => {
             Object.assign(d.node_status, nodeStatusUpdate);
@@ -638,10 +645,9 @@ export class AggexEngine {
 
 
     private onNodeError(
-        ctx:               AggexEngine.Execution.Context,
-        nodeStatusManager: NodeStatusManager,
-        vertexId:          Vertex.Id,
-        error:             unknown,
+        ctx:      AggexEngine.Execution.Context,
+        vertexId: Vertex.Id,
+        error:    unknown,
     ) {
         console.error(`Error during node execution, ${vertexId}:`, error)
 
@@ -655,6 +661,9 @@ export class AggexEngine {
             )
 
         const nodeId = vertexId as unknown as Workflow.Node.Id;
+
+        this.flightRecorder?.onNodeFailed(nodeId);
+
         const existing = ctx.session.node_status[nodeId];
         const nodeStatus: Execution.Session.NodeStatus = {
             status: "failed",
@@ -663,7 +672,7 @@ export class AggexEngine {
             error: aggexError.toJSON() as any,
         };
 
-        const nodeStatusUpdate = nodeStatusManager.handleStatusSet(ctx.session, nodeId, nodeStatus);
+        const nodeStatusUpdate = { [nodeId]: nodeStatus };
 
         ctx.updateSession(d => {
             Object.assign(d.node_status, nodeStatusUpdate);

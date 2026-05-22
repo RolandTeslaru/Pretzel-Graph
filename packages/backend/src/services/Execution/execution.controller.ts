@@ -1,9 +1,10 @@
-import { Controller, Post, Get, Body, UseGuards, Req, HttpCode, Param } from '@nestjs/common';
+import { Controller, Post, Get, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { ExecutionService } from './execution.service';
-import { Auth, Execution } from '@pretzel-graph/shared/domain';
+import { Auth, Execution, Recording } from '@pretzel-graph/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
 import { InternalAuthGuard, InternalAuthenticatedRequest } from '../../auth/internal-auth.guard';
 import { ApiKeyAuthGuard, ApiKeyAuthenticatedRequest } from '../../auth/api-key-auth.guard';
+import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('execution')
 export class ExecutionController {
@@ -12,57 +13,71 @@ export class ExecutionController {
     @Post('run')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
-    async run(@Req() req: AuthenticatedRequest, @Body() body: Execution.API.Run.Request) {
-        const payload = Execution.API.Run.Request.parse(body);
-        return this.executionService.runFromUser(req.token, req.user.id as Auth.User.Id, payload);
+    async run(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Execution.API.Run.Request) body: Execution.API.Run.Request,
+    ) {
+        return this.executionService.runFromUser(req.token, req.user.id as Auth.User.Id, body);
     }
 
     @Post('internal/run')
     @UseGuards(InternalAuthGuard)
     @HttpCode(200)
-    async runInternal(@Req() req: InternalAuthenticatedRequest, @Body() body: Execution.API.Run.InternalRequest) {
-        const payload = Execution.API.Run.InternalRequest.parse(body);
-        return this.executionService.runFromService(payload, req.internal.service);
+    async runInternal(
+        @Req() req: InternalAuthenticatedRequest,
+        @ZodBody(Execution.API.Run.InternalRequest) body: Execution.API.Run.InternalRequest,
+    ) {
+        return this.executionService.runFromService(body, req.internal.service);
     }
 
     @Post('pause')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
-    async pause(@Req() req: AuthenticatedRequest, @Body() body: Execution.API.Pause.Request) {
-        const payload = Execution.API.Pause.Request.parse(body);
-        return this.executionService.pause(req.token, req.user.id as Auth.User.Id, payload);
+    async pause(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Execution.API.Pause.Request) body: Execution.API.Pause.Request,
+    ) {
+        return this.executionService.pause(req.token, req.user.id as Auth.User.Id, body);
     }
 
     @Post('resume')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
-    async resume(@Req() req: AuthenticatedRequest, @Body() body: Execution.API.Resume.Request) {
-        const payload = Execution.API.Resume.Request.parse(body);
-        return this.executionService.resume(req.token, req.user.id as Auth.User.Id, payload);
+    async resume(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Execution.API.Resume.Request) body: Execution.API.Resume.Request,
+    ) {
+        return this.executionService.resume(req.token, req.user.id as Auth.User.Id, body);
     }
 
     @Post('heartbeat')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
-    async heartbeat(@Req() req: AuthenticatedRequest, @Body() body: Execution.API.Heartbeat.Request) {
-        const payload = Execution.API.Heartbeat.Request.parse(body);
-        return this.executionService.heartbeat(req.token, req.user.id as Auth.User.Id, payload);
+    async heartbeat(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Execution.API.Heartbeat.Request) body: Execution.API.Heartbeat.Request,
+    ) {
+        return this.executionService.heartbeat(req.token, req.user.id as Auth.User.Id, body);
     }
 
     @Post('suspend')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
-    async suspend(@Req() req: AuthenticatedRequest, @Body() body: Execution.API.Suspend.Request) {
-        const payload = Execution.API.Suspend.Request.parse(body);
-        return this.executionService.suspend(req.token, req.user.id as Auth.User.Id, payload);
+    async suspend(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Execution.API.Suspend.Request) body: Execution.API.Suspend.Request,
+    ) {
+        return this.executionService.suspend(req.token, req.user.id as Auth.User.Id, body);
     }
 
     @Post('terminate')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
-    async terminate(@Req() req: AuthenticatedRequest, @Body() body: Execution.API.Terminate.Request) {
-        const payload = Execution.API.Terminate.Request.parse(body);
-        return this.executionService.terminate(req.token, req.user.id as Auth.User.Id, payload);
+    async terminate(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Execution.API.Terminate.Request) body: Execution.API.Terminate.Request,
+    ) {
+        return this.executionService.terminate(req.token, req.user.id as Auth.User.Id, body);
     }
 
     @Post('terminate-all')
@@ -75,41 +90,49 @@ export class ExecutionController {
     @Post('finalise')
     @UseGuards(InternalAuthGuard)
     @HttpCode(200)
-    async finalise(@Body() body: Execution.API.Finalise.Request) {
-        const payload = Execution.API.Finalise.Request.parse(body);
-        return this.executionService.finalise(payload);
+    async finalise(
+        @ZodBody(Execution.API.Finalise.Request) body: Execution.API.Finalise.Request,
+    ) {
+        return this.executionService.finalise(body);
     }
 
     @Post('get')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
-    async get(@Req() req: AuthenticatedRequest, @Body() body: Execution.API.Get.Request) {
-        const payload = Execution.API.Get.Request.parse(body);
-        return this.executionService.get(req.token, req.user.id as Auth.User.Id, payload);
+    async get(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Execution.API.Get.Request) body: Execution.API.Get.Request,
+    ) {
+        return this.executionService.get(req.token, req.user.id as Auth.User.Id, body);
     }
 
     @Post('update')
     @UseGuards(InternalAuthGuard)
     @HttpCode(200)
-    async update(@Body() body: Execution.API.Update.Request) {
-        const payload = Execution.API.Update.Request.parse(body);
-        return this.executionService.update(payload);
+    async update(
+        @ZodBody(Execution.API.Update.Request) body: Execution.API.Update.Request,
+    ) {
+        return this.executionService.update(body);
     }
 
     @Post('meta/list')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
-    async metaList(@Req() req: AuthenticatedRequest, @Body() body: Execution.API.Meta.List.Request) {
-        const payload = Execution.API.Meta.List.Request.parse(body);
-        return this.executionService.meta.list(req.token, payload);
+    async metaList(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Execution.API.Meta.List.Request) body: Execution.API.Meta.List.Request,
+    ) {
+        return this.executionService.meta.list(req.token, body);
     }
 
     @Post('meta/get')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
-    async metaGet(@Req() req: AuthenticatedRequest, @Body() body: Execution.API.Meta.Get.Request) {
-        const payload = Execution.API.Meta.Get.Request.parse(body);
-        return this.executionService.meta.get(req.token, req.user.id as Auth.User.Id, payload);
+    async metaGet(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Execution.API.Meta.Get.Request) body: Execution.API.Meta.Get.Request,
+    ) {
+        return this.executionService.meta.get(req.token, req.user.id as Auth.User.Id, body);
     }
 
     @Post('meta/list-active')
@@ -122,8 +145,39 @@ export class ExecutionController {
     @Post('sdk/run')
     @UseGuards(ApiKeyAuthGuard)
     @HttpCode(200)
-    async sdkRun(@Req() req: ApiKeyAuthenticatedRequest, @Body() body: Execution.API.SdkRun.Request) {
-        const payload = Execution.API.SdkRun.Request.parse(body);
-        return this.executionService.runFromSdk(req.user.id as Auth.User.Id, payload);
+    async sdkRun(
+        @Req() req: ApiKeyAuthenticatedRequest,
+        @ZodBody(Execution.API.SdkRun.Request) body: Execution.API.SdkRun.Request,
+    ) {
+        return this.executionService.runFromSdk(req.user.id as Auth.User.Id, body);
+    }
+
+    @Post('recording/upsert')
+    @UseGuards(InternalAuthGuard)
+    @HttpCode(200)
+    async recordingUpsert(
+        @ZodBody(Recording.API.Upsert.Request) body: Recording.API.Upsert.Request,
+    ) {
+        return this.executionService.recording.upsert(body);
+    }
+
+    @Post('recording/get')
+    @UseGuards(SupabaseAuthGuard)
+    @HttpCode(200)
+    async recordingGet(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Recording.API.Get.Request) body: Recording.API.Get.Request,
+    ) {
+        return this.executionService.recording.get(req.token, req.user.id as Auth.User.Id, body);
+    }
+
+    @Post('recording/list-by-workflow')
+    @UseGuards(SupabaseAuthGuard)
+    @HttpCode(200)
+    async recordingListByWorkflow(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Recording.API.ListByWorkflow.Request) body: Recording.API.ListByWorkflow.Request,
+    ) {
+        return this.executionService.recording.listByWorkflow(req.token, body);
     }
 }

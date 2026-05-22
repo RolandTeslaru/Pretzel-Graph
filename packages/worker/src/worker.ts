@@ -1,9 +1,10 @@
 import { Job as BullJob, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants"
-import { Execution, Realtime } from '@pretzel-graph/shared/domain';
+import { Execution, Recording, Realtime } from '@pretzel-graph/shared/domain';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { AggexEngine, AggexHooks } from 'src/engine';
+import { FlightRecorderService } from './engine/flight-recorder-service';
 import { container, singleton } from 'tsyringe';
 import { WorkflowCompiler } from './compiler';
 import { AxiosService } from './axios';
@@ -115,6 +116,8 @@ export class AggexWorkerImpl {
             channel: eventChannel
         });
 
+        let recorder: FlightRecorderService | null = null;
+
         try {
             let engineExecutionCtx!: AggexEngine.Execution.Context;
             let engine!: AggexEngine;
@@ -154,6 +157,10 @@ export class AggexWorkerImpl {
             engine = new AggexEngine(aggexHooks);
             this.runningEnginesMap.set(executionId, engine);
 
+            const origin = Date.now();
+            recorder = new FlightRecorderService(executionId, workflowId, workflowData, origin);
+            engine.attachFlightRecorder(recorder);
+
             // Compile and register execution context
             engineExecutionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.emit, engine, credentialInstances);
             this.runningExecutionContextsMap.set(executionId, engineExecutionCtx);
@@ -164,6 +171,9 @@ export class AggexWorkerImpl {
             const status = result.status === 'terminated' ? 'terminated' : 'completed';
 
             await Execution.API.update(AxiosService.api, { executionId, status, session });
+
+            await Recording.API.upsert(AxiosService.api, { recording: recorder.getRecording() })
+                .catch(err => console.error('[Worker] Failed to save recording:', err));
 
             if (status === 'terminated')
                 this.emit<Execution.Event.Terminated>({ executionId, workflowId, type: "terminated", channel: eventChannel });
@@ -181,6 +191,11 @@ export class AggexWorkerImpl {
             const session = engineExecutionCtx?.session ?? Execution.Session.createInitial();
 
             await Execution.API.update(AxiosService.api, { executionId: execution.id, status: 'failed', session }).catch(() => {});
+
+            if (recorder) {
+                await Recording.API.upsert(AxiosService.api, { recording: recorder.getRecording() })
+                    .catch(saveErr => console.error('[Worker] Failed to save recording:', saveErr));
+            }
 
             this.emit<Execution.Event.Failed>({
                 executionId: execution.id,
