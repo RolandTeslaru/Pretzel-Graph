@@ -4,8 +4,9 @@ import Tipped from '@/components/Tipped'
 import { handlePause, handleResume, handleRun, handleSuspend, handleTerminate, handleClear } from './utils'
 import { AnimatePresence, motion } from 'motion/react'
 import { ControlButton } from './control-button'
-import { Button, Popover } from '@pretzel-graph/standard-ui/foundations'
+import { Button, DropdownMenu, Popover, Spinner, Switch } from '@pretzel-graph/standard-ui/foundations'
 import ExecutionHistoryPanel from '../ExecutionHistoryPanel'
+import { ButtonGroup } from '@pretzel-graph/standard-ui/foundations/button-group'
 
 const spring = { type: "spring", stiffness: 500, damping: 28 } as const
 
@@ -15,7 +16,17 @@ interface Props {
 
 const ExecutionControls = ({ canRun }: Props) => {
 
-  const [currentExecution, awaitedConfirmation] = ExecutionSDK.useStore(s => [s.currentExecution, s.awaitedConfirmation]);
+  const [
+    currentExecution, 
+    awaitedConfirmation,
+    recordExecution,
+    isCurrentExecutionRecording
+  ] = ExecutionSDK.useStore(s => [
+    s.currentExecution, 
+    s.awaitedConfirmation,
+    s.recordExecution,
+    s.isCurrentExecutionRecording
+  ]);
 
   let status = "idle"
   if (currentExecution) {
@@ -42,15 +53,59 @@ const ExecutionControls = ({ canRun }: Props) => {
       >
         {status === "idle" || status === "failed" || status === "completed" ? (
           <>
-            <ControlButton
-              disabled={!canRun}
-              loading={awaitedConfirmation.has("started")}
-              icon={SystemIcons.Play}
-              iconClassName="mr-auto"
-              label="Run"
+          <ButtonGroup>
+            <Button
+              disabled={!canRun || awaitedConfirmation.has("started")}
               variant="success"
+              className="my-auto"
               onClick={handleRun}
-            />
+            >
+              {awaitedConfirmation.has("started") ? <Spinner /> : <><SystemIcons.Play className="mr-auto" />Run</>}
+            </Button>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <Button
+                    variant="success"
+                    size="icon-sm"
+                    aria-label="More Options"
+                    disabled={!canRun || awaitedConfirmation.has("started")}
+                    className='w-6!'
+                >
+                    <SystemIcons.ChevronUp />
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content align='end' sideOffset={8} className='min-w-[150px]!'>
+                <DropdownMenu.Group>
+                  <DropdownMenu.Item>
+                    <SystemIcons.Play className="mr-2" />
+                    Run
+                  </DropdownMenu.Item>
+                  {/* <DropdownMenu.Item>
+                    <SystemIcons.MessageSquare className="mr-2" />
+                    Run via Chat Input
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item>
+                    <SystemIcons.Webhook className="mr-2" />
+                    Run via Webhook 1
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item>
+                    <SystemIcons.Webhook className="mr-2" />
+                    Run via Webhook 2
+                  </DropdownMenu.Item> */}
+                </DropdownMenu.Group>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Group>
+                  <DropdownMenu.StaticItem>
+                    <SystemIcons.Film className="mr-2" />
+                    Record
+                    <Switch size={"md"} className='ml-auto' checked={recordExecution} onCheckedChange={(checked) => {
+                      ExecutionSDK.actions.setRecordExecution(checked)
+                    }} />
+                  </DropdownMenu.StaticItem>
+                </DropdownMenu.Group>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          </ButtonGroup>
           </>
         ) : null}
         {status === "running" && (
@@ -119,6 +174,18 @@ const ExecutionControls = ({ canRun }: Props) => {
         )}
 
         {(status === "running" || status === "paused") ? null : <HistoryPopoverButton />}
+        {(recordExecution || isCurrentExecutionRecording) && (
+          <>
+          <div className='h-4 my-auto px-2 border-l border-border' />
+            <Tipped label='Ready To Record'>
+              <div className='h-full flex flex-row gap-2 pr-2'>
+                <SystemIcons.Film className='size-4 text-secondary-foreground my-auto' />
+                {/* <p className='text-sm font-medium text-muted-foreground my-auto h-auto'>Ready</p> */}
+                <div className={`content-[""] my-auto w-2 h-2  rounded-full animate-pulse ${isCurrentExecutionRecording ? 'bg-red-500' : 'bg-gray-500'}`}/>
+              </div>
+            </Tipped>
+          </>
+        )}
       </motion.div>
     </AnimatePresence>
   )
@@ -129,17 +196,17 @@ export default ExecutionControls
 
 const HistoryPopoverButton = () => {
   return (
-    <Tipped label="Show Execution History">
-      <Popover.Root>
+    <Popover.Root>
+        <Tipped label="Show Execution History">
         <Popover.Trigger asChild>
           <Button size="icon-sm" variant="ghost">
             <SystemIcons.History className='scale-80' />
           </Button>
         </Popover.Trigger>
+    </Tipped>
         <Popover.Content sideOffset={14} className='px-0 pb-0 rounded-xl overflow-hidden'>
           <ExecutionHistoryPanel />
         </Popover.Content>
       </Popover.Root>
-    </Tipped>
   )
 }

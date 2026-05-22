@@ -18,6 +18,7 @@ import { Workflow } from '@pretzel-graph/shared/domain'
 import { BottomPanel } from './-panels/BottomPanel'
 import { PathPanel } from './-panels/PathPanel'
 import { TopRightPanel } from './-panels/TopRightPanel'
+import BottomLeftPanel from './-panels/BottomLeftPanel'
 
 
 export const Route = createFileRoute('/workflow/$workflowid')({
@@ -103,6 +104,7 @@ function WorkflowLayoutComponent() {
             <TopRightPanel />
             <SpotlightSearch />
             <StackSDK.UIOverlay />
+            <BottomLeftPanel />
         </div>
     )
 }

@@ -1,10 +1,15 @@
-import type { Execution } from "@pretzel-graph/shared/domain";
+import type { Execution, Recording } from "@pretzel-graph/shared/domain";
 import type { ExecutionSDKImpl } from "./sdk";
 import { toast } from "sonner";
 
-export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event) => {
+export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event | Recording.Event) => {
     console.log("Execution Session Event Received:", e.type)
     switch (e.type) {
+
+
+        // Lifecycle events
+
+
         case "started":
             sdk.setState(s => {
                 sdk.reducers.setStatus(s, "running");
@@ -16,7 +21,8 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event)
                 sdk.reducers.setStatus(s, "completed");
             })
             sdk.actions.removeAwaitedConfirmation("started");
-            sdk.runtime.unsubscribeFromEvents?.();
+            if (!sdk.state.isCurrentExecutionRecording)
+                sdk.runtime.unsubscribeFromEvents?.();
             break;
         case "failed":
             sdk.setState(s => {
@@ -33,7 +39,8 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event)
                 sdk.reducers.setStatus(s, "terminated");
             })
             sdk.actions.removeAwaitedConfirmation("terminated");
-            sdk.runtime.unsubscribeFromEvents?.();
+            if (!sdk.state.isCurrentExecutionRecording)
+                sdk.runtime.unsubscribeFromEvents?.();
             break;
         case "paused":
             sdk.setState(s => {
@@ -79,8 +86,38 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event)
                 sdk.reducers.applySessionUpdate(s, e.sessionUpdate);
             })
             break;
+
+        
+        // Recording related events
+
+
+        case "unit:started":
+            sdk.setState(s => {
+                sdk.reducers.recordingViewer.currentRecording.patchUnitStarted(s, e.unit)
+            })
+            break;
+        case "unit:completed":
+            sdk.setState(s => {
+                sdk.reducers.recordingViewer.currentRecording.patchUnitCompleted(s, e)
+            })
+            break;
+        case "unit:failed":
+            sdk.setState(s => {
+                sdk.reducers.recordingViewer.currentRecording.patchUnitFailed(s, e)
+            })
+            break;
+        case "relation:createBatch":
+            sdk.setState(s => {
+                sdk.reducers.recordingViewer.currentRecording.patchRelationCreateBatch(s, e)
+            })
+            break;
+        case "recording:fullyUploaded":
+            sdk.actions.recordingViewer.loadLiveRecording(e.executionId)
+            sdk.runtime.unsubscribeFromEvents?.();
+            break;
+        case "recording:completed":
+            break;
         default:
-            // @ts-expect-error
             toast.error(`Received unknown event: ${e.type}`)
     }
 }

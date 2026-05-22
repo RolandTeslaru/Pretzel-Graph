@@ -8,7 +8,7 @@ class RecordingMethods {
 
     @SupabaseAssert('recording.upsert')
     async upsert(supabase: SupabaseClient, recording: Recording, userId: Auth.User.Id): Promise<void> {
-        const { workflowDataSnapshot, tracks, units, relations, dataBank } = recording;
+        const { tracks, units, relations, dataBank } = recording;
         await supabase
             .from('execution_recordings')
             .upsert({
@@ -16,7 +16,7 @@ class RecordingMethods {
                 execution_id: recording.executionId,
                 workflow_id:  recording.workflowId,
                 user_id:      userId,
-                data:         { workflowDataSnapshot, tracks, units, relations, dataBank },
+                data:         { tracks, units, relations, dataBank },
                 created_at:   recording.createdAt,
             }, { onConflict: 'execution_id' })
             .throwOnError();

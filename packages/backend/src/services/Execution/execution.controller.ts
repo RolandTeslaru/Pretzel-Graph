@@ -180,4 +180,14 @@ export class ExecutionController {
     ) {
         return this.executionService.recording.listByWorkflow(req.token, body);
     }
+
+    @Post('recording/get-live')
+    @UseGuards(SupabaseAuthGuard)
+    @HttpCode(200)
+    async recordingGetLive(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Recording.API.GetLive.Request) body: Recording.API.GetLive.Request,
+    ) {
+        return this.executionService.recording.getLive(req.token, req.user.id as Auth.User.Id, body);
+    }
 }
