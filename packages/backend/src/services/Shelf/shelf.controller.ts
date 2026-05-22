@@ -1,7 +1,8 @@
-import { Controller, Post, Body, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
 import { ShelfService } from './shelf.service';
 import { Shelf } from '@pretzel-graph/shared/domain';
 import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
+import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('shelf')
 @UseGuards(SupabaseAuthGuard)
@@ -11,38 +12,32 @@ export class ShelfController {
     @Post('blueprint/get')
     @HttpCode(200)
     getBlueprint(
-        @Body() body: Shelf.API.Blueprint.Get.Request
+        @ZodBody(Shelf.API.Blueprint.Get.Request) body: Shelf.API.Blueprint.Get.Request,
     ) {
-        const payload = Shelf.API.Blueprint.Get.Request.parse(body);
-        return this.shelfService.getBlueprint(payload);
+        return this.shelfService.getBlueprint(body);
     }
-
 
     @Post('blueprint/getBatch')
     @HttpCode(200)
     getBatchBlueprints(
-        @Body() body: Shelf.API.Blueprint.GetBatch.Request
+        @ZodBody(Shelf.API.Blueprint.GetBatch.Request) body: Shelf.API.Blueprint.GetBatch.Request,
     ) {
-        const payload = Shelf.API.Blueprint.GetBatch.Request.parse(body);
-        return this.shelfService.getBatchBlueprints(payload);
+        return this.shelfService.getBatchBlueprints(body);
     }
-
 
     @Post('blueprint/getAllInSection')
     @HttpCode(200)
     getAllInSection(
-        @Body() body: Shelf.API.Blueprint.GetAllInSection.Request
+        @ZodBody(Shelf.API.Blueprint.GetAllInSection.Request) body: Shelf.API.Blueprint.GetAllInSection.Request,
     ) {
-        const payload = Shelf.API.Blueprint.GetAllInSection.Request.parse(body);
-        return this.shelfService.getAllInSection(payload);
+        return this.shelfService.getAllInSection(body);
     }
 
     @Post('blueprint/reconcile')
     @HttpCode(200)
     async reconcileBlueprint(
-        @Body() body: Shelf.API.Blueprint.Reconcile.Request
+        @ZodBody(Shelf.API.Blueprint.Reconcile.Request) body: Shelf.API.Blueprint.Reconcile.Request,
     ) {
-        const payload = Shelf.API.Blueprint.Reconcile.Request.parse(body);
-        return await this.shelfService.reconcileBlueprint(payload);
+        return await this.shelfService.reconcileBlueprint(body);
     }
 }
