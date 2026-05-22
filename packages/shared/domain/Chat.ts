@@ -3,6 +3,7 @@ import { Workflow } from "./Workflow"
 import { type AxiosInstance } from "axios"
 import { type SupabaseClient } from "@supabase/supabase-js";
 import { Realtime } from "./Realtime";
+import { supabaseTimestamp } from "./zod-utils";
 import { SystemError } from "./SystemError";
 import { Auth } from "./Auth";
 
@@ -30,7 +31,7 @@ export namespace Chat {
             mime_type: z.string(),
             size_bytes: z.number(),
             storage_path: z.string(),
-            uploaded_at: z.iso.datetime({ offset: true })
+            uploaded_at: supabaseTimestamp
         })
     }
     export type Attachment = z.infer<typeof Attachment.Schema>
@@ -63,8 +64,8 @@ export namespace Chat {
             id:          Message.Id,
             content:     z.string(),
             chat_id:     Chat.Id,
-            created_at:  z.iso.datetime({ offset: true }),
-            updated_at:  z.iso.datetime({ offset: true }),
+            created_at:  supabaseTimestamp,
+            updated_at:  supabaseTimestamp,
             attachments: z.record(Attachment.Id, Attachment.Schema).optional(),
         })
 
@@ -119,8 +120,8 @@ export namespace Chat {
         id: Chat.Id,
         name: z.string(),
         workflow_id: Workflow.Id,
-        created_at: z.iso.datetime({ offset: true }),
-        updated_at: z.iso.datetime({ offset: true }),
+        created_at: supabaseTimestamp,
+        updated_at: supabaseTimestamp,
     })
 
     export namespace Event {
