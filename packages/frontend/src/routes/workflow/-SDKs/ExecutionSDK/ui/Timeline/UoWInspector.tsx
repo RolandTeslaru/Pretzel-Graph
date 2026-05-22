@@ -1,20 +1,24 @@
 import React from "react"
-import type { Recording } from "@pretzel-graph/shared/domain"
+import type { Recording, Workflow } from "@pretzel-graph/shared/domain"
 import { ExecutionSDK } from "../../sdk"
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
 import { Button } from "@pretzel-graph/standard-ui/foundations"
 import { Separator } from "@pretzel-graph/standard-ui/foundations/separator"
 
-const UoWInspector = () => {
-    const recording    = ExecutionSDK.useStore(s => s.currentRecording)
-    const selectedUoW  = ExecutionSDK.useStore(s => s.selectedUoW)
+interface UoWInspectorProps {
+    nodes: Record<Workflow.Node.Id, Workflow.Node>
+}
+
+const UoWInspector = ({ nodes }: UoWInspectorProps) => {
+    const recording    = ExecutionSDK.useStore(s => s.recordingViewer.currentRecording)
+    const selectedUoW  = ExecutionSDK.useStore(s => s.recordingViewer.selectedUoW)
 
     if (!recording || !selectedUoW) return null
 
     const unit = recording.units[selectedUoW]
     if (!unit) return null
 
-    const node = recording.workflowDataSnapshot.nodes[unit.trackId]
+    const node = nodes[unit.trackId]
     const inputPorts  = node?.inputs  ?? []
     const outputPorts = node?.outputs ?? []
 
@@ -30,7 +34,7 @@ const UoWInspector = () => {
                 <Button
                     size="icon-xs"
                     variant="ghost"
-                    onClick={() => ExecutionSDK.actions.selectUoW(null)}
+                    onClick={() => ExecutionSDK.actions.recordingViewer.selectUoW(null)}
                 >
                     <SystemIcons.X className="size-3" />
                 </Button>

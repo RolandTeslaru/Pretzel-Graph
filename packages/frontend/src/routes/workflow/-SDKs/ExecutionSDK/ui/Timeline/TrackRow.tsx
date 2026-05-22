@@ -1,17 +1,18 @@
 import React from "react"
-import type { Recording } from "@pretzel-graph/shared/domain"
+import type { Recording, Workflow } from "@pretzel-graph/shared/domain"
 import { TRACK_HEIGHT } from "./constants"
 import UoWBlock from "./UoWBlock"
 
 interface TrackRowProps {
     track: Recording.Track
     recording: Recording
+    nodes: Record<Workflow.Node.Id, Workflow.Node>
     zoom: number
     top: number
 }
 
-const TrackRow = ({ track, recording, zoom, top }: TrackRowProps) => {
-    const node = recording.workflowDataSnapshot.nodes[track.id]
+const TrackRow = ({ track, recording, nodes, zoom, top }: TrackRowProps) => {
+    const node = nodes[track.id]
     const accent = node?.accent ?? undefined
 
     return (

@@ -21,11 +21,16 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
             currentExecution: undefined,
             executionHistory: [],
             awaitedConfirmation: new Set(),
-            currentRecording: null,
-            zoom: 0.2,
-            selectedUoW: null,
-            showRemnants: true,
+            recordingViewer: {
+                currentRecording: null,
+                zoom: 0.2,
+                selectedUoW: null,
+                showRemnants: true,
+            },
+            selectedIgniter: "workbench_manual",
             selectors: executionSDKSelectors,
+            recordExecution: false,
+            isCurrentExecutionRecording: false,
         })),
         shallow
     )
@@ -58,7 +63,7 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         )
     }
 
-    public handleOnEvent = (e: Execution.Event) => { handleExecutionEvents(this, e) }
+    public handleOnEvent = (e: Execution.Event | Recording.Event) => { handleExecutionEvents(this, e) }
 }
 
 export const ExecutionSDK = SDK.get<ExecutionSDKImpl>("Execution")
@@ -127,15 +132,22 @@ ExecutionSDK.subscribe((state, prev) => {
 export namespace ExecutionSDK {
     export type AwaitedConfirmation = "started" | "paused" | "resumed" | "terminated" | "suspended" | "executed"
 
-    export type State = {
-        currentExecution?: Execution
-        executionHistory: Execution.Meta[]
-        awaitedConfirmation: Set<AwaitedConfirmation>
+    export type RecordingViewer = {
         currentRecording: Recording | null
         zoom: number
         selectedUoW: Recording.UnitOfWork.Id | null
         showRemnants: boolean
+    }
+
+    export type State = {
+        currentExecution?: Execution
+        executionHistory: Execution.Meta[]
+        awaitedConfirmation: Set<AwaitedConfirmation>
+        recordingViewer: RecordingViewer
         selectors: ExecutionSDKSelectors
+        selectedIgniter: Execution.Igniter["variant"],
+        recordExecution: boolean
+        isCurrentExecutionRecording: boolean
     }
 
     export type Reducers = _ExecutionSessionReducers

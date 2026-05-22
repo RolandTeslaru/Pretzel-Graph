@@ -13,7 +13,7 @@ export const executionSDKSelectors = {
         return Array.isArray(projection) ? projection.length : undefined
     },
     getOrderedTracks: (s) => {
-        const rec = s.currentRecording;
+        const rec = s.recordingViewer.currentRecording;
         if (!rec) return [];
         return Object.values(rec.tracks)
             .filter(t => t.unitIds.length > 0)
@@ -24,7 +24,7 @@ export const executionSDKSelectors = {
             });
     },
     getTotalDuration: (s) => {
-        const rec = s.currentRecording;
+        const rec = s.recordingViewer.currentRecording;
         if (!rec) return 0;
         const units = Object.values(rec.units);
         if (units.length === 0) return 0;

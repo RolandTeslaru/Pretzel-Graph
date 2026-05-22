@@ -68,22 +68,26 @@ export namespace Execution {
 
     export namespace Igniter {
 
-        export const WorkbenchManual = z.object({
+        export const Base = z.object({
+            record: z.boolean().default(false),
+        })
+
+        export const WorkbenchManual = Base.extend({
             variant: z.literal("workbench_manual"),
         })
 
-        export const SubWorkflow = z.object({
+        export const SubWorkflow = Base.extend({
             variant: z.literal("sub_workflow"),
             parentNodeId: Workflow.Node.Id,
             subWorkflowPath: z.array(Workflow.Id),
         })
 
-        export const ChatMessage = z.object({
+        export const ChatMessage = Base.extend({
             variant: z.literal("chat_message"),
             message: Chat.Message.Schema,
         })
 
-        export const Webhook = z.object({
+        export const Webhook = Base.extend({
             variant: z.literal("webhook"),
             nodeId: Workflow.Node.Id,
             payload: z.object({
@@ -95,14 +99,14 @@ export namespace Execution {
             }),
         })
 
-        export const Scheduled = z.object({
+        export const Scheduled = Base.extend({
             variant: z.literal("scheduled"),
             scheduleId:  z.string().optional(),
             scheduledAt: supabaseTimestamp,
         })
 
         // Added by the api-keys spec.
-        export const Sdk = z.object({
+        export const Sdk = Base.extend({
             variant: z.literal("sdk"),
             inputs: z.record(z.string(), z.unknown()).optional(),
         })
@@ -141,9 +145,9 @@ export namespace Execution {
         igniter:     Igniter.Schema,
         status:      Status,
         duration:    z.number(),
-        error:       SystemError.Schema.optional(),
+        error:       SystemError.Schema.nullish(),
         session:     Session.Schema,     // embedded; no separate id
-        chat_id:     Chat.Id.optional(), // if applicable
+        chat_id:     Chat.Id.nullish(), // if applicable
         created_at:  supabaseTimestamp,
         updated_at:  supabaseTimestamp,
     })
@@ -278,7 +282,7 @@ export namespace Execution {
                 workflowId:   Workflow.Id,
                 workflowData: Workflow.Data.Schema,
                 executionId:  Execution.Id.optional(),
-                igniter:      Igniter.Schema.optional(),
+                igniter:      Igniter.Schema,
                 chat_id:      Chat.Id.optional(),
             })
             export type Request = z.infer<typeof Request>
@@ -288,6 +292,7 @@ export namespace Execution {
 
             export const Response = z.object({
                 execution: Execution.Schema,
+                isRecording: z.boolean(),
             })
             export type Response = z.infer<typeof Response>
         }

@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useRef } from "react"
 import { ExecutionSDK } from "../../sdk"
+import { WorkbenchSDK } from "../../../WorkbenchSDK/sdk"
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
 import { Button } from "@pretzel-graph/standard-ui/foundations"
 import TimeRuler from "./TimeRuler"
@@ -12,9 +13,9 @@ import { RULER_H, TRACK_HEIGHT, TRACK_LABEL_W } from "./constants"
 const ZOOM_STEP = 1.4
 
 const TimelineViewer = () => {
-    const recording     = ExecutionSDK.useStore(s => s.currentRecording)
-    const zoom          = ExecutionSDK.useStore(s => s.zoom)
-    const showRemnants  = ExecutionSDK.useStore(s => s.showRemnants)
+    const recording     = ExecutionSDK.useStore(s => s.recordingViewer.currentRecording)
+    const zoom          = ExecutionSDK.useStore(s => s.recordingViewer.zoom)
+    const showRemnants  = ExecutionSDK.useStore(s => s.recordingViewer.showRemnants)
     const orderedTracks = ExecutionSDK.useStore(s => s.selectors.getOrderedTracks(s))
     const totalDuration = ExecutionSDK.useStore(s => s.selectors.getTotalDuration(s))
 
@@ -29,6 +30,8 @@ const TimelineViewer = () => {
         if (labelsRef.current) labelsRef.current.scrollTop  = sc.scrollTop
     }, [])
 
+    const workbenchNodes = WorkbenchSDK.useStore(s => s.data.nodes)
+
     const totalWidth  = Math.max(totalDuration * zoom + 80, 400)
     const totalHeight = orderedTracks.length * TRACK_HEIGHT
 
@@ -36,6 +39,8 @@ const TimelineViewer = () => {
         () => new Map(orderedTracks.map((t, i) => [t.id, i])),
         [orderedTracks]
     )
+
+    const nodes = recording?.workflowDataSnapshot?.nodes ?? workbenchNodes
 
     if (!recording) {
         return (
@@ -61,7 +66,7 @@ const TimelineViewer = () => {
                     <Button
                         size="icon-xs"
                         variant="ghost"
-                        onClick={() => ExecutionSDK.actions.setZoom(zoom / ZOOM_STEP)}
+                        onClick={() => ExecutionSDK.actions.recordingViewer.setZoom(zoom / ZOOM_STEP)}
                         title="Zoom out"
                     >
                         <SystemIcons.Minus className="size-3" />
@@ -69,7 +74,7 @@ const TimelineViewer = () => {
                     <Button
                         size="icon-xs"
                         variant="ghost"
-                        onClick={() => ExecutionSDK.actions.setZoom(zoom * ZOOM_STEP)}
+                        onClick={() => ExecutionSDK.actions.recordingViewer.setZoom(zoom * ZOOM_STEP)}
                         title="Zoom in"
                     >
                         <SystemIcons.Plus className="size-3" />
@@ -77,7 +82,7 @@ const TimelineViewer = () => {
                     <Button
                         size="icon-xs"
                         variant={showRemnants ? "secondary" : "ghost"}
-                        onClick={() => ExecutionSDK.actions.toggleRemnants()}
+                        onClick={() => ExecutionSDK.actions.recordingViewer.toggleRemnants()}
                         title={showRemnants ? "Hide data remnants" : "Show data remnants"}
                         className="ml-auto"
                     >
@@ -104,7 +109,7 @@ const TimelineViewer = () => {
                     style={{ overflowY: "hidden" }}
                     className="border-r border-border bg-background"
                 >
-                    <TrackColumn tracks={orderedTracks} recording={recording} />
+                    <TrackColumn tracks={orderedTracks} nodes={nodes} />
                 </div>
 
                 {/* Scrollable track canvas */}
@@ -120,12 +125,14 @@ const TimelineViewer = () => {
                                 key={track.id}
                                 track={track}
                                 recording={recording}
+                                nodes={nodes}
                                 zoom={zoom}
                                 top={i * TRACK_HEIGHT}
                             />
                         ))}
                         <RelationLayer
                             recording={recording}
+                            nodes={nodes}
                             zoom={zoom}
                             trackIndexMap={trackIndexMap}
                             showRemnants={showRemnants}
@@ -137,7 +144,7 @@ const TimelineViewer = () => {
             </div>
 
             {/* Inspector side panel */}
-            <UoWInspector />
+            <UoWInspector nodes={nodes} />
         </div>
     )
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue, QueueEvents } from 'bullmq';
+import Redis from 'ioredis';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { createAuthenticatedClient, createServiceClient } from '@/utils/supabase';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
@@ -20,6 +21,8 @@ export class ExecutionService {
     private readonly queueEvents = new QueueEvents(Execution.Queue.ID, {
         connection: { host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null }
     });
+
+    private readonly redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 
     private readonly serviceSupabase = createServiceClient();
 
@@ -52,8 +55,7 @@ export class ExecutionService {
     ): Promise<Execution.API.Run.Response> {
         const supabase = createAuthenticatedClient(token);
         const ownerId = await this.ownership.assertWorkflow(supabase, payload.workflowId, userId);
-        const igniter = payload.igniter ?? { variant: 'workbench_manual' } as Execution.Igniter;
-        return this.runCore(supabase, ownerId, payload, igniter);
+        return this.runCore(supabase, ownerId, payload, payload.igniter);
     }
 
 
@@ -67,7 +69,7 @@ export class ExecutionService {
 
         const ownerId = await this.ownership.loadWorkflowOwner(payload.workflowId);
 
-        return this.runCore(this.serviceSupabase, ownerId, payload, payload.igniter ?? { variant: 'workbench_manual' });
+        return this.runCore(this.serviceSupabase, ownerId, payload, payload.igniter);
     }
 
     public async runFromSdk(
@@ -75,9 +77,9 @@ export class ExecutionService {
         payload: Execution.API.SdkRun.Request,
     ): Promise<Execution.API.SdkRun.Response> {
         const workflowData = await this.database.getActivePublishedWorkflowData(this.serviceSupabase, payload.workflowId);
-        const igniter: Execution.Igniter = { variant: 'sdk', inputs: payload.inputs };
+        const igniter: Execution.Igniter = { variant: 'sdk', record: false, inputs: payload.inputs };
 
-        const runPayload: Execution.API.Run.Request = { workflowId: payload.workflowId, workflowData };
+        const runPayload: Execution.API.Run.Request = { workflowId: payload.workflowId, workflowData, igniter };
         const result = await this.runCore(this.serviceSupabase, userId, runPayload, igniter);
 
         if (payload.await) return result;
@@ -175,7 +177,8 @@ export class ExecutionService {
                 session,
                 created_at: now,
                 updated_at: now,
-            }
+            },
+            isRecording: payload.igniter.record ?? false,
         };
     }
 
@@ -416,6 +419,20 @@ export class ExecutionService {
             const supabase = createAuthenticatedClient(token);
             const recordings = await this.database.recording.listByWorkflow(supabase, payload.workflowId);
             return { recordings };
+        },
+
+        getLive: async (
+            token:   Token.UserSupabaseJWT,
+            userId:  Auth.User.Id,
+            payload: Recording.API.GetLive.Request,
+        ): Promise<Recording.API.GetLive.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            await this.ownership.assertExecution(supabase, payload.executionId, userId);
+            const key = Execution.Event.getChannel(payload.executionId);
+            const raw = await this.redis.get(key);
+            if (!raw) throw new SystemError(SystemError.Code.NOT_FOUND, 'Live recording not found or expired');
+            const recording = Recording.Schema.parse(JSON.parse(raw));
+            return { recording };
         },
 
     };
