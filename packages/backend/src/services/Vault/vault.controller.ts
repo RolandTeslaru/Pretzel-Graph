@@ -2,6 +2,7 @@ import { Controller, Get, Post, Delete, Patch, Body, Param, UseGuards, Req, Http
 import { VaultService } from './vault.service';
 import { Vault } from '@pretzel-graph/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
+import { ZodBody, ZodStringBody } from '../../pipes/zod.pipe';
 
 @Controller('vault')
 @UseGuards(SupabaseAuthGuard)
@@ -17,7 +18,7 @@ export class VaultController {
     @HttpCode(200)
     async create(
         @Req() req: AuthenticatedRequest,
-        @Body() body: Vault.API.CredentialInstance.Create.Request,
+        @ZodBody(Vault.API.CredentialInstance.Create.Request) body: Vault.API.CredentialInstance.Create.Request,
     ): Promise<Vault.API.CredentialInstance.Create.Response> {
         return this.vaultService.credentialInstance.create(req.token, body);
     }
@@ -43,7 +44,7 @@ export class VaultController {
     async updateName(
         @Req() req: AuthenticatedRequest,
         @Param('id') id: Vault.Credential.Instance.Id,
-        @Body('name') name: string,
+        @ZodStringBody('name') name: string,
     ): Promise<Vault.API.CredentialInstance.UpdateName.Response> {
         return this.vaultService.credentialInstance.updateName(req.token, { id, name });
     }

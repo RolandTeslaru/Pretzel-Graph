@@ -1,5 +1,5 @@
 import { PipeTransform, Injectable, ArgumentMetadata, Body } from '@nestjs/common';
-import { ZodType } from 'zod';
+import { ZodType, z } from 'zod';
 
 @Injectable()
 export class ZodPipe<T> implements PipeTransform<unknown, T> {
@@ -11,3 +11,4 @@ export class ZodPipe<T> implements PipeTransform<unknown, T> {
 }
 
 export const ZodBody = <T>(schema: ZodType<T>) => Body(new ZodPipe(schema));
+export const ZodStringBody = (field: string) => Body(field, new ZodPipe(z.string()));
