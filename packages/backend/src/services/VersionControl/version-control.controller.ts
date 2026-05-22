@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Delete, Body, Param, UseGuards, Req, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { VersionControl } from '@pretzel-graph/shared/domain';
 import { VersionControlService } from './version-control.service';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
+import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('version-control')
 @UseGuards(SupabaseAuthGuard)
@@ -12,10 +13,9 @@ export class VersionControlController {
     @HttpCode(200)
     async publish(
         @Req() req: AuthenticatedRequest,
-        @Body() body: VersionControl.API.Publish.Request,
+        @ZodBody(VersionControl.API.Publish.Request) body: VersionControl.API.Publish.Request,
     ) {
-        const payload = VersionControl.API.Publish.Request.parse(body);
-        return this.service.publish(req.token, payload);
+        return this.service.publish(req.token, body);
     }
 
     @Get('list/:workflowId')
@@ -28,9 +28,7 @@ export class VersionControlController {
     }
 
     @Get('active')
-    async listActiveWorkflows(
-        @Req() req: AuthenticatedRequest,
-    ) {
+    async listActiveWorkflows(@Req() req: AuthenticatedRequest) {
         return this.service.listActiveWorkflows(req.token);
     }
 

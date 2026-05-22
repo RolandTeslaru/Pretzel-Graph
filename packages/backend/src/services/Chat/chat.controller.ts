@@ -1,7 +1,8 @@
-import { Controller, Post, Body, UseGuards, Req, HttpCode } from '@nestjs/common';
+import { Controller, Post, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { Auth, Chat } from '@pretzel-graph/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
+import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('chat')
 @UseGuards(SupabaseAuthGuard)
@@ -13,10 +14,9 @@ export class ChatController {
     @HttpCode(200)
     async create(
         @Req() req: AuthenticatedRequest,
-        @Body() body: Chat.API.Create.Request
+        @ZodBody(Chat.API.Create.Request) body: Chat.API.Create.Request,
     ) {
-        const payload = Chat.API.Create.Request.parse(body);
-        return await this.chatService.create(req.token, req.user.id as Auth.User.Id, payload);
+        return await this.chatService.create(req.token, req.user.id as Auth.User.Id, body);
     }
 
 
@@ -24,10 +24,9 @@ export class ChatController {
     @HttpCode(200)
     async ensure(
         @Req() req: AuthenticatedRequest,
-        @Body() body: Chat.API.Ensure.Request
+        @ZodBody(Chat.API.Ensure.Request) body: Chat.API.Ensure.Request,
     ) {
-        const payload = Chat.API.Ensure.Request.parse(body);
-        return await this.chatService.ensure(req.token, req.user.id as Auth.User.Id, payload);
+        return await this.chatService.ensure(req.token, req.user.id as Auth.User.Id, body);
     }
 
 
@@ -35,18 +34,15 @@ export class ChatController {
     @HttpCode(200)
     async get(
         @Req() req: AuthenticatedRequest,
-        @Body() body: Chat.API.Get.Request
+        @ZodBody(Chat.API.Get.Request) body: Chat.API.Get.Request,
     ) {
-        const payload = Chat.API.Get.Request.parse(body);
-        return await this.chatService.get(req.token, req.user.id as Auth.User.Id, payload);
+        return await this.chatService.get(req.token, req.user.id as Auth.User.Id, body);
     }
 
 
     @Post('list')
     @HttpCode(200)
-    async list(
-        @Req() req: AuthenticatedRequest
-    ) {
+    async list(@Req() req: AuthenticatedRequest) {
         return await this.chatService.list(req.token, req.user.id as Auth.User.Id);
     }
 
@@ -55,10 +51,9 @@ export class ChatController {
     @HttpCode(200)
     async erase(
         @Req() req: AuthenticatedRequest,
-        @Body() body: Chat.API.Erase.Request
+        @ZodBody(Chat.API.Erase.Request) body: Chat.API.Erase.Request,
     ) {
-        const payload = Chat.API.Erase.Request.parse(body);
-        return await this.chatService.erase(req.token, req.user.id as Auth.User.Id, payload);
+        return await this.chatService.erase(req.token, req.user.id as Auth.User.Id, body);
     }
 
 
@@ -66,10 +61,9 @@ export class ChatController {
     @HttpCode(200)
     async addMessage(
         @Req() req: AuthenticatedRequest,
-        @Body() body: Chat.API.Message.Add.Request
+        @ZodBody(Chat.API.Message.Add.Request) body: Chat.API.Message.Add.Request,
     ) {
-        const payload = Chat.API.Message.Add.Request.parse(body);
-        return await this.chatService.message.add(req.token, payload);
+        return await this.chatService.message.add(req.token, body);
     }
 
 
@@ -77,10 +71,9 @@ export class ChatController {
     @HttpCode(200)
     async eraseMessage(
         @Req() req: AuthenticatedRequest,
-        @Body() body: Chat.API.Message.Erase.Request
+        @ZodBody(Chat.API.Message.Erase.Request) body: Chat.API.Message.Erase.Request,
     ) {
-        const payload = Chat.API.Message.Erase.Request.parse(body);
-        return await this.chatService.message.erase(req.token, payload);
+        return await this.chatService.message.erase(req.token, body);
     }
 
 
@@ -88,9 +81,8 @@ export class ChatController {
     @HttpCode(200)
     async updateMessage(
         @Req() req: AuthenticatedRequest,
-        @Body() body: Chat.API.Message.Update.Request
+        @ZodBody(Chat.API.Message.Update.Request) body: Chat.API.Message.Update.Request,
     ) {
-        const payload = Chat.API.Message.Update.Request.parse(body);
-        return await this.chatService.message.update(req.token, payload);
+        return await this.chatService.message.update(req.token, body);
     }
 }

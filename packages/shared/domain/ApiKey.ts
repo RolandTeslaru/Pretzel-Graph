@@ -16,10 +16,10 @@ export namespace ApiKey {
         user_id:      Auth.User.Id,
         name:         z.string(),
         prefix:       z.string(),
-        last_used_at: z.iso.datetime().nullable(),
-        expires_at:   z.iso.datetime().nullable(),
-        revoked_at:   z.iso.datetime().nullable(),
-        created_at:   z.iso.datetime(),
+        last_used_at: z.iso.datetime({ offset: true }).nullable(),
+        expires_at:   z.iso.datetime({ offset: true }).nullable(),
+        revoked_at:   z.iso.datetime({ offset: true }).nullable(),
+        created_at:   z.iso.datetime({ offset: true }),
     })
     export type Schema = z.infer<typeof Schema>
 

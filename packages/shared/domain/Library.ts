@@ -50,12 +50,12 @@ export namespace Library {
             export namespace Get {
                 export const Request = z.object({});
                 export type Request = z.infer<typeof Request>;
-                export const ResponseSchema = z.object({
+                export const Response = z.object({
                     projects: z.array(Library.Folder.Schema),
                     folders: z.array(Library.Folder.Schema),
                     workflow_metas: z.array(Library.WorkflowMeta.Schema),
                 });
-                export type Response = z.infer<typeof ResponseSchema>;
+                export type Response = z.infer<typeof Response>;
             }
 
             export async function get(
@@ -93,8 +93,8 @@ export namespace Library {
             export namespace List {
                 export const Request = z.object({});
                 export type Request = z.infer<typeof Request>;
-                export const ResponseSchema = z.array(Library.Folder.Schema);
-                export type Response = z.infer<typeof ResponseSchema>;
+                export const Response = z.array(Library.Folder.Schema);
+                export type Response = z.infer<typeof Response>;
             }
 
             export async function create(
@@ -127,7 +127,8 @@ export namespace Library {
             export namespace Remove {
                 export const Request = z.object({ id: Library.Folder.Id });
                 export type Request = z.infer<typeof Request>;
-                export type Response = { ok: true };
+                export const Response = z.object({ ok: z.literal(true) });
+                export type Response = z.infer<typeof Response>;
             }
             export async function remove(
                 api: AxiosInstance,

@@ -1,5 +1,6 @@
 import { SystemError } from "../domain/SystemError";
 import { DatabaseError } from "../domain/SystemError";
+import { ZodType } from "zod";
 
 /**
  * Wraps an async function so that any error thrown (including from .throwOnError())
@@ -22,5 +23,15 @@ export function withSupabaseAssert<TArgs extends any[], TReturn>(
                 { detail: `[${operation}] ${detail}`, data: { operation } }
             );
         }
+    };
+}
+
+export function withZodReturn<TArgs extends any[], TReturn>(
+    schema: ZodType<TReturn>,
+    fn: (...args: TArgs) => Promise<TReturn>
+): (...args: TArgs) => Promise<TReturn> {
+    return async (...args: TArgs) => {
+        const result = await fn(...args);
+        return schema.parse(result);
     };
 }

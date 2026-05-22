@@ -114,7 +114,7 @@ export namespace Recording {
         id:          Id,
         executionId: Execution.Id,
         workflowId:  Workflow.Id,
-        createdAt:   z.iso.datetime(),
+        createdAt:   z.iso.datetime({ offset: true }),
     })
     export type Meta = z.infer<typeof Meta>
 
@@ -139,7 +139,7 @@ export namespace Recording {
                 execution_id: Execution.Id,
                 workflow_id:  Workflow.Id,
                 user_id:      Auth.User.Id,
-                created_at:   z.iso.datetime(),
+                created_at:   z.iso.datetime({ offset: true }),
                 data:         z.object({
                     workflowDataSnapshot: Workflow.Data.Schema,
                     tracks:    z.record(Track.Id,      Track.Schema     ).default({}),
