@@ -1,6 +1,7 @@
 import React from "react"
 import type { Recording, Workflow } from "@pretzel-graph/shared/domain"
 import { ExecutionSDK } from "../../sdk"
+import { useTimelineViewerStore, timelineViewerActions } from "../../timeline-viewer-store"
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
 import { Button } from "@pretzel-graph/standard-ui/foundations"
 import { Separator } from "@pretzel-graph/standard-ui/foundations/separator"
@@ -10,8 +11,8 @@ interface UoWInspectorProps {
 }
 
 const UoWInspector = ({ nodes }: UoWInspectorProps) => {
-    const recording    = ExecutionSDK.useStore(s => s.recordingViewer.currentRecording)
-    const selectedUoW  = ExecutionSDK.useStore(s => s.recordingViewer.selectedUoW)
+    const recording    = ExecutionSDK.useStore(s => s.currentRecording)
+    const selectedUoW  = useTimelineViewerStore(s => s.selectedUoW)
 
     if (!recording || !selectedUoW) return null
 
@@ -34,7 +35,7 @@ const UoWInspector = ({ nodes }: UoWInspectorProps) => {
                 <Button
                     size="icon-xs"
                     variant="ghost"
-                    onClick={() => ExecutionSDK.actions.recordingViewer.selectUoW(null)}
+                    onClick={() => timelineViewerActions.selectUoW(null)}
                 >
                     <SystemIcons.X className="size-3" />
                 </Button>

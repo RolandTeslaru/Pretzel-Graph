@@ -2,11 +2,12 @@ import React from "react"
 import { cn } from "@/utils/styleUtils"
 import type { Recording } from "@pretzel-graph/shared/domain"
 import { MIN_BLOCK_W, RUNNING_BLOCK_W, TRACK_HEIGHT } from "./constants"
-import { ExecutionSDK } from "../../sdk"
+import { useTimelineViewerStore, timelineViewerActions } from "../../timeline-viewer-store"
+import type { TimeScale } from "./time-scale"
 
 interface UoWBlockProps {
     unit: Recording.UnitOfWork
-    zoom: number
+    scale: TimeScale
     accent?: string
 }
 
@@ -16,15 +17,18 @@ const STATUS_CLASSES: Record<Recording.UnitOfWork.Status, string> = {
     failed:    "opacity-90",
 }
 
-const UoWBlock = ({ unit, zoom, accent }: UoWBlockProps) => {
-    const selectedUoW = ExecutionSDK.useStore(s => s.recordingViewer.selectedUoW)
+const UoWBlock = ({ unit, scale, accent }: UoWBlockProps) => {
+    const selectedUoW = useTimelineViewerStore(s => s.selectedUoW)
     const isSelected = selectedUoW === unit.id
 
-    const x = unit.startedAt * zoom
-    const rawW = (unit.duration ?? 0) * zoom
+    const x = scale.xFor(unit.startedAt)
+    const rawW = scale.widthFor(unit.startedAt, unit.duration ?? 0)
     const w = unit.status === "running" ? RUNNING_BLOCK_W : Math.max(rawW, MIN_BLOCK_W)
 
-    const baseColor = accent ?? "var(--primary)"
+    const backgroundColor = `color-mix(in srgb, var(--${accent}) 40%, var(--node-accent-base))`;
+    const borderColor =  `color-mix(in srgb, var(--${accent}) 50%, var(--border))`;
+
+    const baseColor = `var(--${accent ?? "primary"})`
     const failColor = "var(--destructive)"
     const bgColor = unit.status === "failed" ? failColor : baseColor
 
@@ -32,20 +36,21 @@ const UoWBlock = ({ unit, zoom, accent }: UoWBlockProps) => {
         <div
             role="button"
             tabIndex={0}
-            onClick={() => ExecutionSDK.actions.recordingViewer.selectUoW(isSelected ? null : unit.id)}
-            onKeyDown={e => e.key === "Enter" && ExecutionSDK.actions.recordingViewer.selectUoW(isSelected ? null : unit.id)}
+            onClick={() => timelineViewerActions.selectUoW(isSelected ? null : unit.id)}
+            onKeyDown={e => e.key === "Enter" && timelineViewerActions.selectUoW(isSelected ? null : unit.id)}
             style={{
                 position: "absolute",
                 left: x,
-                top: 6,
+                top: 3,
                 width: w,
-                height: TRACK_HEIGHT - 12,
-                backgroundColor: bgColor,
+                height: TRACK_HEIGHT - 6,
+                backgroundColor,
+                border: `1px solid ${borderColor}`,
                 outline: isSelected ? `2px solid ${bgColor}` : undefined,
                 outlineOffset: isSelected ? 2 : undefined,
             }}
             className={cn(
-                "rounded cursor-pointer transition-opacity",
+                "rounded-xs cursor-pointer transition-opacity",
                 STATUS_CLASSES[unit.status],
             )}
             title={`${unit.id} · ${unit.status}${unit.duration != null ? ` · ${unit.duration}ms` : ""}`}

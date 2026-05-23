@@ -21,12 +21,7 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
             currentExecution: undefined,
             executionHistory: [],
             awaitedConfirmation: new Set(),
-            recordingViewer: {
-                currentRecording: null,
-                zoom: 0.2,
-                selectedUoW: null,
-                showRemnants: true,
-            },
+            currentRecording: null,
             selectedIgniter: "workbench_manual",
             selectors: executionSDKSelectors,
             recordExecution: false,
@@ -132,18 +127,11 @@ ExecutionSDK.subscribe((state, prev) => {
 export namespace ExecutionSDK {
     export type AwaitedConfirmation = "started" | "paused" | "resumed" | "terminated" | "suspended" | "executed"
 
-    export type RecordingViewer = {
-        currentRecording: Recording | null
-        zoom: number
-        selectedUoW: Recording.UnitOfWork.Id | null
-        showRemnants: boolean
-    }
-
     export type State = {
         currentExecution?: Execution
         executionHistory: Execution.Meta[]
         awaitedConfirmation: Set<AwaitedConfirmation>
-        recordingViewer: RecordingViewer
+        currentRecording: Recording | null
         selectors: ExecutionSDKSelectors
         selectedIgniter: Execution.Igniter["variant"],
         recordExecution: boolean
