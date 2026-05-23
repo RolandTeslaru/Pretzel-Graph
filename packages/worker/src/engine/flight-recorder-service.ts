@@ -25,7 +25,7 @@ export class FlightRecorderService {
             id:                   Recording.createId(executionId),
             executionId,
             workflowId,
-            // workflowDataSnapshot: workflowData,
+            workflowDataSnapshot: workflowData,
             createdAt:            new Date().toISOString(),
             units:                {},
             relations:            {},

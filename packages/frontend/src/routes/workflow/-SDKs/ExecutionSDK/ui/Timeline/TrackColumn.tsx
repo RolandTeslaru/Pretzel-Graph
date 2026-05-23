@@ -1,6 +1,7 @@
 import React from "react"
 import type { Recording, Workflow } from "@pretzel-graph/shared/domain"
 import { TRACK_HEIGHT } from "./constants"
+import { LazyIcon } from "@pretzel-graph/standard-ui/icons/LazyIcon"
 
 interface TrackColumnProps {
     tracks: Recording.Track[]
@@ -19,15 +20,14 @@ const TrackColumn = ({ tracks, nodes }: TrackColumnProps) => {
                     <div
                         key={track.id}
                         style={{ height: TRACK_HEIGHT }}
-                        className="flex items-center gap-2 px-3 border-b border-border/50"
+                        className="flex items-center gap-2 border-b border-border/20"
                     >
-                        {accent && (
-                            <div
-                                className="size-2 rounded-full shrink-0"
-                                style={{ backgroundColor: accent }}
+                        <LazyIcon
+                            className={`w-3 h-3`}
+                            name={node.icon as string}
+                            style={{ color: `var(--${node.accent}-foreground)` }}
                             />
-                        )}
-                        <span className="text-xs text-foreground truncate leading-none">
+                        <span className="text-[10px] text-foreground font-medium  ml-auto truncate leading-none">
                             {label}
                         </span>
                     </div>

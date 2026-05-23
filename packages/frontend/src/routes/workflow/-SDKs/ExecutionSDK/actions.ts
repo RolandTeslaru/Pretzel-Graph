@@ -144,32 +144,21 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 s.awaitedConfirmation.delete(event)
             })
         },
-        recordingViewer: {
-            loadRecording: async (executionId) => {
-                try {
-                    const { recording } = await Recording.API.get(api, { executionId });
-                    sdk.setState(s => { sdk.reducers.recordingViewer.currentRecording.set(s, recording) });
-                } catch {
-                    sdk.setState(s => { sdk.reducers.recordingViewer.currentRecording.set(s, null) });
-                }
-            },
-            loadLiveRecording: async (executionId) => {
-                try {
-                    const { recording } = await Recording.API.getLive(api, { executionId });
-                    sdk.setState(s => { sdk.reducers.recordingViewer.currentRecording.set(s, recording) });
-                } catch {
-                    sdk.setState(s => { sdk.reducers.recordingViewer.currentRecording.set(s, null) });
-                }
-            },
-            selectUoW: (id) => {
-                sdk.setState(s => { sdk.reducers.recordingViewer.setSelectedUoW(s, id) });
-            },
-            setZoom: (zoom) => {
-                sdk.setState(s => { sdk.reducers.recordingViewer.setZoom(s, zoom) });
-            },
-            toggleRemnants: () => {
-                sdk.setState(s => { sdk.reducers.recordingViewer.toggleRemnants(s) });
-            },
+        loadRecording: async (executionId) => {
+            try {
+                const { recording } = await Recording.API.get(api, { executionId });
+                sdk.setState(s => { sdk.reducers.currentRecording.set(s, recording) });
+            } catch {
+                sdk.setState(s => { sdk.reducers.currentRecording.set(s, null) });
+            }
+        },
+        loadLiveRecording: async (executionId) => {
+            try {
+                const { recording } = await Recording.API.getLive(api, { executionId });
+                sdk.setState(s => { sdk.reducers.currentRecording.set(s, recording) });
+            } catch {
+                sdk.setState(s => { sdk.reducers.currentRecording.set(s, null) });
+            }
         },
         setSelectedIgniter: (variant) => {
             sdk.setState(s => { sdk.reducers.setSelectedIgniter(s, variant) });
@@ -195,13 +184,8 @@ export type ExecutionSDKActions = {
     addAwaitedConfirmation:    (event: ExecutionSDK.AwaitedConfirmation) => void,
     removeAwaitedConfirmation: (event: ExecutionSDK.AwaitedConfirmation) => void,
 
-    recordingViewer: {
-        loadRecording:     (executionId: Execution.Id) => Promise<void>,
-        loadLiveRecording: (executionId: Execution.Id) => Promise<void>,
-        selectUoW:         (id: Recording.UnitOfWork.Id | null) => void,
-        setZoom:           (zoom: number) => void,
-        toggleRemnants:    () => void,
-    },
+    loadRecording:     (executionId: Execution.Id) => Promise<void>,
+    loadLiveRecording: (executionId: Execution.Id) => Promise<void>,
 
     setSelectedIgniter: (variant: Execution.Igniter["variant"]) => void,
     setRecordExecution: (value: boolean) => void,

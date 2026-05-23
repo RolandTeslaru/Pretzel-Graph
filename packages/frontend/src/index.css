@@ -265,8 +265,8 @@ code {
 
 
   --foreground: theme(--color-white);
-  --card: rgb(35, 35, 35);
-  --card-float: rgb(50, 50, 50);
+  --card: rgb(48, 48, 51);
+  --card-float: rgb(38, 38, 38);
 
 
   --port-Text: theme(--color-slate-400);
@@ -287,10 +287,10 @@ code {
   --accent-foreground: theme(--color-white);
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: rgb(55, 55, 55);
+  --border: rgb(70, 70, 70);
 
   /* --border: theme(--color-stone-800); */
-  --input: theme(--color-neutral-800);
+  --input: rgb(35, 35, 35);
   --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
 
 

@@ -93,26 +93,26 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event 
 
         case "unit:started":
             sdk.setState(s => {
-                sdk.reducers.recordingViewer.currentRecording.patchUnitStarted(s, e.unit)
+                sdk.reducers.currentRecording.patchUnitStarted(s, e.unit)
             })
             break;
         case "unit:completed":
             sdk.setState(s => {
-                sdk.reducers.recordingViewer.currentRecording.patchUnitCompleted(s, e)
+                sdk.reducers.currentRecording.patchUnitCompleted(s, e)
             })
             break;
         case "unit:failed":
             sdk.setState(s => {
-                sdk.reducers.recordingViewer.currentRecording.patchUnitFailed(s, e)
+                sdk.reducers.currentRecording.patchUnitFailed(s, e)
             })
             break;
         case "relation:createBatch":
             sdk.setState(s => {
-                sdk.reducers.recordingViewer.currentRecording.patchRelationCreateBatch(s, e)
+                sdk.reducers.currentRecording.patchRelationCreateBatch(s, e)
             })
             break;
         case "recording:fullyUploaded":
-            sdk.actions.recordingViewer.loadLiveRecording(e.executionId)
+            sdk.actions.loadLiveRecording(e.executionId)
             sdk.runtime.unsubscribeFromEvents?.();
             break;
         case "recording:completed":
