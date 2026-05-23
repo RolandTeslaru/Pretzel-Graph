@@ -121,7 +121,7 @@ export namespace Recording {
     export type Meta = z.infer<typeof Meta>
 
     export const Schema = Meta.extend({
-        // workflowDataSnapshot: Workflow.Data.Schema, // workflow state at execution time;
+        workflowDataSnapshot: Workflow.Data.Schema, // workflow state at execution time;
                                                     // insulates the timeline from subsequent edits
         tracks:    z.record(Track.Id,      Track.Schema     ).default({}),
         units:     z.record(UnitOfWork.Id, UnitOfWork.Schema).default({}),

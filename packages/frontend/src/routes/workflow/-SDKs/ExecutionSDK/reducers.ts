@@ -4,9 +4,9 @@ import type { ExecutionSDK, ExecutionSDKImpl } from "./sdk";
 export type State = ExecutionSDK.State;
 
 const ensureRecording = (s: State): Recording => {
-    if (!s.recordingViewer.currentRecording) {
+    if (!s.currentRecording) {
         const execution = s.currentExecution!;
-        s.recordingViewer.currentRecording = {
+        s.currentRecording = {
             id:          Recording.createId(execution.id),
             executionId: execution.id,
             workflowId:  execution.workflow_id,
@@ -17,7 +17,7 @@ const ensureRecording = (s: State): Recording => {
             dataBank:    { snapshots: {} },
         };
     }
-    return s.recordingViewer.currentRecording;
+    return s.currentRecording;
 };
 
 export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
@@ -54,52 +54,41 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
         setRecordExecution: (s, value) => {
             s.recordExecution = value;
         },
-        recordingViewer: {
-            setSelectedUoW: (s, id) => {
-                s.recordingViewer.selectedUoW = id;
+        currentRecording: {
+            set: (s, recording) => {
+                s.currentRecording = recording;
             },
-            setZoom: (s, zoom) => {
-                s.recordingViewer.zoom = Math.min(10, Math.max(0.02, zoom));
+            ensure: ensureRecording,
+            patchUnitStarted: (s, unit) => {
+                const rec = _sdk.reducers.currentRecording.ensure(s);
+                rec.units[unit.id] = unit;
+                const track = rec.tracks[unit.trackId];
+                if (track) {
+                    track.unitIds.push(unit.id);
+                } else {
+                    rec.tracks[unit.trackId] = { id: unit.trackId, unitIds: [unit.id] };
+                }
             },
-            toggleRemnants: (s) => {
-                s.recordingViewer.showRemnants = !s.recordingViewer.showRemnants;
+            patchUnitCompleted: (s, event) => {
+                const rec = _sdk.reducers.currentRecording.ensure(s);
+                const unit = rec.units[event.unitId];
+                if (!unit) return;
+                unit.status         = "completed";
+                unit.duration       = event.duration;
+                unit.outputSnapshot = event.outputSnapshot;
             },
-            currentRecording: {
-                set: (s, recording) => {
-                    s.recordingViewer.currentRecording = recording;
-                },
-                ensure: ensureRecording,
-                patchUnitStarted: (s, unit) => {
-                    const rec = _sdk.reducers.recordingViewer.currentRecording.ensure(s);
-                    rec.units[unit.id] = unit;
-                    const track = rec.tracks[unit.trackId];
-                    if (track) {
-                        track.unitIds.push(unit.id);
-                    } else {
-                        rec.tracks[unit.trackId] = { id: unit.trackId, unitIds: [unit.id] };
-                    }
-                },
-                patchUnitCompleted: (s, event) => {
-                    const rec = _sdk.reducers.recordingViewer.currentRecording.ensure(s);
-                    const unit = rec.units[event.unitId];
-                    if (!unit) return;
-                    unit.status         = "completed";
-                    unit.duration       = event.duration;
-                    unit.outputSnapshot = event.outputSnapshot;
-                },
-                patchUnitFailed: (s, event) => {
-                    const rec = _sdk.reducers.recordingViewer.currentRecording.ensure(s);
-                    const unit = rec.units[event.unitId];
-                    if (!unit) return;
-                    unit.status   = "failed";
-                    unit.duration = event.duration;
-                },
-                patchRelationCreateBatch: (s, event) => {
-                    const rec = _sdk.reducers.recordingViewer.currentRecording.ensure(s);
-                    for (const relation of event.relations) {
-                        rec.relations[relation.id] = relation;
-                    }
-                },
+            patchUnitFailed: (s, event) => {
+                const rec = _sdk.reducers.currentRecording.ensure(s);
+                const unit = rec.units[event.unitId];
+                if (!unit) return;
+                unit.status   = "failed";
+                unit.duration = event.duration;
+            },
+            patchRelationCreateBatch: (s, event) => {
+                const rec = _sdk.reducers.currentRecording.ensure(s);
+                for (const relation of event.relations) {
+                    rec.relations[relation.id] = relation;
+                }
             },
         },
     } satisfies _ExecutionSessionReducers;
@@ -113,17 +102,12 @@ export interface _ExecutionSessionReducers {
     setCurrentExecution: (state: State, execution: Execution) => void;
     setSelectedIgniter:  (state: State, variant: Execution.Igniter["variant"]) => void;
     setRecordExecution:  (state: State, value: boolean) => void;
-    recordingViewer: {
-        setSelectedUoW:   (state: State, id: Recording.UnitOfWork.Id | null) => void;
-        setZoom:          (state: State, zoom: number) => void;
-        toggleRemnants:   (state: State) => void;
-        currentRecording: {
-            set:                      (state: State, recording: Recording | null) => void;
-            ensure:                   (state: State) => Recording;
-            patchUnitStarted:         (state: State, unit: Recording.UnitOfWork) => void;
-            patchUnitCompleted:       (state: State, event: Recording.Event.Unit.Completed) => void;
-            patchUnitFailed:          (state: State, event: Recording.Event.Unit.Failed) => void;
-            patchRelationCreateBatch: (state: State, event: Recording.Event.Relation.CreateBatch) => void;
-        };
+    currentRecording: {
+        set:                      (state: State, recording: Recording | null) => void;
+        ensure:                   (state: State) => Recording;
+        patchUnitStarted:         (state: State, unit: Recording.UnitOfWork) => void;
+        patchUnitCompleted:       (state: State, event: Recording.Event.Unit.Completed) => void;
+        patchUnitFailed:          (state: State, event: Recording.Event.Unit.Failed) => void;
+        patchRelationCreateBatch: (state: State, event: Recording.Event.Relation.CreateBatch) => void;
     };
 }
