@@ -1,5 +1,5 @@
-export const TRACK_HEIGHT   = 44
-export const TRACK_LABEL_W  = 160
+export const TRACK_HEIGHT   = 24
+export const TRACK_LABEL_W  = 100
 export const RULER_H        = 28
 export const MIN_BLOCK_W    = 6
 export const RUNNING_BLOCK_W = 32

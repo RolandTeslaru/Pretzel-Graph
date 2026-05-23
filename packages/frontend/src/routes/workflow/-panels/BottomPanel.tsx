@@ -6,9 +6,10 @@ import ErrorViewer from '@/routes/workflow/-SDKs/ExecutionSDK/ui/ErrorViewer'
 import IssuesViewer from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/IssuesViewer'
 import { GlowingAlertTriangle, GlowingAlertTriangleRed } from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/Canvas/Node/Header/icons'
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk'
-import { Popover } from '@pretzel-graph/standard-ui/foundations'
+import { Popover, Switch } from '@pretzel-graph/standard-ui/foundations'
 import { Validation } from '@pretzel-graph/shared/domain'
 import { AnimatePresence, motion } from 'motion/react'
+import { DrawerSDK } from '../-SDKs/DrawerSDK/sdk'
 
 export const BottomPanel = () => {
     const hasIssues = WorkbenchSDK.useStore(s => Validation.workflowHasIssues(s.issues));
@@ -20,7 +21,7 @@ export const BottomPanel = () => {
     });
 
     return (
-        <div className='bottom-5 left-1/2 -translate-x-1/2 z-10 fixed'>
+        <div className='bottom-5 left-1/2 -translate-x-1/2 z-20 absolute'>
             <motion.div layout transition={{ layout: { type: "spring", stiffness: 400, damping: 30 } }} className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/80 backdrop-blur-sm border border-border overflow-visible'>
                 <TemporalControls />
                 <ChatButton />

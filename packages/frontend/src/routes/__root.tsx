@@ -49,7 +49,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
                 <Outlet />
             </QuerySDK.Provider>
 
-            <VexrLabsWatermark/>
+            {/* <VexrLabsWatermark/> */}
         </>
     ),
 })

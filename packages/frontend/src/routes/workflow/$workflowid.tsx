@@ -19,6 +19,9 @@ import { BottomPanel } from './-panels/BottomPanel'
 import { PathPanel } from './-panels/PathPanel'
 import { TopRightPanel } from './-panels/TopRightPanel'
 import BottomLeftPanel from './-panels/BottomLeftPanel'
+import { DrawerSDK } from './-SDKs/DrawerSDK/sdk'
+import TimelineViewer from './-SDKs/ExecutionSDK/ui/Timeline'
+import UoWInspectorSidebar from './-SDKs/ExecutionSDK/ui/UoWInspector/sidebar'
 
 
 export const Route = createFileRoute('/workflow/$workflowid')({
@@ -93,18 +96,31 @@ function WorkflowLayoutComponent() {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, []);
 
+    const isDrawerOpen = DrawerSDK.useStore(s => s.isOpen);
+
     return (
-        <div className='w-full h-screen overflow-hidden'>
-            <ShelfSidebar />
-            <WorkflowCanvas />
-            <ChatSidebar />
-            <NodeSidebar />
-            <BottomPanel />
-            <PathPanel />
-            <TopRightPanel />
-            <SpotlightSearch />
-            <StackSDK.UIOverlay />
-            <BottomLeftPanel />
+        <div className='bg-secondary'>
+            <div className={`
+                w-full relative overflow-hidden  z-20 bg-background
+                border-b border-border transition-[height]
+                ${isDrawerOpen ? "h-[65vh]" : "h-screen"}
+            `}>
+                <ShelfSidebar />
+                <WorkflowCanvas />
+                <ChatSidebar />
+                <NodeSidebar />
+                <UoWInspectorSidebar />
+                <BottomPanel />
+                <PathPanel />
+                <TopRightPanel />
+                <SpotlightSearch />
+                <StackSDK.UIOverlay />
+                <BottomLeftPanel />
+            </div>
+            
+            <div className='h-[35vh] fixed bottom-0 left-0 w-full'>
+                <TimelineViewer/>
+            </div>
         </div>
     )
 }

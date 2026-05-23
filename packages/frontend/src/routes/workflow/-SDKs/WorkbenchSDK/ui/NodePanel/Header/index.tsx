@@ -6,6 +6,7 @@ import { WorkbenchSDK } from '../../../sdk'
 import { OptionsDropdown } from './OptionsDropdown'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import Tipped from '@/components/Tipped'
+import FloatContainer from '@/components/FloatContainer'
 
 interface HeaderProps {
     node: Workflow.Node
@@ -46,7 +47,7 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                     </h4>
                 )}
             </div>
-            <div className='ml-auto z-10 flex flex-row bg-card w-fit p-0.5 rounded-xl border border-border shadow-md shadow-black/10'>
+            <FloatContainer className='ml-auto'>
                 {isEditing ? (
                     <div className='flex flex-row gap-2 ml-auto my-auto h-auto'>
                         <Button size="xs" className='rounded-full' variant="success" onClick={onEditFinish}>
@@ -83,7 +84,7 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                         <OptionsDropdown node={node} onEdit={onEditStart} />
                     </div>
                 )}
-            </div>
+            </FloatContainer>
         </div>
     )
 }

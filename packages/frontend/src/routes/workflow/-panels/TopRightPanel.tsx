@@ -65,7 +65,7 @@ export const TopRightPanel = () => {
     };
 
     return (
-        <div className='fixed top-5 right-5 flex flex-row gap-2'>
+        <div className='fixed top-5 right-5 z-100 flex flex-row gap-2'>
             <div className='flex flex-row gap-2 z-10 p-0.5 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
                 <Button className='rounded-full' variant="ghost" size="sm" onClick={openPublishDialog}>
                     {hasPublications && (
