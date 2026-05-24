@@ -105,7 +105,7 @@ export type InferCredentialValues<C> = 0 extends (1 & C) ? any
  * Infer credential instances from a Blueprint, keyed by credential template id.
  * Each value is the resolved Vault.Credential.Instance at runtime, with its
  * `blob` phantom-branded with the template type so that
- * `context.getDecryptedCredentialValues(instance.blob)` returns a typed record.
+ * `credentialsAPI.getDecryptedValue(templateId)` returns a fully-typed record.
  */
 export type InferCredentials<D> = 0 extends (1 & D) ? any
     : D extends { credentials?: infer T }
@@ -115,6 +115,22 @@ export type InferCredentials<D> = 0 extends (1 & D) ? any
       }
     : Record<string, never>
     : Record<string, never>;
+
+/**
+ * Extracts the credential template type T from a phantom-branded
+ * `EncryptedBlob<T>` sitting on a credential instance entry.
+ *
+ * Used by `credentialsAPI.getDecryptedValue` to infer the exact field-value
+ * record from the template that was used to create the blob.
+ *
+ * @example
+ * // Given: InferCredentials<Blueprint>["googleGeminiApi"]
+ * //        = Omit<Instance, "blob"> & { blob: EncryptedBlob<GoogleGemini> }
+ * // ExtractCredentialTemplate<...> = GoogleGemini
+ * // InferCredentialValues<GoogleGemini> = { apiKey: string }
+ */
+export type ExtractCredentialTemplate<I> =
+    I extends { blob: Vault.Credential.Instance.EncryptedBlob<infer T> } ? T : never;
 
 /**
  * Infer webhook definitions from a Blueprint into a record keyed by webhook id.

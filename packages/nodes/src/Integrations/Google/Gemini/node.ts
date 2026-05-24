@@ -13,7 +13,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
 
-        const { apiKey } = this.context.getDecryptedCredentialValues(this.credentials.googleGeminiApi.blob);
+        const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.googleGeminiApi.blob);
 
         this.llm = new ChatGoogleGenerativeAI({
             model: this.fields.model,

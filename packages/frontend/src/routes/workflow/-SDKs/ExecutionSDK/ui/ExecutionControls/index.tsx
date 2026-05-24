@@ -17,12 +17,12 @@ interface Props {
 const ExecutionControls = ({ canRun }: Props) => {
 
   const [
-    currentExecution, 
+    currentExecution,
     awaitedConfirmation,
     recordExecution,
     isCurrentExecutionRecording
   ] = ExecutionSDK.useStore(s => [
-    s.currentExecution, 
+    s.currentExecution,
     s.awaitedConfirmation,
     s.recordExecution,
     s.isCurrentExecutionRecording
@@ -41,153 +41,143 @@ const ExecutionControls = ({ canRun }: Props) => {
   }
 
   return (
-    <AnimatePresence mode="popLayout" initial={false}>
-      <motion.div
-        key={status}
-        layout
-        className="flex gap-1 items-center"
-        initial={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
-        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-        exit={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
-        transition={spring}
-      >
-        {status === "idle" || status === "failed" || status === "completed" ? (
-          <>
-          <ButtonGroup>
-            <Button
-              disabled={!canRun || awaitedConfirmation.has("started")}
-              variant="success"
-              className="my-auto"
-              onClick={handleRun}
-            >
-              {awaitedConfirmation.has("started") ? <Spinner /> : <><SystemIcons.Play className="mr-auto" />Run</>}
-            </Button>
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
+    <>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div
+          key={status}
+          layout
+          className="flex gap-1 items-center"
+          initial={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
+          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
+          transition={spring}
+        >
+          {status === "idle" || status === "failed" || status === "completed" ? (
+            <>
+              <ButtonGroup>
                 <Button
-                    variant="success"
-                    size="icon-sm"
-                    aria-label="More Options"
-                    disabled={!canRun || awaitedConfirmation.has("started")}
-                    className='w-6!'
+                  disabled={!canRun || awaitedConfirmation.has("started")}
+                  variant="success"
+                  className="my-auto"
+                  onClick={handleRun}
                 >
-                    <SystemIcons.ChevronUp />
+                  {awaitedConfirmation.has("started") ? <Spinner /> : <><SystemIcons.Play className="mr-auto" />Run</>}
                 </Button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content align='end' sideOffset={8} className='min-w-[150px]!'>
-                <DropdownMenu.Group>
-                  <DropdownMenu.Item>
-                    <SystemIcons.Play className="mr-2" />
-                    Run
-                  </DropdownMenu.Item>
-                  {/* <DropdownMenu.Item>
-                    <SystemIcons.MessageSquare className="mr-2" />
-                    Run via Chat Input
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item>
-                    <SystemIcons.Webhook className="mr-2" />
-                    Run via Webhook 1
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item>
-                    <SystemIcons.Webhook className="mr-2" />
-                    Run via Webhook 2
-                  </DropdownMenu.Item> */}
-                </DropdownMenu.Group>
-                <DropdownMenu.Separator />
-                <DropdownMenu.Group>
-                  <DropdownMenu.StaticItem>
-                    <SystemIcons.Film className="mr-2" />
-                    Record
-                    <Switch size={"md"} className='ml-auto' checked={recordExecution} onCheckedChange={(checked) => {
-                      ExecutionSDK.actions.setRecordExecution(checked)
-                    }} />
-                  </DropdownMenu.StaticItem>
-                </DropdownMenu.Group>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
-          </ButtonGroup>
-          </>
-        ) : null}
-        {status === "running" && (
-          <>
-            <Tipped label="Pause">
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <Button
+                      variant="success"
+                      size="icon-sm"
+                      aria-label="More Options"
+                      disabled={!canRun || awaitedConfirmation.has("started")}
+                      className='w-6!'
+                    >
+                      <SystemIcons.ChevronUp />
+                    </Button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Content align='end' sideOffset={8} className='min-w-[150px]!'>
+                    <DropdownMenu.Group>
+                      <DropdownMenu.Item>
+                        <SystemIcons.Play className="mr-2" />
+                        Run
+                      </DropdownMenu.Item>
+                      {/* <DropdownMenu.Item>
+                      <SystemIcons.MessageSquare className="mr-2" />
+                      Run via Chat Input
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item>
+                      <SystemIcons.Webhook className="mr-2" />
+                      Run via Webhook 1
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item>
+                      <SystemIcons.Webhook className="mr-2" />
+                      Run via Webhook 2
+                    </DropdownMenu.Item> */}
+                    </DropdownMenu.Group>
+                    <DropdownMenu.Separator />
+                    <DropdownMenu.Group>
+                      <DropdownMenu.StaticItem>
+                        <SystemIcons.Film className="mr-2" />
+                        Record
+                        <Switch size={"md"} className='ml-auto' checked={recordExecution} onCheckedChange={(checked) => {
+                          ExecutionSDK.actions.setRecordExecution(checked)
+                        }} />
+                      </DropdownMenu.StaticItem>
+                    </DropdownMenu.Group>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Root>
+              </ButtonGroup>
+            </>
+          ) : null}
+          {status === "running" && (
+            <>
+              <Tipped label="Pause">
+                <ControlButton
+                  loading={awaitedConfirmation.has("paused")}
+                  icon={SystemIcons.PauseFill}
+                  size="icon-sm"
+                  iconClassName='scale-80'
+                  variant="ghost-warning"
+                  onClick={handlePause}
+                />
+              </Tipped>
+              <Tipped label="Terminate">
+                <ControlButton
+                  loading={awaitedConfirmation.has("terminated")}
+                  icon={SystemIcons.X}
+                  size="icon-sm"
+                  iconClassName='scale-80'
+                  variant="ghost-destructive"
+                  onClick={handleTerminate}
+                />
+              </Tipped>
+            </>
+          )}
+          {status === "paused" && (
+            <>
               <ControlButton
-                loading={awaitedConfirmation.has("paused")}
-                icon={SystemIcons.PauseFill}
+                loading={awaitedConfirmation.has("resumed")}
+                icon={SystemIcons.Play}
+                variant="ghost-success"
                 size="icon-sm"
-                iconClassName='scale-80'
-                variant="ghost-warning"
-                onClick={handlePause}
+                onClick={handleResume}
               />
-            </Tipped>
-            <Tipped label="Terminate">
-              <ControlButton
-                loading={awaitedConfirmation.has("terminated")}
-                icon={SystemIcons.X}
-                size="icon-sm"
-                iconClassName='scale-80'
-                variant="ghost-destructive"
-                onClick={handleTerminate}
-              />
-            </Tipped>
-          </>
-        )}
-        {status === "paused" && (
-          <>
-            <ControlButton
-              loading={awaitedConfirmation.has("resumed")}
-              icon={SystemIcons.Play}
-              variant="ghost-success"
-              size="icon-sm"
-              onClick={handleResume}
-            />
-            <Tipped label="Suspend">
-              <ControlButton
-                loading={awaitedConfirmation.has("suspended")}
-                icon={SystemIcons.SquareFill}
-                size="icon-sm"
-                iconClassName='scale-80'
-                variant="ghost-warning"
-                onClick={handleSuspend}
-              />
-            </Tipped>
-            <Tipped label="Terminate">
-              <ControlButton
-                loading={awaitedConfirmation.has("terminated")}
-                icon={SystemIcons.X}
-                size="icon-sm"
-                iconClassName='scale-80'
-                variant="ghost-destructive"
-                onClick={handleTerminate}
-              />
-            </Tipped>
-          </>
-        )}
-        {currentExecution && (status === "completed" || status === "failed" || status === "terminated") && (
-          <>
-            <Tipped label="Clear Execution">
-              <Button size="icon-sm" variant="ghost-destructive" onClick={handleClear}>
-                <SystemIcons.Trash2 className='scale-80' />
-              </Button>
-            </Tipped>
-          </>
-        )}
+              <Tipped label="Suspend">
+                <ControlButton
+                  loading={awaitedConfirmation.has("suspended")}
+                  icon={SystemIcons.SquareFill}
+                  size="icon-sm"
+                  iconClassName='scale-80'
+                  variant="ghost-warning"
+                  onClick={handleSuspend}
+                />
+              </Tipped>
+              <Tipped label="Terminate">
+                <ControlButton
+                  loading={awaitedConfirmation.has("terminated")}
+                  icon={SystemIcons.X}
+                  size="icon-sm"
+                  iconClassName='scale-80'
+                  variant="ghost-destructive"
+                  onClick={handleTerminate}
+                />
+              </Tipped>
+            </>
+          )}
+          {currentExecution && (status === "completed" || status === "failed" || status === "terminated") && (
+            <>
+              <Tipped label="Clear Execution">
+                <Button size="icon-sm" variant="ghost-destructive" onClick={handleClear}>
+                  <SystemIcons.Trash2 className='scale-80' />
+                </Button>
+              </Tipped>
+            </>
+          )}
 
-        {(status === "running" || status === "paused") ? null : <HistoryPopoverButton />}
-        {(recordExecution || isCurrentExecutionRecording) && (
-          <>
-          <div className='h-4 my-auto px-2 border-l border-border' />
-            <Tipped label='Ready To Record'>
-              <div className='h-full flex flex-row gap-2 pr-2'>
-                <SystemIcons.Film className='size-4 text-secondary-foreground my-auto' />
-                {/* <p className='text-sm font-medium text-muted-foreground my-auto h-auto'>Ready</p> */}
-                <div className={`content-[""] my-auto w-2 h-2  rounded-full animate-pulse ${isCurrentExecutionRecording ? 'bg-red-500' : 'bg-gray-500'}`}/>
-              </div>
-            </Tipped>
-          </>
-        )}
-      </motion.div>
-    </AnimatePresence>
+          {(status === "running" || status === "paused") ? null : <HistoryPopoverButton />}
+        </motion.div>
+      </AnimatePresence>
+    </>
   )
 }
 
@@ -197,16 +187,16 @@ export default ExecutionControls
 const HistoryPopoverButton = () => {
   return (
     <Popover.Root>
-        <Tipped label="Show Execution History">
+      <Tipped label="Show Execution History">
         <Popover.Trigger asChild>
           <Button size="icon-sm" variant="ghost">
             <SystemIcons.History className='scale-80' />
           </Button>
         </Popover.Trigger>
-    </Tipped>
-        <Popover.Content sideOffset={14} className='px-0 pb-0 rounded-xl overflow-hidden'>
-          <ExecutionHistoryPanel />
-        </Popover.Content>
-      </Popover.Root>
+      </Tipped>
+      <Popover.Content sideOffset={14} className='px-0 pb-0 rounded-xl overflow-hidden'>
+        <ExecutionHistoryPanel />
+      </Popover.Content>
+    </Popover.Root>
   )
 }

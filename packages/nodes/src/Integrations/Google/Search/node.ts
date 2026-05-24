@@ -70,7 +70,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     public readonly Blueprint = Blueprint;
 
     private async search(query: string) {
-        const { apiKey, searchEngineId } = this.context.getDecryptedCredentialValues(this.credentials.googleSearchApi.blob);
+        const { apiKey, searchEngineId } = this.context.credentialsAPI.getDecryptedValue(this.credentials.googleSearchApi.blob);
 
         if (!apiKey)
             throw new Error("Google Search: API key is required.");

@@ -31,7 +31,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                         const result = await tool.invoke(
                             call, 
                             {
-                                signal: this.context.abortSignal,
+                                signal: this.context.abortAPI.signal,
                             }) as LC.ToolMessage;
                         return result;
                     } catch (error) {

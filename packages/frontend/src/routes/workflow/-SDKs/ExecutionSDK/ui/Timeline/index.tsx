@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef } from "react"
 import { ExecutionSDK } from "../../sdk"
-import { getOrderedTracks, getTotalDuration } from "../../selectors"
+import { getTimelineLayout, getTotalDuration } from "../../selectors"
 import { useTimelineViewerStore, timelineViewerActions } from "../../timeline-viewer-store"
 import { WorkbenchSDK } from "../../../WorkbenchSDK/sdk"
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
@@ -10,7 +10,7 @@ import TrackColumn from "./TrackColumn"
 import TrackRow from "./TrackRow"
 import RelationLayer from "./RelationLayer"
 import UoWInspector from "./UoWInspector"
-import { RULER_H, TRACK_HEIGHT, TRACK_LABEL_W } from "./constants"
+import { RULER_H } from "./constants"
 import { makeTimeScale } from "./time-scale"
 import FloatContainer from "@/components/FloatContainer"
 
@@ -18,12 +18,18 @@ const ZOOM_STEP = 1.4
 
 const TimelineViewer = () => {
     const recording = ExecutionSDK.useStore(s => s.currentRecording)
-    const zoom = useTimelineViewerStore(s => s.zoom)
-    const showRemnants = useTimelineViewerStore(s => s.showRemnants)
-    const viewMode = useTimelineViewerStore(s => s.viewMode)
 
-    const orderedTracks = useMemo(() => getOrderedTracks(recording), [recording])
-    const totalDuration = useMemo(() => getTotalDuration(recording), [recording])
+    const [zoom, showRemnants, viewMode] = useTimelineViewerStore(s => [
+        s.zoom,
+        s.showRemnants,
+        s.viewMode,
+    ])
+
+    const workbenchNodes = WorkbenchSDK.useStore(s => s.data.nodes)
+    const nodes = recording?.workflowDataSnapshot?.nodes ?? workbenchNodes
+
+    const layout        = useMemo(() => getTimelineLayout(recording, nodes), [recording, nodes])
+    const totalDuration = useMemo(() => getTotalDuration(recording),         [recording])
     const scale = useMemo(
         () => makeTimeScale(viewMode, zoom, recording, totalDuration),
         [viewMode, zoom, recording, totalDuration],
@@ -40,17 +46,8 @@ const TimelineViewer = () => {
         if (labelsRef.current) labelsRef.current.scrollTop = sc.scrollTop
     }, [])
 
-    const workbenchNodes = WorkbenchSDK.useStore(s => s.data.nodes)
-
-    const totalWidth = Math.max(scale.totalWidth + 80, 400)
-    const totalHeight = orderedTracks.length * TRACK_HEIGHT
-
-    const trackIndexMap = useMemo(
-        () => new Map(orderedTracks.map((t, i) => [t.id, i])),
-        [orderedTracks]
-    )
-
-    const nodes = recording?.workflowDataSnapshot?.nodes ?? workbenchNodes
+    const totalWidth  = Math.max(scale.totalWidth + 80, 400)
+    const totalHeight = layout.totalHeight
 
     if (!recording) {
         return (
@@ -129,9 +126,9 @@ const TimelineViewer = () => {
                     <div
                         ref={labelsRef}
                         style={{ overflowY: "hidden" }}
-                        className="border border-border/70 w-[150px] h-[300px] rounded-lg pt-[19px] pb-2 h-[] px-1 absolute left-5 top-2 z-20 bg-card/70 backdrop-blur-md shadow-md shadow-black/10"
+                        className="border border-border/70 w-[150px] h-[300px] rounded-lg pt-[19px] pb-2 px-1 absolute left-5 top-2 z-20 bg-card/70 backdrop-blur-md shadow-md shadow-black/10"
                     >
-                        <TrackColumn tracks={orderedTracks} nodes={nodes} />
+                        <TrackColumn layout={layout} nodes={nodes} />
                     </div>
 
                     {/* Scrollable track canvas */}
@@ -142,21 +139,22 @@ const TimelineViewer = () => {
                         className="pl-[180px] pb-20"
                     >
                         <div style={{ position: "relative", width: totalWidth, height: totalHeight }}>
-                            {orderedTracks.map((track, i) => (
+                            {layout.tracks.map(tl => (
                                 <TrackRow
-                                    key={track.id}
-                                    track={track}
+                                    key={tl.track.id}
+                                    track={tl.track}
                                     recording={recording}
                                     nodes={nodes}
                                     scale={scale}
-                                    top={i * TRACK_HEIGHT}
+                                    top={tl.top}
+                                    height={tl.height}
                                 />
                             ))}
                             <RelationLayer
                                 recording={recording}
                                 nodes={nodes}
                                 scale={scale}
-                                trackIndexMap={trackIndexMap}
+                                layout={layout}
                                 showRemnants={showRemnants}
                                 totalWidth={totalWidth}
                                 totalHeight={totalHeight}

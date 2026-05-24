@@ -37,3 +37,56 @@ export function getTotalDuration(recording: Recording | null): number {
     if (units.length === 0) return 0;
     return Math.max(...units.map(u => u.startedAt + (u.duration ?? 0)));
 }
+
+// ─── Timeline layout ────────────────────────────────────────────────────────
+// Track height comes from the node's declared port count so it's stable
+// from the start of execution, not derived from relations (which stream in
+// over time).
+
+export interface TimelineTrackLayout {
+    track:       Recording.Track
+    top:         number
+    height:      number
+    inputPorts:  Foundations.Port.Input.Id[]
+    outputPorts: Foundations.Port.Output.Id[]
+}
+
+export interface TimelineLayout {
+    tracks:       TimelineTrackLayout[]
+    byTrackId:    Map<Workflow.Node.Id, TimelineTrackLayout>
+    totalHeight:  number
+    subRowHeight: number
+}
+
+const SUB_ROW_HEIGHT = 24
+
+export function getTimelineLayout(
+    recording: Recording | null,
+    nodes:     Record<Workflow.Node.Id, Workflow.Node>,
+): TimelineLayout {
+    if (!recording) {
+        return { tracks: [], byTrackId: new Map(), totalHeight: 0, subRowHeight: SUB_ROW_HEIGHT }
+    }
+
+    const ordered = getOrderedTracks(recording)
+
+    let top = 0
+    const tracks: TimelineTrackLayout[] = []
+    const byTrackId = new Map<Workflow.Node.Id, TimelineTrackLayout>()
+
+    for (const track of ordered) {
+        const node        = nodes[track.id]
+        const inputPorts  = node?.inputs.map(p => p.id)  ?? []
+        const outputPorts = node?.outputs.map(p => p.id) ?? []
+
+        const rows   = Math.max(1, inputPorts.length, outputPorts.length)
+        const height = rows * SUB_ROW_HEIGHT
+
+        const layout: TimelineTrackLayout = { track, top, height, inputPorts, outputPorts }
+        tracks.push(layout)
+        byTrackId.set(track.id, layout)
+        top += height
+    }
+
+    return { tracks, byTrackId, totalHeight: top, subRowHeight: SUB_ROW_HEIGHT }
+}

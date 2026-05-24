@@ -10,6 +10,8 @@ import { Popover, Switch } from '@pretzel-graph/standard-ui/foundations'
 import { Validation } from '@pretzel-graph/shared/domain'
 import { AnimatePresence, motion } from 'motion/react'
 import { DrawerSDK } from '../-SDKs/DrawerSDK/sdk'
+import Tipped from '@/components/Tipped'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 export const BottomPanel = () => {
     const hasIssues = WorkbenchSDK.useStore(s => Validation.workflowHasIssues(s.issues));
@@ -19,9 +21,21 @@ export const BottomPanel = () => {
         if (exec.error) return true;
         return Object.values(exec.session.node_status).some(ns => ns.status === 'failed');
     });
+    
+    const [
+        currentExecution,
+        awaitedConfirmation,
+        recordExecution,
+        isCurrentExecutionRecording
+    ] = ExecutionSDK.useStore(s => [
+        s.currentExecution,
+        s.awaitedConfirmation,
+        s.recordExecution,
+        s.isCurrentExecutionRecording
+    ]);
 
     return (
-        <div className='bottom-5 left-1/2 -translate-x-1/2 z-20 absolute'>
+        <div className='bottom-5 flex flex-row left-1/2 -translate-x-1/2 z-20 absolute gap-2'>
             <motion.div layout transition={{ layout: { type: "spring", stiffness: 400, damping: 30 } }} className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/80 backdrop-blur-sm border border-border overflow-visible'>
                 <TemporalControls />
                 <ChatButton />
@@ -73,6 +87,20 @@ export const BottomPanel = () => {
                     )}
                 </AnimatePresence>
             </motion.div>
+
+            {(recordExecution || isCurrentExecutionRecording) && (
+            <div className=' px-2 w-auto bg-card/90 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'>
+              <Tipped label='Ready To Record'>
+                <div className='h-full flex flex-row gap-2'>
+                  <SystemIcons.Film className='size-4 text-secondary-foreground my-auto' />
+                  {/* <p className='text-sm font-medium text-muted-foreground my-auto h-auto'>Ready</p> */}
+                  <div className={`content-[""] my-auto w-2 h-2  rounded-full animate-pulse ${isCurrentExecutionRecording ? 'bg-red-500' : 'bg-gray-500'}`} />
+                </div>
+              </Tipped>
+            </div>
+          )}
         </div>
+
+        
     )
 }
