@@ -19,7 +19,7 @@ const IDLE_SEG_W            = 12  // fixed compressed width for gaps
 
 // Step tunables — discrete bucket widths assigned by relative duration
 const STEP_WIDTHS    = [20, 40, 60, 80]
-const STEP_IDLE_W    = 10
+const STEP_IDLE_W    = 0   // idle time is meaningless in step mode; collapse gaps to zero
 
 export function makeTimeScale(
     mode: TimelineViewMode,
@@ -69,9 +69,17 @@ function buildStepScale(zoom: number, recording: Recording, totalDuration: numbe
         return STEP_WIDTHS[idx] * zoomFactor
     }
 
+    // Use a sub-microsecond epsilon so truly zero-duration UoWs still create a
+    // valid boundary interval and get a proper step-mode bucket width.
+    // Must be tiny enough that it never swallows the startedAt of a subsequent
+    // sequential UoW (performance.now() gives sub-ms precision, so 0.0001ms
+    // is safe — no two sequential events fire within 0.1µs of each other).
+    const D_EPSILON = 0.0001
+
     const intervals = finished.map(u => {
         const d = Math.max(u.duration ?? 0, 0)
-        return { s: u.startedAt, e: u.startedAt + d, d: Math.max(d, 1), bucket: bucketFor(d) }
+        const dFloor = Math.max(d, D_EPSILON)
+        return { s: u.startedAt, e: u.startedAt + dFloor, d: dFloor, bucket: bucketFor(d) }
     })
 
     const boundarySet = new Set<number>([0, totalDuration])
@@ -108,8 +116,7 @@ function buildStepScale(zoom: number, recording: Recording, totalDuration: numbe
 
     const xFor = makeXFor(segments, totalWidth)
     const widthFor = (startMs: number, durationMs: number) => {
-        if (durationMs <= 0) return 0
-        return xFor(startMs + durationMs) - xFor(startMs)
+        return xFor(startMs + Math.max(durationMs, D_EPSILON)) - xFor(startMs)
     }
 
     return { mode: "step", zoom, xFor, widthFor, totalWidth }

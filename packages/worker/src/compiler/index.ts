@@ -128,8 +128,10 @@ export class WorkflowCompiler {
             },
         } satisfies RuntimeNode.ExecutionContext["dependencyAPI"];
 
-        const getDecryptedCredentialValues: RuntimeNode.ExecutionContext["getDecryptedCredentialValues"] =
-            (blob) => decryptCredentialBlob(blob) as any;
+        const credentialsAPI: RuntimeNode.ExecutionContext["credentialsAPI"] = {
+            getInstance: (instanceId) => credentialInstances[instanceId],
+            getDecryptedValue: (blob) => decryptCredentialBlob(blob) as any,
+        };
 
         const nodeExecutionCtx = {
             executionId: execution.id,
@@ -139,8 +141,10 @@ export class WorkflowCompiler {
             workflowCache,
             get session() { return execution.session; },
             emit,
-            abortExecution: (reason: string) => abortController.abort(reason),
-            abortSignal: abortController.signal,
+            abortAPI: {
+                signal: abortController.signal,
+                abort:  (reason?: any) => abortController.abort(reason),
+            },
             updateSession,
             portAPI,
             propagationAPI,
@@ -150,8 +154,7 @@ export class WorkflowCompiler {
             enclosingNodeAPI,
             subWorkflowAPI,
             dependencyAPI,
-            credentialInstances,
-            getDecryptedCredentialValues,
+            credentialsAPI,
         } satisfies RuntimeNode.ExecutionContext
 
         engineExecutionCtx = {
@@ -162,8 +165,10 @@ export class WorkflowCompiler {
             workflowCache,
             get session() { return execution.session; },
             emit,
-            abortExecution: (reason: string) => abortController.abort(reason),
-            abortSignal: abortController.signal,
+            abortAPI: {
+                signal: abortController.signal,
+                abort:  (reason?: any) => abortController.abort(reason),
+            },
             updateSession,
             compiledGraph: graph,
             activeNodes: new Set(),
@@ -175,8 +180,7 @@ export class WorkflowCompiler {
             enclosingNodeAPI,
             subWorkflowAPI,
             dependencyAPI,
-            credentialInstances,
-            getDecryptedCredentialValues,
+            credentialsAPI,
         } satisfies AggexEngine.Execution.Context
 
 

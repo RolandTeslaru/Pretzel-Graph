@@ -265,8 +265,8 @@ code {
 
 
   --foreground: theme(--color-white);
-  --card: rgb(48, 48, 51);
-  --card-float: rgb(38, 38, 38);
+  --card: rgb(40, 40, 43);
+  --card-float: rgb(32, 32, 32);
 
 
   --port-Text: theme(--color-slate-400);
@@ -287,7 +287,7 @@ code {
   --accent-foreground: theme(--color-white);
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: rgb(70, 70, 70);
+  --border: rgb(60, 60, 60);
 
   /* --border: theme(--color-stone-800); */
   --input: rgb(35, 35, 35);

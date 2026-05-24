@@ -56,6 +56,8 @@ export function StateViewer() {
     const [minimized, setMinimized] = useState(true);
     const state = useSDKState(selected);
 
+    return null
+
     return (
         <div className={`fixed transition-all top-[20px] left-1/2 -translate-x-1/2 z-50 w-[400px] bg-card/80 backdrop-blur-sm border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto ${minimized ? 'h-[34px] border-0' : ' h-[400px]'}`}>
             <div className={`absolute z-10 transition-all ${minimized ? 'left-0 bottom-0 right-0' : 'left-1 bottom-1 right-1'}  flex px-1 py-1 gap-2 border rounded-xl border-border bg-card shadow-md shadow-black/10`}>

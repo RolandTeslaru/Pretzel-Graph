@@ -1,18 +1,18 @@
 import React from "react"
 import type { Recording, Workflow } from "@pretzel-graph/shared/domain"
-import { TRACK_HEIGHT } from "./constants"
 import UoWBlock from "./UoWBlock"
 import type { TimeScale } from "./time-scale"
 
 interface TrackRowProps {
-    track: Recording.Track
+    track:     Recording.Track
     recording: Recording
-    nodes: Record<Workflow.Node.Id, Workflow.Node>
-    scale: TimeScale
-    top: number
+    nodes:     Record<Workflow.Node.Id, Workflow.Node>
+    scale:     TimeScale
+    top:       number
+    height:    number
 }
 
-const TrackRow = ({ track, recording, nodes, scale, top }: TrackRowProps) => {
+const TrackRow = ({ track, recording, nodes, scale, top, height }: TrackRowProps) => {
     const node = nodes[track.id]
     const accent = node?.accent ?? undefined
 
@@ -23,7 +23,7 @@ const TrackRow = ({ track, recording, nodes, scale, top }: TrackRowProps) => {
                 top,
                 left: 0,
                 right: 0,
-                height: TRACK_HEIGHT,
+                height,
             }}
             className="border-b border-border/50"
         >
@@ -36,6 +36,7 @@ const TrackRow = ({ track, recording, nodes, scale, top }: TrackRowProps) => {
                         unit={unit}
                         scale={scale}
                         accent={accent}
+                        height={height}
                     />
                 )
             })}
