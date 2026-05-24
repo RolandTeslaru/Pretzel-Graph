@@ -34,7 +34,7 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionS
     )
 
   return (
-    <div className="flex w-full items-center gap-3 px-4 py-1 rounded-t-xl " >
+    <div className="flex w-full items-center gap-3 px-5 py-1 rounded-t-xl " >
       <LazyIcon
         className={`${isMinimized ? "w-8 h-8" : "w-5.5 h-5.5"} ${isFlipped ? "scale-x-[-1]" : ""}`}
         name={node.icon as string}
