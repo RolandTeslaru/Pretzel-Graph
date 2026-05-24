@@ -80,7 +80,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
-        const { privateKey } = this.context.getDecryptedCredentialValues(this.credentials.uniswapApi.blob);
+        const { privateKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.uniswapApi.blob);
         this.clients = buildClients({ ...this.fields, privateKey });
     }
 
@@ -88,7 +88,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const { wallet, public: publicClient, chainId } = this.clients;
-        const { apiKey } = this.context.getDecryptedCredentialValues(this.credentials.uniswapApi.blob);
+        const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.uniswapApi.blob);
         const address = wallet.account!.address;
 
         const checkApproval = tool(

@@ -24,7 +24,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const messages = [systemMessage, ...inputs.messages].filter(Boolean);
         const response = await languageModel.invoke(messages, {
-            signal: this.context.abortSignal,
+            signal: this.context.abortAPI.signal,
         });
         return { response };
     }
