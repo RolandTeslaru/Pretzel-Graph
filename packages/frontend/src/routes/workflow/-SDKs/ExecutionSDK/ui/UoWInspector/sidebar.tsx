@@ -8,12 +8,14 @@ const UoWInspectorSidebar = () => {
   const uowId = useTimelineViewerStore(s => s.selectedUoW)
 
   useEffect(() => {
-    if(uowId){
+    if (uowId) {
       StackSDK.actions.push("uowInspector" as StackSDK.Panel.Id, (props) => (
         <StackSDK.Template {...props}>
           <Content uowId={uowId} />
         </StackSDK.Template>
       ))
+    } else {
+      StackSDK.actions.pop("uowInspector" as StackSDK.Panel.Id)
     }
   }, [uowId])
 
