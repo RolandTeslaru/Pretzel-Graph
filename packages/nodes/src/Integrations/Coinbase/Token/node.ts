@@ -41,7 +41,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onCompile() {
-        const { cdpKeyId, cdpKeySecret, walletSecret } = this.context.getDecryptedCredentialValues(this.credentials.coinbaseApi.blob);
+        const { cdpKeyId, cdpKeySecret, walletSecret } = this.context.credentialsAPI.getDecryptedValue(this.credentials.coinbaseApi.blob);
         const { networkId, walletAddress } = this.fields;
 
         if (!cdpKeyId || !cdpKeySecret || !walletSecret)

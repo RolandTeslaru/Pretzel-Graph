@@ -1,26 +1,25 @@
 import React from "react"
-import type { Recording, Workflow } from "@pretzel-graph/shared/domain"
-import { TRACK_HEIGHT } from "./constants"
+import type { Workflow } from "@pretzel-graph/shared/domain"
 import { LazyIcon } from "@pretzel-graph/standard-ui/icons/LazyIcon"
+import type { TimelineLayout } from "../../selectors"
 
 interface TrackColumnProps {
-    tracks: Recording.Track[]
-    nodes: Record<Workflow.Node.Id, Workflow.Node>
+    layout: TimelineLayout
+    nodes:  Record<Workflow.Node.Id, Workflow.Node>
 }
 
-const TrackColumn = ({ tracks, nodes }: TrackColumnProps) => {
+const TrackColumn = ({ layout, nodes }: TrackColumnProps) => {
     return (
-        <div>
-            {tracks.map(track => {
-                const node = nodes[track.id]
-                const label = node?.displayName ?? track.id
-                const accent = node?.accent ?? undefined
+        <div style={{ position: "relative", height: layout.totalHeight }}>
+            {layout.tracks.map(tl => {
+                const node = nodes[tl.track.id]
+                const label = node?.displayName ?? tl.track.id
 
                 return (
                     <div
-                        key={track.id}
-                        style={{ height: TRACK_HEIGHT }}
-                        className="flex items-center gap-2 border-b border-border/20"
+                        key={tl.track.id}
+                        style={{ position: "absolute", top: tl.top, height: tl.height, left: 0, right: 0 }}
+                        className="flex items-center gap-2 px-1"
                     >
                         <LazyIcon
                             className={`w-3 h-3`}

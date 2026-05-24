@@ -1,14 +1,15 @@
 import React from "react"
 import { cn } from "@/utils/styleUtils"
 import type { Recording } from "@pretzel-graph/shared/domain"
-import { MIN_BLOCK_W, RUNNING_BLOCK_W, TRACK_HEIGHT } from "./constants"
+import { MIN_BLOCK_W, RUNNING_BLOCK_W } from "./constants"
 import { useTimelineViewerStore, timelineViewerActions } from "../../timeline-viewer-store"
 import type { TimeScale } from "./time-scale"
 
 interface UoWBlockProps {
-    unit: Recording.UnitOfWork
-    scale: TimeScale
+    unit:    Recording.UnitOfWork
+    scale:   TimeScale
     accent?: string
+    height:  number
 }
 
 const STATUS_CLASSES: Record<Recording.UnitOfWork.Status, string> = {
@@ -17,7 +18,7 @@ const STATUS_CLASSES: Record<Recording.UnitOfWork.Status, string> = {
     failed:    "opacity-90",
 }
 
-const UoWBlock = ({ unit, scale, accent }: UoWBlockProps) => {
+const UoWBlock = ({ unit, scale, accent, height }: UoWBlockProps) => {
     const selectedUoW = useTimelineViewerStore(s => s.selectedUoW)
     const isSelected = selectedUoW === unit.id
 
@@ -41,9 +42,10 @@ const UoWBlock = ({ unit, scale, accent }: UoWBlockProps) => {
             style={{
                 position: "absolute",
                 left: x,
-                top: 3,
+                top: 0,
                 width: w,
-                height: TRACK_HEIGHT - 6,
+                height,
+                zIndex: 1,
                 backgroundColor,
                 border: `1px solid ${borderColor}`,
                 outline: isSelected ? `2px solid ${bgColor}` : undefined,

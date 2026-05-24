@@ -74,7 +74,7 @@ export class AggexEngine {
             ),
 
             new Promise((resolve, reject) => {
-                ctx.abortSignal.addEventListener("abort", () => {
+                ctx.abortAPI.signal.addEventListener("abort", () => {
                     resolve({
                         status: "terminated" as const,
                         duration: (performance.now() - start) / 1000

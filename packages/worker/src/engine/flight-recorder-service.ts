@@ -16,7 +16,7 @@ export class FlightRecorderService {
         executionId:  Execution.Id,
         workflowId:   Workflow.Id,
         workflowData: Workflow.Data,
-        origin:       number,
+        origin:       number,  // performance.now() at execution start
     ) {
         this.executionId = executionId
         this.origin      = origin
@@ -46,7 +46,7 @@ export class FlightRecorderService {
     // Creates a new UnitOfWork for the node, appends it to the track.
     public onNodeFired(nodeId: Workflow.Node.Id): void {
         const unitId    = Recording.UnitOfWork.createId(nodeId)
-        const startedAt = Date.now() - this.origin
+        const startedAt = performance.now() - this.origin
 
         const unit: Recording.UnitOfWork = {
             id:             unitId,
@@ -147,7 +147,7 @@ export class FlightRecorderService {
         if (!unit) return
 
         unit.status   = "completed"
-        unit.duration = Date.now() - this.origin - unit.startedAt
+        unit.duration = performance.now() - this.origin - unit.startedAt
 
         const projections = ctx.session.node_output_projections[nodeId] ?? {}
 
@@ -188,7 +188,7 @@ export class FlightRecorderService {
         if (!unit) return
 
         unit.status   = "failed"
-        unit.duration = Date.now() - this.origin - unit.startedAt
+        unit.duration = performance.now() - this.origin - unit.startedAt
 
         ctx.emit<Recording.Event.Unit.Failed>({
             channel:     Execution.Event.getChannel(this.executionId),

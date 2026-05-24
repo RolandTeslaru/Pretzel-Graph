@@ -37,11 +37,12 @@ export abstract class RuntimeNode<
         const nodeCredIds = this.context.workflowData.credentialInstanceIds[this.workflowNode.id] ?? {};
         const result: Record<string, Vault.Credential.Instance> = {};
         for (const [templateId, instanceId] of Object.entries(nodeCredIds) as [Vault.Credential.Template.Id, Vault.Credential.Instance.Id][]) {
-            const instance = this.context.credentialInstances[instanceId];
+            const instance = this.context.credentialsAPI.getInstance(instanceId);
             if (instance) result[templateId] = instance;
         }
         return result as InferCredentials<T_Blueprint>;
     }
+
 
 
 
@@ -179,7 +180,7 @@ export abstract class RuntimeNode<
             signal: AbortSignal
         ) => void
     ): Promise<T> {
-        const signal = this.context.abortSignal; 
+        const signal = this.context.abortAPI.signal;
 
         if (signal.aborted)
             return Promise.reject(signal.reason);
@@ -268,20 +269,24 @@ export abstract class RuntimeRouterNode<T_Blueprint extends Blueprint> extends R
 export namespace RuntimeNode {
     export type ConstructorProps = ConstructorParameters<typeof RuntimeNode>[0]
     export type CompileProps = Parameters<RuntimeNode<Blueprint>["compile"]>[0]
-    
+
     export interface ExecutionContext {
         readonly executionId: Execution.Id,
         readonly chat_id: Chat.Id | undefined,
         readonly session: Execution.Session,
-        readonly credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
-        readonly getDecryptedCredentialValues: <T = unknown>(blob: Vault.Credential.Instance.EncryptedBlob<T>) => InferCredentialValues<T>,
         readonly updateSession: (recipe: (draft: Execution.Session) => void) => void,
-        readonly abortSignal: AbortSignal,
-        readonly abortExecution: (reason?: any) => void,
         readonly emit: <T_Event extends Realtime.Event>(event: T_Event) => void,
         readonly workflowData: Workflow.Data,
         readonly workflowId: Workflow.Id,
         readonly workflowCache: Workflow.Cache,
+        readonly credentialsAPI: {
+            getInstance(instanceId: Vault.Credential.Instance.Id): Vault.Credential.Instance | undefined
+            getDecryptedValue<T = unknown>(blob: Vault.Credential.Instance.EncryptedBlob<T>): InferCredentialValues<T>
+        },
+        readonly abortAPI: {
+            signal: AbortSignal,
+            abort:  (reason?: any) => void,
+        },
         readonly portAPI: {
             write: (
                 nodeId: Workflow.Node.Id,

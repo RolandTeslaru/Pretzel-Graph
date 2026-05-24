@@ -47,7 +47,7 @@ export class AggexWorkerImpl {
 
         switch (signal.type) {
             case "terminate":
-                ctx.abortExecution()
+                ctx.abortAPI.abort()
                 break;
             case "pause":
                 engine?.pause();
@@ -56,7 +56,7 @@ export class AggexWorkerImpl {
                 engine?.resume();
                 break;
             case "suspend":
-                ctx.abortExecution();
+                ctx.abortAPI.abort();
                 break;
             case "heartbeat":
                 this.pauseTimeoutResetters.get(signal.executionId)?.();
@@ -125,7 +125,7 @@ export class AggexWorkerImpl {
 
             const onPauseTimeout = () => {
                 console.log(`[Worker] Max pause duration reached for job ${bullJob.id}, terminating`);
-                executionCtx.abortExecution()
+                executionCtx.abortAPI.abort()
                 engine.resume();
             };
 
@@ -158,7 +158,7 @@ export class AggexWorkerImpl {
             engine = new AggexEngine(aggexHooks);
             this.runningEnginesMap.set(executionId, engine);
 
-            const origin = Date.now();
+            const origin = performance.now();
             recorder = new FlightRecorderService(executionId, workflowId, workflowData, origin);
             if(igniter.record)
                 engine.attachFlightRecorder(recorder);
