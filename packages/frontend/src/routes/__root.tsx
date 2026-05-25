@@ -44,7 +44,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
                 <SandboxSDK.SandboxFrame />
                 <NotificationSDK.UIOverlay />
                 <DialogSDK.UIOverlay />
-                {/* <StateViewer /> */}
+                <StateViewer />
                 {/* <WebhookTester /> */}
                 <Outlet />
             </QuerySDK.Provider>

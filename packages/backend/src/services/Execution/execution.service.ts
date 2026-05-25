@@ -5,7 +5,7 @@ import Redis from 'ioredis';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { createAuthenticatedClient, createServiceClient } from '@/utils/supabase';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
-import { Auth, Execution, Recording, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
+import { Auth, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
 import { RealtimeService } from '../Realtime/realtime.service';
@@ -122,6 +122,7 @@ export class ExecutionService {
         const execution = {
             id: executionId,
             session,
+            recording: null,
             igniter,
             workflow_id: workflowId,
             chat_id,
@@ -175,6 +176,7 @@ export class ExecutionService {
                 status: 'pending' as Execution.Status,
                 duration: 0,
                 session,
+                recording: null,
                 created_at: now,
                 updated_at: now,
             },
@@ -383,55 +385,25 @@ export class ExecutionService {
     public async update(
         payload: Execution.API.Update.Request
     ): Promise<Execution.API.Update.Response> {
-        const { executionId, status, session } = payload;
-        await this.database.update(this.serviceSupabase, { executionId, status, session });
+        const { executionId, status, session, recording } = payload;
+        await this.database.update(this.serviceSupabase, { executionId, status, session, recording });
         return {};
     }
 
 
     public readonly recording = {
 
-        upsert: async (
-            payload: Recording.API.Upsert.Request,
-        ): Promise<Recording.API.Upsert.Response> => {
-            const userId = await this.ownership.loadExecutionOwner(payload.recording.executionId);
-            if (!userId)
-                throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
-            await this.database.recording.upsert(this.serviceSupabase, payload.recording, userId);
-            return {};
-        },
-
-        get: async (
-            token:   Token.UserSupabaseJWT,
-            userId:  Auth.User.Id,
-            payload: Recording.API.Get.Request,
-        ): Promise<Recording.API.Get.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            await this.ownership.assertExecution(supabase, payload.executionId, userId);
-            const recording = await this.database.recording.get(supabase, payload.executionId);
-            return { recording };
-        },
-
-        listByWorkflow: async (
-            token:   Token.UserSupabaseJWT,
-            payload: Recording.API.ListByWorkflow.Request,
-        ): Promise<Recording.API.ListByWorkflow.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            const recordings = await this.database.recording.listByWorkflow(supabase, payload.workflowId);
-            return { recordings };
-        },
-
         getLive: async (
             token:   Token.UserSupabaseJWT,
             userId:  Auth.User.Id,
-            payload: Recording.API.GetLive.Request,
-        ): Promise<Recording.API.GetLive.Response> => {
+            payload: Execution.API.Recording.GetLive.Request,
+        ): Promise<Execution.API.Recording.GetLive.Response> => {
             const supabase = createAuthenticatedClient(token);
             await this.ownership.assertExecution(supabase, payload.executionId, userId);
             const key = Execution.Event.getChannel(payload.executionId);
             const raw = await this.redis.get(key);
             if (!raw) throw new SystemError(SystemError.Code.NOT_FOUND, 'Live recording not found or expired');
-            const recording = Recording.Schema.parse(JSON.parse(raw));
+            const recording = Execution.Recording.Schema.parse(JSON.parse(raw));
             return { recording };
         },
 

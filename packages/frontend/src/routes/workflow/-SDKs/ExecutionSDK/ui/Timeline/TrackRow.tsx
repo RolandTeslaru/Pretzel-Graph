@@ -1,5 +1,5 @@
 import React from "react"
-import { Recording } from "@pretzel-graph/shared/domain"
+import { Execution } from "@pretzel-graph/shared/domain"
 import type { Workflow } from "@pretzel-graph/shared/domain"
 import UoWBlock from "./UoWBlock"
 import type { TimeScale } from "./time-scale"
@@ -7,7 +7,7 @@ import type { TimelineTrackLayout } from "../../selectors"
 
 interface TrackRowProps {
     trackLayout: TimelineTrackLayout
-    recording:   Recording
+    recording:   Execution.Recording
     nodes:       Record<Workflow.Node.Id, Workflow.Node>
     scale:       TimeScale
 }
@@ -38,7 +38,7 @@ const TrackRow = ({ trackLayout, recording, nodes, scale }: TrackRowProps) => {
                         scale={scale}
                         accent={accent}
                         height={blockHeight}
-                        topOffset={Recording.Timeline.TRACK_PADDING_Y}
+                        topOffset={Execution.Recording.Timeline.TRACK_PADDING_Y}
                     />
                 )
             })}

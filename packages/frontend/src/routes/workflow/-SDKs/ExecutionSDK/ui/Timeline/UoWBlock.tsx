@@ -1,18 +1,18 @@
 import React from "react"
 import { cn } from "@/utils/styleUtils"
-import { Recording } from "@pretzel-graph/shared/domain"
+import { Execution } from "@pretzel-graph/shared/domain"
 import { useTimelineViewerStore, timelineViewerActions } from "../../timeline-viewer-store"
 import type { TimeScale } from "./time-scale"
 
 interface UoWBlockProps {
-    unit:      Recording.UnitOfWork
+    unit:      Execution.Recording.UnitOfWork
     scale:     TimeScale
     accent?:   string
     height:    number
     topOffset: number
 }
 
-const STATUS_CLASSES: Record<Recording.UnitOfWork.Status, string> = {
+const STATUS_CLASSES: Record<Execution.Recording.UnitOfWork.Status, string> = {
     running:   "opacity-80 animate-pulse",
     completed: "opacity-100",
     failed:    "opacity-90",
@@ -24,7 +24,7 @@ const UoWBlock = ({ unit, scale, accent, height, topOffset }: UoWBlockProps) => 
 
     const x = scale.xFor(unit.startedAt)
     const rawW = scale.widthFor(unit.startedAt, unit.duration ?? 0)
-    const w = unit.status === "running" ? Recording.Timeline.RUNNING_BLOCK_W : Math.max(rawW, Recording.Timeline.MIN_BLOCK_W)
+    const w = unit.status === "running" ? Execution.Recording.Timeline.RUNNING_BLOCK_W : Math.max(rawW, Execution.Recording.Timeline.MIN_BLOCK_W)
 
     const backgroundColor = `color-mix(in srgb, var(--${accent}) 40%, var(--node-accent-base))`;
     const borderColor =  `color-mix(in srgb, var(--${accent}) 50%, var(--border))`;

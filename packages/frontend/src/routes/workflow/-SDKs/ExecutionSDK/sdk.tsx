@@ -1,7 +1,7 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
-import { Execution, Recording } from "@pretzel-graph/shared/domain";
+import { Execution } from "@pretzel-graph/shared/domain";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { createExecutionSDKActions, type ExecutionSDKActions } from "./actions";
@@ -21,7 +21,6 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
             currentExecution: undefined,
             executionHistory: [],
             awaitedConfirmation: new Set(),
-            currentRecording: null,
             selectedIgniter: "workbench_manual",
             selectors: executionSDKSelectors,
             recordExecution: false,
@@ -58,7 +57,7 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         )
     }
 
-    public handleOnEvent = (e: Execution.Event | Recording.Event) => { handleExecutionEvents(this, e) }
+    public handleOnEvent = (e: Execution.Event) => { handleExecutionEvents(this, e) }
 }
 
 export const ExecutionSDK = SDK.get<ExecutionSDKImpl>("Execution")
@@ -131,7 +130,6 @@ export namespace ExecutionSDK {
         currentExecution?: Execution
         executionHistory: Execution.Meta[]
         awaitedConfirmation: Set<AwaitedConfirmation>
-        currentRecording: Recording | null
         selectors: ExecutionSDKSelectors
         selectedIgniter: Execution.Igniter["variant"],
         recordExecution: boolean

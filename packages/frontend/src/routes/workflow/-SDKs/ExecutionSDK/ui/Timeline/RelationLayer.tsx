@@ -1,11 +1,11 @@
 import React, { useMemo } from "react"
-import { Recording } from "@pretzel-graph/shared/domain"
+import { Execution } from "@pretzel-graph/shared/domain"
 import type { Workflow } from "@pretzel-graph/shared/domain"
 import type { TimeScale } from "./time-scale"
 import type { TimelineLayout } from "../../selectors"
 
 interface RelationLayerProps {
-    recording:    Recording
+    recording:    Execution.Recording
     nodes:        Record<Workflow.Node.Id, Workflow.Node>
     scale:        TimeScale
     layout:       TimelineLayout
@@ -24,8 +24,8 @@ const RelationLayer = ({
     totalHeight,
 }: RelationLayerProps) => {
     const arrows = useMemo(() => {
-        const subRow  = Recording.Timeline.UOW_PORT_HEIGHT
-        const padY    = Recording.Timeline.TRACK_PADDING_Y
+        const subRow  = Execution.Recording.Timeline.UOW_PORT_HEIGHT
+        const padY    = Execution.Recording.Timeline.TRACK_PADDING_Y
 
         return Object.values(recording.relations).flatMap(rel => {
             if (rel.type === "dataRemnant" && !showRemnants) return []
@@ -50,8 +50,8 @@ const RelationLayer = ({
             const tgtRow = tgtPortIdx >= 0 ? tgtPortIdx : 0
 
             const srcW = srcUnit.status === "running"
-                ? Recording.Timeline.RUNNING_BLOCK_W
-                : Math.max(scale.widthFor(srcUnit.startedAt, srcUnit.duration ?? 0), Recording.Timeline.MIN_BLOCK_W)
+                ? Execution.Recording.Timeline.RUNNING_BLOCK_W
+                : Math.max(scale.widthFor(srcUnit.startedAt, srcUnit.duration ?? 0), Execution.Recording.Timeline.MIN_BLOCK_W)
 
             const sx = scale.xFor(srcUnit.startedAt) + srcW
             const sy = srcLayout.top + padY + srcRow * subRow + subRow / 2

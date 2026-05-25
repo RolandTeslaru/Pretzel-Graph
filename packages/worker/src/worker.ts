@@ -1,7 +1,7 @@
 import { Job as BullJob, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants"
-import { Execution, Recording, Realtime } from '@pretzel-graph/shared/domain';
+import { Execution, Realtime } from '@pretzel-graph/shared/domain';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { AggexEngine, AggexHooks } from 'src/engine';
 import { FlightRecorderService } from './engine/flight-recorder-service';
@@ -171,8 +171,9 @@ export class AggexWorkerImpl {
 
             const session = executionCtx.session;
             const status = result.status === 'terminated' ? 'terminated' : 'completed';
+            const recording = (igniter.record && recorder) ? recorder.getRecording() : null;
 
-            await Execution.API.update(AxiosService.api, { executionId, status, session });
+            await Execution.API.update(AxiosService.api, { executionId, status, session, recording });
 
             if (status === 'terminated') {
                 this.emit<Execution.Event.Terminated>({ executionId, workflowId, type: "terminated", channel: eventChannel });
@@ -180,15 +181,16 @@ export class AggexWorkerImpl {
                 this.emit<Execution.Event.Completed>({ executionId, workflowId, type: "completed", channel: eventChannel, session });
             }
 
-            if(igniter.record && recorder){
+            if (recording) {
                 await this.redisPub.set(
                     Execution.Event.getChannel(executionId),
-                    JSON.stringify(recorder.getRecording()),
-                    'EX', 60 * 60 // expire in 1 hour
+                    JSON.stringify(recording),
+                    'EX', Execution.Recording.LIVE_TTL_SECONDS,
                 )
-                this.emit<Recording.Event.FullyUploaded>({
+                this.emit<Execution.Event.Recording.FullyUploaded>({
                     channel:     Execution.Event.getChannel(executionId),
                     executionId: executionId,
+                    workflowId,
                     type:        "recording:fullyUploaded",
                 })
             }
@@ -202,12 +204,22 @@ export class AggexWorkerImpl {
 
             const executionCtx = this.runningExecutionContextsMap.get(execution.id)!;
             const session = executionCtx?.session ?? Execution.Session.createInitial();
+            const recording = (igniter.record && recorder) ? recorder.getRecording() : null;
 
-            await Execution.API.update(AxiosService.api, { executionId: execution.id, status: 'failed', session }).catch(() => {});
+            await Execution.API.update(AxiosService.api, { executionId: execution.id, status: 'failed', session, recording }).catch(() => {});
 
-            if (recorder) {
-                await Recording.API.upsert(AxiosService.api, { recording: recorder.getRecording() })
-                    .catch(saveErr => console.error('[Worker] Failed to save recording:', saveErr));
+            if (recording) {
+                await this.redisPub.set(
+                    Execution.Event.getChannel(execution.id),
+                    JSON.stringify(recording),
+                    'EX', Execution.Recording.LIVE_TTL_SECONDS,
+                ).catch(redisErr => console.error('[Worker] Failed to cache recording:', redisErr));
+                this.emit<Execution.Event.Recording.FullyUploaded>({
+                    channel:     Execution.Event.getChannel(execution.id),
+                    executionId: execution.id,
+                    workflowId,
+                    type:        "recording:fullyUploaded",
+                })
             }
 
             this.emit<Execution.Event.Failed>({

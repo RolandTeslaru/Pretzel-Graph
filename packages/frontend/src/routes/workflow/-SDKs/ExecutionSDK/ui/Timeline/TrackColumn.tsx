@@ -21,11 +21,13 @@ const TrackColumn = ({ layout, nodes }: TrackColumnProps) => {
                         style={{ position: "absolute", top: tl.top, height: tl.height, left: 0, right: 0 }}
                         className="flex items-center gap-2 px-1 border-b border-border/50"
                     >
-                        <LazyIcon
-                            className={`w-3 h-3`}
-                            name={node.icon as string}
-                            style={{ color: `var(--${node.accent}-foreground)` }}
+                        {node?.icon && (
+                            <LazyIcon
+                                className={`w-3 h-3`}
+                                name={node.icon as string}
+                                style={{ color: `var(--${node.accent}-foreground)` }}
                             />
+                        )}
                         <span className="text-[10px] text-foreground font-medium  ml-auto truncate leading-none">
                             {label}
                         </span>

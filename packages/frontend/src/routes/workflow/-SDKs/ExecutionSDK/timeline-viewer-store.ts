@@ -1,12 +1,12 @@
 import { immer } from "zustand/middleware/immer"
 import { createWithEqualityFn } from "zustand/traditional"
 import { shallow } from "zustand/shallow"
-import { Recording } from "@pretzel-graph/shared/domain"
+import { Execution } from "@pretzel-graph/shared/domain"
 import { VIEW_MODES, type TimelineViewMode } from "./ui/Timeline/time-scale"
 
 export type TimelineViewerState = {
     zoom: number
-    selectedUoW: Recording.UnitOfWork.Id | null
+    selectedUoW: Execution.Recording.UnitOfWork.Id | null
     showRemnants: boolean
     viewMode: TimelineViewMode
 }
@@ -15,7 +15,7 @@ export const timelineViewerReducers = {
     setZoom: (s: TimelineViewerState, zoom: number) => {
         s.zoom = Math.min(10, Math.max(0.02, zoom));
     },
-    setSelectedUoW: (s: TimelineViewerState, id: Recording.UnitOfWork.Id | null) => {
+    setSelectedUoW: (s: TimelineViewerState, id: Execution.Recording.UnitOfWork.Id | null) => {
         s.selectedUoW = id;
     },
     toggleRemnants: (s: TimelineViewerState) => {
@@ -44,7 +44,7 @@ export const timelineViewerActions = {
     setZoom: (zoom: number) => {
         useTimelineViewerStore.setState(s => { timelineViewerReducers.setZoom(s, zoom) })
     },
-    selectUoW: (id: Recording.UnitOfWork.Id | null) => {
+    selectUoW: (id: Execution.Recording.UnitOfWork.Id | null) => {
         useTimelineViewerStore.setState(s => { timelineViewerReducers.setSelectedUoW(s, id) })
     },
     toggleRemnants: () => {

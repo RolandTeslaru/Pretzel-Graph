@@ -1,56 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Auth, Chat, Execution, Recording, Workflow } from '@pretzel-graph/shared/domain';
+import { Auth, Chat, Execution, Workflow } from '@pretzel-graph/shared/domain';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { SupabaseAssert, ZodReturn } from '../../decorators/database';
-
-class RecordingMethods {
-
-    @SupabaseAssert('recording.upsert')
-    async upsert(supabase: SupabaseClient, recording: Recording, userId: Auth.User.Id): Promise<void> {
-        const { tracks, units, relations, dataBank } = recording;
-        await supabase
-            .from('execution_recordings')
-            .upsert({
-                id:           recording.id,
-                execution_id: recording.executionId,
-                workflow_id:  recording.workflowId,
-                user_id:      userId,
-                data:         { tracks, units, relations, dataBank },
-                created_at:   recording.createdAt,
-            }, { onConflict: 'execution_id' })
-            .throwOnError();
-    }
-
-    @SupabaseAssert('recording.get')
-    async get(supabase: SupabaseClient, executionId: Execution.Id): Promise<Recording> {
-        const { data } = await supabase
-            .from('execution_recordings')
-            .select('id, execution_id, workflow_id, user_id, data, created_at')
-            .eq('execution_id', executionId)
-            .single()
-            .throwOnError();
-
-        return Recording.Database.fromRow(Recording.Database.Row.Schema.parse(data));
-    }
-
-    @SupabaseAssert('recording.listByWorkflow')
-    async listByWorkflow(supabase: SupabaseClient, workflowId: Workflow.Id): Promise<Recording.Meta[]> {
-        const { data } = await supabase
-            .from('execution_recordings')
-            .select('id, execution_id, workflow_id, created_at')
-            .eq('workflow_id', workflowId)
-            .order('created_at', { ascending: false })
-            .throwOnError();
-
-        return (data ?? []).map(row => ({
-            id:          row.id,
-            executionId: row.execution_id,
-            workflowId:  row.workflow_id,
-            createdAt:   row.created_at,
-        }));
-    }
-}
 
 class MetaMethods {
 
@@ -97,7 +49,6 @@ class MetaMethods {
 @Injectable()
 export class ExecutionDatabase {
 
-    public readonly recording = new RecordingMethods();
     public readonly meta      = new MetaMethods();
 
     @SupabaseAssert('execution.create')
@@ -134,13 +85,15 @@ export class ExecutionDatabase {
         status?:     Execution.Status,
         error?:      string,
         session?:    Execution.Session.Update,
+        recording?:  Execution.Recording | null,
     }): Promise<void> {
         await supabase
             .from('executions')
             .update({
-                ...(props.status  !== undefined && { status:  props.status }),
-                ...(props.error   !== undefined && { error:   props.error }),
-                ...(props.session !== undefined && { session: props.session }),
+                ...(props.status    !== undefined && { status:    props.status }),
+                ...(props.error     !== undefined && { error:     props.error }),
+                ...(props.session   !== undefined && { session:   props.session }),
+                ...(props.recording !== undefined && { recording: props.recording }),
                 updated_at: new Date(),
             })
             .eq('id', props.executionId)
@@ -165,7 +118,7 @@ export class ExecutionDatabase {
     async get(supabase: SupabaseClient, executionId: Execution.Id): Promise<Execution> {
         const { data } = await supabase
             .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, session, chat_id, created_at, updated_at')
+            .select('id, workflow_id, igniter, status, duration, error, session, recording, chat_id, created_at, updated_at')
             .eq('id', executionId)
             .single()
             .throwOnError();
