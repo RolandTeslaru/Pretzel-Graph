@@ -19,7 +19,7 @@ const TrackColumn = ({ layout, nodes }: TrackColumnProps) => {
                     <div
                         key={tl.track.id}
                         style={{ position: "absolute", top: tl.top, height: tl.height, left: 0, right: 0 }}
-                        className="flex items-center gap-2 px-1"
+                        className="flex items-center gap-2 px-1 border-b border-border/50"
                     >
                         <LazyIcon
                             className={`w-3 h-3`}
