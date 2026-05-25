@@ -136,8 +136,151 @@ export namespace Execution {
         export type Item = z.infer<typeof Item>
     }
 
+    // ─── Recording ────────────────────────────────────────────────────────────
+    // Per-execution flight recorder data. 1:1 with Execution — identified by
+    // the execution's own id. Embedded as a nullable JSONB column on the
+    // executions row, so the recording lifecycle rides on the execution's.
+
+    export namespace Recording {
+
+        // Default Redis TTL for the post-finalisation live cache.
+        // The cache is only the "fresh read after recording:fullyUploaded"
+        // path — Supabase is authoritative beyond that window.
+        export const LIVE_TTL_SECONDS = 300
+
+        // ─── DataBank ────────────────────────────────────────────────────────
+        // Flat store of port value snapshots. One entry per (uow, port) pair.
+        // Input snapshots reference the same entries as the source UoW's
+        // output snapshots — no duplication across the two.
+
+        export namespace DataBank {
+            export namespace PortSnapshot {
+                export const Id = z.string().brand("ExecutionRecordingPortSnapshotId")
+                export type Id = z.infer<typeof Id>
+
+                // Deterministic — always uowId:portId, no need to pass around separately
+                export const formatId = (uowId: UnitOfWork.Id, portId: Port.Id): Id =>
+                    `${uowId}:${portId}` as Id
+
+                export const Schema = z.object({
+                    id:     Id,
+                    portId: Port.Id,
+                    value:  Projection.Schema,
+                })
+            }
+
+            export const Schema = z.object({
+                snapshots: z.record(PortSnapshot.Id, PortSnapshot.Schema).default({}),
+            })
+        }
+        export type DataBank = z.infer<typeof DataBank.Schema>
+
+        // ─── UnitOfWork ──────────────────────────────────────────────────────
+        // One per node execution. Cyclic nodes produce multiple UoWs on the
+        // same track. Times are ms relative to origin (0 = execution start).
+
+        export namespace UnitOfWork {
+            export const Id = z.string().brand("ExecutionRecordingUnitOfWorkId")
+            export type Id = z.infer<typeof Id>
+
+            export const createId = (nodeId: Workflow.Node.Id): Id =>
+                `${nodeId}:${crypto.randomUUID().slice(0, 8)}` as Id
+
+            export const Status = z.enum(["running", "completed", "failed"])
+            export type Status = z.infer<typeof Status>
+
+            export const Schema = z.object({
+                id:             Id,
+                trackId:        Workflow.Node.Id,
+                status:         Status,
+                startedAt:      z.number(),            // ms from origin
+                duration:       z.number().optional(), // ms; undefined while running
+                inputSnapshot:  z.record(Port.Input.Id,  DataBank.PortSnapshot.Id).default({}),
+                outputSnapshot: z.record(Port.Output.Id, DataBank.PortSnapshot.Id).default({}),
+            })
+        }
+        export type UnitOfWork = z.infer<typeof UnitOfWork.Schema>
+
+        // ─── Track ───────────────────────────────────────────────────────────
+        // One per node. unitIds is append-only in execution order.
+
+        export namespace Track {
+            export const Id = Workflow.Node.Id
+            export type Id = z.infer<typeof Id>
+
+            export const Schema = z.object({
+                id:      Id,
+                unitIds: z.array(UnitOfWork.Id).default([]),
+            })
+        }
+        export type Track = z.infer<typeof Track.Schema>
+
+        // ─── Relation ────────────────────────────────────────────────────────
+        // Connects two UoWs via a workflow edge.
+        // "signal"      — source directly triggered target this cycle  (solid arrow)
+        // "dataRemnant" — source ran in a prior cycle; target read its stale output (dashed arrow)
+
+        export namespace Relation {
+            export const Id = z.string().brand("ExecutionRecordingRelationId")
+            export type Id = z.infer<typeof Id>
+
+            export const formatId = (source: UnitOfWork.Id, edgeId: Workflow.Edge.Id, target: UnitOfWork.Id): Id =>
+                `${source}:${edgeId}:${target}` as Id
+
+            export const Schema = z.object({
+                id:             Id,
+                source:         UnitOfWork.Id,
+                target:         UnitOfWork.Id,
+                edge:           Workflow.Edge.Id,
+                type:           z.enum(["signal", "dataRemnant"]),
+                dataSnapshotId: DataBank.PortSnapshot.Id,
+            })
+        }
+        export type Relation = z.infer<typeof Relation.Schema>
+
+        // ─── Schema ──────────────────────────────────────────────────────────
+        // The embedded payload. id/executionId/workflowId/createdAt are NOT
+        // here — they're on the parent Execution row.
+
+        export const Schema = z.object({
+            workflowDataSnapshot: Workflow.Data.Schema, // workflow state at execution time;
+                                                        // insulates the timeline from subsequent edits
+            tracks:    z.record(Track.Id,      Track.Schema     ).default({}),
+            units:     z.record(UnitOfWork.Id, UnitOfWork.Schema).default({}),
+            relations: z.record(Relation.Id,   Relation.Schema  ).default({}),
+            dataBank:  DataBank.Schema.default({ snapshots: {} }),
+        })
+
+        // ─── Timeline UI constants ───────────────────────────────────────────
+        // Pixel geometry and formatting helpers for the timeline viewer.
+
+        export namespace Timeline {
+            export const UOW_PORT_HEIGHT = 20   // px — height of one port sub-row inside a UoW block
+            export const TRACK_PADDING_Y = 3    // px — vertical inset above/below the UoW block within its track row
+            export const TRACK_LABEL_W   = 100  // px — width of the track label column
+            export const RULER_H         = 28   // px — height of the time ruler header
+            export const MIN_BLOCK_W     = 6    // px — minimum rendered width of a completed UoW block
+            export const RUNNING_BLOCK_W = 32   // px — fixed width used while a UoW is still running
+
+            export function tickIntervalMs(pixelsPerMs: number): number {
+                if (pixelsPerMs >= 2)   return 10
+                if (pixelsPerMs >= 0.5) return 100
+                if (pixelsPerMs >= 0.1) return 500
+                return 1000
+            }
+
+            export function formatMs(ms: number): string {
+                if (ms >= 1000) return `${(ms / 1000).toFixed(ms % 1000 === 0 ? 0 : 1)}s`
+                return `${ms}ms`
+            }
+        }
+    }
+    export type Recording = z.infer<typeof Recording.Schema>
+
     // ─── Top-level entity ─────────────────────────────────────────────────────
     // Execution = Job + Session collapsed into one record.
+    // recording is nullable — only populated when igniter.record === true.
+    // NEVER `SELECT *` from the executions table — recording can be large.
 
     export const Schema = z.object({
         id:          Id,
@@ -147,6 +290,7 @@ export namespace Execution {
         duration:    z.number(),
         error:       SystemError.Schema.nullish(),
         session:     Session.Schema,     // embedded; no separate id
+        recording:   Recording.Schema.nullable().default(null),
         chat_id:     Chat.Id.nullish(), // if applicable
         created_at:  supabaseTimestamp,
         updated_at:  supabaseTimestamp,
@@ -156,13 +300,13 @@ export namespace Execution {
         export namespace Row {
             export const Schema = Execution.Schema.extend({
                 user_id: Auth.User.Id,
-            })   
+            })
         }
         export type Row = z.infer<typeof Schema>
     }
 
-    // Lightweight projection for list views — omits the heavy session blob.
-    export const Meta = Schema.omit({ session: true })
+    // Lightweight projection for list views — omits the heavy session + recording blobs.
+    export const Meta = Schema.omit({ session: true, recording: true })
     export type Meta = z.infer<typeof Meta>
 
 
@@ -237,10 +381,66 @@ export namespace Execution {
         export type Failed          = z.infer<typeof Failed>
         export type SessionUpdate   = z.infer<typeof SessionUpdate>
 
+        // ─── Recording events ────────────────────────────────────────────────
+        // Sent on the same execution channel. Frontend applies each as a
+        // direct patch to its local recording state.
+
+        export namespace Recording {
+            export namespace Unit {
+                export const Started = Base.extend({
+                    type: z.literal("unit:started"),
+                    unit: Execution.Recording.UnitOfWork.Schema,
+                })
+                export type Started = z.infer<typeof Started>
+
+                export const Completed = Base.extend({
+                    type:           z.literal("unit:completed"),
+                    unitId:         Execution.Recording.UnitOfWork.Id,
+                    duration:       z.number(),
+                    outputSnapshot: z.record(Port.Output.Id, Execution.Recording.DataBank.PortSnapshot.Id),
+                })
+                export type Completed = z.infer<typeof Completed>
+
+                export const Failed = Base.extend({
+                    type:     z.literal("unit:failed"),
+                    unitId:   Execution.Recording.UnitOfWork.Id,
+                    duration: z.number(),
+                })
+                export type Failed = z.infer<typeof Failed>
+            }
+
+            export namespace Relation {
+                export const Created = Base.extend({
+                    type:     z.literal("relation:created"),
+                    relation: Execution.Recording.Relation.Schema,
+                })
+                export type Created = z.infer<typeof Created>
+
+                export const CreateBatch = Base.extend({
+                    type:      z.literal("relation:createBatch"),
+                    relations: z.array(Execution.Recording.Relation.Schema),
+                })
+                export type CreateBatch = z.infer<typeof CreateBatch>
+            }
+
+            export const Completed = Base.extend({
+                type: z.literal("recording:completed"),
+            })
+            export type Completed = z.infer<typeof Completed>
+
+            export const FullyUploaded = Base.extend({
+                type: z.literal("recording:fullyUploaded"),
+            })
+            export type FullyUploaded = z.infer<typeof FullyUploaded>
+        }
+
         export const Schema = z.discriminatedUnion("type", [
             Started, Paused, Resumed, Suspended, Terminated, Completed, Failed,
             SessionUpdate,
             Node.Started, Node.Completed, Node.Error, Node.Waiting,
+            Recording.Unit.Started, Recording.Unit.Completed, Recording.Unit.Failed,
+            Recording.Relation.Created, Recording.Relation.CreateBatch,
+            Recording.Completed, Recording.FullyUploaded,
         ])
     }
     export type Event = z.infer<typeof Event.Schema>
@@ -431,6 +631,7 @@ export namespace Execution {
                 executionId: Execution.Id,
                 status:      Status.optional(),
                 session:     Session.Update.optional(),
+                recording:   Execution.Recording.Schema.nullable().optional(),
             })
             export type Request = z.infer<typeof Request>
             export const Response = z.object({})
@@ -440,6 +641,23 @@ export namespace Execution {
         export async function update(api: AxiosInstance, req: Update.Request): Promise<Update.Response> {
             const { data } = await api.post<Update.Response>('/api/execution/update', req)
             return data
+        }
+
+        // Reads the ephemeral recording from Redis (written at end of execution,
+        // TTL-expiring). Use this immediately after a `recording:fullyUploaded`
+        // event to reconcile any missed event patches. Supabase is authoritative
+        // beyond the TTL window — fall back to Execution.API.get for old runs.
+        export namespace Recording {
+            export namespace GetLive {
+                export const Request  = z.object({ executionId: Execution.Id })
+                export const Response = z.object({ recording: Execution.Recording.Schema })
+                export type Request   = z.infer<typeof Request>
+                export type Response  = z.infer<typeof Response>
+            }
+            export async function getLive(api: AxiosInstance, req: GetLive.Request): Promise<GetLive.Response> {
+                const { data } = await api.post<GetLive.Response>('/api/execution/recording/get-live', req)
+                return data
+            }
         }
 
         export namespace Meta {

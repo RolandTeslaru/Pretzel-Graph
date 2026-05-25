@@ -8,7 +8,7 @@ import { Button } from "@pretzel-graph/standard-ui/foundations"
 import TimeRuler from "./TimeRuler"
 import TrackRow from "./TrackRow"
 import RelationLayer from "./RelationLayer"
-import { Recording } from "@pretzel-graph/shared/domain"
+import { Execution } from "@pretzel-graph/shared/domain"
 import { makeTimeScale } from "./time-scale"
 import FloatContainer from "@/components/FloatContainer"
 import TimelineControls from "./Controls"
@@ -17,7 +17,7 @@ import TracksPanel from "./TracksPanel"
 const ZOOM_STEP = 1.4
 
 const TimelineViewer = () => {
-    const recording = ExecutionSDK.useStore(s => s.currentRecording)
+    const recording = ExecutionSDK.useStore(s => s.currentExecution?.recording ?? null)
 
     const [zoom, showRemnants, viewMode] = useTimelineViewerStore(s => [
         s.zoom,
@@ -26,7 +26,8 @@ const TimelineViewer = () => {
     ])
 
     const workbenchNodes = WorkbenchSDK.useStore(s => s.data.nodes)
-    const nodes = recording?.workflowDataSnapshot?.nodes ?? workbenchNodes
+    const snapshotNodes = recording?.workflowDataSnapshot?.nodes
+    const nodes = (snapshotNodes && Object.keys(snapshotNodes).length > 0) ? snapshotNodes : workbenchNodes
 
     const layout        = useMemo(() => getTimelineLayout(recording, nodes), [recording, nodes])
     const totalDuration = useMemo(() => getTotalDuration(recording),         [recording])
@@ -78,7 +79,7 @@ const TimelineViewer = () => {
                     style={{
                         display: "grid",
                         // gridTemplateColumns: `${TRACK_LABEL_W}px 1fr`,
-                        gridTemplateRows: `${Recording.Timeline.RULER_H}px 1fr`,
+                        gridTemplateRows: `${Execution.Recording.Timeline.RULER_H}px 1fr`,
                     }}
                 >
     

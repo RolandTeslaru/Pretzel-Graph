@@ -1,4 +1,4 @@
-import { Execution, Recording, Validation, Workflow } from "@pretzel-graph/shared/domain";
+import { Execution, Validation, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { ExecutionSDK, type ExecutionSDKImpl } from "./sdk"
 import { toast } from "sonner";
@@ -27,6 +27,25 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             // Generate the ID eagerly
             const executionId = Execution.createId();
             sdk.subscribeToEvents(executionId);
+
+            // Seed a stub currentExecution so events arriving before the HTTP
+            // response have somewhere to land. The real Execution replaces it
+            // once the run API resolves.
+            const now = new Date().toISOString();
+            sdk.setState(s => {
+                s.currentExecution = {
+                    id:          executionId,
+                    workflow_id: WorkbenchSDK.state.workflowId,
+                    igniter,
+                    status:      "pending",
+                    duration:    0,
+                    session:     Execution.Session.createInitial(),
+                    recording:   null,
+                    created_at:  now,
+                    updated_at:  now,
+                };
+                s.isCurrentExecutionRecording = igniter.record ?? false;
+            });
 
             const executionCreationPromise = Execution.API.run(api, {
                 workflowId: WorkbenchSDK.state.workflowId,
@@ -83,7 +102,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             const confirmEvent = sdk.useAwaitConfirmation("terminated")
             const { success } = await Execution.API.terminate(api, { executionId });
             if (success){
-                sdk.setState(s => { sdk.reducers.setStatus(s, "terminated") })
+                sdk.setState(s => { sdk.reducers.currentExecution.setStatus(s, "terminated") })
                 toast.info('Workflow execution terminated')
             }
             else
@@ -121,7 +140,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             return success;
         },
         setCurrentExecution: (execution: Execution) => {
-            sdk.setState(s => { sdk.reducers.setCurrentExecution(s, execution) });
+            sdk.setState(s => { sdk.reducers.currentExecution.set(s, execution) });
         },
         loadHistory: async (workflowId: Workflow.Id) => {
             const { executions } = await Execution.API.Meta.list(api, { workflowId });
@@ -144,20 +163,12 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 s.awaitedConfirmation.delete(event)
             })
         },
-        loadRecording: async (executionId) => {
-            try {
-                const { recording } = await Recording.API.get(api, { executionId });
-                sdk.setState(s => { sdk.reducers.currentRecording.set(s, recording) });
-            } catch {
-                sdk.setState(s => { sdk.reducers.currentRecording.set(s, null) });
-            }
-        },
         loadLiveRecording: async (executionId) => {
             try {
-                const { recording } = await Recording.API.getLive(api, { executionId });
-                sdk.setState(s => { sdk.reducers.currentRecording.set(s, recording) });
+                const { recording } = await Execution.API.Recording.getLive(api, { executionId });
+                sdk.setState(s => { sdk.reducers.currentExecution?.recording.set(s, recording) });
             } catch {
-                sdk.setState(s => { sdk.reducers.currentRecording.set(s, null) });
+                sdk.setState(s => { sdk.reducers.currentExecution?.recording.set(s, null) });
             }
         },
         setSelectedIgniter: (variant) => {
@@ -184,7 +195,6 @@ export type ExecutionSDKActions = {
     addAwaitedConfirmation:    (event: ExecutionSDK.AwaitedConfirmation) => void,
     removeAwaitedConfirmation: (event: ExecutionSDK.AwaitedConfirmation) => void,
 
-    loadRecording:     (executionId: Execution.Id) => Promise<void>,
     loadLiveRecording: (executionId: Execution.Id) => Promise<void>,
 
     setSelectedIgniter: (variant: Execution.Igniter["variant"]) => void,
