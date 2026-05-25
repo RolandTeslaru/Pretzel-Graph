@@ -1,15 +1,15 @@
 import React from "react"
 import { cn } from "@/utils/styleUtils"
-import type { Recording } from "@pretzel-graph/shared/domain"
-import { MIN_BLOCK_W, RUNNING_BLOCK_W } from "./constants"
+import { Recording } from "@pretzel-graph/shared/domain"
 import { useTimelineViewerStore, timelineViewerActions } from "../../timeline-viewer-store"
 import type { TimeScale } from "./time-scale"
 
 interface UoWBlockProps {
-    unit:    Recording.UnitOfWork
-    scale:   TimeScale
-    accent?: string
-    height:  number
+    unit:      Recording.UnitOfWork
+    scale:     TimeScale
+    accent?:   string
+    height:    number
+    topOffset: number
 }
 
 const STATUS_CLASSES: Record<Recording.UnitOfWork.Status, string> = {
@@ -18,13 +18,13 @@ const STATUS_CLASSES: Record<Recording.UnitOfWork.Status, string> = {
     failed:    "opacity-90",
 }
 
-const UoWBlock = ({ unit, scale, accent, height }: UoWBlockProps) => {
+const UoWBlock = ({ unit, scale, accent, height, topOffset }: UoWBlockProps) => {
     const selectedUoW = useTimelineViewerStore(s => s.selectedUoW)
     const isSelected = selectedUoW === unit.id
 
     const x = scale.xFor(unit.startedAt)
     const rawW = scale.widthFor(unit.startedAt, unit.duration ?? 0)
-    const w = unit.status === "running" ? RUNNING_BLOCK_W : Math.max(rawW, MIN_BLOCK_W)
+    const w = unit.status === "running" ? Recording.Timeline.RUNNING_BLOCK_W : Math.max(rawW, Recording.Timeline.MIN_BLOCK_W)
 
     const backgroundColor = `color-mix(in srgb, var(--${accent}) 40%, var(--node-accent-base))`;
     const borderColor =  `color-mix(in srgb, var(--${accent}) 50%, var(--border))`;
@@ -42,7 +42,7 @@ const UoWBlock = ({ unit, scale, accent, height }: UoWBlockProps) => {
             style={{
                 position: "absolute",
                 left: x,
-                top: 0,
+                top: topOffset,
                 width: w,
                 height,
                 zIndex: 1,
@@ -52,7 +52,7 @@ const UoWBlock = ({ unit, scale, accent, height }: UoWBlockProps) => {
                 outlineOffset: isSelected ? 2 : undefined,
             }}
             className={cn(
-                "rounded-xs cursor-pointer transition-opacity",
+                "rounded-xs cursor-pointer  transition-opacity",
                 STATUS_CLASSES[unit.status],
             )}
             title={`${unit.id} · ${unit.status}${unit.duration != null ? ` · ${unit.duration}ms` : ""}`}

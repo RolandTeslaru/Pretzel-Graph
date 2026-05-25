@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from "react"
+import { useCallback, useMemo, useRef } from "react"
 import { ExecutionSDK } from "../../sdk"
 import { getTimelineLayout, getTotalDuration } from "../../selectors"
 import { useTimelineViewerStore, timelineViewerActions } from "../../timeline-viewer-store"
@@ -6,13 +6,13 @@ import { WorkbenchSDK } from "../../../WorkbenchSDK/sdk"
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
 import { Button } from "@pretzel-graph/standard-ui/foundations"
 import TimeRuler from "./TimeRuler"
-import TrackColumn from "./TrackColumn"
 import TrackRow from "./TrackRow"
 import RelationLayer from "./RelationLayer"
-import UoWInspector from "./UoWInspector"
-import { RULER_H } from "./constants"
+import { Recording } from "@pretzel-graph/shared/domain"
 import { makeTimeScale } from "./time-scale"
 import FloatContainer from "@/components/FloatContainer"
+import TimelineControls from "./Controls"
+import TracksPanel from "./TracksPanel"
 
 const ZOOM_STEP = 1.4
 
@@ -42,8 +42,14 @@ const TimelineViewer = () => {
     const handleScroll = useCallback(() => {
         const sc = scrollRef.current
         if (!sc) return
-        if (rulerRef.current) rulerRef.current.scrollLeft = sc.scrollLeft
-        if (labelsRef.current) labelsRef.current.scrollTop = sc.scrollTop
+        if (rulerRef.current)  rulerRef.current.scrollLeft  = sc.scrollLeft
+        if (labelsRef.current) labelsRef.current.scrollTop  = sc.scrollTop
+    }, [])
+
+    const handleLabelScroll = useCallback(() => {
+        const lb = labelsRef.current
+        if (!lb) return
+        if (scrollRef.current) scrollRef.current.scrollTop = lb.scrollTop
     }, [])
 
     const totalWidth  = Math.max(scale.totalWidth + 80, 400)
@@ -60,43 +66,11 @@ const TimelineViewer = () => {
 
     return (
         <>
-            <FloatContainer className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10">
-                <Button
-                    size="icon-xs"
-                    variant="ghost"
-                    onClick={() => timelineViewerActions.setZoom(zoom / ZOOM_STEP)}
-                    title="Zoom out"
-                >
-                    <SystemIcons.Minus className="size-3" />
-                </Button>
-                <Button
-                    size="icon-xs"
-                    variant="ghost"
-                    onClick={() => timelineViewerActions.setZoom(zoom * ZOOM_STEP)}
-                    title="Zoom in"
-                >
-                    <SystemIcons.Plus className="size-3" />
-                </Button>
-                <Button
-                    size="xs"
-                    variant={viewMode === "linear" ? "ghost" : "secondary"}
-                    onClick={() => timelineViewerActions.toggleViewMode()}
-                    title="Cycle view mode (linear → equalize → step)"
-                    className="px-2 gap-1"
-                >
-                    <SystemIcons.Activity className="size-3" />
-                    <span className="text-[10px] capitalize">{viewMode}</span>
-                </Button>
-                <Button
-                    size="icon-xs"
-                    variant={showRemnants ? "secondary" : "ghost"}
-                    onClick={() => timelineViewerActions.toggleRemnants()}
-                    title={showRemnants ? "Hide data remnants" : "Show data remnants"}
-                    className="ml-auto"
-                >
-                    <SystemIcons.Eye className="size-3" />
-                </Button>
-            </FloatContainer>
+            <TimelineControls/>
+                    
+            <TracksPanel labelsRef={labelsRef} onScroll={handleLabelScroll} layout={layout} nodes={nodes} />
+
+            
             <div className="flex h-full overflow-hidden">
                 {/* Main grid */}
                 <div
@@ -104,7 +78,7 @@ const TimelineViewer = () => {
                     style={{
                         display: "grid",
                         // gridTemplateColumns: `${TRACK_LABEL_W}px 1fr`,
-                        gridTemplateRows: `${RULER_H}px 1fr`,
+                        gridTemplateRows: `${Recording.Timeline.RULER_H}px 1fr`,
                     }}
                 >
     
@@ -122,15 +96,6 @@ const TimelineViewer = () => {
                         />
                     </div>
 
-                    {/* Track labels */}
-                    <div
-                        ref={labelsRef}
-                        style={{ overflowY: "hidden" }}
-                        className="border border-border/70 w-[150px] h-[300px] rounded-lg pt-[19px] pb-2 px-1 absolute left-5 top-2 z-20 bg-card/70 backdrop-blur-md shadow-md shadow-black/10"
-                    >
-                        <TrackColumn layout={layout} nodes={nodes} />
-                    </div>
-
                     {/* Scrollable track canvas */}
                     <div
                         ref={scrollRef}
@@ -142,12 +107,10 @@ const TimelineViewer = () => {
                             {layout.tracks.map(tl => (
                                 <TrackRow
                                     key={tl.track.id}
-                                    track={tl.track}
+                                    trackLayout={tl}
                                     recording={recording}
                                     nodes={nodes}
                                     scale={scale}
-                                    top={tl.top}
-                                    height={tl.height}
                                 />
                             ))}
                             <RelationLayer
@@ -162,9 +125,6 @@ const TimelineViewer = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Inspector side panel */}
-                {/* <UoWInspector nodes={nodes} /> */}
             </div>
         </>
     )

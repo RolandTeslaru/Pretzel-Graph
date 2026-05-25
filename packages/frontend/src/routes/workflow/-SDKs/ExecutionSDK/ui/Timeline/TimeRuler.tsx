@@ -1,5 +1,5 @@
 import React, { useMemo } from "react"
-import { RULER_H, formatMs, tickIntervalMs } from "./constants"
+import { Recording } from "@pretzel-graph/shared/domain"
 import type { TimeScale } from "./time-scale"
 
 interface TimeRulerProps {
@@ -13,7 +13,7 @@ const TimeRuler = ({ totalWidth, scale, totalDuration }: TimeRulerProps) => {
         // Pick a sensible tick interval. In equalize mode the on-screen density
         // varies, so use a heuristic based on totalWidth vs totalDuration.
         const effectivePxPerMs = totalDuration > 0 ? totalWidth / totalDuration : scale.zoom
-        const interval = tickIntervalMs(effectivePxPerMs)
+        const interval = Recording.Timeline.tickIntervalMs(effectivePxPerMs)
         const count = Math.floor(totalDuration / interval) + 1
         const raw = Array.from({ length: count }, (_, i) => ({
             ms: i * interval,
@@ -33,7 +33,7 @@ const TimeRuler = ({ totalWidth, scale, totalDuration }: TimeRulerProps) => {
     }, [scale, totalDuration, totalWidth])
 
     return (
-        <div style={{ width: totalWidth, height: RULER_H, position: "relative" }} className="select-none">
+        <div style={{ width: totalWidth, height: Recording.Timeline.RULER_H, position: "relative" }} className="select-none">
             {ticks.map(({ ms, x }) => (
                 <div
                     key={ms}
@@ -41,7 +41,7 @@ const TimeRuler = ({ totalWidth, scale, totalDuration }: TimeRulerProps) => {
                     className="flex flex-col items-center"
                 >
                     <span className="text-[10px] text-muted-foreground leading-none pt-1 px-0.5 whitespace-nowrap">
-                        {formatMs(ms)}
+                        {Recording.Timeline.formatMs(ms)}
                     </span>
                     <div className="w-px flex-1 bg-border/60 mt-0.5" />
                 </div>

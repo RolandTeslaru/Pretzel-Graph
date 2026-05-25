@@ -231,6 +231,32 @@ export namespace Recording {
     }
     export type Event = z.infer<typeof Event.Schema>
 
+    // ─── Timeline UI constants ───────────────────────────────────────────────
+    // Pixel geometry and formatting helpers for the timeline viewer.
+    // Kept here so any package that works with Recording data can share them
+    // without depending on a UI-layer constants file.
+
+    export namespace Timeline {
+        export const UOW_PORT_HEIGHT = 20   // px — height of one port sub-row inside a UoW block
+        export const TRACK_PADDING_Y = 3    // px — vertical inset above/below the UoW block within its track row
+        export const TRACK_LABEL_W   = 100  // px — width of the track label column
+        export const RULER_H         = 28   // px — height of the time ruler header
+        export const MIN_BLOCK_W     = 6    // px — minimum rendered width of a completed UoW block
+        export const RUNNING_BLOCK_W = 32   // px — fixed width used while a UoW is still running
+
+        export function tickIntervalMs(pixelsPerMs: number): number {
+            if (pixelsPerMs >= 2)   return 10
+            if (pixelsPerMs >= 0.5) return 100
+            if (pixelsPerMs >= 0.1) return 500
+            return 1000
+        }
+
+        export function formatMs(ms: number): string {
+            if (ms >= 1000) return `${(ms / 1000).toFixed(ms % 1000 === 0 ? 0 : 1)}s`
+            return `${ms}ms`
+        }
+    }
+
     // ─── API ─────────────────────────────────────────────────────────────────
     // All routes live under /api/execution/recording/*.
     // Upsert is internal-only (worker → backend after job completes).

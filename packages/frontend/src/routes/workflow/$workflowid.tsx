@@ -4,7 +4,7 @@ import ShelfSidebar from '@/routes/workflow/-SDKs/ShelfSDK/ui/ShelfSidebar'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import WorkflowCanvas from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/Canvas'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { Dialog, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import NodeSidebar from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/NodePanel'
 import ChatSidebar from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatSidebar'
@@ -98,13 +98,73 @@ function WorkflowLayoutComponent() {
 
     const isDrawerOpen = DrawerSDK.useStore(s => s.isOpen);
 
+    const canvasRef   = useRef<HTMLDivElement>(null)
+    const drawerRef   = useRef<HTMLDivElement>(null)
+    const dragRef     = useRef<{ startY: number; startDrawerH: number } | null>(null)
+
+    const DRAWER_MIN  = 80
+    const DRAWER_MAX  = window.innerHeight * 0.85
+    const DRAWER_DEFAULT = window.innerHeight * 0.35
+
+    // remembers the last open height so re-opening restores it
+    const openHeightRef = useRef(DRAWER_DEFAULT)
+
+    // animate open/close when isDrawerOpen changes
+    useEffect(() => {
+        const drawer = drawerRef.current
+        if (!drawer) return
+        const t = "height 300ms ease-in-out"
+        drawer.style.transition = t
+        drawer.style.height = isDrawerOpen ? `${openHeightRef.current}px` : "0px"
+    }, [isDrawerOpen])
+
+    const onHandleMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault()
+        const drawer = drawerRef.current
+        if (!drawer) return
+        // kill transition during drag, restore on mouseup
+        drawer.style.transition = "none"
+        canvasRef.current && (canvasRef.current.style.transition = "none")
+        dragRef.current = {
+            startY:       e.clientY,
+            startDrawerH: drawer.getBoundingClientRect().height,
+        }
+    }, [])
+
+    useEffect(() => {
+        const onMouseMove = (e: MouseEvent) => {
+            const drag   = dragRef.current
+            const drawer = drawerRef.current
+            if (!drag || !drawer) return
+            const newH = Math.min(DRAWER_MAX, Math.max(DRAWER_MIN, drag.startDrawerH + (drag.startY - e.clientY)))
+            drawer.style.height = `${newH}px`
+        }
+        const onMouseUp = () => {
+            if (dragRef.current) {
+                const t = "height 300ms ease-in-out"
+                if (drawerRef.current) {
+                    drawerRef.current.style.transition = t
+                    openHeightRef.current = drawerRef.current.getBoundingClientRect().height
+                }
+                if (canvasRef.current) canvasRef.current.style.transition = t
+            }
+            dragRef.current = null
+        }
+        window.addEventListener("mousemove", onMouseMove)
+        window.addEventListener("mouseup",   onMouseUp)
+        return () => {
+            window.removeEventListener("mousemove", onMouseMove)
+            window.removeEventListener("mouseup",   onMouseUp)
+        }
+    }, [])
+
     return (
-        <div className='bg-secondary'>
-            <div className={`
-                w-full relative overflow-hidden  z-20 bg-background
-                border-b border-border transition-[height]
-                ${isDrawerOpen ? "h-[65vh]" : "h-screen"}
-            `}>
+        <div className="h-screen flex flex-col">
+            {/* Canvas — fills all space the drawer doesn't take */}
+            <div
+                ref={canvasRef}
+                className="flex-1 relative overflow-hidden z-20 bg-background border-b border-border"
+            >
                 <ShelfSidebar />
                 <WorkflowCanvas />
                 <ChatSidebar />
@@ -117,10 +177,23 @@ function WorkflowLayoutComponent() {
                 <StackSDK.UIOverlay />
                 <BottomLeftPanel />
             </div>
-            
-            <div className='h-[35vh] fixed bottom-0 left-0 w-full'>
-                <TimelineViewer/>
-            </div>
+
+            {/* Drawer — always mounted, height animates between 0 and open height */}
+            <div
+                ref={drawerRef}
+                style={{ height: 0 }}
+                className="flex-none flex flex-col w-full overflow-hidden"
+            >
+                    <div
+                        onMouseDown={onHandleMouseDown}
+                        className="h-2 w-full cursor-ns-resize flex items-center justify-center group flex-none"
+                    >
+                        <div className="w-10 h-0.5 rounded-full bg-border group-hover:bg-muted-foreground transition-colors" />
+                    </div>
+                    <div className="flex-1 overflow-hidden relative">
+                        <TimelineViewer />
+                    </div>
+                </div>
         </div>
     )
 }
