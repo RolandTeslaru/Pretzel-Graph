@@ -1,4 +1,5 @@
-import type { Execution, Foundations, Recording, Workflow } from "@pretzel-graph/shared/domain"
+import type { Execution, Foundations, Workflow } from "@pretzel-graph/shared/domain"
+import { Recording } from "@pretzel-graph/shared/domain"
 import type { ExecutionSDK } from "./sdk"
 
 export const executionSDKSelectors = {
@@ -46,7 +47,8 @@ export function getTotalDuration(recording: Recording | null): number {
 export interface TimelineTrackLayout {
     track:       Recording.Track
     top:         number
-    height:      number
+    height:      number   // total row height including TRACK_PADDING_Y × 2
+    blockHeight: number   // UoW block height = rows × UOW_PORT_HEIGHT (no padding)
     inputPorts:  Foundations.Port.Input.Id[]
     outputPorts: Foundations.Port.Output.Id[]
 }
@@ -55,17 +57,14 @@ export interface TimelineLayout {
     tracks:       TimelineTrackLayout[]
     byTrackId:    Map<Workflow.Node.Id, TimelineTrackLayout>
     totalHeight:  number
-    subRowHeight: number
 }
-
-const SUB_ROW_HEIGHT = 24
 
 export function getTimelineLayout(
     recording: Recording | null,
     nodes:     Record<Workflow.Node.Id, Workflow.Node>,
 ): TimelineLayout {
     if (!recording) {
-        return { tracks: [], byTrackId: new Map(), totalHeight: 0, subRowHeight: SUB_ROW_HEIGHT }
+        return { tracks: [], byTrackId: new Map(), totalHeight: 0 }
     }
 
     const ordered = getOrderedTracks(recording)
@@ -79,14 +78,15 @@ export function getTimelineLayout(
         const inputPorts  = node?.inputs.map(p => p.id)  ?? []
         const outputPorts = node?.outputs.map(p => p.id) ?? []
 
-        const rows   = Math.max(1, inputPorts.length, outputPorts.length)
-        const height = rows * SUB_ROW_HEIGHT
+        const rows        = Math.max(1, inputPorts.length, outputPorts.length)
+        const blockHeight = rows * Recording.Timeline.UOW_PORT_HEIGHT
+        const height      = blockHeight + Recording.Timeline.TRACK_PADDING_Y * 2
 
-        const layout: TimelineTrackLayout = { track, top, height, inputPorts, outputPorts }
+        const layout: TimelineTrackLayout = { track, top, height, blockHeight, inputPorts, outputPorts }
         tracks.push(layout)
         byTrackId.set(track.id, layout)
         top += height
     }
 
-    return { tracks, byTrackId, totalHeight: top, subRowHeight: SUB_ROW_HEIGHT }
+    return { tracks, byTrackId, totalHeight: top }
 }
