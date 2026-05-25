@@ -1,4 +1,4 @@
-import type { Recording } from "@pretzel-graph/shared/domain"
+import type { Execution } from "@pretzel-graph/shared/domain"
 
 export type TimelineViewMode = "linear" | "equalize" | "step"
 
@@ -24,7 +24,7 @@ const STEP_IDLE_W    = 0   // idle time is meaningless in step mode; collapse ga
 export function makeTimeScale(
     mode: TimelineViewMode,
     zoom: number,
-    recording: Recording | null,
+    recording: Execution.Recording | null,
     totalDuration: number,
 ): TimeScale {
     if (mode === "linear" || !recording) {
@@ -43,7 +43,7 @@ export function makeTimeScale(
     return buildEqualizeScale(zoom, recording, totalDuration)
 }
 
-function buildStepScale(zoom: number, recording: Recording, totalDuration: number): TimeScale {
+function buildStepScale(zoom: number, recording: Execution.Recording, totalDuration: number): TimeScale {
     const finished = Object.values(recording.units).filter(u => u.status !== "running")
     if (finished.length === 0) {
         const xFor = (ms: number) => ms * zoom
@@ -144,7 +144,7 @@ function makeXFor(segments: { t0: number; t1: number; x0: number; w: number }[],
     }
 }
 
-function buildEqualizeScale(zoom: number, recording: Recording, totalDuration: number): TimeScale {
+function buildEqualizeScale(zoom: number, recording: Execution.Recording, totalDuration: number): TimeScale {
     const units = Object.values(recording.units)
 
     const intervals = units
