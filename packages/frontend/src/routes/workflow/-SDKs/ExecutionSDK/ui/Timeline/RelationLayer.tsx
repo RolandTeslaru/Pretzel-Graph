@@ -100,11 +100,15 @@ const RelationLayer = ({
                 ].join(' ')
             }
 
+            const srcNode   = nodes[srcUnit.trackId]
+            const srcPort   = srcNode?.outputs.find(p => p.id === srcPortId)
+            const portColor = srcPort ? `var(--port-${srcPort.variant})` : "var(--muted-foreground)"
+
             return [{
                 id: rel.id,
                 type: rel.type,
                 d,
-                accent: nodes[srcUnit.trackId]?.accent,
+                color: portColor,
             }]
         })
     }, [recording, nodes, scale, layout, showRemnants])
@@ -124,20 +128,17 @@ const RelationLayer = ({
             }}
         >
             <defs>
-                {arrows.map(arrow => {
-                    const color = arrow.accent ? `var(--${arrow.accent})` : "var(--muted-foreground)"
-                    return (
-                        <marker
-                            key={`marker-${arrow.id}`}
-                            id={`arrow-tip-${arrow.id}`}
-                            markerWidth="6" markerHeight="6"
-                            refX="5" refY="3"
-                            orient="auto"
-                        >
-                            <path d="M0,0 L6,3 L0,6 Z" fill={color} fillOpacity={0.7} />
-                        </marker>
-                    )
-                })}
+                {arrows.map(arrow => (
+                    <marker
+                        key={`marker-${arrow.id}`}
+                        id={`arrow-tip-${arrow.id}`}
+                        markerWidth="6" markerHeight="6"
+                        refX="5" refY="3"
+                        orient="auto"
+                    >
+                        <path d="M0,0 L6,3 L0,6 Z" fill={arrow.color} fillOpacity={0.7} />
+                    </marker>
+                ))}
             </defs>
             {arrows.map(arrow => (
                 <path
@@ -145,7 +146,7 @@ const RelationLayer = ({
                     d={arrow.d}
                     fill="none"
                     style={{
-                        stroke: arrow.accent ? `var(--${arrow.accent})` : "var(--muted-foreground)",
+                        stroke: arrow.color,
                         strokeWidth: 1.5,
                         strokeOpacity: 0.7,
                         strokeDasharray: arrow.type === "dataRemnant" ? "4 3" : undefined,
