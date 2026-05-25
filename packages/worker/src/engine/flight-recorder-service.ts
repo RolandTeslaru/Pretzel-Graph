@@ -1,4 +1,4 @@
-import { Recording, Execution } from "@pretzel-graph/shared/domain"
+import { Execution } from "@pretzel-graph/shared/domain"
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow"
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port"
 import { Vertex } from "../S2/graph"
@@ -7,10 +7,11 @@ import type { AggexEngine } from "./index"
 export class FlightRecorderService {
 
     private readonly executionId: Execution.Id
+    private readonly workflowId:  Workflow.Id
     private readonly origin:      number
 
-    private recording!:    Recording
-    private mostRecentUoW: Map<Workflow.Node.Id, Recording.UnitOfWork.Id> = new Map()
+    private recording!:    Execution.Recording
+    private mostRecentUoW: Map<Workflow.Node.Id, Execution.Recording.UnitOfWork.Id> = new Map()
 
     constructor(
         executionId:  Execution.Id,
@@ -19,14 +20,11 @@ export class FlightRecorderService {
         origin:       number,  // performance.now() at execution start
     ) {
         this.executionId = executionId
+        this.workflowId  = workflowId
         this.origin      = origin
 
         this.recording = {
-            id:                   Recording.createId(executionId),
-            executionId,
-            workflowId,
             workflowDataSnapshot: workflowData,
-            createdAt:            new Date().toISOString(),
             units:                {},
             relations:            {},
             tracks:               {},
@@ -45,10 +43,10 @@ export class FlightRecorderService {
     // Called from AggexEngine.onNodeFired.
     // Creates a new UnitOfWork for the node, appends it to the track.
     public onNodeFired(nodeId: Workflow.Node.Id): void {
-        const unitId    = Recording.UnitOfWork.createId(nodeId)
+        const unitId    = Execution.Recording.UnitOfWork.createId(nodeId)
         const startedAt = performance.now() - this.origin
 
-        const unit: Recording.UnitOfWork = {
+        const unit: Execution.Recording.UnitOfWork = {
             id:             unitId,
             trackId:        nodeId,
             status:         "running",
@@ -81,14 +79,15 @@ export class FlightRecorderService {
 
         const inputHandles = ctx.workflowCache.inputHandlesMap[nodeId] ?? {}
 
-        ctx.emit<Recording.Event.Unit.Started>({
+        ctx.emit<Execution.Event.Recording.Unit.Started>({
             channel:     Execution.Event.getChannel(this.executionId),
+            workflowId:  this.workflowId,
             executionId: this.executionId,
             type:        "unit:started",
             unit,
         })
 
-        const incomingRelations: Recording.Relation[] = []
+        const incomingRelations: Execution.Recording.Relation[] = []
 
         for (const [portIdStr, edgeId] of Object.entries(inputHandles)) {
             const portId = portIdStr as Port.Input.Id
@@ -106,10 +105,10 @@ export class FlightRecorderService {
             const sourceUoWId = this.mostRecentUoW.get(sourceNodeId)
             if (!sourceUoWId) continue
 
-            const snapshotId = Recording.DataBank.PortSnapshot.formatId(sourceUoWId, edge.source.portId)
+            const snapshotId = Execution.Recording.DataBank.PortSnapshot.formatId(sourceUoWId, edge.source.portId)
             unit.inputSnapshot[portId] = snapshotId
 
-            const relationId = Recording.Relation.formatId(sourceUoWId, edge.id, unitId)
+            const relationId = Execution.Recording.Relation.formatId(sourceUoWId, edge.id, unitId)
             const relation = {
                 id:           relationId,
                 source:       sourceUoWId,
@@ -117,15 +116,16 @@ export class FlightRecorderService {
                 edge:         edge.id,
                 type:         isSignal ? "signal" : "dataRemnant",
                 dataSnapshotId: snapshotId,
-            } satisfies Recording.Relation
+            } satisfies Execution.Recording.Relation
             this.recording.relations[relationId] = relation
 
             incomingRelations.push(relation)
         }
 
         if (incomingRelations.length > 0)
-            ctx.emit<Recording.Event.Relation.CreateBatch>({
+            ctx.emit<Execution.Event.Recording.Relation.CreateBatch>({
                 channel:     Execution.Event.getChannel(this.executionId),
+                workflowId:  this.workflowId,
                 executionId: this.executionId,
                 type:        "relation:createBatch",
                 relations:   incomingRelations,
@@ -153,7 +153,7 @@ export class FlightRecorderService {
 
         for (const [portIdStr, value] of Object.entries(projections)) {
             const portId  = portIdStr as Port.Output.Id
-            const snapId  = Recording.DataBank.PortSnapshot.formatId(unitId, portId)
+            const snapId  = Execution.Recording.DataBank.PortSnapshot.formatId(unitId, portId)
 
             this.recording.dataBank.snapshots[snapId] = { 
                 id: snapId, 
@@ -163,8 +163,9 @@ export class FlightRecorderService {
             unit.outputSnapshot[portId] = snapId
         }
 
-        ctx.emit<Recording.Event.Unit.Completed>({
+        ctx.emit<Execution.Event.Recording.Unit.Completed>({
             channel:        Execution.Event.getChannel(this.executionId),
+            workflowId:     this.workflowId,
             executionId:    this.executionId,
             type:           "unit:completed",
             unitId:         unit.id,
@@ -190,8 +191,9 @@ export class FlightRecorderService {
         unit.status   = "failed"
         unit.duration = performance.now() - this.origin - unit.startedAt
 
-        ctx.emit<Recording.Event.Unit.Failed>({
+        ctx.emit<Execution.Event.Recording.Unit.Failed>({
             channel:     Execution.Event.getChannel(this.executionId),
+            workflowId:  this.workflowId,
             executionId: this.executionId,
             type:        "unit:failed",
             unitId:      unit.id,
@@ -201,23 +203,7 @@ export class FlightRecorderService {
 
 
 
-    public onCompleted(emit: (event: Recording.Event) => void): void {
-        emit({
-            channel:     Execution.Event.getChannel(this.executionId),
-            executionId: this.executionId,
-            type:        "recording:fullyUploaded",
-        })
-    }
-
-    public onTerminated(emit: (event: Recording.Event) => void): void {
-        emit({
-            channel:     Execution.Event.getChannel(this.executionId),
-            executionId: this.executionId,
-            type:        "recording:fullyUploaded",
-        })
-    }
-
-    public getRecording(): Recording {
+    public getRecording(): Execution.Recording {
         return this.recording
     }
 }

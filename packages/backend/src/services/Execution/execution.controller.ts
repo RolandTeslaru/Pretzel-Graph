@@ -1,6 +1,6 @@
 import { Controller, Post, Get, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { ExecutionService } from './execution.service';
-import { Auth, Execution, Recording } from '@pretzel-graph/shared/domain';
+import { Auth, Execution } from '@pretzel-graph/shared/domain';
 import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
 import { InternalAuthGuard, InternalAuthenticatedRequest } from '../../auth/internal-auth.guard';
 import { ApiKeyAuthGuard, ApiKeyAuthenticatedRequest } from '../../auth/api-key-auth.guard';
@@ -152,41 +152,12 @@ export class ExecutionController {
         return this.executionService.runFromSdk(req.user.id as Auth.User.Id, body);
     }
 
-    @Post('recording/upsert')
-    @UseGuards(InternalAuthGuard)
-    @HttpCode(200)
-    async recordingUpsert(
-        @ZodBody(Recording.API.Upsert.Request) body: Recording.API.Upsert.Request,
-    ) {
-        return this.executionService.recording.upsert(body);
-    }
-
-    @Post('recording/get')
-    @UseGuards(SupabaseAuthGuard)
-    @HttpCode(200)
-    async recordingGet(
-        @Req() req: AuthenticatedRequest,
-        @ZodBody(Recording.API.Get.Request) body: Recording.API.Get.Request,
-    ) {
-        return this.executionService.recording.get(req.token, req.user.id as Auth.User.Id, body);
-    }
-
-    @Post('recording/list-by-workflow')
-    @UseGuards(SupabaseAuthGuard)
-    @HttpCode(200)
-    async recordingListByWorkflow(
-        @Req() req: AuthenticatedRequest,
-        @ZodBody(Recording.API.ListByWorkflow.Request) body: Recording.API.ListByWorkflow.Request,
-    ) {
-        return this.executionService.recording.listByWorkflow(req.token, body);
-    }
-
     @Post('recording/get-live')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async recordingGetLive(
         @Req() req: AuthenticatedRequest,
-        @ZodBody(Recording.API.GetLive.Request) body: Recording.API.GetLive.Request,
+        @ZodBody(Execution.API.Recording.GetLive.Request) body: Execution.API.Recording.GetLive.Request,
     ) {
         return this.executionService.recording.getLive(req.token, req.user.id as Auth.User.Id, body);
     }

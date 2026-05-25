@@ -4,12 +4,12 @@ import { useTimelineViewerStore } from '../../timeline-viewer-store'
 import { WorkbenchSDK } from '../../../WorkbenchSDK/sdk'
 import { PortDataTree } from '../../../WorkbenchSDK/ui/NodePanel/PortDataTree'
 import { projectionsToTree } from '@/components/Tree/toTree'
-import type { Recording, Workflow } from '@pretzel-graph/shared/domain'
+import type { Execution, Workflow } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 const IncomingPanel = () => {
     const uowId = useTimelineViewerStore(s => s.selectedUoW)
-    const recording = ExecutionSDK.useStore(s => s.currentRecording)
+    const recording = ExecutionSDK.useStore(s => s.currentExecution?.recording)
     const uow = uowId ? recording?.units[uowId] : undefined
 
     const trackId = uow?.trackId
@@ -37,9 +37,9 @@ const Content = ({
     node,
     recording,
 }: {
-    uow: Recording.UnitOfWork
+    uow: Execution.Recording.UnitOfWork
     node: Workflow.Node
-    recording: Recording
+    recording: Execution.Recording
 }) => {
     const keyNameMap = useMemo(
         () => Object.fromEntries(node.inputs.map(i => [i.id, i.displayName])),
