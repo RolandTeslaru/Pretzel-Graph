@@ -306,7 +306,12 @@ export namespace Execution {
     }
 
     // Lightweight projection for list views — omits the heavy session + recording blobs.
-    export const Meta = Schema.omit({ session: true, recording: true })
+    // has_recording is a derived boolean: true when the recording column is non-null.
+    // The actual recording payload is never sent; the backend computes this flag and
+    // Zod strips the raw recording column before the response leaves the service.
+    export const Meta = Schema.omit({ session: true, recording: true }).extend({
+        has_recording: z.boolean(),
+    })
     export type Meta = z.infer<typeof Meta>
 
 
