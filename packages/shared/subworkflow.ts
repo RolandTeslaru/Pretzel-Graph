@@ -26,17 +26,19 @@ export const extractExposedPorts = (wfData: Workflow.Data): ExposedPorts => {
             uniqueInputPorts[portId] = {
                 id: portId,
                 displayName: node.displayName,
-                variant: port.variant as Port.ResolvedVariant,
+                variant: port.variant,
                 required: isRequired,
-            }
+                ...(Port.isUnresolvedLike(port.variant) && { originalVariant: port.variant }),
+            } as Port.Input
         } else if (node.blueprintId === "Core.SubWorkflow.ExposeOutputPort") {
             const port = node.inputs[0] as Port;
 
             outputs.push({
                 id: Port.Output.Id.parse(node.id),
                 displayName: node.displayName,
-                variant: port.variant as Port.ResolvedVariant,
-            });
+                variant: port.variant,
+                ...(Port.isUnresolvedLike(port.variant) && { originalVariant: port.variant }),
+            } as Port.Output);
         }
     });
 

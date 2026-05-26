@@ -42,7 +42,7 @@ export namespace Workbench {
 
             export namespace Commit {
                 export const Request = z.object({
-                    workflowId: WorkflowNs.Id,
+                    workflowId: z.string().uuid("workflowId must be a UUID").pipe(WorkflowNs.Id),
                     data: WorkflowNs.Data.Schema,
                 })
                 export type Request = z.infer<typeof Request>
