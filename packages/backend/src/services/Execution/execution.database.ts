@@ -11,7 +11,7 @@ class MetaMethods {
     async get(supabase: SupabaseClient, executionId: Execution.Id): Promise<Execution.Meta> {
         const { data } = await supabase
             .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at')
+            .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at, has_recording')
             .eq('id', executionId)
             .single()
             .throwOnError();
@@ -24,7 +24,7 @@ class MetaMethods {
     async list(supabase: SupabaseClient, workflowId: Workflow.Id): Promise<Execution.Meta[]> {
         const { data } = await supabase
             .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at')
+            .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at, has_recording')
             .eq('workflow_id', workflowId)
             .order('created_at', { ascending: false })
             .throwOnError();
@@ -37,7 +37,7 @@ class MetaMethods {
     async listActive(supabase: SupabaseClient): Promise<Execution.Meta[]> {
         const { data } = await supabase
             .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at')
+            .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at, has_recording')
             .in('status', ['pending', 'running'])
             .order('created_at', { ascending: false })
             .throwOnError();
