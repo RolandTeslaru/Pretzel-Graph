@@ -1,8 +1,10 @@
-import { RegisterNode, RuntimeFloatingNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 @RegisterNode(Blueprint.id)
-export class Node extends RuntimeFloatingNode<typeof Blueprint> {
+export class Node extends RuntimeNode<typeof Blueprint> {
+
+    public override readonly IS_PASSIVE = true
 
     public readonly Blueprint = Blueprint;
 

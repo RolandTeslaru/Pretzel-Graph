@@ -1,10 +1,11 @@
-import { RegisterNode } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
-import { RuntimeRouterNode } from "@pretzel-graph/node-sdk";
 import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 
 @RegisterNode(Blueprint.id)
-export class Node extends RuntimeRouterNode<typeof Blueprint> {
+export class Node extends RuntimeNode<typeof Blueprint> {
+
+    public override getPropagationStrategy() { return "router" as const }
 
     public readonly Blueprint = Blueprint;
 
