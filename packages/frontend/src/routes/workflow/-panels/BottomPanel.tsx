@@ -24,12 +24,10 @@ export const BottomPanel = () => {
     
     const [
         currentExecution,
-        awaitedConfirmation,
         recordExecution,
         isCurrentExecutionRecording
     ] = ExecutionSDK.useStore(s => [
         s.currentExecution,
-        s.awaitedConfirmation,
         s.recordExecution,
         s.isCurrentExecutionRecording
     ]);
@@ -88,13 +86,13 @@ export const BottomPanel = () => {
                 </AnimatePresence>
             </motion.div>
 
-            {(recordExecution || isCurrentExecutionRecording) && (
+            {(recordExecution || isCurrentExecutionRecording || currentExecution?.recording) && (
             <div className=' px-2 w-auto bg-card/90 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'>
-              <Tipped label='Ready To Record'>
+              <Tipped label={isCurrentExecutionRecording ? 'Recording' : 'Ready To Record'}>
                 <div className='h-full flex flex-row gap-2'>
                   <SystemIcons.Film className='size-4 text-secondary-foreground my-auto' />
                   {/* <p className='text-sm font-medium text-muted-foreground my-auto h-auto'>Ready</p> */}
-                  <div className={`content-[""] my-auto w-2 h-2  rounded-full animate-pulse ${isCurrentExecutionRecording ? 'bg-red-500' : 'bg-gray-500'}`} />
+                  <div className={`content-[""] my-auto w-2 h-2  rounded-full animate-pulse ${isCurrentExecutionRecording ? 'bg-red-500' : 'bg-green-500'}`} />
                 </div>
               </Tipped>
             </div>
