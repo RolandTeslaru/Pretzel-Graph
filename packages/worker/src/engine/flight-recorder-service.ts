@@ -12,6 +12,7 @@ export class FlightRecorderService {
 
     private recording!:    Execution.Recording
     private mostRecentUoW: Map<Workflow.Node.Id, Execution.Recording.UnitOfWork.Id> = new Map()
+    private uowInputs:     Map<Execution.Recording.UnitOfWork.Id, Record<string, unknown>> = new Map()
 
     constructor(
         executionId:  Execution.Id,
@@ -46,6 +47,8 @@ export class FlightRecorderService {
         const unitId    = Execution.Recording.UnitOfWork.createId(nodeId)
         const startedAt = performance.now() - this.origin
 
+        const wfNode = this.recording.workflowDataSnapshot.nodes[nodeId]
+
         const unit: Execution.Recording.UnitOfWork = {
             id:             unitId,
             trackId:        nodeId,
@@ -53,6 +56,7 @@ export class FlightRecorderService {
             startedAt,
             inputSnapshot:  {},
             outputSnapshot: {},
+            metrics:        {},
         }
 
         this.recording.units[unitId] = unit
@@ -69,6 +73,7 @@ export class FlightRecorderService {
         nodeId:  Workflow.Node.Id,
         signals: Set<Workflow.Node.Id | Vertex.Id>,
         allDeps: Set<Vertex.Id>,
+        inputs:  Record<string, unknown>,
         ctx:     AggexEngine.ExecutionContext,
     ): void {
         const unitId = this.mostRecentUoW.get(nodeId)
@@ -76,6 +81,8 @@ export class FlightRecorderService {
 
         const unit = this.recording.units[unitId]
         if (!unit) return
+
+        this.uowInputs.set(unitId, inputs)
 
         const inputHandles = ctx.workflowCache.inputHandlesMap[nodeId] ?? {}
 
@@ -155,13 +162,16 @@ export class FlightRecorderService {
             const portId  = portIdStr as Port.Output.Id
             const snapId  = Execution.Recording.DataBank.PortSnapshot.formatId(unitId, portId)
 
-            this.recording.dataBank.snapshots[snapId] = { 
-                id: snapId, 
-                portId, 
-                value 
+            this.recording.dataBank.snapshots[snapId] = {
+                id: snapId,
+                portId,
+                value
             }
             unit.outputSnapshot[portId] = snapId
         }
+
+        const metrics = this.collectMetrics(nodeId, unitId, "completed", unit.duration!, ctx)
+        if (metrics) unit.metrics = metrics
 
         ctx.emit<Execution.Event.Recording.Unit.Completed>({
             channel:        Execution.Event.getChannel(this.executionId),
@@ -171,7 +181,10 @@ export class FlightRecorderService {
             unitId:         unit.id,
             duration:       unit.duration!,
             outputSnapshot: unit.outputSnapshot,
+            metrics,
         })
+
+        this.uowInputs.delete(unitId)
     }
 
 
@@ -179,7 +192,7 @@ export class FlightRecorderService {
     // Called from AggexEngine.onNodeError.
     // Sets status to failed and duration.
     public onNodeFailed(
-        nodeId: Workflow.Node.Id, 
+        nodeId: Workflow.Node.Id,
         ctx: AggexEngine.Execution.Context
     ): void {
         const unitId = this.mostRecentUoW.get(nodeId)
@@ -191,6 +204,9 @@ export class FlightRecorderService {
         unit.status   = "failed"
         unit.duration = performance.now() - this.origin - unit.startedAt
 
+        const metrics = this.collectMetrics(nodeId, unitId, "failed", unit.duration!, ctx)
+        if (metrics) unit.metrics = metrics
+
         ctx.emit<Execution.Event.Recording.Unit.Failed>({
             channel:     Execution.Event.getChannel(this.executionId),
             workflowId:  this.workflowId,
@@ -198,6 +214,33 @@ export class FlightRecorderService {
             type:        "unit:failed",
             unitId:      unit.id,
             duration:    unit.duration!,
+            metrics,
+        })
+
+        this.uowInputs.delete(unitId)
+    }
+
+
+
+    private collectMetrics(
+        nodeId:   Workflow.Node.Id,
+        unitId:   Execution.Recording.UnitOfWork.Id,
+        status:   Execution.Recording.UnitOfWork["status"],
+        duration: number,
+        ctx:      AggexEngine.ExecutionContext,
+    ): Record<string, Execution.Recording.Metric> | undefined {
+        const instance = ctx.instanceRegistryAPI.get(nodeId)
+        if (!instance) return undefined
+
+        const inputs  = this.uowInputs.get(unitId) ?? {}
+        const outputs = ctx.session.node_output_instances[nodeId] ?? {}
+
+        return instance.recordMetrics({
+            inputs:   inputs as any,
+            outputs:  outputs as any,
+            unitId,
+            status,
+            duration,
         })
     }
 

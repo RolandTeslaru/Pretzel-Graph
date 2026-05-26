@@ -10,6 +10,7 @@ import { Auth } from "./Auth"
 import { Realtime } from "./Realtime"
 import { type AxiosInstance } from "axios"
 import { Vault } from "./Vault"
+import { Blueprint } from "./Foundations/Blueprint"
 
 export namespace Execution {
 
@@ -175,6 +176,30 @@ export namespace Execution {
         }
         export type DataBank = z.infer<typeof DataBank.Schema>
 
+        // ─── Metric ──────────────────────────────────────────────────────────
+        // Node-defined per-UoW measurement. Renderer formats by `type`; `value`
+        // is the raw number/string. Nodes return `Record<string, Metric>` from
+        // `onRecordMetrics` — the key is the stable programmatic identifier,
+        // displayName is purely cosmetic.
+
+        export namespace Metric {
+            export const Type = z.enum([
+                "number",
+                "string",
+                "duration_ms",
+                "currency_usd",
+                "tokens",
+            ])
+            export type Type = z.infer<typeof Type>
+
+            export const Schema = z.object({
+                displayName: z.string(),
+                value:       z.union([z.string(), z.number()]),
+                type:        Type,
+            })
+        }
+        export type Metric = z.infer<typeof Metric.Schema>
+
         // ─── UnitOfWork ──────────────────────────────────────────────────────
         // One per node execution. Cyclic nodes produce multiple UoWs on the
         // same track. Times are ms relative to origin (0 = execution start).
@@ -197,6 +222,7 @@ export namespace Execution {
                 duration:       z.number().optional(), // ms; undefined while running
                 inputSnapshot:  z.record(Port.Input.Id,  DataBank.PortSnapshot.Id).default({}),
                 outputSnapshot: z.record(Port.Output.Id, DataBank.PortSnapshot.Id).default({}),
+                metrics:        z.record(z.string(), Metric.Schema).optional(),
             })
         }
         export type UnitOfWork = z.infer<typeof UnitOfWork.Schema>
@@ -403,6 +429,7 @@ export namespace Execution {
                     unitId:         Execution.Recording.UnitOfWork.Id,
                     duration:       z.number(),
                     outputSnapshot: z.record(Port.Output.Id, Execution.Recording.DataBank.PortSnapshot.Id),
+                    metrics:        z.record(z.string(), Execution.Recording.Metric.Schema).optional(),
                 })
                 export type Completed = z.infer<typeof Completed>
 
@@ -410,6 +437,7 @@ export namespace Execution {
                     type:     z.literal("unit:failed"),
                     unitId:   Execution.Recording.UnitOfWork.Id,
                     duration: z.number(),
+                    metrics:  z.record(z.string(), Execution.Recording.Metric.Schema).optional(),
                 })
                 export type Failed = z.infer<typeof Failed>
             }

@@ -25,7 +25,18 @@ function formatStartedAt(ms: number): string {
     return `+${(ms / 1000).toFixed(2)}s`
 }
 
-const DEFAULT_OPEN_DRAWERS = ["general"]
+function formatMetric(metric: Execution.Recording.Metric): string {
+    switch (metric.type) {
+        case "duration_ms":  return typeof metric.value === "number" ? formatDuration(metric.value) : String(metric.value)
+        case "currency_usd": return typeof metric.value === "number" ? `$${metric.value.toFixed(6)}` : String(metric.value)
+        case "tokens":       return typeof metric.value === "number" ? metric.value.toLocaleString() : String(metric.value)
+        case "number":       return typeof metric.value === "number" ? metric.value.toLocaleString() : String(metric.value)
+        case "string":
+        default:             return String(metric.value)
+    }
+}
+
+const DEFAULT_OPEN_DRAWERS = ["general", "metrics"]
 
 
 interface AccordionItemProps {
@@ -104,7 +115,15 @@ export const Content = memo(({ uowId }: Props) => {
                     className='pb-14'
                 >
                     <AccordionItem label="General" value="general">
-                        <div className='flex flex-row gap-2 justify-between'> 
+                        <div className='flex flex-row gap-2 justify-between'>
+                            <p className='text-xs text-muted-foreground'>Name</p>
+                            <p className='text-xs text-foreground/50'>{node.displayName}</p>
+                        </div>
+                        <div className='flex flex-row gap-2 justify-between'>
+                            <p className='text-xs text-muted-foreground'>Blueprint</p>
+                            <p className='text-xs text-foreground/50'>{node.blueprintId}</p>
+                        </div>
+                        <div className='flex flex-row gap-2 justify-between'>
                             <p className='text-xs text-muted-foreground'>Status</p>
                             <Badge size="sm" variant={uow.status === "completed" ? "success" : uow.status === "failed" ? "destructive" : "outline"}>
                                 {uow.status}
@@ -119,6 +138,17 @@ export const Content = memo(({ uowId }: Props) => {
                             <p className='text-xs text-foreground/50'>{formatStartedAt(uow.startedAt)}</p>
                         </div>
                     </AccordionItem>
+
+                    {uow.metrics && Object.keys(uow.metrics).length > 0 && (
+                        <AccordionItem label="Metrics" value="metrics">
+                            {Object.entries(uow.metrics).map(([key, metric]) => (
+                                <div key={key} className='flex flex-row gap-2 justify-between'>
+                                    <p className='text-xs text-muted-foreground'>{metric.displayName}</p>
+                                    <p className='text-xs text-foreground/50'>{formatMetric(metric)}</p>
+                                </div>
+                            ))}
+                        </AccordionItem>
+                    )}
                 </Accordion.Root>
             </ScrollArea.Root>
 

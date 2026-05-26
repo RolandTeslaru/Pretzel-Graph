@@ -56,10 +56,13 @@ const ExecutionHistoryPanel = () => {
                 />
             </div>
             <ScrollArea.Root className=" max-h-[400px] min-h-[400px] h-[400px] [mask-image:linear-gradient(to_bottom,black_calc(100%-48px),transparent)]">
+                {executionHistory.length === 0 && (
+                    <p className='text-xs text-muted-foreground absolute top-1/2 left-1/2 text-center -translate-1/2'>
+                        <SystemIcons.Activity className='mx-auto mb-2 text-muted-foreground size-4' />
+                        No executions yet.
+                    </p>
+                )}
                 <div className='flex flex-col'>
-                    {executionHistory.length === 0 && (
-                        <p className='text-xs text-muted-foreground'>No executions yet.</p>
-                    )}
                     {executionHistory
                         .filter(meta => meta.id.includes(debouncedSearchQuery))
                         .map(meta => (

@@ -313,7 +313,7 @@ export class WorkflowCompiler {
             if (targetNodeIds.has(id as Workflow.Node.Id))
                 return false;
             const instance = getInstance(id as Workflow.Node.Id);
-            if (instance && "isFloatingNode" in instance)
+            if (instance?.IS_PASSIVE)
                 return false;
             return true;
         }) as Workflow.Node.Id[];
