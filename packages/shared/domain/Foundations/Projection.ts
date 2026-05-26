@@ -77,12 +77,12 @@ export namespace Projection {
     export const Schema = z.union([
         Message,
         MessageList,
-        Retriever,
         Document,
         Tool,
         ToolList,
         LanguageModel,
         Embeddings,
+        Retriever,     // z.object({}) — opaque handle, must be last: matches any plain object
         z.undefined()
     ])
 }
