@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, RuntimeRouterNode } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Execution, Workflow } from "@pretzel-graph/shared/domain";
@@ -6,7 +6,11 @@ import { AggexEngine, CompilationContext, extendCompilePath } from "@pretzel-gra
 import { Node as ExposeInputPortNode } from "../ExposeInputPort/node";
 
 @RegisterNode(Blueprint.id)
-export class Node extends RuntimeRouterNode<typeof Blueprint> {
+export class Node extends RuntimeNode<typeof Blueprint> {
+
+    /** ExposeOutputPort nodes propagate parent outputs directly via enclosingNodeAPI
+     *  as they fire — suppress automatic fan-out so the engine doesn't double-signal. */
+    public override getPropagationStrategy() { return "none" as const }
 
     public readonly Blueprint = Blueprint;
 
@@ -99,9 +103,9 @@ export class Node extends RuntimeRouterNode<typeof Blueprint> {
             console.log(`[ExecuteSubWorkflow:onRun] running sub-environment`);
             await this.subEnvironment.run(this.subEngineCtx);
 
-            // This is a RuntimeRouterNode so completion does not fan out all output edges.
-            // ExposeOutputPort nodes write/propagate parent outputs as they fire; returning {}
-            // keeps ExecuteSubWorkflow from emitting a second completion-time signal.
+            // getPropagationStrategy() returns "none" — ExposeOutputPort nodes propagate
+            // parent outputs via enclosingNodeAPI as they fire; returning {} here avoids
+            // a second fan-out signal from the engine on completion.
             console.log(`[ExecuteSubWorkflow:onRun] sub-environment finished successfully`);
             return {};
         } catch (err) {

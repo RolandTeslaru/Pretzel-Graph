@@ -116,6 +116,10 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event)
             sdk.runtime.unsubscribeFromEvents?.();
             break;
         case "recording:completed":
+            sdk.setState(s => {
+                s.isCurrentExecutionRecording = false;
+            })
+            sdk.runtime.unsubscribeFromEvents?.();
             break;
         default:
             toast.error(`Received unknown event: ${e.type}`)

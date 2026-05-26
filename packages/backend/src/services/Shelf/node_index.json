@@ -1,6 +1,6 @@
 {
-  "version": "1779356556969",
-  "generatedAt": "2026-05-21T09:42:36.969Z",
+  "version": "1779801643938",
+  "generatedAt": "2026-05-26T13:20:43.938Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -5666,6 +5666,13 @@
           "required": false
         },
         {
+          "id": "ExposedInputPort-99s96",
+          "displayName": "Expose Input Port",
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved",
+          "required": false
+        },
+        {
           "id": "ExposedInputPort-nyb7u",
           "displayName": "Messages",
           "variant": "MessageList",
@@ -5681,70 +5688,6 @@
       ],
       "dependency": {
         "workflowId": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0",
-        "mode": "publication"
-      }
-    },
-    "undefined": {
-      "displayName": "Basic Agent Test",
-      "icon": "Graph",
-      "accent": "utility",
-      "description": "Executes a saved sub-workflow and returns its output.",
-      "flags": {
-        "SHOW_DEPENDENCY_SELECTOR": true
-      },
-      "credentials": [],
-      "fields": [
-        {
-          "id": "signalDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Signal Dependency",
-          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All signals required"
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one signal required"
-            },
-            {
-              "value": "XOR",
-              "displayName": "(XOR) Exactly one signal required"
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready"
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one data dependency ready"
-            }
-          ],
-          "kind": "select"
-        }
-      ],
-      "inputs": [],
-      "outputs": [],
-      "dependency": {
-        "workflowId": "a397c87d-4ede-4ae8-beaf-e2d432782e44",
         "mode": "publication"
       }
     }

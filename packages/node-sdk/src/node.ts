@@ -10,7 +10,7 @@ import { mapFieldValues } from "./utils/mapFieldValues";
  
 export abstract class RuntimeNode<
 
-    T_Blueprint extends Blueprint, 
+    T_Blueprint extends Blueprint,
     T_ToolBlueprint extends Blueprint = any
 
 > {
@@ -20,6 +20,18 @@ export abstract class RuntimeNode<
     public readonly credentials: InferCredentials<T_Blueprint>
 
     protected isWaiting: boolean = false;
+
+    /** Exclude this node from the automatic __START__ wiring — it will only
+     *  fire when explicitly triggered by another node via schedulerAPI or propagationAPI. */
+    public readonly IS_PASSIVE: boolean = false
+
+    /** Controls how the engine fans out signals after this node completes.
+     *  - "all"    — signal every downstream dependent (default)
+     *  - "router" — signal only dependents connected to ports present in the result
+     *  - "none"   — suppress automatic fan-out entirely (node handled propagation itself) */
+    public getPropagationStrategy(): RuntimeNode.PropagationStrategy {
+        return "all"
+    }
 
 
 
@@ -171,6 +183,33 @@ export abstract class RuntimeNode<
 
 
 
+    protected onRecordMetrics(args: {
+        inputs:   InferInputs<T_Blueprint>,
+        outputs:  Partial<InferOutputs<T_Blueprint>>,
+        unitId:   Execution.Recording.UnitOfWork.Id,
+        status:   Execution.Recording.UnitOfWork["status"],
+        duration: number,
+    }): Record<string, Execution.Recording.Metric> | undefined {
+        return undefined;
+    }
+
+    public recordMetrics(args: {
+        inputs:   InferInputs<T_Blueprint>,
+        outputs:  Partial<InferOutputs<T_Blueprint>>,
+        unitId:   Execution.Recording.UnitOfWork.Id,
+        status:   Execution.Recording.UnitOfWork["status"],
+        duration: number,
+    }): Record<string, Execution.Recording.Metric> | undefined {
+        try {
+            return this.onRecordMetrics(args);
+        } catch (err) {
+            console.warn(`[RuntimeNode.recordMetrics] node=${this.workflowNode.id} threw:`, err);
+            return undefined;
+        }
+    }
+
+
+
 
 
     protected AbortablePromise<T>(
@@ -237,36 +276,11 @@ export abstract class RuntimeNode<
     }
 }
 
-export abstract class RuntimeFloatingNode<T_Blueprint extends Blueprint> extends RuntimeNode<T_Blueprint> {
-
-    public readonly isFloatingNode: true = true;
-}
-
-export abstract class RuntimeRouterNode<T_Blueprint extends Blueprint> extends RuntimeNode<T_Blueprint> {
-
-    public readonly isRouterNode: true = true;
-
-    constructor(
-        ...args: ConstructorParameters<typeof RuntimeNode>
-    ) {
-        super(...args)
-    }
-
-    public override async run(
-        inputs: InferInputs<T_Blueprint>
-    ): Promise<InferOutputs<T_Blueprint>> {
-        this.isWaiting = false;
-        this.fields = this.evaluateFields(inputs);
-        return this.onRun(inputs) as Promise<InferOutputs<T_Blueprint>>;
-    }
-
-    protected abstract override onRun(
-        inputs: InferInputs<T_Blueprint>
-    ): Promise<Partial<InferOutputs<T_Blueprint>>>;
-}
 
 
 export namespace RuntimeNode {
+    export type PropagationStrategy = "all" | "router" | "none"
+
     export type ConstructorProps = ConstructorParameters<typeof RuntimeNode>[0]
     export type CompileProps = Parameters<RuntimeNode<Blueprint>["compile"]>[0]
 

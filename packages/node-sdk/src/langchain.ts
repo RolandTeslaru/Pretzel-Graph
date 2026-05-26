@@ -1,4 +1,4 @@
-import { BaseMessage as CoreBaseMessage, HumanMessage as CoreHumanMessage, SystemMessage as CoreSystemMessage, AIMessage as CoreAIMessage, ToolMessage as CoreToolMessage } from "@langchain/core/messages";
+import { BaseMessage as CoreBaseMessage, HumanMessage as CoreHumanMessage, SystemMessage as CoreSystemMessage, AIMessage as CoreAIMessage, AIMessageChunk as CoreAIMessageChunk, ToolMessage as CoreToolMessage } from "@langchain/core/messages";
 import { BaseLanguageModel as CoreBaseLanguageModel } from "@langchain/core/language_models/base";
 import { BaseChatModel as CoreBaseChatModel } from "@langchain/core/language_models/chat_models";
 import { Embeddings as CoreEmbeddings } from "@langchain/core/embeddings";
@@ -12,6 +12,7 @@ export namespace LC {
     export const HumanMessage = CoreHumanMessage;
     export const SystemMessage = CoreSystemMessage;
     export const AIMessage = CoreAIMessage;
+    export const AIMessageChunk = CoreAIMessageChunk;
     export const ToolMessage = CoreToolMessage;
     export const BaseLanguageModel = CoreBaseLanguageModel;
     export const BaseChatModel = CoreBaseChatModel;
@@ -25,6 +26,7 @@ export namespace LC {
     export type HumanMessage = CoreHumanMessage;
     export type SystemMessage = CoreSystemMessage;
     export type AIMessage = CoreAIMessage;
+    export type AIMessageChunk = CoreAIMessageChunk;
     export type ToolMessage = CoreToolMessage;
     export type BaseLanguageModel = CoreBaseLanguageModel;
     export type BaseChatModel = CoreBaseChatModel;

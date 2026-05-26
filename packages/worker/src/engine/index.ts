@@ -415,13 +415,15 @@ export class AggexEngine {
                 this.session.createEdgeStateUpdate(ctx, incomingEdges, "completed")
             );
 
-        // Set all outgoing edges to preparing (skip for router nodes — only the taken branch should light up)
-        if (this.isRouterNode(entry.instance) === false){
+        // Set all outgoing edges to preparing.
+        // Skip for "router" — we don't know which branch will be taken yet.
+        // Skip for "none"   — the node manages its own propagation and edge state.
+        if (entry.instance.getPropagationStrategy() === "all") {
             const outgoingEdges = workflowCache.outgoingEdgesMap[entry.wfNode.id];
 
             if (outgoingEdges)
                 Object.assign(
-                    edgeStateUpdate, 
+                    edgeStateUpdate,
                     this.session.createEdgeStateUpdate(ctx, outgoingEdges, "preparing")
                 );
         }
@@ -515,10 +517,13 @@ export class AggexEngine {
             };
         });
             
-        this.flightRecorder?.onNodeExecuted(wfNode.id, signals, allDependencies, ctx);
+        this.flightRecorder?.onNodeExecuted(wfNode.id, signals, allDependencies, inputs, ctx);
 
-        if (this.isRouterNode(nodeInstance))
-            return this.resolveRouterSignals(ctx, wfNode.id, result);
+        switch (nodeInstance.getPropagationStrategy()) {
+            case "router": return this.resolveRouterSignals(ctx, wfNode.id, result)
+            case "none":   return new Set<Vertex.Id>()   // empty set → fireVertexDependents signals nobody
+            case "all":    return                         // void → fireVertexDependents signals all
+        }
     }
 
 
@@ -543,13 +548,18 @@ export class AggexEngine {
         let edgeStateUpdate: Execution.Session["edge_state"] = {};
 
         if (allOutgoingEdges) {
-            if (this.isRouterNode(entry.instance) && resolvedOutSignals) {
+            const strategy = entry.instance.getPropagationStrategy();
+
+            if (strategy === "router" && resolvedOutSignals) {
+                // Only mark edges for the taken branches
                 const takenEdges: Record<string, Workflow.Edge.Id> = {};
                 for (const [targetId, edgeId] of Object.entries(allOutgoingEdges)) {
                     if (resolvedOutSignals.has(targetId as unknown as Vertex.Id))
                         takenEdges[targetId] = edgeId;
                 }
                 edgeStateUpdate = this.session.createEdgeStateUpdate(ctx, takenEdges, "waiting", s => { s.runCount += 1; });
+            } else if (strategy === "none") {
+                // Node managed its own edge state via propagationAPI — nothing to do
             } else {
                 edgeStateUpdate = this.session.createEdgeStateUpdate(ctx, allOutgoingEdges, "waiting", s => { s.runCount += 1; });
             }
@@ -796,9 +806,6 @@ export class AggexEngine {
         return input;
     }
 
-    private isRouterNode(instance: RuntimeNode<Blueprint>): boolean {
-        return "isRouterNode" in instance;
-    }
 }
 
 

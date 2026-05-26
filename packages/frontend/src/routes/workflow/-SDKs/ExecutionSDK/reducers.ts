@@ -67,6 +67,7 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
                     unit.status         = "completed";
                     unit.duration       = event.duration;
                     unit.outputSnapshot = event.outputSnapshot;
+                    if (event.metrics) unit.metrics = event.metrics;
                 },
                 patchUnitFailed: (s, event) => {
                     const rec = _sdk.reducers.currentExecution.recording.ensure(s);
@@ -74,6 +75,7 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
                     if (!unit) return;
                     unit.status   = "failed";
                     unit.duration = event.duration;
+                    if (event.metrics) unit.metrics = event.metrics;
                 },
                 patchRelationCreateBatch: (s, event) => {
                     const rec = _sdk.reducers.currentExecution.recording.ensure(s);
