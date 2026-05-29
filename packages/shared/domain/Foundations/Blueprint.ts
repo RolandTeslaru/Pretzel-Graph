@@ -39,7 +39,7 @@ export namespace Blueprint {
             toolCompatible:       z.boolean().optional(),
             description:          z.string().nullable().optional(),
             dependency: z.object({
-                workflowId: z.uuid().brand("WorkflowId").nullable(),
+                workflowId: z.uuid().brand("WorkflowId"),
                 mode:       z.enum(["publication", "draft"]),
             }).optional(),
             flags:                z.record(z.string(), z.unknown()).optional(),

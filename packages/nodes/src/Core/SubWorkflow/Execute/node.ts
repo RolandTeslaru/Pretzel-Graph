@@ -52,10 +52,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const subExecution: Execution = {
             id:          this.context.executionId,
             workflow_id: subWorkflowId,
+            recording:   null,
             igniter:     {
                 variant: "sub_workflow",
                 parentNodeId: this.workflowNode.id,
                 subWorkflowPath: [...compilePath, subWorkflowId],
+                record: false
             },
             status:      "running",
             duration:    0,

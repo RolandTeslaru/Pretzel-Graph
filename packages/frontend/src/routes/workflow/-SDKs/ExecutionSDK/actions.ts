@@ -148,10 +148,11 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             return executions;
         },
         clear: () => {
-            sdk.setState(s => { s.currentExecution = undefined })
-        },
-        clearHistory: () => {
-            sdk.setState(s => { s.executionHistory = [] })
+            sdk.setState(s => {
+                s.currentExecution           = undefined;
+                s.executionHistory           = [];
+                s.isCurrentExecutionRecording = false;
+            })
         },
         addAwaitedConfirmation: (event) => {
             sdk.setState(s => {
@@ -185,8 +186,7 @@ export type ExecutionSDKActions = {
     run:                 (igniter: Execution.Igniter) => Promise<Execution.Id | null>,
     setCurrentExecution: (execution: Execution) => void,
     loadHistory:         (workflowId: Workflow.Id) => Promise<Execution.Meta[]>,
-    clearHistory:        () => void,
-    clear: () => void,
+    clear:               () => void,
     pause:     (executionId: Execution.Id) => Promise<boolean>,
     terminate: (executionId: Execution.Id) => Promise<boolean>,
     resume:    (executionId: Execution.Id) => Promise<boolean>,
