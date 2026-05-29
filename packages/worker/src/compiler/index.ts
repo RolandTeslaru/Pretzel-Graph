@@ -68,22 +68,23 @@ export class WorkflowCompiler {
         } satisfies RuntimeNode.ExecutionContext["instanceRegistryAPI"];
 
         const workflowQueryAPI = {
-            getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: T_Blueprint["id"]) => Object.values(engineExecutionCtx.workflowData.nodes)
-                .filter(n => n.blueprintId === blueprintId)
-                .map(n => ({
-                    node:   n,
-                    fields: mapFieldValues<T_Blueprint>(n.id, engineExecutionCtx.workflowData),
-                })),
+            getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: T_Blueprint["id"]) => 
+                Object.values(engineExecutionCtx.workflowData.nodes)
+                    .filter(n => n.blueprintId === blueprintId)
+                    .map(n => ({
+                        node:   n,
+                        fields: mapFieldValues<T_Blueprint>(n.id, engineExecutionCtx.workflowData),
+                    })),
             getNodeOutput: (nodeId, portId) =>
                 engineExecutionCtx.session.node_output_instances[nodeId]?.[portId],
         } satisfies RuntimeNode.ExecutionContext["workflowQueryAPI"];
 
         const schedulerAPI = {
-            fireNode:      (nodeId, signals) => engine.schedulerAPI.fireNode(engineExecutionCtx, nodeId, signals),
+            fireNode:      (nodeId, signals)    => engine.schedulerAPI.fireNode(engineExecutionCtx, nodeId, signals),
             signalNode:    (nodeId, fromNodeId) => engine.schedulerAPI.signalNode(engineExecutionCtx, nodeId, fromNodeId),
             removeSignal:  (nodeId, fromNodeId) => engine.schedulerAPI.removeSignal(engineExecutionCtx, nodeId, fromNodeId),
-            clearSignals:  (nodeId) => engine.schedulerAPI.clearSignals(engineExecutionCtx, nodeId),
-            scheduleCheck: (nodeId) => engine.schedulerAPI.scheduleCheck(engineExecutionCtx, nodeId),
+            clearSignals:  (nodeId)             => engine.schedulerAPI.clearSignals(engineExecutionCtx, nodeId),
+            scheduleCheck: (nodeId)             => engine.schedulerAPI.scheduleCheck(engineExecutionCtx, nodeId),
         } satisfies RuntimeNode.ExecutionContext["schedulerAPI"];
 
 
