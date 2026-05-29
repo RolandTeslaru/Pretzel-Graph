@@ -208,6 +208,15 @@ export class AggexWorkerImpl {
 
             await Execution.API.update(AxiosService.api, { executionId: execution.id, status: 'failed', session, recording }).catch(() => {});
 
+            this.emit<Execution.Event.Failed>({
+                executionId: execution.id,
+                workflowId,
+                type: "failed",
+                channel: eventChannel,
+                error: systemError.toJSON(),
+                session,
+            });
+
             if (recording) {
                 await this.redisPub.set(
                     Execution.Event.getChannel(execution.id),
@@ -221,15 +230,6 @@ export class AggexWorkerImpl {
                     type:        "recording:fullyUploaded",
                 })
             }
-
-            this.emit<Execution.Event.Failed>({
-                executionId: execution.id,
-                workflowId,
-                type: "failed",
-                channel: eventChannel,
-                error: systemError.toJSON(),
-                session,
-            });
 
             return { status: 'failed', error: systemError.toJSON() };
 
