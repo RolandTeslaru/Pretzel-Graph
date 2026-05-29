@@ -65,8 +65,8 @@ export namespace Chat {
             content:     z.string(),
             chat_id:     Chat.Id,
             created_at:  supabaseTimestamp,
-            updated_at:  supabaseTimestamp,
-            attachments: z.record(Attachment.Id, Attachment.Schema).optional(),
+            updated_at:  supabaseTimestamp.nullish(),
+            attachments: z.record(Attachment.Id, Attachment.Schema).nullish(),
         })
 
         function configLiteral<T extends Role>(value: T) {

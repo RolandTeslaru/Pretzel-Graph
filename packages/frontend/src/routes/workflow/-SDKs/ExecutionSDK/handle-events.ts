@@ -21,8 +21,6 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event)
                 sdk.reducers.currentExecution.setStatus(s, "completed");
             })
             sdk.actions.removeAwaitedConfirmation("started");
-            if (!sdk.state.isCurrentExecutionRecording)
-                sdk.runtime.unsubscribeFromEvents?.();
             break;
         case "failed":
             sdk.setState(s => {
@@ -31,7 +29,6 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event)
                 sdk.reducers.currentExecution.setError(s, e.error);
             })
             sdk.actions.removeAwaitedConfirmation("started");
-            sdk.runtime.unsubscribeFromEvents?.();
             toast.error(`Execution failed: ${e.error.message}`)
             break;
         case "terminated":
@@ -39,8 +36,6 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event)
                 sdk.reducers.currentExecution.setStatus(s, "terminated");
             })
             sdk.actions.removeAwaitedConfirmation("terminated");
-            if (!sdk.state.isCurrentExecutionRecording)
-                sdk.runtime.unsubscribeFromEvents?.();
             break;
         case "paused":
             sdk.setState(s => {
@@ -87,7 +82,7 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event)
             })
             break;
 
-        
+
         // Execution.Recording related events
 
 
@@ -113,13 +108,11 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event)
             break;
         case "recording:fullyUploaded":
             sdk.actions.loadLiveRecording(e.executionId)
-            sdk.runtime.unsubscribeFromEvents?.();
             break;
         case "recording:completed":
             sdk.setState(s => {
                 s.isCurrentExecutionRecording = false;
             })
-            sdk.runtime.unsubscribeFromEvents?.();
             break;
         default:
             toast.error(`Received unknown event: ${e.type}`)

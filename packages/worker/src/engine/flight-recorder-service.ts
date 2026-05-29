@@ -74,6 +74,7 @@ export class FlightRecorderService {
         signals: Set<Workflow.Node.Id | Vertex.Id>,
         allDeps: Set<Vertex.Id>,
         inputs:  Record<string, unknown>,
+        fields:  Record<string, unknown>,
         ctx:     AggexEngine.ExecutionContext,
     ): void {
         const unitId = this.mostRecentUoW.get(nodeId)
@@ -83,6 +84,7 @@ export class FlightRecorderService {
         if (!unit) return
 
         this.uowInputs.set(unitId, inputs)
+        unit.fieldSnapshot = fields
 
         const inputHandles = ctx.workflowCache.inputHandlesMap[nodeId] ?? {}
 

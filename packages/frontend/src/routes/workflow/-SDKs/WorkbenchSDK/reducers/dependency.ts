@@ -75,7 +75,7 @@ export const dependencyReducers = {
         const node = s.data.nodes[nodeId]
         
         node.dependency = {
-            workflowId: "" as Workflow.Id,
+            workflowId: null,
             mode,
         }
 
