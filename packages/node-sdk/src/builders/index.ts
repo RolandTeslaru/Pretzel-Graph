@@ -10,6 +10,7 @@ export { InputBuilder } from "./input"
 export { OutputBuilder } from "./output"
 export { WebhookBuilder } from "./webhook"
 export { defineCredential } from "./credential"
+export { defineLoaders } from "./loaders"
 export type { CredentialTemplate } from "./credential"
 
 

@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferInputs, InferOutputs, defineLoaders } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 @RegisterNode(Blueprint.id)
@@ -8,7 +8,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     // ── Mock loaders — replace with real DB calls when Postgres node is built ──
 
-    static loaders: Record<string, RuntimeNode.LoaderFn> = {
+    static loaders = defineLoaders<typeof Blueprint>()({
 
         async schemaSearch({ searchQuery }) {
             const schemas = [
@@ -43,14 +43,14 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 ],
             };
 
-            const schema = (fieldValues["schema"] as { value?: string } | undefined)?.value ?? "public";
+            const schema = fieldValues.schema?.value ?? "public";
             const tables = tablesBySchema[schema] ?? [{ label: `(no tables for schema "${schema}")`, value: "" }];
             const q = searchQuery?.toLowerCase() ?? "";
             return {
                 options: q ? tables.filter(t => t.label.includes(q)) : tables,
             };
         },
-    };
+    });
 
     // ── Execution ─────────────────────────────────────────────────────────────
 

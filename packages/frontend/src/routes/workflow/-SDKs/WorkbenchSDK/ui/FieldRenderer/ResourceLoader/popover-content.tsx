@@ -33,6 +33,7 @@ export const PopoverContent = memo<Props>(({ nodeId, field, selectedValue, onSel
                 blueprintId: s.data.nodes[nodeId].blueprintId,
                 loaderId: field.loaderId,
                 fieldValues: s.data.staticValues[nodeId] ?? {},
+                credentialInstanceIds: s.data.credentialInstanceIds[nodeId] ?? {},
                 searchQuery: debouncedSearch || undefined,
             })
         },

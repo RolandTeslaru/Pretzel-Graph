@@ -1,14 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { createAuthenticatedClient } from '@/utils/supabase';
-import { Workflow, Workbench } from '@pretzel-graph/shared/domain';
+import { Workflow, Workbench, Vault } from '@pretzel-graph/shared/domain';
 import { WorkbenchDatabase } from './workbench.database';
-import { CatalogueService } from '@pretzel-graph/node-sdk';
+import { VaultDatabase } from '../Vault/vault.database';
+import { decryptCredentialBlob } from '../Vault/vault.encryption';
+import { CatalogueService, RuntimeNode } from '@pretzel-graph/node-sdk';
 import { Token } from '@/domain/Token';
 
 @Injectable()
 export class WorkbenchService {
     constructor(
         private readonly database: WorkbenchDatabase,
+        private readonly vaultDatabase: VaultDatabase,
     ) {}
 
     public readonly workflow = {
@@ -98,11 +101,38 @@ export class WorkbenchService {
                         `No loader '${payload.loaderId}' on blueprint '${payload.blueprintId}'`
                     );
 
+                // Fetch the node's selected credential instances through the user's
+                // authenticated client — Supabase RLS gates ownership, so a spoofed
+                // instance id simply yields no row (same guarantee as VaultService.reveal).
+                const supabase = createAuthenticatedClient(token);
+                const ids = Object.values(payload.credentialInstanceIds);
+                const instances = ids.length
+                    ? await this.vaultDatabase.credentialInstance.listByIds(supabase, ids)
+                    : [];
+                const byId = new Map(instances.map(i => [i.id, i]));
+
+                // credentials record, keyed by template id (the InferCredentials<B> shape).
+                const credentials = Object.fromEntries(
+                    Object.entries(payload.credentialInstanceIds)
+                        .map(([templateId, instanceId]) => [templateId, byId.get(instanceId)] as const)
+                        .filter(([, inst]) => inst !== undefined),
+                );
+
+                // credentialsAPI — identical surface to the worker's ExecutionContext.credentialsAPI.
+                const credentialsAPI: RuntimeNode.LoaderContext['credentialsAPI'] = {
+                    getInstance: (id) => byId.get(id),
+                    getDecryptedValue: (blob) => decryptCredentialBlob(blob) as any,
+                };
+
+                // The backend operates without compile-time blueprint knowledge, so the
+                // loader context is cast at this type-erased boundary.
                 return await loaderFn({
                     fieldValues: payload.fieldValues,
+                    credentials,
+                    credentialsAPI,
                     searchQuery: payload.searchQuery,
                     paginationCursor: payload.paginationCursor,
-                });
+                } as RuntimeNode.LoaderContext);
             },
         },
     };

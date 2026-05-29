@@ -454,7 +454,13 @@ export const BUNDLE_DRAWERS = {
     displayName: "MongoDB",
     id: "mongodb",
     icon: "MongoDB",
-    blueprintIds: []
+    blueprintIds: ["Integrations.MongoDB.Operation"]
+  },
+  mysql: {
+    displayName: "MySQL",
+    id: "mysql",
+    icon: "MySQL",
+    blueprintIds: ["Integrations.MySQL.Query"]
   },
   needle: {
     displayName: "Needle",
@@ -528,6 +534,12 @@ export const BUNDLE_DRAWERS = {
     icon: "Pinecone",
     blueprintIds: []
   },
+  postgres: {
+    displayName: "Postgres",
+    id: "postgres",
+    icon: "Postgres",
+    blueprintIds: ["Integrations.Postgres.Query"]
+  },
   qdrant: {
     displayName: "Qdrant",
     id: "qdrant",
@@ -538,7 +550,7 @@ export const BUNDLE_DRAWERS = {
     displayName: "Redis",
     id: "redis",
     icon: "Redis",
-    blueprintIds: []
+    blueprintIds: ["Integrations.Redis.Command"]
   },
   sambanova: {
     displayName: "SambaNova",
