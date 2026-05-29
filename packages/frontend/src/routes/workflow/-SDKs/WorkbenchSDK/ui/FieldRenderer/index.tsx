@@ -13,6 +13,7 @@ import { ConditionField } from './Condition'
 import { CaseListField } from './CaseList'
 import { JsonField } from './Json'
 import { VariadicField } from './Variadic'
+import { ResourceLoaderField } from './ResourceLoader'
 
 export { FieldLabel } from './FieldLabel'
 export type { RendererProps } from './FieldLabel'
@@ -52,6 +53,7 @@ export const FIELD_RENDERER_MAP: FieldRendererMapType = {
     Condition: ConditionField,
     CaseList: CaseListField,
     Variadic: VariadicField,
+    ResourceLoader: ResourceLoaderField,
 }
 
 /** Renders the appropriate field component based on variant */

@@ -1,7 +1,7 @@
 import z from "zod";
 import { Auth } from "./Auth";
 
-export const WorkflowId = z.string().brand("WorkflowId");
+export const WorkflowId = z.uuid().brand("WorkflowId");
 export type WorkflowId = z.infer<typeof WorkflowId>;
 
 export namespace VersionControlPublication {

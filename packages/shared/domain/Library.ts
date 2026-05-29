@@ -5,7 +5,7 @@ import { Workflow as DomainWorkflow } from "./Workflow"
 export namespace Library {
 
     export namespace Folder {
-        export const Id = z.string().brand("FolderId")
+        export const Id = z.uuid().brand("FolderId")
         export type Id = z.infer<typeof Folder.Id>
 
         export const Schema = z.object({
@@ -32,7 +32,7 @@ export namespace Library {
     export namespace Database {
         export namespace FolderRow {
             export const Schema = Folder.Schema.extend({
-                user_id: z.string().brand("UserId"),
+                user_id: z.uuid().brand("UserId"),
             })
         }
         export type FolderRow = z.infer<typeof Database.FolderRow.Schema>

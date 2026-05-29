@@ -62,7 +62,10 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
                 }
             }
 
-            setState(s => { reducers.field.setValue(s, nodeId, field.id, value) });
+            setState(s => {
+                reducers.field.setValue(s, nodeId, field.id, value)
+                reducers.field.clearDependentFields(s, nodeId, field.id)
+            });
 
             debouncedValidateField(nodeId, field);
         }),

@@ -2,17 +2,17 @@ import z from "zod";
 import type { AxiosInstance } from "axios";
 import { Realtime } from "./Realtime";
 
-const WorkflowId = z.string().brand("WorkflowId");
+const WorkflowId = z.uuid().brand("WorkflowId");
 type WorkflowId = z.infer<typeof WorkflowId>;
 
-const ExecutionId = z.string().brand("ExecutionId");
+const ExecutionId = z.uuid().brand("ExecutionId");
 type ExecutionId = z.infer<typeof ExecutionId>;
 
 export namespace Webhook {
     export const Id = z.string().brand("WebhookId")
     export type Id = z.infer<typeof Id>
 
-    export const WorkflowId = z.string().brand("WorkflowId")
+    export const WorkflowId = z.uuid().brand("WorkflowId")
     export type WorkflowId = z.infer<typeof WorkflowId>
 
     export const Path = z.string().brand("WebhookPath")

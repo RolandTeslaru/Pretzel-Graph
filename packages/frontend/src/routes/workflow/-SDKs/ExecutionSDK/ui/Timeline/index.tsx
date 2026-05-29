@@ -53,7 +53,7 @@ const TimelineViewer = () => {
         if (scrollRef.current) scrollRef.current.scrollTop = lb.scrollTop
     }, [])
 
-    const totalWidth  = Math.max(scale.totalWidth + 80, 400)
+    const totalWidth  = Math.max(scale.totalWidth + 80, 400) + window.innerWidth
     const totalHeight = layout.totalHeight
 
     if (!recording) {
@@ -72,7 +72,7 @@ const TimelineViewer = () => {
             <TracksPanel labelsRef={labelsRef} onScroll={handleLabelScroll} layout={layout} nodes={nodes} />
 
             
-            <div className="flex h-full overflow-hidden">
+            <div className="flex h-full overflow-hidden min-w-[200vw]">
                 {/* Main grid */}
                 <div
                     className="flex-1 overflow-hidden"

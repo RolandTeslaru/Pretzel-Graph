@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { createAuthenticatedClient } from '@/utils/supabase';
 import { Workflow, Workbench } from '@pretzel-graph/shared/domain';
 import { WorkbenchDatabase } from './workbench.database';
+import { CatalogueService } from '@pretzel-graph/node-sdk';
+import { Token } from '@/domain/Token';
 
 @Injectable()
 export class WorkbenchService {
@@ -76,6 +78,31 @@ export class WorkbenchService {
                 const supabase = createAuthenticatedClient(token);
                 const updates = await this.database.dependency.draft.checkUpdates(supabase, payload.dependencies);
                 return { updates };
+            },
+        },
+    };
+
+    public readonly field = {
+        resourceLoader: {
+            loadOptions: async (
+                token: Token.UserSupabaseJWT,
+                payload: Workbench.API.Field.ResourceLoader.LoadOptions.Request,
+            ): Promise<Workbench.API.Field.ResourceLoader.LoadOptions.Response> => {
+                const loaderFn = await CatalogueService.getLoader(
+                    payload.blueprintId,
+                    payload.loaderId,
+                );
+
+                if (!loaderFn)
+                    throw new NotFoundException(
+                        `No loader '${payload.loaderId}' on blueprint '${payload.blueprintId}'`
+                    );
+
+                return await loaderFn({
+                    fieldValues: payload.fieldValues,
+                    searchQuery: payload.searchQuery,
+                    paginationCursor: payload.paginationCursor,
+                });
             },
         },
     };

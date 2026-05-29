@@ -67,4 +67,13 @@ export class WorkbenchController {
     ) {
         return await this.workbenchService.dependency.draft.checkUpdates(req.token, body);
     }
+
+    @Post('field/resource-loader/load-options')
+    @HttpCode(200)
+    async loadResourceLoaderOptions(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Workbench.API.Field.ResourceLoader.LoadOptions.Request) body: Workbench.API.Field.ResourceLoader.LoadOptions.Request,
+    ) {
+        return await this.workbenchService.field.resourceLoader.loadOptions(req.token, body);
+    }
 }
