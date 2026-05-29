@@ -443,7 +443,6 @@ export class AggexEngine {
             Object.assign(d.node_status, nodeStatusUpdate);
         });
 
-        console.log(`[Engine] node:started  ${entry.wfNode.id}`);
         ctx.emit<Execution.Event.Node.Started>({
             executionId:   ctx.executionId,
             workflowId:    ctx.workflowId,
@@ -491,18 +490,22 @@ export class AggexEngine {
         const dataDependency = entry.instance.fields["dataDependency" as Field.Id];
         
         const inputs = this.node.getIncomingData(
-            ctx, 
-            wfNode.id, 
+            ctx,
+            wfNode.id,
             dataDependency === "AND" ? allDependencies : signals
         );
+
+        const fields = nodeInstance.evaluateFields(inputs);
+
+        this.flightRecorder?.onNodeExecuted(wfNode.id, signals, allDependencies, inputs, fields, ctx);
 
         const isTool = nodeInstance.fields["isConvertedToTool" as Field.Id] === true;
 
         let result;
         if(isTool)
-            result = await nodeInstance.buildTool(inputs);
+            result = await nodeInstance.buildTool(inputs, fields);
         else
-            result = await nodeInstance.run(inputs);
+            result = await nodeInstance.run(inputs, fields);
 
         const projectedResult = this.node.projectOutputs(result, wfNode);
 
@@ -516,8 +519,6 @@ export class AggexEngine {
                 ...projectedResult,
             };
         });
-            
-        this.flightRecorder?.onNodeExecuted(wfNode.id, signals, allDependencies, inputs, ctx);
 
         switch (nodeInstance.getPropagationStrategy()) {
             case "router": return this.resolveRouterSignals(ctx, wfNode.id, result)
@@ -579,7 +580,6 @@ export class AggexEngine {
             Object.assign(d.node_status, nodeStatusUpdate);
         });
 
-        console.log(`[Engine] node:completed ${entry.wfNode.id}`);
         ctx.emit<Execution.Event.Node.Completed>({
             executionId:   ctx.executionId,
             workflowId:    ctx.workflowId,
@@ -648,7 +648,8 @@ export class AggexEngine {
         });
 
         const partialInputs = this.node.getIncomingData(ctx, wfNode.id, arrivedSignals);
-        instance.wait(partialInputs, nodeDepMap);
+        const partialFields = instance.evaluateFields(partialInputs);
+        instance.wait(partialInputs, nodeDepMap, partialFields);
     }
 
 
@@ -710,61 +711,33 @@ export class AggexEngine {
         receivedSignals:   Set<Vertex.Id>,
         s2EngineAssesment: boolean
     ): boolean {
-        console.log(`[canNodeRun] vertexId=${vertexId} s2Assessment=${s2EngineAssesment} receivedSignals=[${[...receivedSignals].join(", ")}]`);
-
         const entry = this.nodeRuntimeMap.get(vertexId);
-        if (!entry) {
-            console.log(`[canNodeRun] vertexId=${vertexId} → no runtime entry, returning true`);
-            return true;
-        }
+        if (!entry) return true;
 
         const { instance, wfNode } = entry;
 
         const signalDepField = instance.fields["signalDependency" as Field.Id];
         const dataDepField   = instance.fields["dataDependency" as Field.Id];
 
-        console.log(`[canNodeRun] vertexId=${vertexId} signalDep=${signalDepField} dataDep=${dataDepField}`);
+        if(signalDepField === "AND") return true;
 
-        // if(!signalDepField || !dataDepField)
-        //     return true;
+        if(dataDepField === "AND"){
+            // Block until every wired port has data.
+            // "Wired" means an edge physically connects to that port — unwired optional ports are ignored.
+            const dependencies       = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
+            const incomingInputs     = this.node.getIncomingData(ctx, wfNode.id, dependencies, true);
+            const incomingEdgeByPort = ctx.workflowCache.inputHandlesMap[wfNode.id];
 
-        // If it is set to strict AND, the S2 engine assessment is sufficient to determine if the node can run
-        // Because its expected that the data will be provided on time
-        if(signalDepField === "AND") {
-            console.log(`[canNodeRun] vertexId=${vertexId} → signalDep=AND, returning true`);
-            return true;
-        }
-        else{
-            if(dataDepField === "AND"){
-                // In non-AND signal dependency mode, we need to check if all data dependencies are resolved before allowing the node to run
-                const dependencies = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
+            for (const portId in incomingInputs) {
+                const edgeId  = incomingEdgeByPort?.[portId as Port.Input.Id];
+                const isWired = !!edgeId && !!ctx.workflowData.edges[edgeId];
 
-                const incomingInputs = this.node.getIncomingData(ctx, wfNode.id, dependencies, true);
-
-                const requiredPortIds = new Set(
-                    wfNode.inputs.filter(p => p.required).map(p => p.id)
-                );
-
-                console.log(`[canNodeRun] vertexId=${vertexId} requiredPorts=[${[...requiredPortIds].join(", ")}] incomingInputs=${JSON.stringify(incomingInputs)}`);
-
-                // If a required port is undefined, not all data dependencies are resolved yet
-                for (const portId in incomingInputs) {
-                    if (
-                        requiredPortIds.has(portId as Port.Input.Id)
-                        && incomingInputs[portId as Port.Input.Id] === undefined
-                    ) {
-                        console.log(`[canNodeRun] vertexId=${vertexId} → required port "${portId}" is undefined, returning false`);
-                        return false;
-                    }
-                }
-                console.log(`[canNodeRun] vertexId=${vertexId} → all required ports resolved, returning true`);
-                return true;
-            }
-            else {
-                console.log(`[canNodeRun] vertexId=${vertexId} → dataDep=${dataDepField} (not AND), returning true`);
-                return true;
+                if (isWired && incomingInputs[portId as Port.Input.Id] === undefined)
+                    return false;
             }
         }
+
+        return true;
     }
 
 
@@ -809,8 +782,6 @@ export class AggexEngine {
 }
 
 
-
-
 export namespace AggexEngine {
     export namespace Execution {
         export type Result = {
@@ -827,4 +798,3 @@ export namespace AggexEngine {
 
     export type ExecutionContext = Execution.Context;
 }
-

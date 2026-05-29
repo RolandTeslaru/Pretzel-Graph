@@ -36,7 +36,7 @@ function formatMetric(metric: Execution.Recording.Metric): string {
     }
 }
 
-const DEFAULT_OPEN_DRAWERS = ["general", "metrics"]
+const DEFAULT_OPEN_DRAWERS = ["general", "fields", "metrics"]
 
 
 interface AccordionItemProps {
@@ -147,6 +147,21 @@ export const Content = memo(({ uowId }: Props) => {
                                     <p className='text-xs text-foreground/50'>{formatMetric(metric)}</p>
                                 </div>
                             ))}
+                        </AccordionItem>
+                    )}
+
+                    {uow.fieldSnapshot && Object.keys(uow.fieldSnapshot).length > 0 && (
+                        <AccordionItem label="Fields" value="fields">
+                            {Object.entries(uow.fieldSnapshot).map(([key, value]) => {
+                                const isComplex = value !== null && value !== undefined && typeof value === 'object'
+                                const display = isComplex ? JSON.stringify(value) : String(value ?? '—')
+                                return (
+                                    <div key={key} className='flex flex-row gap-2 justify-between'>
+                                        <p className='text-xs text-muted-foreground shrink-0'>{key}</p>
+                                        <p className='text-xs text-foreground/50 text-right break-all'>{display}</p>
+                                    </div>
+                                )
+                            })}
                         </AccordionItem>
                     )}
                 </Accordion.Root>

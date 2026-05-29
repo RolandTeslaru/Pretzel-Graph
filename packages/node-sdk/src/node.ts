@@ -62,12 +62,14 @@ export abstract class RuntimeNode<
 
     /**
      * Called by the engine. Wraps onRun with shared pre/post logic.
+     * fields must be pre-evaluated by the engine via evaluateFields().
      */
     public async run(
-        inputs: InferInputs<T_Blueprint>
+        inputs: InferInputs<T_Blueprint>,
+        fields: InferFields<T_Blueprint>,
     ): Promise<Partial<InferOutputs<T_Blueprint>>> {
         this.isWaiting = false;
-        this.fields = this.evaluateFields(inputs);
+        this.fields = fields;
 
         return this.onRun(inputs);
     }
@@ -79,7 +81,7 @@ export abstract class RuntimeNode<
         inputs: InferInputs<T_Blueprint>
     ): Promise<Partial<InferOutputs<T_Blueprint>>>;
 
-    protected evaluateFields(
+    public evaluateFields(
         incoming: Record<Port.Id, Projection> | Record<string, unknown>
     ): InferFields<T_Blueprint> {
         const fields = mapFieldValues<T_Blueprint>(this.workflowNode.id, this.context.workflowData);
@@ -97,10 +99,11 @@ export abstract class RuntimeNode<
 
 
     public async buildTool(
-        inputs: InferInputs<T_ToolBlueprint>
+        inputs: InferInputs<T_ToolBlueprint>,
+        fields: InferFields<T_Blueprint>,
     ): Promise<InferOutputs<T_ToolBlueprint>> {
         this.isWaiting = false;
-        this.fields = this.evaluateFields(inputs);
+        this.fields = fields;
         return this.onBuildTool(inputs);
     }
 
@@ -119,10 +122,11 @@ export abstract class RuntimeNode<
 
     public async wait(
         partialInputs: InferInputs<T_Blueprint>,
-        dependencyResolutionMap: Record<Workflow.Node.Id, boolean>
+        dependencyResolutionMap: Record<Workflow.Node.Id, boolean>,
+        fields: InferFields<T_Blueprint>,
     ): Promise<void> {
         this.isWaiting = true;
-        this.fields = this.evaluateFields(partialInputs);
+        this.fields = fields;
         return this.onWait(partialInputs);
     }
     
