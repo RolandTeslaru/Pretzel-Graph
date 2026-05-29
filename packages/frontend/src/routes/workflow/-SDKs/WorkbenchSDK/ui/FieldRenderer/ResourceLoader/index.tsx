@@ -38,10 +38,10 @@ export const ResourceLoaderField = memo<RendererProps<'ResourceLoader'>>(({ fiel
 
     const modeSelect = (
         <Select.Root value={value.mode} onValueChange={v => setMode(v as RLValue['mode'])}>
-            <Select.Trigger size="xs" className="shrink-0 w-auto h-7!">
+            <Select.Trigger size="xs" className="shrink-0 w-auto ">
                 <Select.Value />
             </Select.Trigger>
-            <Select.Content>
+            <Select.Content size='xs'>
                 <Select.Item value="list">by List</Select.Item>
                 <Select.Item value="manual">by Search</Select.Item>
             </Select.Content>
@@ -61,7 +61,8 @@ export const ResourceLoaderField = memo<RendererProps<'ResourceLoader'>>(({ fiel
                         onChange={e => WorkbenchSDK.actions.field.setValue(
                             nodeId, field, { mode: 'manual', value: e.target.value } satisfies RLValue
                         )}
-                        className={cn('flex-1 text-xs h-7', hasIssue && 'border-destructive')}
+                        size='xs'
+                        className={cn('flex-1 text-xs', hasIssue && 'border-destructive')}
                     />
                 </div>
             ) : (
@@ -72,12 +73,13 @@ export const ResourceLoaderField = memo<RendererProps<'ResourceLoader'>>(({ fiel
                             <Button
                                 variant="outline"
                                 className={cn(
-                                    'w-full flex transition-colors text-left text-xs',
+                                    'w-full flex transition-colors text-left! text-xs',
                                     hasIssue && 'border-destructive',
                                     !displayText && 'text-muted-foreground',
                                 )}
+                                size="xs"
                             >
-                                <span className="truncate">{displayText || field.placeholder || `Select ${field.displayName}`}</span>
+                                <span className="truncate mr-auto">{displayText || field.placeholder || `Select ${field.displayName}`}</span>
                             </Button>
                         </Popover.Trigger>
                     </div>
