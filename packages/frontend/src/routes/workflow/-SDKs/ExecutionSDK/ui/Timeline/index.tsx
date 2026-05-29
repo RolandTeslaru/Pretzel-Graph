@@ -53,7 +53,8 @@ const TimelineViewer = () => {
         if (scrollRef.current) scrollRef.current.scrollTop = lb.scrollTop
     }, [])
 
-    const totalWidth  = Math.max(scale.totalWidth + 80, 400) + window.innerWidth
+    const totalWidth  = Math.max(scale.totalWidth + 80, 400)
+    const scrollWidth = totalWidth + Math.max(window.innerWidth, totalWidth)
     const totalHeight = layout.totalHeight
 
     if (!recording) {
@@ -104,7 +105,7 @@ const TimelineViewer = () => {
                         style={{ overflowX: "auto", overflowY: "auto" }}
                         className="pl-[180px] pb-20"
                     >
-                        <div style={{ position: "relative", width: totalWidth, height: totalHeight }}>
+                        <div style={{ position: "relative", width: scrollWidth, height: totalHeight }}>
                             {layout.tracks.map(tl => (
                                 <TrackRow
                                     key={tl.track.id}

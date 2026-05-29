@@ -222,6 +222,7 @@ export namespace Execution {
                 duration:       z.number().optional(), // ms; undefined while running
                 inputSnapshot:  z.record(Port.Input.Id,  DataBank.PortSnapshot.Id).default({}),
                 outputSnapshot: z.record(Port.Output.Id, DataBank.PortSnapshot.Id).default({}),
+                fieldSnapshot:  z.record(z.string(), z.unknown()).optional(),
                 metrics:        z.record(z.string(), Metric.Schema).optional(),
             })
         }
