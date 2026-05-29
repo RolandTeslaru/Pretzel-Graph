@@ -74,7 +74,7 @@ export const Route = createFileRoute('/workflow/$workflowid')({
             staleTime: 30_000,
         })
 
-        ExecutionSDK.actions.clearHistory();
+        ExecutionSDK.actions.clear();
 
         WorkbenchSDK.actions.workflow.load(workflowId, abortController.signal)
             .finally(() => {
