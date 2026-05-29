@@ -96,7 +96,7 @@ export type InferCredentialValues<C> = 0 extends (1 & C) ? any
     ? { [K in F[number] as K extends { __literalId?: infer Id extends string }
             ? Id
             : K extends { id: infer Id extends string } ? Id : never
-        ]: string
+        ]: K extends { initialValue: infer IV } ? IV : string
       }
     : Record<string, string>
     : Record<string, string>;

@@ -74,6 +74,22 @@ export namespace Projection {
     })
     export type Embeddings = z.infer<typeof Embeddings>
 
+    // Data ports project their value through as-is (see Synthesizer.project); they aren't LC
+    // instances, so they need permissive shapes. The two mirror the port variants:
+    //   Data     = a single item — a plain object (Data / Json) or a scalar (Text / Integer)
+    //   DataList = an array of items (DataList)
+    export const Data = z.union([
+        z.record(z.string(), z.any()),
+        z.string(),
+        z.number(),
+        z.boolean(),
+        z.null(),
+    ])
+    export type Data = z.infer<typeof Data>
+
+    export const DataList = z.array(Data)
+    export type DataList = z.infer<typeof DataList>
+
     export const Schema = z.union([
         Message,
         MessageList,
@@ -82,7 +98,9 @@ export namespace Projection {
         ToolList,
         LanguageModel,
         Embeddings,
-        Retriever,     // z.object({}) — opaque handle, must be last: matches any plain object
+        Retriever,     // z.object({}) — opaque handle for VectorStore / Retriever
+        Data,          // a single item: object or scalar
+        DataList,      // an array of items
         z.undefined()
     ])
 }

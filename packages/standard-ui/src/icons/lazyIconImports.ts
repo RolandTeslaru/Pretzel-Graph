@@ -246,6 +246,8 @@ export const lazyIconsMapping = {
     import("./BRAND_ICONS/Missive"),
   Mistral: () =>
     import("./BRAND_ICONS/mistral"),
+  MySQL: () =>
+    import("./BRAND_ICONS/MySQL"),
   MongoDB: () =>
     import("./BRAND_ICONS/MongoDB"),
   Neon: () => import("./BRAND_ICONS/Neon"),

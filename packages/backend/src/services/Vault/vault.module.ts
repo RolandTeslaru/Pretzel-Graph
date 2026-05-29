@@ -6,6 +6,6 @@ import { VaultDatabase } from './vault.database';
 @Module({
     controllers: [VaultController],
     providers:   [VaultService, VaultDatabase],
-    exports:     [VaultService],
+    exports:     [VaultService, VaultDatabase],
 })
 export class VaultModule {}
