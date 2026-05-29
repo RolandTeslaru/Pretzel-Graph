@@ -42,12 +42,15 @@ packages/
   frontend/    # React 19 + Vite + XYFlow graph editor
   backend/     # NestJS + WebSocket + BullMQ
   shared/      # Domain models (Zod schemas) used by all packages
-  vx-ui/       # UI component library (Radix + Tailwind foundations, icons)
+  standard-ui/ # UI component library (Radix + Tailwind foundations, icons)
+  node-sdk/    # Node authoring SDK — RuntimeNode, builders, CatalogueService, db/ connection managers
+  nodes/       # Node implementations (blueprint.ts + node.ts) organized by provider
   worker/      # Workflow execution engine (LangChain + LangGraph)
+  webhook/     # Inbound webhook receiver
 ```
 
 ### Frontend State Management — SDK Pattern
-All state lives in Zustand stores wrapped by typed SDK classes in `src/SDKs/`. Each SDK extends `BaseSDK<T_State>` and exposes:
+All state lives in Zustand stores wrapped by typed SDK classes. App-wide SDKs (Dialog, Vault, Query, Auth, …) live in `src/SDKs/`; the editor-scoped SDKs (`WorkbenchSDK`, `ExecutionSDK`, `ShelfSDK`, `TreeSDK`) live under `src/routes/workflow/-SDKs/`. Each SDK extends `BaseSDK<T_State>` and exposes:
 - `useStore` — Zustand store (Immer + Zundo for undo/redo)
 - `reducers` — Immer-based state mutations
 - `actions` — Side-effectful operations (API calls, etc.)
@@ -70,10 +73,12 @@ Branded string types (e.g., `Workflow.Id`, `Node.Id`) are used throughout for ty
 ### Graph Canvas
 `WorkbenchSDK/ui/Canvas/` contains the XYFlow canvas, custom node components, and edge renderers. Nodes are defined by Blueprints; the `FieldRenderer` dynamically renders each node's input fields based on the field's type.
 
-### Execution Engine (`worker`)
-- `WorkflowCompiler` — Validates a workflow DAG before execution
-- `AggexEngine` — Executes the graph node-by-node; resolves field values and incoming port data
-- Node implementations live under `nodes/` organized by provider (Core, OpenAI, Google, Anthropic)
+### Execution Engine (`worker`) + Nodes (`nodes`, `node-sdk`)
+**Full engine/scheduler docs: `packages/worker/README.md`** (S²Engine, signal vs data dependency, propagation strategies, cycles).
+- `compiler/` — Builds the `S2Graph` + execution context, instantiates/registers nodes, wires edges, finds start nodes
+- `engine/` — `AggexEngine` wraps the signal-based `S2Engine`; runs each node, resolves incoming port data, projects outputs. **Not a DAG walk** — nodes fire on accumulated signals and may re-fire (cycles are first-class).
+- Node implementations live in **`packages/nodes/src/`** (NOT in worker), organized by provider (`Core/`, `Integrations/<Provider>/`). Each node is `blueprint.ts` + `node.ts` (+ optional `reconcile.ts`).
+- `packages/node-sdk/` is the authoring SDK: `RuntimeNode` base class, field/credential/blueprint builders, `CatalogueService` (resolves nodes by blueprint-id path convention), and `src/db/` connection managers (`ConnectionManager` → `SqlConnectionManager`; Postgres/MySQL/Redis/Mongo adapters).
 - Uses LangGraph state machines for agent loop execution
 
 ### Backend
@@ -101,7 +106,7 @@ When the user says "let's spec out [feature]", read the relevant codebase and pr
 
 - **Dialogs/Confirmations**: Always use `DialogSDK.actions.push()` with `DialogSDK.Template` or `DialogSDK.AlertTemplate` to open dialogs. Do not use inline `AlertDialog.Root`/`Trigger`/`Content` patterns. See `VaultSDK/ui/VaultPanel.tsx` for examples.
 
-- **Adding a new node**: When creating a new node (`blueprint.ts` + `node.ts` under `packages/worker/src/nodes/`), always also register its blueprint ID in the appropriate drawer in `packages/shared/constants/drawers.ts`. The drawer key should match the node's provider (e.g. `tavily`, `openai`, `anthropic`). For core nodes, use the relevant `CORE_DRAWERS` entry.
+- **Adding a new node**: See the full guide in **`packages/node-sdk/README.md`** (builders, ports, credentials, RuntimeNode hooks, ResourceLoader/reconcile, DB connection layer). In short: create `blueprint.ts` + `node.ts` (the class is resolved by blueprint-id → path convention, e.g. `Integrations.Postgres.Query` → `packages/nodes/src/Integrations/Postgres/Query/node.ts`); then (1) register the blueprint ID in the appropriate drawer in `packages/shared/constants/drawers.ts` (drawer key matches the provider, e.g. `tavily`, `postgres`); (2) if it has a credential, define it in `packages/nodes/src/Credentials/` and re-export from `Credentials/index.ts`; (3) run `npm run generate-indexes` (in `packages/nodes`) to refresh the catalog `node_index.json` (dist + backend shelf). Operation-style nodes use a reconcile-driven `operation` field — see `Integrations/Redis/Command` and `Integrations/MongoDB/Operation`.
 
 - **Reading SDK state inside callbacks/handlers**: Never subscribe to SDK state via `useStore` just to use it inside an event handler or async function. Read it at call time from `SDK.state` directly inside the function. `useStore` subscriptions cause re-renders on every state change — only use them for values the component must re-render on. Example: inside a `fetchOptions` function, do `const value = WorkbenchSDK.state.data.someSlice[nodeId]`, not `const value = WorkbenchSDK.useStore(s => s.data.someSlice[nodeId])` at the component level.
 
@@ -109,12 +114,14 @@ When the user says "let's spec out [feature]", read the relevant codebase and pr
 
 | Concern | Path |
 |---|---|
-| Editor state (Zustand) | `packages/frontend/src/SDKs/WorkbenchSDK/sdk.ts` |
-| State reducers | `packages/frontend/src/SDKs/WorkbenchSDK/reducers/` |
-| Graph canvas | `packages/frontend/src/SDKs/WorkbenchSDK/ui/Canvas/` |
+| Editor state (Zustand) | `packages/frontend/src/routes/workflow/-SDKs/WorkbenchSDK/sdk.ts` |
+| State reducers | `packages/frontend/src/routes/workflow/-SDKs/WorkbenchSDK/reducers/` |
+| Graph canvas | `packages/frontend/src/routes/workflow/-SDKs/WorkbenchSDK/ui/Canvas/` |
 | Domain models | `packages/shared/domain/` |
-| Workflow execution | `packages/worker/src/engine.ts` |
-| Workflow compiler | `packages/worker/src/compiler.ts` |
+| Node authoring SDK | `packages/node-sdk/src/` (RuntimeNode, builders, `db/` connection managers) |
+| Node implementations | `packages/nodes/src/` |
+| Workflow execution | `packages/worker/src/engine/index.ts` |
+| Workflow compiler | `packages/worker/src/compiler/index.ts` |
 | Backend entry | `packages/backend/src/index.ts` |
 | Tailwind config | `packages/frontend/tailwind.config.ts` |
-| UI component library | `packages/vx-ui/src/foundations/` |
+| UI component library | `packages/standard-ui/src/foundations/` |

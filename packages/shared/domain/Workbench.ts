@@ -3,6 +3,7 @@ import z from "zod"
 import { Workflow as WorkflowNs } from "./Workflow"
 import { VersionControlPublication } from "./VersionControlPublication"
 import { Foundations } from "./index"
+import { Vault } from "./Vault"
 
 export namespace Workbench {
     export namespace API {
@@ -149,6 +150,10 @@ export namespace Workbench {
                         blueprintId: Foundations.Blueprint.Id,
                         loaderId: Foundations.Field.ResourceLoader.LoaderId,
                         fieldValues: z.record(z.string(), z.any()).default({}),
+                        credentialInstanceIds: z.record(
+                            Vault.Credential.Template.Id,
+                            Vault.Credential.Instance.Id,
+                        ).default({}),
                         searchQuery: z.string().optional(),
                         paginationCursor: z.string().optional(),
                     })

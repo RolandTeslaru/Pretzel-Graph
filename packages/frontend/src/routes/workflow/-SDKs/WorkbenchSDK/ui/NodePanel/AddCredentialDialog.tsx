@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Button, Dialog, Form, Input, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Form, Input, Spinner, Switch } from '@pretzel-graph/standard-ui/foundations'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { VaultSDK } from '@/SDKs/VaultSDK/sdk'
 import type { Vault } from '@pretzel-graph/shared/domain'
@@ -18,11 +18,13 @@ interface Props {
 
 export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }: Props) => {
     const schema = useMemo(() => z.object({
-        name:   z.string().trim().min(1, 'Name is required'),
+        name: z.string().trim().min(1, 'Name is required'),
         fields: z.object(
             Object.fromEntries(credentialTemplate.fields.map(f => [
                 f.id,
-                f.required ? z.string().min(1, `${f.displayName} is required`) : z.string(),
+                f.variant === 'Boolean' ? z.boolean()
+                    : (f.variant === 'Integer' || f.variant === 'Float') ? z.number()
+                    : f.required ? z.string().min(1, `${f.displayName} is required`) : z.string(),
             ]))
         ),
     }), [credentialTemplate])
@@ -32,16 +34,21 @@ export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }:
     const form = useForm<Values>({
         resolver: zodResolver(schema),
         defaultValues: {
-            name:   '',
-            fields: Object.fromEntries(credentialTemplate.fields.map(f => [f.id, ''])),
+            name: '',
+            fields: Object.fromEntries(credentialTemplate.fields.map(f => [
+                f.id,
+                f.variant === 'Boolean' ? (('initialValue' in f ? f.initialValue : false) ?? false)
+                    : (f.variant === 'Integer' || f.variant === 'Float') ? (('initialValue' in f ? f.initialValue : 0) ?? 0)
+                    : '',
+            ])) as Values['fields'],
         },
     })
 
     const onSubmit = async (values: Values) => {
         try {
             const instance = await VaultSDK.actions.create({
-                name:        values.name,
-                templateId:  credentialTemplate.id,
+                name: values.name,
+                templateId: credentialTemplate.id,
                 fieldValues: values.fields,
             })
             toast.success(`${credentialTemplate.displayName} credential saved`)
@@ -53,9 +60,9 @@ export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }:
     }
 
     return (
-        <div className='p-4 flex flex-row gap-4 w-[600px] h-[500px]'>
+        <div className='flex flex-row w-[600px] h-[500px] overflow-hidden rounded-2xl'>
             {/* Left sidebar */}
-            <div className='w-[150px] flex flex-col gap-2 shrink-0'>
+            <div className='w-[180px] flex flex-col gap-2 shrink-0 py-4 pl-4'>
                 <div className='flex flex-row items-center gap-2'>
                     <SystemIcons.Vault className='size-10 text-muted-foreground' />
                     <p className='text-lg font-semibold text-foreground'>Vault</p>
@@ -63,11 +70,11 @@ export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }:
                 <p className='text-xs text-muted-foreground'>Stores and manages credentials securely.</p>
             </div>
 
-            <div className='content-[" "] h-full bg-border w-[1px]'/>
+            <div className='h-full bg-border w-[1px]' />
 
             {/* Right column */}
             <Form.Root {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-3 pt-2 flex-1' autoComplete='off'>
+                <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-3 pt-6 pb-4 px-4 flex-1 h-full overflow-y-auto' autoComplete='off'>
                     <div className='flex flex-row gap-2 items-center'>
                         <LazyIcon name={credentialTemplate.icon ?? ""} className='size-5 text-muted-foreground' />
                         <p className='text-sm font-semibold text-foreground'>
@@ -98,12 +105,30 @@ export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }:
                                     {f.required && <span className='ml-1 text-destructive'>*</span>}
                                 </Form.Label>
                                 <Form.Control>
-                                    <Input
-                                        {...field}
-                                        type={f.variant === 'Password' ? 'password' : 'text'}
-                                        placeholder={'placeholder' in f ? (f.placeholder as string) : undefined}
-                                        autoComplete='new-password'
-                                    />
+                                    {f.variant === 'Boolean' ? (
+                                        <Switch
+                                            checked={Boolean(field.value)}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    ) : (f.variant === 'Integer' || f.variant === 'Float') ? (
+                                        <Input
+                                            type='number'
+                                            value={field.value as number}
+                                            onChange={e => field.onChange(e.target.valueAsNumber)}
+                                            onBlur={field.onBlur}
+                                            name={field.name}
+                                            ref={field.ref}
+                                            placeholder={'placeholder' in f ? (f.placeholder as string) : undefined}
+                                        />
+                                    ) : (
+                                        <Input
+                                            {...field}
+                                            value={field.value as string}
+                                            type={f.variant === 'Password' ? 'password' : 'text'}
+                                            placeholder={'placeholder' in f ? (f.placeholder as string) : undefined}
+                                            autoComplete='new-password'
+                                        />
+                                    )}
                                 </Form.Control>
                                 <Form.Message />
                             </Form.Item>

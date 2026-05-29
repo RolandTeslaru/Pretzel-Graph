@@ -293,16 +293,24 @@ export namespace RuntimeNode {
         nextPaginationCursor?: string;
     };
 
-    export type LoaderContext = {
-        /** All current field values on the node, keyed by field id */
-        fieldValues: Record<string, unknown>;
+    export type LoaderContext<T_Blueprint extends Blueprint = Blueprint> = {
+        /** Typed static field values, keyed by field literal id — same shape as `this.fields`. */
+        fieldValues: InferFields<T_Blueprint>;
+        /** Typed credential instances, keyed by template id — same shape as `this.credentials`. */
+        credentials: InferCredentials<T_Blueprint>;
+        /** Decryption capability — identical surface to ExecutionContext.credentialsAPI. */
+        credentialsAPI: {
+            getInstance(instanceId: Vault.Credential.Instance.Id): Vault.Credential.Instance | undefined;
+            getDecryptedValue<T = unknown>(blob: Vault.Credential.Instance.EncryptedBlob<T>): InferCredentialValues<T>;
+        };
         /** Search string typed by the user, if any */
         searchQuery?: string;
         /** Pagination cursor from a previous call */
         paginationCursor?: string;
     };
 
-    export type LoaderFn = (context: LoaderContext) => Promise<LoaderResult>;
+    export type LoaderFn<T_Blueprint extends Blueprint = Blueprint> =
+        (context: LoaderContext<T_Blueprint>) => Promise<LoaderResult>;
 
     export interface ExecutionContext {
         readonly executionId: Execution.Id,
