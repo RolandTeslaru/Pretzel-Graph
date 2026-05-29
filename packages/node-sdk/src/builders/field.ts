@@ -353,4 +353,20 @@ export namespace FieldBuilder {
             },
         };
     }
+
+    export function ResourceLoader<TId extends string, TReq extends boolean = false>(config: {
+        loaderId: string;
+        dependsOn?: string[];
+        placeholder?: string;
+        initialValue?: Foundations.Field.ResourceLoader.Value;
+} & BaseProps<TId, TReq>): Ret<TId, "ResourceLoader", Foundations.Field.ResourceLoader, TReq, true> {
+        return {
+            ...buildBase(config),
+            variant: "ResourceLoader",
+            loaderId: config.loaderId as Foundations.Field.ResourceLoader.LoaderId,
+            dependsOn: (config.dependsOn ?? []) as Foundations.Field.Id[],
+            placeholder: config.placeholder ?? "",
+            initialValue: config.initialValue ?? { mode: "list", value: "" },
+        };
+    }
 }

@@ -2,6 +2,7 @@ import type { AxiosInstance } from "axios"
 import z from "zod"
 import { Workflow as WorkflowNs } from "./Workflow"
 import { VersionControlPublication } from "./VersionControlPublication"
+import { Foundations } from "./index"
 
 export namespace Workbench {
     export namespace API {
@@ -42,7 +43,7 @@ export namespace Workbench {
 
             export namespace Commit {
                 export const Request = z.object({
-                    workflowId: z.string().uuid("workflowId must be a UUID").pipe(WorkflowNs.Id),
+                    workflowId: WorkflowNs.Id,
                     data: WorkflowNs.Data.Schema,
                 })
                 export type Request = z.infer<typeof Request>
@@ -52,7 +53,11 @@ export namespace Workbench {
             }
 
             export async function commit(api: AxiosInstance, request: Commit.Request): Promise<Commit.Response> {
-                const { data } = await api.post<Commit.Response>("/api/workbench/workflows/commit", request)
+                const { data } = await api.post<Commit.Response>(
+                    "/api/workbench/workflows/commit",
+                    request,
+                    { timeout: 8_000 },
+                )
                 return data
             }
         }
@@ -132,6 +137,37 @@ export namespace Workbench {
 
                 export async function checkUpdates(api: AxiosInstance, request: Draft.CheckUpdates.Request): Promise<Draft.CheckUpdates.Response> {
                     const { data } = await api.post<Draft.CheckUpdates.Response>(`/api/workbench/dependencies/check-draft-updates`, request)
+                    return data
+                }
+            }
+        }
+
+        export namespace Field {
+            export namespace ResourceLoader {
+                export namespace LoadOptions {
+                    export const Request = z.object({
+                        blueprintId: Foundations.Blueprint.Id,
+                        loaderId: Foundations.Field.ResourceLoader.LoaderId,
+                        fieldValues: z.record(z.string(), z.any()).default({}),
+                        searchQuery: z.string().optional(),
+                        paginationCursor: z.string().optional(),
+                    })
+                    export type Request = z.infer<typeof Request>
+
+                    export const Response = z.object({
+                        options: z.array(Foundations.Field.ResourceLoader.OptionItem),
+                        nextPaginationCursor: z.string().optional(),
+                    })
+                    export type Response = z.infer<typeof Response>
+                }
+
+                export async function loadOptions(
+                    api: AxiosInstance,
+                    request: LoadOptions.Request,
+                ): Promise<LoadOptions.Response> {
+                    const { data } = await api.post<LoadOptions.Response>(
+                        '/api/workbench/field/resource-loader/load-options', request
+                    )
                     return data
                 }
             }

@@ -21,7 +21,7 @@ const IncomingPanel = () => {
 
     return (
         <div className='p-2 h-full overflow-auto relative'>
-            <div className='fixed z-10 top-2 left-2 w-[calc(100%-1rem)] bg-card-float border border-border rounded-full p-1 flex flex-row gap-2 shadow-md shadow-black/10 dark:shadow-black/20 dark:shadow-lg'>
+            <div className=' w-full border-b border-border/50 px-2 pt-0.5 pb-2 flex flex-row gap-2 '>
                 <SystemIcons.LogIn size={20} />
                 <p className='h-auto my-auto text-sm'>Incoming Data</p>
             </div>
@@ -71,7 +71,7 @@ const Content = ({
     }
 
     return (
-        <div className='mt-2 pt-8'>
+        <div className='pt-2'>
             <PortDataTree root={root} keyNameMap={keyNameMap} portVariantMap={portVariantMap} />
         </div>
     )

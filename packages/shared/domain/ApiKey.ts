@@ -4,7 +4,7 @@ import { supabaseTimestamp } from "./zod-utils"
 
 export namespace ApiKey {
 
-    export const Id = z.string().brand("ApiKeyId")
+    export const Id = z.uuid().brand("ApiKeyId")
     export type Id = z.infer<typeof Id>
 
     // Raw key format: pg_live_<32-char-base62>. Returned once at creation, never stored.

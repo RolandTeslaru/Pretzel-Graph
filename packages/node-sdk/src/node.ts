@@ -284,6 +284,22 @@ export namespace RuntimeNode {
     export type ConstructorProps = ConstructorParameters<typeof RuntimeNode>[0]
     export type CompileProps = Parameters<RuntimeNode<Blueprint>["compile"]>[0]
 
+    export type LoaderResult = {
+        options: Foundations.Field.ResourceLoader.OptionItem[];
+        nextPaginationCursor?: string;
+    };
+
+    export type LoaderContext = {
+        /** All current field values on the node, keyed by field id */
+        fieldValues: Record<string, unknown>;
+        /** Search string typed by the user, if any */
+        searchQuery?: string;
+        /** Pagination cursor from a previous call */
+        paginationCursor?: string;
+    };
+
+    export type LoaderFn = (context: LoaderContext) => Promise<LoaderResult>;
+
     export interface ExecutionContext {
         readonly executionId: Execution.Id,
         readonly chat_id: Chat.Id | undefined,

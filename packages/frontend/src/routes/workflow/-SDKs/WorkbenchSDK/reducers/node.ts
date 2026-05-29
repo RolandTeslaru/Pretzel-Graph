@@ -385,7 +385,7 @@ export const nodeReducers = {
     clearIssues: (s, nodeId) => {
         delete s.issues.nodes[nodeId];
     },
-    wipe: (s, nodeId, replace) => {
+    wipe: (s, nodeId, replace = {}) => {
         const node = s.data.nodes[nodeId];
         if (!node) return;
         s.isDirty = true;

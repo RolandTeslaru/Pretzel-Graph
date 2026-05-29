@@ -9,7 +9,7 @@ export namespace Vault {
         export namespace Row {
             export namespace CredentialInstance {
                 export const Schema = z.object({
-                    id:          z.string().brand("CredentialInstanceId"),
+                    id:          z.uuid().brand("CredentialInstanceId"),
                     template_id: z.string().brand("CredentialTemplateId"),
                     user_id:     Auth.User.Id,
                     name:        z.string(),
@@ -48,7 +48,7 @@ export namespace Vault {
         export type Template = z.infer<typeof Template.Schema>
 
         export namespace Instance {
-            export const Id = z.string().brand("CredentialInstanceId");
+            export const Id = z.uuid().brand("CredentialInstanceId");
             export type Id = z.infer<typeof Id>
 
             export const Schema = Database.Row.CredentialInstance.Schema.omit({ user_id: true })

@@ -11,7 +11,7 @@ const OutgoingPanel = () => {
   const execution = ExecutionSDK.useStore(s => s.currentExecution)
   return (
     <div className="p-2 h-full overflow-y-auto">
-      <div className='bg-card-float border border-border rounded-full p-1 flex flex-row gap-2 shadow-md shadow-black/10'>
+      <div className=' w-full border-b border-border/50 px-2 pt-0.5 pb-2 flex flex-row gap-2 '>
         <SystemIcons.LogOut size={20} />
         <p className='h-auto my-auto text-sm'>Outgoing Data</p>
       </div>

@@ -6,11 +6,16 @@ import { api } from '@/SDKs/ApiInterceptorSDK';
 import { workflowReducers } from '../reducers/workflow';
 
 export const commit = async () => {
-    if (WorkbenchSDK.state.isDirty === false) return;
+    const { workflowId, data, isDirty } = WorkbenchSDK.state;
+    if (isDirty === false || !workflowId) return;
+
     try {
         console.log("Committing")
-        await Workbench.API.Workflow.commit(api, { workflowId: WorkbenchSDK.state.workflowId, data: WorkbenchSDK.state.data })
-        WorkbenchSDK.actions.setDirty(false);
+        await Workbench.API.Workflow.commit(api, { workflowId, data })
+
+        if (WorkbenchSDK.state.workflowId === workflowId) {
+            WorkbenchSDK.actions.setDirty(false);
+        }
     } catch (error) {
         toast.error("Could not save to cloud")
     }
