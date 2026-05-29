@@ -1,4 +1,4 @@
-import { WorkbenchSDKImpl, WorkbenchSDK } from '../sdk';
+import type { WorkbenchSDKImpl, WorkbenchSDK } from '../sdk';
 import type { DropFirstArg } from '@/SDKs/types';
 import { Workflow } from '@pretzel-graph/shared/domain';
 import { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
@@ -11,7 +11,8 @@ import { createWorkflowActions, type WorkflowActions } from './workflow';
 import { createDependencyActions, type DependencyActions } from './dependency';
 import { DialogSDK } from '@/SDKs/DialogSDK';
 import React from 'react';
-import FullScreenNodePanel from '../ui/FullScreenNodePanel';
+
+const FullScreenNodePanel = React.lazy(() => import('../ui/FullScreenNodePanel'));
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
@@ -91,7 +92,11 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             openNodePanelFullscreen: () => {
                 DialogSDK.actions.push("fullscreen-node-panel", (props) => (
                     React.createElement(DialogSDK.Template, { className: "border-none! shadow-none! bg-white/0!", ...props },
-                        React.createElement(FullScreenNodePanel)
+                        React.createElement(
+                            React.Suspense,
+                            { fallback: null },
+                            React.createElement(FullScreenNodePanel)
+                        )
                     )
                 ))
             },

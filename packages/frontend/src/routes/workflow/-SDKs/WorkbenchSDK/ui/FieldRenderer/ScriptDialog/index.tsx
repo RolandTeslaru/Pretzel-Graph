@@ -1,5 +1,5 @@
 import React, { memo, Suspense, lazy, useEffect, useState } from 'react'
-import { FieldLabel, type RendererProps } from '..';
+import { FieldLabel, type RendererProps } from '../FieldLabel';
 import { Button, Dialog, Input, Spinner } from '@pretzel-graph/standard-ui/foundations';
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk';
 import { DialogSDK } from '@/SDKs/DialogSDK';

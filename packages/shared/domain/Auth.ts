@@ -3,7 +3,7 @@ import type { AxiosInstance } from "axios"
 
 export namespace Auth {
     export namespace User {
-        export const Id = z.string().brand("UserId");
+        export const Id = z.uuid().brand("UserId");
         export type Id = z.infer<typeof Id>
         export const Schema = z.object({
             id: User.Id,

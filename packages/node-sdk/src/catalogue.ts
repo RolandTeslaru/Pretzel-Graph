@@ -78,6 +78,15 @@ class CatalogueServiceImpl {
             return null;
         }
     }
+
+    public async getLoader(
+        blueprintId: Foundations.Blueprint.Id,
+        loaderId: Foundations.Field.ResourceLoader.LoaderId,
+    ): Promise<RuntimeNode.LoaderFn | null> {
+        const NodeClass = await this.getNode(blueprintId);
+        if (!NodeClass) return null;
+        return (NodeClass as any).loaders?.[loaderId] ?? null;
+    }
 }
 
 export const CatalogueService = container.resolve(CatalogueServiceImpl);

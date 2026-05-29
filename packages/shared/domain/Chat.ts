@@ -7,12 +7,12 @@ import { supabaseTimestamp } from "./zod-utils";
 import { SystemError } from "./SystemError";
 import { Auth } from "./Auth";
 
-const ExecutionId = z.string().brand("ExecutionId");
+const ExecutionId = z.uuid().brand("ExecutionId");
 type ExecutionId = z.infer<typeof ExecutionId>;
 
 export namespace Chat {
 
-    export const Id = z.string().brand("ChatId")
+    export const Id = z.uuid().brand("ChatId")
     export type Id = z.infer<typeof Id>
 
     export function createId() {
@@ -50,7 +50,7 @@ export namespace Chat {
 
 
     export namespace Message {
-        export const Id = z.string().brand("MessageId")
+        export const Id = z.uuid().brand("MessageId")
         export type Id = z.infer<typeof Message.Id>
 
         export function createId() {

@@ -1,5 +1,5 @@
 import type { DropFirstArg } from "@/SDKs/types";
-import { type WorkbenchSDKImpl, WorkbenchSDK } from "../sdk"
+import type { WorkbenchSDKImpl, WorkbenchSDK } from "../sdk"
 import { withAsyncCommit, withCommit, withCyclesRecompute } from "../utils/actions"
 import { ShelfSDK } from "../../ShelfSDK/sdk";
 import { Foundations, SystemError, Workbench, type Workflow } from "@pretzel-graph/shared/domain";

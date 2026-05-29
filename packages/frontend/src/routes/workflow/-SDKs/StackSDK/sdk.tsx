@@ -79,6 +79,7 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
         const baseYOffset = depth * 48;                 // shift right 24px per level
         const scale = 1 + depth * 0.03;                 // shrink 3% per level
         const brightnessBase = depth === 0 ? 1 : 1 / -(depth - 1);  // darken behind panels
+        const brightness = 1 - (1 - brightnessBase) * 0.3
 
 
         const isFront = depth === 0;
@@ -107,7 +108,7 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                     y: baseYOffset,
                     opacity: 1,
                     scale: scale,
-                    filter: `brightness(calc(1 - (1 - ${brightnessBase}) * var(--stack-depth-dim-mult, 0.08)))`,
+                    filter: `brightness(${brightness})`,
                 }}
                 exit={{ x: "100%", opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -118,7 +119,6 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                     ${className || ''}
                     fixed flex flex-col right-5 top-24 bottom-24 w-87.5 bg-card/70 backdrop-blur-lg 
                     border border-border rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10
-                    [--stack-depth-dim-mult:0.3] dark:[--stack-depth-dim-mult:1]
                     ${!isFront ? 'cursor-pointer' : ''}
                 `}
             >
@@ -141,6 +141,7 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
         const yOffset = depth * 48
         const scale = 1 + depth * 0.03
         const brightnessBase = depth === 0 ? 1 : 1 / -(depth - 1)
+        const brightness = 1 - (1 - brightnessBase) * 0.3
         const enterVector = StackSDKImpl.ENTER_VECTORS[enter]
 
         const rightShift = (this.useStore as any)((s: StackSDK.State) => {
@@ -169,7 +170,7 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                     y: yOffset,
                     opacity: 1,
                     scale: scale,
-                    filter: `brightness(calc(1 - (1 - ${brightnessBase}) * var(--stack-depth-dim-mult, 0.08)))`,
+                    filter: `brightness(${brightness})`,
                 }}
                 exit={{ ...enterVector, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -179,7 +180,6 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                     ${className || ''}
                     fixed flex flex-col bg-card/70 backdrop-blur-lg
                     border border-border rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10
-                    [--stack-depth-dim-mult:0.3] dark:[--stack-depth-dim-mult:1]
                     ${!isFront ? 'cursor-pointer' : ''}
                 `}
             >

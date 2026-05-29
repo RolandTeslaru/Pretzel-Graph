@@ -23,6 +23,17 @@ import { DrawerSDK } from './-SDKs/DrawerSDK/sdk'
 import TimelineViewer from './-SDKs/ExecutionSDK/ui/Timeline'
 import UoWInspectorSidebar from './-SDKs/ExecutionSDK/ui/UoWInspector/sidebar'
 
+let isViteFullReloadPending = false
+let isBrowserUnloadPending = false
+
+if (import.meta.hot) {
+    import.meta.hot.on('vite:beforeFullReload', () => {
+        isViteFullReloadPending = true
+    })
+}
+
+const isDevHmrFullReload = () => import.meta.env.DEV && isViteFullReloadPending
+const isDevBrowserUnload = () => import.meta.env.DEV && isBrowserUnloadPending
 
 export const Route = createFileRoute('/workflow/$workflowid')({
     beforeLoad: ({ context }) => {
@@ -77,7 +88,7 @@ export const Route = createFileRoute('/workflow/$workflowid')({
         const workflowId = params.workflowid as Workflow.Id;
 
         DialogSDK.actions.pop(`workflow-${workflowId}`)
-        WorkbenchSDK.actions.commit();
+        if (!isDevHmrFullReload() && !isDevBrowserUnload()) WorkbenchSDK.actions.commit();
         WorkbenchSDK.actions.workflow.close()
     },
     component: WorkflowLayoutComponent,
@@ -86,6 +97,10 @@ export const Route = createFileRoute('/workflow/$workflowid')({
 function WorkflowLayoutComponent() {
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            isBrowserUnloadPending = true;
+
+            if (import.meta.env.DEV || isDevHmrFullReload()) return;
+
             if (WorkbenchSDK.state.isDirty) {
                 WorkbenchSDK.actions.commit();
                 e.preventDefault();

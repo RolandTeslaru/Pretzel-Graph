@@ -14,7 +14,7 @@ import { Blueprint } from "./Foundations/Blueprint"
 
 export namespace Execution {
 
-    export const Id = z.string().brand("ExecutionId")
+    export const Id = z.uuid().brand("ExecutionId")
     export type Id = z.infer<typeof Id>
     export const createId = () => crypto.randomUUID() as Id
 

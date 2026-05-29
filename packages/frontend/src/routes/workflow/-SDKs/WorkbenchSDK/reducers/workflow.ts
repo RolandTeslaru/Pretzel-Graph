@@ -29,6 +29,7 @@ export const workflowReducers = {
         s.workflowId = '' as Workflow.Id;
         s.data = cloneDeep(Workflow.INITIAL.data);
         s.cache = Workflow.createCache(cloneDeep(Workflow.INITIAL.data));
+        s.isDirty = false;
     },
     validate: (s) => {
         const issues = Validation.Issue.checkWorkflow(s.data, s.cycles, s.cache);
