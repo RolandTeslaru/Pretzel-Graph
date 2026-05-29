@@ -1,6 +1,6 @@
 {
-  "version": "1779876321642",
-  "generatedAt": "2026-05-27T10:05:21.642Z",
+  "version": "1780075596653",
+  "generatedAt": "2026-05-29T17:26:36.653Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -4720,6 +4720,365 @@
         }
       ]
     },
+    "Integrations.MongoDB.Operation": {
+      "id": "Integrations.MongoDB.Operation",
+      "displayName": "MongoDB",
+      "icon": "MongoDB",
+      "accent": "utility",
+      "description": "Runs an operation against a MongoDB collection.",
+      "credentials": [
+        {
+          "id": "mongoDb",
+          "displayName": "MongoDB",
+          "fields": [
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "localhost",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Port",
+              "tooltip": "Leave blank for a mongodb+srv (Atlas) connection.",
+              "variant": "Integer",
+              "initialValue": 27017,
+              "step": 1
+            },
+            {
+              "id": "database",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Database",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "user",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "User",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "tls",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Use TLS",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "icon": "MongoDB"
+        }
+      ],
+      "fields": [
+        {
+          "id": "operation",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Operation",
+          "tooltip": "The MongoDB operation to run.",
+          "variant": "MultiOption",
+          "initialValue": "find",
+          "options": [
+            {
+              "value": "find",
+              "displayName": "Find"
+            },
+            {
+              "value": "insert",
+              "displayName": "Insert"
+            },
+            {
+              "value": "update",
+              "displayName": "Update"
+            },
+            {
+              "value": "delete",
+              "displayName": "Delete"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "collection",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Collection",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "users"
+        },
+        {
+          "id": "query",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Query",
+          "tooltip": "Filter document, e.g. { \"status\": \"active\" }.",
+          "variant": "Json",
+          "initialValue": {}
+        },
+        {
+          "id": "limit",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Limit",
+          "variant": "Integer",
+          "initialValue": 50,
+          "min": 1,
+          "step": 1
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "result",
+          "displayName": "Documents",
+          "tooltip": "Documents matched by the query — one item per document.",
+          "variant": "DataList"
+        }
+      ]
+    },
+    "Integrations.MySQL.Query": {
+      "id": "Integrations.MySQL.Query",
+      "displayName": "MySQL",
+      "icon": "MySQL",
+      "accent": "utility",
+      "description": "Runs operations against a MySQL database.",
+      "credentials": [
+        {
+          "id": "mysql",
+          "displayName": "MySQL",
+          "fields": [
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "localhost",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 3306,
+              "step": 1
+            },
+            {
+              "id": "database",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Database",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "user",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "User",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "ssl",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Use SSL",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "icon": "MySQL"
+        }
+      ],
+      "fields": [
+        {
+          "id": "operation",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Operation",
+          "tooltip": "What this node does against the database.",
+          "variant": "MultiOption",
+          "initialValue": "executeQuery",
+          "options": [
+            {
+              "value": "executeQuery",
+              "displayName": "Execute Query"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "query",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Query",
+          "tooltip": "SQL executed against the connected database.",
+          "variant": "String",
+          "initialValue": "SELECT * FROM ",
+          "multiline": true,
+          "placeholder": "SELECT * FROM ..."
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "rows",
+          "displayName": "Rows",
+          "tooltip": "Result rows returned by the query — one item per row.",
+          "variant": "DataList"
+        }
+      ]
+    },
     "Integrations.OpenAI.Chat": {
       "id": "Integrations.OpenAI.Chat",
       "displayName": "OpenAI Chat",
@@ -5108,6 +5467,318 @@
           "displayName": "Language Model",
           "tooltip": "The OpenRouter language model instance.",
           "variant": "LanguageModel"
+        }
+      ]
+    },
+    "Integrations.Postgres.Query": {
+      "id": "Integrations.Postgres.Query",
+      "displayName": "Postgres",
+      "icon": "Postgres",
+      "accent": "utility",
+      "description": "Runs operations against a Postgres database.",
+      "credentials": [
+        {
+          "id": "postgres",
+          "displayName": "Postgres",
+          "fields": [
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "localhost",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 5432,
+              "step": 1
+            },
+            {
+              "id": "database",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Database",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "user",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "User",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "ssl",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Use SSL",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "icon": "Postgres"
+        }
+      ],
+      "fields": [
+        {
+          "id": "operation",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Operation",
+          "tooltip": "What this node does against the database.",
+          "variant": "MultiOption",
+          "initialValue": "executeQuery",
+          "options": [
+            {
+              "value": "executeQuery",
+              "displayName": "Execute Query"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "query",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Query",
+          "tooltip": "SQL executed against the connected database.",
+          "variant": "String",
+          "initialValue": "SELECT * FROM ",
+          "multiline": true,
+          "placeholder": "SELECT * FROM ..."
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "rows",
+          "displayName": "Rows",
+          "tooltip": "Result rows returned by the query — one item per row.",
+          "variant": "DataList"
+        }
+      ]
+    },
+    "Integrations.Redis.Command": {
+      "id": "Integrations.Redis.Command",
+      "displayName": "Redis",
+      "icon": "Redis",
+      "accent": "utility",
+      "description": "Runs a command against a Redis server.",
+      "credentials": [
+        {
+          "id": "redis",
+          "displayName": "Redis",
+          "fields": [
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "localhost",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 6379,
+              "step": 1
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "db",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Database Index",
+              "variant": "Integer",
+              "initialValue": 0,
+              "step": 1
+            }
+          ],
+          "icon": "Redis"
+        }
+      ],
+      "fields": [
+        {
+          "id": "operation",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Operation",
+          "tooltip": "The Redis command to run.",
+          "variant": "MultiOption",
+          "initialValue": "GET",
+          "options": [
+            {
+              "value": "GET",
+              "displayName": "Get"
+            },
+            {
+              "value": "SET",
+              "displayName": "Set"
+            },
+            {
+              "value": "DELETE",
+              "displayName": "Delete"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "key",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Key",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "my:key"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "result",
+          "displayName": "Result",
+          "tooltip": "GET → value (or null); SET → \"OK\"; DELETE → number of keys removed.",
+          "variant": "Data"
         }
       ]
     },

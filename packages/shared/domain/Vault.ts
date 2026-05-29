@@ -59,7 +59,13 @@ export namespace Vault {
             // can infer the decrypted field shape from the blob alone.
             export type EncryptedBlob<T = unknown> = EncryptedBlobBase & { readonly __template?: T }
 
-            export const DecryptedValues = z.record(Field.Id, z.string())
+            // Type-preserving: a credential field's value keeps its real type through
+            // the encrypted blob (Boolean → boolean, Integer → number), mirroring
+            // Workflow.staticValues. The blob is JSON, so any JSON value round-trips.
+            export const DecryptedValues = z.record(
+                Field.Id,
+                z.union([z.string(), z.number(), z.boolean(), z.array(z.string()), z.json()])
+            )
             export type DecryptedValues = z.infer<typeof DecryptedValues>
         }
         export type Instance = z.infer<typeof Instance.Schema>
