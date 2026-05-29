@@ -1,5 +1,5 @@
 import type { Workflow } from "@pretzel-graph/shared/domain";
-import { WorkbenchSDK } from "../sdk";
+import type { WorkbenchSDK } from "../sdk";
 import { nodeReducers } from "./node";
 import { edgeReducers } from "./edge";
 

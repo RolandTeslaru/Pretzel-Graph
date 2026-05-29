@@ -8,7 +8,7 @@ import { VersionControlPublication } from "./VersionControlPublication";
 import { Vault } from "./Vault";
 
 export namespace Workflow {
-    export const Id = z.string().brand("WorkflowId");
+    export const Id = z.uuid().brand("WorkflowId");
     export type Id = z.infer<typeof Id>;
 
     /** Dummy node ID used as the staticValues key for workflow-level config fields. */
@@ -214,7 +214,7 @@ export namespace Workflow {
         created_at: z.coerce.date(),
         updated_at: z.coerce.date(),
 
-        folder_id: z.string().brand("FolderId"),
+        folder_id: z.uuid().brand("FolderId"),
 
         data: Data.Schema
     });

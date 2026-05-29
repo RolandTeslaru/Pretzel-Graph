@@ -38,6 +38,7 @@ export namespace Field {
         "Condition",
         "CaseList",
         "Variadic",
+        "ResourceLoader",
     ])
     export type Variant = z.infer<typeof Variant>
 
@@ -314,6 +315,40 @@ export namespace Field {
         };
     }
 
+    export namespace ResourceLoader {
+
+        export const LoaderId = z.string().brand("LoaderId");
+        export type LoaderId = z.infer<typeof LoaderId>;
+
+        export const Mode = z.enum(["list", "manual"]);
+        export type Mode = z.infer<typeof Mode>;
+
+        export const Value = z.object({
+            mode: Mode,
+            value: z.string(),
+        });
+        export type Value = z.infer<typeof Value>;
+
+        export const OptionItem = z.object({
+            label: z.string(),
+            value: z.string(),
+            description: z.string().optional(),
+            icon: z.string().optional(),
+            url: z.string().optional(),
+        });
+        export type OptionItem = z.infer<typeof OptionItem>;
+
+        export const Schema = Field.Base.extend({
+            variant: configLiteral("ResourceLoader"),
+            loaderId: LoaderId,
+            dependsOn: z.array(Field.Id).default([]),
+            placeholder: z.string().optional(),
+            initialValue: Value,
+        });
+    }
+
+    export interface ResourceLoader extends z.infer<typeof ResourceLoader.Schema> {}
+
     export interface Integer extends z.infer<typeof Integer> { }
     export interface Float extends z.infer<typeof Float> { }
     export interface String extends z.infer<typeof String> { }
@@ -346,6 +381,7 @@ export namespace Field {
         Condition.Schema,
         CaseList.Schema,
         Variadic,
+        ResourceLoader.Schema,
     ]);
 
     export type Schema = z.infer<typeof Schema>;

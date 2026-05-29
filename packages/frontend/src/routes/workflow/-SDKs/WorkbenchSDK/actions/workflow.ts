@@ -10,7 +10,7 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
     const reducers = sdk.reducers;
 
     return {
-        close:    withCommit((...props) => setState(s => { reducers.workflow.close(s,    ...props) })),
+        close:    (...props) => setState(s => { reducers.workflow.close(s,    ...props) }),
         open:     (...props) => setState(s => { reducers.workflow.open(s,     ...props) }),
         validate: (...props) => setState(s => { reducers.workflow.validate(s, ...props) }),
         setFields: withCommit((...props) => setState(s => { reducers.workflow.setFields(s, ...props) })),

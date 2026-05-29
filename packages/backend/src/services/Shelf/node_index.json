@@ -1,6 +1,6 @@
 {
-  "version": "1779801643938",
-  "generatedAt": "2026-05-26T13:20:43.938Z",
+  "version": "1779876321642",
+  "generatedAt": "2026-05-27T10:05:21.642Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -1051,6 +1051,112 @@
           "id": "status",
           "displayName": "Status",
           "variant": "Integer"
+        }
+      ]
+    },
+    "Core.Developer.ResourceLoaderTest": {
+      "id": "Core.Developer.ResourceLoaderTest",
+      "displayName": "Resource Loader Test",
+      "icon": "FlaskConical",
+      "accent": "utility",
+      "description": "Dev node for testing the ResourceLoader field. Loaders return mock data.",
+      "credentials": [],
+      "fields": [
+        {
+          "id": "schema",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Schema",
+          "variant": "ResourceLoader",
+          "loaderId": "schemaSearch",
+          "dependsOn": [],
+          "placeholder": "Select a schema",
+          "initialValue": {
+            "mode": "list",
+            "value": ""
+          }
+        },
+        {
+          "id": "table",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Table",
+          "variant": "ResourceLoader",
+          "loaderId": "tableSearch",
+          "dependsOn": [
+            "schema"
+          ],
+          "placeholder": "Select a table",
+          "initialValue": {
+            "mode": "list",
+            "value": ""
+          }
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "internal": false,
+          "variant": "Message",
+          "initialValue": "",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "output",
+          "displayName": "Output",
+          "tooltip": "Passes input through with selected schema/table logged.",
+          "variant": "Message"
         }
       ]
     },
@@ -5663,13 +5769,6 @@
           "id": "ToolsPort",
           "displayName": "Tools",
           "variant": "ToolList",
-          "required": false
-        },
-        {
-          "id": "ExposedInputPort-99s96",
-          "displayName": "Expose Input Port",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         },
         {

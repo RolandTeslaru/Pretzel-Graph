@@ -30,7 +30,8 @@ export const CORE_DRAWERS = {
       "Core.Developer.ConsoleLog",
       "Core.Developer.Sleep",
       "Core.Developer.ErrorThrower",
-      "Core.Developer.HttpRequest"
+      "Core.Developer.HttpRequest",
+      "Core.Developer.ResourceLoaderTest"
     ],
   },
   data_source: {

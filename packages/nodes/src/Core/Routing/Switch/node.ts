@@ -21,7 +21,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             this.workflowNode,
             this.fields,
             inputs,
-            Expression.resolveWorkflowConfig(this.context.workflowData.fields ?? {}),
+            Expression.resolveWorkflowConfig(this.context.workflowData),
         )
 
         for (const { condition, portId } of cases) {

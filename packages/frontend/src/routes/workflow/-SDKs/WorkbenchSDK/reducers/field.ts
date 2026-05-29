@@ -32,6 +32,21 @@ export const fieldReducers = {
         const next = typeof value === "function" ? value(cur as any) : value
         s.data.staticValues[nodeId][fieldId] = next
     },
+    clearDependentFields: (s, nodeId, changedFieldId) => {
+        const node = workbenchSelectors.node.get(s, nodeId)
+        if (!node) return
+
+        for (const sibling of node.fields) {
+            if (
+                sibling.variant === "ResourceLoader" &&
+                sibling.id !== changedFieldId &&
+                sibling.dependsOn.includes(changedFieldId)
+            ) {
+                s.data.staticValues[nodeId][sibling.id] = { mode: "list", value: "" }
+                s.isDirty = true
+            }
+        }
+    },
     validate: (s, nodeId, field) => {
         const issue = Validation.Issue.Field.check(field, nodeId, s.data)
 
@@ -174,6 +189,11 @@ type FieldReducers = {
         nodeId: Workflow.Node.Id,
         fieldId: Foundations.Field.Id,
         next: Foundations.Field.Value | ((value: Foundations.Field.Value) => Foundations.Field.Value)
+    ) => void
+    clearDependentFields: (
+        state: WorkbenchSDK.State,
+        nodeId: Workflow.Node.Id,
+        changedFieldId: Foundations.Field.Id,
     ) => void
     validate: (
         state: WorkbenchSDK.State,
