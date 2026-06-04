@@ -2,11 +2,8 @@ import { Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { cacheReducers } from "./cache";
 import { inputReducers } from "./input";
-import { workbenchSelectors } from "../selectors"
 import { nodeReducers } from "./node";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
-
-const sel = workbenchSelectors
 
 // TODO: rename handles to ports
 export const edgeReducers = {
@@ -36,7 +33,7 @@ export const edgeReducers = {
             // throw new Error(`Cannot create edge, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
         }
         
-        const isFirstArcBetweenNodes = sel.graph.hasArcBetween(s, sourceNodeId, targetNodeId) === false; 
+        const isFirstArcBetweenNodes = s.selectors.graph.hasArcBetween(s, sourceNodeId, targetNodeId) === false; 
 
         const edgeId = edgeReducers.createId(sourceNodeId, sourcePortId, targetNodeId, targetPortId)
         
@@ -64,8 +61,8 @@ export const edgeReducers = {
         inputReducers.validate(s, targetNodeId, targetPort);
 
         if(
-            sel.node.isSourceNode(s, sourceNodeId) === false && 
-            sel.node.isSinkNode(s, targetNodeId) === false &&
+            s.selectors.node.isSourceNode(s, sourceNodeId) === false && 
+            s.selectors.node.isSinkNode(s, targetNodeId) === false &&
             isFirstArcBetweenNodes
         )
             if(doesCycleExistBetweenNodes(sourceNodeId, targetNodeId, s.cache))
@@ -114,20 +111,20 @@ export const edgeReducers = {
 
         // Connecting two leafs, recompute and validate cycles
         if(
-            sel.node.isSourceNode(s, sourceNodeId) === false && 
-            sel.node.isSinkNode(s, targetNodeId) === false &&
-            sel.graph.hasArcBetween(s, sourceNodeId, targetNodeId) === false
+            s.selectors.node.isSourceNode(s, sourceNodeId) === false && 
+            s.selectors.node.isSinkNode(s, targetNodeId) === false &&
+            s.selectors.graph.hasArcBetween(s, sourceNodeId, targetNodeId) === false
         )
             if(didCycleExist)
                 s.cyclesDirty = true;
 
         // Unresolve polymorphic groups if no edges remain
         if (Port.isPolymorphic(targetPort) && targetPort.polymorphicGroupId)
-            if (!sel.port.polymorphism.groupHasEdges(s, targetNodeId, targetPort.polymorphicGroupId))
+            if (!s.selectors.port.polymorphism.groupHasEdges(s, targetNodeId, targetPort.polymorphicGroupId))
                 nodeReducers.polymorphism.unresolveGroup(s, targetNodeId, targetPort.polymorphicGroupId);
 
         if (Port.isPolymorphic(sourcePort) && sourcePort.polymorphicGroupId)
-            if (!sel.port.polymorphism.groupHasEdges(s, sourceNodeId, sourcePort.polymorphicGroupId))
+            if (!s.selectors.port.polymorphism.groupHasEdges(s, sourceNodeId, sourcePort.polymorphicGroupId))
                 nodeReducers.polymorphism.unresolveGroup(s, sourceNodeId, sourcePort.polymorphicGroupId);
     },
     createId: Workflow.Edge.createId

@@ -13,7 +13,7 @@ interface Props {
 
 export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionStatus, hasUpdate }) => {
   const isMinimized = node.isMinimized;
-  const isFlipped = node.isFlipped;
+const isFlipped = node.isFlipped;
   if (isMinimized)
     return (
       <MinimizedHandles node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped}>

@@ -3,6 +3,7 @@ import { Port } from "./Port"
 import { Field } from "./Field"
 import { Webhook } from "../Webhook"
 import { Vault } from "../Vault"
+import { extractExposedPorts } from "../../subworkflow"
 
 // ============================================
 // BLUEPRINT
@@ -30,7 +31,18 @@ export namespace Blueprint {
         return `${blueprintId}:${parts}` as Blueprint.ReconciledId;
     }
 
+
+
     export namespace Meta {
+
+        export namespace Dependency {
+            export const Schema = z.object({
+                workflowId: z.uuid().brand("WorkflowId"),
+                mode:       z.enum(["publication", "draft"]),
+            })
+        }
+        export type Dependency = z.infer<typeof Dependency.Schema>
+
         export const Schema = z.object({
             id:                   Blueprint.Id,
             displayName:          z.string(),
@@ -38,13 +50,11 @@ export namespace Blueprint {
             accent:               z.string().optional(),
             toolCompatible:       z.boolean().optional(),
             description:          z.string().optional(),
-            dependency: z.object({
-                workflowId: z.uuid().brand("WorkflowId"),
-                mode:       z.enum(["publication", "draft"]),
-            }).optional(),
+            dependency:           Dependency.Schema.optional(),
             flags:                z.record(z.string(), z.unknown()).optional(),
             credentials:          z.array(Vault.Credential.Template.Schema).readonly().optional(),
         })
+        
     }
     export type Meta = z.infer<typeof Meta.Schema>
 
@@ -54,5 +64,33 @@ export namespace Blueprint {
         outputs:  z.array(Port.Output.Schema).readonly(),
         webhooks: z.array(Webhook.Schema).readonly().optional(),
     }).readonly()
+
+
+    export const createFromDependency = (dep: {
+        workflow_data: any
+        display_name: string
+        icon?: string | null
+        accent?: string | null
+    }, baseBlueprint: Blueprint) => {
+        return {
+            ...baseBlueprint,
+            ...extractExposedPorts(dep.workflow_data),
+            fields:      mergeFieldsById(baseBlueprint.fields, dep.workflow_data.fields ?? []),
+            displayName: dep.display_name,
+            icon:        dep.icon ?? baseBlueprint.icon,
+            accent:      dep.accent ?? baseBlueprint.accent,
+        } satisfies Blueprint
+    }
 }
 export type Blueprint = z.infer<typeof Blueprint.Schema>
+
+
+function mergeFieldsById(
+    baseFields: readonly Field[],
+    depFields:  readonly Field[],
+): Field[] {
+    const map = new Map<Field.Id, Field>()
+    for (const f of baseFields) map.set(f.id, f)
+    for (const f of depFields) if (!map.has(f.id)) map.set(f.id, f)
+    return [...map.values()]
+}

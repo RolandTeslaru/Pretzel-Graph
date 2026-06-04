@@ -11,12 +11,10 @@ interface Props {
     nodeId: Workflow.Node.Id
     dialogId: string
     searchQuery: string
-    selectedWorkflowId: Workflow.Id | ""
+    nodeDependency: Workflow.Node.Dependency | undefined
 }
 
-export const DraftSelector = memo<Props>(({ nodeId, dialogId, searchQuery, selectedWorkflowId }) => {
-    const [manualWorkflowId, setManualWorkflowId] = useState<Workflow.Id>("" as Workflow.Id)
-
+export const DraftSelector = memo<Props>(({ nodeId, dialogId, searchQuery, nodeDependency }) => {
     const workflowMetas = LibrarySDK.useStore(s => s.workflowMetas)
 
     const options = useMemo(() => {
@@ -42,7 +40,7 @@ export const DraftSelector = memo<Props>(({ nodeId, dialogId, searchQuery, selec
                         <DraftSelectorItem
                             key={workflow.id}
                             workflow={workflow}
-                            isSelected={workflow.id === selectedWorkflowId}
+                            isSelected={workflow.id === nodeDependency?.workflowId && nodeDependency.mode === "draft"}
                             onSelect={attach}
                         />
                     ))
