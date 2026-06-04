@@ -133,6 +133,8 @@ export const nodeReducers = {
         const staticValues = s.data.staticValues[nodeId] ?? {};
         const credentialInstances = s.data.credentialInstanceIds[nodeId];
 
+        const nodeLayout = cloneDeep(s.selectors.layout.node.get(s, nodeId));
+
         const newNode = constructNode({
             id          : nodeId,
             blueprintId : blueprint.id,
@@ -169,6 +171,9 @@ export const nodeReducers = {
         nodeReducers.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs, staticValues);
         nodeReducers.populateCredentialInstances(s, nodeId, credentialInstances);
 
+        if (nodeLayout)
+            layoutReducers.node.add(s, nodeId, nodeLayout);
+
         incomingEdges.forEach(oldEdge => {
             edgeReducers.create(s, {
                 source: oldEdge.source.nodeId,
@@ -193,7 +198,7 @@ export const nodeReducers = {
     duplicate: (s, originalNode, position) => {
         s.isDirty = true
         if (!position) {
-            position = cloneDeep(s.data.ui.layout[originalNode.id])
+            position = cloneDeep(s.selectors.layout.node.get(s, originalNode.id) ?? { x: 0, y: 0 })
             position.x += 40
             position.y += 40
         }
@@ -459,10 +464,6 @@ export const nodeReducers = {
         cacheReducers.createNode(s, wiped);
         nodeReducers.clearIssues(s, nodeId);
     },
-    setDependency: (s, nodeId, dependency) => {
-        s.isDirty = true;
-        s.data.nodes[nodeId].dependency = dependency;
-    },
     setCredential: (s, nodeId, templateId, instanceId) => {
         s.isDirty = true;
         if (!s.data.credentialInstanceIds[nodeId])
@@ -494,7 +495,6 @@ interface NodeReducers {
     clearIssues    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void;
     
     wipe          : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, replace?: Partial<Workflow.Node>) => void;
-    setDependency : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, dependency: Workflow.Node['dependency']) => void;
     setCredential         : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, templateId: Vault.Credential.Template.Id, instanceId: Vault.Credential.Instance.Id | null) => void;
 
     polymorphism: {

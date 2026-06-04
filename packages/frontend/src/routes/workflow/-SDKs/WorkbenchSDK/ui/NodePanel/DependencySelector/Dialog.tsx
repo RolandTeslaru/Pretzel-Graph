@@ -16,14 +16,9 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, dialogId }
     const [searchQuery, setSearchQuery] = useState("")
     const [manualWorkflowId, setManualWorkflowId] = useState<Workflow.Id>("" as Workflow.Id)
 
-    const dependency = WorkbenchSDK.useStore(s => s.data.nodes[nodeId]?.dependency)
-    const mode = dependency?.mode ?? "draft"
-    const selectedWorkflowId = dependency?.workflowId ?? "" as Workflow.Id
+    const nodeDependency = WorkbenchSDK.useStore(s => s.data.nodes[nodeId]?.dependency)
 
-    const onModeChange = (value: string) => {
-        setSearchQuery("")
-        WorkbenchSDK.actions.dependency.setMode(nodeId, value as "publication" | "draft")
-    }
+    const [mode, setMode] = useState<"publication" | "draft">(nodeDependency?.mode === "publication" ? "publication" : "draft")
 
     return (
         <div className="flex flex-col gap-3 p-3 w-[360px]">
@@ -32,7 +27,7 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, dialogId }
                     <SystemIcons.Graph className="size-4" />
                     Select Workflow
                 </Dialog.Title>
-                <Select.Root value={mode} onValueChange={onModeChange}>
+                <Select.Root value={mode} onValueChange={(m) => setMode(m as "publication" | "draft")}>
                     <Select.Trigger size="xs" className='w-2/6 rounded-lg'>
                         <Select.Value />
                     </Select.Trigger>
@@ -69,8 +64,8 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, dialogId }
 
 
             {mode === "draft"
-                ? <DraftSelector nodeId={nodeId} dialogId={dialogId} searchQuery={searchQuery} selectedWorkflowId={selectedWorkflowId} />
-                : <PublicationSelector nodeId={nodeId} dialogId={dialogId} searchQuery={searchQuery} selectedWorkflowId={selectedWorkflowId} />
+                ? <DraftSelector nodeId={nodeId} dialogId={dialogId} searchQuery={searchQuery} nodeDependency={nodeDependency} />
+                : <PublicationSelector nodeId={nodeId} dialogId={dialogId} searchQuery={searchQuery} nodeDependency={nodeDependency} />
             }
 
             <div className="flex flex-col gap-1 border-t border-border pt-2">

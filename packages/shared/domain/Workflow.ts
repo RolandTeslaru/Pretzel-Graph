@@ -23,6 +23,11 @@ export namespace Workflow {
         export const Id = z.string().brand("NodeId");
         export type Id = z.infer<typeof Id>;
 
+        export namespace Dependency {
+            export const Schema = Blueprint.Meta.Dependency.Schema
+        }
+        export type Dependency = z.infer<typeof Dependency.Schema>
+
         export const Schema = Blueprint.Meta.Schema.extend({
             id:           Node.Id,
             blueprintId:  z.string().brand("BlueprintId"),
@@ -200,7 +205,10 @@ export namespace Workflow {
             export type UpdateInfo = z.infer<typeof UpdateInfo>;
         }
         export type Draft = z.infer<typeof Draft.Schema>
+
+        export const Schema = z.union([Publication.Schema, Draft.Schema])
     }
+    export type Dependency = z.infer<typeof Dependency.Schema>
 
     export const Schema = z.object({
         id:           Workflow.Id,
