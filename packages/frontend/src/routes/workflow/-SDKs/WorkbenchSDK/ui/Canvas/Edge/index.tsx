@@ -1,9 +1,57 @@
-import { memo, useId, useCallback } from 'react';
+import { memo, useId, useCallback, useMemo } from 'react';
 import { type EdgeProps, getBezierPath } from '@xyflow/react';
 import { WorkbenchSDK } from '../../../sdk';
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 import CanvasEdgeLabel from './label';
+
+const GLINT_MAX_LEN = 60;   // length on a straight edge
+const GLINT_MIN_LEN = 16;   // length on the sharpest bends
+const GLINT_OVERSHOOT_TOL = 1.5; // px the rigid streak may lift off the curve
+
+/**
+ * Picks a glint streak length from the edge's tightest bend so the rigid streak
+ * never visibly overshoots the curve. A chord of length L on a circle of radius R
+ * deviates from the arc by ~L²/(8R); we solve that for L given a px tolerance.
+ * Pure geometry on the bezier control points — computed once per path, no per-frame cost.
+ */
+function getGlintLength(edgePath: string): number {
+    // getBezierPath => "M sx,sy C c1x,c1y c2x,c2y tx,ty"
+    const nums = edgePath.match(/-?\d+(\.\d+)?/g)?.map(Number);
+    if (!nums || nums.length < 8) return GLINT_MAX_LEN;
+    const [p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y] = nums;
+
+    const bez = (a: number, b: number, c: number, d: number, t: number) => {
+        const mt = 1 - t;
+        return mt * mt * mt * a + 3 * mt * mt * t * b + 3 * mt * t * t * c + t * t * t * d;
+    };
+
+    const N = 20;
+    let prevX = p0x, prevY = p0y, prevAng = 0, haveAng = false, maxCurv = 0;
+    for (let i = 1; i <= N; i++) {
+        const t = i / N;
+        const x = bez(p0x, p1x, p2x, p3x, t);
+        const y = bez(p0y, p1y, p2y, p3y, t);
+        const dx = x - prevX, dy = y - prevY;
+        const segLen = Math.hypot(dx, dy);
+        if (segLen > 0.001) {
+            const ang = Math.atan2(dy, dx);
+            if (haveAng) {
+                let dAng = Math.abs(ang - prevAng);
+                if (dAng > Math.PI) dAng = 2 * Math.PI - dAng; // normalize
+                maxCurv = Math.max(maxCurv, dAng / segLen); // κ ≈ Δθ/Δs = 1/R
+            }
+            prevAng = ang;
+            haveAng = true;
+        }
+        prevX = x; prevY = y;
+    }
+
+    if (maxCurv <= 0.0001) return GLINT_MAX_LEN; // effectively straight
+    // L ≤ sqrt(8 · R · tol) = sqrt(8 · tol / κ)
+    const len = Math.sqrt((8 * GLINT_OVERSHOOT_TOL) / maxCurv);
+    return Math.max(GLINT_MIN_LEN, Math.min(GLINT_MAX_LEN, len));
+}
 
 const CanvasEdge = memo(({
     source,
@@ -27,12 +75,13 @@ const CanvasEdge = memo(({
         targetPosition,
     });
 
+    const glintLen = useMemo(() => getGlintLength(edgePath), [edgePath]);
+
     const edgeId = id as Workflow.Edge.Id;
     const sourceNodeId = source as Workflow.Node.Id;
     const sourcePortId = sourceHandleId as Foundations.Port.Output.Id;
 
     const markerId = useId();
-    const glintGradientId = useId();
 
     const sourceNode = WorkbenchSDK.useStore(s => s.data.nodes[source as Workflow.Node.Id])
 
@@ -77,17 +126,10 @@ const CanvasEdge = memo(({
     };
 
     const showGlint = !selected;
-    const streakLen = 60;
-    const streakThickness = 6;
 
     return (
         <g>
             <defs>
-                <radialGradient id={glintGradientId}>
-                    <stop offset="0%" stopColor="white" stopOpacity="1" />
-                    <stop offset="35%" stopColor={displayColor} stopOpacity="0.9" />
-                    <stop offset="100%" stopColor={displayColor} stopOpacity="0" />
-                </radialGradient>
                 <marker
                     id={markerId}
                     markerWidth="12"
@@ -122,38 +164,6 @@ const CanvasEdge = memo(({
                     animation: (isWaiting || isPreparing) ? `edge-dash-flow 0.6s linear infinite` : undefined,
                 }}
             />
-            {showGlint && (
-                <ellipse
-                    cx={0}
-                    cy={0}
-                    rx={streakLen / 2}
-                    ry={streakThickness / 2}
-                    fill={`url(#${glintGradientId})`}
-                    opacity={0}
-                    style={{ pointerEvents: 'none', mixBlendMode: 'screen' }}
-                >
-                    <animateMotion
-                        dur="3s"
-                        repeatCount="indefinite"
-                        path={edgePath}
-                        rotate="auto"
-                    />
-                    <animate
-                        attributeName="opacity"
-                        dur="3s"
-                        repeatCount="indefinite"
-                        keyTimes="0;0.12;0.88;1"
-                        values="0;0.9;0.9;0"
-                    />
-                    <animate
-                        attributeName="rx"
-                        dur="3s"
-                        repeatCount="indefinite"
-                        keyTimes="0;0.2;0.5;0.8;1"
-                        values={`0;${streakLen / 2};${streakLen / 2};${streakLen / 2};0`}
-                    />
-                </ellipse>
-            )}
             <CanvasEdgeLabel
                 selected={selected}
                 labelX={labelX}
@@ -163,6 +173,10 @@ const CanvasEdge = memo(({
                 outputVariant={output.variant}
                 itemCount={itemCount}
                 statusColor={statusColor}
+                showGlint={showGlint}
+                edgePath={edgePath}
+                glintColor={displayColor}
+                glintLen={glintLen}
             />
         </g>
     );

@@ -41,3 +41,29 @@ export class AggexExecutionError extends AggexError {
         Object.setPrototypeOf(this, AggexExecutionError.prototype)
     }
 }
+
+/**
+ * Thrown when a propagating error envelope reaches a node with no wired outgoing
+ * edges — the error was never caught, so the whole run terminates. `data.path`
+ * carries the ordered node-id trace the error travelled.
+ */
+export class UncaughtRuntimeNodeError extends AggexExecutionError {
+    constructor(message: string, path: string[]) {
+        super(SystemError.Code.EXECUTION_UNCAUGHT_NODE_ERROR, message, { data: { path } })
+        this.name = "UncaughtRuntimeNodeError"
+        Object.setPrototypeOf(this, UncaughtRuntimeNodeError.prototype)
+    }
+}
+
+/**
+ * Thrown when a propagating error envelope loops back onto a node already in its
+ * own propagation path — the error cycled on itself, so the run terminates.
+ * `data.path` carries the full loop (the revisited node appended at the end).
+ */
+export class CyclicalUncaughtRuntimeNodeError extends AggexExecutionError {
+    constructor(message: string, path: string[]) {
+        super(SystemError.Code.EXECUTION_CYCLIC_ERROR_PROPAGATION, message, { data: { path } })
+        this.name = "CyclicalUncaughtRuntimeNodeError"
+        Object.setPrototypeOf(this, CyclicalUncaughtRuntimeNodeError.prototype)
+    }
+}

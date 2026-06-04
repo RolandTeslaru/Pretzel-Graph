@@ -1,4 +1,4 @@
-import { Foundations, Validation, Vault, Workflow } from "@pretzel-graph/shared/domain";
+import { Foundations, Validation, Vault, Webhook, Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 import { cloneDeep } from 'lodash';
 import { edgeReducers } from "./edge";
@@ -8,6 +8,7 @@ import { fieldReducers } from "./field";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import uid from "../../../../../utils/uid";
 import { dependencyReducers } from "./dependency";
+import { VaultSDK } from "@/SDKs/VaultSDK/sdk";
 
 const generateUniqueString = (field: Foundations.Field): string => {
     if (field.variant !== "UniqueString") return "";
@@ -59,29 +60,27 @@ export const nodeReducers = {
     create: (s, blueprint, position, staticValues) => {
         s.isDirty = true;
         const nodeId = Workflow.Node.createId(blueprint.id);
-        const newNode = {
+        const newNode = constructNode({
             id          : nodeId,
             blueprintId : blueprint.id,
             displayName : blueprint.displayName,
 
-            fields      : cloneDeep(blueprint.fields)   as Workflow.Node['fields'],
-            inputs      : cloneDeep(blueprint.inputs)   as Workflow.Node['inputs'],
-            outputs     : cloneDeep(blueprint.outputs)  as Workflow.Node["outputs"],
-            webhooks    : cloneDeep(blueprint.webhooks) as Workflow.Node["webhooks"] | undefined,
+            fields      : blueprint.fields,
+            inputs      : blueprint.inputs,
+            outputs     : blueprint.outputs,
+            webhooks    : blueprint.webhooks ?? [],
+            credentials : blueprint.credentials ?? [],
 
             icon        : blueprint.icon,
             description : blueprint.description,
             isMinimized : false,
             isFlipped   : false,
-            accent      : blueprint.accent ? blueprint.accent : undefined,
-
-            dependency:     blueprint.dependency,
-            flags:          blueprint.flags,
-
+            isDisabled  : false,
+            accent      : blueprint.accent,
+            dependency  : blueprint.dependency,
+            flags       : blueprint.flags ?? {},
             toolCompatible: blueprint.toolCompatible,
-
-            credentials: blueprint.credentials?.length ? cloneDeep(blueprint.credentials) as Workflow.Node['credentials'] : undefined,
-        } satisfies Workflow.Node
+        })
 
         try {
             Workflow.Node.Schema.parse(newNode)
@@ -92,28 +91,8 @@ export const nodeReducers = {
 
         s.data.nodes[nodeId] = newNode;
 
-        const initialStaticValues: Record<Foundations.Field.Id | Foundations.Port.Input.Id, any> = {};
-
-        // Populate default values from fields
-        for (const field of blueprint.fields) {
-            if (staticValues && staticValues[field.id] !== undefined) {
-                initialStaticValues[field.id] = staticValues[field.id];
-            } else {
-                const resolved = resolveFieldInitialValue(field);
-                if (resolved !== undefined) initialStaticValues[field.id] = resolved;
-            }
-        }
-
-        // Populate default values from inputs
-        for (const input of blueprint.inputs) {
-            if (staticValues && staticValues[input.id] !== undefined) {
-                initialStaticValues[input.id] = staticValues[input.id];
-            } else if ('initialValue' in input && input.initialValue !== undefined) {
-                initialStaticValues[input.id] = input.initialValue;
-            }
-        }
-
-        s.data.staticValues[nodeId] = initialStaticValues;
+        nodeReducers.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs, staticValues);
+        nodeReducers.populateCredentialInstances(s, nodeId);
 
         layoutReducers.node.add(s, nodeId, position);
         cacheReducers.createNode(s, newNode);
@@ -144,41 +123,71 @@ export const nodeReducers = {
         if (!node)
             throw new Error(`Node ${nodeId} not found`);
 
-        const isMinimized = node.isMinimized;
-        const isFlipped = node.isFlipped;
         s.isDirty = true;
 
-        nodeReducers.disconnect(s, nodeId);
+        const incomingEdges = s.selectors.node.getIncomingEdges(s, nodeId);
+        const outgoingEdges = s.selectors.node.getOutgoingEdges(s, nodeId);
 
-        cacheReducers.deleteNode(s, nodeId);
+        // Capture before `remove` wipes them, so we can carry the user's values/credentials
+        // across the recreate instead of losing them.
+        const staticValues = s.data.staticValues[nodeId] ?? {};
+        const credentialInstances = s.data.credentialInstanceIds[nodeId];
 
-        const newNode = {
+        const newNode = constructNode({
             id          : nodeId,
             blueprintId : blueprint.id,
             displayName : blueprint.displayName,
 
-            fields      : cloneDeep(blueprint.fields)   as Workflow.Node['fields'],
-            inputs      : cloneDeep(blueprint.inputs)   as Workflow.Node['inputs'],
-            outputs     : cloneDeep(blueprint.outputs)  as Workflow.Node["outputs"],
-            webhooks    : cloneDeep(blueprint.webhooks) as Workflow.Node["webhooks"] | undefined,
+            fields      : blueprint.fields,
+            inputs      : blueprint.inputs,
+            outputs     : blueprint.outputs,
+            webhooks    : blueprint.webhooks ?? [],
+            credentials : blueprint.credentials ?? [],
 
             icon        : blueprint.icon,
             description : blueprint.description,
-            isMinimized : isMinimized,
-            isFlipped   : isFlipped,
-            accent      : blueprint.accent ? blueprint.accent : undefined,
-
+            isMinimized : node.isMinimized,
+            isFlipped   : node.isFlipped,
+            isDisabled  : node.isDisabled,
+            accent      : blueprint.accent,
+            dependency  : node.dependency ?? blueprint.dependency,
+            flags       : blueprint.flags ?? {},
             toolCompatible: blueprint.toolCompatible,
-            dependency:     node.dependency ?? blueprint.dependency,
-            flags:          blueprint.flags,
-        } satisfies Workflow.Node
+        })
 
         const result = Workflow.Node.Schema.safeParse(newNode)
         if (!result.success)
             throw new Error(`Node schema validation failed. Could not recreate node from blueprint id ${blueprint.id}`)
 
+        nodeReducers.remove(s, nodeId)
+
         s.data.nodes[nodeId] = newNode;
         cacheReducers.createNode(s, newNode);
+
+        // Restore the carried-over values/credentials (kept where keys still exist,
+        // gaps filled with the new blueprint's defaults).
+        nodeReducers.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs, staticValues);
+        nodeReducers.populateCredentialInstances(s, nodeId, credentialInstances);
+
+        incomingEdges.forEach(oldEdge => {
+            edgeReducers.create(s, {
+                source: oldEdge.source.nodeId,
+                sourceHandle: oldEdge.source.portId,
+                target: oldEdge.target.nodeId,
+                targetHandle: oldEdge.target.portId
+            })
+        })
+
+        outgoingEdges.forEach(oldEdge => {
+            edgeReducers.create(s, {
+                source: oldEdge.source.nodeId,
+                sourceHandle: oldEdge.source.portId,
+                target: oldEdge.target.nodeId,
+                targetHandle: oldEdge.target.portId
+            })
+        })
+
+
         nodeReducers.validate(s, nodeId);
     },
     duplicate: (s, originalNode, position) => {
@@ -189,32 +198,31 @@ export const nodeReducers = {
             position.y += 40
         }
         const newNodeId = Workflow.Node.createId(originalNode.blueprintId)
-        const newNode = {
+        const newNode = constructNode({
             id           : newNodeId,
             blueprintId  : originalNode.blueprintId,
             displayName  : originalNode.displayName,
 
-            fields       : cloneDeep(originalNode.fields)   as Workflow.Node['fields'],
-            inputs       : cloneDeep(originalNode.inputs)   as Workflow.Node['inputs'],
-            outputs      : cloneDeep(originalNode.outputs)  as Workflow.Node["outputs"],
-            webhooks     : cloneDeep(originalNode.webhooks) as Workflow.Node["webhooks"] | undefined,
+            fields       : originalNode.fields,
+            inputs       : originalNode.inputs,
+            outputs      : originalNode.outputs,
+            webhooks     : originalNode.webhooks ?? [],
+            credentials  : originalNode.credentials ?? [],
 
             icon         : originalNode.icon,
             description  : originalNode.description,
             isMinimized  : originalNode.isMinimized,
             isFlipped    : originalNode.isFlipped,
+            isDisabled   : originalNode.isDisabled,
             accent       : originalNode.accent,
+            dependency   : originalNode.dependency,
+            flags        : originalNode.flags ?? {},
             toolCompatible: originalNode.toolCompatible,
-            dependency:     originalNode.dependency,
-            flags:          originalNode.flags,
-
-            credentials: originalNode.credentials ? cloneDeep(originalNode.credentials) as Workflow.Node['credentials'] : undefined,
-        } satisfies Workflow.Node
+        })
 
         s.data.nodes[newNodeId] = newNode;
         s.data.staticValues[newNodeId] = cloneDeep(s.data.staticValues[originalNode.id]);
-        if (s.data.credentialInstanceIds[originalNode.id])
-            s.data.credentialInstanceIds[newNodeId] = cloneDeep(s.data.credentialInstanceIds[originalNode.id]);
+        nodeReducers.populateCredentialInstances(s, newNodeId, s.data.credentialInstanceIds[originalNode.id]);
 
         layoutReducers.node.add(s, newNodeId, position);
         cacheReducers.createNode(s, newNode);
@@ -263,22 +271,56 @@ export const nodeReducers = {
         node.accent = blueprint.accent;
 
         // Seed from existing values, then fill gaps with initialValue
-        const existing = s.data.staticValues[nodeId] ?? {};
-        const next: Record<Foundations.Field.Id | Foundations.Port.Input.Id, any> = { ...existing };
+        nodeReducers.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs);
+    },
+    populateInitialValues: (s, nodeId, fields, inputs, overrides?) => {
+        // Seed from any existing values so we never clobber user edits, then fill
+        // gaps: an explicit `overrides` entry wins over a field/input's initialValue.
+        const next: Record<Foundations.Field.Id | Foundations.Port.Input.Id, any> = { ...(s.data.staticValues[nodeId] ?? {}) };
 
-        for (const field of blueprint.fields) {
-            if (field.id in next) continue;
-            const resolved = resolveFieldInitialValue(field);
-            if (resolved !== undefined) next[field.id] = resolved;
+        for (const field of fields) {
+            if (overrides && overrides[field.id] !== undefined) {
+                next[field.id] = overrides[field.id];
+            } else if (!(field.id in next)) {
+                const resolved = resolveFieldInitialValue(field);
+                if (resolved !== undefined) next[field.id] = resolved;
+            }
         }
 
-        for (const input of blueprint.inputs) {
-            if (input.id in next) continue;
-            if ('initialValue' in input && input.initialValue !== undefined)
+        for (const input of inputs) {
+            if (overrides && overrides[input.id] !== undefined) {
+                next[input.id] = overrides[input.id];
+            } else if (!(input.id in next) && 'initialValue' in input && input.initialValue !== undefined) {
                 next[input.id] = input.initialValue;
+            }
         }
 
         s.data.staticValues[nodeId] = next;
+    },
+    populateCredentialInstances: (s, nodeId, overrides?) => {
+        const node = s.data.nodes[nodeId];
+        if (!node) return;
+
+        // Seed from existing assignments, let explicit `overrides` win over them.
+        const next: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id> = {
+            ...(s.data.credentialInstanceIds[nodeId] ?? {}),
+            ...(overrides ?? {}),
+        };
+
+        // Auto-fill any still-unassigned credential the node declares, but only when
+        // exactly one matching vault instance exists (unambiguous default).
+        for (const template of node.credentials ?? []) {
+            if (next[template.id] !== undefined) continue;
+            const instances = VaultSDK.selectors.byTemplateId(VaultSDK.state, template.id);
+            if (instances.length === 1)
+                next[template.id] = instances[0].id;
+        }
+
+        // Keep serialized workflow lean: omit the key entirely when nothing is assigned.
+        if (Object.keys(next).length === 0)
+            delete s.data.credentialInstanceIds[nodeId];
+        else
+            s.data.credentialInstanceIds[nodeId] = next;
     },
     polymorphism: {
         resolveGroup: (s, nodeId, triggerPort, resolvedVariant) => {
@@ -440,6 +482,8 @@ interface NodeReducers {
     recreate       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
     duplicate      : (state: WorkbenchSDK.State, originalNode: Workflow.Node, position?: { x: number, y: number }) => Workflow.Node;
     reconcile      : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, blueprint: Foundations.Blueprint) => void;
+    populateInitialValues : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fields: readonly Foundations.Field[], inputs: readonly Foundations.Port.Input[], overrides?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>) => void;
+    populateCredentialInstances : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, overrides?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>) => void;
     setSignalStrategy : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, strategy: "AND" | "OR" | "XOR") => void;
     setDisabled    : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isDisabled: boolean) => void;
     setMinimized   : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, isMinimized: boolean) => void;
@@ -457,4 +501,44 @@ interface NodeReducers {
         resolveGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, triggerPort: Foundations.Port.Input | Foundations.Port.Output, resolvedVariant: Foundations.Port.Variant) => void
         unresolveGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => void
     }
+}
+
+
+/** Forces every property key to be present, while keeping each value's original type (incl. null/undefined). */
+type Explicit<T> = { [K in keyof Required<T>]: T[K] };
+
+const constructNode = ({
+    id, blueprintId, displayName, fields, inputs, outputs, webhooks, credentials, icon, description, isMinimized, isFlipped, isDisabled, accent, toolCompatible, dependency, flags
+}: Explicit<Omit<Workflow.Node, 'fields' | 'inputs' | 'outputs' | 'webhooks' | 'credentials' | 'flags' | 'dependency'>> & {
+    fields      : readonly Foundations.Field[],
+    inputs      : readonly Foundations.Port.Input[],
+    outputs     : readonly Foundations.Port.Output[],
+    webhooks    : readonly Webhook[],
+    credentials : readonly Vault.Credential.Template[],
+    flags       : Record<string, unknown>,
+    dependency  : Workflow.Node['dependency'],
+}) => {
+    return {
+        id,
+        blueprintId,
+        displayName,
+        icon,
+        isMinimized,
+
+        // Arrays/objects/booleans collapse to `undefined` when empty/default so the
+        // serialized workflow JSON omits them entirely (keeps persisted nodes lean).
+        fields      : cloneDeep(fields) as Workflow.Node["fields"],
+        inputs      : cloneDeep(inputs) as Workflow.Node["inputs"],
+        outputs     : cloneDeep(outputs) as Workflow.Node["outputs"],
+        webhooks    : webhooks.length === 0 ? undefined : cloneDeep(webhooks) as Workflow.Node["webhooks"],
+        credentials : credentials.length === 0 ? undefined : cloneDeep(credentials) as Workflow.Node["credentials"],
+        flags       : Object.keys(flags).length === 0 ? undefined : cloneDeep(flags) as Workflow.Node["flags"],
+        dependency  : dependency === undefined ? undefined : cloneDeep(dependency) as Workflow.Node["dependency"],
+
+        description    : description ? description : undefined,
+        accent         : accent ? accent : undefined,
+        isFlipped      : isFlipped ? true : undefined,
+        isDisabled     : isDisabled ? true : undefined,
+        toolCompatible : toolCompatible ? true : undefined,
+    } satisfies Workflow.Node
 }

@@ -30,8 +30,11 @@ export const edgeReducers = {
         const targetPort = targetNode.inputs.find(i => i.id === targetPortId);
 
         
-        if (!sourcePort || !targetPort)
-            throw new Error(`Cannot create edge, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
+        if (!sourcePort || !targetPort){
+            console.error(`Cannot create edge, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
+            return
+            // throw new Error(`Cannot create edge, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
+        }
         
         const isFirstArcBetweenNodes = sel.graph.hasArcBetween(s, sourceNodeId, targetNodeId) === false; 
 
