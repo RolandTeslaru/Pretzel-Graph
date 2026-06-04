@@ -1,4 +1,5 @@
-import { Foundations, Workflow } from "./domain";
+import { Workflow } from "./domain";
+import { Field } from "./domain/Foundations/Field";
 import { Port } from "./domain/Foundations/Port";
 
 export type ExposedPorts = {
@@ -16,9 +17,9 @@ export const extractExposedPorts = (wfData: Workflow.Data): ExposedPorts => {
     Object.values(wfData.nodes).forEach(node => {
         if (node.blueprintId === "Core.SubWorkflow.ExposeInputPort") {
             const port = node.outputs[0] as Port;
-            const requiredFieldId = "required" as Foundations.Field.Id;
+            const requiredFieldId = "required" as Field.Id;
             const isRequired = Boolean(wfData.staticValues[node.id]?.[requiredFieldId]);
-            const portId = wfData.staticValues[node.id]?.["exposed_port_id" as Foundations.Field.Id] as Port.Input.Id | undefined;
+            const portId = wfData.staticValues[node.id]?.["exposed_port_id" as Field.Id] as Port.Input.Id | undefined;
 
             if(!portId)
                 throw new Error(`Exposed input port node ${node.id} is missing the 'exposed_port_id' static value.`);

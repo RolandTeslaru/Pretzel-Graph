@@ -69,29 +69,30 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
                 toast.info(`${count} dependency update${count === 1 ? '' : 's'} available`)
         },
 
-        attachToNode: withAsyncCommit(async (nodeId: Workflow.Node.Id, workflowId: Workflow.Id, mode: "publication" | "draft") => {
+        attachToNode: withAsyncCommit(async (nodeId, workflowId, mode) => {
+            const promise: Promise<{ dependency: Workflow.Dependency }> =
+                mode === "publication"
+                    ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
+                    : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId })
+
+            toast.promise(promise, {
+                loading: "Loading workflow…",
+                success: "Workflow attached",
+                error:   (err) => `Failed to attach dependency: ${SystemError.fromUnknown(err).message}`,
+            })
+
             try {
-                const { dependency } = mode === "publication"
-                    ? await Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
-                    : await Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId })
+                const { dependency } = await promise
 
                 setState(withCyclesRecompute(s => {
                     reducers.dependency.attachToNode(s, nodeId, workflowId, mode, dependency)
                 }))
             } catch (err) {
-                const error = SystemError.fromUnknown(err)
-                console.error("Failed to attach dependency", error)
-                toast.error(`Failed to attach dependency: ${error.message}`)
+                console.error("Failed to attach dependency", err)
                 return false
             }
             return true
         }),
-        setMode: withAsyncCommit(async (nodeId: Workflow.Node.Id, mode: "publication" | "draft") => {
-            setState(withCyclesRecompute(s => {
-                reducers.dependency.setMode(s, nodeId, mode)
-            }))
-        }),
-
         published: {
             update: withAsyncCommit((updateInfo) => applyUpdate("publication", updateInfo.workflowId)),
         },
@@ -119,7 +120,6 @@ export type DependencyActions = {
     checkUpdates:       () => Promise<void>
     updateAll:          () => Promise<boolean>
     attachToNode:       (nodeId: Workflow.Node.Id, workflowId: Workflow.Id, mode: "publication" | "draft") => Promise<boolean>
-    setMode:            (nodeId: Workflow.Node.Id, mode: "publication" | "draft") => void
     published: {
         update: (updateInfo: Workflow.Dependency.Publication.UpdateInfo) => Promise<boolean>
     }

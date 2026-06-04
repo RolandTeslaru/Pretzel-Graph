@@ -7,6 +7,7 @@ import { cacheSelectors, type CacheSelectors } from './cache';
 import { executionSelectors, type ExecutionSelectors } from './execution';
 import { graphSelectors, type GraphSelectors } from './graph';
 import { dependencySelectors, type DependencySelectors } from './dependency';
+import { layoutSelectors, type LayoutSelectors } from './layout';
 import type { WorkbenchSDK } from '../sdk';
 import type { Workflow } from '@pretzel-graph/shared/domain';
 
@@ -21,6 +22,7 @@ export interface WorkbenchSDKSelectors {
     execution      : ExecutionSelectors
     graph          : GraphSelectors
     dependency     : DependencySelectors
+    layout         : LayoutSelectors
 }
 
 export const workbenchSelectors = {
@@ -34,4 +36,5 @@ export const workbenchSelectors = {
     execution      : executionSelectors,
     graph          : graphSelectors,
     dependency     : dependencySelectors,
+    layout         : layoutSelectors,
 } satisfies WorkbenchSDKSelectors
