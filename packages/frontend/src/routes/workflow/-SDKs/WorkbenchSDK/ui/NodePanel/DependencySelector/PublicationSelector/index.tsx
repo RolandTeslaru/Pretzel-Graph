@@ -15,12 +15,10 @@ interface Props {
     nodeId: Workflow.Node.Id
     dialogId: string
     searchQuery: string
-    selectedWorkflowId: Workflow.Id | ""
+    nodeDependency: Workflow.Node.Dependency | undefined
 }
 
-export const PublicationSelector = memo<Props>(({ nodeId, dialogId, searchQuery, selectedWorkflowId }) => {
-    const [manualWorkflowId, setManualWorkflowId] = useState<Workflow.Id>("" as Workflow.Id)
-
+export const PublicationSelector = memo<Props>(({ nodeId, dialogId, searchQuery, nodeDependency }) => {
     const activeWorkflows = VersionControlSDK.useStore(s => s.activeWorkflows)
     const workflowMetas   = LibrarySDK.useStore(s => s.workflowMetas)
 
@@ -75,7 +73,7 @@ export const PublicationSelector = memo<Props>(({ nodeId, dialogId, searchQuery,
                             key={publication.id}
                             publication={publication}
                             workflowMeta={workflowMeta}
-                            isSelected={publication.workflow_id === selectedWorkflowId}
+                            isSelected={publication.workflow_id === nodeDependency?.workflowId && nodeDependency.mode === "publication"}
                             onSelect={attach}
                         />
                     ))
