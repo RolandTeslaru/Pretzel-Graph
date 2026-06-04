@@ -25,6 +25,7 @@
         "@pretzel-graph/worker": "*",
         "@supabase/supabase-js": "^2.105.4",
         "axios": "*",
+        "kalshi-typescript": "^3.19.0",
         "lodash": "^4.17.23",
         "viem": "^2.47.12",
         "zod": "^4.3.6"

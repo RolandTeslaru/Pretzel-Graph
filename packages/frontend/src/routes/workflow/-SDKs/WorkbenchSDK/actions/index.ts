@@ -67,6 +67,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         workflow: workflowActions,
         setClickedNodeId:          (nodeId) => setState(s => { reducers.setClickedNodeId(s, nodeId) }),
         setSelectionContextMenu:   (pos) => setState(s => { reducers.setSelectionContextMenu(s, pos) }),
+        setPaneContextMenu:        (pos) => setState(s => { reducers.setPaneContextMenu(s, pos) }),
         setDirty:             (value) => setState(s => {
             if (s.isDirty !== value)
                 s.isDirty = value;
@@ -141,6 +142,7 @@ export interface _WorkbenchSDKActions {
     };
     setClickedNodeId             : DropFirstArg<WorkbenchSDK.Reducers['setClickedNodeId']>;
     setSelectionContextMenu      : DropFirstArg<WorkbenchSDK.Reducers['setSelectionContextMenu']>;
+    setPaneContextMenu           : DropFirstArg<WorkbenchSDK.Reducers['setPaneContextMenu']>;
     setCurrentDraggedHandle : (handle: WorkbenchSDK.Handle | null) => void;
     setDirty                : (dirty: boolean) => void;
     takeSnapshot            : (p: { force?: boolean }) => void;

@@ -15,6 +15,8 @@ export interface NodeSelectors {
     isSinkNode:       (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
     isIsolatedNode:   (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
     getConnectedPorts:    (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Port.Input.Id, Workflow.Edge.Id>
+    getIncomingEdges:     (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Edge[]
+    getOutgoingEdges:     (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Edge[]
     getStaticValues:      (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Field.Id | Port.Id, any> | null
     getExpressionContext: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session?: Execution.Session) => Expression.Context
 }
@@ -68,6 +70,10 @@ export const nodeSelectors = {
         return hasNoIncoming && hasNoOutgoing;
     },
     getConnectedPorts: (s, nodeId) => s.cache.inputHandlesMap[nodeId] ?? EMPTY_CONNECTED_PORTS,
+    getIncomingEdges: (s, nodeId) =>
+        Object.values(s.cache.incomingEdgesMap[nodeId] ?? {}).map(edgeId => s.data.edges[edgeId]),
+    getOutgoingEdges: (s, nodeId) =>
+        Object.values(s.cache.outgoingEdgesMap[nodeId] ?? {}).map(edgeId => s.data.edges[edgeId]),
     getStaticValues: (s, nodeId) => s.data.staticValues[nodeId] ?? null,
     getExpressionContext: (s, nodeId, session) => {
         const ctx: Expression.Context = {

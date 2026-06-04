@@ -14,7 +14,14 @@ type CanvasEdgeLabelProps = {
     outputVariant: Foundations.Port.Variant;
     itemCount?: number;
     statusColor: string;
+    showGlint?: boolean;
+    edgePath: string;
+    glintColor: string;
+    glintLen: number;
 };
+
+// Thickness of the travelling glint streak (px, in flow coordinates).
+const GLINT_THICKNESS = 6;
 
 const CanvasEdgeLabel = ({
     selected,
@@ -25,9 +32,34 @@ const CanvasEdgeLabel = ({
     outputVariant,
     itemCount,
     statusColor,
+    showGlint,
+    edgePath,
+    glintColor,
+    glintLen,
 }: CanvasEdgeLabelProps) => {
     return (
         <EdgeLabelRenderer>
+            {showGlint && (
+                <div
+                    className="animate-edge-glint"
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: glintLen,
+                        height: GLINT_THICKNESS,
+                        borderRadius: '9999px',
+                        // offset-path rides the bezier on the compositor (offset-distance
+                        // is a transform under the hood) — no per-frame style/layout/paint.
+                        offsetPath: `path('${edgePath}')`,
+                        offsetRotate: 'auto',
+                        background: `radial-gradient(closest-side, #fff, ${glintColor} 40%, transparent)`,
+                        opacity: 0,
+                        pointerEvents: 'none',
+                        willChange: 'offset-distance, opacity',
+                    }}
+                />
+            )}
             {selected && (
                 <div
                     style={{

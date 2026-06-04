@@ -19,7 +19,7 @@ export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionS
       <MinimizedHandles node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped}>
         <div className='px-4 h-fit my-auto'>
           <LazyIcon
-            className={`w-10 h-10 ${isFlipped ? "scale-x-[-1]" : ""}`}
+            className={`w-11 h-11 ${isFlipped ? "scale-x-[-1]" : ""}`}
             name={node.icon as string}
             style={{ color: `var(--${node.accent}-foreground)` }}
           />

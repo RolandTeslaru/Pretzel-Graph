@@ -132,6 +132,6 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
             },
         );
 
-        return { getCandles, getMids, getOrderBook, getMeta };
+        return { tools: [getCandles, getMids, getOrderBook, getMeta] };
     }
 }

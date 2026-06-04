@@ -2,16 +2,17 @@
 
 ## Node error strategy — [spec](SPECS/node-error-strategy.md)
 
-- [ ] **node-sdk:** add `onErrorStrategyField` (`MultiOption`: `terminate` default / `propagate` / `do_nothing`); include in `executionStrategyFields` so every blueprint gets it.
-- [ ] **shared:** `SystemError` — add `EXECUTION_UNCAUGHT_NODE_ERROR = 2010`, `EXECUTION_CYCLIC_ERROR_PROPAGATION = 2011`; add `UncaughtRuntimeNodeError` / `CyclicalUncaughtRuntimeNodeError` classes (carry `path` in `data`).
-- [ ] **worker:** add `errorChannel: Map<Edge.Id, ErrorEnvelope>` to execution context; `ErrorEnvelope { id, error: SystemError.Serialized, path: Node.Id[] }`.
-- [ ] **worker:** rewrite `onNodeError` to branch on `onErrorStrategy` — `terminate` (reject as today), `do_nothing` (record + emit, no reject), `propagate` (mint envelope, write to outgoing edges, signal targets, no reject).
-- [ ] **worker:** intercept in `onNodeExecuted` — if an incoming edge carries an envelope and node isn't a Catch, `propagateError` (skip `run()`); cycle check (`path.includes` → `CyclicalUncaughtRuntimeNodeError`) and terminal check (no wired outgoing → `UncaughtRuntimeNodeError`).
-- [ ] **worker:** keep S2 generic — catch `instance.run()` in `onNodeExecuted` and only re-throw for `terminate`/terminal/cyclic (avoid changing the `onVertexError`→reject contract).
-- [ ] **worker:** AND fail-fast in `canNodeRun` — an envelope on any incoming edge fires the node immediately (routes to `propagateError`, not `run()`).
-- [ ] **nodes:** `Core/Catch/{blueprint,node}.ts` — `flags.catchesError: true`; `input` Unresolved → `passthrough` Unresolved (normal data) + `onError` Data (serialized error); engine special-cases via the flag.
-- [ ] **shared:** register `Core.Catch` in `drawers.ts`; **catalog:** `generate-indexes`.
-- [ ] **worker:** document the error model in `packages/worker/README.md`.
+- [x] **node-sdk:** add `onErrorStrategyField` (`MultiOption`: `terminate` default / `propagate` / `do_nothing`); included in `executionStrategyFields` (auto-injected into every blueprint by `defineBlueprint`).
+- [x] **shared:** `SystemError` — added `EXECUTION_UNCAUGHT_NODE_ERROR = 2010`, `EXECUTION_CYCLIC_ERROR_PROPAGATION = 2011`. **worker:** added `UncaughtRuntimeNodeError` / `CyclicalUncaughtRuntimeNodeError` (extend `AggexExecutionError`, carry `path` in `data`).
+- [x] **worker:** added `errorChannel: Map<Edge.Id, ErrorEnvelope>` to execution context (init in compiler); `ErrorEnvelope { id, error: SystemError.Serialized, path: Node.Id[] }` defined in `AggexEngine.Execution`.
+- [x] **worker:** extracted `recordNodeError` (shared by S2 hook + inline handler); added `handleNodeError` branching on `onErrorStrategy` — `terminate` (re-throw → reject as today), `do_nothing` (record + emit, fire nobody), `propagate` (mint envelope → `propagateError`). `propagateError` writes envelope to outgoing edges + returns router-style target set; `materializeCaughtError` for Catch nodes writes `onError` + fires only that branch.
+- [x] **worker:** intercept at top of `onNodeExecuted` — incoming envelope → consume + (Catch ? materialize : propagate), skipping `run()`; cycle check (`path.includes` → `CyclicalUncaughtRuntimeNodeError`) + terminal check (no wired outgoing → `UncaughtRuntimeNodeError`). `onNodeCompleted` early-returns for `failed` nodes so the returned set still drives fan-out without stomping status/edges.
+- [x] **worker:** kept S2 generic — `try/catch` around `run()`/`buildTool()` in `onNodeExecuted`; only `terminate`/terminal/cyclic re-throw to reach `onVertexError`.
+- [x] **worker:** AND fail-fast in `canNodeRun` — an incoming envelope returns `true` (fires immediately, routes to interception). Catch-flag read via narrow cast (base `RuntimeNode` doesn't declare `Blueprint`; avoids `override` churn across 51 nodes).
+- [x] **nodes:** `Core/Routing/Catch/{blueprint,node}.ts` — `flags.catchesError: true`; `input` Unresolved → `passthrough` Unresolved (`"router"` so only passthrough fires) + `onError` Data; inert (plain passthrough) until the engine special-cases the flag.
+- [x] **shared:** registered `Core.Routing.Catch` in the `routing` drawer; **catalog:** `generate-indexes` ran (50 nodes, synced to backend shelf). Typecheck clean across node-sdk/shared/nodes/worker.
+- [x] **worker:** documented the error model in `packages/worker/README.md` (new "Error handling & propagation" section after propagation strategies).
+- [x] **frontend:** route `onErrorStrategy` into the **Execution Strategy** panel section (`NodePanel/index.tsx` — added to the `signalDependency`/`dataDependency` filter) so it renders alongside the other strategy selects instead of in the generic Fields list. No new TS errors in touched file (frontend has pre-existing unrelated `noUnusedLocals` warnings).
 - [ ] **sub-workflow boundary (decided):** envelope does NOT cross — inner run rejects, `SubWorkflow/Execute` sees it as its own `onRun` throw and applies *its* `onErrorStrategy` (re-originates a fresh envelope rooted at the Execute node).
 - [ ] **open questions (resolve during impl):** multi-error convergence dedup; `do_nothing` partial-run vs skip-signal; tool-mode applicability.
 

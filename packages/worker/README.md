@@ -117,6 +117,75 @@ Set via `RuntimeNode.getPropagationStrategy()`:
 
 ---
 
+## Error handling & propagation (`onErrorStrategy`)
+
+Every blueprint carries an injected `onErrorStrategy` field (alongside
+`signalDependency` / `dataDependency`, via `executionStrategyFields`). When a
+node's `run()`/`buildTool()` **throws**, `onNodeExecuted` catches it and branches in
+`handleNodeError`:
+
+- **`terminate`** (default) — re-throw → S2's `onVertexError` → `onNodeError`
+  records `failed` and **rejects the run**. This is the historical behavior; nodes
+  with no explicit strategy behave exactly as before.
+- **`do_nothing`** — record `failed` + emit `node:error`, then fire **nobody**
+  (return empty set). Downstream `AND`-joins stall; the engine settles as a
+  **partial** run. No termination.
+- **`propagate`** — mint an **error envelope** and send it down every wired
+  outgoing edge (see below).
+
+### Errors travel out-of-band
+
+Errors do **not** ride typed output ports (that would break
+`Synthesizer.project` / pollute `node_output_projections`). They ride a separate
+edge-keyed channel on the context:
+
+```ts
+ctx.errorChannel: Map<Edge.Id, ErrorEnvelope>
+ErrorEnvelope = { id: string; error: SystemError.Serialized; path: Node.Id[] }
+```
+
+`propagateError(nodeId, envelope)`:
+1. **Cycle check** — `envelope.path.includes(nodeId)` → throw
+   `CyclicalUncaughtRuntimeNodeError(path)` → terminate. (Fires on the *first*
+   revisit, before the `runCount`/`delta` short-circuit guard would.)
+2. **Terminal check** — no wired outgoing edges → throw
+   `UncaughtRuntimeNodeError(path)` → terminate (the error was never caught).
+3. Otherwise record the carrying node `failed` (so the whole path lights up),
+   write the path-extended envelope onto each outgoing edge, and **return the set of
+   target vertices** — reusing the same router mechanism (`fireVertexDependents`
+   fires only those).
+
+### Interception (pass-through)
+
+At the **top** of `onNodeExecuted`, before running, `findIncomingErrorEnvelope`
+checks the node's incoming edges. If an envelope is present the node does **not**
+run its own logic — it consumes the envelope and either **catches** it (Catch node,
+see below) or **re-propagates** it. `canNodeRun` has a matching **fail-fast**: an
+incoming envelope fires the node immediately, bypassing the data gate (an
+`AND`-join doesn't wait for sibling inputs that will never arrive).
+
+`onNodeCompleted` early-returns for any node already marked `failed`, so it never
+overwrites the status with `completed` — but S2 still drives the returned target
+set, so propagation continues.
+
+### Catch node (`Core.Routing.Catch`, `flags.catchesError`)
+
+Identified by the blueprint flag (engine stays generic — no hardcoded id). On an
+incoming envelope, `materializeCaughtError` writes the serialized error to the
+`onError` **Data** output and fires only that branch; the envelope is consumed, so
+propagation **stops here**. With no envelope it's a plain passthrough
+(`input` → `passthrough`, both `Unresolved`). The `onError` port is the one
+deliberate boundary where an out-of-band error becomes in-band `Data`.
+
+### Sub-workflow boundary
+
+`errorChannel` is per-engine, so an envelope never crosses into a parent/child run.
+A sub-workflow that fails surfaces at the `SubWorkflow/Execute` node as that node's
+own `onRun` throw, which then applies *its* `onErrorStrategy` — re-originating a
+fresh envelope rooted at the Execute node.
+
+---
+
 ## Execution context & node-facing APIs
 
 The compiler builds **two** context objects over one execution (`compiler/index.ts`):
