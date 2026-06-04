@@ -36,7 +36,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             Synthesizer.lcToChatMessage(lcMsg, this.chatId!)
         );
 
-
         this.emit<Chat.Event.Message.Added>({
             type: "message:added",
             channel: Chat.Event.getChannel(this.chatId),
@@ -44,7 +43,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             messages
         });
 
-        await InternalChatAPI.messageAdd({ messages });
+        if(this.fields.write_to_session)
+            await InternalChatAPI.messageAdd({ messages });
 
         return {};
     }

@@ -167,6 +167,7 @@ export namespace FieldBuilder {
     export type MultiOptionItem<V extends string = string> = {
         value: V;
         displayName?: string;
+        description?: string;
     }
 
     export function MultiOption<

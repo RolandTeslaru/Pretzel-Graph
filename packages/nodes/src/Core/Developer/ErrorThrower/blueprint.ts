@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Developer.ErrorThrower",
@@ -24,5 +24,12 @@ export const Blueprint = defineBlueprint({
             polymorphicGroupId: "signal"
         }),
     ],
-    outputs: [],
+    outputs: [
+        OutputBuilder.Unresolved({
+            id: "result",
+            displayName: "Result",
+            polymorphicGroupId: "signal",
+            tooltip: "Never produced — the node always throws. Wire it to a Catch node to test error propagation.",
+        }),
+    ],
 });

@@ -37,7 +37,7 @@ export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nod
                         </Select.Trigger>
                         <Select.Content size="sm">
                             {field.options.map((opt) => (
-                                <Select.Item key={opt.value} value={opt.value}>{opt.displayName ?? opt.value}</Select.Item>
+                                <Select.Item key={opt.value} value={opt.value} description={opt.description}>{opt.displayName ?? opt.value}</Select.Item>
                             ))}
                         </Select.Content>
                     </Select.Root>

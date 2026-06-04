@@ -202,8 +202,10 @@ export const createCanvasCallbacks = (
 
             WorkbenchSDK.actions.setSelectionContextMenu({ x: e.clientX, y: e.clientY });
         },
-        onPaneContextMenu: (_e) => {
+        onPaneContextMenu: (e) => {
+            e.preventDefault();
             WorkbenchSDK.actions.setSelectionContextMenu(null);
+            WorkbenchSDK.actions.setPaneContextMenu({ x: e.clientX, y: e.clientY });
         },
         onMoveEnd: (_, viewport) => {
             WorkbenchSDK.actions.layout.viewport.set(viewport)

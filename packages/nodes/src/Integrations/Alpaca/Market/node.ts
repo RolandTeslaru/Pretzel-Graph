@@ -194,6 +194,6 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
             },
         );
 
-        return { getBars, getLatestTrade, getLatestQuote, getNews, searchAssets };
+        return { tools: [getBars, getLatestTrade, getLatestQuote, getNews, searchAssets] };
     }
 }

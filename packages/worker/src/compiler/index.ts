@@ -173,6 +173,7 @@ export class WorkflowCompiler {
             updateSession,
             compiledGraph: graph,
             activeNodes: new Set(),
+            errorChannel: new Map(),
             portAPI,
             propagationAPI,
             instanceRegistryAPI,

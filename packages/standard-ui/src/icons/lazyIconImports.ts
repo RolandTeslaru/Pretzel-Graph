@@ -206,8 +206,12 @@ export const lazyIconsMapping = {
     import("./BRAND_ICONS/HuggingFace"),
   HyperLiquid: () =>
     import("./BRAND_ICONS/HyperLiquid"),
+  Polymarket: () =>
+    import("./BRAND_ICONS/Polymarket"),
   Icosa: () =>
     import("./BRAND_ICONS/Icosa"),
+  Kalshi: () =>
+    import("./BRAND_ICONS/Kalshi"),
   IFixIt: () =>
     import("./BRAND_ICONS/IFixIt"),
   Instagram: () =>

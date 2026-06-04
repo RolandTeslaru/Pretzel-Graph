@@ -6,7 +6,13 @@ export const Blueprint = defineBlueprint({
     description: "This node is a chat input",
     icon: "MessagesSquare",
     accent: "port-Message",
-    fields: [],
+    fields: [
+        FieldBuilder.Boolean({
+            id: "write_to_session",
+            displayName: "Write to Session",
+            initialValue: true,
+        })
+    ],
     inputs: [
         InputBuilder.Message({
             id: "input",

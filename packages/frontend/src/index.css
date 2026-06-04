@@ -147,10 +147,10 @@ code {
   --port-MessageList-accent: theme(--color-indigo-200);
   --port-MessageList-glow: theme(--color-indigo-600);
 
-  --port-DataList: theme(--color-rose-400);
-  --port-DataList-foreground: theme(--color-rose-400);
-  --port-DataList-accent: theme(--color-rose-200);
-  --port-DataList-glow: theme(--color-rose-600);
+  --port-DataList: theme(--color-slate-400);
+  --port-DataList-foreground: theme(--color-slate-300);
+  --port-DataList-accent: theme(--color-slate-200);
+  --port-DataList-glow: theme(--color-slate-600);
 
   --port-LanguageModel: theme(--color-fuchsia-400);
   --port-LanguageModel-foreground: theme(--color-fuchsia-400);
@@ -328,7 +328,7 @@ code {
   /* Dark mode: glow uses the base port color (already vibrant on dark bg) */
   --port-Message-glow: theme(--color-blue-300);
   --port-MessageList-glow: theme(--color-indigo-300);
-  --port-DataList-glow: theme(--color-rose-300);
+  --port-DataList-glow: theme(--color-slate-300);
   --port-LanguageModel-glow: theme(--color-fuchsia-300);
   --port-Tool-glow: theme(--color-cyan-300);
   --port-ToolList-glow: theme(--color-teal-300);

@@ -105,6 +105,7 @@ export namespace Field {
             z.object({
                 value: z.string(),
                 displayName: z.string().optional(),
+                description: z.string().optional(),
             })
         ),
         kind: z.enum(["select", "tab"]).default("select"),

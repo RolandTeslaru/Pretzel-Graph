@@ -96,7 +96,7 @@ export const ToolBlueprint = defineBlueprint({
     displayName: "Alpaca Market",
     description: "Exposes Alpaca market data and news tools to an agent.",
     icon: "Alpaca",
-    accent: "port-Tool",
+    accent: "port-ToolList",
     toolCompatible: true,
     fields: [
         FieldBuilder.MultiOption({
@@ -138,30 +138,10 @@ export const ToolBlueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Tool({
-            id: "getBars",
-            displayName: "Get Bars",
-            tooltip: "Tool: fetch OHLCV bars for a symbol.",
-        }),
-        OutputBuilder.Tool({
-            id: "getLatestTrade",
-            displayName: "Get Latest Trade",
-            tooltip: "Tool: fetch the latest trade for a symbol.",
-        }),
-        OutputBuilder.Tool({
-            id: "getLatestQuote",
-            displayName: "Get Latest Quote",
-            tooltip: "Tool: fetch the latest quote for a symbol.",
-        }),
-        OutputBuilder.Tool({
-            id: "getNews",
-            displayName: "Get News",
-            tooltip: "Tool: fetch recent news for a symbol.",
-        }),
-        OutputBuilder.Tool({
-            id: "searchAssets",
-            displayName: "Search Assets",
-            tooltip: "Tool: list/search tradable assets (symbol/name substring match).",
+        OutputBuilder.ToolList({
+            id: "tools",
+            displayName: "Alpaca Tools",
+            tooltip: "Toolkit: alpaca_get_bars, alpaca_get_latest_trade, alpaca_get_latest_quote, alpaca_get_news, alpaca_search_assets.",
         }),
     ],
 });

@@ -82,7 +82,7 @@ export const ToolBlueprint = defineBlueprint({
     displayName: "Massive Market",
     description: "Exposes Massive (Polygon.io) stock-market data tools to an agent.",
     icon: "Massive",
-    accent: "port-Tool",
+    accent: "port-ToolList",
     toolCompatible: true,
     fields: [
         FieldBuilder.MultiOption({
@@ -118,40 +118,10 @@ export const ToolBlueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Tool({
-            id: "getCandles",
-            displayName: "Get Candles",
-            tooltip: "Tool: download OHLCV aggregates (bars) for a ticker.",
-        }),
-        OutputBuilder.Tool({
-            id: "getNews",
-            displayName: "Get News",
-            tooltip: "Tool: get recent news articles for a ticker.",
-        }),
-        OutputBuilder.Tool({
-            id: "getSnapshot",
-            displayName: "Get Snapshot",
-            tooltip: "Tool: get a ticker snapshot (last trade/quote + day metrics).",
-        }),
-        OutputBuilder.Tool({
-            id: "getLastTrade",
-            displayName: "Get Last Trade",
-            tooltip: "Tool: get the last trade for a ticker.",
-        }),
-        OutputBuilder.Tool({
-            id: "getLastQuote",
-            displayName: "Get Last Quote",
-            tooltip: "Tool: get the last quote (NBBO) for a ticker.",
-        }),
-        OutputBuilder.Tool({
-            id: "getTickerDetails",
-            displayName: "Get Ticker Details",
-            tooltip: "Tool: get reference details for a ticker.",
-        }),
-        OutputBuilder.Tool({
-            id: "searchTickers",
-            displayName: "Search Tickers",
-            tooltip: "Tool: search tickers by symbol or company name.",
+        OutputBuilder.ToolList({
+            id: "tools",
+            displayName: "Massive Tools",
+            tooltip: "Toolkit: massive_get_candles, massive_get_news, massive_get_snapshot, massive_get_last_trade, massive_get_last_quote, massive_get_ticker_details, massive_search_tickers.",
         }),
     ],
 });

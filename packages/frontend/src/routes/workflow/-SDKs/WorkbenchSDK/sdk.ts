@@ -38,6 +38,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 lastSelection: null,
                 clickedNodeId: null,
                 selectionContextMenu: null,
+                paneContextMenu: null,
                 draggedHandle: null,
                 cache: cloneDeep(Workflow.Cache.INITIAL),
                 issues: {
@@ -136,6 +137,7 @@ export namespace WorkbenchSDK {
         lastSelection: OnSelectionChangeParams<NodeDriver, EdgeDriver> | null;
         clickedNodeId: Workflow.Node.Id | null;
         selectionContextMenu: { x: number, y: number } | null;
+        paneContextMenu: { x: number, y: number } | null;
         draggedHandle: Handle | null
         reconcilingFields: Record<Workflow.Node.Id, Set<Foundations.Field.Id>>
         clipboard: {

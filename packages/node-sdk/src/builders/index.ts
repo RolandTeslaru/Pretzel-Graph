@@ -60,26 +60,38 @@ export const signalDependencyStrategyField = FieldBuilder.MultiOption({
     id: "signalDependency",
     displayName: "Signal Dependency",
     options: [
-        { value: "AND", displayName: "(AND) All signals required" },
-        { value: "OR", displayName: "(OR) At least one signal required" },
-        { value: "XOR", displayName: "(XOR) Exactly one signal required" },
+        { value: "AND", displayName: "(AND) All signals required", description: "Fire only once every upstream signal has arrived." },
+        { value: "OR", displayName: "(OR) At least one signal required", description: "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)." },
+        { value: "XOR", displayName: "(XOR) Exactly one signal required", description: "Fire on exactly one signal; rejects if two or more arrive at once." },
     ],
     initialValue: "OR",
-    tooltip: "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+    tooltip: "Determines how incoming signals are evaluated to trigger node execution.",
 })
 
 export const dataDependencyStrategyField = FieldBuilder.MultiOption({
     id: "dataDependency",
     displayName: "Data Dependency",
     options: [
-        { value: "AND", displayName: "(AND) All data dependencies must be ready" },
-        { value: "OR", displayName: "(OR) At least one data dependency ready" },
+        { value: "AND", displayName: "(AND) All data dependencies must be ready", description: "Wait until every wired input port has data before reading inputs." },
+        { value: "OR", displayName: "(OR) At least one data dependency ready", description: "Read inputs as soon as any wired port has data." },
     ],
     initialValue: "AND",
-    tooltip: "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+    tooltip: "Determines how incoming data dependencies are evaluated to trigger node execution.",
 })
 
-export const executionStrategyFields = [signalDependencyStrategyField, dataDependencyStrategyField] as const;
+export const onErrorStrategyField = FieldBuilder.MultiOption({
+    id: "onErrorStrategy",
+    displayName: "On Error",
+    options: [
+        { value: "terminate", displayName: "Terminate workflow", description: "Fail the whole run (default)." },
+        { value: "propagate", displayName: "Propagate error", description: "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates." },
+        { value: "do_nothing", displayName: "Do nothing", description: "Swallow the error — no signal, no termination. Downstream stalls." },
+    ],
+    initialValue: "terminate",
+    tooltip: "What happens when this node's execution throws.",
+})
+
+export const executionStrategyFields = [signalDependencyStrategyField, dataDependencyStrategyField, onErrorStrategyField] as const;
 
 
 export function defineBlueprint<
