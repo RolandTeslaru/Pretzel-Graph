@@ -3,7 +3,7 @@
 import * as SelectPrimitive from "@radix-ui/react-select"
 
 import { cn } from "../utils/cn"
-import { createContext, useContext, type ComponentProps, type FC } from "react"
+import { createContext, useContext, type ComponentProps, type FC, type ReactNode } from "react"
 import { SystemIcons } from "../icons"
 
 type SelectSize = "default" | "sm" | "xs"
@@ -18,7 +18,7 @@ namespace SelectComponents {
   export type ScrollDownButton = FC<ComponentProps<typeof SelectPrimitive.ScrollDownButton>>
   export type Content = FC<ComponentProps<typeof SelectPrimitive.Content> & { position?: "popper" | "item-aligned"; size?: "default" | "sm" | "xs" }>
   export type Label = FC<ComponentProps<typeof SelectPrimitive.Label>>
-  export type Item = FC<ComponentProps<typeof SelectPrimitive.Item> & { size?: "default" | "sm" | "xs" }>
+  export type Item = FC<ComponentProps<typeof SelectPrimitive.Item> & { size?: "default" | "sm" | "xs"; description?: ReactNode }>
   export type Separator = FC<ComponentProps<typeof SelectPrimitive.Separator>>
 }
 
@@ -173,7 +173,7 @@ const itemIndicatorClasses: Record<"default" | "sm" | "xs", string> = {
   xs: "right-1 h-3 w-3",
 }
 
-const Item: SelectComponents.Item = ({ className, children, size, ...props }) => {
+const Item: SelectComponents.Item = ({ className, children, size, description, ...props }) => {
   const contextSize = useContext(SelectSizeContext)
   const resolvedSize = size ?? contextSize
   return (
@@ -208,9 +208,20 @@ const Item: SelectComponents.Item = ({ className, children, size, ...props }) =>
       </SelectPrimitive.ItemIndicator>
     </span>
 
-    <SelectPrimitive.ItemText>
-      <span>{children}</span>
-    </SelectPrimitive.ItemText>
+    {description ? (
+      // Description lives OUTSIDE ItemText so it shows only in the dropdown list,
+      // not mirrored into the closed trigger via Select.Value.
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <SelectPrimitive.ItemText>
+          <span>{children}</span>
+        </SelectPrimitive.ItemText>
+        <span className="text-muted-foreground text-xs font-normal whitespace-normal">{description}</span>
+      </div>
+    ) : (
+      <SelectPrimitive.ItemText>
+        <span>{children}</span>
+      </SelectPrimitive.ItemText>
+    )}
   </SelectPrimitive.Item>
   )
 }

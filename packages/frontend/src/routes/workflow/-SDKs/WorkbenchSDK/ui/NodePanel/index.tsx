@@ -80,7 +80,7 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
         const executionStrategyFields: Foundations.Field[] = []
 
         node.fields.forEach(field => {
-            if (field.id === "signalDependency" || field.id === "dataDependency"){
+            if (field.id === "signalDependency" || field.id === "dataDependency" || field.id === "onErrorStrategy"){
                 executionStrategyFields.push(field)
                 return
             }

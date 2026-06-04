@@ -37,7 +37,7 @@ export namespace Blueprint {
             icon:                 z.string(),
             accent:               z.string().optional(),
             toolCompatible:       z.boolean().optional(),
-            description:          z.string().nullable().optional(),
+            description:          z.string().optional(),
             dependency: z.object({
                 workflowId: z.uuid().brand("WorkflowId"),
                 mode:       z.enum(["publication", "draft"]),

@@ -62,7 +62,7 @@ export const ToolBlueprint = defineBlueprint({
     displayName: "HyperLiquid Market",
     description: "Exposes HyperLiquid market-data tools to an agent. Read-only — no API key required.",
     icon: "HyperLiquid",
-    accent: "port-Tool",
+    accent: "port-ToolList",
     toolCompatible: true,
     fields: [
         FieldBuilder.MultiOption({
@@ -83,25 +83,10 @@ export const ToolBlueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Tool({
-            id: "getCandles",
-            displayName: "Get Candles",
-            tooltip: "Tool: download OHLCV candle history for a coin.",
-        }),
-        OutputBuilder.Tool({
-            id: "getMids",
-            displayName: "Get Mid Prices",
-            tooltip: "Tool: get current mid prices for all (or one) coin(s).",
-        }),
-        OutputBuilder.Tool({
-            id: "getOrderBook",
-            displayName: "Get Order Book",
-            tooltip: "Tool: snapshot the L2 order book for a coin.",
-        }),
-        OutputBuilder.Tool({
-            id: "getMeta",
-            displayName: "Get Meta",
-            tooltip: "Tool: list available coins with their metadata and market context (funding, OI, mark px).",
+        OutputBuilder.ToolList({
+            id: "tools",
+            displayName: "HyperLiquid Tools",
+            tooltip: "Toolkit: hyperliquid_get_candles, hyperliquid_get_mids, hyperliquid_get_order_book, hyperliquid_get_meta.",
         }),
     ],
 });

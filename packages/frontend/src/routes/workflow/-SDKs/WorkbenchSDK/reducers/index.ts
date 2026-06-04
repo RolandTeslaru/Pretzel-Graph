@@ -24,4 +24,5 @@ export const workbenchReducers = {
     dependency              : dependencyReducers,
     setClickedNodeId        : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id | null) => { state.clickedNodeId = nodeId; },
     setSelectionContextMenu : (state: WorkbenchSDK.State, pos: { x: number, y: number } | null) => { state.selectionContextMenu = pos; },
+    setPaneContextMenu      : (state: WorkbenchSDK.State, pos: { x: number, y: number } | null) => { state.paneContextMenu = pos; },
 }

@@ -78,6 +78,7 @@ export const CORE_DRAWERS = {
       "Core.Routing.Merge",
       "Core.Routing.Accumulator",
       "Core.Routing.Passthrough",
+      "Core.Routing.Catch",
       "Core.Routing.Portal.In",
       "Core.Routing.Portal.Out",
     ],
@@ -396,6 +397,12 @@ export const BUNDLE_DRAWERS = {
     icon: "JigsawStack",
     blueprintIds: []
   },
+  kalshi: {
+    displayName: "Kalshi",
+    id: "kalshi",
+    icon: "Kalshi",
+    blueprintIds: ["Integrations.Kalshi.Market"]
+  },
   langchain_utils: {
     displayName: "LangChain",
     id: "langchain_utils",
@@ -533,6 +540,12 @@ export const BUNDLE_DRAWERS = {
     id: "pinecone",
     icon: "Pinecone",
     blueprintIds: []
+  },
+  polymarket: {
+    displayName: "Polymarket",
+    id: "polymarket",
+    icon: "Polymarket",
+    blueprintIds: ["Integrations.Polymarket.Market"]
   },
   postgres: {
     displayName: "Postgres",

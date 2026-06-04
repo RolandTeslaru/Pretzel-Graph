@@ -1,6 +1,6 @@
 {
-  "version": "1780075596653",
-  "generatedAt": "2026-05-29T17:26:36.653Z",
+  "version": "1780093455194",
+  "generatedAt": "2026-05-29T22:24:15.194Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -53,6 +53,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -136,6 +161,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [
@@ -207,6 +257,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -444,6 +519,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -737,6 +837,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [
@@ -822,6 +947,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [
@@ -836,7 +986,16 @@
           "required": false
         }
       ],
-      "outputs": []
+      "outputs": [
+        {
+          "id": "result",
+          "displayName": "Result",
+          "tooltip": "Never produced — the node always throws. Wire it to a Catch node to test error propagation.",
+          "polymorphicGroupId": "signal",
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
+        }
+      ]
     },
     "Core.Developer.Eval": {
       "id": "Core.Developer.Eval",
@@ -897,6 +1056,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -1029,6 +1213,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [
@@ -1139,6 +1348,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [
@@ -1222,6 +1456,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -1310,6 +1569,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -1409,6 +1693,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [
@@ -1447,6 +1756,116 @@
           "polymorphicGroupId": "data",
           "variant": "UnresolvedList",
           "originalVariant": "UnresolvedList"
+        }
+      ]
+    },
+    "Core.Routing.Catch": {
+      "id": "Core.Routing.Catch",
+      "displayName": "Catch",
+      "icon": "ShieldAlert",
+      "accent": "group-routing",
+      "description": "Catches a propagating error. Non-error data passes straight through; an incoming error is serialized to the 'On Error' output and propagation stops here.",
+      "flags": {
+        "catchesError": true
+      },
+      "credentials": [],
+      "fields": [
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "polymorphicGroupId": "catch_passthrough",
+          "internal": false,
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "passthrough",
+          "displayName": "Passthrough",
+          "polymorphicGroupId": "catch_passthrough",
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
+        },
+        {
+          "id": "onError",
+          "displayName": "On Error",
+          "tooltip": "The serialized error (code + message) when a propagating error is caught here.",
+          "variant": "Data"
         }
       ]
     },
@@ -1529,6 +1948,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -1627,6 +2071,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [
@@ -1721,6 +2190,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -1830,6 +2324,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [
@@ -1905,6 +2424,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -2057,6 +2601,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -2236,6 +2805,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [
@@ -2329,6 +2923,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [],
@@ -2408,6 +3027,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [],
@@ -2471,6 +3115,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -2539,6 +3208,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -2622,6 +3316,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -2718,6 +3437,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -2818,6 +3562,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [
@@ -2915,6 +3684,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [
@@ -2996,6 +3790,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -3085,6 +3904,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -3231,6 +4075,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -3439,6 +4308,31 @@
           "kind": "select"
         },
         {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
+        },
+        {
           "id": "isConvertedToTool",
           "advanced": false,
           "required": false,
@@ -3640,6 +4534,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [],
@@ -3724,6 +4643,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -3901,6 +4845,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -4111,6 +5080,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [],
@@ -4262,6 +5256,31 @@
           "kind": "select"
         },
         {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
+        },
+        {
           "id": "isConvertedToTool",
           "advanced": false,
           "required": false,
@@ -4354,6 +5373,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -4507,6 +5551,31 @@
           "kind": "select"
         },
         {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
+        },
+        {
           "id": "isConvertedToTool",
           "advanced": false,
           "required": false,
@@ -4539,6 +5608,187 @@
           "id": "summary",
           "displayName": "Summary",
           "tooltip": "Convenience summary: { coin, interval, count, firstClose, lastClose, change, changePct }.",
+          "variant": "Json"
+        }
+      ]
+    },
+    "Integrations.Kalshi.Market": {
+      "id": "Integrations.Kalshi.Market",
+      "displayName": "Kalshi Market",
+      "icon": "Kalshi",
+      "accent": "port-DataList",
+      "toolCompatible": true,
+      "description": "Reads Kalshi prediction-market data: events, markets and order books. Requires a Kalshi API key + RSA private key (requests are RSA-PSS signed).",
+      "credentials": [
+        {
+          "id": "kalshiApi",
+          "displayName": "Kalshi",
+          "fields": [
+            {
+              "id": "apiKeyId",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key ID",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "privateKeyPem",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "RSA Private Key (PEM)",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Kalshi"
+        }
+      ],
+      "fields": [
+        {
+          "id": "status",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Status",
+          "tooltip": "Filter markets by status. Used in direct mode and as the default for the tools.",
+          "variant": "MultiOption",
+          "initialValue": "active",
+          "options": [
+            {
+              "value": "active",
+              "displayName": "Active (open)"
+            },
+            {
+              "value": "closed",
+              "displayName": "Closed"
+            },
+            {
+              "value": "all",
+              "displayName": "All"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "maxResults",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Max Results",
+          "tooltip": "Maximum number of markets/events to return.",
+          "variant": "Integer",
+          "initialValue": 20,
+          "min": 1,
+          "max": 1000,
+          "step": 1
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "eventTicker",
+          "displayName": "Event Ticker",
+          "tooltip": "Optional Kalshi event ticker to scope markets to one event. Leave empty to list markets by status.",
+          "internal": false,
+          "variant": "Text",
+          "initialValue": "",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "markets",
+          "displayName": "Markets",
+          "tooltip": "Array of Kalshi markets: { ticker, event_ticker, title, status, yes_bid_dollars, yes_ask_dollars, last_price_dollars, volume_fp, close_time, ... }.",
+          "variant": "DataList"
+        },
+        {
+          "id": "summary",
+          "displayName": "Summary",
+          "tooltip": "Convenience summary: { eventTicker, status, count, tickers }.",
           "variant": "Json"
         }
       ]
@@ -4673,6 +5923,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -4904,6 +6179,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [],
@@ -5064,6 +6364,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -5271,6 +6596,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [],
@@ -5458,6 +6808,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [],
@@ -5467,6 +6842,161 @@
           "displayName": "Language Model",
           "tooltip": "The OpenRouter language model instance.",
           "variant": "LanguageModel"
+        }
+      ]
+    },
+    "Integrations.Polymarket.Market": {
+      "id": "Integrations.Polymarket.Market",
+      "displayName": "Polymarket Market",
+      "icon": "Polymarket",
+      "accent": "port-DataList",
+      "toolCompatible": true,
+      "description": "Reads Polymarket prediction-market data: events, markets, prices and order books (Gamma + CLOB). No API key required.",
+      "credentials": [],
+      "fields": [
+        {
+          "id": "status",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Status",
+          "tooltip": "Filter markets by status. Used in direct mode and as the default for the search tool.",
+          "variant": "MultiOption",
+          "initialValue": "active",
+          "options": [
+            {
+              "value": "active",
+              "displayName": "Active"
+            },
+            {
+              "value": "closed",
+              "displayName": "Closed"
+            },
+            {
+              "value": "all",
+              "displayName": "All"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "maxResults",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Max Results",
+          "tooltip": "Maximum number of markets to return.",
+          "variant": "Integer",
+          "initialValue": 20,
+          "min": 1,
+          "max": 500,
+          "step": 1
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution. 'OR' requires at least one signal, 'AND' requires all signals, and 'XOR' requires exactly one signal.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required"
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution. 'OR' requires at least one data input to be ready, while 'AND' requires all data inputs to be ready.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All data dependencies must be ready"
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "query",
+          "displayName": "Query",
+          "tooltip": "Substring to match against market question / slug. Leave empty to list top markets by volume.",
+          "internal": false,
+          "variant": "Text",
+          "initialValue": "",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "markets",
+          "displayName": "Markets",
+          "tooltip": "Array of markets: { id, question, slug, conditionId, outcomes, outcomePrices, clobTokenIds, volume, liquidity, endDate }.",
+          "variant": "DataList"
+        },
+        {
+          "id": "summary",
+          "displayName": "Summary",
+          "tooltip": "Convenience summary: { query, status, count, top }.",
+          "variant": "Json"
         }
       ]
     },
@@ -5621,6 +7151,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [],
@@ -5770,6 +7325,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [],
@@ -5895,6 +7475,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [],
@@ -6017,6 +7622,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"
@@ -6185,6 +7815,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [],
@@ -6343,6 +7998,31 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
+            }
+          ],
+          "kind": "select"
         }
       ],
       "inputs": [],
@@ -6408,6 +8088,31 @@
             {
               "value": "OR",
               "displayName": "(OR) At least one data dependency ready"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws. 'Terminate workflow' fails the whole run (default). 'Propagate error' forwards the error along outgoing edges until a Catch node handles it (or it reaches a node with no outputs and terminates). 'Do nothing' swallows the error — no signal, no termination.",
+          "variant": "MultiOption",
+          "initialValue": "terminate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow"
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error"
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing"
             }
           ],
           "kind": "select"

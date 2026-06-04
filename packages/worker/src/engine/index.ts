@@ -4,7 +4,7 @@ import { S2Graph, Vertex } from "../S2/graph";
 import { Synthesizer } from "@pretzel-graph/node-sdk";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { S2Hooks } from "src/S2/types";
-import { AggexExecutionError } from "src/errors";
+import { AggexExecutionError, UncaughtRuntimeNodeError, CyclicalUncaughtRuntimeNodeError } from "src/errors";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
@@ -485,10 +485,27 @@ export class AggexEngine {
         const wfNode = entry.wfNode;
         const nodeInstance = entry.instance;
 
-        const allDependencies = ctx.compiledGraph.dependenciesMap.get(vertexId)!; 
+        // ── Error interception ──────────────────────────────────────────────
+        // An error envelope on an incoming edge means an upstream node failed with
+        // `propagate`. This node does NOT run its own logic — it either catches the
+        // error (Catch node → materialize to `onError`) or re-propagates it.
+        const incomingEnvelope = this.findIncomingErrorEnvelope(ctx, vertexId);
+        if (incomingEnvelope) {
+            this.consumeIncomingEnvelopes(ctx, vertexId);   // delivered — clear from channel
+
+            // Concrete nodes expose `Blueprint` (with `flags`); the abstract base doesn't
+            // declare it, so read it through a narrow cast rather than churning all nodes.
+            const blueprint = (entry.instance as { Blueprint?: Blueprint }).Blueprint;
+            if (blueprint?.flags?.catchesError === true)
+                return this.materializeCaughtError(ctx, vertexId, incomingEnvelope);
+
+            return this.propagateError(ctx, vertexId, incomingEnvelope);
+        }
+
+        const allDependencies = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
 
         const dataDependency = entry.instance.fields["dataDependency" as Field.Id];
-        
+
         const inputs = this.node.getIncomingData(
             ctx,
             wfNode.id,
@@ -502,10 +519,15 @@ export class AggexEngine {
         const isTool = nodeInstance.fields["isConvertedToTool" as Field.Id] === true;
 
         let result;
-        if(isTool)
-            result = await nodeInstance.buildTool(inputs, fields);
-        else
-            result = await nodeInstance.run(inputs, fields);
+        try {
+            if(isTool)
+                result = await nodeInstance.buildTool(inputs, fields);
+            else
+                result = await nodeInstance.run(inputs, fields);
+        } catch (err) {
+            // The node's own execution threw — apply its `onErrorStrategy`.
+            return this.handleNodeError(ctx, vertexId, err);
+        }
 
         const projectedResult = this.node.projectOutputs(result, wfNode);
 
@@ -542,6 +564,14 @@ export class AggexEngine {
         const entry = this.nodeRuntimeMap.get(vertexId);
         if (!entry)
             return
+
+        // Errored nodes (do_nothing / propagate) were already recorded "failed" and
+        // handled their own propagation. Don't overwrite that with "completed" or
+        // re-touch edge state — but S2 still drives any returned signal set after this.
+        if (ctx.session.node_status[entry.wfNode.id]?.status === "failed") {
+            await this.awaitPause(ctx);
+            return;
+        }
 
         // Set outgoing edges to waiting and increment runCount
         // For router nodes, only update edges for the taken branches
@@ -655,6 +685,11 @@ export class AggexEngine {
 
 
 
+    /**
+     * S2 `onVertexError` hook — fires only when a node throw reaches S2 (i.e. the
+     * `terminate` strategy, or a terminal/cyclic `UncaughtRuntimeNodeError`). The
+     * run is already rejecting; we just record the failure.
+     */
     private onNodeError(
         ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
@@ -671,8 +706,17 @@ export class AggexEngine {
                 error instanceof Error ? error.message : String(error),
             )
 
-        const nodeId = vertexId as unknown as Workflow.Node.Id;
+        this.recordNodeError(ctx, vertexId as unknown as Workflow.Node.Id, aggexError.toJSON());
+    }
 
+
+    /** Records a node as `failed` in the session + emits `node:error`. Shared by the
+     *  S2 error hook (terminate) and the inline strategy handler (do_nothing/propagate). */
+    private recordNodeError(
+        ctx:    AggexEngine.Execution.Context,
+        nodeId: Workflow.Node.Id,
+        error:  SystemError.Serialized,
+    ) {
         this.flightRecorder?.onNodeFailed(nodeId, ctx);
 
         const existing = ctx.session.node_status[nodeId];
@@ -680,7 +724,7 @@ export class AggexEngine {
             status: "failed",
             started_at: existing?.started_at,
             completed_at: new Date().toISOString(),
-            error: aggexError.toJSON() as any,
+            error: error as any,
         };
 
         const nodeStatusUpdate = { [nodeId]: nodeStatus };
@@ -695,11 +739,175 @@ export class AggexEngine {
             type:          "node:error",
             nodeId:        nodeId,
             channel:       this.getEventChannel(ctx),
-            error:         aggexError.toJSON(),
+            error:         error,
             sessionUpdate: {
                 node_status: nodeStatusUpdate,
             },
         })
+    }
+
+
+    /**
+     * A node's own execution threw. Branch on its `onErrorStrategy` field:
+     *   - `terminate` (default) → re-throw so S2 rejects the whole run (`onNodeError` records it).
+     *   - `do_nothing`          → record + emit, fire nobody (downstream stalls). Partial run.
+     *   - `propagate`           → record + emit, then send an error envelope down every outgoing edge.
+     */
+    private handleNodeError(
+        ctx:      AggexEngine.Execution.Context,
+        vertexId: Vertex.Id,
+        error:    unknown,
+    ): Set<Vertex.Id> | void {
+        const entry = this.nodeRuntimeMap.get(vertexId);
+        const nodeId = vertexId as unknown as Workflow.Node.Id;
+
+        const aggexError = error instanceof SystemError
+            ? error
+            : new AggexExecutionError(
+                SystemError.Code.EXECUTION_NODE_FAILED,
+                error instanceof Error ? error.message : String(error),
+            );
+
+        const strategy = entry?.instance.fields["onErrorStrategy" as Field.Id] ?? "terminate";
+
+        switch (strategy) {
+            case "do_nothing":
+                console.warn(`Node "${nodeId}" failed; swallowed (onErrorStrategy=do_nothing):`, aggexError.message);
+                this.recordNodeError(ctx, nodeId, aggexError.toJSON());
+                return new Set<Vertex.Id>();   // fire nobody
+
+            case "propagate": {
+                const envelope: AggexEngine.Execution.ErrorEnvelope = {
+                    id:    crypto.randomUUID(),
+                    error: aggexError.toJSON(),
+                    path:  [],
+                };
+                return this.propagateError(ctx, vertexId, envelope);
+            }
+
+            case "terminate":
+            default:
+                throw aggexError;   // S2 → onNodeError → reject ignite
+        }
+    }
+
+
+    /**
+     * Send `envelope` down every wired outgoing edge of this node and fire those
+     * targets. Used both at the origin (fresh envelope) and for pass-through nodes
+     * re-emitting a received envelope. Returns the set of target vertices to fire
+     * (router-style); the carrying node is recorded `failed` so the path lights up.
+     *
+     * Throws (→ terminate) when:
+     *   - the envelope's `path` already contains this node → `CyclicalUncaughtRuntimeNodeError`
+     *   - this node has no wired outgoing edges → `UncaughtRuntimeNodeError`
+     */
+    private propagateError(
+        ctx:      AggexEngine.Execution.Context,
+        vertexId: Vertex.Id,
+        envelope: AggexEngine.Execution.ErrorEnvelope,
+    ): Set<Vertex.Id> {
+        const nodeId = vertexId as unknown as Workflow.Node.Id;
+
+        // Cycle: the error looped back onto a node already in its own path.
+        if (envelope.path.includes(nodeId)) {
+            throw new CyclicalUncaughtRuntimeNodeError(
+                `Error propagation cycled back onto node "${nodeId}": ${envelope.error.message}`,
+                [...envelope.path, nodeId] as unknown as string[],
+            );
+        }
+
+        const outgoing = ctx.workflowCache.outgoingEdgesMap[nodeId];
+        const wiredEdgeIds = outgoing ? Object.values(outgoing) : [];
+
+        // Terminal: nowhere left to forward → the error was never caught.
+        if (wiredEdgeIds.length === 0) {
+            throw new UncaughtRuntimeNodeError(
+                `Uncaught node error reached terminal node "${nodeId}": ${envelope.error.message}`,
+                [...envelope.path, nodeId] as unknown as string[],
+            );
+        }
+
+        // This node is now carrying the error.
+        this.recordNodeError(ctx, nodeId, envelope.error);
+
+        const nextEnvelope: AggexEngine.Execution.ErrorEnvelope = {
+            ...envelope,
+            path: [...envelope.path, nodeId],
+        };
+
+        const edgeIdMap: Record<string, Workflow.Edge.Id> = {};
+        const targets = new Set<Vertex.Id>();
+
+        for (const edgeId of wiredEdgeIds) {
+            ctx.errorChannel.set(edgeId, nextEnvelope);
+            edgeIdMap[edgeId] = edgeId;
+            const edge = ctx.workflowData.edges[edgeId];
+            if (edge) targets.add(edge.target.nodeId as unknown as Vertex.Id);
+        }
+
+        const edgeStateUpdate = this.session.createEdgeStateUpdate(
+            ctx, edgeIdMap, "waiting", s => { s.runCount += 1; },
+        );
+
+        ctx.emit<Execution.Event.SessionUpdate>({
+            executionId:   ctx.executionId,
+            workflowId:    ctx.workflowId,
+            type:          "update",
+            channel:       this.getEventChannel(ctx),
+            sessionUpdate: { edge_state: edgeStateUpdate },
+        });
+
+        return targets;   // fireVertexDependents fires only these
+    }
+
+
+    /**
+     * A Catch node received an error envelope: materialize the serialized error onto
+     * its `onError` output port (so downstream gets it as `Data`) and fire only that
+     * branch. The envelope was already consumed from the channel, so propagation
+     * stops here. The node completes normally (it succeeded at catching).
+     */
+    private materializeCaughtError(
+        ctx:      AggexEngine.Execution.Context,
+        vertexId: Vertex.Id,
+        envelope: AggexEngine.Execution.ErrorEnvelope,
+    ): Set<Vertex.Id> {
+        const nodeId = vertexId as unknown as Workflow.Node.Id;
+        const onErrorPort = "onError" as Port.Output.Id;
+
+        this.portAPI.write(ctx, nodeId, onErrorPort, envelope.error);
+
+        return this.resolveRouterSignals(ctx, nodeId, { [onErrorPort]: envelope.error });
+    }
+
+
+    /** First error envelope sitting on any of this node's incoming edges, if any. */
+    private findIncomingErrorEnvelope(
+        ctx:      AggexEngine.Execution.Context,
+        vertexId: Vertex.Id,
+    ): AggexEngine.Execution.ErrorEnvelope | undefined {
+        const incoming = ctx.workflowCache.inputHandlesMap[vertexId as unknown as Workflow.Node.Id];
+        if (!incoming) return undefined;
+
+        for (const edgeId of Object.values(incoming)) {
+            const envelope = ctx.errorChannel.get(edgeId);
+            if (envelope) return envelope;
+        }
+        return undefined;
+    }
+
+
+    /** Remove delivered envelopes from this node's incoming edges. */
+    private consumeIncomingEnvelopes(
+        ctx:      AggexEngine.Execution.Context,
+        vertexId: Vertex.Id,
+    ): void {
+        const incoming = ctx.workflowCache.inputHandlesMap[vertexId as unknown as Workflow.Node.Id];
+        if (!incoming) return;
+
+        for (const edgeId of Object.values(incoming))
+            ctx.errorChannel.delete(edgeId);
     }
 
 
@@ -715,6 +923,11 @@ export class AggexEngine {
         if (!entry) return true;
 
         const { instance, wfNode } = entry;
+
+        // Fail-fast: an incoming error envelope bypasses every data/signal gate so the
+        // node fires immediately and re-propagates (or catches) rather than waiting on
+        // sibling inputs that will never arrive.
+        if (this.findIncomingErrorEnvelope(ctx, vertexId)) return true;
 
         const signalDepField = instance.fields["signalDependency" as Field.Id];
         const dataDepField   = instance.fields["dataDependency" as Field.Id];
@@ -788,10 +1001,24 @@ export namespace AggexEngine {
             status: "completed" | "terminated";
             duration: number;
         }
-    
+
+        /**
+         * An in-flight error travelling the graph out-of-band (NOT through typed
+         * output ports). Keyed by edge in `ctx.errorChannel`. `path` is the ordered
+         * trace of nodes the error has visited — used for cycle detection (a node
+         * re-appearing → `CyclicalUncaughtRuntimeNodeError`) and debugging.
+         */
+        export interface ErrorEnvelope {
+            id:    string;
+            error: SystemError.Serialized;
+            path:  Workflow.Node.Id[];
+        }
+
         export interface Context extends RuntimeNode.ExecutionContext {
             compiledGraph: S2Graph,
             activeNodes:   Set<Workflow.Node.Id | Vertex.Id>;
+            /** Out-of-band error propagation channel, keyed by the edge the error travels. */
+            errorChannel:  Map<Workflow.Edge.Id, ErrorEnvelope>;
         }
 
     }

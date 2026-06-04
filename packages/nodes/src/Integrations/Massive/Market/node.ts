@@ -220,6 +220,6 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
             },
         );
 
-        return { getCandles, getNews, getSnapshot, getLastTrade, getLastQuote, getTickerDetails, searchTickers: searchTickersTool };
+        return { tools: [getCandles, getNews, getSnapshot, getLastTrade, getLastQuote, getTickerDetails, searchTickersTool] };
     }
 }
