@@ -1,7 +1,7 @@
 import { SystemError, Workbench, type Workflow } from "@pretzel-graph/shared/domain"
 import type { VersionControlPublication } from "@pretzel-graph/shared/domain/VersionControlPublication"
 import type { WorkbenchSDKImpl } from "../sdk"
-import { withCommit, withAsyncCommit, withCyclesRecompute } from "../utils/actions"
+import { withCommit, withAsyncCommit, withCyclesRecompute, createToastPromise } from "../utils/actions"
 import { api } from "@/SDKs/ApiInterceptorSDK"
 import { toast } from "sonner"
 
@@ -10,19 +10,26 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     const reducers = sdk.reducers
 
     const applyUpdate = async (mode: "publication" | "draft", workflowId: Workflow.Id): Promise<boolean> => {
+        const promise = createToastPromise<{ dependency: Workflow.Dependency }>(
+            mode === "publication"
+                ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
+                : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId }),
+            {
+                loading: "Updating dependency…",
+                success: "Dependency updated",
+                error:   (err: unknown) => `Failed to update dependency: ${SystemError.fromUnknown(err).message}`,
+            }
+        )
+
         try {
-            const { dependency } = mode === "publication"
-                ? await Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
-                : await Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId })
+            const { dependency } = await promise
 
             setState(withCyclesRecompute(s => {
                 reducers.dependency.applyUpdate(s, mode, dependency)
             }))
         } catch (err) {
-            const error = SystemError.fromUnknown(err)
-            console.error("Failed to apply dependency update", error)
-            toast.error(`Failed to apply dependency update: ${error.message}`)
-        return false
+            console.error("Failed to apply dependency update", err)
+            return false
         }
         return true
     }
@@ -70,16 +77,16 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
         },
 
         attachToNode: withAsyncCommit(async (nodeId, workflowId, mode) => {
-            const promise: Promise<{ dependency: Workflow.Dependency }> =
+            const promise = createToastPromise<{ dependency: Workflow.Dependency }>(
                 mode === "publication"
                     ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
-                    : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId })
-
-            toast.promise(promise, {
-                loading: "Loading workflow…",
-                success: "Workflow attached",
-                error:   (err) => `Failed to attach dependency: ${SystemError.fromUnknown(err).message}`,
-            })
+                    : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId }),
+                {
+                    loading: "Loading workflow…",
+                    success: "Workflow attached",
+                    error:   (err: unknown) => `Failed to attach dependency: ${SystemError.fromUnknown(err).message}`,
+                }
+            )
 
             try {
                 const { dependency } = await promise
