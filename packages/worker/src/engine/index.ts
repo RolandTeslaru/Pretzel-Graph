@@ -12,6 +12,7 @@ import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection"
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Execution } from "@pretzel-graph/shared/domain";
 import { FlightRecorderService } from "./flight-recorder-service";
+import { System } from "../system";
 
 export interface AggexHooks {
     onPause?(): void;
@@ -428,6 +429,12 @@ export class AggexEngine {
                 );
         }
 
+        System.log.debug("node fired", {
+            nodeId:      entry.wfNode.id,
+            blueprint:   entry.wfNode.blueprintId,
+            propagation: entry.instance.getPropagationStrategy(),
+        });
+
         this.flightRecorder?.onNodeFired(entry.wfNode.id);
 
         ctx.activeNodes.add(nodeId)
@@ -513,6 +520,14 @@ export class AggexEngine {
         );
 
         const fields = nodeInstance.evaluateFields(inputs);
+
+        System.log.debug("node executing", {
+            nodeId:         wfNode.id,
+            dataDependency: dataDependency ?? "OR",
+            signals:        [...signals],
+            deps:           [...allDependencies],
+            inputPorts:     Object.keys(inputs),
+        });
 
         this.flightRecorder?.onNodeExecuted(wfNode.id, signals, allDependencies, inputs, fields, ctx);
 
@@ -626,6 +641,11 @@ export class AggexEngine {
             },
         });
 
+        System.log.info("node completed", {
+            nodeId:      entry.wfNode.id,
+            outputPorts: projectedOutput ? Object.keys(projectedOutput) : [],
+        });
+
         this.flightRecorder?.onNodeCompleted(entry.wfNode.id, ctx);
 
         await this.awaitPause(ctx);
@@ -653,6 +673,12 @@ export class AggexEngine {
             const depId = _depId as unknown as Workflow.Node.Id;
             nodeDepMap[depId] = resolved;
         })
+
+        System.log.debug("node waiting on dependencies", {
+            nodeId:     wfNode.id,
+            arrived:    [...arrivedSignals],
+            resolution: nodeDepMap,
+        });
 
         const existing = ctx.session.node_status[wfNode.id];
         const nodeStatus: Execution.Session.NodeStatus = {
@@ -695,7 +721,10 @@ export class AggexEngine {
         vertexId: Vertex.Id,
         error:    unknown,
     ) {
-        console.error(`Error during node execution, ${vertexId}:`, error)
+        System.log.error("node errored (reached S2)", {
+            nodeId: vertexId,
+            error:  error instanceof Error ? error.message : String(error),
+        });
 
         // If the node already threw a SystemError (or subclass), preserve it.
         // Otherwise wrap the S2/unknown error into an AggexExecutionError.
@@ -772,7 +801,10 @@ export class AggexEngine {
 
         switch (strategy) {
             case "do_nothing":
-                console.warn(`Node "${nodeId}" failed; swallowed (onErrorStrategy=do_nothing):`, aggexError.message);
+                System.log.warning("node failed; swallowed (onErrorStrategy=do_nothing)", {
+                    nodeId,
+                    error: aggexError.message,
+                });
                 this.recordNodeError(ctx, nodeId, aggexError.toJSON());
                 return new Set<Vertex.Id>();   // fire nobody
 

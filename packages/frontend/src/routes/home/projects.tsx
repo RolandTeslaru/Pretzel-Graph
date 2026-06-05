@@ -25,11 +25,11 @@ function ProjectsLayout() {
 
 
     return (
-        <div className="py-6 max-w-6xl w-full">
+        <div className="py-6 max-w-6xl w-full h-full">
             <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6">
                 <aside className="h-fit sticky">
                     <FileSystemTree
-                        className="max-h-[70vh] overflow-auto"
+                        className=" overflow-auto"
                     />
                 </aside>
 
