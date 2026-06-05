@@ -1,6 +1,6 @@
 import { WorkbenchSDK } from '../sdk';
 import { debounce } from '@/decorators/debounce';
-import { toast } from 'sonner';
+import { toast, type PromiseData } from 'sonner';
 import { Foundations, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { api } from '@/SDKs/ApiInterceptorSDK';
 import { workflowReducers } from '../reducers/workflow';
@@ -61,6 +61,11 @@ export const withAsyncCommit = <TArgs extends any[], TReturn>(fn: (...args: TArg
         }
     };
 };
+
+export const createToastPromise = <T>(promise: Promise<T>, options: PromiseData<T>): Promise<T> => {
+    toast.promise(promise, options)
+    return promise
+}
 
 export const validateField = (nodeId: Workflow.Node.Id, field: Foundations.Field) => {
     WorkbenchSDK.useStore.setState(s => { WorkbenchSDK.reducers.field.validate(s, nodeId, field) });
