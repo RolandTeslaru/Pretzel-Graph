@@ -4,7 +4,7 @@ import { S2Graph, Vertex } from "../S2/graph";
 import { Synthesizer } from "@pretzel-graph/node-sdk";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { S2Hooks } from "src/S2/types";
-import { AggexExecutionError, UncaughtRuntimeNodeError, CyclicalUncaughtRuntimeNodeError } from "src/errors";
+import { AggexExecutionError, UncaughtRuntimeNodeError, CyclicalRuntimeNodeError } from "src/errors";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
@@ -805,6 +805,9 @@ export class AggexEngine {
         const strategy = entry?.instance.fields["onErrorStrategy" as Field.Id] ?? "terminate";
 
         switch (strategy) {
+            case "terminate": { 
+                throw aggexError;
+            }
             case "do_nothing":
                 System.log.warning("node failed; swallowed (onErrorStrategy=do_nothing)", {
                     nodeId,
@@ -812,19 +815,14 @@ export class AggexEngine {
                 });
                 this.recordNodeError(ctx, nodeId, aggexError.toJSON());
                 return new Set<Vertex.Id>();   // fire nobody
-
-            case "propagate": {
+            default:
+            case "propagate":
                 const envelope: AggexEngine.Execution.ErrorEnvelope = {
                     id:    crypto.randomUUID(),
                     error: aggexError.toJSON(),
                     path:  [],
                 };
                 return this.propagateError(ctx, vertexId, envelope);
-            }
-
-            case "terminate":
-            default:
-                throw aggexError;   // S2 → onNodeError → reject ignite
         }
     }
 
@@ -847,23 +845,21 @@ export class AggexEngine {
         const nodeId = vertexId as unknown as Workflow.Node.Id;
 
         // Cycle: the error looped back onto a node already in its own path.
-        if (envelope.path.includes(nodeId)) {
-            throw new CyclicalUncaughtRuntimeNodeError(
-                `Error propagation cycled back onto node "${nodeId}": ${envelope.error.message}`,
+        if (envelope.path.includes(nodeId))
+            throw new CyclicalRuntimeNodeError(
+                `Error cycled back onto node "${nodeId}": ${envelope.error.message}`,
                 [...envelope.path, nodeId] as unknown as string[],
             );
-        }
 
         const outgoing = ctx.workflowCache.outgoingEdgesMap[nodeId];
         const wiredEdgeIds = outgoing ? Object.values(outgoing) : [];
 
         // Terminal: nowhere left to forward → the error was never caught.
-        if (wiredEdgeIds.length === 0) {
+        if (wiredEdgeIds.length === 0)
             throw new UncaughtRuntimeNodeError(
                 `Uncaught node error reached terminal node "${nodeId}": ${envelope.error.message}`,
                 [...envelope.path, nodeId] as unknown as string[],
             );
-        }
 
         // This node is now carrying the error.
         this.recordNodeError(ctx, nodeId, envelope.error);
@@ -880,7 +876,8 @@ export class AggexEngine {
             ctx.errorChannel.set(edgeId, nextEnvelope);
             edgeIdMap[edgeId] = edgeId;
             const edge = ctx.workflowData.edges[edgeId];
-            if (edge) targets.add(edge.target.nodeId as unknown as Vertex.Id);
+            if (edge) 
+                targets.add(edge.target.nodeId as unknown as Vertex.Id);
         }
 
         const edgeStateUpdate = this.session.createEdgeStateUpdate(

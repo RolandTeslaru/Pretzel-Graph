@@ -60,10 +60,10 @@ export class UncaughtRuntimeNodeError extends AggexExecutionError {
  * own propagation path — the error cycled on itself, so the run terminates.
  * `data.path` carries the full loop (the revisited node appended at the end).
  */
-export class CyclicalUncaughtRuntimeNodeError extends AggexExecutionError {
+export class CyclicalRuntimeNodeError extends AggexExecutionError {
     constructor(message: string, path: string[]) {
         super(SystemError.Code.EXECUTION_CYCLIC_ERROR_PROPAGATION, message, { data: { path } })
-        this.name = "CyclicalUncaughtRuntimeNodeError"
-        Object.setPrototypeOf(this, CyclicalUncaughtRuntimeNodeError.prototype)
+        this.name = "CyclicalRuntimeNodeError"
+        Object.setPrototypeOf(this, CyclicalRuntimeNodeError.prototype)
     }
 }
