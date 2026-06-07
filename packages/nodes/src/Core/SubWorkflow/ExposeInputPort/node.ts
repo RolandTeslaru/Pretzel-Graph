@@ -8,13 +8,15 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public readonly Blueprint = Blueprint;
 
-    public injectedData: any;
+    public injectedData: any = null;
 
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
+        // null = "exposed but nothing injected" — a settled-empty value the data
+        // gate treats as arrived. Never emit undefined (that means "still waiting").
         return {
-            output: this.injectedData,
+            output: this.injectedData ?? null,
         };
     }
 }

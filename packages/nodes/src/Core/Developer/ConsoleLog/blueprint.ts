@@ -31,6 +31,7 @@ export const Blueprint = defineBlueprint({
         InputBuilder.Message({
             id: "message",
             displayName: "Message",
+            required: true,
         }),
     ],
     outputs: [

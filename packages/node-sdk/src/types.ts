@@ -37,21 +37,33 @@ export type InferFieldsWithInitial<D> = D extends { fields: infer T }
 
 /**
  * Infer runtime port input values from a Blueprint.
- * 
+ *
  * Uses __reference phantom if present (set by InputBuilder.Message → BaseMessage, etc.)
  * Falls back to initialValue type, then `any`.
+ * Uses __required phantom to make optional ports (required: false, the default) produce
+ * optional keys so callers must handle undefined.
  */
+type _InputKey<K> =
+    K extends { __literalId?: infer Id extends string } ? Id
+    : K extends { id: infer Id extends string } ? Id
+    : never;
+
+type _InputValue<K> =
+    K extends { __reference?: infer V }
+    ? [NonNullable<V>] extends [never]
+    ? (K extends { initialValue: infer IV } ? IV : any)
+    : NonNullable<V>
+    : K extends { initialValue: infer IV } ? IV : any;
+
 export type InferInputs<D> = 0 extends (1 & D) ? any
     : D extends { inputs: infer T }
     ? T extends readonly { id: string }[]
-    ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
-        ? Id
-        : K extends { id: infer Id extends string } ? Id : never
-        ]: K extends { __reference?: infer V }
-        ? [NonNullable<V>] extends [never]
-        ? (K extends { initialValue: infer IV } ? IV : any)
-        : NonNullable<V>
-        : K extends { initialValue: infer IV } ? IV : any
+    ? {
+        // Required inputs — __required phantom is exactly `true`
+        [K in T[number] as K extends { __required?: true } ? _InputKey<K> : never]: _InputValue<K>
+    } & {
+        // Optional inputs — __required is false, absent, or boolean
+        [K in T[number] as K extends { __required?: true } ? never : _InputKey<K>]?: _InputValue<K>
     }
     : never
     : never;

@@ -12,7 +12,7 @@ import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection"
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Execution } from "@pretzel-graph/shared/domain";
 import { FlightRecorderService } from "./flight-recorder-service";
-import { System } from "../system";
+import { System } from "@pretzel-graph/shared/system";
 
 export interface AggexHooks {
     onPause?(): void;
@@ -203,12 +203,10 @@ export class AggexEngine {
 
             const allEdgeIds: Record<string, Workflow.Edge.Id> = {};
 
-            for (const output of node.outputs) {
-                for (const edge of Object.values(ctx.workflowData.edges)) {
+            for (const output of node.outputs)
+                for (const edge of Object.values(ctx.workflowData.edges)) 
                     if (edge.source.nodeId === nodeId && edge.source.portId === output.id)
                         allEdgeIds[edge.id] = edge.id;
-                }
-            }
 
             const edgeStateUpdate = this.session.createEdgeStateUpdate(
                 ctx,
@@ -306,13 +304,18 @@ export class AggexEngine {
                             resolved[input.id] = undefined;
                         continue;
                     }
-
+                    
                     const sourceOutputs = ctx.session.node_output_instances[edge.source.nodeId];
                     if (sourceOutputs) {
                         const rawReference = sourceOutputs[edge.source.portId as string];
-                        if(!rawReference)
+                        // undefined = nothing produced yet (keep waiting).
+                        // null      = produced-but-empty, only ExposeInputPort emits it (settled).
+                        // Keep them distinct; null bypasses ensureReference (which would throw).
+                        if(rawReference === undefined)
                             resolved[input.id] = undefined;
-                        else 
+                        else if(rawReference === null)
+                            resolved[input.id] = null;
+                        else
                             resolved[input.id] = Synthesizer.ensureReference(rawReference, input.variant);
                     }
                     else {
@@ -429,11 +432,11 @@ export class AggexEngine {
                 );
         }
 
-        System.log.debug("node fired", {
-            nodeId:      entry.wfNode.id,
-            blueprint:   entry.wfNode.blueprintId,
-            propagation: entry.instance.getPropagationStrategy(),
-        });
+        // System.log.debug("node fired", {
+        //     name:        entry.wfNode.displayName,
+        //     nodeId:      entry.wfNode.id,
+        //     propagation: entry.instance.getPropagationStrategy(),
+        // });
 
         this.flightRecorder?.onNodeFired(entry.wfNode.id);
 
@@ -522,6 +525,7 @@ export class AggexEngine {
         const fields = nodeInstance.evaluateFields(inputs);
 
         System.log.debug("node executing", {
+            name:           wfNode.displayName,
             nodeId:         wfNode.id,
             dataDependency: dataDependency ?? "OR",
             signals:        [...signals],
@@ -642,6 +646,7 @@ export class AggexEngine {
         });
 
         System.log.info("node completed", {
+            name:        entry.wfNode.displayName,
             nodeId:      entry.wfNode.id,
             outputPorts: projectedOutput ? Object.keys(projectedOutput) : [],
         });
@@ -961,14 +966,19 @@ export class AggexEngine {
         // sibling inputs that will never arrive.
         if (this.findIncomingErrorEnvelope(ctx, vertexId)) return true;
 
-        const signalDepField = instance.fields["signalDependency" as Field.Id];
-        const dataDepField   = instance.fields["dataDependency" as Field.Id];
+        const signalDep = instance.fields["signalDependency" as Field.Id];
+        const dataDep   = instance.fields["dataDependency" as Field.Id];
 
-        if(signalDepField === "AND") return true;
+        if(signalDep === "AND") 
+            return true;
 
-        if(dataDepField === "AND"){
-            // Block until every wired port has data.
-            // "Wired" means an edge physically connects to that port — unwired optional ports are ignored.
+        if(dataDep === "AND"){
+            // Wait only while a wired port has NOT received data yet (=== undefined).
+            //   undefined → nothing produced yet            → keep waiting
+            //   null      → nothing will come               → settled, proceed
+            //   any value → arrived                         → proceed
+            // A router-skipped branch leaves its port undefined and never signals;
+            // the node stays waiting and the engine settles once nothing can run.
             const dependencies       = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
             const incomingInputs     = this.node.getIncomingData(ctx, wfNode.id, dependencies, true);
             const incomingEdgeByPort = ctx.workflowCache.inputHandlesMap[wfNode.id];

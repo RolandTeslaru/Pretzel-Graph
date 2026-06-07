@@ -1,16 +1,4 @@
-/**
- * System — process-wide singleton for cross-cutting concerns in the worker.
- *
- * Currently exposes `System.log` with level methods:
- *
- *   System.log.info("node fired", { nodeId, blueprint })
- *   System.log.warning("swallowed node error", { nodeId })
- *   System.log.error("execution failed", { executionId, err })
- *
- * Output goes to the worker's stdout/stderr. The active level is controlled by
- * the LOG_LEVEL env var (debug < info < warning < error); messages below the
- * threshold are dropped cheaply. Default level is "info".
- */
+// System.log levels gated by LOG_LEVEL env var (debug < info < warning < error). Default: info.
 
 export type LogLevel = "debug" | "info" | "warning" | "error";
 
@@ -32,29 +20,31 @@ const COLOR: Record<LogLevel, string> = {
 const RESET = "\x1b[0m";
 
 class LogService {
-    private threshold: number;
+    /** Explicit override via setLevel(); when null, the level is read from LOG_LEVEL. */
+    private override: LogLevel | null = null;
 
-    constructor() {
+    /** Resolved per-call so it survives dotenv loading after this module is imported. */
+    private get threshold(): number {
+        if (this.override) return LEVEL_ORDER[this.override];
         const envLevel = (process.env.LOG_LEVEL ?? "info").trim().toLowerCase() as LogLevel;
-        this.threshold = LEVEL_ORDER[envLevel] ?? LEVEL_ORDER.info;
+        return LEVEL_ORDER[envLevel] ?? LEVEL_ORDER.info;
     }
 
-    /** Change the active level at runtime. */
+    /** Force a level at runtime, ignoring LOG_LEVEL. */
     public setLevel(level: LogLevel): void {
-        this.threshold = LEVEL_ORDER[level];
+        this.override = level;
     }
 
     private write(level: LogLevel, msg: string, meta?: Meta): void {
         if (LEVEL_ORDER[level] < this.threshold) return;
 
         const tag  = `${COLOR[level]}[${level.toUpperCase()}]${RESET}`;
-        const time = new Date().toISOString();
         const sink = level === "error" ? console.error : level === "warning" ? console.warn : console.log;
 
         if (meta && Object.keys(meta).length > 0)
-            sink(`${tag} ${time} ${msg}`, meta);
+            sink(`${tag} ${msg}`, meta);
         else
-            sink(`${tag} ${time} ${msg}`);
+            sink(`${tag} ${msg}`);
     }
 
     public debug   = (msg: string, meta?: Meta) => this.write("debug",   msg, meta);

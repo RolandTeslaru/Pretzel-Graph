@@ -18,7 +18,15 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const incoming = Array.isArray(append) ? append.flat() : append != null ? [append] : [];
 
-        const newState = [...previousState, ...incoming];
+        let newState = [...previousState, ...incoming];
+
+        if (overwrite !== undefined) {
+            if (Array.isArray(overwrite)) {
+                newState = [... overwrite]
+            } else {
+                newState = overwrite != null ? [overwrite] : [];
+            }
+        }
 
         return {
             state: newState,

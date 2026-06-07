@@ -100,61 +100,75 @@ export const Blueprint = defineBlueprint({
         InputBuilder.Message({
             id: "messageInput",
             displayName: "Message Input",
+            required: true,
         }),
         InputBuilder.LanguageModel({
             id: "languageModelInput",
             displayName: "Language Model Input",
+            required: true,
         }),
         InputBuilder.Document({
             id: "documentInput",
             displayName: "Document Input",
+            required: true,
         }),
         InputBuilder.Retriever({
             id: "retrieverInput",
             displayName: "Retriever Input",
+            required: true,
         }),
         InputBuilder.Embeddings({
             id: "embeddingsInput",
             displayName: "Embeddings Input",
+            required: true,
         }),
         InputBuilder.VectorStore({
             id: "vectorStoreInput",
             displayName: "Vector Store Input",
+            required: true,
         }),
         InputBuilder.Tool({
             id: "toolInput",
             displayName: "Tool Input",
+            required: true,
         }),
         InputBuilder.Unresolved({
             id: "unresolvedInput",
             displayName: "Unresolved Input",
             polymorphicGroupId: "unresolvedGroup",
+            required: true,
         }),
         InputBuilder.UnresolvedScalar({
             id: "unresolvedScalarInput",
             displayName: "Unresolved Scalar Input",
             polymorphicGroupId: "unresolvedScalarGroup",
+            required: true,
         }),
         InputBuilder.UnresolvedList({
             id: "unresolvedListInput",
             displayName: "Unresolved List Input",
             polymorphicGroupId: "unresolvedListGroup",
+            required: true,
         }),
         InputBuilder.ToolList({
             id: "toolListInput",
             displayName: "Tool List Input",
+            required: true,
         }),
         InputBuilder.MessageList({
             id: "messageListInput",
             displayName: "Message List Input",
+            required: true,
         }),
         InputBuilder.Data({
             id: "dataInput",
             displayName: "Data Input",
+            required: true,
         }),
         InputBuilder.DataList({
             id: "dataListInput",
             displayName: "Data List Input",
+            required: true,
         }),
     ],
     outputs: [
