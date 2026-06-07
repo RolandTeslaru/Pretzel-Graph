@@ -8,6 +8,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import { Dialog, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import NodeSidebar from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/NodePanel'
 import ChatSidebar from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatSidebar'
+import AssistantSidebar from '@/routes/workflow/-SDKs/AssistantSDK/ui/AssistantSidebar'
 import SpotlightSearch from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/SpotlightSearch'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { DialogSDK } from '@/SDKs/DialogSDK'
@@ -183,6 +184,7 @@ function WorkflowLayoutComponent() {
                 <ShelfSidebar />
                 <WorkflowCanvas />
                 <ChatSidebar />
+                <AssistantSidebar />
                 <NodeSidebar />
                 <UoWInspectorSidebar />
                 <BottomPanel />

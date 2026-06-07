@@ -12,11 +12,8 @@ export const nodeReducers = {
     // Lifecycle: create / remove / recreate / duplicate / reconcile / wipe / disconnect
     // + validate / clearIssues (kept here since lifecycle is their primary consumer).
     ...nodeLifecycleReducers,
-
-    // Static value + credential seeding.
     ...nodeValueReducers,
 
-    // Polymorphic port-group resolution (distinct regime → namespaced).
     polymorphism: nodePolymorphismReducers,
 
     // --- meta setters ---

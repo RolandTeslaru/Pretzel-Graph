@@ -102,6 +102,14 @@ export const buttonVariants = cva(
           hover:bg-amber-400/20 hover:text-amber-800 dark:hover:text-amber-300
           aria-expanded:bg-amber-400/20 aria-expanded:text-amber-800
           dark:aria-expanded:bg-amber-500/20 dark:aria-expanded:text-amber-300
+        `,
+        "language-model": `
+          shadow-none border-transparent text-[var(--port-LanguageModel-foreground)]
+          bg-[color-mix(in_srgb,var(--port-LanguageModel)_20%,transparent)]
+          hover:bg-[color-mix(in_srgb,var(--port-LanguageModel)_32%,transparent)]
+          aria-expanded:bg-[color-mix(in_srgb,var(--port-LanguageModel)_32%,transparent)]
+          focus-visible:ring-[color-mix(in_srgb,var(--port-LanguageModel)_30%,transparent)]
+          focus-visible:border-[color-mix(in_srgb,var(--port-LanguageModel)_40%,transparent)]
         `
       },
       size: {
