@@ -1,5 +1,5 @@
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
-import { Button } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 import React, { memo } from 'react'
@@ -95,7 +95,10 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
 
 
 const ToolButton: React.FC<Props> = memo(({ node }) => {
-    const isTool = WorkbenchSDK.useStore(s => s.selectors.node.isTool(s, node.id));
+    const [isTool, isReconciling] = WorkbenchSDK.useStore(s => [
+        s.selectors.node.isTool(s, node.id),
+        s.selectors.field.isReconciling(s, node.id, "isConvertedToTool" as Field.Id)
+    ]);
 
     return (
         <Tipped label={isTool ? "Revert to node" : "Convert to tool"}>
@@ -104,8 +107,9 @@ const ToolButton: React.FC<Props> = memo(({ node }) => {
                     if (isTool) WorkbenchSDK.actions.tool.revert(node.id);
                     else WorkbenchSDK.actions.tool.convert(node.id);
                 }}
+                disabled={isReconciling}
             >
-                <SystemIcons.Hammer />
+                {isReconciling ? <Spinner /> : <SystemIcons.Hammer />}
             </Button>
         </Tipped>
     );

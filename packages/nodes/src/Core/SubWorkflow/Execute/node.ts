@@ -2,7 +2,8 @@ import { RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Execution, Workflow } from "@pretzel-graph/shared/domain";
-import { AggexEngine, CompilationContext, extendCompilePath } from "@pretzel-graph/worker";
+import { AggexEngine, WorkflowCompiler } from "@pretzel-graph/worker";
+import { System } from "@pretzel-graph/shared/system";
 import { Node as ExposeInputPortNode } from "../ExposeInputPort/node";
 
 @RegisterNode(Blueprint.id)
@@ -10,7 +11,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     /** ExposeOutputPort nodes propagate parent outputs directly via enclosingNodeAPI
      *  as they fire — suppress automatic fan-out so the engine doesn't double-signal. */
-    public override getPropagationStrategy() { return "none" as const }
+    protected override PROPAGATION_STRATEGY = "none" as const
 
     public readonly Blueprint = Blueprint;
 
@@ -22,14 +23,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
 
     protected override async onCompile(
-        compilationContext: CompilationContext,
+        compilationCtx: WorkflowCompiler.Compilation.Context,
     ): Promise<void> {
-        const { compilePath } = compilationContext;
+        const { compilePath, parentWorkflowIgniter } = compilationCtx;
         const subWorkflowId  = this.workflowNode.dependency?.workflowId as Workflow.Id;
         const dependencyMode = this.workflowNode.dependency?.mode ?? "publication";
-
-        console.log(`[ExecuteSubWorkflow:onCompile] nodeId=${this.workflowNode.id} dependency=${JSON.stringify(this.workflowNode.dependency)} resolved subWorkflowId=${subWorkflowId}`);
-        console.log(`[ExecuteSubWorkflow:onCompile] compilePath=${compilePath.join(" -> ")}`);
 
         if (compilePath.includes(subWorkflowId)) {
             const cyclePath = [...compilePath, subWorkflowId];
@@ -45,20 +43,25 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             ? structuredClone(this.context.dependencyAPI.getDraft(subWorkflowId).workflow_data)
             : structuredClone(this.context.dependencyAPI.getPublished(subWorkflowId).workflow_data);
 
-        console.log(`[ExecuteSubWorkflow:onCompile] mode=${dependencyMode} dependency resolved for subWorkflowId=${subWorkflowId}`);
+        const record = parentWorkflowIgniter ? parentWorkflowIgniter.record : false;
 
-        const childCompilationCtx = extendCompilePath(compilationContext, subWorkflowId);
+        const igniter = {
+            variant: "sub_workflow",
+            parentNodeId: this.workflowNode.id,
+            subWorkflowPath: [...compilePath, subWorkflowId],
+            record
+        } satisfies Execution.Igniter;
+
+        const childCompilationCtx = {
+            compilePath: [...compilePath, subWorkflowId],
+            parentWorkflowIgniter: igniter,
+        }
 
         const subExecution: Execution = {
             id:          this.context.executionId,
             workflow_id: subWorkflowId,
             recording:   null,
-            igniter:     {
-                variant: "sub_workflow",
-                parentNodeId: this.workflowNode.id,
-                subWorkflowPath: [...compilePath, subWorkflowId],
-                record: false
-            },
+            igniter,
             status:      "running",
             duration:    0,
             session:     this.context.session,
@@ -80,7 +83,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         this.injectWorkflowConfigValues(childWorkflowData);
 
-        console.log(`[ExecuteSubWorkflow:onCompile] compiling sub-workflow subWorkflowId=${subWorkflowId}`);
         this.subEngineCtx = await this.subEnvironment.compile(
             subWorkflowId,
             childWorkflowData,
@@ -89,7 +91,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             childCompilationCtx,
             enclosingNodeAPI,
         ) as AggexEngine.ExecutionContext;
-        console.log(`[ExecuteSubWorkflow:onCompile] done — nodes=${Object.keys(this.subEngineCtx.workflowData.nodes).length}`);
     }
 
 
@@ -97,21 +98,20 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        console.log(`[ExecuteSubWorkflow:onRun] nodeId=${this.workflowNode.id} inputs keys=${Object.keys(inputs).join(", ")}`);
 
         this.injectInputNodeValues(inputs);
 
         try {
-            console.log(`[ExecuteSubWorkflow:onRun] running sub-environment`);
             await this.subEnvironment.run(this.subEngineCtx);
 
             // getPropagationStrategy() returns "none" — ExposeOutputPort nodes propagate
             // parent outputs via enclosingNodeAPI as they fire; returning {} here avoids
             // a second fan-out signal from the engine on completion.
-            console.log(`[ExecuteSubWorkflow:onRun] sub-environment finished successfully`);
             return {};
         } catch (err) {
-            console.error(`[ExecuteSubWorkflow:onRun] sub-environment threw:`, err);
+            System.log.error("[ExecuteSubWorkflow:onRun] sub-environment threw", {
+                error: err instanceof Error ? err.message : String(err),
+            });
             throw new Error(`Error executing sub-workflow: ${err instanceof Error ? err.message : String(err)}`);
         }
     }
@@ -135,7 +135,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
             const exposeNodeId = instance.fields.exposed_port_id;
             const dynamicInputs = inputs as Record<string, unknown>;
-            console.log(`[ExecuteSubWorkflow:onRun] injecting exposed_port_id=${exposeNodeId} value=${JSON.stringify(dynamicInputs[exposeNodeId])?.slice(0, 100)}`);
+            System.log.debug("[ExecuteSubWorkflow:onRun] injecting exposed input port", {
+                exposed_port_id: exposeNodeId,
+                value:           JSON.stringify(dynamicInputs[exposeNodeId])?.slice(0, 100),
+            });
             instance.injectedData = dynamicInputs[exposeNodeId];
         }
     }

@@ -7,11 +7,12 @@ import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 import type { Workflow } from '@pretzel-graph/shared/domain';
 
 export interface FieldSelectors {
-    get:       (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Field | null
-    getValue:  (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Field.Value | null
-    getValues: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Field.Id, any>
-    condition: ConditionSelectors
-    caseList:  CaseListSelectors
+    get            : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Field | null
+    getValue       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Field.Value | null
+    getValues      : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Field.Id, any>
+    isReconciling  : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => boolean
+    condition      : ConditionSelectors
+    caseList       : CaseListSelectors
 }
 
 export const fieldSelectors = {
@@ -22,6 +23,7 @@ export const fieldSelectors = {
         return node.fields.find(f => f.id === fieldId) ?? null;
     },
     getValue: (s, nodeId, fieldId) => s.data.staticValues[nodeId]?.[fieldId] ?? null,
+    isReconciling: (s, nodeId, fieldId) => s.reconcilingFields[nodeId]?.has(fieldId) ?? false,
     getValues: (s, nodeId) => {
         const staticValues = s.data.staticValues[nodeId]
         if (!staticValues)

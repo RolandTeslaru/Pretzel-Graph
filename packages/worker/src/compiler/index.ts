@@ -36,15 +36,9 @@ export class WorkflowCompiler {
         graph.addVertex(S2Graph.START_VERTEX_ID);
 
         //
-        // Build contexts
+        // Build APIs
         //
         
-        const abortController = new AbortController();
-        
-        const updateSession = (r: (draft: Execution.Session) => void) => {
-            execution.session = produce(execution.session, r);
-        };
-
         let engineExecutionCtx!: AggexEngine.Execution.Context;
 
         const portAPI = {
@@ -134,6 +128,18 @@ export class WorkflowCompiler {
             getDecryptedValue: (blob) => decryptCredentialBlob(blob) as any,
         };
 
+        const abortController = new AbortController();
+        
+        const abortAPI = {
+            signal: abortController.signal,
+            abort:  (reason?: any) => abortController.abort(reason),
+        }
+
+        const updateSession = (r: (draft: Execution.Session) => void) => {
+            execution.session = produce(execution.session, r);
+        };
+
+
         const nodeExecutionCtx = {
             executionId: execution.id,
             workflowId,
@@ -142,10 +148,7 @@ export class WorkflowCompiler {
             workflowCache,
             get session() { return execution.session; },
             emit,
-            abortAPI: {
-                signal: abortController.signal,
-                abort:  (reason?: any) => abortController.abort(reason),
-            },
+            abortAPI,
             updateSession,
             portAPI,
             propagationAPI,
@@ -166,10 +169,7 @@ export class WorkflowCompiler {
             workflowCache,
             get session() { return execution.session; },
             emit,
-            abortAPI: {
-                signal: abortController.signal,
-                abort:  (reason?: any) => abortController.abort(reason),
-            },
+            abortAPI,
             updateSession,
             compiledGraph: graph,
             activeNodes: new Set(),
@@ -328,6 +328,7 @@ export namespace WorkflowCompiler {
     export namespace Compilation {
         export interface Context {
             compilePath: readonly Workflow.Id[];
+            parentWorkflowIgniter?: Execution.Igniter;
         }
     }
 
@@ -338,10 +339,10 @@ export function createCompilationContext(rootId: Workflow.Id): WorkflowCompiler.
 }
 
 export function extendCompilePath(
-    ctx: WorkflowCompiler.Compilation.Context,
+    compilePath: WorkflowCompiler.Compilation.Context["compilePath"],
     nextId: Workflow.Id,
 ): WorkflowCompiler.Compilation.Context {
     return {
-        compilePath: [...ctx.compilePath, nextId],
+        compilePath: [...compilePath, nextId],
     };
 }

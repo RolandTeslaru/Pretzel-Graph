@@ -29,8 +29,10 @@ export abstract class RuntimeNode<
      *  - "all"    — signal every downstream dependent (default)
      *  - "router" — signal only dependents connected to ports present in the result
      *  - "none"   — suppress automatic fan-out entirely (node handled propagation itself) */
+    protected PROPAGATION_STRATEGY: RuntimeNode.PropagationStrategy = "all"
+
     public getPropagationStrategy(): RuntimeNode.PropagationStrategy {
-        return "all"
+        return this.PROPAGATION_STRATEGY
     }
 
 

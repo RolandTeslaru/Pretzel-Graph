@@ -6,7 +6,7 @@ import { Expression, Foundations } from "@pretzel-graph/shared/domain";
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    public override getPropagationStrategy() { return "router" as const }
+    protected override PROPAGATION_STRATEGY = "router" as const
 
     public readonly Blueprint = Blueprint;
 

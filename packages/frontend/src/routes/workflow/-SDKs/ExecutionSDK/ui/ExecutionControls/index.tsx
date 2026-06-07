@@ -31,7 +31,7 @@ const ExecutionControls = ({ canRun }: Props) => {
   let status = "idle"
   if (currentExecution) {
     const executionStatus = currentExecution.status;
-    if (executionStatus === "failed" || executionStatus === "completed") {
+    if (executionStatus === "failed" || executionStatus === "completed" || executionStatus === "terminated") {
       status = executionStatus;
     } else if (executionStatus === "paused") {
       status = "paused";

@@ -10,8 +10,9 @@ export function createToolActions(sdk: WorkbenchSDKImpl, fieldActions: FieldActi
         convert: async (nodeId) => {
             try {
                 const field = sel.field.get(sdk.state, nodeId, "isConvertedToTool" as Field.Id);
-                if (!field) throw new Error(`Node does not have an isConvertedToTool field — is it toolCompatible?`);
-                await fieldActions.setValue(nodeId, field, true);
+                if (!field) 
+                    throw new Error(`Node does not have an isConvertedToTool field — is it toolCompatible?`);
+                fieldActions.setValue(nodeId, field, true);
             } catch (error) {
                 throw new Error(`Could not convert node ${nodeId} to tool. ${error instanceof Error ? error.message : String(error)}`);
             }
@@ -19,8 +20,9 @@ export function createToolActions(sdk: WorkbenchSDKImpl, fieldActions: FieldActi
         revert: async (nodeId) => {
             try {
                 const field = sel.field.get(sdk.state, nodeId, "isConvertedToTool" as Field.Id);
-                if (!field) throw new Error(`Node does not have an isConvertedToTool field — is it toolCompatible?`);
-                await fieldActions.setValue(nodeId, field, false);
+                if (!field) 
+                    throw new Error(`Node does not have an isConvertedToTool field — is it toolCompatible?`);
+                fieldActions.setValue(nodeId, field, false);
             } catch (error) {
                 throw new Error(`Could not revert node ${nodeId} from tool. ${error instanceof Error ? error.message : String(error)}`);
             }
