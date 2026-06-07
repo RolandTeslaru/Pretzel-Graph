@@ -1,6 +1,7 @@
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import TemporalControls from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/TemporalControls'
 import ChatButton from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatButton'
+import AssistantButton from '@/routes/workflow/-SDKs/AssistantSDK/ui/AssistantButton'
 import ExecutionControls from '@/routes/workflow/-SDKs/ExecutionSDK/ui/ExecutionControls'
 import ErrorViewer from '@/routes/workflow/-SDKs/ExecutionSDK/ui/ErrorViewer'
 import IssuesViewer from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/IssuesViewer'
@@ -37,6 +38,7 @@ export const BottomPanel = () => {
             <motion.div layout transition={{ layout: { type: "spring", stiffness: 400, damping: 30 } }} className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/80 backdrop-blur-sm border border-border overflow-visible'>
                 <TemporalControls />
                 <ChatButton />
+                <AssistantButton />
                 <ExecutionControls canRun={!hasIssues} />
 
                 <AnimatePresence>
