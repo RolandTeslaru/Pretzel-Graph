@@ -77,7 +77,7 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                         ) : (
                             <Tipped label="Expand">
                                 <Button size="icon-xs" variant="ghost" onClick={() => WorkbenchSDK.actions.ui.openNodePanelFullscreen()}>
-                                    <SystemIcons.Expand />
+                                    <SystemIcons.Maximize2 />
                                 </Button>
                             </Tipped>
                         )}
