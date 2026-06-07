@@ -10,7 +10,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     // signal only the passthrough branch, never the `onError` branch.
     // The error path is engine-driven via `flags.catchesError` (writes `onError`,
     // emits only that branch, swallows the envelope) and does not call onRun.
-    public override getPropagationStrategy() { return "router" as const }
+    protected override PROPAGATION_STRATEGY = "router" as const
 
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,

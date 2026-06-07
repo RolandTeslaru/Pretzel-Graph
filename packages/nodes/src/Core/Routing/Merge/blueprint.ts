@@ -12,6 +12,13 @@ export const Blueprint = defineBlueprint({
             displayName: "Input Ports",
             groupId: "variadic_inputs_1",
         }),
+        FieldBuilder.Integer({
+            id: "flattenDepth",
+            displayName: "Flatten Depth",
+            initialValue: 1,
+            min: 0,
+            max: 10
+        }),
     ],
     inputs: [
         InputBuilder.UnresolvedList({

@@ -1,6 +1,6 @@
 import { ShelfSDK } from "../../../ShelfSDK/sdk";
 import type { WorkbenchSDKImpl, WorkbenchSDK } from "../../sdk";
-import { debouncedValidateField, withAsyncCommit, withCommit, withCyclesRecompute } from "../../utils/actions";
+import { createToastPromise, debouncedValidateField, withAsyncCommit, withCommit, withCyclesRecompute } from "../../utils/actions";
 import type { NodeActions } from "../node";
 import type { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import type { DropFirstArg } from "@/SDKs/types";
@@ -38,12 +38,19 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
 
                     const fieldValues = sel.field.getValues(sdk.state, nodeId);
 
-                    const reconciledBlueprint = await ShelfSDK.actions.getReconciledBlueprint(
-                        blueprint, field.id, value, fieldValues,
-                        {
-                            onApiFetch: () => {
-                                setState(s => { reducers.field.markAsReconciling(s, nodeId, field.id) })
+                    const reconciledBlueprint = await createToastPromise(
+                        ShelfSDK.actions.getReconciledBlueprint(
+                            blueprint, field.id, value, fieldValues,
+                            {
+                                onApiFetch: () => {
+                                    setState(s => { reducers.field.markAsReconciling(s, nodeId, field.id) })
+                                }
                             }
+                        ),
+                        {
+                            loading : `Reconciling node ${nodeId}`,
+                            success : `Node reconciled`,
+                            error   : (e: any) => e instanceof Error ? e.message : String(e),
                         }
                     );
 

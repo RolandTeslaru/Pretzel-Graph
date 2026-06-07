@@ -1,4 +1,4 @@
 export * from "./errors";
 export * from "./engine/index";
-export { CompilationContext, extendCompilePath } from "./compiler/context";
-
+export {  extendCompilePath } from "./compiler/context";
+export { WorkflowCompiler } from "./compiler/index";
