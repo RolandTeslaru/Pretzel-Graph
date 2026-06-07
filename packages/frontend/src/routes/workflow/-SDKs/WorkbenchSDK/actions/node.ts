@@ -44,6 +44,32 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             
             setState(withCyclesRecompute(s => { reducers.node.recreate(s, nodeId, blueprint)}));
         }),
+        recreateAll:       withAsyncCommit( async () => {
+            const s = sdk.state;
+            const nodes = Object.values(s.data.nodes);
+
+            // Nodes with a dependency (e.g. an attached subworkflow) derive their shape from
+            // that dependency, not a static blueprint, so they can't be blindly recreated — skip them.
+            const recreatable = nodes.filter(n => !n.dependency);
+
+            // Hydrate each distinct blueprint once (parallel), so we recreate from fresh blueprints.
+            const blueprintIds = [...new Set(recreatable.map(n => n.blueprintId))];
+            await Promise.all(blueprintIds.map(id => ShelfSDK.actions.hydrateBlueprint(id)));
+
+            const blueprints = ShelfSDK.state.blueprints;
+
+            // Run every recreate in a single commit + cycles recompute → one undo step.
+            setState(withCyclesRecompute(s => {
+                for (const node of recreatable) {
+                    const blueprint = blueprints[node.blueprintId];
+                    if (!blueprint) {
+                        console.error(`Skipping recreate for ${node.id}: blueprint ${node.blueprintId} failed to hydrate`);
+                        continue;
+                    }
+                    reducers.node.recreate(s, node.id, blueprint);
+                }
+            }));
+        }),
         create:        withAsyncCommit( async (...props) => { 
             const blueprint = props[0];
 
@@ -94,5 +120,6 @@ export type NodeActions = {
     validate            : DropFirstArg<WorkbenchSDK.Reducers['node']['validate']>;
     clearIssues         : DropFirstArg<WorkbenchSDK.Reducers['node']['clearIssues']>;
     recreate            : (nodeId: Workflow.Node.Id) => void;
+    recreateAll         : () => void;
     setCredential       : DropFirstArg<WorkbenchSDK.Reducers['node']['setCredential']>;
 };
