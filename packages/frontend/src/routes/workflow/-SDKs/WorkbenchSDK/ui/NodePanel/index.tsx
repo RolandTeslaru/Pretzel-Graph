@@ -165,7 +165,7 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
                                 </div>
                             ))}
                         </SidebarAccordionItem>
-                    <SidebarAccordionItem label='Execution Strategy' value='execution-strategy'>
+                    <SidebarAccordionItem label='Execution Behavior' value='execution-strategy'>
                         {executionStrategyFields.map(field => field.hidden ? null : (
                             <div key={field.id} className='px-4 py-2'>
                                 <FieldRenderer field={field} nodeId={node.id} />

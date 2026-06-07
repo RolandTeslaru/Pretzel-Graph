@@ -55,16 +55,16 @@ type _InputValue<K> =
     : NonNullable<V>
     : K extends { initialValue: infer IV } ? IV : any;
 
+type _InferInputsRaw<T extends readonly { id: string }[]> = {
+    [K in T[number] as K extends { __required?: true } ? _InputKey<K> : never]: _InputValue<K>
+} & {
+    [K in T[number] as K extends { __required?: true } ? never : _InputKey<K>]?: _InputValue<K>
+};
+
 export type InferInputs<D> = 0 extends (1 & D) ? any
     : D extends { inputs: infer T }
     ? T extends readonly { id: string }[]
-    ? {
-        // Required inputs — __required phantom is exactly `true`
-        [K in T[number] as K extends { __required?: true } ? _InputKey<K> : never]: _InputValue<K>
-    } & {
-        // Optional inputs — __required is false, absent, or boolean
-        [K in T[number] as K extends { __required?: true } ? never : _InputKey<K>]?: _InputValue<K>
-    }
+    ? { [K in keyof _InferInputsRaw<T>]: _InferInputsRaw<T>[K] }
     : never
     : never;
 

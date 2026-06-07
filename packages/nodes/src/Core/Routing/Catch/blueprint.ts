@@ -18,7 +18,7 @@ export const Blueprint = defineBlueprint({
         OutputBuilder.Unresolved({
             id: "passthrough",
             displayName: "Passthrough",
-            polymorphicGroupId: "catch_passthrough",
+        polymorphicGroupId: "catch_passthrough",
         }),
         OutputBuilder.Data({
             id: "onError",

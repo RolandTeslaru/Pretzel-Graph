@@ -1,6 +1,6 @@
 {
-  "version": "1780826471962",
-  "generatedAt": "2026-06-07T10:01:11.962Z",
+  "version": "1780864100825",
+  "generatedAt": "2026-06-07T20:28:20.825Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -34,7 +34,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -45,19 +45,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -70,17 +70,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -156,7 +156,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -167,19 +167,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -192,17 +192,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -272,7 +272,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -283,19 +283,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -308,17 +308,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -542,7 +542,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -553,19 +553,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -578,17 +578,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -865,7 +865,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -876,19 +876,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -901,17 +901,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -983,7 +983,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -994,19 +994,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -1019,17 +1019,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -1103,7 +1103,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -1114,19 +1114,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -1139,17 +1139,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -1265,7 +1265,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -1276,19 +1276,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -1301,17 +1301,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -1408,7 +1408,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -1419,19 +1419,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -1444,17 +1444,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -1527,7 +1527,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -1538,19 +1538,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -1563,17 +1563,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -1648,7 +1648,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -1659,19 +1659,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -1684,17 +1684,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -1755,6 +1755,29 @@
       "credentials": [],
       "fields": [
         {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
           "id": "signalDependency",
           "advanced": false,
           "required": false,
@@ -1777,30 +1800,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -1813,17 +1813,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -1907,7 +1907,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -1918,19 +1918,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -1943,17 +1943,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -2051,7 +2051,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -2062,19 +2062,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -2087,17 +2087,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -2191,7 +2191,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -2202,19 +2202,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -2227,17 +2227,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -2321,7 +2321,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -2332,19 +2332,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -2357,17 +2357,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -2460,7 +2460,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -2471,19 +2471,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -2496,17 +2496,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -2571,7 +2571,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -2582,19 +2582,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -2607,17 +2607,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -2756,7 +2756,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -2767,19 +2767,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -2792,17 +2792,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -2965,7 +2965,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -2976,19 +2976,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -3001,17 +3001,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -3091,7 +3091,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -3102,19 +3102,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -3127,17 +3127,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -3203,7 +3203,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -3214,19 +3214,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -3239,17 +3239,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -3302,7 +3302,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -3313,19 +3313,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -3338,17 +3338,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -3403,7 +3403,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -3414,19 +3414,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -3439,17 +3439,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -3519,7 +3519,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -3530,19 +3530,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -3555,17 +3555,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -3648,7 +3648,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -3659,19 +3659,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -3684,17 +3684,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -3778,7 +3778,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -3789,19 +3789,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -3814,17 +3814,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -3908,7 +3908,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -3919,19 +3919,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -3944,17 +3944,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -4025,7 +4025,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -4036,19 +4036,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -4061,17 +4061,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -4147,7 +4147,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -4158,19 +4158,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -4183,17 +4183,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -4326,7 +4326,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -4337,19 +4337,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -4362,17 +4362,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -4562,7 +4562,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -4573,19 +4573,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -4598,17 +4598,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -4798,7 +4798,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -4809,19 +4809,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -4834,17 +4834,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -4918,7 +4918,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -4929,19 +4929,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -4954,17 +4954,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -5128,7 +5128,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -5139,19 +5139,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -5164,17 +5164,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -5368,7 +5368,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -5379,19 +5379,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -5404,17 +5404,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -5550,7 +5550,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -5561,19 +5561,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -5586,17 +5586,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -5680,7 +5680,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -5691,19 +5691,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -5716,17 +5716,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -5861,7 +5861,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -5872,19 +5872,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -5897,17 +5897,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -6050,7 +6050,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -6061,19 +6061,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -6086,17 +6086,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -6254,7 +6254,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -6265,19 +6265,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -6290,17 +6290,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -6515,7 +6515,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -6526,19 +6526,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -6551,17 +6551,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -6711,7 +6711,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -6722,19 +6722,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -6747,17 +6747,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -6948,7 +6948,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -6959,19 +6959,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -6984,17 +6984,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -7168,7 +7168,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -7179,19 +7179,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -7204,17 +7204,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -7305,7 +7305,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -7316,19 +7316,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -7341,17 +7341,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -7527,7 +7527,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -7538,19 +7538,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -7563,17 +7563,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -7709,7 +7709,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -7720,19 +7720,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -7745,17 +7745,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -7867,7 +7867,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -7878,19 +7878,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -7903,17 +7903,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -8025,7 +8025,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -8036,19 +8036,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -8061,17 +8061,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -8223,7 +8223,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -8234,19 +8234,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -8259,17 +8259,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -8414,7 +8414,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -8425,19 +8425,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -8450,17 +8450,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",
@@ -8515,7 +8515,7 @@
             {
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal; rejects if two or more arrive at once."
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
             }
           ],
           "kind": "select"
@@ -8526,19 +8526,19 @@
           "required": false,
           "reconcile": false,
           "displayName": "Data Dependency",
-          "tooltip": "Determines how incoming data dependencies are evaluated to trigger node execution.",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
           "variant": "MultiOption",
           "initialValue": "AND",
           "options": [
             {
               "value": "AND",
-              "displayName": "(AND) All data dependencies must be ready",
-              "description": "Wait until every wired input port has data before reading inputs."
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
             },
             {
               "value": "OR",
-              "displayName": "(OR) At least one data dependency ready",
-              "description": "Read inputs as soon as any wired port has data."
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"
@@ -8551,17 +8551,17 @@
           "displayName": "On Error",
           "tooltip": "What happens when this node's execution throws.",
           "variant": "MultiOption",
-          "initialValue": "terminate",
+          "initialValue": "propagate",
           "options": [
             {
               "value": "terminate",
               "displayName": "Terminate workflow",
-              "description": "Fail the whole run (default)."
+              "description": "Fail the whole run."
             },
             {
               "value": "propagate",
               "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges until a Catch node handles it — or it reaches a node with no outputs and terminates."
+              "description": "Forward the error along outgoing edges."
             },
             {
               "value": "do_nothing",

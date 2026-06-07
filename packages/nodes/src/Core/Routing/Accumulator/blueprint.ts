@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { dataDependencyStrategyField, defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.Accumulator",
@@ -7,6 +7,10 @@ export const Blueprint = defineBlueprint({
     icon: "GitPullRequestArrow",
     accent: "group-routing",
     fields: [
+        {
+            ...dataDependencyStrategyField,
+            initialValue: "OR"
+        }
     ],
     inputs: [
         InputBuilder.UnresolvedList({
