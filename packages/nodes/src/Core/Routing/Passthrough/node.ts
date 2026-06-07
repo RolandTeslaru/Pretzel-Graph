@@ -5,7 +5,7 @@ import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    public override getPropagationStrategy() { return "router" as const }
+    protected override PROPAGATION_STRATEGY = "router" as const
 
     public readonly Blueprint = Blueprint;
 
@@ -17,7 +17,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         for (const [key, value] of Object.entries(inputs)) {
             const index = key.replace("input_", "");
-            result[`output_${index}`] = value;
+            // never emit undefined (means "still waiting"), but allow null (means "exposed but nothing injected")
+            result[`output_${index}`] = value ?? null;
         }
 
         return result as InferOutputs<typeof Blueprint>;

@@ -17,11 +17,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         
         const toolList: LC.Tool[] = [];
 
-        Object.entries(inputs).forEach(([key, value]) => {
+        Object.entries(inputs).filter(([_, value]) => !!value).forEach(([key, value]) => {
             toolList.push(...value);
         });
 
-        // Implement ToolDictionary node logic here
         return {
             tool_list: toolList,
         };

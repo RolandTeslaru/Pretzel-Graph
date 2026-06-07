@@ -138,20 +138,31 @@ export class S2Engine {
 
             if(this.ctx.settled) return;
 
-            const signals = this.ctx.accumulatedSignals.get(dep)!;
+            try {
+                const signals = this.ctx.accumulatedSignals.get(dep)!;
 
-            if(this.canVertexRun(dep)){
-                const firingSignals = new Set(signals);
-                signals.clear();
-                this.fireVertex(dep, firingSignals);
-            } 
-            else {
-                const allDeps = this.ctx.graph.dependenciesMap.get(dep)!;
-                const resolutionMap: Record<Vertex.Id, boolean> = {};
-                for (const depId of allDeps) {
-                    resolutionMap[depId] = signals.has(depId);
+                if(this.canVertexRun(dep)){
+                    const firingSignals = new Set(signals);
+                    signals.clear();
+                    this.fireVertex(dep, firingSignals);
                 }
-                this.ctx.hooks.onVertexWaiting?.(dep, new Set(signals), resolutionMap, allDeps.size);
+                else {
+                    const allDeps = this.ctx.graph.dependenciesMap.get(dep)!;
+                    const resolutionMap: Record<Vertex.Id, boolean> = {};
+                    for (const depId of allDeps) {
+                        resolutionMap[depId] = signals.has(depId);
+                    }
+                    this.ctx.hooks.onVertexWaiting?.(dep, new Set(signals), resolutionMap, allDeps.size);
+                }
+            } catch (err) {
+                // A throw in canVertexRun / onVertexFired / onVertexWaiting would
+                // otherwise escape this microtask as an uncaught exception and kill
+                // the whole worker process. Reject the run so it fails as a job.
+                if (!this.ctx.settled) {
+                    this.ctx.settled = true;
+                    this.ctx.hooks.onVertexError?.(dep, err);
+                    this.ctx.reject(err);
+                }
             }
         })
     }

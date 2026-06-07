@@ -29,7 +29,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             ? inputs.languageModel.bindTools(inputs.tools)
             : inputs.languageModel;
 
-        const messages = [systemMessage, ...inputs.messages].filter(Boolean);
+        const messages = [systemMessage, ...inputs.messages].filter((m): m is LC.BaseMessage => m != null);
 
         const stream = await languageModel.stream(messages, {
             signal: this.context.abortAPI.signal,
