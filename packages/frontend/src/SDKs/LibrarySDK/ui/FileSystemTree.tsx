@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { Tree, type TreeDataItem } from '@pretzel-graph/standard-ui/components/Tree/tree-view'
-import { ContextMenu } from '@pretzel-graph/standard-ui/foundations'
+import { Button, ContextMenu, Input } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { LibrarySDK } from '../sdk'
 import type { Library, Workflow } from '@pretzel-graph/shared/domain'
@@ -67,22 +67,34 @@ export function FileSystemTree({
     }
 
     return (
-        <Tree.Root
-            className={className}
-            data={treeData}
-            expandAll={expandAll}
-            initialSelectedItemId={initialSelectedItemId}
-            onSelectChange={handleSelectChange}
-            onExpandedChange={(item, isExpanded) => {
-                if (item.id.startsWith('folder:')) {
-                    const folderId = item.id.slice('folder:'.length) as Library.Folder.Id
-                    LibrarySDK.actions.preferences.setFolderExpanded(folderId, isExpanded)
-                }
-            }}
-            renderItem={({ item, isOpen, isSelected }) => (
-                <FileSystemTreeItem item={item} isOpen={isOpen} isSelected={isSelected} />
-            )}
-        />
+        <>
+            <div className='relative mx-2 flex flex-row gap-1'>
+                <Input className='rounded-full!' 
+                    placeholder='Search in Tree'
+                    size='sm'
+                />
+                
+                <Button variant="ghost"   size='icon-xs' className='absolute right-1 top-0.5 rounded-full'>
+                    <SystemIcons.Filter className='size-3' />
+                </Button>
+            </div>
+            <Tree.Root
+                className={className}
+                data={treeData}
+                expandAll={expandAll}
+                initialSelectedItemId={initialSelectedItemId}
+                onSelectChange={handleSelectChange}
+                onExpandedChange={(item, isExpanded) => {
+                    if (item.id.startsWith('folder:')) {
+                        const folderId = item.id.slice('folder:'.length) as Library.Folder.Id
+                        LibrarySDK.actions.preferences.setFolderExpanded(folderId, isExpanded)
+                    }
+                }}
+                renderItem={({ item, isOpen, isSelected }) => (
+                    <FileSystemTreeItem item={item} isOpen={isOpen} isSelected={isSelected} />
+                )}
+            />
+        </>
     )
 }
 
