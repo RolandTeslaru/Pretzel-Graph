@@ -5,7 +5,7 @@ import FloatContainer from '@/components/FloatContainer'
 
 const AssistantSidebarHeader = () => {
     return (
-        <div className='flex flex-row gap-2 absolute top-2 w-[calc(100%-16px)] left-2 z-10'>
+        <div className='flex flex-row gap-2 absolute top-2 w-[calc(100%-16px)] left-2 z-20'>
             <div
                 className='flex items-center gap-2 px-2 py-1 rounded-full'
                 style={{ backgroundColor: 'color-mix(in srgb, var(--port-LanguageModel) 25%, transparent)' }}
