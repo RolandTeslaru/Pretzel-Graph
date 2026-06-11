@@ -43,13 +43,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             ? structuredClone(this.context.dependencyAPI.getDraft(subWorkflowId).workflow_data)
             : structuredClone(this.context.dependencyAPI.getPublished(subWorkflowId).workflow_data);
 
-        const record = parentWorkflowIgniter ? parentWorkflowIgniter.record : false;
-
         const igniter = {
-            variant: "sub_workflow",
-            parentNodeId: this.workflowNode.id,
+            variant:         "sub_workflow",
+            parentNodeId:    this.workflowNode.id,
             subWorkflowPath: [...compilePath, subWorkflowId],
-            record
+            record:          parentWorkflowIgniter ? parentWorkflowIgniter.record : false
         } satisfies Execution.Igniter;
 
         const childCompilationCtx = {
