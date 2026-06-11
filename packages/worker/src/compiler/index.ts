@@ -28,117 +28,15 @@ export class WorkflowCompiler {
     ): Promise<AggexEngine.Execution.Context> {
         const workflowCache = Workflow.createCache(workflowData);
 
-        const graph = new S2Graph();    
+        const graph = new S2Graph();
         const nodes = workflowData.nodes;
         const edges = workflowData.edges;
 
         // START vertex — S2Engine ignites from here
         graph.addVertex(S2Graph.START_VERTEX_ID);
 
-        //
-        // Build APIs
-        //
-        
-        let engineExecutionCtx!: AggexEngine.Execution.Context;
-
-        const portAPI = {
-            write: (nodeId, outputId, value) => {
-                engine.portAPI.write(engineExecutionCtx, nodeId, outputId, value);
-            },
-        } satisfies RuntimeNode.ExecutionContext["portAPI"];
-
-        const propagationAPI = {
-            emitPort: (nodeId, outputId) => {
-                engine.propagationAPI.emitPort(engineExecutionCtx, nodeId, outputId);
-            },
-            emitNode: (nodeId) => {
-                engine.propagationAPI.emitNode(engineExecutionCtx, nodeId);
-            },
-        } satisfies RuntimeNode.ExecutionContext["propagationAPI"];
-
-        const instanceRegistryAPI = {
-            get:    (nodeId: Workflow.Node.Id) => engine.instanceRegistryAPI.get(nodeId),
-            getAll: ()                         => engine.instanceRegistryAPI.getAll(),
-        } satisfies RuntimeNode.ExecutionContext["instanceRegistryAPI"];
-
-        const workflowQueryAPI = {
-            getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: T_Blueprint["id"]) => 
-                Object.values(engineExecutionCtx.workflowData.nodes)
-                    .filter(n => n.blueprintId === blueprintId)
-                    .map(n => ({
-                        node:   n,
-                        fields: mapFieldValues<T_Blueprint>(n.id, engineExecutionCtx.workflowData),
-                    })),
-            getNodeOutput: (nodeId, portId) =>
-                engineExecutionCtx.session.node_output_instances[nodeId]?.[portId],
-        } satisfies RuntimeNode.ExecutionContext["workflowQueryAPI"];
-
-        const schedulerAPI = {
-            fireNode:      (nodeId, signals)    => engine.schedulerAPI.fireNode(engineExecutionCtx, nodeId, signals),
-            signalNode:    (nodeId, fromNodeId) => engine.schedulerAPI.signalNode(engineExecutionCtx, nodeId, fromNodeId),
-            removeSignal:  (nodeId, fromNodeId) => engine.schedulerAPI.removeSignal(engineExecutionCtx, nodeId, fromNodeId),
-            clearSignals:  (nodeId)             => engine.schedulerAPI.clearSignals(engineExecutionCtx, nodeId),
-            scheduleCheck: (nodeId)             => engine.schedulerAPI.scheduleCheck(engineExecutionCtx, nodeId),
-        } satisfies RuntimeNode.ExecutionContext["schedulerAPI"];
-
-
-        const subWorkflowAPI = {
-            createEnv: () => {
-                const engine = new AggexEngine();
-                const compiler = new WorkflowCompiler();
-
-                return {
-                    compile: (
-                        workflowId,
-                        workflowData,
-                        execution,
-                        emit,
-                        compilationCtx,
-                        enclosingNodeAPI,
-                    ) => compiler.compile(
-                        workflowId,
-                        workflowData,
-                        execution,
-                        emit,
-                        engine,
-                        credentialInstances,
-                        compilationCtx,
-                        enclosingNodeAPI,
-                    ),
-                    run: (ctx: unknown) => engine.run(ctx as AggexEngine.Execution.Context),
-                }
-            }
-        } satisfies RuntimeNode.ExecutionContext["subWorkflowAPI"];
-
-        const dependencyAPI = {
-            getPublished: (wfId: Workflow.Id) => {
-                const dep = workflowData.dependencies?.published?.[wfId];
-                if (!dep) throw new Error(`Missing published dependency "${wfId}"`);
-                return dep;
-            },
-            getDraft: (wfId: Workflow.Id) => {
-                const draft = workflowData.dependencies?.draft?.[wfId];
-                if (!draft) throw new Error(`Missing draft dependency "${wfId}"`);
-                return draft;
-            },
-        } satisfies RuntimeNode.ExecutionContext["dependencyAPI"];
-
-        const credentialsAPI: RuntimeNode.ExecutionContext["credentialsAPI"] = {
-            getInstance: (instanceId) => credentialInstances[instanceId],
-            getDecryptedValue: (blob) => decryptCredentialBlob(blob) as any,
-        };
-
-        const abortController = new AbortController();
-        
-        const abortAPI = {
-            signal: abortController.signal,
-            abort:  (reason?: any) => abortController.abort(reason),
-        }
-
-        const updateSession = (r: (draft: Execution.Session) => void) => {
-            execution.session = produce(execution.session, r);
-        };
-
+        const ctxRef = { current: null! as AggexEngine.Execution.Context };
+        const apis = this.createAPIs(engine, ctxRef, execution, workflowData, credentialInstances);
 
         const nodeExecutionCtx = {
             executionId: execution.id,
@@ -148,20 +46,11 @@ export class WorkflowCompiler {
             workflowCache,
             get session() { return execution.session; },
             emit,
-            abortAPI,
-            updateSession,
-            portAPI,
-            propagationAPI,
-            instanceRegistryAPI,
-            workflowQueryAPI,
-            schedulerAPI,
             enclosingNodeAPI,
-            subWorkflowAPI,
-            dependencyAPI,
-            credentialsAPI,
+            ...apis,
         } satisfies RuntimeNode.ExecutionContext
 
-        engineExecutionCtx = {
+        const engineExecutionCtx = {
             executionId: execution.id,
             workflowId,
             chat_id: execution.chat_id,
@@ -169,21 +58,14 @@ export class WorkflowCompiler {
             workflowCache,
             get session() { return execution.session; },
             emit,
-            abortAPI,
-            updateSession,
             compiledGraph: graph,
             activeNodes: new Set(),
             errorChannel: new Map(),
-            portAPI,
-            propagationAPI,
-            instanceRegistryAPI,
-            workflowQueryAPI,
-            schedulerAPI,
             enclosingNodeAPI,
-            subWorkflowAPI,
-            dependencyAPI,
-            credentialsAPI,
+            ...apis,
         } satisfies AggexEngine.Execution.Context
+
+        ctxRef.current = engineExecutionCtx;
 
 
 
@@ -220,6 +102,100 @@ export class WorkflowCompiler {
         await this.handleIgniter(engine, execution.igniter);
 
         return engineExecutionCtx;
+    }
+
+
+
+
+    private createAPIs(
+        engine:              AggexEngine,
+        ctxRef:              { current: AggexEngine.Execution.Context },
+        execution:           Execution,
+        workflowData:        Workflow.Data,
+        credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
+    ) {
+        const portAPI = {
+            write: (nodeId, outputId, value) =>
+                engine.portAPI.write(ctxRef.current, nodeId, outputId, value),
+        } satisfies RuntimeNode.ExecutionContext["portAPI"];
+
+        const propagationAPI = {
+            emitPort: (nodeId, outputId) =>
+                engine.propagationAPI.emitPort(ctxRef.current, nodeId, outputId),
+            emitNode: (nodeId) =>
+                engine.propagationAPI.emitNode(ctxRef.current, nodeId),
+        } satisfies RuntimeNode.ExecutionContext["propagationAPI"];
+
+        const instanceRegistryAPI = {
+            get:    (nodeId: Workflow.Node.Id) => engine.instanceRegistryAPI.get(nodeId),
+            getAll: ()                         => engine.instanceRegistryAPI.getAll(),
+        } satisfies RuntimeNode.ExecutionContext["instanceRegistryAPI"];
+
+        const workflowQueryAPI = {
+            getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: T_Blueprint["id"]) =>
+                Object.values(ctxRef.current.workflowData.nodes)
+                    .filter(n => n.blueprintId === blueprintId)
+                    .map(n => ({
+                        node:   n,
+                        fields: mapFieldValues<T_Blueprint>(n.id, ctxRef.current.workflowData),
+                    })),
+            getNodeOutput: (nodeId, portId) =>
+                ctxRef.current.session.node_output_instances[nodeId]?.[portId],
+        } satisfies RuntimeNode.ExecutionContext["workflowQueryAPI"];
+
+        const schedulerAPI = {
+            fireNode:      (nodeId, signals)    => engine.schedulerAPI.fireNode(ctxRef.current, nodeId, signals),
+            signalNode:    (nodeId, fromNodeId) => engine.schedulerAPI.signalNode(ctxRef.current, nodeId, fromNodeId),
+            removeSignal:  (nodeId, fromNodeId) => engine.schedulerAPI.removeSignal(ctxRef.current, nodeId, fromNodeId),
+            clearSignals:  (nodeId)             => engine.schedulerAPI.clearSignals(ctxRef.current, nodeId),
+            scheduleCheck: (nodeId)             => engine.schedulerAPI.scheduleCheck(ctxRef.current, nodeId),
+        } satisfies RuntimeNode.ExecutionContext["schedulerAPI"];
+
+        const subWorkflowAPI = {
+            createEnv: () => {
+                const subEngine   = new AggexEngine();
+                const subCompiler = new WorkflowCompiler();
+                return {
+                    compile: (workflowId, workflowData, execution, emit, compilationCtx, enclosingNodeAPI) =>
+                        subCompiler.compile(workflowId, workflowData, execution, emit, subEngine, credentialInstances, compilationCtx, enclosingNodeAPI),
+                    run: (ctx: unknown) => subEngine.run(ctx as AggexEngine.Execution.Context),
+                };
+            },
+        } satisfies RuntimeNode.ExecutionContext["subWorkflowAPI"];
+
+        const dependencyAPI = {
+            getPublished: (wfId: Workflow.Id) => {
+                const dep = workflowData.dependencies?.published?.[wfId];
+                if (!dep) throw new Error(`Missing published dependency "${wfId}"`);
+                return dep;
+            },
+            getDraft: (wfId: Workflow.Id) => {
+                const draft = workflowData.dependencies?.draft?.[wfId];
+                if (!draft) throw new Error(`Missing draft dependency "${wfId}"`);
+                return draft;
+            },
+        } satisfies RuntimeNode.ExecutionContext["dependencyAPI"];
+
+        const credentialsAPI: RuntimeNode.ExecutionContext["credentialsAPI"] = {
+            getInstance:       (instanceId) => credentialInstances[instanceId],
+            getDecryptedValue: (blob)       => decryptCredentialBlob(blob) as any,
+        };
+
+        const abortController = new AbortController();
+        const abortAPI = {
+            signal: abortController.signal,
+            abort:  (reason?: any) => abortController.abort(reason),
+        };
+
+        const updateSession = (r: (draft: Execution.Session) => void) => {
+            execution.session = produce(execution.session, r);
+        };
+
+        return {
+            portAPI, propagationAPI, instanceRegistryAPI, workflowQueryAPI,
+            schedulerAPI, subWorkflowAPI, dependencyAPI, credentialsAPI,
+            abortAPI, updateSession,
+        };
     }
 
 
