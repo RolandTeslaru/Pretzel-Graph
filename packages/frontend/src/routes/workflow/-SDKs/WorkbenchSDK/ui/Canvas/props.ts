@@ -29,6 +29,7 @@ export const canvasProps = Object.freeze({
     fitViewOptions,
     minZoom: MIN_ZOOM,
     maxZoom: MAX_ZOOM,
+    panActivationKeyCode: null,
     edgeTypes: {
         workflowEdge: CanvasEdge
     },

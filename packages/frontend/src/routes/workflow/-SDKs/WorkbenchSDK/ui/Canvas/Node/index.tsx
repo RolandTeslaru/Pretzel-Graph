@@ -59,7 +59,7 @@ const Content = memo(({ node }: { node: Workflow.Node }) => {
       </NodeToolbar>
 
       <div className={cn(
-          "animate-in fade-in-0 duration-200 ease-out transition-colors p-0.5",
+          "animate-in fade-in-0 duration-200 ease-out transition-colors",
           "flex flex-col relative rounded-3xl shadow-lg shadow-black/20 dark:shadow-black/30",
           isMinimized ? "" : "w-[250px]",
           isDisabled ? "opacity-50" : "opacity-100",
@@ -70,7 +70,9 @@ const Content = memo(({ node }: { node: Workflow.Node }) => {
         <NodeHeader executionStatus={executionStatus} node={node} isWorkflowLocked={isWorkflowLocked} hasUpdate={hasUpdate} />
 
         {node.isMinimized === false &&
-          <div className='dark:bg-black/50 px-1 bg-card/80 py-2 border gap-2 flex flex-col border-border/50 rounded-b-[22px] rounded-t-lg shadow-md shadow-black/10 min-h-8'>
+          <div className='dark:bg-black/50 px-1 bg-card/80 py-2 gap-2 flex flex-col  rounded-b-[26px] rounded-t-xl shadow-md shadow-black/10 min-h-8'
+            
+          >
             <NodeInputs node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped} />
             <NodeOutputs node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped} />
           </div>

@@ -40,7 +40,7 @@ export const HighlightedTextarea: React.FC<HighlightedTextareaProps> = ({ classN
             className={cn(
                 // Outer wrapper for border/focus styles
                 "relative w-full rounded-md border border-border shadow-md shadow-black/10 transition-[color,box-shadow]",
-                "bg-input/50",
+                "bg-input/50 overflow-hidden!",
                 "focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] overflow-hidden",
                 className
             )}
@@ -77,7 +77,7 @@ export const HighlightedTextarea: React.FC<HighlightedTextareaProps> = ({ classN
                 </div>
             </div>
             {showExpansionButton &&
-                <Button variant="input" size="icon-xs" className="right-0.5 rounded-md top-0.5 absolute"
+                <Button variant="input" size="icon-xs" className="right-0 bottom-0 rounded-none! rounded-tl-md! absolute"
                     onClick={() => {
                         DialogSDK.actions.push("highlighAreaTextInputDialog", (dialogProps) => (
                             <DialogSDK.Template {...dialogProps} className='min-w-[60vw] max-h-[85vh]'>

@@ -1,35 +1,40 @@
 export namespace Tree {
-    export interface BranchBaseProps<T_Data = any> {
-        branch: Branch<T_Data>
-        level: number
-        isExpanded: boolean
-        isLeaf: boolean
-        onToggle: () => void
-    }
-
-    export interface BranchRendererProps<T_Data = any> extends BranchBaseProps<T_Data> {
-        DefaultRenderer: React.ComponentType<BranchBaseProps<T_Data>>
-    }
-
-    export type BranchRenderer<T_Data = any> = React.ComponentType<BranchRendererProps<T_Data>>
-
-    export type BranchKey = string & { __brand: "BranchKey" }
-
+    
     export namespace Dummy {
         export interface Branch<T_Data = any> {
-            childBranches?: Record<BranchKey, Branch>
+            childBranches?: Record<Branch.Key, Branch>
             isExpanded?: boolean
             data?: T_Data
             isExpandedByDefault?: boolean
         }
     }
-    export type Dummy = Record<BranchKey, Dummy.Branch>
+    export type Dummy = Record<Branch.Key, Dummy.Branch>
 
     export interface Branch<T_Data = any> extends Tree.Dummy.Branch<T_Data> {
-        key: BranchKey
-        path: BranchKey[]
-        childBranches?: Record<BranchKey, Branch>
+        key: Branch.Key
+        path: Branch.Key[]
+        pathString: Branch.PathString
+        childBranches?: Record<Branch.Key, Branch>
     }
+    export namespace Branch {
+        export function isLeaf(branch: Branch): boolean {
+            return !branch.childBranches || Object.keys(branch.childBranches).length === 0
+        }
+        export type Key = string & { __brand: "BranchKey" }
+        export type Path = Key[]
+
+        export type PathString = string & { __brand: "BranchPathString" }
+
+        export interface RenderProps<T_Data = any> {
+            branch: Branch<T_Data>
+            level: number
+            isExpanded: boolean
+            isLeaf: boolean
+            onToggle: () => void
+        }
+        export type Renderer<T_Data = any> = (props: RenderProps<T_Data>) => React.ReactNode
+    }
+
 }
 
-export type Tree = Record<Tree.BranchKey, Tree.Branch>
+export type Tree = Record<Tree.Branch.Key, Tree.Branch>
