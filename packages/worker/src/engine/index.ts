@@ -5,6 +5,7 @@ import { Synthesizer } from "@pretzel-graph/node-sdk";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { S2Hooks } from "src/S2/types";
 import { AggexExecutionError, UncaughtRuntimeNodeError, CyclicalRuntimeNodeError } from "src/errors";
+import { AirlockTerminationError } from "src/airlock";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
@@ -522,7 +523,14 @@ export class AggexEngine {
             dataDependency === "AND" ? allDependencies : signals
         );
 
-        const fields = nodeInstance.evaluateFields(inputs);
+        let fields;
+        try {
+            // Field expressions run in the airlock; a throw/timeout here is the node's
+            // failure (→ onErrorStrategy), an OOM force-terminates (handled in handleNodeError).
+            fields = nodeInstance.evaluateFields(inputs);
+        } catch (err) {
+            return this.handleNodeError(ctx, vertexId, err);
+        }
 
         System.log.debug("node executing", {
             name:           wfNode.displayName,
@@ -709,7 +717,13 @@ export class AggexEngine {
         });
 
         const partialInputs = this.node.getIncomingData(ctx, wfNode.id, arrivedSignals);
-        const partialFields = instance.evaluateFields(partialInputs);
+        let partialFields;
+        try {
+            partialFields = instance.evaluateFields(partialInputs);
+        } catch (err) {
+            this.handleNodeError(ctx, vertexId, err);  // OOM → throws (terminate); else recorded
+            return;
+        }
         instance.wait(partialInputs, nodeDepMap, partialFields);
     }
 
@@ -801,6 +815,12 @@ export class AggexEngine {
                 SystemError.Code.EXECUTION_NODE_FAILED,
                 error instanceof Error ? error.message : String(error),
             );
+
+        // OOM disposed the shared airlock isolate — it's unrecoverable and every scope is
+        // dead. Force-terminate regardless of the node's onErrorStrategy (do_nothing/propagate
+        // would just cascade the same failure into every subsequent node).
+        if (error instanceof AirlockTerminationError)
+            throw aggexError;
 
         const strategy = entry?.instance.fields["onErrorStrategy" as Field.Id] ?? "terminate";
 

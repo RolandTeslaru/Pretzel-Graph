@@ -1,7 +1,7 @@
 import { RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { InferInputs, InferOutputs, OneOf } from "@pretzel-graph/node-sdk";
-import { Expression, Foundations } from "@pretzel-graph/shared/domain";
+import { Airlock, Foundations } from "@pretzel-graph/shared/domain";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -17,20 +17,27 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const { cases } = this.fields;
         const { input } = inputs;
 
-        const expressionCtx = Expression.createContext(
-            this.workflowNode,
-            this.fields,
-            inputs,
-            Expression.resolveWorkflowConfig(this.context.workflowData),
-        )
+        return this.context
+            .airlockAPI
+            .executeSync(
+                { [Airlock.GLOBALS.in]: inputs, [Airlock.GLOBALS.nodeId]: this.workflowNode.id },
+                (evaluate) => {
+                    const resolve = this.operandResolver(evaluate);
+                    for (const { condition, portId } of cases) {
+                        if (Foundations.Field.Condition.evaluate(condition, resolve))
+                            return { [portId]: input } as OneOf<InferOutputs<typeof Blueprint>>;
+                    }
+                    return {} as OneOf<InferOutputs<typeof Blueprint>>;
+                },
+            );
+    }
 
-        for (const { condition, portId } of cases) {
-            const result = Foundations.Field.Condition.evaluate(condition, expressionCtx);
-            
-            if (result)
-                return { [portId]: input } as OneOf<InferOutputs<typeof Blueprint>>;
-        }
-        
-        return {}
+    /** Resolve operands (literals pass through; isExpression → airlock). */
+    private operandResolver(evaluate: Airlock.EvaluateFn): Foundations.Field.Condition.OperandResolver {
+        return (operand, isExpression) => {
+            if (!isExpression) return operand;
+            if (operand.trim() === "") return undefined;
+            return evaluate(Airlock.Source.asExpression(operand));
+        };
     }
 }
