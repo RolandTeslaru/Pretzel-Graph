@@ -1,8 +1,8 @@
 import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
-import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
+import { Airlock } from "@pretzel-graph/shared/domain";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferFields, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 
 // NOT INCLUDED IN PRODUCTION BUILD - FOR DEV PURPOSES ONLY. This node allows executing arbitrary JavaScript code, and is intended for testing and development only. It should not be used in production environments.
 
@@ -20,20 +20,19 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const { code } = this.fields;
 
         try {
-            // Create a function that takes inputs and returns the result
-            // Wrap in async IIFE to allow await usage in the script
-            const fn = new Function('inputs', 'fields', 'session', `
-                return (async () => {
-                    ${code}
-                })();
-            `);
-
-            const result = await fn(inputs, this.fields, this.context.session);
+            // Sandboxed (isolated-vm) async code: @in is passed as the fn param, so re-fires
+            // can't clobber it. Code `return`s its result explicitly (code mode).
+            const result = await this.context
+                .airlockAPI
+                .executeAsyncCode(Airlock.Source.asCode(code), this.workflowNode.id, inputs);
 
             return {
                 output: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
             };
         } catch (err) {
+            // An OOM disposed the shared isolate — must terminate, never swallow.
+            if (err instanceof Error && err.name === Airlock.TERMINATION_ERROR_NAME)
+                throw err;
             return {
                 output: `Error evaluating script: ${err instanceof Error ? err.message : String(err)}`
             };

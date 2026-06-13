@@ -1,4 +1,4 @@
-import { Execution, Foundations, Vault } from "@pretzel-graph/shared/domain";
+import { Airlock, Execution, Foundations, Vault } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { CatalogueService, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
@@ -6,6 +6,7 @@ import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { decryptCredentialBlob } from "src/credentials";
 
 import { AggexCompilerError } from "../errors";
+import { AirlockService } from "../airlock";
 import { S2Graph, Vertex } from "../S2/graph";
 import { isUUID } from "../utils";
 
@@ -22,6 +23,7 @@ export class WorkflowCompiler {
         execution:           Execution,
         emit:                RuntimeNode.ExecutionContext["emit"],
         engine:              AggexEngine,
+        airlock:             AirlockService,
         credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
         compilationCtx:    WorkflowCompiler.Compilation.Context = createCompilationContext(workflowId),
         enclosingNodeAPI?: RuntimeNode.ExecutionContext["enclosingNodeAPI"],
@@ -35,8 +37,17 @@ export class WorkflowCompiler {
         // START vertex — S2Engine ignites from here
         graph.addVertex(S2Graph.START_VERTEX_ID);
 
+        // AIRLOCK — register this workflow's @workflow copy (dedup by id), warm the script
+        // cache, and create this env's sandbox scope (one Context, reused across re-fires).
+        airlock.registerWorkflow(workflowId, workflowData);
+        this.warmExpressionCache(airlock, workflowData);
+        const airlockScope = airlock.createScope(workflowId, {
+            igniter: execution.igniter,
+            chatId:  execution.chat_id,
+        });
+
         const ctxRef = { current: null! as AggexEngine.Execution.Context };
-        const apis = this.createAPIs(engine, ctxRef, execution, workflowData, credentialInstances);
+        const apis = this.createAPIs(engine, airlock, ctxRef, execution, workflowData, credentialInstances);
 
         const nodeExecutionCtx = {
             executionId: execution.id,
@@ -44,6 +55,7 @@ export class WorkflowCompiler {
             chat_id: execution.chat_id,
             workflowData,
             workflowCache,
+            airlockAPI: airlockScope,
             get session() { return execution.session; },
             emit,
             enclosingNodeAPI,
@@ -56,6 +68,7 @@ export class WorkflowCompiler {
             chat_id: execution.chat_id,
             workflowData,
             workflowCache,
+            airlockAPI: airlockScope,
             get session() { return execution.session; },
             emit,
             compiledGraph: graph,
@@ -107,8 +120,39 @@ export class WorkflowCompiler {
 
 
 
+    /**
+     * Eager (best-effort) compilation of every `isExpression` field, to warm the script
+     * cache so the first firing doesn't pay the compile cost. Not a correctness dependency:
+     * `airlockScope.evaluate` compiles-on-demand anyway, and a syntactically-invalid
+     * expression is left to surface at runtime via the node's `onError` (so we swallow
+     * compile errors here rather than abort the whole workflow compile).
+     */
+    private warmExpressionCache(airlock: AirlockService, workflowData: Workflow.Data): void {
+        for (const node of Object.values(workflowData.nodes)) {
+            const values = mapFieldValues(node.id, workflowData);
+            for (const field of node.fields) {
+                if (!("isExpression" in field) || field.isExpression !== true) 
+                    continue;
+
+                const raw = values[field.id as Foundations.Field.Id];
+                
+                if (typeof raw !== "string") 
+                    continue;
+
+                try {
+                    airlock.compileExpression(
+                        Airlock.Source.asExpression(raw),
+                        Airlock.coerceTargetForVariant(field.variant),
+                    );
+                } catch { /* invalid expr → surfaced at runtime via onError */ }
+            }
+        }
+    }
+
+
     private createAPIs(
         engine:              AggexEngine,
+        airlock:             AirlockService,
         ctxRef:              { current: AggexEngine.Execution.Context },
         execution:           Execution,
         workflowData:        Workflow.Data,
@@ -156,8 +200,10 @@ export class WorkflowCompiler {
                 const subEngine   = new AggexEngine();
                 const subCompiler = new WorkflowCompiler();
                 return {
+                    // Reuse the SAME airlock ref → shared isolate (same tenant); the child
+                    // compile registers its own workflow copy + creates its own scope on it.
                     compile: (workflowId, workflowData, execution, emit, compilationCtx, enclosingNodeAPI) =>
-                        subCompiler.compile(workflowId, workflowData, execution, emit, subEngine, credentialInstances, compilationCtx, enclosingNodeAPI),
+                        subCompiler.compile(workflowId, workflowData, execution, emit, subEngine, airlock, credentialInstances, compilationCtx, enclosingNodeAPI),
                     run: (ctx: unknown) => subEngine.run(ctx as AggexEngine.Execution.Context),
                 };
             },

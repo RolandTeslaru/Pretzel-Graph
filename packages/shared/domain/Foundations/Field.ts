@@ -222,7 +222,10 @@ export namespace Field {
             const Base = z.object({
                 id: Id,
                 leftOperand: z.string(),
+                /** When true, leftOperand is a JS expression run through the airlock; else a literal. */
+                leftIsExpression: z.boolean().optional(),
                 rightOperand: z.string().optional(),
+                rightIsExpression: z.boolean().optional(),
             })
 
             export const String   = Base.extend({ dataType: z.literal("string"),   operator: Operator.String })
@@ -270,6 +273,13 @@ export namespace Field {
             initialValue: Value,
         });
 
+
+        /**
+         * Resolves a rule operand to a concrete value. Static operands return their literal
+         * string; `isExpression` operands are run through the airlock by the caller. Keeps
+         * the rule-tree combinator pure (it operates only on resolved values).
+         */
+        export type OperandResolver = (operand: string, isExpression?: boolean) => unknown;
 
         export const evaluateRule = _evaluateRule;
         export const evaluateRuleGroup = _evaluateRuleGroup;

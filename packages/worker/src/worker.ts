@@ -7,6 +7,7 @@ import { AggexEngine, AggexHooks } from 'src/engine';
 import { FlightRecorderService } from './engine/flight-recorder-service';
 import { container, singleton } from 'tsyringe';
 import { WorkflowCompiler } from './compiler';
+import { AirlockService } from './airlock';
 import { AxiosService } from './axios';
 
 const LOCK_EXTEND_INTERVAL_MS = 15_000;
@@ -118,6 +119,9 @@ export class AggexWorkerImpl {
         });
 
         let recorder: FlightRecorderService | null = null;
+        // One Isolate per execution = the tenant/security boundary. Owned here (outermost),
+        // passed by ref into the compiler, and disposed in `finally`.
+        const airlock = new AirlockService();
 
         try {
             let executionCtx!: AggexEngine.Execution.Context;
@@ -164,7 +168,7 @@ export class AggexWorkerImpl {
                 engine.attachFlightRecorder(recorder);
 
             // Compile and register execution context
-            executionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.emit, engine, credentialInstances);
+            executionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.emit, engine, airlock, credentialInstances);
             this.runningExecutionContextsMap.set(executionId, executionCtx);
 
             const result = await engine.run(executionCtx);
@@ -237,6 +241,7 @@ export class AggexWorkerImpl {
             stopLockExtension();
             console.log("Deleting job", execution.id, "from running engines and contexts")
 
+            airlock.dispose();   // free the isolate + all its contexts/scripts
             this.runningEnginesMap.delete(execution.id);
             this.runningExecutionContextsMap.delete(execution.id);
             this.signalHandlersMap.delete(signalChannel);

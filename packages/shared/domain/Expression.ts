@@ -132,4 +132,41 @@ export namespace Expression {
 
         return config;
     }
+
+    /**
+     * Normalized, copy-safe shape of `@workflow` injected into the sandbox.
+     *
+     * Built from what the worker actually receives (`workflowId` + `Workflow.Data` — the
+     * BullMQ `Execution.Queue.Item`); the full `Workflow` record's editor/library meta
+     * (`display_name`, `locked`, timestamps, …) never crosses into the worker, and none of
+     * it is runtime-relevant. Drops `ui` and `dependencies` (the latter embeds whole nested
+     * workflows → unbounded size). `credentialInstanceIds` are IDs only — never secrets.
+     */
+    export interface WorkflowView {
+        id: Workflow.Id;
+        fields: Field[];
+        nodes: Workflow.Data["nodes"];
+        edges: Workflow.Data["edges"];
+        staticValues: Workflow.Data["staticValues"];
+        credentialInstanceIds: Workflow.Data["credentialInstanceIds"];
+    }
+
+    export function toWorkflowView(
+        workflowId: Workflow.Id,
+        data: Workflow.Data,
+    ): WorkflowView {
+        const { ui, dependencies, ...normalized } = data;  // drop ui + dependencies
+        return {
+            id: workflowId,
+            fields: normalized.fields,
+            nodes: normalized.nodes,
+            edges: normalized.edges,
+            credentialInstanceIds: normalized.credentialInstanceIds,
+            staticValues: {
+                ...normalized.staticValues,
+                // bake resolved @config defaults so the sandbox sees a complete config bag
+                [Workflow.WORKFLOW_CONFIG_NODE_ID]: resolveWorkflowConfig(data),
+            },
+        };
+    }
 }
