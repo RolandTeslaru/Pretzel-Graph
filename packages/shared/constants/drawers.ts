@@ -93,7 +93,8 @@ export const CORE_DRAWERS = {
       "Core.Utils.Tool.Runner",
       "Core.Utils.List.Select",
       "Core.Utils.List.Slice",
-      "Core.Utils.Tool.Catalog"
+      "Core.Utils.Tool.Catalog",
+      "Core.Utils.RunCode"
     ],
   },
   sub_workflow: {
