@@ -4,9 +4,9 @@ import { Field } from "./domain/Foundations/Field";
 type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id
 type RuleId = Foundations.Field.Condition.Rule.Id
 
-export const evaluateRule = (rule: Field.Condition.Rule, expressionCtx: Expression.Context): boolean => {
+export const evaluateRule = (rule: Field.Condition.Rule, resolve: Field.Condition.OperandResolver): boolean => {
 
-    const left = Expression.evaluate(rule.leftOperand, expressionCtx);
+    const left = resolve(rule.leftOperand, rule.leftIsExpression);
 
     // Shared operators — present on every dataType
     if (rule.operator === "exists") return left !== undefined && left !== null;
@@ -15,7 +15,7 @@ export const evaluateRule = (rule: Field.Condition.Rule, expressionCtx: Expressi
     if (rule.operator === "is_not_empty") return left !== "" && left !== null && left !== undefined && !(Array.isArray(left) && left.length === 0);
 
     const right = rule.rightOperand != null
-        ? Expression.evaluate(rule.rightOperand, expressionCtx)
+        ? resolve(rule.rightOperand, rule.rightIsExpression)
         : undefined;
 
     switch (rule.dataType) {
@@ -97,7 +97,7 @@ export const evaluateRule = (rule: Field.Condition.Rule, expressionCtx: Expressi
 export function evaluateRuleGroup(
     condition: Field.Condition.Value,
     ruleGroup: Field.Condition.RuleGroup,
-    expressionCtx: Expression.Context
+    resolve: Field.Condition.OperandResolver
 ): boolean {
     const { children, combinator } = ruleGroup;
 
@@ -105,12 +105,12 @@ export function evaluateRuleGroup(
         if (id in condition.groups){
             const group = condition.groups[id as RuleGroupId];
 
-            return evaluateRuleGroup(condition, group, expressionCtx);
+            return evaluateRuleGroup(condition, group, resolve);
         }
         if (id in condition.rules){
             const rule = condition.rules[id as RuleId];
-            
-            return evaluateRule(rule, expressionCtx);
+
+            return evaluateRule(rule, resolve);
         }
         throw new Error(`Invalid condition: no group or rule with id ${id}`);
     };
@@ -144,7 +144,7 @@ export function resolveWebhook(
 
 export function evaluateCondition(
     condition: Field.Condition.Value,
-    expressionCtx: Expression.Context
+    resolve: Field.Condition.OperandResolver
 ): boolean {
-    return evaluateRuleGroup(condition, condition.groups[condition.rootId], expressionCtx);
+    return evaluateRuleGroup(condition, condition.groups[condition.rootId], resolve);
 }

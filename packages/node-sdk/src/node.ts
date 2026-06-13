@@ -1,4 +1,4 @@
-import { Chat, Execution, Expression, Foundations, Realtime, Vault, Workflow } from "@pretzel-graph/shared/domain";
+import { Airlock, Chat, Execution, Foundations, Realtime, Vault, Workflow } from "@pretzel-graph/shared/domain";
 import { InferCredentials, InferCredentialValues, InferFields, InferInputs, InferOutputs } from "./types";
 import type { CompilationContext } from "./compiler-context";
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
@@ -87,13 +87,32 @@ export abstract class RuntimeNode<
         incoming: Record<Port.Id, Projection> | Record<string, unknown>
     ): InferFields<T_Blueprint> {
         const fields = mapFieldValues<T_Blueprint>(this.workflowNode.id, this.context.workflowData);
+        const evaluated: Record<Foundations.Field.Id, unknown> = { ...fields };
 
-        return Expression.evaluateNodeFields({
-            node: this.workflowNode,
-            fields,
-            incoming: incoming as Record<Port.Id, Projection>,
-            workflowConfig: Expression.resolveWorkflowConfig(this.context.workflowData),
-        }) as InferFields<T_Blueprint>;
+        // Set `@in` once for this firing, evaluate every isExpression field synchronously,
+        // then it's cleared — one copy of `incoming`, atomic against concurrent firings.
+        this.context
+            .airlockAPI
+            .executeSync(
+                {
+                    [Airlock.GLOBALS.in]: incoming,
+                    [Airlock.GLOBALS.nodeId]: this.workflowNode.id,
+                },
+                (evaluate) => {
+                    for (const field of this.workflowNode.fields) {
+                        if (!("isExpression" in field) || field.isExpression !== true) continue;
+                        const raw = evaluated[field.id as Foundations.Field.Id];
+                        if (typeof raw !== "string") continue;
+
+                        evaluated[field.id as Foundations.Field.Id] = evaluate(
+                            Airlock.Source.asExpression(raw),
+                            Airlock.coerceTargetForVariant(field.variant),
+                        );
+                    }
+                },
+            );
+
+        return evaluated as InferFields<T_Blueprint>;
     }
 
 
@@ -323,6 +342,8 @@ export namespace RuntimeNode {
         readonly workflowData: Workflow.Data,
         readonly workflowId: Workflow.Id,
         readonly workflowCache: Workflow.Cache,
+        /** Sandboxed expression/code evaluation for this workflow env (one Context per env). */
+        readonly airlockAPI: Airlock.API,
         readonly credentialsAPI: {
             getInstance(instanceId: Vault.Credential.Instance.Id): Vault.Credential.Instance | undefined
             getDecryptedValue<T = unknown>(blob: Vault.Credential.Instance.EncryptedBlob<T>): InferCredentialValues<T>
