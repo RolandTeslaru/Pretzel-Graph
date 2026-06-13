@@ -24,8 +24,7 @@ export default IncomingPanel
 
 
 const Content = ({ node, execution }: { node: Workflow.Node; execution: Execution }) => {
-  const cache = WorkbenchSDK.useStore(s => s.cache)
-  const edges = WorkbenchSDK.useStore(s => s.data.edges)
+  const [cache, edges] = WorkbenchSDK.useStore(s => [s.cache, s.data.edges])
 
   const keyNameMap = useMemo(
     () => Object.fromEntries(node.inputs.map(i => [i.id, i.displayName])),

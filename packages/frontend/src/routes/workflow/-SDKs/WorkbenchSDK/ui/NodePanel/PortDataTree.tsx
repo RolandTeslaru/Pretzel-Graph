@@ -10,7 +10,7 @@ interface Props {
     className?: string
 }
 
-function PortBranchRenderer({ branch, level, isExpanded, isLeaf, onToggle, keyNameMap, portVariantMap }: TreeType.BranchBaseProps & {
+function PortBranchRenderer({ branch, level, isExpanded, isLeaf, onToggle, keyNameMap, portVariantMap }: TreeType.Branch.RenderProps & {
     keyNameMap?: Record<string, string | undefined>
     portVariantMap?: Record<string, Foundations.Port.Variant>
 }) {

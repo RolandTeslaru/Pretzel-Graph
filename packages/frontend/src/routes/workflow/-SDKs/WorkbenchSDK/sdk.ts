@@ -4,10 +4,10 @@ import { immer } from "zustand/middleware/immer";
 import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance } from "@xyflow/react";
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
 import { workbenchSelectors, type WorkbenchSDKSelectors } from "./selectors";
-import React from "react";
+import { useState, useRef, useMemo, useEffect, useCallback, createRef } from "react";
 import { Foundations, Validation, Workflow, Workbench } from "@pretzel-graph/shared/domain"
 import { temporal } from 'zundo';
-import { cloneDeep } from "lodash";
+import { cloneDeep, debounce as lodashDebounce } from "lodash";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
@@ -95,6 +95,73 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         });
     }
 
+    public useDebouncedField<T>(nodeId: Workflow.Node.Id, field: Foundations.Field, delay = 300) {
+        const [storeValue, issue, isReconciling] = this.useField<T>(nodeId, field.id);
+        const [localValue, setLocalValue] = useState<T>(storeValue as T);
+        const isPending = useRef(false);
+
+        const debouncedSetValue = useMemo(
+            () => lodashDebounce((val: T) => {
+                this.actions.field.setValue(nodeId, field, val);
+                isPending.current = false;
+            }, delay),
+            // field.id is the stable identity; field object reference changes on every render
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            [nodeId, field.id, delay]
+        );
+
+        useEffect(() => {
+            if (!isPending.current) setLocalValue(storeValue as T);
+        }, [storeValue]);
+
+        useEffect(() => () => { debouncedSetValue.cancel() }, [debouncedSetValue]);
+
+        const onChange = useCallback((val: T) => {
+            isPending.current = true;
+            setLocalValue(val);
+            debouncedSetValue(val);
+        }, [debouncedSetValue]);
+
+        const flush = useCallback(() => {
+            debouncedSetValue.flush();
+        }, [debouncedSetValue]);
+
+        return [localValue, onChange, flush, issue, isReconciling] as const;
+    }
+
+    public useDebouncedInput<T>(nodeId: Workflow.Node.Id, input: Foundations.Port.Input, delay = 300) {
+        const [storeValue, issue] = this.useInput(nodeId, input.id);
+        const [localValue, setLocalValue] = useState<T>(storeValue as T);
+        const isPending = useRef(false);
+
+        const debouncedSetValue = useMemo(
+            () => lodashDebounce((val: T) => {
+                this.actions.input.setValue(nodeId, input, val);
+                isPending.current = false;
+            }, delay),
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            [nodeId, input.id, delay]
+        );
+
+        useEffect(() => {
+            if (!isPending.current) setLocalValue(storeValue as T);
+        }, [storeValue]);
+
+        useEffect(() => () => { debouncedSetValue.cancel() }, [debouncedSetValue]);
+
+        const onChange = useCallback((val: T) => {
+            isPending.current = true;
+            setLocalValue(val);
+            debouncedSetValue(val);
+        }, [debouncedSetValue]);
+
+        const flush = useCallback(() => {
+            debouncedSetValue.flush();
+        }, [debouncedSetValue]);
+
+        return [localValue, onChange, flush, issue] as const;
+    }
+
     public useInput(nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) {
         return this.useStore(s => {
             const staticVals = s.data.staticValues[nodeId]
@@ -113,7 +180,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         window.open(`/workflow/${workflowId}`, "_blank");
     }
 
-    public readonly canvasWrapper = React.createRef<HTMLDivElement>();
+    public readonly canvasWrapper = createRef<HTMLDivElement>();
 
     public readonly createDrivers = createDrivers
 }

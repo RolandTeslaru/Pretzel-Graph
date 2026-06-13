@@ -21,7 +21,7 @@ type RendererProps<K extends Foundations.Port.Input['variant']> = {
 // ── Variant Renderers ────────────────────────────────────────
 
 const MessageInput = memo(({ input, nodeId, className, isFlipped, labelVariant, labelSize }: RendererProps<'Message'>) => {
-    const [value, issue] = WorkbenchSDK.useInput(nodeId, input.id);
+    const [localValue, onChange, flush, issue] = WorkbenchSDK.useDebouncedInput<string>(nodeId, input);
 
     return (
         <div className={className + " w-full flex flex-col gap-1"}>
@@ -29,8 +29,9 @@ const MessageInput = memo(({ input, nodeId, className, isFlipped, labelVariant, 
             <HighlightedTextarea
                 input={input}
                 nodeId={nodeId}
-                value={value as string}
-                onChange={e => WorkbenchSDK.actions.input.setValue(nodeId, input, e.target.value)}
+                value={localValue}
+                onChange={e => onChange(e.target.value)}
+                onBlur={flush}
                 placeholder={input.placeholder}
                 className={issue ? "border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50" : ""}
             />
@@ -41,7 +42,7 @@ MessageInput.displayName = "MessageInput"
 
 
 const TextInput = memo(({ input, nodeId, className, isFlipped, labelVariant, labelSize }: RendererProps<'Text'>) => {
-    const [value, issue] = WorkbenchSDK.useInput(nodeId, input.id);
+    const [localValue, onChange, flush, issue] = WorkbenchSDK.useDebouncedInput<string>(nodeId, input);
 
     let innerClassName = ""
     if(issue)
@@ -51,8 +52,9 @@ const TextInput = memo(({ input, nodeId, className, isFlipped, labelVariant, lab
         <div className={className + " w-full flex flex-col gap-1"}>
             <InputLabel input={input} isFlipped={isFlipped} variant={labelVariant} size={labelSize} />
             <Textarea
-                value={value as string}
-                onChange={(e) => WorkbenchSDK.actions.input.setValue(nodeId, input, e.target.value)}
+                value={localValue}
+                onChange={(e) => onChange(e.target.value)}
+                onBlur={flush}
                 placeholder="Enter text..."
                 className={innerClassName}
             />
