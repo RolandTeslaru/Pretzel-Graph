@@ -1,7 +1,7 @@
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
 import type { Tree } from "./domain"
 
-export function DefaultBranchRenderer({ branch, level, isExpanded, isLeaf, onToggle }: Tree.BranchBaseProps) {
+export const DefaultBranchRenderer: Tree.Branch.Renderer= ({ branch, level, isExpanded, isLeaf, onToggle }) => {
     return (
         <div
             className="flex items-center gap-1 py-0.5 px-1 rounded cursor-pointer select-none hover:bg-accent/50 text-sm"
