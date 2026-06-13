@@ -269,6 +269,7 @@ code {
   --card-float: rgb(32, 32, 32);
 
 
+  --port-Data-foreground: theme(--color-slate-500);
   --port-Text: theme(--color-slate-400);
 
   --card-foreground: theme(--color-white);
@@ -320,10 +321,10 @@ code {
   --node-bg-mix: 20%;
   --node-border-mix: 50%;
 
-  --utility: theme(--color-neutral-200);
-  --utility-foreground: theme(--color-neutral-300);
+  --utility: theme(--color-neutral-500);
+  --utility-foreground: theme(--color-neutral-200);
 
-  --group-routing: theme(--color-neutral-300);
+  --group-routing: theme(--color-neutral-500);
 
   /* Dark mode: glow uses the base port color (already vibrant on dark bg) */
   --port-Message-glow: theme(--color-blue-300);

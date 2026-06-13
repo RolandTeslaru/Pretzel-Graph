@@ -1,7 +1,7 @@
 import { useMemo } from "react"
-import { Tree } from "./Tree"
-import { projectionsToTree } from "./toTree"
-import type { Tree as TreeType } from "./domain"
+import { Tree } from "@/components/Tree/Tree"
+import { projectionsToTree } from "@/components/Tree/toTree"
+import type { Tree as TreeD } from "@/components/Tree/domain"
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
 
 interface Props {
@@ -16,8 +16,7 @@ function renderValue(value: unknown): string {
     return String(value)
 }
 
-function ProjectionBranchRenderer({ branch, level, isExpanded, isLeaf, onToggle }: TreeType.BranchRendererProps) {
-    // Shorten node IDs at the top level: "Integrations.Google.GenerativeAI-7qtrc" → "GenerativeAI-7qtrc"
+function ProjectionBranchRenderer({ branch, level, isExpanded, isLeaf, onToggle }: TreeD.Branch.RenderProps) {
     const label = level === 0
         ? branch.key.split(".").at(-1) ?? branch.key
         : branch.key

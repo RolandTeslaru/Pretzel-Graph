@@ -35,8 +35,14 @@ export const BottomPanel = () => {
 
     return (
         <div className='bottom-5 flex flex-row left-1/2 -translate-x-1/2 z-20 absolute gap-2'>
-            <motion.div layout transition={{ layout: { type: "spring", stiffness: 400, damping: 30 } }} className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/80 backdrop-blur-sm border border-border overflow-visible'>
+            <div className='p-1 w-auto bg-card/90 backdrop-blur-sm border border-border rounded-full flex'>
                 <TemporalControls />
+            </div>
+            <motion.div 
+                className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/80 backdrop-blur-sm border border-border overflow-visible'
+                layout 
+                transition={{ layout: { type: "spring", stiffness: 400, damping: 30 } }} 
+            >
                 <ChatButton />
                 <AssistantButton />
                 <ExecutionControls canRun={!hasIssues} />
