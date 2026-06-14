@@ -2,8 +2,7 @@ import { useMemo } from 'react'
 import { ExecutionSDK } from '../../sdk'
 import { useTimelineViewerStore } from '../../timeline-viewer-store'
 import { WorkbenchSDK } from '../../../WorkbenchSDK/sdk'
-import { PortDataTree } from '../../../WorkbenchSDK/ui/NodePanel/PortDataTree'
-import { projectionsToTree } from '@/components/Tree/toTree'
+import { PortProjectionsView } from '../../../WorkbenchSDK/ui/NodePanel/PortDataTree'
 import type { Execution, Workflow } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
@@ -20,8 +19,8 @@ const OutgoingPanel = () => {
     })
 
     return (
-        <div className='p-2 h-full overflow-auto relative'>
-            <div className=' w-full border-b border-border/50 px-2 pt-0.5 pb-2 flex flex-row gap-2 '>
+        <div className='p-1 h-full overflow-auto relative flex flex-col gap-2'>
+            <div className='w-full border-b border-border/50 px-3 py-2 flex flex-row gap-2'>
                 <SystemIcons.LogOut size={20} />
                 <p className='h-auto my-auto text-sm'>Outgoing Data</p>
             </div>
@@ -41,38 +40,20 @@ const Content = ({
     node: Workflow.Node
     recording: Execution.Recording
 }) => {
-    const keyNameMap = useMemo(
-        () => Object.fromEntries(node.outputs.map(o => [o.id, o.displayName])),
-        [node.outputs]
-    )
-
-    const portVariantMap = useMemo(
-        () => Object.fromEntries(node.outputs.map(o => [o.id, o.variant])),
-        [node.outputs]
-    )
-
-    const root = useMemo(() => {
-        const outgoingData: Record<string, Record<string, unknown>> = {}
+    const projections = useMemo(() => {
+        const result: Record<string, Record<string, unknown>> = {}
         for (const [portId, snapId] of Object.entries(uow.outputSnapshot)) {
             const snap = recording.dataBank.snapshots[snapId]
-            if (snap?.value !== undefined) {
-                outgoingData[portId] = snap.value as Record<string, unknown>
-            }
+            if (snap?.value !== undefined) result[portId] = snap.value as Record<string, unknown>
         }
-        return projectionsToTree(outgoingData)
+        return result
     }, [uow.outputSnapshot, recording.dataBank.snapshots])
 
-    if (Object.keys(uow.outputSnapshot).length === 0) {
-        return (
-            <div className='mt-2 pt-8 text-xs text-muted-foreground px-1'>
-                No outgoing data recorded.
-            </div>
-        )
-    }
-
     return (
-        <div className='pt-2'>
-            <PortDataTree root={root} keyNameMap={keyNameMap} portVariantMap={portVariantMap} />
-        </div>
+        <PortProjectionsView
+            ports={node.outputs}
+            projections={projections}
+            emptyMessage="No outgoing data recorded."
+        />
     )
 }

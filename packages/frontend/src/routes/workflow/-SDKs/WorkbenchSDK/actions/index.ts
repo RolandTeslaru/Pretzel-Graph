@@ -12,7 +12,7 @@ import { createDependencyActions, type DependencyActions } from './dependency';
 import { DialogSDK } from '@/SDKs/DialogSDK';
 import React from 'react';
 
-const FullScreenNodePanel = React.lazy(() => import('../ui/FullScreenNodePanel'));
+const FullScreenNodePanel = React.lazy(() => import('../ui/NodePanel/fullscreen'));
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
@@ -36,6 +36,8 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             remove:            withCommit((edgeId) => setState(withCyclesRecompute(s => { reducers.edge.remove(s, edgeId) }))),
         },
         port: {
+            addInput:             withCommit((...props) => setState(s => { reducers.port.addInput(s,             ...props) })),
+            removeInput:          withCommit((...props) => setState(withCyclesRecompute(s => { reducers.port.removeInput(s,          ...props) }))),
             removeOutput:         withCommit((...props) => setState(withCyclesRecompute(s => { reducers.port.removeOutput(s,         ...props) }))),
             addOutput:            withCommit((...props) => setState(s => { reducers.port.addOutput(s,            ...props) })),
             setOutputDisplayName: withCommit((...props) => setState(s => { reducers.port.setOutputDisplayName(s, ...props) })),
@@ -124,6 +126,8 @@ export interface _WorkbenchSDKActions {
         remove              : DropFirstArg<WorkbenchSDK.Reducers['edge']['remove']>;
     };
     port                    : {
+        addInput            : DropFirstArg<WorkbenchSDK.Reducers['port']['addInput']>;
+        removeInput         : DropFirstArg<WorkbenchSDK.Reducers['port']['removeInput']>;
         removeOutput        : DropFirstArg<WorkbenchSDK.Reducers['port']['removeOutput']>;
         addOutput           : DropFirstArg<WorkbenchSDK.Reducers['port']['addOutput']>;
         setOutputDisplayName: DropFirstArg<WorkbenchSDK.Reducers['port']['setOutputDisplayName']>;
