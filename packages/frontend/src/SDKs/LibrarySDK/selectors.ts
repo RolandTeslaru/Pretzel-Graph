@@ -16,7 +16,7 @@ export function _createLibrarySelectors_(sdk: LibrarySDKImpl) {
             const s = sdk.useStore.getState();
             return Object.values(s.workflowMetas).filter((w) => w.folder_id === folderId);
         },
-        getBreadcrumbs: (s: LibrarySDK.State, currentFolderId: Library.Folder.Id, addProjectRoot: boolean = true) => {
+        getBreadcrumbs: (s: LibrarySDK.State, currentFolderId: Library.Folder.Id, addProjectRoot: boolean = false) => {
             let curFolder = s.folders[currentFolderId] as Library.Folder | undefined;
             const cwd: {
                 key: Library.Folder.Id,

@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState } from '@tanstack/react-router'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import type { ComponentType } from 'react'
+import { useMemo, type ComponentType } from 'react'
 import type { BaseIconProps } from '@pretzel-graph/standard-ui/icons/baseIcon'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
@@ -67,6 +67,11 @@ function HomeLayout() {
     )
 
     const theme = SystemSDK.useStore(s => s.theme)
+    const pathname = useRouterState({ select: (s) => s.location.pathname })
+    const currentNav =  useMemo(() => {
+        return NAV_TOP.find(e => pathname === e.to || pathname.startsWith(e.to + '/'))
+    }, [pathname])
+    
 
     return (
         <div className="flex max-h-screen w-full min-h-screen relative overflow-hidden">
@@ -84,11 +89,18 @@ function HomeLayout() {
                     waveSpeed={0.05}
                 />
             </div>
-            <div className="relative z-10 flex flex-row bg-background/80 backdrop-blur-lg max-h-screen  min-h-screen mr-auto">
+            <div className="relative z-10 flex flex-row bg-background/80 backdrop-blur-lg max-h-screen rounded-tr-2xl min-h-screen mr-auto">
                 <Sidebar />
-                <main className="pt-4 pl-3 pr-10 w-6xl">
-                    <Outlet />
-                </main>
+                <div className="flex flex-col">
+                    <nav className="min-h-[60px] px-4 flex items-center ">
+                        <h1 className="text-xl font-semibold">
+                            {currentNav && currentNav.label}
+                        </h1>
+                    </nav>
+                    <main className=" pl-3 pr-10 w-6xl">
+                        <Outlet />
+                    </main>
+                </div>
             </div>
         </div>
     )
