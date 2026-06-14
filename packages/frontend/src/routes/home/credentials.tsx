@@ -8,7 +8,6 @@ export const Route = createFileRoute('/home/credentials')({
 function CredentialsRoute() {
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-semibold">Credentials</h1>
         </div>
     )
 }

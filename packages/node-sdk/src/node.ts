@@ -7,7 +7,8 @@ import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection"
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import Redis from "ioredis";
 import { mapFieldValues } from "./utils/mapFieldValues";
- 
+import { Synthesizer } from "./synthesizer";
+
 export abstract class RuntimeNode<
 
     T_Blueprint extends Blueprint,
@@ -89,13 +90,22 @@ export abstract class RuntimeNode<
         const fields = mapFieldValues<T_Blueprint>(this.workflowNode.id, this.context.workflowData);
         const evaluated: Record<Foundations.Field.Id, unknown> = { ...fields };
 
+        // Project each port value to its plain-object form before injecting as @in —
+        // raw LC instances (BaseChatModel, BaseRetriever, etc.) contain functions that
+        // can't be structured-cloned into the isolate.
+        const projectedIncoming: Record<string, unknown> = {};
+        for (const input of this.workflowNode.inputs) {
+            const value = (incoming as Record<string, unknown>)[input.id as string];
+            projectedIncoming[input.id as string] = Synthesizer.project(value, input.variant);
+        }
+
         // Set `@in` once for this firing, evaluate every isExpression field synchronously,
         // then it's cleared — one copy of `incoming`, atomic against concurrent firings.
         this.context
             .airlockAPI
             .executeSync(
                 {
-                    [Airlock.GLOBALS.in]: incoming,
+                    [Airlock.GLOBALS.in]: projectedIncoming,
                     [Airlock.GLOBALS.nodeId]: this.workflowNode.id,
                 },
                 (evaluate) => {

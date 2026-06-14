@@ -1,0 +1,86 @@
+<svg width="600" height="600" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Recolor the whole folder by overriding the folder-color CSS variable (default charcoal).
+       All shades are derived from it with color-mix. -->
+  <style>
+    svg { --folder-color: #454c54; }
+  </style>
+  <defs>
+    <!-- Back panel (tab + top wall) — slightly darker, sits behind the front face -->
+    <linearGradient id="backGrad" x1="300" y1="104" x2="300" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="color-mix(in srgb, var(--folder-color) 88%, black)"/>
+      <stop offset="1" stop-color="color-mix(in srgb, var(--folder-color) 73%, black)"/>
+    </linearGradient>
+
+    <!-- Front face: subtle vertical gradient, lighter in the middle -->
+    <linearGradient id="bodyGrad" x1="300" y1="172" x2="300" y2="530" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="color-mix(in srgb, var(--folder-color) 85%, black)"/>
+      <stop offset="0.16" stop-color="var(--folder-color)"/>
+      <stop offset="0.55" stop-color="color-mix(in srgb, var(--folder-color) 88%, black)"/>
+      <stop offset="1" stop-color="color-mix(in srgb, var(--folder-color) 76%, black)"/>
+    </linearGradient>
+
+    <!-- Bottom lip -->
+    <linearGradient id="lipGrad" x1="300" y1="470" x2="300" y2="535" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="color-mix(in srgb, var(--folder-color) 76%, black)"/>
+      <stop offset="1" stop-color="color-mix(in srgb, var(--folder-color) 66%, black)"/>
+    </linearGradient>
+
+    <!-- Soft drop shadow -->
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.28"/>
+    </filter>
+
+    <!-- Faint top highlight on the front face -->
+    <linearGradient id="topHighlight" x1="300" y1="172" x2="300" y2="222" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.09"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#softShadow)">
+    <!-- BACK PANEL: continuous top contour (tab on the left, top wall across) — peeks above the front face -->
+    <path d="M58 172
+             L58 122
+             Q58 104 76 104
+             L190 104
+             Q206 104 215 119
+             L239 142
+             Q251 153 272 153
+             L520 153
+             Q542 153 542 175
+             L542 240
+             L58 240 Z"
+          fill="url(#backGrad)"/>
+
+    <!-- Bottom lip / stacked front lines -->
+    <path d="M40 480
+             L560 480
+             L560 505
+             Q560 535 530 535
+             L70 535
+             Q40 535 40 505 Z"
+          fill="url(#lipGrad)"/>
+    <line x1="55" y1="498" x2="545" y2="498" stroke="color-mix(in srgb, var(--folder-color) 60%, black)" stroke-width="2" opacity="0.6"/>
+    <line x1="55" y1="510" x2="545" y2="510" stroke="color-mix(in srgb, var(--folder-color) 60%, black)" stroke-width="2" opacity="0.5"/>
+
+    <!-- FRONT FACE: starts below the back panel's top edge -->
+    <path d="M40 194
+             Q40 172 62 172
+             L538 172
+             Q560 172 560 194
+             L560 500
+             Q560 510 552 510
+             L48 510
+             Q40 510 40 500 Z"
+          fill="url(#bodyGrad)"/>
+
+    <!-- Top inner highlight on the front face -->
+    <path d="M40 194
+             Q40 172 62 172
+             L538 172
+             Q560 172 560 194
+             L560 215
+             L40 215 Z"
+          fill="url(#topHighlight)"/>
+  </g>
+</svg>

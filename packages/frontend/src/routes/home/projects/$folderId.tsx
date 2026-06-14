@@ -65,14 +65,14 @@ function FolderView({ folderId }: { folderId: Library.Folder.Id }) {
 
     const isEmpty = childFolders.length === 0 && workflows.length === 0
 
+    const breadCrumbs = LibrarySDK.useStore(s => {
+        return LibrarySDK.selectors.getBreadcrumbs(s, folderId);
+    });
+
     return (
         <>
             <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-sm opacity-70">
-                    <span>{childFolders.length} folder{childFolders.length === 1 ? '' : 's'}</span>
-                    <span>·</span>
-                    <span>{workflows.length} workflow{workflows.length === 1 ? '' : 's'}</span>
-                </div>
+                <Breadcrumbs cwd={breadCrumbs} />
                 <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
@@ -83,7 +83,6 @@ function FolderView({ folderId }: { folderId: Library.Folder.Id }) {
                         New folder
                     </Button>
                     <Button
-                        variant="outline"
                         size="sm"
                         onClick={() => openCreateWorkflowDialog({ folder_id: folderId })}
                     >
@@ -96,10 +95,25 @@ function FolderView({ folderId }: { folderId: Library.Folder.Id }) {
             {isEmpty ? (
                 <EmptyFolder />
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {childFolders.map((f) => <FolderCard key={f.id} folder={f} />)}
-                    {workflows.map((w) => <WorkflowCard key={w.id} workflow={w} />)}
-                </div>
+                <>
+                    {childFolders.length > 0 && (
+                        <>
+                            <h4>{childFolders.length} Folder{childFolders.length === 1 ? '' : 's'}</h4>
+                            <div className="grid grid-cols-2 mt-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-3">
+                                {childFolders.map((f) => <FolderCard key={f.id} folder={f} />)}
+                            </div>
+                        </>
+                    )}
+                    {workflows.length > 0 && (
+                        <>
+                            <h4>{workflows.length} Workflow{workflows.length === 1 ? '' : 's'}</h4>
+                            <div className="grid grid-cols-2 mt-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-3">
+                            {workflows.map((w) => <WorkflowCard key={w.id} workflow={w} />)}
+                            </div>
+                        </>
+                    )}
+                </>
+                
             )}
         </>
     )

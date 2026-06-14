@@ -7,6 +7,7 @@ import { DialogSDK } from '@/SDKs/DialogSDK'
 import { LibrarySDK } from '../sdk'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { toast } from 'sonner'
+import { FolderIcon } from '@/routes/home/projects/-components/FolderIcon'
 
 const DIALOG_CLASSNAME = 'sm:max-w-[480px] w-full'
 
@@ -58,7 +59,7 @@ function CreateFolderContent({ dialogId, parent_folder_id }: { dialogId: string;
         <div className="p-3 flex flex-col gap-4">
             <Dialog.Header className="my-1">
                 <Dialog.Title className="flex items-center gap-2">
-                    <SystemIcons.Folder />
+                    <FolderIcon color="var(--primary)" className="size-8 shrink-0" />
                     New folder
                 </Dialog.Title>
                 <Dialog.Description className="text-muted-foreground">

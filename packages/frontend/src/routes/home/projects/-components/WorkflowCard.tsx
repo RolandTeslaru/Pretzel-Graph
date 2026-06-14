@@ -1,8 +1,9 @@
+import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { DialogSDK } from '@/SDKs/DialogSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { AlertDialog, Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, ContextMenu } from '@pretzel-graph/standard-ui/foundations'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { openEditWorkflowDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
@@ -13,77 +14,69 @@ interface WorkflowCardProps {
 
 export function WorkflowCard({ workflow }: WorkflowCardProps) {
     return (
-        <div
-            className="relative rounded-xl border hover:bg-muted/40 transition-colors shadow-md shadow-black/10"
-            style={{
-                backgroundColor: workflow.accent
-                    ? `color-mix(in srgb, var(--${workflow.accent}) 8%, transparent)`
-                    : undefined,
-                borderColor: workflow.accent
-                    ? `color-mix(in srgb, var(--${workflow.accent}) 30%, var(--border))`
-                    : undefined,
-            }}
-        >
-            <div className="absolute top-2 right-2 z-10">
-                <DropdownMenu.Root>
-                    <DropdownMenu.Trigger asChild>
-                        <Button variant="ghost" size="icon-xs" className="p-0!">
-                            <SystemIcons.Ellipsis />
-                        </Button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content align="end">
-                        <DropdownMenu.Item onClick={() => openEditWorkflowDialog({ workflow })}>
-                            <SystemIcons.SquarePen />
-                            Edit
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item onClick={() => LibrarySDK.actions.workflow.duplicate(workflow.id)}>
-                            <SystemIcons.Copy />
-                            Duplicate
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(workflow.id)}>
-                            <SystemIcons.Copy />
-                            Copy ID
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item
-                            variant="destructive"
-                            onClick={() => openDeleteWorkflowDialog(workflow)}
-                        >
-                            <SystemIcons.Trash2 />
-                            Delete
-                        </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                </DropdownMenu.Root>
-            </div>
-
+        <WorkflowCardContextMenu workflow={workflow}>
             <Link
                 to="/workflow/$workflowid"
                 params={{ workflowid: workflow.id }}
-                className="block p-4 pr-11"
+                className="p-4 flex flex-col gap-1 hover:bg-accent/30 rounded-md relative m-auto"
             >
-                <div className="flex items-center gap-3">
-                    <div
-                        className="p-2 rounded-full shrink-0"
-                        style={{
-                            backgroundColor: workflow.accent
-                                ? `color-mix(in srgb, var(--${workflow.accent}) 25%, transparent)`
-                                : 'var(--muted)',
-                        }}
-                    >
-                        <LazyIcon
-                            name={workflow.icon ?? "Graph"}
-                            size={16}
-                            style={{ color: workflow.accent ? `var(--${workflow.accent}-foreground)` : undefined }}
-                        />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <div className="font-medium truncate">{workflow.display_name || 'Untitled'}</div>
-                        {workflow.description && (
-                            <p className="text-xs opacity-60 truncate mt-0.5">{workflow.description}</p>
-                        )}
-                    </div>
+                <LazyIcon
+                    name={workflow.icon ?? "Graph"}
+                    size={40}
+                    className="shrink-0 w-fit h-fit m-auto"
+                    style={{ color: workflow.accent ? `var(--${workflow.accent})` : "var(--primary)" }}
+                />
+                <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm text-center truncate">{workflow.display_name || 'Untitled'}</p>
+                    {workflow.description && (
+                        <p className="text-xs opacity-60 truncate mt-0.5">{workflow.description}</p>
+                    )}
                 </div>
             </Link>
-        </div>
+        </WorkflowCardContextMenu>
+    )
+}
+
+interface WorkflowCardContextMenuProps {
+    workflow: Library.WorkflowMeta
+    children: ReactNode
+}
+
+function WorkflowCardContextMenu({ workflow, children }: WorkflowCardContextMenuProps) {
+    return (
+        <ContextMenu.Root>
+            <ContextMenu.Trigger asChild>
+                {children}
+            </ContextMenu.Trigger>
+            <ContextMenu.Content>
+                <ContextMenu.Item
+                    icon={<SystemIcons.SquarePen className='size-4' />}
+                    onClick={() => openEditWorkflowDialog({ workflow })}
+                >
+                    Edit
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                    icon={<SystemIcons.Copy className='size-4' />}
+                    onClick={() => LibrarySDK.actions.workflow.duplicate(workflow.id)}
+                >
+                    Duplicate
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                    icon={<SystemIcons.Copy className='size-4' />}
+                    onClick={() => navigator.clipboard.writeText(workflow.id)}
+                >
+                    Copy ID
+                </ContextMenu.Item>
+                <ContextMenu.Separator />
+                <ContextMenu.Item
+                    variant='destructive'
+                    icon={<SystemIcons.Trash2 className='size-4' />}
+                    onClick={() => openDeleteWorkflowDialog(workflow)}
+                >
+                    Delete
+                </ContextMenu.Item>
+            </ContextMenu.Content>
+        </ContextMenu.Root>
     )
 }
 
