@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { Tree } from "./Tree"
-import { projectionsToTree } from "./toTree"
+import { projectionsToDummyTree } from "./toTree"
 import type { Tree as TreeD } from "./domain"
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
 
@@ -49,7 +49,7 @@ function ProjectionBranchRenderer({ branch, level, isExpanded, isLeaf, onToggle 
 }
 
 export function ProjectionsTree({ projections, className }: Props) {
-    const root = useMemo(() => projectionsToTree(projections), [projections])
+    const root = useMemo(() => projectionsToDummyTree(projections), [projections])
 
     return (
         <Tree
