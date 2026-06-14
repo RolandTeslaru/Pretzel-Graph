@@ -9,8 +9,8 @@ export function jsonToTree(value: unknown): Tree.Dummy.Branch {
         if (value.length === 0) return { data: value }
         return {
             childBranches: Object.fromEntries(
-                value.map((item, i) => [`${i}` as Tree.BranchKey, jsonToTree(item)])
-            ) as Record<Tree.BranchKey, Tree.Dummy.Branch>,
+                value.map((item, i) => [`${i}` as Tree.Branch.Key, jsonToTree(item)])
+            ) as Record<Tree.Branch.Key, Tree.Dummy.Branch>,
         }
     }
 
@@ -19,20 +19,21 @@ export function jsonToTree(value: unknown): Tree.Dummy.Branch {
 
     return {
         childBranches: Object.fromEntries(
-            entries.map(([k, v]) => [k as Tree.BranchKey, jsonToTree(v)])
-        ) as Record<Tree.BranchKey, Tree.Dummy.Branch>,
+            entries.map(([k, v]) => [k as Tree.Branch.Key, jsonToTree(v)])
+        ) as Record<Tree.Branch.Key, Tree.Dummy.Branch>,
     }
 }
 
-export function projectionsToTree(
-    projections: Record<string, Record<string, unknown>>
-): Tree.Dummy.Branch {
+export function projectionsToDummyTree<T_Data = undefined>(
+    projections: Record<string, Record<string, unknown>>,
+    branchData?: Record<string, T_Data>
+): Tree.Dummy.Branch<T_Data> {
     return {
         childBranches: Object.fromEntries(
-            Object.entries(projections).map(([nodeId, outputs]) => [
-                nodeId as Tree.BranchKey,
-                { ...jsonToTree(outputs), isExpandedByDefault: true },
+            Object.entries(projections).map(([key, outputs]) => [
+                key as Tree.Branch.Key,
+                { ...jsonToTree(outputs), isExpandedByDefault: true, data: branchData?.[key] },
             ])
-        ) as Record<Tree.BranchKey, Tree.Dummy.Branch>,
+        ) as Record<Tree.Branch.Key, Tree.Dummy.Branch<T_Data>>,
     }
 }
