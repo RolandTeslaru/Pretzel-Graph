@@ -1,73 +1,77 @@
+import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { DialogSDK } from '@/SDKs/DialogSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { AlertDialog, Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, ContextMenu } from '@pretzel-graph/standard-ui/foundations'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { openEditProjectDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
+import { FolderIcon } from './FolderIcon'
 
 interface ProjectCardProps {
     project: Library.Folder
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
-    const [childCount, workflowCount] = LibrarySDK.useStore((s) => [
-        Object.values(s.folders).filter((f) => f.parent_folder_id === project.id).length,
+    const itemCount = LibrarySDK.useStore((s) =>
+        Object.values(s.folders).filter((f) => f.parent_folder_id === project.id).length +
         Object.values(s.workflowMetas).filter((w) => w.folder_id === project.id).length,
-    ])
+    )
 
     return (
-        <div className="relative rounded-xl border hover:bg-muted/40 transition-colors">
-            <div className="absolute top-2 right-2 z-10">
-                <DropdownMenu.Root>
-                    <DropdownMenu.Trigger asChild>
-                        <Button variant="ghost" size="icon-xs" className="p-0!">
-                            <SystemIcons.Ellipsis />
-                        </Button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content align="end">
-                        <DropdownMenu.Item onClick={() => openEditProjectDialog({ project })}>
-                            <SystemIcons.SquarePen />
-                            Edit project
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(project.id)}>
-                            <SystemIcons.Copy />
-                            Copy ID
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item
-                            variant="destructive"
-                            onClick={() => openDeleteProjectDialog(project)}
-                        >
-                            <SystemIcons.Trash2 />
-                            Delete project
-                        </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                </DropdownMenu.Root>
-            </div>
-
+        <ProjectCardContextMenu project={project}>
             <Link
                 to="/home/projects/$folderId"
                 params={{ folderId: project.id }}
                 disabled={!project.id}
-                className="block p-4 pr-11 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+                className="p-4 flex flex-col gap-1 hover:bg-accent/30 rounded-md relative m-auto aria-disabled:pointer-events-none aria-disabled:opacity-50"
             >
-                <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-muted shrink-0">
-                        <SystemIcons.Folder size={18} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <div className="font-medium truncate">{project.display_name}</div>
-                        {project.description && (
-                            <p className="text-sm opacity-60 truncate mt-0.5">{project.description}</p>
-                        )}
-                        <div className="text-xs opacity-50 mt-2 flex items-center gap-3">
-                            <span>{childCount} folder{childCount === 1 ? '' : 's'}</span>
-                            <span>{workflowCount} workflow{workflowCount === 1 ? '' : 's'}</span>
-                        </div>
+                <FolderIcon color="var(--primary)" className="size-20 shrink-0 mx-auto" />
+                <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm text-center truncate">{project.display_name}</p>
+                    <div className="text-xs opacity-50 mt-2 flex items-center justify-center gap-3">
+                        <span>{itemCount} item{itemCount === 1 ? '' : 's'}</span>
                     </div>
                 </div>
             </Link>
-        </div>
+        </ProjectCardContextMenu>
+    )
+}
+
+interface ProjectCardContextMenuProps {
+    project: Library.Folder
+    children: ReactNode
+}
+
+function ProjectCardContextMenu({ project, children }: ProjectCardContextMenuProps) {
+    return (
+        <ContextMenu.Root>
+            <ContextMenu.Trigger asChild>
+                {children}
+            </ContextMenu.Trigger>
+            <ContextMenu.Content>
+                <ContextMenu.Item
+                    icon={<SystemIcons.SquarePen className='size-4' />}
+                    onClick={() => openEditProjectDialog({ project })}
+                >
+                    Edit
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                    icon={<SystemIcons.Copy className='size-4' />}
+                    onClick={() => navigator.clipboard.writeText(project.id)}
+                >
+                    Copy ID
+                </ContextMenu.Item>
+                <ContextMenu.Separator />
+                <ContextMenu.Item
+                    variant='destructive'
+                    icon={<SystemIcons.Trash2 className='size-4' />}
+                    onClick={() => openDeleteProjectDialog(project)}
+                >
+                    Delete
+                </ContextMenu.Item>
+            </ContextMenu.Content>
+        </ContextMenu.Root>
     )
 }
 

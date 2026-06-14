@@ -21,13 +21,8 @@ function ProjectsRoute() {
 
     return (
         <div>
-            <Breadcrumbs
-                cwd={[{ key: '', name: 'Projects' }]}
-                className="mb-4"
-            />
             <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-semibold">Projects</h1>
-                <Button variant="outline" size="sm" onClick={() => openCreateProjectDialog()}>
+                <Button className="ml-auto" size="sm" onClick={() => openCreateProjectDialog()}>
                     <SystemIcons.Plus />
                     New project
                 </Button>
