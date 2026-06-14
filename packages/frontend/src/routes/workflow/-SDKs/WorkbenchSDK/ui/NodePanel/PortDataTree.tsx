@@ -1,22 +1,16 @@
+import { useMemo } from 'react'
 import { Tree } from '@/components/Tree/Tree'
+import { projectionsToDummyTree } from '@/components/Tree/toTree'
 import type { Tree as TreeType } from '@/components/Tree/domain'
 import type { Foundations } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
-interface Props {
-    root: TreeType.Dummy.Branch
-    keyNameMap?: Record<string, string | undefined>
-    portVariantMap?: Record<string, Foundations.Port.Variant>
-    className?: string
-}
+export type PortBranchMeta = { displayName?: string; variant?: Foundations.Port.Variant }
 
-function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSibling, onToggle, keyNameMap, portVariantMap }: TreeType.Branch.RenderProps & {
-    keyNameMap?: Record<string, string | undefined>
-    portVariantMap?: Record<string, Foundations.Port.Variant>
-}) {
-    const label = keyNameMap?.[branch.key] ?? branch.key
+export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSibling, onToggle }: TreeType.Branch.RenderProps<PortBranchMeta>) {
+    const label = branch.data?.displayName ?? branch.key
     const isPortRoot = level === 0
-    const variant = isPortRoot ? portVariantMap?.[branch.key] : undefined
+    const variant = isPortRoot ? branch.data?.variant : undefined
 
     return (
         <div
@@ -49,22 +43,31 @@ function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSibling, 
             ) : (
                 <></>
             )}
-            <span className="whitespace-nowrap text-[10px] font-medium text-foreground">{label}</span>
+            <span className="whitespace-nowrap text-[11px] font-medium text-foreground">{label}</span>
             {isLeaf && branch.data !== undefined && (
-                <span className="ml-auto whitespace-nowrap text-muted-foreground text-[10px] pl-1">{String(branch.data)}</span>
+                <span className="ml-auto whitespace-nowrap text-muted-foreground text-[11px] pl-1">{String(branch.data)}</span>
             )}
         </div>
     )
 }
 
-export function PortDataTree({ root, keyNameMap, portVariantMap, className }: Props) {
-    return (
-        <Tree
-            root={root}
-            className={className}
-            renderBranch={(props) => (
-                <PortBranchRenderer {...props} keyNameMap={keyNameMap} portVariantMap={portVariantMap} />
-            )}
-        />
+export function PortProjectionsView({
+    ports,
+    projections,
+    emptyMessage,
+}: {
+    ports: Array<{ id: string; displayName?: string; variant: Foundations.Port.Variant }>
+    projections: Record<string, Record<string, unknown>>
+    emptyMessage: string
+}) {
+    const branchData = useMemo(
+        () => Object.fromEntries(ports.map(p => [p.id, { displayName: p.displayName, variant: p.variant }])),
+        [ports]
     )
+    const root = useMemo(() => projectionsToDummyTree(projections, branchData), [projections, branchData])
+
+    if (Object.keys(projections).length === 0)
+        return <div className='mt-2 text-xs text-muted-foreground px-1'>{emptyMessage}</div>
+
+    return <Tree root={root} renderBranch={PortBranchRenderer} />
 }
