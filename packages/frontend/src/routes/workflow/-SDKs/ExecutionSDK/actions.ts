@@ -3,7 +3,6 @@ import { api } from "@/SDKs/ApiInterceptorSDK";
 import { ExecutionSDK, type ExecutionSDKImpl } from "./sdk"
 import { toast } from "sonner";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
-import { ChatSDK } from "../ChatSDK/sdk";
 
 export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
     return {
@@ -52,7 +51,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 workflowData: WorkbenchSDK.state.data,
                 executionId,
                 igniter,
-                chat_id: ChatSDK.state.currentChatId ?? undefined,
+                chat_id: sdk.chatSDK.state.currentChatId ?? undefined,
             });
 
             toast.promise(executionCreationPromise, {

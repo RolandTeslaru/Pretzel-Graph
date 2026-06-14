@@ -6,7 +6,8 @@ import { Workflow, Library } from "@pretzel-graph/shared/domain";
 import { SDK } from "../SDKManager";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
-import type { TreeDataItem } from '@pretzel-graph/standard-ui/components/Tree/tree-view';
+import type { Tree as TreeDomain } from '@/components/Tree/domain';
+import type { FileSystemNodeData } from './actions';
 
 @SDK("Library")
 export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
@@ -18,7 +19,7 @@ export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
             folders: {},
             workflowMetas: {},
             treeExpandedByFolderId: {},
-            treeData: [],
+            treeData: {},
         })),
         shallow
     )
@@ -39,7 +40,7 @@ export namespace LibrarySDK {
         folders: Record<Library.Folder.Id, Library.Folder>;
         workflowMetas: Record<Workflow.Id, Library.WorkflowMeta>;
         treeExpandedByFolderId: Record<Library.Folder.Id, boolean>;
-        treeData: TreeDataItem[];
+        treeData: TreeDomain.Dummy.Branch<FileSystemNodeData>;
     }
 
     export type Selectors = _LibrarySDKSelectors

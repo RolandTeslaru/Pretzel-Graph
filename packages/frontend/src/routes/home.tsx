@@ -6,6 +6,9 @@ import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { PretzelGraphDropdown } from '@/components/PretzelGraphDropdown'
+import Dither from '@/components/Dither/Dither'
+import { ditherCtx } from '@/components/Dither/ditherCtx'
+import { SystemSDK } from '@/SDKs/SystemSDK'
 // import { Preview } from 'shaders/react'
 
 const HOME_STALE_TIME = 60_000
@@ -63,12 +66,30 @@ function HomeLayout() {
         { staleTime: HOME_STALE_TIME },
     )
 
+    const theme = SystemSDK.useStore(s => s.theme)
+
     return (
-        <div className="flex min-h-screen relative">
-            <Sidebar />
-            <main className="flex-1 bg-card/80 backdrop-blur-md mt-4 mr-2 rounded-2xl overflow-auto border border-border shadow-md shadow-black/5">
-                <Outlet />
-            </main>
+        <div className="flex max-h-screen w-full min-h-screen relative overflow-hidden">
+            <div className="pointer-events-none w-full fixed inset-0 z-0">
+                <Dither
+                    ctx={ditherCtx}
+                    waveColorVar="--primary"
+                    bgColor={theme === "dark" ? [0.08, 0.08, 0.08] : [0.88, 0.88, 0.88]}
+                    disableAnimation={false}
+                    enableMouseInteraction={false}
+                    mouseRadius={0.3}
+                    colorNum={5.5}
+                    waveAmplitude={0.20}
+                    waveFrequency={1.4}
+                    waveSpeed={0.05}
+                />
+            </div>
+            <div className="relative z-10 flex flex-row bg-background/80 backdrop-blur-lg max-h-screen  min-h-screen mr-auto">
+                <Sidebar />
+                <main className="pt-4 pl-3 pr-10 w-6xl">
+                    <Outlet />
+                </main>
+            </div>
         </div>
     )
 }
@@ -85,7 +106,7 @@ function Sidebar() {
                 {NAV_TOP.map((e) => <NavItem key={e.id} entry={e} />)}
             </nav>
 
-            <div className="p-2 border-t flex flex-col gap-0.5">
+            <div className="p-2 flex flex-col gap-0.5">
                 {NAV_BOTTOM.map((e) => <NavItem key={e.id} entry={e} />)}
             </div>
         </aside>
@@ -102,7 +123,7 @@ function NavItem({ entry }: { entry: NavEntry }) {
             to={entry.to}
             className={[
                 'flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors',
-                active ? 'bg-muted font-medium' : 'hover:bg-muted/50 opacity-80 hover:opacity-100',
+                active ? 'bg-muted/80 font-medium' : 'hover:bg-muted/50 opacity-80 hover:opacity-100',
             ].join(' ')}
         >
             <Icon size={16} className={active ? 'stroke-primary' : ''} />

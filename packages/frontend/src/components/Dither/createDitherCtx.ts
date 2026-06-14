@@ -231,11 +231,17 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
   let varColor: [number, number, number] | null = null;
   let varBgColor: [number, number, number] | null = null;
 
-  const renderer = new Renderer({ antialias: true });
+  // No antialias: a fullscreen dither pass has no geometry edges, so MSAA only
+  // wastes a multisampled buffer.
+  const renderer = new Renderer({ antialias: false });
   const gl = renderer.gl;
   gl.clearColor(0, 0, 0, 1);
   gl.canvas.style.width = '100%';
   gl.canvas.style.height = '100%';
+
+  // Wave pass renders at this fraction of canvas res; the dither pass upscales
+  // it. Lower = cheaper fbm, hidden by dithering + any backdrop blur.
+  const WAVE_SCALE = 0.5;
 
   const waveGeometry = new Triangle(gl);
   const ditherGeometry = new Triangle(gl);
@@ -284,10 +290,14 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
     const w = container.offsetWidth || 1;
     const h = container.offsetHeight || 1;
     renderer.setSize(w, h);
-    const res: [number, number] = [gl.canvas.width, gl.canvas.height];
-    waveProgram.uniforms.uResolution.value = res;
-    ditherProgram.uniforms.uResolution.value = res;
-    target.setSize(gl.canvas.width, gl.canvas.height);
+    // Dither pass runs at full canvas res (for crisp pixelSize/Bayer blocks)…
+    ditherProgram.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height];
+    // …but the expensive fbm wave pass renders into a downscaled target and is
+    // bilinearly upscaled when sampled, so the noise runs on 1/4 the pixels.
+    const ww = Math.max(1, Math.round(gl.canvas.width * WAVE_SCALE));
+    const wh = Math.max(1, Math.round(gl.canvas.height * WAVE_SCALE));
+    waveProgram.uniforms.uResolution.value = [ww, wh];
+    target.setSize(ww, wh);
     ditherProgram.uniforms.tMap.value = target.texture;
   }
 
@@ -299,8 +309,14 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
     mouse[1] = (e.clientY - rect.top) * dpr;
   };
 
+  // Slow wave ⇒ 30fps is indistinguishable from 60/120 but ~half the GPU work.
+  const FRAME_INTERVAL = 1000 / 30;
+  let lastFrame = 0;
+
   const update = (t: number) => {
     animateId = requestAnimationFrame(update);
+    if (t - lastFrame < FRAME_INTERVAL) return;
+    lastFrame = t;
 
     const wu = waveProgram.uniforms;
     if (!get('disableAnimation')) {
@@ -334,6 +350,13 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
     cancelAnimationFrame(animateId);
   }
 
+  // Pause the loop entirely while the tab is hidden; resume on return (only if
+  // still mounted to a container).
+  const handleVisibility = () => {
+    if (document.hidden) stop();
+    else if (container) start();
+  };
+
   return {
     canvas: gl.canvas,
 
@@ -348,6 +371,7 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
       if (props.bgColorVar) varBgColor = cssVarToRgb(props.bgColorVar);
 
       gl.canvas.addEventListener('pointermove', handlePointerMove);
+      document.addEventListener('visibilitychange', handleVisibility);
 
       resizeObserver?.disconnect();
       resizeObserver = new ResizeObserver(() => resize());
@@ -360,6 +384,7 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
     unmount() {
       stop();
       gl.canvas.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('visibilitychange', handleVisibility);
       resizeObserver?.disconnect();
       resizeObserver = null;
       if (container && gl.canvas.parentNode === container) {
@@ -375,6 +400,7 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
     destroy() {
       stop();
       gl.canvas.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('visibilitychange', handleVisibility);
       resizeObserver?.disconnect();
       resizeObserver = null;
       if (container && gl.canvas.parentNode === container) {

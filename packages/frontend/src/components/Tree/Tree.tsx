@@ -16,7 +16,7 @@ export function Tree<T_Data = any>({ root, renderBranch, className }: TreeProps<
         const set = new Set<string>()
         Object.values(tree).forEach((branch) => {
             if (branch.isExpanded || branch.isExpandedByDefault) {
-                set.add(branch.key)
+                set.add(branch.pathString)
             }
         })
         return set
@@ -45,13 +45,22 @@ export function Tree<T_Data = any>({ root, renderBranch, className }: TreeProps<
                     level,
                     isExpanded,
                     isLeaf,
+                    isLastSibling: branch.isLastSibling,
                     onToggle: () => toggle(branch.pathString),
                 })}
-                {!isLeaf && isExpanded && (
-                    <div>
-                        {Object.values(branch.childBranches!).map((child) =>
-                            renderBranchNode(child as TreeD.Branch<T_Data>, level + 1)
-                        )}
+                {!isLeaf && (
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateRows: isExpanded ? "1fr" : "0fr",
+                            transition: "grid-template-rows 200ms ease",
+                        }}
+                    >
+                        <div style={{ overflow: "hidden" }}>
+                            {Object.values(branch.childBranches!).map((child) =>
+                                renderBranchNode(child as TreeD.Branch<T_Data>, level + 1)
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
