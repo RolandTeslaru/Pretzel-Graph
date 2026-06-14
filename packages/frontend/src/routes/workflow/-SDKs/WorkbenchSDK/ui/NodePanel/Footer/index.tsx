@@ -44,7 +44,7 @@ export const NodeSidebarFooter = ({ node }: { node: Workflow.Node }) => {
     }
 
     return (
-        <div className='absolute z-10 bottom-2 left-2 flex flex-row justify-between bg-card-float w-[calc(100%-16px)]'>
+        <div className='absolute z-10 bottom-2 left-2 flex flex-row justify-between w-[calc(100%-16px)]'>
             <Button variant={isInputsOpen ? "active" : "ghost"} size="sm" className="gap-2 rounded-full" onClick={toggleInputs}>
                 <SystemIcons.LogIn/>
                 <p className="text-xs h-auto my-auto mt-1.5">Incoming</p>

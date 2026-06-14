@@ -208,12 +208,12 @@ function FileSystemTreeItem({
                             <span key={i} className='shrink-0 w-5 relative self-stretch'>
                                 {isInnermost ? (
                                     isLastSibling ? (
-                                        <span className='absolute top-0 h-1/2 left-[7px] right-1.5 border-l border-b border-primary-foreground/20 rounded-bl-lg' />
+                                        <span className='absolute top-0 h-1/2 left-[7px] right-1.5 border-l border-b border-accent-foreground/20 rounded-bl-lg' />
                                     ) : (
-                                        <span className='absolute inset-y-0 left-[7px] border-l border-primary-foreground/20' />
+                                        <span className='absolute inset-y-0 left-[7px] border-l border-accent-foreground/20' />
                                     )
                                 ) : !branch.ancestorIsLast[i + 1] ? (
-                                    <span className='absolute inset-y-0 left-[7px] border-l border-primary-foreground/20' />
+                                    <span className='absolute inset-y-0 left-[7px] border-l border-accent-foreground/20' />
                                 ) : null}
                             </span>
                         )

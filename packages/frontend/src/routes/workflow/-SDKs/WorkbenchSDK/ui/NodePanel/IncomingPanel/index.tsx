@@ -70,7 +70,7 @@ const Content = ({ node, execution }: { node: Workflow.Node; execution: Executio
   }
 
   return (
-    <div className='mt-2 pt-8'>
+    <div className='mt-2'>
       <PortDataTree root={root} keyNameMap={keyNameMap} portVariantMap={portVariantMap} />
     </div>
   )
