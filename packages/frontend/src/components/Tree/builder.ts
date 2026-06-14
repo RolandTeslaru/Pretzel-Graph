@@ -8,12 +8,16 @@ export const buildTree = (dummyTree: Tree.Dummy.Branch): Tree => {
         path: ["root" as Tree.Branch.Key],
         pathString: "root" as Tree.Branch.PathString,
         childBranches: {} as Record<Tree.Branch.Key, Tree.Branch>,
+        isLastSibling: true,
+        ancestorIsLast: [],
     }
 
     const buildBranch = (
         key: Tree.Branch.Key,
         dummyBranch: Tree.Dummy.Branch,
         parentBranch: Tree.Branch,
+        isLastSibling: boolean,
+        ancestorIsLast: boolean[],
     ): Tree.Branch => {
         const path = [...parentBranch.path, key]
         const pathString = path.join(".") as Tree.Branch.PathString
@@ -25,18 +29,21 @@ export const buildTree = (dummyTree: Tree.Dummy.Branch): Tree => {
             data: dummyBranch.data,
             isExpandedByDefault: dummyBranch.isExpandedByDefault,
             isExpanded: dummyBranch.isExpanded ?? dummyBranch.isExpandedByDefault ?? false,
+            isLastSibling,
+            ancestorIsLast,
         }
 
         if (dummyBranch.childBranches) {
             const childBranches = {} as Record<Tree.Branch.Key, Tree.Branch>
-
-
-            // Recursively build child branches
-            Object.entries(dummyBranch.childBranches).forEach(([childKey, childDummy]) => {
+            const childKeys = Object.keys(dummyBranch.childBranches)
+            const childAncestorIsLast = [...ancestorIsLast, isLastSibling]
+            childKeys.forEach((childKey, i) => {
                 childBranches[childKey as Tree.Branch.Key] = buildBranch(
                     childKey as Tree.Branch.Key,
-                    childDummy,
+                    dummyBranch.childBranches![childKey as Tree.Branch.Key],
                     branch,
+                    i === childKeys.length - 1,
+                    childAncestorIsLast,
                 )
             })
             branch.childBranches = childBranches
@@ -47,8 +54,15 @@ export const buildTree = (dummyTree: Tree.Dummy.Branch): Tree => {
     }
 
     if (dummyTree.childBranches) {
-        Object.entries(dummyTree.childBranches).forEach(([branchKey, dummyBranch]) => {
-            buildBranch(branchKey as Tree.Branch.Key, dummyBranch, rootBranch)
+        const rootKeys = Object.keys(dummyTree.childBranches)
+        rootKeys.forEach((branchKey, i) => {
+            buildBranch(
+                branchKey as Tree.Branch.Key,
+                dummyTree.childBranches![branchKey as Tree.Branch.Key],
+                rootBranch,
+                i === rootKeys.length - 1,
+                [],
+            )
         })
     }
 

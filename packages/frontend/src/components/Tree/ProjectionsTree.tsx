@@ -1,7 +1,7 @@
 import { useMemo } from "react"
-import { Tree } from "@/components/Tree/Tree"
-import { projectionsToTree } from "@/components/Tree/toTree"
-import type { Tree as TreeD } from "@/components/Tree/domain"
+import { Tree } from "./Tree"
+import { projectionsToTree } from "./toTree"
+import type { Tree as TreeD } from "./domain"
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
 
 interface Props {
@@ -23,7 +23,7 @@ function ProjectionBranchRenderer({ branch, level, isExpanded, isLeaf, onToggle 
 
     return (
         <div
-            className="flex items-center gap-1.5 py-0.5 px-1 rounded cursor-pointer select-none hover:bg-accent/50 text-xs group"
+            className="flex items-center gap-1.5 py-0.5 px-1 dasd rounded     cursor-pointer select-none hover:bg-accent/50 text-xs group"
             style={{ paddingLeft: `${level * 14 + 4}px` }}
             onClick={onToggle}
         >

@@ -15,6 +15,8 @@ export namespace Tree {
         path: Branch.Key[]
         pathString: Branch.PathString
         childBranches?: Record<Branch.Key, Branch>
+        isLastSibling: boolean
+        ancestorIsLast: boolean[]
     }
     export namespace Branch {
         export function isLeaf(branch: Branch): boolean {
@@ -30,6 +32,7 @@ export namespace Tree {
             level: number
             isExpanded: boolean
             isLeaf: boolean
+            isLastSibling: boolean
             onToggle: () => void
         }
         export type Renderer<T_Data = any> = (props: RenderProps<T_Data>) => React.ReactNode

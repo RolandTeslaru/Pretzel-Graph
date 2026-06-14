@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { DialogSDK } from "@/SDKs/DialogSDK";
 import FullscreenChat from "./ui/FullscreenChat";
-import { ExecutionSDK } from "../ExecutionSDK/sdk";
 
 function deriveChatName(content: string, maxLength = 50): string {
     const trimmed = content.trim().replace(/\s+/g, ' ');
@@ -71,7 +70,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                 try {
                     sdk.actions.message.upsert(message)
 
-                    await ExecutionSDK.actions.run({
+                    await sdk.executionSDK.actions.run({
                         variant: "chat_message",
                         message,
                     });

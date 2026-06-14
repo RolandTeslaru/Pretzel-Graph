@@ -1,13 +1,9 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import AuthenticationPanel from '@/SDKs/AuthSDK/ui/AuthenticationPanel'
 import Dither from '@/components/Dither/Dither'
-import { createDitherCtx } from '@/components/Dither/createDitherCtx'
+import { ditherCtx } from '@/components/Dither/ditherCtx'
 import { Pretzel } from '@pretzel-graph/standard-ui/icons/system'
 import { SystemSDK } from '@/SDKs/SystemSDK'
-
-// Created once outside the component so the WebGL renderer/canvas survive
-// remounts of the auth page.
-const ditherCtx = createDitherCtx()
 
 
 export const Route = createFileRoute('/auth/')({
