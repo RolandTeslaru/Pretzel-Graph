@@ -2,6 +2,7 @@ import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { FileSystemTree } from '@/SDKs/LibrarySDK/ui/FileSystemTree'
+import { ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 
 const BOOTSTRAP_STALE_TIME = 60_000
 
@@ -25,17 +26,15 @@ function ProjectsLayout() {
 
 
     return (
-        <div className="py-6 max-w-6xl w-full h-full">
-            <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6">
-                <aside className="h-fit sticky">
-                    <FileSystemTree
-                        className=" overflow-auto"
-                    />
-                </aside>
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6">
+            <ScrollArea.Root className="h-screen sticky top-0 left-0 pr-2">
+                <FileSystemTree
+                    className=" overflow-auto"
+                />
+            </ScrollArea.Root>
 
-                <div>
-                    <Outlet />
-                </div>
+            <div>
+                <Outlet />
             </div>
         </div>
     )

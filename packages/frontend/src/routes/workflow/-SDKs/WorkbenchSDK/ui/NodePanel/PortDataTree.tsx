@@ -10,7 +10,7 @@ interface Props {
     className?: string
 }
 
-function PortBranchRenderer({ branch, level, isExpanded, isLeaf, onToggle, keyNameMap, portVariantMap }: TreeType.Branch.RenderProps & {
+function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSibling, onToggle, keyNameMap, portVariantMap }: TreeType.Branch.RenderProps & {
     keyNameMap?: Record<string, string | undefined>
     portVariantMap?: Record<string, Foundations.Port.Variant>
 }) {
@@ -20,26 +20,38 @@ function PortBranchRenderer({ branch, level, isExpanded, isLeaf, onToggle, keyNa
 
     return (
         <div
-            className="flex items-center gap-1 py-0.5 px-1 rounded-md cursor-pointer select-none hover:bg-accent/50 text-sm"
-            style={{
-                paddingLeft: `${level * 12 + 4}px`,
-                ...(variant && {
-                    backgroundColor: `color-mix(in srgb, var(--port-${variant}) 15%, transparent)`,
-                })
-            }}
+            className="flex items-center h-6 pr-1 pl-1 rounded-md cursor-pointer select-none hover:bg-accent/50 text-sm"
+            style={variant ? { backgroundColor: `color-mix(in srgb, var(--port-${variant}) 15%, transparent)` } : undefined}
             onClick={onToggle}
         >
+            {Array.from({ length: level }).map((_, i) => {
+                const isInnermost = i === level - 1
+
+                return (
+                    <span key={i} className="shrink-0 w-5 relative self-stretch">
+                        {isInnermost ? (
+                            isLastSibling ? (
+                                <span className="absolute top-0 h-1/2 left-[7px] right-1.5 border-l border-b border-primary-foreground/20 rounded-bl-lg" />
+                            ) : (
+                                <span className="absolute inset-y-0 left-[7px] border-l border-primary-foreground/20" />
+                            )
+                        ) : !branch.ancestorIsLast[i + 1] ? (
+                            <span className="absolute inset-y-0 left-[7px] border-l border-primary-foreground/20" />
+                        ) : null}
+                    </span>
+                )
+            })}
             {!isLeaf ? (
                 <SystemIcons.ChevronRight
-                    className="shrink-0 h-3.5 w-3.5 text-muted-foreground transition-transform duration-150"
+                    className="shrink-0 h-4 w-4 text-muted-foreground transition-transform duration-150"
                     style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
                 />
             ) : (
-                <span className="h-3.5 w-3.5 shrink-0" />
+                <></>
             )}
-            <span className="whitespace-nowrap text-[10px] text-foreground">{label}</span>
+            <span className="whitespace-nowrap text-[10px] font-medium text-foreground">{label}</span>
             {isLeaf && branch.data !== undefined && (
-                <span className="ml-auto whitespace-nowrap text-muted-foreground text-[10px] pl-2">{String(branch.data)}</span>
+                <span className="ml-auto whitespace-nowrap text-muted-foreground text-[10px] pl-1">{String(branch.data)}</span>
             )}
         </div>
     )

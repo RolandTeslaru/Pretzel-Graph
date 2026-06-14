@@ -2,8 +2,10 @@ import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { api } from '../ApiInterceptorSDK';
 import type { LibrarySDKImpl } from './sdk';
 import type { LibrarySDK } from './sdk';
-import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
-import type { TreeDataItem } from '@pretzel-graph/standard-ui/components/Tree/tree-view';
+import type { Tree as TreeDomain } from '@/components/Tree/domain';
+
+export type FileSystemNodeData = { name: string }
+type FileNode = TreeDomain.Dummy.Branch<FileSystemNodeData>
 
 export type _LibrarySDKActions = {
     rebuildTree: () => void;
@@ -36,7 +38,7 @@ export type _LibrarySDKActions = {
 };
 
 
-function buildTreeData(s: LibrarySDK.State): TreeDataItem[] {
+function buildTreeData(s: LibrarySDK.State): FileNode {
     const { folders, workflowMetas, treeExpandedByFolderId } = s;
 
     const childFoldersByParent = new Map<string, Library.Folder[]>()
@@ -63,25 +65,17 @@ function buildTreeData(s: LibrarySDK.State): TreeDataItem[] {
         list.sort((a, b) => a.display_name.localeCompare(b.display_name))
     }
 
-    const buildFolderNode = (folder: Library.Folder): TreeDataItem => {
-        const folderChildren = (childFoldersByParent.get(folder.id) ?? []).map(buildFolderNode)
-        const workflowChildren = (workflowsByFolder.get(folder.id) ?? []).map((workflow) => ({
-            id: `workflow:${workflow.id}`,
-            name: workflow.display_name,
-            icon: SystemIcons.Graph,
-            selectedIcon: SystemIcons.Graph,
-        }))
-
-        const children = [...folderChildren, ...workflowChildren]
+    const buildFolderBranch = (folder: Library.Folder): FileNode => {
+        const childBranches: Record<string, FileNode> = {}
+        for (const child of childFoldersByParent.get(folder.id) ?? [])
+            childBranches[`folder:${child.id}`] = buildFolderBranch(child)
+        for (const workflow of workflowsByFolder.get(folder.id) ?? [])
+            childBranches[`workflow:${workflow.id}`] = { data: { name: workflow.display_name } }
 
         return {
-            id: `folder:${folder.id}`,
-            name: folder.display_name,
-            icon: SystemIcons.Folder,
-            openIcon: SystemIcons.FolderOpen,
-            selectedIcon: SystemIcons.FolderOpen,
-            expanded: treeExpandedByFolderId[folder.id] ?? true,
-            children: children.length > 0 ? children : undefined,
+            data: { name: folder.display_name },
+            isExpandedByDefault: treeExpandedByFolderId[folder.id] ?? true,
+            childBranches: (Object.keys(childBranches).length ? childBranches : undefined) as FileNode['childBranches'],
         }
     }
 
@@ -89,7 +83,10 @@ function buildTreeData(s: LibrarySDK.State): TreeDataItem[] {
         .filter((f) => f.is_root)
         .sort((a, b) => a.display_name.localeCompare(b.display_name))
 
-    return roots.map(buildFolderNode)
+    const childBranches: Record<string, FileNode> = {}
+    for (const root of roots) childBranches[`folder:${root.id}`] = buildFolderBranch(root)
+
+    return { childBranches: childBranches as FileNode['childBranches'] }
 }
 
 export function _createLibraryActions_(sdk: LibrarySDKImpl) {

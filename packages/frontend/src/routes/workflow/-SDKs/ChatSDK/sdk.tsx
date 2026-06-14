@@ -7,6 +7,7 @@ import { createChatSDKActions, type ChatSDKActions } from "./actions";
 import { createChatSDKReducers, type ChatSDKReducers } from "./reducers";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { DialogSDK } from "@/SDKs/DialogSDK";
+import type { ExecutionSDKImpl } from "../ExecutionSDK/sdk";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 
@@ -52,6 +53,8 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 
     public readonly selectors: ChatSDK.Selectors = {}
 
+
+    public get executionSDK(): ExecutionSDKImpl { return SDK.get<ExecutionSDKImpl>("Execution") }
 
     public handleOnEvent = (e: Chat.Event) => {
         switch (e.type) {

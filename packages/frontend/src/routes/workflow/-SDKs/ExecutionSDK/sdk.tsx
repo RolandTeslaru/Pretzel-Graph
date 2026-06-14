@@ -10,6 +10,7 @@ import { executionSDKSelectors, type ExecutionSDKSelectors } from "./selectors";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { handleExecutionEvents } from "./handle-events";
+import type { ChatSDKImpl } from "../ChatSDK/sdk";
 
 @SDK("Execution")
 export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
@@ -58,6 +59,8 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
     }
 
     public handleOnEvent = (e: Execution.Event) => { handleExecutionEvents(this, e) }
+
+    public get chatSDK(): ChatSDKImpl { return SDK.get<ChatSDKImpl>("Chat") }
 }
 
 export const ExecutionSDK = SDK.get<ExecutionSDKImpl>("Execution")
