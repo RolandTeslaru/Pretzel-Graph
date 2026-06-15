@@ -14,7 +14,7 @@ type RLValue = Foundations.Field.ResourceLoader.Value
 type Option = Foundations.Field.ResourceLoader.OptionItem
 
 export const ResourceLoaderField = memo<RendererProps<'ResourceLoader'>>(({ field, nodeId, className }) => {
-    const [storedValue, issue, isReconciling] = WorkbenchSDK.useField<RLValue>(nodeId, field.id)
+    const [storedValue, , , issue, isReconciling] = WorkbenchSDK.useField<RLValue>(nodeId, field)
     const value = storedValue ?? { mode: 'list', value: '' }
 
     const [open, setOpen] = useState(false)

@@ -7,7 +7,7 @@ import type { RendererProps } from './FieldLabel'
 const formatJson = (value: unknown) => JSON.stringify(value, null, 2) ?? 'null'
 
 export const JsonField = memo<RendererProps<'Json'>>(({ field, nodeId, className }) => {
-    const [value, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field.id)
+    const [value, onChange, flush, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field)
     const formattedValue = formatJson(value ?? field.initialValue)
     const [draft, setDraft] = useState(() => formattedValue)
     const [parseError, setParseError] = useState<string | null>(null)
@@ -34,11 +34,12 @@ export const JsonField = memo<RendererProps<'Json'>>(({ field, nodeId, className
                     try {
                         const nextValue = JSON.parse(nextDraft)
                         setParseError(null)
-                        WorkbenchSDK.actions.field.setValue(nodeId, field, nextValue)
+                        onChange(nextValue)
                     } catch (error) {
                         setParseError(error instanceof Error ? error.message : 'Invalid JSON')
                     }
                 }}
+                onBlur={flush}
                 className={innerClassName}
                 rows={10}
                 spellCheck={false}

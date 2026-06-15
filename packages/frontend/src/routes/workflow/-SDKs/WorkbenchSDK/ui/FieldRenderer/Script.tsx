@@ -12,7 +12,7 @@ import OutgoingPanel from '../NodePanel/OutgoingPanel';
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
 
 export const ScriptField = memo(({ field, nodeId, className }: RendererProps<'Script'>) => {
-    const [localValue, onChange, , , isReconciling] = WorkbenchSDK.useDebouncedField<string>(nodeId, field);
+    const [localValue, onChange, flush, , isReconciling] = WorkbenchSDK.useField<string>(nodeId, field);
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1 relative"}>
@@ -22,7 +22,7 @@ export const ScriptField = memo(({ field, nodeId, className }: RendererProps<'Sc
                     const snapshot = localValue;
                     DialogSDK.actions.push("ScriptDialog", (dialogProps) => (
                         <DialogSDK.Template {...dialogProps} className='overflow-hidden! border-none! bg-white/0! shadow-none! flex flex-row gap-4'>
-                            <ScriptDialogContent displayName={field.displayName} onChange={onChange} initialValue={snapshot} />
+                            <ScriptDialogContent displayName={field.displayName} onChange={onChange} onClose={flush} initialValue={snapshot} />
                         </DialogSDK.Template>
                     ))
                 }}
@@ -35,18 +35,22 @@ export const ScriptField = memo(({ field, nodeId, className }: RendererProps<'Sc
 ScriptField.displayName = "ScriptField"
 
 interface Props {
-    displayName: string, 
-    onChange: (val: string) => void, 
-    initialValue: string 
+    displayName: string,
+    onChange: (val: string) => void,
+    onClose: () => void,
+    initialValue: string
 }
 
-const ScriptDialogContent = ({ displayName, onChange, initialValue }: Props) => {
+const ScriptDialogContent = ({ displayName, onChange, onClose, initialValue }: Props) => {
     const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
         const timer = setTimeout(() => setMounted(true), 300)
         return () => clearTimeout(timer)
     }, [])
+
+    // commit the buffered script to the store when the editor closes
+    useEffect(() => () => onClose(), [onClose])
 
     const theme = SystemSDK.useStore(s => s.theme)
 

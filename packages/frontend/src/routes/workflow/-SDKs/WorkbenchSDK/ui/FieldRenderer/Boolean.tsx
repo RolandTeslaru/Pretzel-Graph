@@ -5,7 +5,7 @@ import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
 
 export const BooleanField = memo<RendererProps<'Boolean'>>(({ field, nodeId, className }) => {
-    const [value, , isReconciling] = WorkbenchSDK.useField(nodeId, field.id)
+    const [value, , , , isReconciling] = WorkbenchSDK.useField(nodeId, field)
 
     return (
         <div className={className + " flex items-center justify-between py-2 nodrag cursor-auto"}>

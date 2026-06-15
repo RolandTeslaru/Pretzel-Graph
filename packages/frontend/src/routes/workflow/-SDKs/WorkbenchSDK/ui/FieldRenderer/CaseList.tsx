@@ -27,7 +27,7 @@ const useCaseListEntry = (
 
 export const CaseListField = memo<RendererProps<'CaseList'>>(({ field, nodeId, className }) => {
     const entries = useCaseListValue(nodeId, field.id)
-    const [, , isReconciling] = WorkbenchSDK.useField<Value>(nodeId, field.id)
+    const [, , , , isReconciling] = WorkbenchSDK.useField<Value>(nodeId, field)
     const portIds = useMemo(() => entries.map(entry => entry.portId), [entries])
 
     return (
