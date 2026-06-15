@@ -36,7 +36,7 @@ const useConditionChildKind = (
 ) => WorkbenchSDK.useStore(s => s.selectors.field.condition.getChildKind(s, nodeId, fieldId, id))
 
 export const ConditionField = memo<RendererProps<'Condition'>>(({ field, nodeId, className }) => {
-    const [root, , isReconciling] = WorkbenchSDK.useField<Value>(nodeId, field.id)
+    const [root, , , , isReconciling] = WorkbenchSDK.useField<Value>(nodeId, field)
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>

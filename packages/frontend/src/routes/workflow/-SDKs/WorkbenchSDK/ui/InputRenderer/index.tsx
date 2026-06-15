@@ -21,7 +21,7 @@ type RendererProps<K extends Foundations.Port.Input['variant']> = {
 // ── Variant Renderers ────────────────────────────────────────
 
 const MessageInput = memo(({ input, nodeId, className, isFlipped, labelVariant, labelSize }: RendererProps<'Message'>) => {
-    const [localValue, onChange, flush, issue] = WorkbenchSDK.useDebouncedInput<string>(nodeId, input);
+    const [localValue, onChange, flush, issue] = WorkbenchSDK.useInput<string>(nodeId, input);
 
     return (
         <div className={className + " w-full flex flex-col gap-1"}>
@@ -42,7 +42,7 @@ MessageInput.displayName = "MessageInput"
 
 
 const TextInput = memo(({ input, nodeId, className, isFlipped, labelVariant, labelSize }: RendererProps<'Text'>) => {
-    const [localValue, onChange, flush, issue] = WorkbenchSDK.useDebouncedInput<string>(nodeId, input);
+    const [localValue, onChange, flush, issue] = WorkbenchSDK.useInput<string>(nodeId, input);
 
     let innerClassName = ""
     if(issue)

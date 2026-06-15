@@ -4,10 +4,10 @@ import { immer } from "zustand/middleware/immer";
 import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance } from "@xyflow/react";
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
 import { workbenchSelectors, type WorkbenchSDKSelectors } from "./selectors";
-import { useState, useRef, useMemo, useEffect, useCallback, createRef } from "react";
+import { useState, useRef, useEffect, useCallback, createRef } from "react";
 import { Foundations, Validation, Workflow, Workbench } from "@pretzel-graph/shared/domain"
 import { temporal } from 'zundo';
-import { cloneDeep, debounce as lodashDebounce } from "lodash";
+import { cloneDeep } from "lodash";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
@@ -78,101 +78,112 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         return LibrarySDK.state.workflowMetas[this.state.workflowId]?.locked ?? false;
     }
 
-    public useField<T>(nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) {
-        return this.useStore(s => {
+    /**
+     * Buffered field hook. `value` is a local draft that updates instantly via
+     * `onChange`; the store is only written on `flush` (wire to `onBlur`) or on
+     * unmount. External store changes flow back into the draft while not editing.
+     * Controls with no blur (switches/selects) can skip onChange/flush and write
+     * directly via `actions.field.setValue` — `value` still tracks the store.
+     */
+    public useField<T>(nodeId: Workflow.Node.Id, field: Foundations.Field) {
+        const fieldId = field.id;
+
+        const [storeValue, issue, isReconciling] = this.useStore(s => {
             const staticVals = s.data.staticValues[nodeId]
             if (!staticVals)
                 return [undefined, null, false] as const
 
             const isReconciling = s.reconcilingFields[nodeId]?.has(fieldId) ?? false
 
-            const value = staticVals[fieldId] as T
             return [
-                value,
+                staticVals[fieldId] as T,
                 s.issues.nodes[nodeId]?.fields[fieldId] ?? null,
                 isReconciling
             ] as const
         });
-    }
 
-    public useDebouncedField<T>(nodeId: Workflow.Node.Id, field: Foundations.Field, delay = 300) {
-        const [storeValue, issue, isReconciling] = this.useField<T>(nodeId, field.id);
         const [localValue, setLocalValue] = useState<T>(storeValue as T);
+        const localRef = useRef<T>(storeValue as T);
         const isPending = useRef(false);
 
-        const debouncedSetValue = useMemo(
-            () => lodashDebounce((val: T) => {
-                this.actions.field.setValue(nodeId, field, val);
-                isPending.current = false;
-            }, delay),
-            // field.id is the stable identity; field object reference changes on every render
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-            [nodeId, field.id, delay]
-        );
+        // Always commit the latest draft with the latest node/field identity.
+        const commitRef = useRef<() => void>(() => {});
+        commitRef.current = () => {
+            if (!isPending.current) return;
+            this.actions.field.setValue(nodeId, field, localRef.current);
+            isPending.current = false;
+        };
 
+        // Pull external store changes into the draft while not actively editing.
         useEffect(() => {
-            if (!isPending.current) setLocalValue(storeValue as T);
+            if (!isPending.current) {
+                setLocalValue(storeValue as T);
+                localRef.current = storeValue as T;
+            }
         }, [storeValue]);
-
-        useEffect(() => () => { debouncedSetValue.cancel() }, [debouncedSetValue]);
 
         const onChange = useCallback((val: T) => {
             isPending.current = true;
+            localRef.current = val;
             setLocalValue(val);
-            debouncedSetValue(val);
-        }, [debouncedSetValue]);
+        }, []);
 
-        const flush = useCallback(() => {
-            debouncedSetValue.flush();
-        }, [debouncedSetValue]);
+        const flush = useCallback(() => { commitRef.current() }, []);
+
+        // Commit any pending draft on unmount (covers the case where onBlur never fires).
+        useEffect(() => () => { commitRef.current() }, []);
 
         return [localValue, onChange, flush, issue, isReconciling] as const;
     }
 
-    public useDebouncedInput<T>(nodeId: Workflow.Node.Id, input: Foundations.Port.Input, delay = 300) {
-        const [storeValue, issue] = this.useInput(nodeId, input.id);
-        const [localValue, setLocalValue] = useState<T>(storeValue as T);
-        const isPending = useRef(false);
+    /**
+     * Buffered input hook — same contract as {@link useField} but for port inputs.
+     * `value` is a local draft updated via `onChange`; the store is written on
+     * `flush` (wire to `onBlur`) or on unmount. External store changes flow back
+     * into the draft while not editing.
+     */
+    public useInput<T>(nodeId: Workflow.Node.Id, input: Foundations.Port.Input) {
+        const inputId = input.id;
 
-        const debouncedSetValue = useMemo(
-            () => lodashDebounce((val: T) => {
-                this.actions.input.setValue(nodeId, input, val);
-                isPending.current = false;
-            }, delay),
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-            [nodeId, input.id, delay]
-        );
-
-        useEffect(() => {
-            if (!isPending.current) setLocalValue(storeValue as T);
-        }, [storeValue]);
-
-        useEffect(() => () => { debouncedSetValue.cancel() }, [debouncedSetValue]);
-
-        const onChange = useCallback((val: T) => {
-            isPending.current = true;
-            setLocalValue(val);
-            debouncedSetValue(val);
-        }, [debouncedSetValue]);
-
-        const flush = useCallback(() => {
-            debouncedSetValue.flush();
-        }, [debouncedSetValue]);
-
-        return [localValue, onChange, flush, issue] as const;
-    }
-
-    public useInput(nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) {
-        return this.useStore(s => {
+        const [storeValue, issue] = this.useStore(s => {
             const staticVals = s.data.staticValues[nodeId]
             if (!staticVals)
                 return [null, null] as const
-            const value = staticVals[inputId] as any
             return [
-                value,
+                staticVals[inputId] as T,
                 s.issues.nodes[nodeId]?.inputs[inputId] ?? null
             ] as const
         });
+
+        const [localValue, setLocalValue] = useState<T>(storeValue as T);
+        const localRef = useRef<T>(storeValue as T);
+        const isPending = useRef(false);
+
+        const commitRef = useRef<() => void>(() => {});
+        commitRef.current = () => {
+            if (!isPending.current) return;
+            this.actions.input.setValue(nodeId, input, localRef.current);
+            isPending.current = false;
+        };
+
+        useEffect(() => {
+            if (!isPending.current) {
+                setLocalValue(storeValue as T);
+                localRef.current = storeValue as T;
+            }
+        }, [storeValue]);
+
+        const onChange = useCallback((val: T) => {
+            isPending.current = true;
+            localRef.current = val;
+            setLocalValue(val);
+        }, []);
+
+        const flush = useCallback(() => { commitRef.current() }, []);
+
+        useEffect(() => () => { commitRef.current() }, []);
+
+        return [localValue, onChange, flush, issue] as const;
     }
 
 

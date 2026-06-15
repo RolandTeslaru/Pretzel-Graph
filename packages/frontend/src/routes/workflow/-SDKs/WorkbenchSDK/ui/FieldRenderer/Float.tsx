@@ -6,7 +6,7 @@ import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
 
 export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, className }) => {
-    const [value, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field.id);
+    const [value, onChange, flush, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field);
     const hasSlider = field.slider;
 
     let errorClass = ""
@@ -25,9 +25,7 @@ export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, classNa
                             max={field.max}
                             step={field.step && field.step}
                             value={[Number(value) || 0]}
-                            onValueChange={values => {
-                                WorkbenchSDK.actions.field.setValue(nodeId, field, values[0])
-                            }}
+                            onValueChange={values => { onChange(values[0]); flush() }}
                         />
                         <Input
                             type="number"
@@ -37,10 +35,8 @@ export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, classNa
                             step={field.step && field.step}
                             min={field.min}
                             max={field.max}
-                            onChange={(e) => {
-                                const val = e.currentTarget.value;
-                                WorkbenchSDK.actions.field.setValue(nodeId, field, Number(val))
-                            }}
+                            onChange={(e) => onChange(Number(e.currentTarget.value))}
+                            onBlur={flush}
                         />
                     </div>
                 </>
@@ -55,10 +51,8 @@ export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, classNa
                         step={field.step && field.step}
                         min={field.min}
                         max={field.max}
-                        onChange={(e) => {
-                            const val = e.currentTarget.value;
-                            WorkbenchSDK.actions.field.setValue(nodeId, field, Number(val))
-                        }}
+                        onChange={(e) => onChange(Number(e.currentTarget.value))}
+                        onBlur={flush}
                     />
                 </>
             }
