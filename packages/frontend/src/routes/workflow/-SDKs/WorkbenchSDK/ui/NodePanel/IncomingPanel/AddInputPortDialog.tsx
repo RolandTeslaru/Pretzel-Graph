@@ -14,8 +14,9 @@ const VARIANT_OPTIONS = [
 ] as const satisfies readonly Port.Variant[]
 
 const schema = z.object({
+    id: z.string().trim().min(1, 'ID is required'),
     displayName: z.string().trim().min(1, 'Name is required'),
-    variant: Port.Variant,
+    variant: z.enum(VARIANT_OPTIONS, { message: 'Please select a type' }),
     required: z.boolean(),
 })
 type Values = z.infer<typeof schema>
@@ -28,13 +29,20 @@ interface Props {
 export const AddInputPortDialog = ({ nodeId, dialogId }: Props) => {
     const form = useForm<Values>({
         resolver: zodResolver(schema),
-        defaultValues: { displayName: '', variant: 'Data', required: false },
+        mode: 'onSubmit',
+        defaultValues: { id: '', displayName: '', variant: 'Data', required: false },
     })
 
     const onSubmit = (values: Values) => {
-        const portId = Port.Input.Id.parse(crypto.randomUUID())
+        const existingIds = new Set<string>(
+            WorkbenchSDK.state.selectors.node.get(WorkbenchSDK.state, nodeId)?.inputs.map(p => p.id) ?? []
+        )
+        if (existingIds.has(values.id)) {
+            form.setError('id', { message: `ID "${values.id}" is already in use on this node` })
+            return
+        }
         WorkbenchSDK.actions.port.addInput(nodeId, Port.Input.Schema.parse({
-            id: portId,
+            id: Port.Input.Id.parse(values.id),
             displayName: values.displayName,
             variant: values.variant,
             required: values.required,
@@ -54,11 +62,21 @@ export const AddInputPortDialog = ({ nodeId, dialogId }: Props) => {
 
             <Form.Root {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-4' autoComplete='off'>
+                    <Form.Field control={form.control} name='id' render={({ field }) => (
+                        <Form.Item>
+                            <Form.Label>ID</Form.Label>
+                            <Form.Control>
+                                <Input {...field} placeholder='e.g. context' autoFocus />
+                            </Form.Control>
+                            <Form.Message />
+                        </Form.Item>
+                    )} />
+
                     <Form.Field control={form.control} name='displayName' render={({ field }) => (
                         <Form.Item>
                             <Form.Label>Name</Form.Label>
                             <Form.Control>
-                                <Input {...field} placeholder='e.g. context' autoFocus />
+                                <Input {...field} placeholder='e.g. Context' />
                             </Form.Control>
                             <Form.Message />
                         </Form.Item>
@@ -67,18 +85,18 @@ export const AddInputPortDialog = ({ nodeId, dialogId }: Props) => {
                     <Form.Field control={form.control} name='variant' render={({ field }) => (
                         <Form.Item>
                             <Form.Label>Type</Form.Label>
-                            <Select.Root value={field.value} onValueChange={field.onChange}>
-                                <Form.Control>
+                            <Form.Control>
+                                <Select.Root value={field.value} onValueChange={field.onChange}>
                                     <Select.Trigger>
-                                        <Select.Value />
+                                        <Select.Value placeholder='Select a type' />
                                     </Select.Trigger>
-                                </Form.Control>
-                                <Select.Content className='max-h-60 overflow-y-auto'>
-                                    {VARIANT_OPTIONS.map(v => (
-                                        <Select.Item key={v} value={v}>{v}</Select.Item>
-                                    ))}
-                                </Select.Content>
-                            </Select.Root>
+                                    <Select.Content className='max-h-60 overflow-y-auto'>
+                                        {VARIANT_OPTIONS.map(v => (
+                                            <Select.Item key={v} value={v}>{v}</Select.Item>
+                                        ))}
+                                    </Select.Content>
+                                </Select.Root>
+                            </Form.Control>
                             <Form.Message />
                         </Form.Item>
                     )} />
