@@ -6,7 +6,7 @@ import type { RendererProps } from './FieldLabel'
 import { ExpressionInput } from './ExpressionInput'
 
 export const StringField = memo<RendererProps<'String'>>(({ field, nodeId, className }) => {
-    const [value, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field.id)
+    const [value, onChange, flush, issue, isReconciling] = WorkbenchSDK.useField<string>(nodeId, field)
 
     const isExpression = field.isExpression ?? false;
 
@@ -28,7 +28,8 @@ export const StringField = memo<RendererProps<'String'>>(({ field, nodeId, class
                     size="sm"
                     placeholder={field.placeholder}
                     value={value as string}
-                    onChange={(e) => WorkbenchSDK.actions.field.setValue(nodeId, field, e.target.value)}
+                    onChange={(e) => onChange(e.target.value)}
+                    onBlur={flush}
                     className={innerClassName}
                 />
             :
@@ -36,8 +37,8 @@ export const StringField = memo<RendererProps<'String'>>(({ field, nodeId, class
                     <ExpressionInput
                         value={value as string}
                         nodeId={nodeId}
-                        onChange={(newValue) => WorkbenchSDK.actions.field.setValue(nodeId, field, newValue)}
-                        onCommit={(newValue) => WorkbenchSDK.actions.field.setValue(nodeId, field, newValue)}
+                        onChange={onChange}
+                        onCommit={() => flush()}
                         placeholder={field.placeholder}
                         className={innerClassName}
                     />

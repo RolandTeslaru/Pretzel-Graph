@@ -6,7 +6,7 @@ import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
 
 export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nodeId, className }) => {
-    const [value, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field.id);
+    const [value, , , issue, isReconciling] = WorkbenchSDK.useField(nodeId, field);
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
