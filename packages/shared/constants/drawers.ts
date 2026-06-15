@@ -20,20 +20,18 @@ export const CORE_DRAWERS = {
       "Core.Chat.History",
     ],
   },
-  developer: {
-    displayName: "DEVELOPER",
-    id: "developer",
-    icon: "Terminal",
-    blueprintIds: [
-      "Core.Developer.AllBuilders",
-      "Core.Developer.Eval",
-      "Core.Developer.ConsoleLog",
-      "Core.Developer.Sleep",
-      "Core.Developer.ErrorThrower",
-      "Core.Developer.HttpRequest",
-      "Core.Developer.ResourceLoaderTest"
-    ],
-  },
+  // developer: {
+  //   displayName: "DEVELOPER",
+  //   id: "developer",
+  //   icon: "Terminal",
+  //   blueprintIds: [
+  //     "Core.Developer.AllBuilders",
+  //     "Core.Developer.Eval",
+  //     "Core.Developer.ConsoleLog",
+  //     "Core.Developer.ErrorThrower",
+  //     "Core.Developer.ResourceLoaderTest"
+  //   ],
+  // },
   data_source: {
     displayName: "Data Sources",
     id: "data_source",
@@ -52,8 +50,10 @@ export const CORE_DRAWERS = {
   llm_operations: {
     displayName: "LLM Operations",
     id: "llm_operations",
-    icon: "BrainCircuit",
-    blueprintIds: [],
+    icon: "MessageSquareCode",
+    blueprintIds: [
+      "Core.Utils.Message.Compose",
+    ],
   },
   files_and_knowledge: {
     displayName: "Files & Knowledge",
@@ -61,11 +61,15 @@ export const CORE_DRAWERS = {
     icon: "Layers",
     blueprintIds: [],
   },
-  processing: {
-    displayName: "Processing",
-    id: "processing",
-    icon: "ListFilter",
-    blueprintIds: [],
+  data_manipulation: {
+    displayName: "Data Manipulation",
+    id: "data_manipulation",
+    icon: "PencilRuler",
+    blueprintIds: [
+      "Core.Utils.JsonInjector",
+      "Core.Utils.List.Select",
+      "Core.Utils.List.Slice",
+    ],
   },
   routing: {
     displayName: "Routing & Flow",
@@ -78,23 +82,18 @@ export const CORE_DRAWERS = {
       "Core.Routing.Merge",
       "Core.Routing.Accumulator",
       "Core.Routing.Passthrough",
-      "Core.Routing.Catch",
-      "Core.Routing.Portal.In",
-      "Core.Routing.Portal.Out",
+      "Core.Routing.CatchError",
+      "Core.Routing.Portal",
+      "Core.Developer.Sleep",
     ],
   },
   utilities: {
     displayName: "Utilities",
     id: "utilities",
-    icon: "PencilRuler",
+    icon: "DraftingCompass",
     blueprintIds: [
-      "Core.Utils.JsonInjector",
-      "Core.Utils.Message.Compose",
-      "Core.Utils.Tool.Runner",
-      "Core.Utils.List.Select",
-      "Core.Utils.List.Slice",
-      "Core.Utils.Tool.Catalog",
-      "Core.Utils.RunCode"
+      "Core.Utils.RunCode",
+      "Core.Developer.HttpRequest"
     ],
   },
   sub_workflow: {
@@ -113,11 +112,14 @@ export const CORE_DRAWERS = {
     icon: "FlaskConical",
     blueprintIds: [],
   },
-  tools: {
-    displayName: "Tools",
-    id: "tools",
-    icon: "Hammer",
-    blueprintIds: [],
+  toolbox: {
+    displayName: "Toolbox",
+    id: "toolbox",
+    icon: "Toolbox",
+    blueprintIds: [
+      "Core.Utils.Tool.Runner",
+      "Core.Utils.Tool.Catalog",
+    ],
   },
 } as const as Record<Shelf.Drawer.Id, Shelf.Drawer>
 

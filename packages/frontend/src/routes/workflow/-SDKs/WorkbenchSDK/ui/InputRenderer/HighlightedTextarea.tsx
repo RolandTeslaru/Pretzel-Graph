@@ -39,7 +39,7 @@ export const HighlightedTextarea: React.FC<HighlightedTextareaProps> = ({ classN
         <div
             className={cn(
                 // Outer wrapper for border/focus styles
-                "relative w-full rounded-md border border-border shadow-md shadow-black/10 transition-[color,box-shadow]",
+                "relative w-full rounded-md border border-border shadow-sm shadow-black/10 transition-[color,box-shadow]",
                 "bg-input/50 overflow-hidden!",
                 "focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] overflow-hidden",
                 className
