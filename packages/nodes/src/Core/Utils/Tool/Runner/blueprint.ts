@@ -4,7 +4,7 @@ export const Blueprint = defineBlueprint({
     id: "Core.Utils.Tool.Runner",
     displayName: "Tool Runner",
     description: "Executes a tool with the provided input and returns the result.",
-    icon: "Hammer",
+    icon: "Play",
     accent: "port-Tool",
     fields: [],
     inputs: [
