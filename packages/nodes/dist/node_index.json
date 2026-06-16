@@ -1,6 +1,6 @@
 {
-  "version": "1781526665248",
-  "generatedAt": "2026-06-15T12:31:05.248Z",
+  "version": "1781613482126",
+  "generatedAt": "2026-06-16T12:38:02.126Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -1078,7 +1078,7 @@
           "reconcile": false,
           "displayName": "Script",
           "variant": "Script",
-          "initialValue": "return 'Hello ' + inputs.input;"
+          "initialValue": "return 'Hello ' + $in.input;"
         },
         {
           "id": "signalDependency",
@@ -3900,7 +3900,7 @@
       "displayName": "Run Code",
       "icon": "FileCode",
       "accent": "utility",
-      "description": "Runs sandboxed JavaScript with access to the incoming data via @in.",
+      "description": "Runs sandboxed JavaScript with access to the incoming data via $in.",
       "credentials": [],
       "fields": [
         {
