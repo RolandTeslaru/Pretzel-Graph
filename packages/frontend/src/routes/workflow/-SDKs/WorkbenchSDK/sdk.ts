@@ -12,14 +12,15 @@ import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { workbenchReducers } from "./reducers";
-import { createDrivers } from "./utils/createDrivers";
+import { createDrivers, reconcileNodeDrivers, reconcileEdgeDrivers } from "./utils/createDrivers";
+import { sameUndoableData } from "./utils/temporal";
 
 @SDK("Workbench")
 export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
     constructor() { super() }
 
-    private readonly TEMPORAL_STACK_SIZE = 3
+    private readonly TEMPORAL_STACK_SIZE = 5
 
     // Mutatable non reactive state
     public readonly runtime = {
@@ -63,7 +64,15 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 workflowId: s.workflowId,
                 data: s.data,
                 cyclesDirty: s.cyclesDirty,
-            })
+            }),
+            // Skip recording history when only the camera (ui.viewport) or field/input
+            // values (staticValues) changed — neither should consume undo slots. Field
+            // values are preserved across undo/redo in actions.temporal. Cheap thanks to
+            // immer's structural sharing.
+            equality: (a, b) =>
+                a.workflowId === b.workflowId &&
+                a.cyclesDirty === b.cyclesDirty &&
+                sameUndoableData(a.data, b.data),
         }
         ),
         shallow
@@ -194,6 +203,8 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public readonly canvasWrapper = createRef<HTMLDivElement>();
 
     public readonly createDrivers = createDrivers
+    public readonly reconcileNodeDrivers = reconcileNodeDrivers
+    public readonly reconcileEdgeDrivers = reconcileEdgeDrivers
 }
 
 

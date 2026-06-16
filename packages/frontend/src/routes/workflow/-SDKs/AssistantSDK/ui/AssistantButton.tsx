@@ -13,7 +13,7 @@ const AssistantButton = () => {
                 onClick={() => AssistantSDK.actions.ui.toggleSidebar()}
                 size={"icon-sm"}
             >
-                <SystemIcons.Sparkles className='scale-80 fill-current' />
+                <SystemIcons.Sparkles className='scale-80 ' />
             </Button>
         </Tipped>
     )

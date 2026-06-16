@@ -28,7 +28,11 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
 
                 setState(s => {
                     reducers.workflow.open(s, workflow)
-                })
+                });
+
+                // Hydration (empty INITIAL -> loaded workflow) would otherwise be recorded
+                // as an undoable step; drop it so undo isn't armed on a fresh load.
+                (sdk.useStore as any).temporal.getState().clear();
 
                 // Fire and forget
                 sdk.actions.dependency.checkUpdates()
