@@ -1,5 +1,7 @@
-import { memo, Suspense, lazy, useEffect, useState } from 'react'
+import { memo, Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { FieldLabel, type RendererProps } from './FieldLabel';
+import { buildAirlockDts } from './airlockTypes';
+import type { Workflow } from '@pretzel-graph/shared/domain';
 import { Button, Dialog, Spinner } from '@pretzel-graph/standard-ui/foundations';
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk';
 import { DialogSDK } from '@/SDKs/DialogSDK';
@@ -17,17 +19,17 @@ export const ScriptField = memo(({ field, nodeId, className }: RendererProps<'Sc
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1 relative"}>
             <FieldLabel field={field} isReconciling={isReconciling} />
-            <Button variant="input" className="overflow-hidden text-left text-ellipsis whitespace-nowrap relative"
+            <Button variant="input" className="justify-start overflow-hidden"
                 onClick={() => {
                     const snapshot = localValue;
                     DialogSDK.actions.push("ScriptDialog", (dialogProps) => (
                         <DialogSDK.Template {...dialogProps} className='overflow-hidden! border-none! bg-white/0! shadow-none! flex flex-row gap-4'>
-                            <ScriptDialogContent displayName={field.displayName} onChange={onChange} onClose={flush} initialValue={snapshot} />
+                            <ScriptDialogContent nodeId={nodeId} displayName={field.displayName} onChange={onChange} onClose={flush} initialValue={snapshot} />
                         </DialogSDK.Template>
                     ))
                 }}
             >
-                <p className="font-mono text-xs">{localValue}</p>
+                <p className="font-mono text-xs truncate w-full min-w-0">{localValue}</p>
             </Button>
         </div>
     )
@@ -35,14 +37,16 @@ export const ScriptField = memo(({ field, nodeId, className }: RendererProps<'Sc
 ScriptField.displayName = "ScriptField"
 
 interface Props {
+    nodeId: Workflow.Node.Id,
     displayName: string,
     onChange: (val: string) => void,
     onClose: () => void,
     initialValue: string
 }
 
-const ScriptDialogContent = ({ displayName, onChange, onClose, initialValue }: Props) => {
+const ScriptDialogContent = ({ nodeId, displayName, onChange, onClose, initialValue }: Props) => {
     const [mounted, setMounted] = useState(false)
+    const extraLibRef = useRef<{ dispose(): void } | null>(null)
 
     useEffect(() => {
         const timer = setTimeout(() => setMounted(true), 300)
@@ -51,6 +55,8 @@ const ScriptDialogContent = ({ displayName, onChange, onClose, initialValue }: P
 
     // commit the buffered script to the store when the editor closes
     useEffect(() => () => onClose(), [onClose])
+
+    useEffect(() => () => extraLibRef.current?.dispose(), [])
 
     const theme = SystemSDK.useStore(s => s.theme)
 
@@ -65,7 +71,7 @@ const ScriptDialogContent = ({ displayName, onChange, onClose, initialValue }: P
             <div className='flex  min-w-[50vw] flex-col relative gap-2 h-full flex-1 overflow-hidden bg-card/80  border-border border rounded-2xl shadow-xl shadow-black/10 backdrop-blur-lg'>
                 <FloatContainer className="absolute top-2 left-2 w-fit h-12 px-3 backdrop-blur-md z-10">
                     <SystemIcons.FileCode className=" size-4 my-auto" />
-                    <Dialog.Title>{displayName}</Dialog.Title>
+                    <Dialog.Title className="font-mono">{displayName}</Dialog.Title>
                 </FloatContainer>
                 <div className="flex-1 h-full min-h-0 overflow-hidden relative [&_.monaco-editor]:!bg-transparent [&_.monaco-editor-background]:!bg-transparent [&_.monaco-editor_.margin]:!bg-transparent">
                     {mounted ? (
@@ -86,6 +92,8 @@ const ScriptDialogContent = ({ displayName, onChange, onClose, initialValue }: P
                                 beforeMount={(monaco) => {
                                     const ts = monaco.languages.typescript.typescriptDefaults;
                                     ts.setDiagnosticsOptions({ ...ts.getDiagnosticsOptions(), diagnosticCodesToIgnore: [1108] });
+                                    extraLibRef.current?.dispose();
+                                    extraLibRef.current = ts.addExtraLib(buildAirlockDts(nodeId), 'ts:airlock-globals.d.ts');
                                 }}
                                 onChange={(val) => onChange(val || "")}
                                 options={{

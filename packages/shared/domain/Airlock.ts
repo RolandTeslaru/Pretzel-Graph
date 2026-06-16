@@ -1,7 +1,7 @@
 import { Field } from "./Foundations/Field"
 import { Workflow } from "./Workflow"
 
-// Pure compile-time layer (no isolated-vm): @key registry + sigil rewrite + brands.
+// Pure compile-time layer (no isolated-vm): $key registry + sigil rewrite + brands.
 // Pipeline: Source → parse() → ParsedSource → ivm.Script → value
 export namespace Airlock {
 
@@ -36,8 +36,8 @@ export namespace Airlock {
         node:     `${GLOBALS.workflow}.nodes[${GLOBALS.nodeId}]`,
     }
 
-    // Matches @root at a word boundary; rewrites only the root, leaving member access intact.
-    const SIGIL = /@(workflow|config|igniter|chatId|in|node)\b/g
+    // Matches $root at a word boundary; rewrites only the root, leaving member access intact.
+    const SIGIL = /\$(workflow|config|igniter|chatId|in|node)\b/g
 
     export function rewrite(source: Source): string {
         return source.replace(SIGIL, (_m, root: string) => STATIC_ROOTS[root])
@@ -58,7 +58,7 @@ export namespace Airlock {
         return `(function(){ return ${inner}; })()` as ParsedSource
     }
 
-    // Async fn-expression; @in / @node id bind to params (per-call, can't clobber). Caller applies it.
+    // Async fn-expression; $in / $node id bind to params (per-call, can't clobber). Caller applies it.
     export function parseCode(code: Source.Code): ParsedSource {
         return `(async (${GLOBALS.in}, ${GLOBALS.nodeId}) => { ${rewrite(code)} })` as ParsedSource
     }
@@ -88,7 +88,7 @@ export namespace Airlock {
     export interface API {
         // Set globals, run synchronously, clear — atomic on the single worker thread.
         executeSync<T>(globals: Record<string, unknown>, run: (evaluate: EvaluateFn) => T): T
-        // Run code-mode source async; `incoming` is passed as @in (the fn param), copied per call.
+        // Run code-mode source async; `incoming` is passed as $in (the fn param), copied per call.
         executeAsyncCode(code: Source.Code, nodeId: Workflow.Node.Id, incoming: unknown): Promise<unknown>
     }
 }

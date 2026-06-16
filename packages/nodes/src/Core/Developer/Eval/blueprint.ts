@@ -10,7 +10,7 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.Script({
             id: "code",
             displayName: "Script",
-            initialValue: "return 'Hello ' + inputs.input;",
+            initialValue: "return 'Hello ' + $in.input;",
         }),
     ],
     inputs: [
