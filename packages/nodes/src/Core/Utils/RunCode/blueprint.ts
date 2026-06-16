@@ -3,7 +3,7 @@ import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/nod
 export const Blueprint = defineBlueprint({
     id: "Core.Utils.RunCode",
     displayName: "Run Code",
-    description: "Runs sandboxed JavaScript with access to the incoming data via @in.",
+    description: "Runs sandboxed JavaScript with access to the incoming data via $in.",
     icon: "FileCode",
     accent: "utility",
     fields: [

@@ -255,7 +255,7 @@ code {
 
   /* Font families */
   --font-sans: 'Geist', 'Geist Fallback', 'Inter', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback', 'Courier New', monospace;
+  --font-mono: 'JetBrains Mono', monospace;
   --font-chivo: 'Chivo', system-ui, sans-serif;
 }
 
@@ -360,7 +360,7 @@ code {
 
 @theme inline {
   --font-sans: 'Inter', 'Geist', 'Geist Fallback', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback', 'Courier New', monospace;
+  --font-mono: 'JetBrains Mono', monospace;
   --font-chivo: 'Chivo', system-ui, sans-serif;
 
   --animate-aurora: aurora 60s linear infinite;
