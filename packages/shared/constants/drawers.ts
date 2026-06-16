@@ -1,12 +1,6 @@
 import { Shelf } from "../domain/Shelf"
 
 export const CORE_DRAWERS = {
-  saved_components: {
-    displayName: "Saved",
-    id: "saved_components",
-    icon: "GradientSave",
-    blueprintIds: [],
-  },
   input_output: {
     displayName: "Input & Output",
     id: "input_output",
@@ -18,6 +12,22 @@ export const CORE_DRAWERS = {
       "Core.Text.Input", 
       "Core.Text.Output", 
       "Core.Chat.History",
+    ],
+  },
+    routing: {
+    displayName: "Routing & Flow",
+    id: "routing",
+    icon: "ChevronsLeftRightEllipsis",
+    blueprintIds: [
+      "Core.Routing.IfElse",
+      "Core.Routing.Switch",
+      "Core.Routing.Router",
+      "Core.Routing.Merge",
+      "Core.Routing.Accumulator",
+      "Core.Routing.Passthrough",
+      "Core.Routing.CatchError",
+      "Core.Routing.Portal",
+      "Core.Developer.Sleep",
     ],
   },
   // developer: {
@@ -39,7 +49,7 @@ export const CORE_DRAWERS = {
     blueprintIds: [],
   },
   models_and_agents: {
-    displayName: "Models & Agents",
+    displayName: "AI & Agents",
     id: "models_and_agents",
     icon: "Bot",
     blueprintIds: [
@@ -71,22 +81,6 @@ export const CORE_DRAWERS = {
       "Core.Utils.List.Slice",
     ],
   },
-  routing: {
-    displayName: "Routing & Flow",
-    id: "routing",
-    icon: "ChevronsLeftRightEllipsis",
-    blueprintIds: [
-      "Core.Routing.IfElse",
-      "Core.Routing.Switch",
-      "Core.Routing.Router",
-      "Core.Routing.Merge",
-      "Core.Routing.Accumulator",
-      "Core.Routing.Passthrough",
-      "Core.Routing.CatchError",
-      "Core.Routing.Portal",
-      "Core.Developer.Sleep",
-    ],
-  },
   utilities: {
     displayName: "Utilities",
     id: "utilities",
@@ -116,6 +110,15 @@ export const CORE_DRAWERS = {
     displayName: "Toolbox",
     id: "toolbox",
     icon: "Toolbox",
+    blueprintIds: [
+      "Core.Utils.Tool.Runner",
+      "Core.Utils.Tool.Catalog",
+    ],
+  },
+  human_review: {
+    displayName: "Human Review",
+    id: "human_review",
+    icon: "ShieldUser",
     blueprintIds: [
       "Core.Utils.Tool.Runner",
       "Core.Utils.Tool.Catalog",

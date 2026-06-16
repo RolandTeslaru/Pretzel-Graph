@@ -51,8 +51,20 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             validate:          (...props) => { setState(s => { reducers.input.validate(s,      ...props) }) },
         },
         temporal: {
-            undo:              ()         => { (sdk.useStore as any).temporal.getState().undo() },
-            redo:              ()         => { (sdk.useStore as any).temporal.getState().redo() }
+            // staticValues are excluded from history (see sdk equality), so a restore would
+            // otherwise revert field/input values to a stale snapshot. Re-apply the live
+            // values after the structural restore. The corrective set doesn't push history
+            // (equality ignores staticValues).
+            undo: () => {
+                const sv = sdk.state.data.staticValues;
+                (sdk.useStore as any).temporal.getState().undo();
+                setState(s => { s.data.staticValues = sv });
+            },
+            redo: () => {
+                const sv = sdk.state.data.staticValues;
+                (sdk.useStore as any).temporal.getState().redo();
+                setState(s => { s.data.staticValues = sv });
+            }
         },
         layout: {
             node: {
@@ -60,10 +72,12 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                 remove:        withCommit((...props) => setState(s => { reducers.layout.node.remove(s,      ...props) })),
                 setPosition:   withCommit((...props) => setState(s => { reducers.layout.node.setPosition(s, ...props) })),
             },
+            // Viewport is per-user view state — update the store only, no cloud commit.
+            // It still rides along to the cloud inside `data` on the next real edit.
             viewport: {
-                set:           withCommit((...props) => setState(s => { reducers.layout.viewport.set(s,         ...props) })),
-                setZoom:       withCommit((...props) => setState(s => { reducers.layout.viewport.setZoom(s,     ...props) })),
-                setPosition:   withCommit((...props) => setState(s => { reducers.layout.viewport.setPosition(s, ...props) })),
+                set:           (...props) => setState(s => { reducers.layout.viewport.set(s,         ...props) }),
+                setZoom:       (...props) => setState(s => { reducers.layout.viewport.setZoom(s,     ...props) }),
+                setPosition:   (...props) => setState(s => { reducers.layout.viewport.setPosition(s, ...props) }),
             }
         },
         workflow: workflowActions,

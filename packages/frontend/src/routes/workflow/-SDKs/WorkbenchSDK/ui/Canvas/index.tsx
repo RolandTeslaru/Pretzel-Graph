@@ -3,6 +3,7 @@ import React, { memo, useEffect, useMemo } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { createCanvasCallbacks, canvasProps } from './props'
 import { createCycleSelectionDrivers } from '../../utils/createDrivers'
+import { useCanvasKeyBindings } from '../../hooks/useCanvasKeyBindings'
 import { SelectionContextMenu } from './SelectionContextMenu'
 import { PaneContextMenu } from './PaneContextMenu'
 
@@ -10,6 +11,8 @@ type NodeDriver = WorkbenchSDK.NodeDriver | WorkbenchSDK.CycleSelectionNodeDrive
 type EdgeDriver = WorkbenchSDK.EdgeDriver
 
 const WorkflowCanvas: React.FC = memo(() => {
+    useCanvasKeyBindings()
+
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
             WorkbenchSDK.runtime.lastMousePosition.x = e.clientX;
@@ -35,9 +38,12 @@ const CanvasRenderer = memo(() => {
 
     const [workflowId, data] = WorkbenchSDK.useStore(s => [s.workflowId, s.data])
 
-    const baseDrivers = useMemo(() => WorkbenchSDK.createDrivers(data), [data.nodes, data.edges])
-    const [nodeDrivers, setNodeDrivers] = useNodesState<NodeDriver>(baseDrivers.nodeDrivers)
-    const [edgeDrivers, setEdgeDrivers] = useEdgesState<EdgeDriver>(baseDrivers.edgeDrivers)
+    // Seed once; thereafter the canvas owns its drivers and we reconcile store changes
+    // into them incrementally (below) so unchanged nodes/edges keep their identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const seed = useMemo(() => WorkbenchSDK.createDrivers(data), [])
+    const [nodeDrivers, setNodeDrivers] = useNodesState<NodeDriver>(seed.nodeDrivers)
+    const [edgeDrivers, setEdgeDrivers] = useEdgesState<EdgeDriver>(seed.edgeDrivers)
 
     const cycleIssues = WorkbenchSDK.useStore(s => s.issues.cycles);
     const cycleSelectionDrivers = useMemo(
@@ -45,10 +51,15 @@ const CanvasRenderer = memo(() => {
         [cycleIssues, data.ui.layout]
     );
 
+    // Reconcile store -> drivers, preserving the identity of unchanged drivers. Edge
+    // animations survive node moves/creates/undo because untouched edges keep their ref.
+    // Canvas-originated changes are typically already applied (drag, add/remove via XYFlow
+    // callbacks), so those reconcile to no-ops.
     useEffect(() => {
-        setNodeDrivers(baseDrivers.nodeDrivers)
-        setEdgeDrivers(baseDrivers.edgeDrivers)
-    }, [baseDrivers.nodeDrivers, baseDrivers.edgeDrivers, setNodeDrivers, setEdgeDrivers])
+        setNodeDrivers(prev => WorkbenchSDK.reconcileNodeDrivers(prev as WorkbenchSDK.NodeDriver[], data))
+        setEdgeDrivers(prev => WorkbenchSDK.reconcileEdgeDrivers(prev, data))
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.nodes, data.edges, data.ui.layout, setNodeDrivers, setEdgeDrivers])
 
     useEffect(() => {
         const driver = WorkbenchSDK.runtime.canvasDriver

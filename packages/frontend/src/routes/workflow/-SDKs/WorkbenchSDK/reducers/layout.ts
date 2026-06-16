@@ -32,20 +32,19 @@ export const layoutReducers = {
             s.data.ui.layout[nodeId] = position;
         }
     },
+    // Viewport is per-user view state: update the store but don't mark the workflow
+    // dirty. The latest viewport still rides to the cloud inside `data` on the next edit.
     viewport: {
         setPosition: (s, position) => {
-            s.isDirty = true;
             const viewport = s.data.ui.viewport
             viewport.x = position.x;
             viewport.y = position.y;
         },
         setZoom: (s, zoom) => {
-            s.isDirty = true;
             const viewport = s.data.ui.viewport
             viewport.zoom = zoom;
         },
         set: (s, viewport) => {
-            s.isDirty = true;
             s.data.ui.viewport = viewport;
         }
     }
