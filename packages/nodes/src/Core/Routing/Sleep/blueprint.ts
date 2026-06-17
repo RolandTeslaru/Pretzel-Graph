@@ -1,7 +1,7 @@
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
-    id: "Core.Developer.Sleep",
+    id: "Core.Routing.Sleep",
     displayName: "Sleep",
     description: "Pauses execution for a specified duration.",
     icon: "Clock",

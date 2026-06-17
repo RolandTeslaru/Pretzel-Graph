@@ -1,6 +1,6 @@
 {
-  "version": "1781613482126",
-  "generatedAt": "2026-06-16T12:38:02.126Z",
+  "version": "1781649405981",
+  "generatedAt": "2026-06-16T22:36:45.981Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -1484,129 +1484,6 @@
         }
       ]
     },
-    "Core.Developer.Sleep": {
-      "id": "Core.Developer.Sleep",
-      "displayName": "Sleep",
-      "icon": "Clock",
-      "accent": "utility",
-      "description": "Pauses execution for a specified duration.",
-      "credentials": [],
-      "fields": [
-        {
-          "id": "duration",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Duration (ms)",
-          "tooltip": "Time to sleep in milliseconds.",
-          "variant": "Integer",
-          "initialValue": 1000,
-          "min": 0,
-          "step": 1
-        },
-        {
-          "id": "signalDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Signal Dependency",
-          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All signals required",
-              "description": "Fire only once every upstream signal has arrived."
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one signal required",
-              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
-            },
-            {
-              "value": "XOR",
-              "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "Wait & Join",
-              "description": "Wait until every wired input port has resolved, then read all of them."
-            },
-            {
-              "value": "OR",
-              "displayName": "Follow Trigger",
-              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "onErrorStrategy",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "On Error",
-          "tooltip": "What happens when this node's execution throws.",
-          "variant": "MultiOption",
-          "initialValue": "propagate",
-          "options": [
-            {
-              "value": "terminate",
-              "displayName": "Terminate workflow",
-              "description": "Fail the whole run."
-            },
-            {
-              "value": "propagate",
-              "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges."
-            },
-            {
-              "value": "do_nothing",
-              "displayName": "Do nothing",
-              "description": "Swallow the error — no signal, no termination. Downstream stalls."
-            }
-          ],
-          "kind": "select"
-        }
-      ],
-      "inputs": [
-        {
-          "id": "trigger",
-          "displayName": "Trigger",
-          "tooltip": "Optional trigger to start the sleep.",
-          "polymorphicGroupId": "signal",
-          "internal": false,
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved",
-          "required": false
-        }
-      ],
-      "outputs": [
-        {
-          "id": "done",
-          "displayName": "Done",
-          "tooltip": "Outputs the trigger message after the sleep duration.",
-          "polymorphicGroupId": "signal",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
-        }
-      ]
-    },
     "Core.LanguageModel": {
       "id": "Core.LanguageModel",
       "displayName": "Language Model",
@@ -1996,7 +1873,7 @@
       "displayName": "If Else",
       "icon": "Split",
       "accent": "group-routing",
-      "description": "Routes input to one of multiple outputs based on a condition.",
+      "description": "Routes input down one of two branches on a single true/false condition.",
       "credentials": [],
       "fields": [
         {
@@ -2555,7 +2432,7 @@
       "displayName": "Router",
       "icon": "ListTree",
       "accent": "group-routing",
-      "description": "Routes input to all outputs whose condition evaluates to true.",
+      "description": "Routes input to every output whose case is true — multiple branches can fire at once (fan-out).",
       "credentials": [],
       "fields": [
         {
@@ -2759,12 +2636,135 @@
         }
       ]
     },
+    "Core.Routing.Sleep": {
+      "id": "Core.Routing.Sleep",
+      "displayName": "Sleep",
+      "icon": "Clock",
+      "accent": "utility",
+      "description": "Pauses execution for a specified duration.",
+      "credentials": [],
+      "fields": [
+        {
+          "id": "duration",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Duration (ms)",
+          "tooltip": "Time to sleep in milliseconds.",
+          "variant": "Integer",
+          "initialValue": 1000,
+          "min": 0,
+          "step": 1
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "trigger",
+          "displayName": "Trigger",
+          "tooltip": "Optional trigger to start the sleep.",
+          "polymorphicGroupId": "signal",
+          "internal": false,
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "done",
+          "displayName": "Done",
+          "tooltip": "Outputs the trigger message after the sleep duration.",
+          "polymorphicGroupId": "signal",
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
+        }
+      ]
+    },
     "Core.Routing.Switch": {
       "id": "Core.Routing.Switch",
       "displayName": "Switch",
       "icon": "Option",
       "accent": "group-routing",
-      "description": "Routes input to one of multiple outputs based on a condition.",
+      "description": "Routes input to exactly one output — the first matching case among many (mutually exclusive).",
       "credentials": [],
       "fields": [
         {
@@ -2967,6 +2967,129 @@
           "originalVariant": "Unresolved"
         }
       ]
+    },
+    "Core.Routing.Terminate": {
+      "id": "Core.Routing.Terminate",
+      "displayName": "Terminate",
+      "icon": "OctagonX",
+      "accent": "group-routing",
+      "description": "Ends the execution when reached. 'Stop' halts the run cleanly (terminated); 'Error' fails the run with a message.",
+      "credentials": [],
+      "fields": [
+        {
+          "id": "mode",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Mode",
+          "tooltip": "Stop → end the run cleanly. Error → fail the run with a message.",
+          "variant": "MultiOption",
+          "initialValue": "stop",
+          "options": [
+            {
+              "value": "stop",
+              "displayName": "Stop"
+            },
+            {
+              "value": "error",
+              "displayName": "Error"
+            }
+          ],
+          "kind": "tab"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "trigger",
+          "displayName": "Trigger",
+          "tooltip": "Reaching this input ends the execution.",
+          "polymorphicGroupId": "signal",
+          "internal": false,
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved",
+          "required": false
+        }
+      ],
+      "outputs": []
     },
     "Core.SubWorkflow.Execute": {
       "id": "Core.SubWorkflow.Execute",

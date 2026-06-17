@@ -4,7 +4,7 @@ import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pre
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.Router",
     displayName: "Router",
-    description: "Routes input to all outputs whose condition evaluates to true.",
+    description: "Routes input to every output whose case is true — multiple branches can fire at once (fan-out).",
     icon: "ListTree",
     accent: "group-routing",
     fields: [

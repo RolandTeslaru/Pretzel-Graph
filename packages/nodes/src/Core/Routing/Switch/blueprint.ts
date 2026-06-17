@@ -4,7 +4,7 @@ import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pre
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.Switch",
     displayName: "Switch",
-    description: "Routes input to one of multiple outputs based on a condition.",
+    description: "Routes input to exactly one output — the first matching case among many (mutually exclusive).",
     icon: "Option",
     accent: "group-routing",
     fields: [

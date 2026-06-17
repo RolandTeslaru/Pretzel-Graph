@@ -23,11 +23,11 @@ export const CORE_DRAWERS = {
       "Core.Routing.Switch",
       "Core.Routing.Router",
       "Core.Routing.Merge",
-      "Core.Routing.Accumulator",
       "Core.Routing.Passthrough",
       "Core.Routing.CatchError",
       "Core.Routing.Portal",
-      "Core.Developer.Sleep",
+      "Core.Routing.Terminate",
+      "Core.Routing.Sleep",
     ],
   },
   // developer: {
@@ -76,6 +76,7 @@ export const CORE_DRAWERS = {
     id: "data_manipulation",
     icon: "PencilRuler",
     blueprintIds: [
+      "Core.Routing.Accumulator",
       "Core.Utils.JsonInjector",
       "Core.Utils.List.Select",
       "Core.Utils.List.Slice",
