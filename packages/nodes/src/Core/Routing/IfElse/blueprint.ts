@@ -4,7 +4,7 @@ import { Foundations } from "@pretzel-graph/shared/domain";
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.IfElse",
     displayName: "If Else",
-    description: "Routes input to one of multiple outputs based on a condition.",
+    description: "Routes input down one of two branches on a single true/false condition.",
     icon: "Split",
     accent: "group-routing",
     fields: [
