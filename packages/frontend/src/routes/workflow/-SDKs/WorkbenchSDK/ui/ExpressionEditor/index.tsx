@@ -30,8 +30,14 @@ export const ExpressionEditor = ({ node, displayName, onChange, onClose, initial
     const [result, setResult] = useState<AirlockSDK.Result>({ ok: true, value: undefined })
     const extraLibRef = useRef<{ dispose(): void } | null>(null)
 
+    // onClose is a fresh closure every render (it closes over the latest draft) — keep
+    // it in a ref so the unmount cleanup below always commits the most recent value,
+    // instead of re-running on every keystroke and firing a stale, one-behind closure.
+    const onCloseRef = useRef(onClose)
+    useEffect(() => { onCloseRef.current = onClose }, [onClose])
+
     // commit the buffered expression to the store when the editor closes
-    useEffect(() => () => onClose(), [onClose])
+    useEffect(() => () => onCloseRef.current(), [])
 
     useEffect(() => () => extraLibRef.current?.dispose(), [])
 

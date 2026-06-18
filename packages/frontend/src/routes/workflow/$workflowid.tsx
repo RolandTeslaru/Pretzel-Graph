@@ -23,6 +23,8 @@ import BottomLeftPanel from './-panels/BottomLeftPanel'
 import { DrawerSDK } from './-SDKs/DrawerSDK/sdk'
 import TimelineViewer from './-SDKs/ExecutionSDK/ui/Timeline'
 import UoWInspectorSidebar from './-SDKs/ExecutionSDK/ui/UoWInspector/sidebar'
+import { toast } from 'sonner'
+import { router } from '@/main'
 
 let isViteFullReloadPending = false
 let isBrowserUnloadPending = false
@@ -78,6 +80,18 @@ export const Route = createFileRoute('/workflow/$workflowid')({
         ExecutionSDK.actions.clear();
 
         WorkbenchSDK.actions.workflow.load(workflowId, abortController.signal)
+            .catch(err => {
+                if (abortController.signal.aborted) return;
+
+                toast.error("Failed to load workflow: " + (err instanceof Error ? err.message : String(err)))
+
+                const folderId = LibrarySDK.state.workflowMetas[workflowId]?.folder_id
+                router.navigate(
+                    folderId
+                        ? { to: '/home/projects/$folderId', params: { folderId } }
+                        : { to: '/home/projects' }
+                )
+            })
             .finally(() => {
                 clearTimeout(loadtimeoutId);
                 DialogSDK.actions.pop(`workflow-${workflowId}`)
@@ -176,7 +190,6 @@ function WorkflowLayoutComponent() {
 
     return (
         <>
-                            <BottomPanel />
 
             <div className="h-screen flex flex-col">
                 {/* Canvas — fills all space the drawer doesn't take */}
@@ -187,6 +200,7 @@ function WorkflowLayoutComponent() {
                     <ShelfSidebar />
                     <WorkflowCanvas />
                     <ChatSidebar />
+                    <BottomPanel />
                     <AssistantSidebar />
                     <NodeSidebar />
                     <UoWInspectorSidebar />

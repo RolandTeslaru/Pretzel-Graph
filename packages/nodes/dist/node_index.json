@@ -1,6 +1,6 @@
 {
-  "version": "1781649405981",
-  "generatedAt": "2026-06-16T22:36:45.981Z",
+  "version": "1781807763858",
+  "generatedAt": "2026-06-18T18:36:03.858Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -2447,77 +2447,20 @@
             {
               "portId": "case-1",
               "label": "Case 1",
-              "condition": {
-                "rootId": "root",
-                "rules": {
-                  "rule1": {
-                    "id": "rule1",
-                    "leftOperand": "",
-                    "rightOperand": "",
-                    "dataType": "string",
-                    "operator": "equals"
-                  }
-                },
-                "groups": {
-                  "root": {
-                    "id": "root",
-                    "combinator": "AND",
-                    "children": [
-                      "rule1"
-                    ]
-                  }
-                }
-              }
+              "value": "true",
+              "isExpression": true
             },
             {
               "portId": "case-2",
               "label": "Case 2",
-              "condition": {
-                "rootId": "root",
-                "rules": {
-                  "rule1": {
-                    "id": "rule1",
-                    "leftOperand": "",
-                    "rightOperand": "",
-                    "dataType": "string",
-                    "operator": "equals"
-                  }
-                },
-                "groups": {
-                  "root": {
-                    "id": "root",
-                    "combinator": "AND",
-                    "children": [
-                      "rule1"
-                    ]
-                  }
-                }
-              }
+              "value": "true",
+              "isExpression": true
             },
             {
               "portId": "case-3",
               "label": "Case 3",
-              "condition": {
-                "rootId": "root",
-                "rules": {
-                  "rule1": {
-                    "id": "rule1",
-                    "leftOperand": "",
-                    "rightOperand": "",
-                    "dataType": "string",
-                    "operator": "equals"
-                  }
-                },
-                "groups": {
-                  "root": {
-                    "id": "root",
-                    "combinator": "AND",
-                    "children": [
-                      "rule1"
-                    ]
-                  }
-                }
-              }
+              "value": "true",
+              "isExpression": true
             }
           ]
         },
@@ -2779,77 +2722,20 @@
             {
               "portId": "case-1",
               "label": "Case 1",
-              "condition": {
-                "rootId": "root",
-                "rules": {
-                  "rule1": {
-                    "id": "rule1",
-                    "leftOperand": "",
-                    "rightOperand": "",
-                    "dataType": "string",
-                    "operator": "equals"
-                  }
-                },
-                "groups": {
-                  "root": {
-                    "id": "root",
-                    "combinator": "AND",
-                    "children": [
-                      "rule1"
-                    ]
-                  }
-                }
-              }
+              "value": "true",
+              "isExpression": true
             },
             {
               "portId": "case-2",
               "label": "Case 2",
-              "condition": {
-                "rootId": "root",
-                "rules": {
-                  "rule1": {
-                    "id": "rule1",
-                    "leftOperand": "",
-                    "rightOperand": "",
-                    "dataType": "string",
-                    "operator": "equals"
-                  }
-                },
-                "groups": {
-                  "root": {
-                    "id": "root",
-                    "combinator": "AND",
-                    "children": [
-                      "rule1"
-                    ]
-                  }
-                }
-              }
+              "value": "true",
+              "isExpression": true
             },
             {
               "portId": "case-3",
               "label": "Case 3",
-              "condition": {
-                "rootId": "root",
-                "rules": {
-                  "rule1": {
-                    "id": "rule1",
-                    "leftOperand": "",
-                    "rightOperand": "",
-                    "dataType": "string",
-                    "operator": "equals"
-                  }
-                },
-                "groups": {
-                  "root": {
-                    "id": "root",
-                    "combinator": "AND",
-                    "children": [
-                      "rule1"
-                    ]
-                  }
-                }
-              }
+              "value": "true",
+              "isExpression": true
             }
           ]
         },
