@@ -9,6 +9,8 @@ type DataType = Field.Condition.DataType
 interface ConditionTreeReducers {
     setLeftValue(condition: ConditionValue, ruleId: RuleId, value: string): void
     setRightValue(condition: ConditionValue, ruleId: RuleId, value: string): void
+    setLeftIsExpression(condition: ConditionValue, ruleId: RuleId, value: boolean): void
+    setRightIsExpression(condition: ConditionValue, ruleId: RuleId, value: boolean): void
     setOperator(condition: ConditionValue, ruleId: RuleId, value: Operator, dataType?: DataType): void
     addRule(condition: ConditionValue, ruleGroupId: RuleGroupId): void
     addGroup(condition: ConditionValue, parentGroupId: RuleGroupId): void
@@ -22,6 +24,12 @@ export const conditionTreeReducers: ConditionTreeReducers = {
     },
     setRightValue: (condition, ruleId, value) => {
         condition.rules[ruleId].rightOperand = value
+    },
+    setLeftIsExpression: (condition, ruleId, value) => {
+        condition.rules[ruleId].leftIsExpression = value
+    },
+    setRightIsExpression: (condition, ruleId, value) => {
+        condition.rules[ruleId].rightIsExpression = value
     },
     setOperator: (condition, ruleId, value, dataType) => {
         const rule = condition.rules[ruleId]

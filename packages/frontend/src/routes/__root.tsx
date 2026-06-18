@@ -2,7 +2,6 @@ import { DialogSDK } from '@/SDKs/DialogSDK'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { NotificationSDK } from '@/SDKs/NotificationSDK'
-import { SandboxSDK } from '@/SDKs/SandboxSDK'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import VexrLabsWatermark from '@pretzel-graph/standard-ui/brands/vexrWatermark'
 import { useState } from 'react'
@@ -41,7 +40,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     component: () => (
         <>
             <QuerySDK.Provider>
-                <SandboxSDK.SandboxFrame />
                 <NotificationSDK.UIOverlay />
                 <DialogSDK.UIOverlay />
                 {/* <StateViewer /> */}

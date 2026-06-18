@@ -56,6 +56,18 @@ export const fieldCaseListReducers = {
             replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry })
             s.isDirty = true
         },
+        setLeftIsExpression: (s, nodeId, fieldId, portId, ruleId, value) => {
+            const entry = s.selectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
+            conditionTreeReducers.setLeftIsExpression(entry.condition, ruleId, value)
+            replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry })
+            s.isDirty = true
+        },
+        setRightIsExpression: (s, nodeId, fieldId, portId, ruleId, value) => {
+            const entry = s.selectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
+            conditionTreeReducers.setRightIsExpression(entry.condition, ruleId, value)
+            replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry })
+            s.isDirty = true
+        },
         setOperator: (s, nodeId, fieldId, portId, ruleId, value, dataType) => {
             const entry = s.selectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
             conditionTreeReducers.setOperator(entry.condition, ruleId, value, dataType)
@@ -97,6 +109,8 @@ export interface FieldCaseListReducers {
     condition: {
         setLeftValue     : (s: S, nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: string) => void
         setRightValue    : (s: S, nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: string) => void
+        setLeftIsExpression : (s: S, nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: boolean) => void
+        setRightIsExpression: (s: S, nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: boolean) => void
         setOperator      : (s: S, nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: Operator, dataType?: DataType) => void
         addRule          : (s: S, nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleGroupId: RuleGroupId) => void
         addGroup         : (s: S, nodeId: NodeId, fieldId: FieldId, portId: PortId, parentGroupId: RuleGroupId) => void

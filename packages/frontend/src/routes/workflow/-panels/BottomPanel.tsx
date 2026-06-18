@@ -34,8 +34,8 @@ export const BottomPanel = () => {
     ]);
 
     return (
-        <div className='bottom-5 flex flex-row left-1/2 -translate-x-1/2 z-20 absolute gap-2'>
-            <div className='p-1 w-auto bg-card/90 backdrop-blur-sm border border-border rounded-full flex'>
+        <div className='bottom-5 flex flex-row left-1/2 -translate-x-1/2 z-100 absolute gap-2'>
+            <div className='p-1 w-auto bg-card/90 backdrop-blur-sm border border-border rounded-full flex shadow-md shadow-black/10'>
                 <TemporalControls />
             </div>
             <motion.div 

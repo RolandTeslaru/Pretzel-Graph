@@ -97,17 +97,20 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public useField<T>(nodeId: Workflow.Node.Id, field: Foundations.Field) {
         const fieldId = field.id;
 
-        const [storeValue, issue, isReconciling] = this.useStore(s => {
+        const [storeValue, issue, isReconciling, isExpression] = this.useStore(s => {
             const staticVals = s.data.staticValues[nodeId]
             if (!staticVals)
-                return [undefined, null, false] as const
+                return [undefined, null, false, false] as const
 
             const isReconciling = s.reconcilingFields[nodeId]?.has(fieldId) ?? false
+            const fieldMeta = s.selectors.field.get(s, nodeId, fieldId)
+            const isExpression = (fieldMeta && 'isExpression' in fieldMeta && fieldMeta.isExpression) ?? false
 
             return [
                 staticVals[fieldId] as T,
                 s.issues.nodes[nodeId]?.fields[fieldId] ?? null,
-                isReconciling
+                isReconciling,
+                isExpression
             ] as const
         });
 
@@ -142,7 +145,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         // Commit any pending draft on unmount (covers the case where onBlur never fires).
         useEffect(() => () => { commitRef.current() }, []);
 
-        return [localValue, onChange, flush, issue, isReconciling] as const;
+        return [localValue, onChange, flush, issue, isReconciling, isExpression] as const;
     }
 
     /**
