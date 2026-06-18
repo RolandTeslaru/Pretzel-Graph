@@ -1,27 +1,30 @@
-import { memo, useState } from 'react'
-import { Tabs, Textarea } from '@pretzel-graph/standard-ui/foundations'
+import { memo } from 'react'
+import { Textarea } from '@pretzel-graph/standard-ui/foundations'
 import { WorkbenchSDK } from '../../sdk'
 import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
-import { ExpressionInput } from './ExpressionInput'
+import { WithExpression } from './withExpression'
 
 export const StringField = memo<RendererProps<'String'>>(({ field, nodeId, className }) => {
-    const [value, onChange, flush, issue, isReconciling] = WorkbenchSDK.useField<string>(nodeId, field)
-
-    const isExpression = field.isExpression ?? false;
+    const [value, onChange, flush, issue, isReconciling, isExpression] = WorkbenchSDK.useField<string>(nodeId, field)
 
     let innerClassName = ""
     if (issue)
         innerClassName = "border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50"
 
-    const [isHovered, setIsHovered] = useState(false)
+    const expressionProps = {
+        value: value as string,
+        isExpression,
+        onToggleExpression: (val: boolean) => WorkbenchSDK.actions.field.setIsExpression(nodeId, field.id, val),
+        onChange,
+        onCommit: flush,
+        nodeId,
+        displayName: field.displayName,
+        className,
+    }
 
     return (
-        <div
-            className={className + " w-full nodrag cursor-auto flex flex-col gap-1 relative"}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
+        <WithExpression {...expressionProps}>
             <FieldLabel field={field} isReconciling={isReconciling} />
             {!isExpression ?
                 <Textarea
@@ -33,32 +36,9 @@ export const StringField = memo<RendererProps<'String'>>(({ field, nodeId, class
                     className={innerClassName}
                 />
             :
-                <div className='bg-input/50 border border-border rounded-md p-0.5'>
-                    <ExpressionInput
-                        value={value as string}
-                        nodeId={nodeId}
-                        onChange={onChange}
-                        onCommit={() => flush()}
-                        placeholder={field.placeholder}
-                        className={innerClassName}
-                    />
-                </div>
+                <WithExpression.Input placeholder={field.placeholder} className={innerClassName} />
             }
-            {(isHovered || isExpression) && (
-                <Tabs.Root
-                    value={isExpression ? 'expression' : 'static'}
-                    onValueChange={(value) => {
-                        WorkbenchSDK.actions.field.setIsExpression(nodeId, field.id, value === 'expression')
-                    }}
-                    className='absolute -top-1 right-0'
-                >
-                    <Tabs.List variant="accent" size="xxs">
-                        <Tabs.Trigger value='expression'>Expression</Tabs.Trigger>
-                        <Tabs.Trigger value='static'>Static</Tabs.Trigger>
-                    </Tabs.List>
-                </Tabs.Root>
-            )}
-        </div>
+        </WithExpression>
     )
 })
 StringField.displayName = "StringField"

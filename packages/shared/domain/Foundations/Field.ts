@@ -53,6 +53,7 @@ export namespace Field {
         max: z.int().optional(),
         step: z.int().optional(),
         slider: z.boolean().optional(),
+        isExpression: z.boolean().optional(),
     })
 
     export const Float = Field.Base.extend({
@@ -62,6 +63,7 @@ export namespace Field {
         max: z.number().optional(),
         step: z.number().optional(),
         slider: z.boolean().optional(),
+        isExpression: z.boolean().optional(),
     })
 
     export const String = Field.Base.extend({
@@ -75,10 +77,10 @@ export namespace Field {
     export const UniqueString = Field.Base.extend({
         variant: configLiteral("UniqueString"),
         initialValue: z.string(),
-        isExpression: z.boolean().optional(),
         prefix: z.string().optional(),
         length: z.number().optional(),
         placeholder: z.string().optional(),
+        isExpression: z.boolean().optional(),
     })
 
     export const Password = Field.Base.extend({
@@ -90,11 +92,13 @@ export namespace Field {
     export const Secret = Field.Base.extend({
         variant: configLiteral("Secret"),
         initialValue: z.string(),
+        isExpression: z.boolean().optional(),
     })
 
     export const Boolean = Field.Base.extend({
         variant: configLiteral("Boolean"),
         initialValue: z.boolean(),
+        isExpression: z.boolean().optional(),
     })
 
     export const MultiOption = Field.Base.extend({
@@ -109,12 +113,14 @@ export namespace Field {
             })
         ),
         kind: z.enum(["select", "tab"]).default("select"),
+        isExpression: z.boolean().optional(),
     })
 
     export const File = Field.Base.extend({
         variant: configLiteral("File"),
         initialValue: z.string(),
         fileTypes: z.array(z.string()).optional(),
+        isExpression: z.boolean().optional(),
     })
 
     export const Script = Field.Base.extend({
@@ -125,11 +131,13 @@ export namespace Field {
     export const Json = Field.Base.extend({
         variant: configLiteral("Json"),
         initialValue: z.json(),
+        isExpression: z.boolean().optional(),
     })
 
     export const List = Field.Base.extend({
         variant: configLiteral("List"),
         initialValue: z.array(z.string()),
+        isExpression: z.boolean().optional(),
     })
 
     export const Variadic = Field.Base.extend({

@@ -4,13 +4,30 @@ import { Tabs } from '@pretzel-graph/standard-ui/foundations'
 import { WorkbenchSDK } from '../../sdk'
 import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
+import { WithExpression } from './withExpression'
 
 export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nodeId, className }) => {
-    const [value, , , issue, isReconciling] = WorkbenchSDK.useField(nodeId, field);
+    const [value, onChange, flush, issue, isReconciling, isExpression] = WorkbenchSDK.useField(nodeId, field);
+
+    const expressionProps = {
+        value: value as string,
+        isExpression,
+        onToggleExpression: (val: boolean) => WorkbenchSDK.actions.field.setIsExpression(nodeId, field.id, val),
+        onChange: (val: string) => onChange(val as any),
+        onCommit: flush,
+        nodeId,
+        displayName: field.displayName,
+        className,
+    }
 
     return (
-        <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
-            {field.kind === "tab" ?
+        <WithExpression {...expressionProps}>
+            {isExpression ?
+                <>
+                    <FieldLabel field={field} isReconciling={isReconciling} />
+                    <WithExpression.Input className={issue ? "border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50" : ""} />
+                </>
+            : field.kind === "tab" ?
                 <div className=' flex flex-row'>
                     <FieldLabel field={field} isReconciling={isReconciling} />
                     <Tabs.Root
@@ -43,7 +60,7 @@ export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nod
                     </Select.Root>
                 </>
             }
-        </div>
+        </WithExpression>
     )
 })
 MultiOptionField.displayName = "MultiOptionField"

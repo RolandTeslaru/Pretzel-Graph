@@ -18,6 +18,8 @@ export interface NodeSelectors {
     getIncomingEdges:     (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Edge[]
     getOutgoingEdges:     (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Edge[]
     getStaticValues:      (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Field.Id | Port.Id, any> | null
+    // Legacy `@`-sigil context — still feeds webhook field resolution (webhook-renderer). Slated
+    // for removal alongside Expression.evaluate; not used by the Airlock `$` preview path.
     getExpressionContext: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session?: Execution.Session) => Expression.Context
 }
 
@@ -75,14 +77,10 @@ export const nodeSelectors = {
     getOutgoingEdges: (s, nodeId) =>
         Object.values(s.cache.outgoingEdgesMap[nodeId] ?? {}).map(edgeId => s.data.edges[edgeId]),
     getStaticValues: (s, nodeId) => s.data.staticValues[nodeId] ?? null,
-    getExpressionContext: (s, nodeId, session) => {
-        const ctx: Expression.Context = {
-            node: s.data.nodes[nodeId],
-            fields: s.data.staticValues[nodeId] ?? {},
-            incoming: executionSelectors.getNodeIncomingData(s, nodeId, session) ?? {},
-            workflowConfig: Expression.resolveWorkflowConfig(s.data),
-        }
-
-        return ctx;
-    }
+    getExpressionContext: (s, nodeId, session) => ({
+        node: s.data.nodes[nodeId],
+        fields: s.data.staticValues[nodeId] ?? {},
+        incoming: executionSelectors.getNodeIncomingData(s, nodeId, session) ?? {},
+        workflowConfig: Expression.resolveWorkflowConfig(s.data),
+    }),
 } satisfies NodeSelectors

@@ -67,6 +67,14 @@ export function createCaseListActions(
                 setState(s => { reducers.field.caseList.condition.setRightValue(s, nodeId, fieldId, portId, ruleId, value) })
                 validateFieldById(nodeId, fieldId)
             }),
+            setLeftIsExpression: withCommit((nodeId, fieldId, portId, ruleId, value) => {
+                setState(s => { reducers.field.caseList.condition.setLeftIsExpression(s, nodeId, fieldId, portId, ruleId, value) })
+                validateFieldById(nodeId, fieldId)
+            }),
+            setRightIsExpression: withCommit((nodeId, fieldId, portId, ruleId, value) => {
+                setState(s => { reducers.field.caseList.condition.setRightIsExpression(s, nodeId, fieldId, portId, ruleId, value) })
+                validateFieldById(nodeId, fieldId)
+            }),
             setOperator: withCommit((nodeId, fieldId, portId, ruleId, value, dataType) => {
                 setState(s => { reducers.field.caseList.condition.setOperator(s, nodeId, fieldId, portId, ruleId, value, dataType) })
                 validateFieldById(nodeId, fieldId)
@@ -99,6 +107,8 @@ export interface CaseListActions {
     condition: {
         setLeftValue     : (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: string) => void
         setRightValue    : (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: string) => void
+        setLeftIsExpression : (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: boolean) => void
+        setRightIsExpression: (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: boolean) => void
         setOperator      : (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: Operator, dataType?: DataType) => void
         addRule          : (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleGroupId: RuleGroupId) => void
         addGroup         : (nodeId: NodeId, fieldId: FieldId, portId: PortId, parentGroupId: RuleGroupId) => void

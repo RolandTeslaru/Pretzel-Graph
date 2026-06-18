@@ -175,42 +175,45 @@ function WorkflowLayoutComponent() {
     }, [])
 
     return (
-        <div className="h-screen flex flex-col">
-            {/* Canvas — fills all space the drawer doesn't take */}
-            <div
-                ref={canvasRef}
-                className="flex-1 relative overflow-hidden z-20 bg-background border-b border-border"
-            >
-                <ShelfSidebar />
-                <WorkflowCanvas />
-                <ChatSidebar />
-                <AssistantSidebar />
-                <NodeSidebar />
-                <UoWInspectorSidebar />
-                <BottomPanel />
-                <PathPanel />
-                <TopRightPanel />
-                <SpotlightSearch />
-                <StackSDK.UIOverlay />
-                <BottomLeftPanel />
-            </div>
+        <>
+                            <BottomPanel />
 
-            {/* Drawer — always mounted, height animates between 0 and open height */}
-            <div
-                ref={drawerRef}
-                style={{ height: 0 }}
-                className="flex-none flex flex-col w-full overflow-hidden"
-            >
-                    <div
-                        onMouseDown={onHandleMouseDown}
-                        className="h-2 w-full cursor-ns-resize flex items-center justify-center group flex-none"
-                    >
-                        <div className="w-10 h-0.5 rounded-full bg-border group-hover:bg-muted-foreground transition-colors" />
-                    </div>
-                    <div className="flex-1 overflow-hidden relative">
-                        <TimelineViewer />
-                    </div>
+            <div className="h-screen flex flex-col">
+                {/* Canvas — fills all space the drawer doesn't take */}
+                <div
+                    ref={canvasRef}
+                    className="flex-1 relative overflow-hidden z-20 bg-background border-b border-border"
+                >
+                    <ShelfSidebar />
+                    <WorkflowCanvas />
+                    <ChatSidebar />
+                    <AssistantSidebar />
+                    <NodeSidebar />
+                    <UoWInspectorSidebar />
+                    <PathPanel />
+                    <TopRightPanel />
+                    <SpotlightSearch />
+                    <StackSDK.UIOverlay />
+                    <BottomLeftPanel />
                 </div>
-        </div>
+                {/* Drawer — always mounted, height animates between 0 and open height */}
+
+                <div
+                    ref={drawerRef}
+                    style={{ height: 0 }}
+                    className="flex-none flex flex-col w-full overflow-hidden"
+                >
+                        <div
+                            onMouseDown={onHandleMouseDown}
+                            className="h-2 w-full cursor-ns-resize flex items-center justify-center group flex-none"
+                        >
+                            <div className="w-10 h-0.5 rounded-full bg-border group-hover:bg-muted-foreground transition-colors" />
+                        </div>
+                        <div className="flex-1 overflow-hidden relative">
+                            <TimelineViewer />
+                        </div>
+                    </div>
+            </div>
+        </>
     )
 }
