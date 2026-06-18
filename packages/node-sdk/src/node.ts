@@ -110,6 +110,18 @@ export abstract class RuntimeNode<
                 },
                 (evaluate) => {
                     for (const field of this.workflowNode.fields) {
+                        if (field.variant === "CaseList") {
+                            const raw = evaluated[field.id as Foundations.Field.Id] as Foundations.Field.CaseList.Value | undefined;
+                            if (!Array.isArray(raw)) continue;
+
+                            evaluated[field.id as Foundations.Field.Id] = raw.map(entry =>
+                                entry.isExpression && typeof entry.value === "string"
+                                    ? { ...entry, value: !!evaluate(Airlock.Source.asExpression(entry.value)) }
+                                    : entry
+                            );
+                            continue;
+                        }
+
                         if (!("isExpression" in field) || field.isExpression !== true) continue;
                         const raw = evaluated[field.id as Foundations.Field.Id];
                         if (typeof raw !== "string") continue;

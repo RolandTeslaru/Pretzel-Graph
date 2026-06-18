@@ -295,11 +295,23 @@ export namespace Field {
     }
 
     export namespace CaseList {
-        export const Entry = z.object({
-            portId: z.string().brand("PortId").brand("OutputId"),
-            label: z.string(),
-            condition: Condition.Value,
-        });
+        // Pre-migration entries used a `condition` rule-tree instead of `value` —
+        // normalize those to a safe default rather than failing to parse old workflows.
+        export const Entry = z.preprocess(
+            (raw) => {
+                if (raw && typeof raw === "object" && !("value" in raw) && "condition" in raw) {
+                    const { condition, ...rest } = raw as Record<string, unknown>;
+                    return { ...rest, value: false };
+                }
+                return raw;
+            },
+            z.object({
+                portId: z.string().brand("PortId").brand("OutputId"),
+                label: z.string(),
+                value: z.union([z.boolean(), z.string()]),
+                isExpression: z.boolean().optional(),
+            }),
+        );
         export type Entry = z.infer<typeof Entry>;
 
         export const Value = z.array(Entry);
@@ -310,28 +322,12 @@ export namespace Field {
             initialValue: Value,
         });
 
-        export const createEntry = (portId: string, label: string): Entry => {
-            const rootId = Condition.RuleGroup.createId("root");
-            return {
-                portId: portId as Entry["portId"],
-                label,
-                condition: {
-                    rootId,
-                    rules: {
-                        [Condition.Rule.createId("rule1")]: {
-                            id: Condition.Rule.createId("rule1"),
-                            dataType: "string",
-                            leftOperand: "",
-                            operator: "equals",
-                            rightOperand: "",
-                        },
-                    } as Condition.Value["rules"],
-                    groups: {
-                        [rootId]: { id: rootId, combinator: "AND", children: [Condition.Rule.createId("rule1")] },
-                    } as Condition.Value["groups"],
-                },
-            };
-        };
+        export const createEntry = (portId: string, label: string): Entry => ({
+            portId: portId as Entry["portId"],
+            label,
+            value: "true",
+            isExpression: true,
+        });
     }
 
     export namespace ResourceLoader {
