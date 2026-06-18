@@ -4,13 +4,10 @@ import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import type { Workflow } from "@pretzel-graph/shared/domain";
 
-type NodeId      = Workflow.Node.Id
-type FieldId     = Field.Id
-type PortId      = Port.Output.Id
-type RuleId      = Field.Condition.Rule.Id
-type RuleGroupId = Field.Condition.RuleGroup.Id
-type Operator    = Field.Condition.Operator
-type DataType    = Field.Condition.DataType
+type NodeId    = Workflow.Node.Id
+type FieldId   = Field.Id
+type PortId    = Port.Output.Id
+type EntryValue = Field.CaseList.Entry["value"]
 
 export function createCaseListActions(
     sdk: WorkbenchSDKImpl,
@@ -58,61 +55,23 @@ export function createCaseListActions(
             validateFieldById(nodeId, fieldId)
         }),
 
-        condition: {
-            setLeftValue: withCommit((nodeId, fieldId, portId, ruleId, value) => {
-                setState(s => { reducers.field.caseList.condition.setLeftValue(s, nodeId, fieldId, portId, ruleId, value) })
-                validateFieldById(nodeId, fieldId)
-            }),
-            setRightValue: withCommit((nodeId, fieldId, portId, ruleId, value) => {
-                setState(s => { reducers.field.caseList.condition.setRightValue(s, nodeId, fieldId, portId, ruleId, value) })
-                validateFieldById(nodeId, fieldId)
-            }),
-            setLeftIsExpression: withCommit((nodeId, fieldId, portId, ruleId, value) => {
-                setState(s => { reducers.field.caseList.condition.setLeftIsExpression(s, nodeId, fieldId, portId, ruleId, value) })
-                validateFieldById(nodeId, fieldId)
-            }),
-            setRightIsExpression: withCommit((nodeId, fieldId, portId, ruleId, value) => {
-                setState(s => { reducers.field.caseList.condition.setRightIsExpression(s, nodeId, fieldId, portId, ruleId, value) })
-                validateFieldById(nodeId, fieldId)
-            }),
-            setOperator: withCommit((nodeId, fieldId, portId, ruleId, value, dataType) => {
-                setState(s => { reducers.field.caseList.condition.setOperator(s, nodeId, fieldId, portId, ruleId, value, dataType) })
-                validateFieldById(nodeId, fieldId)
-            }),
-            addRule: withCommit((nodeId, fieldId, portId, ruleGroupId) => {
-                setState(s => { reducers.field.caseList.condition.addRule(s, nodeId, fieldId, portId, ruleGroupId) })
-                validateFieldById(nodeId, fieldId)
-            }),
-            addGroup: withCommit((nodeId, fieldId, portId, parentGroupId) => {
-                setState(s => { reducers.field.caseList.condition.addGroup(s, nodeId, fieldId, portId, parentGroupId) })
-                validateFieldById(nodeId, fieldId)
-            }),
-            removeRuleOrGroup: withCommit((nodeId, fieldId, portId, id, parentGroupId) => {
-                setState(s => { reducers.field.caseList.condition.removeRuleOrGroup(s, nodeId, fieldId, portId, id, parentGroupId) })
-                validateFieldById(nodeId, fieldId)
-            }),
-            changeCombinator: withCommit((nodeId, fieldId, portId, ruleGroupId, combinator) => {
-                setState(s => { reducers.field.caseList.condition.changeCombinator(s, nodeId, fieldId, portId, ruleGroupId, combinator) })
-                validateFieldById(nodeId, fieldId)
-            }),
-        },
+        setValue: withCommit((nodeId, fieldId, portId, value) => {
+            setState(s => { reducers.field.caseList.setValue(s, nodeId, fieldId, portId, value) })
+            validateFieldById(nodeId, fieldId)
+        }),
+
+        setIsExpression: withCommit((nodeId, fieldId, portId, isExpression) => {
+            setState(s => { reducers.field.caseList.setIsExpression(s, nodeId, fieldId, portId, isExpression) })
+            validateFieldById(nodeId, fieldId)
+        }),
     } satisfies CaseListActions
 }
 
 
 export interface CaseListActions {
-    addEntry    : (nodeId: NodeId, fieldId: FieldId, label: string) => void
-    removeEntry : (nodeId: NodeId, fieldId: FieldId, portId: PortId) => void
-    setLabel    : (nodeId: NodeId, fieldId: FieldId, portId: PortId, label: string) => void
-    condition: {
-        setLeftValue     : (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: string) => void
-        setRightValue    : (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: string) => void
-        setLeftIsExpression : (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: boolean) => void
-        setRightIsExpression: (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: boolean) => void
-        setOperator      : (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleId: RuleId, value: Operator, dataType?: DataType) => void
-        addRule          : (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleGroupId: RuleGroupId) => void
-        addGroup         : (nodeId: NodeId, fieldId: FieldId, portId: PortId, parentGroupId: RuleGroupId) => void
-        removeRuleOrGroup: (nodeId: NodeId, fieldId: FieldId, portId: PortId, id: RuleId | RuleGroupId, parentGroupId: RuleGroupId) => void
-        changeCombinator : (nodeId: NodeId, fieldId: FieldId, portId: PortId, ruleGroupId: RuleGroupId, combinator: "AND" | "OR") => void
-    }
+    addEntry      : (nodeId: NodeId, fieldId: FieldId, label: string) => void
+    removeEntry   : (nodeId: NodeId, fieldId: FieldId, portId: PortId) => void
+    setLabel      : (nodeId: NodeId, fieldId: FieldId, portId: PortId, label: string) => void
+    setValue      : (nodeId: NodeId, fieldId: FieldId, portId: PortId, value: EntryValue) => void
+    setIsExpression: (nodeId: NodeId, fieldId: FieldId, portId: PortId, isExpression: boolean) => void
 }

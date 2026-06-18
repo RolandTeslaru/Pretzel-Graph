@@ -51,7 +51,7 @@ export const buttonVariants = cva(
         `,
         "ghost-destructive": `
           shadow-none text-red-600 dark:text-red-500
-          hover:bg-red-400/40 hover:text-red-800 dark:hover:text-red-300
+          hover:bg-red-500/20 hover:text-red-900 dark:hover:text-red-600
           aria-expanded:bg-red-400/20 aria-expanded:text-red-800
           dark:aria-expanded:bg-red-500/20 dark:aria-expanded:text-red-300
         `,

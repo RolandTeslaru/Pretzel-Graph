@@ -20,7 +20,7 @@ export const JsonField = memo<RendererProps<'Json'>>(({ field, nodeId, className
 
     const innerClassName = (issue || parseError)
         ? 'border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50 font-mono font-semibold text-xs'
-        : 'font-mono font-medium text-xs'
+    : 'font-mono font-medium text-xs'
 
     const expressionProps = {
         value: draft,

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 import { Button, Input, Tabs, Textarea } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
@@ -21,7 +21,10 @@ interface Props {
 interface ExpressionContextValue {
     value: string
     onChange: (value: string) => void
-    onCommit: () => void
+    // the dialog content is created once (at click time) and never re-rendered with
+    // fresh props as the parent re-renders — read onCommit through a ref so the dialog
+    // always invokes the latest closure (current draft) instead of the one from click time.
+    onCommitRef: React.RefObject<() => void>
     node: Workflow.Node | null
     displayName: string
 }
@@ -39,7 +42,7 @@ function ExpressionInput({ multiline, placeholder, className }: {
     placeholder?: string
     className?: string
 }) {
-    const { value, onChange, onCommit, node, displayName } = useExpressionContext()
+    const { value, onChange, onCommitRef, node, displayName } = useExpressionContext()
 
     return (
         <div className='relative input-default rounded-sm overflow-hidden'>
@@ -51,7 +54,7 @@ function ExpressionInput({ multiline, placeholder, className }: {
                     DialogSDK.actions
                         .push("ExpressionEditorDialog", (dialogProps) => (
                             <DialogSDK.Template {...dialogProps} className='overflow-hidden! border-none! bg-white/0! shadow-none! flex flex-row gap-4'>
-                                <ExpressionEditor node={node} displayName={displayName} onChange={onChange} onClose={onCommit} initialValue={value} />
+                                <ExpressionEditor node={node} displayName={displayName} onChange={onChange} onClose={() => onCommitRef.current()} initialValue={value} />
                             </DialogSDK.Template>
                         ))
                 }}
@@ -64,7 +67,7 @@ function ExpressionInput({ multiline, placeholder, className }: {
                 value={value}
                 placeholder={placeholder}
                 onChange={(e) => onChange(e.currentTarget.value)}
-                onBlur={onCommit}
+                onBlur={() => onCommitRef.current()}
                 className={className + " pl-8"}
             />
         </div>
@@ -75,8 +78,11 @@ export function WithExpression({ value, isExpression, onToggleExpression, onChan
     const [isHovered, setIsHovered] = useState(false)
     const node = WorkbenchSDK.state.selectors.node.get(WorkbenchSDK.state, nodeId);
 
+    const onCommitRef = useRef(onCommit)
+    useEffect(() => { onCommitRef.current = onCommit }, [onCommit])
+
     return (
-        <ExpressionContext.Provider value={{ value, onChange, onCommit, node, displayName }}>
+        <ExpressionContext.Provider value={{ value, onChange, onCommitRef, node, displayName }}>
             <div
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
