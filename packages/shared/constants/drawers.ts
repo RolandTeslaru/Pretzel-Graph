@@ -58,7 +58,7 @@ export const CORE_DRAWERS = {
     ],
   },
   llm_operations: {
-    displayName: "LLM Operations",
+    displayName: "LLM Utilities",
     id: "llm_operations",
     icon: "MessageSquareCode",
     blueprintIds: [

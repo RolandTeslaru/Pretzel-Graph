@@ -2,6 +2,7 @@
 @config "../tailwind.config.ts";
 
 @import "@xyflow/react/dist/style.css";
+@import "../../standard-ui/src/styles.css";
 
 body {
   margin: 0;

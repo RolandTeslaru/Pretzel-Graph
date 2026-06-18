@@ -4,18 +4,35 @@ import { Slider } from '@pretzel-graph/standard-ui/foundations'
 import { WorkbenchSDK } from '../../sdk'
 import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
+import { WithExpression } from './withExpression'
 
 export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, className }) => {
-    const [value, onChange, flush, issue, isReconciling] = WorkbenchSDK.useField(nodeId, field);
+    const [value, onChange, flush, issue, isReconciling, isExpression] = WorkbenchSDK.useField(nodeId, field);
     const hasSlider = field.slider;
 
     let errorClass = ""
     if (issue)
         errorClass = "border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50"
 
+    const expressionProps = {
+        value: String(value ?? ""),
+        isExpression,
+        onToggleExpression: (val: boolean) => WorkbenchSDK.actions.field.setIsExpression(nodeId, field.id, val),
+        onChange: (val: string) => onChange(val as any),
+        onCommit: flush,
+        nodeId,
+        displayName: field.displayName,
+        className,
+    }
+
     return (
-        <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
-            {hasSlider ?
+        <WithExpression {...expressionProps}>
+            {isExpression ?
+                <>
+                    <FieldLabel field={field} isReconciling={isReconciling} />
+                    <WithExpression.Input className={errorClass} />
+                </>
+            : hasSlider ?
                 <>
                     <FieldLabel field={field} isReconciling={isReconciling} />
                     <div className='flex flex-row gap-2'>
@@ -56,7 +73,7 @@ export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, classNa
                     />
                 </>
             }
-        </div>
+        </WithExpression>
     )
 })
 FloatField.displayName = "FloatField"

@@ -6,7 +6,7 @@ import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
 import { ConditionContext, useConditionContext } from './Condition/context'
 import { Button, DropdownMenu, Input, Label } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { ExpressionInput } from './ExpressionInput'
+import { WithExpression } from './withExpression'
 import { OperatorSelector } from './Condition/OperatorSelector'
 
 type Value = Foundations.Field.CaseList.Value
@@ -73,6 +73,10 @@ const CaseEntry = memo(({ field, nodeId, fieldId, portId, index }: {
             WorkbenchSDK.actions.field.caseList.condition.setLeftValue(nodeId, fieldId, portId, ruleId, value),
         setRightValue: (ruleId: RuleId, value: string) =>
             WorkbenchSDK.actions.field.caseList.condition.setRightValue(nodeId, fieldId, portId, ruleId, value),
+        setLeftIsExpression: (ruleId: RuleId, value: boolean) =>
+            WorkbenchSDK.actions.field.caseList.condition.setLeftIsExpression(nodeId, fieldId, portId, ruleId, value),
+        setRightIsExpression: (ruleId: RuleId, value: boolean) =>
+            WorkbenchSDK.actions.field.caseList.condition.setRightIsExpression(nodeId, fieldId, portId, ruleId, value),
         setOperator: (ruleId: RuleId, op: Foundations.Field.Condition.Operator, dataType?: Foundations.Field.Condition.DataType) =>
             WorkbenchSDK.actions.field.caseList.condition.setOperator(nodeId, fieldId, portId, ruleId, op, dataType),
         addRule: (ruleGroupId: RuleGroupId) =>
@@ -202,14 +206,25 @@ const CaseEntryRule = memo(({ ruleId, parentGroupId }: {
 
     return (
         <div className='group/rule relative flex flex-col w-full border-border bg-input/80 rounded-sm shadow-md shadow-black/5 border'>
-            <ExpressionInput
+            <WithExpression
                 value={leftValue}
-                side='left'
-                className='border-b border-b-border rounded-none!'
+                isExpression={rule.leftIsExpression ?? false}
+                onToggleExpression={(value) => actions.setLeftIsExpression(ruleId, value)}
                 onChange={setLeftValue}
-                onCommit={(value) => actions.setLeftValue(ruleId, value)}
+                onCommit={() => actions.setLeftValue(ruleId, leftValue)}
                 nodeId={nodeId}
-            />
+                displayName='Left Operand'
+                className='border-b border-b-border'
+            >
+                <Input
+                    variant='ghost-no-focus'
+                    size='xs'
+                    className='rounded-none!'
+                    value={leftValue}
+                    onChange={(e) => setLeftValue(e.currentTarget.value)}
+                    onBlur={() => actions.setLeftValue(ruleId, leftValue)}
+                />
+            </WithExpression>
             <div className='flex flex-row w-full'>
                 <OperatorSelector
                     operator={rule.operator}
@@ -219,14 +234,24 @@ const CaseEntryRule = memo(({ ruleId, parentGroupId }: {
 
                 <div className='content-[" "] h-6 w-px bg-border' />
 
-                <ExpressionInput
+                <WithExpression
                     value={rightValue}
-                    side='right'
-                    className='rounded-none!'
+                    isExpression={rule.rightIsExpression ?? false}
+                    onToggleExpression={(value) => actions.setRightIsExpression(ruleId, value)}
                     onChange={setRightValue}
-                    onCommit={(value) => actions.setRightValue(ruleId, value)}
+                    onCommit={() => actions.setRightValue(ruleId, rightValue)}
                     nodeId={nodeId}
-                />
+                    displayName='Right Operand'
+                >
+                    <Input
+                        variant='ghost-no-focus'
+                        size='xs'
+                        className='rounded-none!'
+                        value={rightValue}
+                        onChange={(e) => setRightValue(e.currentTarget.value)}
+                        onBlur={() => actions.setRightValue(ruleId, rightValue)}
+                    />
+                </WithExpression>
             </div>
 
             <Button

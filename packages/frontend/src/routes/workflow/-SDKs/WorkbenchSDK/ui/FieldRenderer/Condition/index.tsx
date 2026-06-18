@@ -3,8 +3,8 @@ import { WorkbenchSDK } from '../../../sdk'
 import { FieldLabel } from '../FieldLabel'
 import type { RendererProps } from '../FieldLabel'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
-import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
-import { ExpressionInput } from '../ExpressionInput'
+import { Button, DropdownMenu, Input } from '@pretzel-graph/standard-ui/foundations'
+import { WithExpression } from '../withExpression'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { OperatorSelector } from './OperatorSelector'
 
@@ -164,14 +164,25 @@ const Rule = memo(({ nodeId, fieldId, ruleId, parentGroupId }: {
 
     return (
         <div className='group/rule relative flex flex-col w-full border-border bg-input/80 rounded-sm shadow-md shadow-black/5 border'>
-            <ExpressionInput
+            <WithExpression
                 value={leftValue}
-                side='left'
-                className='border-b border-b-border rounded-none!'
+                isExpression={rule.leftIsExpression ?? false}
+                onToggleExpression={(value) => WorkbenchSDK.actions.field.condition.setLeftIsExpression(nodeId, fieldId, ruleId, value)}
                 onChange={setLeftValue}
-                onCommit={(value) => WorkbenchSDK.actions.field.condition.setLeftValue(nodeId, fieldId, ruleId, value)}
+                onCommit={() => WorkbenchSDK.actions.field.condition.setLeftValue(nodeId, fieldId, ruleId, leftValue)}
                 nodeId={nodeId}
-            />
+                displayName='Left Operand'
+                className='border-b border-b-border'
+            >
+                <Input
+                    variant='ghost-no-focus'
+                    size='xs'
+                    className='rounded-none!'
+                    value={leftValue}
+                    onChange={(e) => setLeftValue(e.currentTarget.value)}
+                    onBlur={() => WorkbenchSDK.actions.field.condition.setLeftValue(nodeId, fieldId, ruleId, leftValue)}
+                />
+            </WithExpression>
             <div className='flex flex-row w-full'>
                 <OperatorSelector
                     operator={rule.operator}
@@ -181,14 +192,24 @@ const Rule = memo(({ nodeId, fieldId, ruleId, parentGroupId }: {
 
                 <div className='content-[" "] h-6 w-px bg-border' />
 
-                <ExpressionInput
+                <WithExpression
                     value={rightValue}
-                    side='right'
-                    className='rounded-none!'
+                    isExpression={rule.rightIsExpression ?? false}
+                    onToggleExpression={(value) => WorkbenchSDK.actions.field.condition.setRightIsExpression(nodeId, fieldId, ruleId, value)}
                     onChange={setRightValue}
-                    onCommit={(value) => WorkbenchSDK.actions.field.condition.setRightValue(nodeId, fieldId, ruleId, value)}
+                    onCommit={() => WorkbenchSDK.actions.field.condition.setRightValue(nodeId, fieldId, ruleId, rightValue)}
                     nodeId={nodeId}
-                />
+                    displayName='Right Operand'
+                >
+                    <Input
+                        variant='ghost-no-focus'
+                        size='xs'
+                        className='rounded-none!'
+                        value={rightValue}
+                        onChange={(e) => setRightValue(e.currentTarget.value)}
+                        onBlur={() => WorkbenchSDK.actions.field.condition.setRightValue(nodeId, fieldId, ruleId, rightValue)}
+                    />
+                </WithExpression>
             </div>
 
             <Button
