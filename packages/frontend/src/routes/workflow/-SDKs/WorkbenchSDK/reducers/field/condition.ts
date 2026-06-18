@@ -21,6 +21,16 @@ export const fieldConditionReducers = {
         conditionTreeReducers.setRightValue(condition, ruleId, value)
         s.isDirty = true
     },
+    setLeftIsExpression: (s, nodeId, fieldId, ruleId, value) => {
+        const condition = s.selectors.field.condition.getValue(s, nodeId, fieldId)!
+        conditionTreeReducers.setLeftIsExpression(condition, ruleId, value)
+        s.isDirty = true
+    },
+    setRightIsExpression: (s, nodeId, fieldId, ruleId, value) => {
+        const condition = s.selectors.field.condition.getValue(s, nodeId, fieldId)!
+        conditionTreeReducers.setRightIsExpression(condition, ruleId, value)
+        s.isDirty = true
+    },
     setOperator: (s, nodeId, fieldId, ruleId, value, dataType) => {
         const condition = s.selectors.field.condition.getValue(s, nodeId, fieldId)!
         conditionTreeReducers.setOperator(condition, ruleId, value, dataType)
@@ -52,6 +62,8 @@ export const fieldConditionReducers = {
 export interface FieldConditionReducers {
     setLeftValue     : (s: S, nodeId: NodeId, fieldId: FieldId, ruleId: RuleId, value: string) => void
     setRightValue    : (s: S, nodeId: NodeId, fieldId: FieldId, ruleId: RuleId, value: string) => void
+    setLeftIsExpression : (s: S, nodeId: NodeId, fieldId: FieldId, ruleId: RuleId, value: boolean) => void
+    setRightIsExpression: (s: S, nodeId: NodeId, fieldId: FieldId, ruleId: RuleId, value: boolean) => void
     setOperator      : (s: S, nodeId: NodeId, fieldId: FieldId, ruleId: RuleId, value: Operator, dataType?: DataType) => void
     addRule          : (s: S, nodeId: NodeId, fieldId: FieldId, ruleGroupId: RuleGroupId) => void
     addGroup         : (s: S, nodeId: NodeId, fieldId: FieldId, parentGroupId: RuleGroupId) => void

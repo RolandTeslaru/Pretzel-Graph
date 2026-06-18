@@ -14,11 +14,15 @@ export const ScriptField = memo(({ field, nodeId, className }: RendererProps<'Sc
             <Button variant="input" className="justify-start overflow-hidden"
                 onClick={() => {
                     const snapshot = localValue;
-                    DialogSDK.actions.push("ScriptDialog", (dialogProps) => (
-                        <DialogSDK.Template {...dialogProps} className='overflow-hidden! border-none! bg-white/0! shadow-none! flex flex-row gap-4'>
-                            <CodeEditorContent nodeId={nodeId} displayName={field.displayName} onChange={onChange} onClose={flush} initialValue={snapshot} />
-                        </DialogSDK.Template>
-                    ))
+                    const node = WorkbenchSDK.state.selectors.node.get(WorkbenchSDK.state, nodeId);
+                    if (!node) return;
+
+                    DialogSDK.actions
+                             .push("ScriptDialog", (dialogProps) => (
+                                <DialogSDK.Template {...dialogProps} className='overflow-hidden! border-none! bg-white/0! shadow-none! flex flex-row gap-4'>
+                                    <CodeEditorContent node={node} displayName={field.displayName} onChange={onChange} onClose={flush} initialValue={snapshot} />
+                                </DialogSDK.Template>
+                            ))
                 }}
             >
                 <p className="font-mono text-xs truncate w-full min-w-0">{localValue}</p>

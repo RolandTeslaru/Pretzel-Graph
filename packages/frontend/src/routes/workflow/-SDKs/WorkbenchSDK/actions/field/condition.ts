@@ -26,6 +26,14 @@ export function createConditionActions(
             setState(s => { reducers.field.condition.setRightValue(s, nodeId, fieldId, ruleId, value) })
             validateFieldById(nodeId, fieldId)
         }),
+        setLeftIsExpression: withCommit((nodeId, fieldId, ruleId, value) => {
+            setState(s => { reducers.field.condition.setLeftIsExpression(s, nodeId, fieldId, ruleId, value) })
+            validateFieldById(nodeId, fieldId)
+        }),
+        setRightIsExpression: withCommit((nodeId, fieldId, ruleId, value) => {
+            setState(s => { reducers.field.condition.setRightIsExpression(s, nodeId, fieldId, ruleId, value) })
+            validateFieldById(nodeId, fieldId)
+        }),
         setOperator: withCommit((nodeId, fieldId, ruleId, value, dataType) => {
             setState(s => { reducers.field.condition.setOperator(s, nodeId, fieldId, ruleId, value, dataType) })
             validateFieldById(nodeId, fieldId)
@@ -53,6 +61,8 @@ export function createConditionActions(
 export interface ConditionActions {
     setLeftValue     : (nodeId: NodeId, fieldId: FieldId, ruleId: RuleId, value: string) => void
     setRightValue    : (nodeId: NodeId, fieldId: FieldId, ruleId: RuleId, value: string) => void
+    setLeftIsExpression : (nodeId: NodeId, fieldId: FieldId, ruleId: RuleId, value: boolean) => void
+    setRightIsExpression: (nodeId: NodeId, fieldId: FieldId, ruleId: RuleId, value: boolean) => void
     setOperator      : (nodeId: NodeId, fieldId: FieldId, ruleId: RuleId, value: Operator, dataType?: DataType) => void
     addRule          : (nodeId: NodeId, fieldId: FieldId, ruleGroupId: RuleGroupId) => void
     addGroup         : (nodeId: NodeId, fieldId: FieldId, parentGroupId: RuleGroupId) => void

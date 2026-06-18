@@ -9,6 +9,13 @@ type S       = WorkbenchSDK.State
 type NodeId  = Workflow.Node.Id
 type FieldId = Foundations.Field.Id
 
+// Variants whose Zod schema declares `isExpression?: boolean` (Foundations/Field.ts).
+// Can't detect support via `'isExpression' in field` — the key is absent until the
+// first toggle, since the property is optional and starts unset.
+const EXPRESSION_CAPABLE_VARIANTS = new Set<Foundations.Field.Variant>([
+    "Integer", "Float", "String", "UniqueString", "Secret", "Boolean", "MultiOption", "File", "Json", "List",
+])
+
 export const fieldReducers = {
     setValue: (s, nodeId, fieldId, value) => {
         s.isDirty = true;
@@ -56,13 +63,32 @@ export const fieldReducers = {
         const field = s.selectors.field.get(s, nodeId, fieldId)
         if (!field) return;
 
-        if (field.variant === "String" || field.variant === "UniqueString") {
-            field.isExpression = value
-            s.isDirty = true;
-        } else {
-            console.warn(`Tried to set isExpression on non-string field ${fieldId} on node ${nodeId}`)
+        if (!EXPRESSION_CAPABLE_VARIANTS.has(field.variant)) {
+            console.warn(`Tried to set isExpression on field ${fieldId} on node ${nodeId}, which doesn't support expressions`)
             return;
         }
+
+        const current = s.data.staticValues[nodeId]?.[fieldId]
+
+        if (value) {
+            // entering expression mode: re-encode the raw value as valid JS source
+            // (e.g. a Json field's object, or a MultiOption's bare string "GET",
+            // aren't valid expression text on their own)
+            if (typeof current !== "undefined") {
+                s.data.staticValues[nodeId][fieldId] = field.variant === "Json"
+                    ? JSON.stringify(current, null, 2)
+                    : JSON.stringify(current)
+            }
+        } else if (typeof current === "string") {
+            // leaving expression mode: recover the literal value behind the expression
+            // text if it's just a JSON literal; otherwise leave the raw text as-is
+            try {
+                s.data.staticValues[nodeId][fieldId] = JSON.parse(current)
+            } catch {}
+        }
+
+        (field as { isExpression?: boolean }).isExpression = value
+        s.isDirty = true;
     },
     variadic:  fieldVariadicReducers,
     condition: fieldConditionReducers,
