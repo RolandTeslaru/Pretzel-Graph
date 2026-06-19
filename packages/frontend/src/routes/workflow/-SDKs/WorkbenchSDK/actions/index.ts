@@ -9,6 +9,7 @@ import { createFieldActions, type FieldActions } from './field';
 import { createToolActions, type ToolActions } from './tool';
 import { createWorkflowActions, type WorkflowActions } from './workflow';
 import { createDependencyActions, type DependencyActions } from './dependency';
+import { clipboardActions } from './clipboard';
 import { DialogSDK } from '@/SDKs/DialogSDK';
 import React from 'react';
 
@@ -92,12 +93,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         setCurrentDraggedHandle: (handle) => setState({
             draggedHandle: handle
         }),
-        clipboard: {
-            copy:           (...props) => { setState(s => { reducers.clipboard.copy(s,     ...props) }) },
-            copyNode:       (...props) => { setState(s => { reducers.clipboard.copyNode(s, ...props) }) },
-            clear:          () => { setState(s => { reducers.clipboard.clear(s) }) },
-            paste:          withCommit((...props) => setState(withCyclesRecompute(s => { reducers.clipboard.paste(s, ...props) }))),
-        },
+        clipboard: clipboardActions,
         selection: {
             duplicate: withCommit(() => setState(withCyclesRecompute(s => { reducers.selection.duplicate(s) }))),
             delete:    withCommit(() => setState(withCyclesRecompute(s => { reducers.selection.delete(s) }))),
@@ -165,10 +161,9 @@ export interface _WorkbenchSDKActions {
     setDirty                : (dirty: boolean) => void;
     takeSnapshot            : (p: { force?: boolean }) => void;
     clipboard               : {
-        copy               : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['copy']>;
-        copyNode           : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['copyNode']>;
-        paste              : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['paste']>;
-        clear              : DropFirstArg<WorkbenchSDK.Reducers['clipboard']['clear']>;
+        copy               : () => Promise<void>;
+        copyNode           : (nodeId: Workflow.Node.Id) => Promise<void>;
+        paste              : (position?: { x: number, y: number }) => Promise<void>;
     };
     temporal                 : {
         undo                : () => void;
