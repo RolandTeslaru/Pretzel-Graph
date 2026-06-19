@@ -1,5 +1,5 @@
-import { ReactFlow, Background, useEdgesState, useNodesState } from '@xyflow/react'
-import React, { memo, useEffect, useMemo } from 'react'
+import { ReactFlow, Background, useEdgesState, useNodesState, useUpdateNodeInternals } from '@xyflow/react'
+import React, { memo, useEffect, useMemo, useRef } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { createCanvasCallbacks, canvasProps } from './props'
 import { createCycleSelectionDrivers } from '../../utils/createDrivers'
@@ -82,7 +82,29 @@ const CanvasRenderer = memo(() => {
             {...canvasProps}
             {...canvasCallbacks}
         >
+            <NewNodeHandleMeasurer />
             <Background size={2} gap={40} />
         </ReactFlow>
     )
+})
+
+// Rendered inside <ReactFlow> so the React Flow store provider is available.
+// When nodes are inserted programmatically (paste/duplicate) alongside edges that
+// connect to them, XYFlow can't position those edges until the new nodes' handles
+// are measured (error #008). Force a re-measure on the next frame so freshly added
+// nodes register their handle bounds and the edges route correctly.
+const NewNodeHandleMeasurer = memo(() => {
+    const nodes = WorkbenchSDK.useStore(s => s.data.nodes)
+    const updateNodeInternals = useUpdateNodeInternals()
+    const knownNodeIds = useRef<Set<string>>(new Set(Object.keys(nodes)))
+
+    useEffect(() => {
+        const added = Object.keys(nodes).filter(id => !knownNodeIds.current.has(id))
+        knownNodeIds.current = new Set(Object.keys(nodes))
+        if (!added.length) return
+        const raf = requestAnimationFrame(() => updateNodeInternals(added))
+        return () => cancelAnimationFrame(raf)
+    }, [nodes, updateNodeInternals])
+
+    return null
 })

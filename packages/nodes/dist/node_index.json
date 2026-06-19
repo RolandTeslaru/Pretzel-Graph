@@ -1,6 +1,6 @@
 {
-  "version": "1781860207996",
-  "generatedAt": "2026-06-19T09:10:07.996Z",
+  "version": "1781877370409",
+  "generatedAt": "2026-06-19T13:56:10.409Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -8601,25 +8601,25 @@
       ],
       "inputs": [
         {
-          "id": "ExposedInputPort-7r7r9",
+          "id": "sys_message",
           "displayName": "System Message",
           "variant": "Message",
           "required": false
         },
         {
-          "id": "ExposedInputPort-u3mi6",
+          "id": "language_model",
           "displayName": "Language Model",
           "variant": "LanguageModel",
           "required": true
         },
         {
-          "id": "ToolsPort",
+          "id": "tools",
           "displayName": "Tools",
           "variant": "ToolList",
           "required": false
         },
         {
-          "id": "ExposedInputPort-nyb7u",
+          "id": "input_message",
           "displayName": "Messages",
           "variant": "MessageList",
           "required": true

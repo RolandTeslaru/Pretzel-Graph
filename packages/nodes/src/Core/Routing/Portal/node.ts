@@ -20,7 +20,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             const outNodes = this.context
                 .workflowQueryAPI
                 .getNodesByBlueprint<typeof Blueprint>(Blueprint.id)
-                .filter(({ fields }) => fields["portalId"] === this.fields.portalId);
+                .filter(({ fields, node }) => (fields["portalId"] === this.fields.portalId) && (fields["direction"] === "out") && (node.id !== this.workflowNode.id));
     
             for (const { node } of outNodes) {
                 const instance = this.context.instanceRegistryAPI.get(node.id);
