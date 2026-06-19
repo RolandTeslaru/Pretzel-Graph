@@ -40,6 +40,7 @@ export namespace Workflow {
             isMinimized:  z.boolean().default(false),
             isFlipped:    z.boolean().optional(),
             isDisabled:   z.boolean().optional(),
+            // iconColor (per-node accent-token override) is inherited from Blueprint.Meta.
         });
 
         export function createId(blueprintId: Blueprint.Id) {
@@ -218,6 +219,7 @@ export namespace Workflow {
         description:  z.string().optional().nullable(),
         icon:         z.string().nullable().optional(),
         accent:       z.string().nullable().optional(),
+        icon_color:   z.string().nullable().optional(),
 
         created_at: z.coerce.date(),
         updated_at: z.coerce.date(),
@@ -236,6 +238,7 @@ export namespace Workflow {
         description:    "",
         icon:           null,
         accent:         null,
+        icon_color:     null,
         folder_id:      "" as Workflow["folder_id"],
         created_at:     new Date(),
         updated_at:     new Date(),

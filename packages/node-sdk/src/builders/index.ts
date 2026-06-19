@@ -35,6 +35,7 @@ type DefineBlueprintReturn<
     readonly description: string;
     readonly icon: string;
     readonly accent?: string;
+    readonly iconColor?: string;
     readonly fields: TToolCompatible extends true
         ? readonly [...TFields, ...typeof executionStrategyFields, typeof hiddenToolField]
         : readonly [...TFields, ...typeof executionStrategyFields];
@@ -112,6 +113,7 @@ export function defineBlueprint<
     description: string;
     icon: string;
     accent?: string;
+    iconColor?: string;
     fields: TFields;
     inputs: TInputs;
     outputs: TOutputs;
@@ -138,6 +140,7 @@ export function defineBlueprint<
         description: config.description,
         icon: config.icon,
         accent: config.accent,
+        iconColor: config.iconColor,
         fields,
         inputs: config.inputs,
         outputs: config.outputs,

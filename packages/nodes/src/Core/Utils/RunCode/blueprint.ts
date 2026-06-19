@@ -6,6 +6,7 @@ export const Blueprint = defineBlueprint({
     description: "Runs sandboxed JavaScript with access to the incoming data via $in.",
     icon: "FileCode",
     accent: "utility",
+    iconColor: "color-emerald-400",
     fields: [
         FieldBuilder.Script({
             id: "code",

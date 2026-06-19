@@ -28,7 +28,7 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                 <LazyIcon
                     className='my-auto h-4 w-4 shrink-0'
                     name={node.icon as string}
-                    style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
+                    style={{ color: (node.iconColor ?? node.accent) ? `var(--${node.iconColor ?? node.accent})` : undefined }}
                 />
                 {isEditing ? (
                     <Input

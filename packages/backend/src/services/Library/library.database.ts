@@ -29,7 +29,7 @@ class BootstrapMethods {
                 .throwOnError(),
             supabase
                 .from('workflows')
-                .select('id, folder_id, display_name, description, icon, accent, locked, is_public, mcp_enabled, created_at, updated_at')
+                .select('id, folder_id, display_name, description, icon, accent, icon_color, locked, is_public, mcp_enabled, created_at, updated_at')
                 .order('created_at', { ascending: false })
                 .throwOnError(),
         ]);
@@ -149,7 +149,7 @@ class FolderMethods {
             supabase.from('folders').select('*').eq('parent_folder_id', id).throwOnError(),
             supabase
                 .from('workflows')
-                .select('id, folder_id, display_name, description, icon, accent, locked, is_public, mcp_enabled, created_at, updated_at')
+                .select('id, folder_id, display_name, description, icon, accent, icon_color, locked, is_public, mcp_enabled, created_at, updated_at')
                 .eq('folder_id', id)
                 .throwOnError(),
         ]);
@@ -195,11 +195,12 @@ class WorkflowMethods {
                 ...(payload.description  !== undefined && { description:  payload.description ?? null }),
                 ...(payload.icon         !== undefined && { icon:         payload.icon }),
                 ...(payload.accent       !== undefined && { accent:       payload.accent }),
+                ...(payload.icon_color   !== undefined && { icon_color:   payload.icon_color }),
                 ...(payload.is_public    !== undefined && { is_public:    payload.is_public }),
                 ...(payload.locked       !== undefined && { locked:       payload.locked }),
             })
             .eq('id', payload.id)
-            .select('id, folder_id, display_name, description, icon, accent, locked, is_public, mcp_enabled, created_at, updated_at')
+            .select('id, folder_id, display_name, description, icon, accent, icon_color, locked, is_public, mcp_enabled, created_at, updated_at')
             .single()
             .throwOnError();
 
@@ -245,6 +246,7 @@ class WorkflowMethods {
                 description:  source.description,
                 icon:         source.icon,
                 accent:       source.accent,
+                icon_color:   source.icon_color,
                 data:         source.data,
                 user_id,
                 locked:       false,
