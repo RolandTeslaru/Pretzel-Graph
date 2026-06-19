@@ -1,5 +1,4 @@
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
-import { Foundations } from "@pretzel-graph/shared/domain";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.IfElse",
@@ -8,9 +7,13 @@ export const Blueprint = defineBlueprint({
     icon: "Split",
     accent: "group-routing",
     fields: [
-        FieldBuilder.Condition({
+        // Single boolean expression — pre-evaluated by evaluateFields() to a real
+        // boolean (coerced via the "Boolean" variant). Replaces the old condition tree.
+        FieldBuilder.Boolean({
             id: "condition",
             displayName: "Condition",
+            initialValue: true,
+            isExpression: true,
         }),
     ],
     inputs: [

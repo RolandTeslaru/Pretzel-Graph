@@ -89,7 +89,7 @@ export const Port: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, is
                     isConnectable={!isWorkflowLocked}
                     style={{
                         ...handleStyle,
-                        [position === Position.Left ? "left" : "right"]: "-6px" // push further out (default is -4/-5px)
+                        [position === Position.Left ? "left" : "right"]: "-2px" // push further out (default is -4/-5px)
                     }}
                     id={port.id}
                     isValidConnection={isValidConnectionCallback}

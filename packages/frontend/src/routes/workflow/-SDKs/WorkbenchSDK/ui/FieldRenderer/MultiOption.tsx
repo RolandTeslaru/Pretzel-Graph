@@ -17,6 +17,7 @@ export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nod
         onCommit: flush,
         nodeId,
         displayName: field.displayName,
+        reconcile: field.reconcile,
         className,
     }
 
