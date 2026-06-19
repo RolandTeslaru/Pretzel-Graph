@@ -6,6 +6,7 @@ export const Blueprint = defineBlueprint({
     description: "Accepts an unresolved input port for external workflow output wiring.",
     icon: "LogOut",
     accent: "utility",
+    iconColor: "primary",
     fields: [],
     inputs: [
         InputBuilder.Unresolved({

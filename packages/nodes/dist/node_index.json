@@ -1,6 +1,6 @@
 {
-  "version": "1781807763858",
-  "generatedAt": "2026-06-18T18:36:03.858Z",
+  "version": "1781857663573",
+  "generatedAt": "2026-06-19T08:27:43.573Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -1183,6 +1183,7 @@
       "displayName": "HTTP Request",
       "icon": "Globe",
       "accent": "utility",
+      "iconColor": "color-blue-400",
       "description": "Makes an HTTP request.",
       "credentials": [],
       "fields": [
@@ -1755,6 +1756,7 @@
       "displayName": "Catch Error",
       "icon": "ShieldAlert",
       "accent": "group-routing",
+      "iconColor": "destructive",
       "description": "Catches a propagating error. Non-error data passes straight through; an incoming error is serialized to the 'On Error' output and propagation stops here.",
       "flags": {
         "catchesError": true
@@ -2301,6 +2303,7 @@
       "displayName": "Portal",
       "icon": "PortalIn",
       "accent": "group-routing",
+      "iconColor": "color-sky-400",
       "description": "Sends data to all Portal Out nodes sharing the same Portal ID, without a visible edge.",
       "credentials": [],
       "fields": [
@@ -2584,6 +2587,7 @@
       "displayName": "Sleep",
       "icon": "Clock",
       "accent": "utility",
+      "iconColor": "color-indigo-400",
       "description": "Pauses execution for a specified duration.",
       "credentials": [],
       "fields": [
@@ -2859,6 +2863,7 @@
       "displayName": "Terminate",
       "icon": "OctagonX",
       "accent": "group-routing",
+      "iconColor": "destructive",
       "description": "Ends the execution when reached. 'Stop' halts the run cleanly (terminated); 'Error' fails the run with a message.",
       "credentials": [],
       "fields": [
@@ -3076,6 +3081,7 @@
       "displayName": "Expose Input Port",
       "icon": "LogIn",
       "accent": "utility",
+      "iconColor": "primary",
       "description": "Exposes an unresolved output port for external workflow input wiring.",
       "credentials": [],
       "fields": [
@@ -3196,6 +3202,7 @@
       "displayName": "Expose Output Port",
       "icon": "LogOut",
       "accent": "utility",
+      "iconColor": "primary",
       "description": "Accepts an unresolved input port for external workflow output wiring.",
       "credentials": [],
       "fields": [
@@ -3909,6 +3916,7 @@
       "displayName": "Run Code",
       "icon": "FileCode",
       "accent": "utility",
+      "iconColor": "color-emerald-400",
       "description": "Runs sandboxed JavaScript with access to the incoming data via $in.",
       "credentials": [],
       "fields": [
@@ -5667,6 +5675,7 @@
       "displayName": "HyperLiquid Account",
       "icon": "HyperLiquid",
       "accent": "port-Json",
+      "iconColor": "color-cyan-500",
       "toolCompatible": true,
       "description": "Reads HyperLiquid account state for a wallet address: positions, balance, open orders, fills. Public read-only — only a wallet address is required, never a private key.",
       "credentials": [],
@@ -5810,6 +5819,7 @@
       "displayName": "HyperLiquid Market",
       "icon": "HyperLiquid",
       "accent": "port-DataList",
+      "iconColor": "color-cyan-500",
       "toolCompatible": true,
       "description": "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata. No API key required.",
       "credentials": [],

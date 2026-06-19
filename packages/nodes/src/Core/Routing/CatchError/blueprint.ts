@@ -6,6 +6,7 @@ export const Blueprint = defineBlueprint({
     description: "Catches a propagating error. Non-error data passes straight through; an incoming error is serialized to the 'On Error' output and propagation stops here.",
     icon: "ShieldAlert",
     accent: "group-routing",
+    iconColor: "destructive",
     fields: [],
     inputs: [
         InputBuilder.Unresolved({

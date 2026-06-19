@@ -13,6 +13,7 @@ const Schema = z.object({
     description: z.string().trim().optional(),
     icon: z.string().trim().optional(),
     accent: z.string().trim().optional(),
+    icon_color: z.string().trim().optional(),
     is_public: z.boolean(),
 })
 type Values = z.infer<typeof Schema>
@@ -28,6 +29,7 @@ export const GeneralSettings = () => {
             description: meta?.description ?? '',
             icon: meta?.icon ?? '',
             accent: meta?.accent ?? '',
+            icon_color: meta?.icon_color ?? '',
             is_public: meta?.is_public ?? false,
         },
     })
@@ -40,6 +42,7 @@ export const GeneralSettings = () => {
                 description: values.description || null,
                 icon: values.icon || null,
                 accent: values.accent || null,
+                icon_color: values.icon_color || null,
                 is_public: values.is_public,
             })
             toast.success('Workflow updated')
@@ -75,24 +78,32 @@ export const GeneralSettings = () => {
                     </Form.Item>
                 )} />
 
-                <div className='grid grid-cols-2 gap-3'>
-                    <Form.Field control={form.control} name='icon' render={({ field }) => (
-                        <Form.Item>
-                            <FieldRow label='Icon'>
-                                <Form.Control><Input size='sm' {...field} placeholder={Workflow.DEFAULT_ICON} /></Form.Control>
-                            </FieldRow>
-                            <Form.Message />
-                        </Form.Item>
-                    )} />
-                    <Form.Field control={form.control} name='accent' render={({ field }) => (
-                        <Form.Item>
-                            <FieldRow label='Accent'>
-                                <Form.Control><Input size='sm' {...field} placeholder={Workflow.DEFAULT_ACCENT} /></Form.Control>
-                            </FieldRow>
-                            <Form.Message />
-                        </Form.Item>
-                    )} />
-                </div>
+                <Form.Field control={form.control} name='icon' render={({ field }) => (
+                    <Form.Item>
+                        <FieldRow label='Icon'>
+                            <Form.Control><Input size='sm' {...field} placeholder={Workflow.DEFAULT_ICON} /></Form.Control>
+                        </FieldRow>
+                        <Form.Message />
+                    </Form.Item>
+                )} />
+
+                <Form.Field control={form.control} name='accent' render={({ field }) => (
+                    <Form.Item>
+                        <FieldRow label='Accent'>
+                            <Form.Control><Input size='sm' {...field} placeholder={Workflow.DEFAULT_ACCENT} /></Form.Control>
+                        </FieldRow>
+                        <Form.Message />
+                    </Form.Item>
+                )} />
+
+                <Form.Field control={form.control} name='icon_color' render={({ field }) => (
+                    <Form.Item>
+                        <FieldRow label='Icon color'>
+                            <Form.Control><Input size='sm' {...field} placeholder={form.watch('accent')?.trim() || Workflow.DEFAULT_ACCENT} /></Form.Control>
+                        </FieldRow>
+                        <Form.Message />
+                    </Form.Item>
+                )} />
 
                 <Form.Field control={form.control} name='is_public' render={({ field }) => (
                     <Form.Item>

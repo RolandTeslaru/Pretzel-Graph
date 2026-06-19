@@ -54,6 +54,7 @@ export const nodeLifecycleReducers = {
             isFlipped   : false,
             isDisabled  : false,
             accent      : blueprint.accent,
+            iconColor   : blueprint.iconColor,
             dependency  : blueprint.dependency,
             flags       : blueprint.flags ?? {},
             toolCompatible: blueprint.toolCompatible,
@@ -131,6 +132,7 @@ export const nodeLifecycleReducers = {
             isFlipped   : node.isFlipped,
             isDisabled  : node.isDisabled,
             accent      : blueprint.accent,
+            iconColor   : node.iconColor ?? blueprint.iconColor,
             dependency  : node.dependency ?? blueprint.dependency,
             flags       : blueprint.flags ?? {},
             toolCompatible: blueprint.toolCompatible,
@@ -207,6 +209,7 @@ export const nodeLifecycleReducers = {
             isFlipped    : originalNode.isFlipped,
             isDisabled   : originalNode.isDisabled,
             accent       : originalNode.accent,
+            iconColor    : originalNode.iconColor,
             dependency   : originalNode.dependency,
             flags        : originalNode.flags ?? {},
             toolCompatible: originalNode.toolCompatible,
@@ -335,7 +338,7 @@ export interface NodeLifecycleReducers {
 type Explicit<T> = { [K in keyof Required<T>]: T[K] };
 
 const constructNode = ({
-    id, blueprintId, displayName, fields, inputs, outputs, webhooks, credentials, icon, description, isMinimized, isFlipped, isDisabled, accent, toolCompatible, dependency, flags
+    id, blueprintId, displayName, fields, inputs, outputs, webhooks, credentials, icon, description, isMinimized, isFlipped, isDisabled, accent, iconColor, toolCompatible, dependency, flags
 }: Explicit<Omit<Workflow.Node, 'fields' | 'inputs' | 'outputs' | 'webhooks' | 'credentials' | 'flags' | 'dependency'>> & {
     fields      : readonly Foundations.Field[],
     inputs      : readonly Foundations.Port.Input[],
@@ -364,6 +367,7 @@ const constructNode = ({
 
         description    : description ? description : undefined,
         accent         : accent ? accent : undefined,
+        iconColor      : iconColor ? iconColor : undefined,
         isFlipped      : isFlipped ? true : undefined,
         isDisabled     : isDisabled ? true : undefined,
         toolCompatible : toolCompatible ? true : undefined,
