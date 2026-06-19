@@ -132,7 +132,7 @@ export const nodeLifecycleReducers = {
             isFlipped   : node.isFlipped,
             isDisabled  : node.isDisabled,
             accent      : blueprint.accent,
-            iconColor   : node.iconColor ?? blueprint.iconColor,
+            iconColor   : blueprint.iconColor,
             dependency  : node.dependency ?? blueprint.dependency,
             flags       : blueprint.flags ?? {},
             toolCompatible: blueprint.toolCompatible,

@@ -1,10 +1,11 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Button, Form, Input, Spinner, Switch } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, Button, Form, Input, Spinner, Switch } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { WorkbenchSDK } from '../../sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
+import { DialogSDK } from '@/SDKs/DialogSDK'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { toast } from 'sonner'
 
@@ -33,6 +34,31 @@ export const GeneralSettings = () => {
             is_public: meta?.is_public ?? false,
         },
     })
+
+    const handleRecreateAll = () => {
+        DialogSDK.actions.push('recreate-all-nodes', props => (
+            <DialogSDK.AlertTemplate
+                {...props}
+                onApprove={async () => {
+                    try {
+                        await WorkbenchSDK.actions.node.recreateAll()
+                        toast.success('All nodes recreated')
+                    } catch {
+                        toast.error('Failed to recreate nodes')
+                    }
+                    DialogSDK.actions.pop('recreate-all-nodes')
+                }}
+                onCancel={() => DialogSDK.actions.pop('recreate-all-nodes')}
+            >
+                <AlertDialog.Title>Recreate all nodes?</AlertDialog.Title>
+                <AlertDialog.Description>
+                    Every node is rebuilt from its latest blueprint. Field values, credentials and
+                    connections are preserved where they still fit; anything no longer supported by the
+                    updated blueprint is dropped. This can be undone.
+                </AlertDialog.Description>
+            </DialogSDK.AlertTemplate>
+        ))
+    }
 
     const onSubmit = async (values: Values) => {
         try {
@@ -118,6 +144,17 @@ export const GeneralSettings = () => {
                         </div>
                     </Form.Item>
                 )} />
+
+                <div className='rounded-md border border-border/50 bg-card/50 p-3 flex items-center justify-between'>
+                    <div className='flex flex-col gap-0.5'>
+                        <span className='text-sm font-medium'>Recreate all nodes</span>
+                        <span className='text-xs text-muted-foreground'>Rebuild every node from its latest blueprint</span>
+                    </div>
+                    <Button type='button' variant='outline' size='sm' onClick={handleRecreateAll}>
+                        <SystemIcons.RefreshCcw className='size-4' />
+                        Recreate
+                    </Button>
+                </div>
             </form>
         </Form.Root>
     )

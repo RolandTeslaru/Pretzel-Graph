@@ -30,6 +30,7 @@ export const JsonField = memo<RendererProps<'Json'>>(({ field, nodeId, className
         onCommit: flush,
         nodeId,
         displayName: field.displayName,
+        reconcile: field.reconcile,
         className,
     }
 

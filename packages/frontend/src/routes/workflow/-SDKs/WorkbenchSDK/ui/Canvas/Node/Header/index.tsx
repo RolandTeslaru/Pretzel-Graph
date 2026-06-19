@@ -14,7 +14,11 @@ interface Props {
 export const NodeHeader: React.FC<Props> = ({ node, isWorkflowLocked, executionStatus, hasUpdate }) => {
   const isMinimized = node.isMinimized;
   const isFlipped = node.isFlipped;
-  const iconColor = `var(--${node.iconColor ?? node.accent})`;
+  const iconColor = node.iconColor
+    ? `var(--${node.iconColor})`
+    : `var(--${node.accent}-foreground)`;
+
+    
   if (isMinimized)
     return (
       <MinimizedHandles node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped}>

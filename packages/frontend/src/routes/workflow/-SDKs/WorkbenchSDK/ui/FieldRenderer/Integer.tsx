@@ -22,6 +22,7 @@ export const IntegerField = memo<RendererProps<'Integer'>>(({ field, nodeId, cla
         onCommit: flush,
         nodeId,
         displayName: field.displayName,
+        reconcile: field.reconcile,
         className,
     }
 
