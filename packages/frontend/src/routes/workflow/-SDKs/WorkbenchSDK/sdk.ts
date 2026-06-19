@@ -50,11 +50,6 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 cyclesDirty: false,
                 reconcilingFields: {},
                 stronglyConnectedComponents: [],
-                clipboard: {
-                    nodes: new Set(),
-                    edges: new Set(),
-                    layout: {},
-                },
                 dependencyUpdates: { published: {}, draft: {} },
                 selectors: workbenchSelectors
             })), {
@@ -232,11 +227,6 @@ export namespace WorkbenchSDK {
         paneContextMenu: { x: number, y: number } | null;
         draggedHandle: Handle | null
         reconcilingFields: Record<Workflow.Node.Id, Set<Foundations.Field.Id>>
-        clipboard: {
-            nodes: Set<Workflow.Node>
-            edges: Set<Workflow.Edge>,
-            layout: Record<Workflow.Node.Id, { x: number, y: number }>
-        }
         cache: Workflow.Cache
         cyclesDirty: boolean
         issues: Validation.Issue.Workflow_

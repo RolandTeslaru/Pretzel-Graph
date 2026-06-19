@@ -8,8 +8,20 @@ export const workflowReducers = {
     open: (s, workflow) => {
         const data = Workflow.Data.Schema.parse(workflow.data);
 
+        // Drop edges whose source/target node no longer exists (orphaned by a node
+        // deletion that didn't clean up its edges). Left in place they'd dangle in the
+        // persisted blob; pruning here removes them on the next commit.
+        const pruned = Object.entries(data.edges).filter(
+            ([, edge]) => !data.nodes[edge.source.nodeId] || !data.nodes[edge.target.nodeId]
+        );
+        for (const [edgeId, edge] of pruned) {
+            console.warn(`[workflow.open] Pruning dangling edge ${edgeId}: missing ${!data.nodes[edge.source.nodeId] ? `source "${edge.source.nodeId}"` : `target "${edge.target.nodeId}"`}`);
+            delete data.edges[edgeId as Workflow.Edge.Id];
+        }
+
         s.workflowId = workflow.id;
         s.data = data;
+        s.isDirty = pruned.length > 0;
         s.cache = Workflow.createCache(data);
         s.cycles = [];
         s.stronglyConnectedComponents = [];

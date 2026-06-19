@@ -23,7 +23,7 @@ export const commit = async () => {
 
 export const debouncedCommit: () => void = debounce(async () => {
     commit();
-}, 1000);
+}, 3000);
 
 export const withCommit = <TArgs extends any[]>(fn: (...args: TArgs) => void, message?: string): ((...args: TArgs) => void) => {
     return (...args) => {

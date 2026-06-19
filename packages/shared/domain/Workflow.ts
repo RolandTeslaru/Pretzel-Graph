@@ -331,6 +331,13 @@ export namespace Workflow {
             const sourceHandleId = edge.source.portId;
             const targetHandleId = edge.target.portId
 
+            // Skip dangling edges whose endpoints were removed but the edge lingered —
+            // otherwise indexing into a missing node's bucket throws and the whole load fails.
+            if (!cache.outgoingEdgesMap[sourceNodeId] || !cache.incomingEdgesMap[targetNodeId]) {
+                console.error(`[createCache] Skipping dangling edge ${edge.id}: missing ${!cache.outgoingEdgesMap[sourceNodeId] ? `source node "${sourceNodeId}"` : `target node "${targetNodeId}"`}`);
+                return;
+            }
+
             // Outgoers Edges Map
             cache.outgoingEdgesMap[sourceNodeId][targetNodeId] = edge.id
 
