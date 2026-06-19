@@ -14,7 +14,7 @@ interface RelationLayerProps {
     totalHeight:  number
 }
 
-const RelationLayer = ({
+const RelationLayer = React.memo(({
     recording,
     nodes,
     scale,
@@ -156,6 +156,8 @@ const RelationLayer = ({
             ))}
         </svg>
     )
-}
+})
+
+RelationLayer.displayName = "RelationLayer"
 
 export default RelationLayer

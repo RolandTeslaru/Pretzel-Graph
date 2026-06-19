@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useRef } from "react"
 import { ExecutionSDK } from "../../sdk"
 import { getTimelineLayout, getTotalDuration } from "../../selectors"
+import type { TimelineTrackLayout } from "../../selectors"
+import type { Workflow } from "@pretzel-graph/shared/domain"
 import { useTimelineViewerStore, timelineViewerActions } from "../../timeline-viewer-store"
 import { WorkbenchSDK } from "../../../WorkbenchSDK/sdk"
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
@@ -29,11 +31,22 @@ const TimelineViewer = () => {
     const snapshotNodes = recording?.workflowDataSnapshot?.nodes
     const nodes = (snapshotNodes && Object.keys(snapshotNodes).length > 0) ? snapshotNodes : workbenchNodes
 
-    const layout        = useMemo(() => getTimelineLayout(recording, nodes), [recording, nodes])
+    // Per-track layout cache for structural sharing — keeps unchanged tracks'
+    // layout objects reference-stable so the memoized TrackRows bail on a tick.
+    const layoutCacheRef = useRef<Map<Workflow.Node.Id, TimelineTrackLayout>>(new Map())
+    const layout        = useMemo(() => getTimelineLayout(recording, nodes, layoutCacheRef.current), [recording, nodes])
     const totalDuration = useMemo(() => getTotalDuration(recording),         [recording])
+    // In linear mode the scale fns (xFor/widthFor) are pure `ms * zoom` — they
+    // don't read `recording` or `totalDuration`. Excluding those from the deps
+    // keeps `scale` reference-stable across streaming events so the memoized
+    // UoWBlocks don't all re-render on every UoW update. step/equalize genuinely
+    // depend on unit data, so they keep the full deps.
+    const scaleRecordingDep = viewMode === "linear" ? null : recording
+    const scaleDurationDep  = viewMode === "linear" ? 0    : totalDuration
     const scale = useMemo(
         () => makeTimeScale(viewMode, zoom, recording, totalDuration),
-        [viewMode, zoom, recording, totalDuration],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [viewMode, zoom, scaleRecordingDep, scaleDurationDep],
     )
 
     const scrollRef = useRef<HTMLDivElement>(null)
@@ -53,7 +66,10 @@ const TimelineViewer = () => {
         if (scrollRef.current) scrollRef.current.scrollTop = lb.scrollTop
     }, [])
 
-    const totalWidth  = Math.max(scale.totalWidth + 80, 400)
+    // scale is intentionally stale in linear mode (see scale memo), so derive the
+    // live container width from totalDuration there instead of scale.totalWidth.
+    const scaleTotalWidth = viewMode === "linear" ? totalDuration * zoom : scale.totalWidth
+    const totalWidth  = Math.max(scaleTotalWidth + 80, 400)
     const scrollWidth = totalWidth + Math.max(window.innerWidth, totalWidth)
     const totalHeight = layout.totalHeight
 
@@ -110,7 +126,6 @@ const TimelineViewer = () => {
                                 <TrackRow
                                     key={tl.track.id}
                                     trackLayout={tl}
-                                    recording={recording}
                                     nodes={nodes}
                                     scale={scale}
                                 />
