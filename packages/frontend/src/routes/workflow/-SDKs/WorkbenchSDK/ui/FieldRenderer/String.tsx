@@ -20,6 +20,7 @@ export const StringField = memo<RendererProps<'String'>>(({ field, nodeId, class
         onCommit: flush,
         nodeId,
         displayName: field.displayName,
+        reconcile: field.reconcile,
         className,
     }
 

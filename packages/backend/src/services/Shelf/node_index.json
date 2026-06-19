@@ -1,6 +1,6 @@
 {
-  "version": "1781857663573",
-  "generatedAt": "2026-06-19T08:27:43.573Z",
+  "version": "1781860207996",
+  "generatedAt": "2026-06-19T09:10:07.996Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -1884,28 +1884,9 @@
           "required": false,
           "reconcile": false,
           "displayName": "Condition",
-          "variant": "Condition",
-          "initialValue": {
-            "rootId": "root",
-            "rules": {
-              "rule1": {
-                "id": "rule1",
-                "leftOperand": "",
-                "rightOperand": "",
-                "dataType": "string",
-                "operator": "equals"
-              }
-            },
-            "groups": {
-              "root": {
-                "id": "root",
-                "combinator": "AND",
-                "children": [
-                  "rule1"
-                ]
-              }
-            }
-          }
+          "variant": "Boolean",
+          "initialValue": true,
+          "isExpression": true
         },
         {
           "id": "signalDependency",
