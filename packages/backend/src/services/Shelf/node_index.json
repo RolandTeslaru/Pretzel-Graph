@@ -1,6 +1,6 @@
 {
-  "version": "1781877370409",
-  "generatedAt": "2026-06-19T13:56:10.409Z",
+  "version": "1781883306505",
+  "generatedAt": "2026-06-19T15:35:06.505Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -4239,8 +4239,8 @@
       "outputs": [
         {
           "id": "toolOutputs",
-          "displayName": "Tool Outputs",
-          "tooltip": "The result of the tool execution.",
+          "displayName": "Messages",
+          "tooltip": "The received AIMessage followed by each tool result, ready to append to the conversation history.",
           "variant": "MessageList"
         }
       ]
@@ -5327,9 +5327,9 @@
           "required": false,
           "reconcile": false,
           "displayName": "Max Output Tokens",
-          "tooltip": "Maximum number of tokens to generate.",
+          "tooltip": "Maximum tokens to generate. For reasoning models (Gemini 3, 2.5) thinking tokens count against this budget — set it high enough to fit both reasoning and the final answer, or responses get truncated (finishReason: MAX_TOKENS).",
           "variant": "Integer",
-          "initialValue": 2048,
+          "initialValue": 16384,
           "min": 1,
           "step": 1
         },
@@ -5359,6 +5359,18 @@
           "min": 1,
           "step": 1,
           "slider": true
+        },
+        {
+          "id": "thinkingBudget",
+          "advanced": true,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Thinking Budget",
+          "tooltip": "Tokens the model may spend on internal reasoning (counts toward Max Output Tokens). -1 = dynamic (model decides), 0 = disable thinking (Flash models only; Pro has a fixed minimum). Higher = more reasoning headroom.",
+          "variant": "Integer",
+          "initialValue": -1,
+          "min": -1,
+          "step": 1
         },
         {
           "id": "signalDependency",

@@ -62,6 +62,12 @@ export interface TimelineLayout {
 export function getTimelineLayout(
     recording: Execution.Recording | null,
     nodes:     Record<Workflow.Node.Id, Workflow.Node>,
+    // Optional caller-owned cache (a useRef Map) for structural sharing: a track's
+    // layout is reused as long as its track ref, top offset and block height are
+    // unchanged. A status tick mutates units[id], not tracks[id], so the track ref
+    // stays stable and the layout (and thus the memoized TrackRow) doesn't churn.
+    // Only a track that gains a unit / shifts position gets a fresh layout object.
+    cache?:    Map<Workflow.Node.Id, TimelineTrackLayout>,
 ): TimelineLayout {
     if (!recording) {
         return { tracks: [], byTrackId: new Map(), totalHeight: 0 }
@@ -82,7 +88,15 @@ export function getTimelineLayout(
         const blockHeight = rows * Execution.Recording.Timeline.UOW_PORT_HEIGHT
         const height      = blockHeight + Execution.Recording.Timeline.TRACK_PADDING_Y * 2
 
-        const layout: TimelineTrackLayout = { track, top, height, blockHeight, inputPorts, outputPorts }
+        const prev = cache?.get(track.id)
+        let layout: TimelineTrackLayout
+        if (prev && prev.track === track && prev.top === top && prev.blockHeight === blockHeight) {
+            layout = prev
+        } else {
+            layout = { track, top, height, blockHeight, inputPorts, outputPorts }
+            cache?.set(track.id, layout)
+        }
+
         tracks.push(layout)
         byTrackId.set(track.id, layout)
         top += height
