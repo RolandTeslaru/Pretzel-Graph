@@ -1,120 +1,137 @@
 import type { Execution } from "@pretzel-graph/shared/domain";
-import type { ExecutionSDKImpl } from "./sdk";
+import type { ExecutionSDK, ExecutionSDKImpl } from "./sdk";
 import { toast } from "sonner";
 
-export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event) => {
-    console.log("Execution Session Event Received:", e.type)
+// Streaming events arrive as individual WebSocket messages, so React can't batch
+// across them — each setState was its own commit, and a single node firing emits
+// 3-5 events (node:started, unit:started, node:completed, unit:completed,
+// relation:createBatch). That packed 3-5 TimelineViewer renders into one frame.
+// We throttle: queue events and flush them in ONE setState per THROTTLE_MS window.
+// Terminal/end-state events flush immediately so the final state never feels laggy.
+const THROTTLE_MS = 120;
+
+const TERMINAL = new Set<Execution.Event["type"]>([
+    "completed",
+    "failed",
+    "terminated",
+    "recording:completed",
+    "recording:fullyUploaded",
+]);
+
+let queue: Execution.Event[] = [];
+let timer: ReturnType<typeof setTimeout> | null = null;
+let lastFlush = 0;
+
+// Applies an event's state mutation to the draft and  returns a deferred side-effect
+// (toast / action call) to run AFTER the batched setState, in arrival order — or null.
+const reduceEvent = (
+    sdk: ExecutionSDKImpl,
+    s: ExecutionSDK.State,
+    e: Execution.Event,
+): (() => void) | null => {
+    const r = sdk.reducers.currentExecution;
     switch (e.type) {
-
-
-        // Lifecycle events
-
-
+        // Lifecycle
         case "started":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.setStatus(s, "running");
-            })
-            break;
+            r.setStatus(s, "running");
+            return null;
         case "completed":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.setSession(s, e.session);
-                sdk.reducers.currentExecution.setStatus(s, "completed");
-            })
-            sdk.actions.removeAwaitedConfirmation("started");
-            break;
+            r.setSession(s, e.session);
+            r.setStatus(s, "completed");
+            return () => sdk.actions.removeAwaitedConfirmation("started");
         case "failed":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.setSession(s, e.session);
-                sdk.reducers.currentExecution.setStatus(s, "failed");
-                sdk.reducers.currentExecution.setError(s, e.error);
-            })
-            sdk.actions.removeAwaitedConfirmation("started");
-            toast.error(`Execution failed: ${e.error.message}`)
-            break;
+            r.setSession(s, e.session);
+            r.setStatus(s, "failed");
+            r.setError(s, e.error);
+            return () => {
+                sdk.actions.removeAwaitedConfirmation("started");
+                toast.error(`Execution failed: ${e.error.message}`);
+            };
         case "terminated":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.setStatus(s, "terminated");
-            })
-            sdk.actions.removeAwaitedConfirmation("terminated");
-            break;
+            r.setStatus(s, "terminated");
+            return () => sdk.actions.removeAwaitedConfirmation("terminated");
         case "paused":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.setSession(s, e.session);
-                sdk.reducers.currentExecution.setStatus(s, "paused");
-            })
-            break;
+            r.setSession(s, e.session);
+            r.setStatus(s, "paused");
+            return null;
         case "resumed":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.setSession(s, e.session);
-                sdk.reducers.currentExecution.setStatus(s, "running");
-            })
-            break;
+            r.setSession(s, e.session);
+            r.setStatus(s, "running");
+            return null;
         case "suspended":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.setSession(s, e.session);
-                sdk.reducers.currentExecution.setStatus(s, "suspended");
-            })
-            break;
+            r.setSession(s, e.session);
+            r.setStatus(s, "suspended");
+            return null;
 
+        // Session updates
         case "node:started":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.applySessionUpdate(s, e.sessionUpdate);
-            })
-            break;
         case "node:completed":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.applySessionUpdate(s, e.sessionUpdate);
-            })
-            break;
         case "node:waiting":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.applySessionUpdate(s, e.sessionUpdate);
-            })
-            break;
         case "node:error":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.applySessionUpdate(s, e.sessionUpdate);
-            })
-            break;
         case "update":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.applySessionUpdate(s, e.sessionUpdate);
-            })
-            break;
+            r.applySessionUpdate(s, e.sessionUpdate);
+            return null;
 
-
-        // Execution.Recording related events
-
-
+        // Recording
         case "unit:started":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.recording.patchUnitStarted(s, e.unit)
-            })
-            break;
+            r.recording.patchUnitStarted(s, e.unit);
+            return null;
         case "unit:completed":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.recording.patchUnitCompleted(s, e)
-            })
-            break;
+            r.recording.patchUnitCompleted(s, e);
+            return null;
         case "unit:failed":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.recording.patchUnitFailed(s, e)
-            })
-            break;
+            r.recording.patchUnitFailed(s, e);
+            return null;
         case "relation:createBatch":
-            sdk.setState(s => {
-                sdk.reducers.currentExecution.recording.patchRelationCreateBatch(s, e)
-            })
-            break;
-        case "recording:fullyUploaded":
-            sdk.actions.loadLiveRecording(e.executionId)
-            break;
+            r.recording.patchRelationCreateBatch(s, e);
+            return null;
         case "recording:completed":
-            sdk.setState(s => {
-                s.isCurrentExecutionRecording = false;
-            })
-            break;
+            s.isCurrentExecutionRecording = false;
+            return null;
+        case "recording:fullyUploaded":
+            // No state mutation — purely loads the finalized recording.
+            return () => sdk.actions.loadLiveRecording(e.executionId);
+
         default:
-            toast.error(`Received unknown event: ${e.type}`)
+            return () => toast.error(`Received unknown event: ${(e as Execution.Event).type}`);
     }
-}
+};
+
+const flush = (sdk: ExecutionSDKImpl) => {
+    if (timer) {
+        clearTimeout(timer);
+        timer = null;
+    }
+    lastFlush = performance.now();
+    if (queue.length === 0) return;
+
+    const batch = queue;
+    queue = [];
+
+    const effects: Array<() => void> = [];
+    sdk.setState(s => {
+        for (const e of batch) {
+            const fx = reduceEvent(sdk, s, e);
+            if (fx) effects.push(fx);
+        }
+    });
+    for (const fx of effects) fx();
+};
+
+export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event) => {
+    queue.push(e);
+
+    // End-states flush right away — no point delaying the final render.
+    if (TERMINAL.has(e.type)) {
+        flush(sdk);
+        return;
+    }
+
+    // Already scheduled — this event rides the pending flush.
+    if (timer) return;
+
+    // Throttle: at most one flush per THROTTLE_MS. The trailing timer also drains
+    // the queue once the stream goes quiet, so nothing is stranded.
+    const wait = Math.max(0, THROTTLE_MS - (performance.now() - lastFlush));
+    timer = setTimeout(() => flush(sdk), wait);
+};

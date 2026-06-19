@@ -17,8 +17,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const aiMessage = input as any as LC.AIMessage;
 
-        if (!aiMessage.tool_calls)
-            return { toolOutputs: [] }
+        // The assistant turn must stay in the conversation history immediately
+        // before its tool results — otherwise providers (e.g. Gemini) see tool
+        // responses with no matching tool call and return MALFORMED_RESPONSE.
+        // So we always emit the received AIMessage as the first element.
+        if (!aiMessage.tool_calls?.length)
+            return { toolOutputs: [aiMessage] }
 
         const toolsMap = new Map(tools.map(tool => [tool.name, tool]));
 
@@ -56,7 +60,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         );
 
         return {
-            toolOutputs: toolMessages,
+            toolOutputs: [aiMessage, ...toolMessages],
         };
     }
 }

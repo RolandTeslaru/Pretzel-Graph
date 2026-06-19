@@ -15,12 +15,17 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.googleGeminiApi.blob);
 
+        const thinkingBudget = this.fields.thinkingBudget;
+
         this.llm = new ChatGoogleGenerativeAI({
             model: this.fields.model,
             temperature: this.fields.temperature,
             maxOutputTokens: this.fields.maxOutputTokens,
             topP: this.fields.topP,
             topK: this.fields.topK,
+            // Omit thinkingConfig for legacy nodes saved before this field existed
+            // (thinkingBudget === undefined) so the model keeps its default behavior.
+            ...(typeof thinkingBudget === "number" ? { thinkingConfig: { thinkingBudget } } : {}),
             apiKey
         });
     }

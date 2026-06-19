@@ -1,11 +1,12 @@
 import React from "react"
 import { cn } from "@/utils/styleUtils"
 import { Execution } from "@pretzel-graph/shared/domain"
+import { ExecutionSDK } from "../../sdk"
 import { useTimelineViewerStore, timelineViewerActions } from "../../timeline-viewer-store"
 import type { TimeScale } from "./time-scale"
 
 interface UoWBlockProps {
-    unit:      Execution.Recording.UnitOfWork
+    unitId:    Execution.Recording.UnitOfWork.Id
     scale:     TimeScale
     accent?:   string
     height:    number
@@ -18,8 +19,13 @@ const STATUS_CLASSES: Record<Execution.Recording.UnitOfWork.Status, string> = {
     failed:    "opacity-90",
 }
 
-const UoWBlock = ({ unit, scale, accent, height, topOffset }: UoWBlockProps) => {
+const UoWBlock = React.memo(({ unitId, scale, accent, height, topOffset }: UoWBlockProps) => {
+    // Slice-subscribe to just this unit so a status tick on one UoW re-renders
+    // only its block, independent of the parent TrackRow / the recording ref.
+    // Immer structural-shares unchanged units, so this is reference-stable.
+    const unit = ExecutionSDK.useStore(s => s.currentExecution?.recording?.units[unitId])
     const selectedUoW = useTimelineViewerStore(s => s.selectedUoW)
+    if (!unit) return null
     const isSelected = selectedUoW === unit.id
 
     const x = scale.xFor(unit.startedAt)
@@ -58,6 +64,8 @@ const UoWBlock = ({ unit, scale, accent, height, topOffset }: UoWBlockProps) => 
             title={`${unit.id} · ${unit.status}${unit.duration != null ? ` · ${unit.duration}ms` : ""}`}
         />
     )
-}
+})
+
+UoWBlock.displayName = "UoWBlock"
 
 export default UoWBlock
