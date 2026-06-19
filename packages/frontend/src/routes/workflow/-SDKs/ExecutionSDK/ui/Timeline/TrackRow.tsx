@@ -7,12 +7,11 @@ import type { TimelineTrackLayout } from "../../selectors"
 
 interface TrackRowProps {
     trackLayout: TimelineTrackLayout
-    recording:   Execution.Recording
     nodes:       Record<Workflow.Node.Id, Workflow.Node>
     scale:       TimeScale
 }
 
-const TrackRow = ({ trackLayout, recording, nodes, scale }: TrackRowProps) => {
+const TrackRow = React.memo(({ trackLayout, nodes, scale }: TrackRowProps) => {
     const { track, top, height, blockHeight } = trackLayout
     const node   = nodes[track.id]
     const accent = node?.accent ?? undefined
@@ -28,22 +27,20 @@ const TrackRow = ({ trackLayout, recording, nodes, scale }: TrackRowProps) => {
             }}
             className="border-b border-border/50"
         >
-            {track.unitIds.map(uowId => {
-                const unit = recording.units[uowId]
-                if (!unit) return null
-                return (
-                    <UoWBlock
-                        key={uowId}
-                        unit={unit}
-                        scale={scale}
-                        accent={accent}
-                        height={blockHeight}
-                        topOffset={Execution.Recording.Timeline.TRACK_PADDING_Y}
-                    />
-                )
-            })}
+            {track.unitIds.map(uowId => (
+                <UoWBlock
+                    key={uowId}
+                    unitId={uowId}
+                    scale={scale}
+                    accent={accent}
+                    height={blockHeight}
+                    topOffset={Execution.Recording.Timeline.TRACK_PADDING_Y}
+                />
+            ))}
         </div>
     )
-}
+})
+
+TrackRow.displayName = "TrackRow"
 
 export default TrackRow

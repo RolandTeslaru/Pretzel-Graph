@@ -22,8 +22,8 @@ export const Blueprint = defineBlueprint({
     outputs: [
         OutputBuilder.MessageList({
             id: "toolOutputs",
-            displayName: "Tool Outputs",
-            tooltip: "The result of the tool execution.",
+            displayName: "Messages",
+            tooltip: "The received AIMessage followed by each tool result, ready to append to the conversation history.",
         }),
     ],
 });
