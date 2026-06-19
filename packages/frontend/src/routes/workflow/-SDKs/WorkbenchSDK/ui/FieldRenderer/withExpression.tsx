@@ -14,6 +14,9 @@ interface Props {
     onCommit: () => void
     nodeId: Workflow.Node.Id
     displayName: string
+    // reconcile fields drive node reconciliation and can't be turned into expressions —
+    // suppress the static/expression toggle entirely for them.
+    reconcile?: boolean
     className?: string
     children: React.ReactNode
 }
@@ -74,7 +77,7 @@ function ExpressionInput({ multiline, placeholder, className }: {
     )
 }
 
-export function WithExpression({ value, isExpression, onToggleExpression, onChange, onCommit, nodeId, displayName, className, children }: Props) {
+export function WithExpression({ value, isExpression, onToggleExpression, onChange, onCommit, nodeId, displayName, reconcile, className, children }: Props) {
     const [isHovered, setIsHovered] = useState(false)
     const node = WorkbenchSDK.state.selectors.node.get(WorkbenchSDK.state, nodeId);
 
@@ -88,7 +91,7 @@ export function WithExpression({ value, isExpression, onToggleExpression, onChan
                 onMouseLeave={() => setIsHovered(false)}
                 className={className + " w-full nodrag cursor-auto flex flex-col gap-1 relative"}
             >
-                {(isHovered) && (
+                {(isHovered && !reconcile) && (
                     <div className='absolute -top-1 right-0 flex flex-row items-center gap-1 z-10'>
                         <Tabs.Root
                             value={isExpression ? 'expression' : 'static'}

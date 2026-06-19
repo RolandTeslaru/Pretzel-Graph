@@ -1,4 +1,5 @@
-import { memo } from 'react'
+import { memo, useEffect } from 'react'
+import { useUpdateNodeInternals } from '@xyflow/react'
 import { WorkbenchSDK } from '../../../sdk';
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk';
 import { NodeHeader } from './Header';
@@ -15,6 +16,13 @@ import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 
 const CanvasNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const node = WorkbenchSDK.useStore(s => s.data.nodes[props.id as Workflow.Node.Id])
+
+  // Handle positions (Left<->Right) flip with node.isFlipped / isMinimized.
+  // XYFlow caches handle bounds, so tell it to re-measure and reroute edges.
+  const updateNodeInternals = useUpdateNodeInternals()
+  useEffect(() => {
+    updateNodeInternals(props.id)
+  }, [props.id, node?.isFlipped, node?.isMinimized, updateNodeInternals])
 
   if (!node)
     return null;
@@ -70,7 +78,7 @@ const Content = memo(({ node }: { node: Workflow.Node }) => {
         <NodeHeader executionStatus={executionStatus} node={node} isWorkflowLocked={isWorkflowLocked} hasUpdate={hasUpdate} />
 
         {node.isMinimized === false &&
-          <div className='dark:bg-black/50 px-1 bg-card/80 py-2 gap-2 flex flex-col  rounded-b-[26px] rounded-t-xl shadow-md shadow-black/10 min-h-8'
+          <div className='dark:bg-black/50 bg-card/80 py-2 gap-2 flex flex-col  rounded-b-[26px] rounded-t-xl shadow-md shadow-black/10 min-h-8'
             
           >
             <NodeInputs node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped} />
