@@ -50,6 +50,14 @@ export const nodeReducers = {
         s.isDirty = true;
         s.data.nodes[nodeId].description = newDescription;
     },
+    setIconColor: (s, nodeId, accentToken) => {
+        s.isDirty = true;
+        const node = s.data.nodes[nodeId];
+        if (!node) return;
+        // Drop the key entirely when cleared, so it stays out of serialized JSON.
+        if (accentToken) node.iconColor = accentToken;
+        else delete node.iconColor;
+    },
 } satisfies NodeReducers
 
 export interface NodeMetaReducers {
@@ -59,6 +67,7 @@ export interface NodeMetaReducers {
     setFlipped        : (s: S, nodeId: NodeId, isFlipped: boolean) => void;
     setDisplayName    : (s: S, nodeId: NodeId, newDisplayName: string) => void;
     setDescription    : (s: S, nodeId: NodeId, newDescription: string) => void;
+    setIconColor      : (s: S, nodeId: NodeId, accentToken: string | null | undefined) => void;
 }
 
 export type NodeReducers =

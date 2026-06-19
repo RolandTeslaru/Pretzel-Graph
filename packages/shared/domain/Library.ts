@@ -230,6 +230,7 @@ export namespace Library {
                     description: z.string().nullable().optional(),
                     icon: z.string().nullable().optional(),
                     accent: z.string().nullable().optional(),
+                    icon_color: z.string().nullable().optional(),
                     is_public: z.boolean().optional(),
                     locked: z.boolean().optional(),
                 });

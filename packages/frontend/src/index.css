@@ -4,6 +4,11 @@
 @import "@xyflow/react/dist/style.css";
 @import "../../standard-ui/src/styles.css";
 
+/* Force-emit the Tailwind color palette as --color-* vars on :root so node
+   iconColor="color-<name>" works. Runtime var() refs aren't seen by the scanner,
+   so without this only colors used elsewhere as utilities would resolve. */
+@source inline("text-{slate,gray,zinc,neutral,stone,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{200,300,400,500,600,700}");
+
 body {
   margin: 0;
   font-family:
