@@ -184,7 +184,7 @@ export const nodeLifecycleReducers = {
 
         nodeLifecycleReducers.validate(s, nodeId);
     },
-    duplicate: (s, originalNode, position) => {
+    duplicate: (s, originalNode, position, overrides) => {
         s.isDirty = true
         if (!position) {
             position = cloneDeep(s.selectors.layout.node.get(s, originalNode.id) ?? { x: 0, y: 0 })
@@ -215,9 +215,11 @@ export const nodeLifecycleReducers = {
             toolCompatible: originalNode.toolCompatible,
         })
 
+        // Values default to the source node's live state, but callers (paste)
+        // may pass a snapshot taken at copy time so later edits don't leak in.
         s.data.nodes[newNodeId] = newNode;
-        s.data.staticValues[newNodeId] = cloneDeep(s.data.staticValues[originalNode.id]);
-        nodeValueReducers.populateCredentialInstances(s, newNodeId, s.data.credentialInstanceIds[originalNode.id]);
+        s.data.staticValues[newNodeId] = cloneDeep(overrides?.staticValues ?? s.data.staticValues[originalNode.id]);
+        nodeValueReducers.populateCredentialInstances(s, newNodeId, overrides?.credentialInstanceIds ?? s.data.credentialInstanceIds[originalNode.id]);
 
         layoutReducers.node.add(s, newNodeId, position);
         cacheReducers.createNode(s, newNode);
@@ -326,7 +328,10 @@ export interface NodeLifecycleReducers {
     create      : (s: S, blueprint: Foundations.Blueprint, position: { x: number, y: number }, staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>) => NodeId;
     disconnect  : (s: S, nodeId: NodeId) => void;
     recreate    : (s: S, nodeId: NodeId, blueprint: Foundations.Blueprint) => void;
-    duplicate   : (s: S, originalNode: Workflow.Node, position?: { x: number, y: number }) => Workflow.Node;
+    duplicate   : (s: S, originalNode: Workflow.Node, position?: { x: number, y: number }, overrides?: {
+        staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>;
+        credentialInstanceIds?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>;
+    }) => Workflow.Node;
     reconcile   : (s: S, nodeId: NodeId, blueprint: Foundations.Blueprint) => void;
     wipe        : (s: S, nodeId: NodeId, replace?: Partial<Workflow.Node>) => void;
     validate    : (s: S, nodeId: NodeId) => void;
