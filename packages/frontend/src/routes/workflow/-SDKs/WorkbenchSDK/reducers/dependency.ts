@@ -59,6 +59,7 @@ export const dependencyReducers = {
         const baseBlueprint = ShelfSDK.state.blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]
 
         const blueprint = Blueprint.createFromDependency(dependency, baseBlueprint)
+
         for (const affectedNodeId of affectedNodeIds) {
             nodeReducers.recreate(s, affectedNodeId, blueprint)
             nodeReducers.validate(s, affectedNodeId)

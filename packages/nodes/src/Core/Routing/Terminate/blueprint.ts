@@ -6,6 +6,7 @@ export const Blueprint = defineBlueprint({
     description: "Ends the execution when reached. 'Stop' halts the run cleanly (terminated); 'Error' fails the run with a message.",
     icon: "OctagonX",
     accent: "group-routing",
+    iconColor: "destructive",
     fields: [
         // mode drives the field schema via reconcile. Base (stop) needs no extra field;
         // error reconciles in `message`.

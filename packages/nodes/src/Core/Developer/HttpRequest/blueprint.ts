@@ -6,6 +6,7 @@ export const Blueprint = defineBlueprint({
     description: "Makes an HTTP request.",
     icon: "Globe",
     accent: "utility",
+    iconColor: "color-blue-400",
     fields: [
         FieldBuilder.MultiOption({
             id: "method",

@@ -48,6 +48,7 @@ export namespace Blueprint {
             displayName:          z.string(),
             icon:                 z.string(),
             accent:               z.string().optional(),
+            iconColor:            z.string().optional(),
             toolCompatible:       z.boolean().optional(),
             description:          z.string().optional(),
             dependency:           Dependency.Schema.optional(),
@@ -71,6 +72,7 @@ export namespace Blueprint {
         display_name: string
         icon?: string | null
         accent?: string | null
+        iconColor?: string | null
     }, baseBlueprint: Blueprint) => {
         return {
             ...baseBlueprint,
@@ -79,6 +81,9 @@ export namespace Blueprint {
             displayName: dep.display_name,
             icon:        dep.icon ?? baseBlueprint.icon,
             accent:      dep.accent ?? baseBlueprint.accent,
+            // Don't inherit the container's iconColor — a dependency has its own
+            // visual identity (icon/accent). Only use one the dependency declares.
+            iconColor:   dep.iconColor ?? undefined,
         } satisfies Blueprint
     }
 }

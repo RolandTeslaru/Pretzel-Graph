@@ -15,6 +15,7 @@ export const Blueprint = defineBlueprint({
     description: "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata. No API key required.",
     icon: "HyperLiquid",
     accent: "port-DataList",
+    iconColor: "color-cyan-500",
     toolCompatible: true,
     fields: [
         FieldBuilder.MultiOption({
@@ -63,6 +64,7 @@ export const ToolBlueprint = defineBlueprint({
     description: "Exposes HyperLiquid market-data tools to an agent. Read-only — no API key required.",
     icon: "HyperLiquid",
     accent: "port-ToolList",
+    iconColor: "color-cyan-500",
     toolCompatible: true,
     fields: [
         FieldBuilder.MultiOption({

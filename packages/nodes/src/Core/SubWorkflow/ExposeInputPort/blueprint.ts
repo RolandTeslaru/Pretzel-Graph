@@ -7,6 +7,7 @@ export const Blueprint = defineBlueprint({
     description: "Exposes an unresolved output port for external workflow input wiring.",
     icon: "LogIn",
     accent: "utility",
+    iconColor: "primary",
     fields: [
         FieldBuilder.Boolean({
             id: "required",

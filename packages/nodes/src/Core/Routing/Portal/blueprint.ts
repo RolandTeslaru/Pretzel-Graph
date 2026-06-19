@@ -6,6 +6,7 @@ export const Blueprint = defineBlueprint({
     description: "Sends data to all Portal Out nodes sharing the same Portal ID, without a visible edge.",
     icon: "PortalIn",
     accent: "group-routing",
+    iconColor: "color-sky-400",
     fields: [
         FieldBuilder.MultiOption({
             id: "direction",

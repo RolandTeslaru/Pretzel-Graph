@@ -6,6 +6,7 @@ export const Blueprint = defineBlueprint({
     description: "Reads HyperLiquid account state for a wallet address: positions, balance, open orders, fills. Public read-only — only a wallet address is required, never a private key.",
     icon: "HyperLiquid",
     accent: "port-Json",
+    iconColor: "color-cyan-500",
     toolCompatible: true,
     fields: [
         FieldBuilder.String({
@@ -49,6 +50,7 @@ export const ToolBlueprint = defineBlueprint({
     description: "Exposes HyperLiquid account-read tools to an agent. Public read-only — no private key, no trading.",
     icon: "HyperLiquid",
     accent: "port-Tool",
+    iconColor: "color-cyan-500",
     toolCompatible: true,
     fields: [
         FieldBuilder.String({

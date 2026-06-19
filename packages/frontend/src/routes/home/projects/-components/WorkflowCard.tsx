@@ -24,7 +24,7 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
                     name={workflow.icon ?? "Graph"}
                     size={40}
                     className="shrink-0 w-fit h-fit m-auto"
-                    style={{ color: workflow.accent ? `var(--${workflow.accent})` : "var(--primary)" }}
+                    style={{ color: (workflow.icon_color ?? workflow.accent) ? `var(--${workflow.icon_color ?? workflow.accent})` : "var(--primary)" }}
                 />
                 <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm text-center truncate">{workflow.display_name || 'Untitled'}</p>
