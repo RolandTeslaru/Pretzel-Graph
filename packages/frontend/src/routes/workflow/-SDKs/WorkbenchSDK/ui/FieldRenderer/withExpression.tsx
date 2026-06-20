@@ -17,6 +17,8 @@ interface Props {
     // reconcile fields drive node reconciliation and can't be turned into expressions —
     // suppress the static/expression toggle entirely for them.
     reconcile?: boolean
+    // item-scoped field → expose $item / $itemIndex in the expression editor's autocomplete.
+    itemScoped?: boolean
     className?: string
     children: React.ReactNode
 }
@@ -30,6 +32,7 @@ interface ExpressionContextValue {
     onCommitRef: React.RefObject<() => void>
     node: Workflow.Node | null
     displayName: string
+    itemScoped?: boolean
 }
 
 const ExpressionContext = createContext<ExpressionContextValue | null>(null)
@@ -40,12 +43,11 @@ function useExpressionContext() {
     return ctx
 }
 
-function ExpressionInput({ multiline, placeholder, className }: {
-    multiline?: boolean
+function ExpressionInput({ placeholder, className }: {
     placeholder?: string
     className?: string
 }) {
-    const { value, onChange, onCommitRef, node, displayName } = useExpressionContext()
+    const { value, onChange, onCommitRef, node, displayName, itemScoped } = useExpressionContext()
 
     return (
         <div className='relative input-default rounded-sm overflow-hidden'>
@@ -57,7 +59,7 @@ function ExpressionInput({ multiline, placeholder, className }: {
                     DialogSDK.actions
                         .push("ExpressionEditorDialog", (dialogProps) => (
                             <DialogSDK.Template {...dialogProps} className='overflow-hidden! border-none! bg-white/0! shadow-none! flex flex-row gap-4'>
-                                <ExpressionEditor node={node} displayName={displayName} onChange={onChange} onClose={() => onCommitRef.current()} initialValue={value} />
+                                <ExpressionEditor node={node} displayName={displayName} onChange={onChange} onClose={() => onCommitRef.current()} initialValue={value} itemScoped={itemScoped} />
                             </DialogSDK.Template>
                         ))
                 }}
@@ -77,7 +79,7 @@ function ExpressionInput({ multiline, placeholder, className }: {
     )
 }
 
-export function WithExpression({ value, isExpression, onToggleExpression, onChange, onCommit, nodeId, displayName, reconcile, className, children }: Props) {
+export function WithExpression({ value, isExpression, onToggleExpression, onChange, onCommit, nodeId, displayName, reconcile, itemScoped, className, children }: Props) {
     const [isHovered, setIsHovered] = useState(false)
     const node = WorkbenchSDK.state.selectors.node.get(WorkbenchSDK.state, nodeId);
 
@@ -85,7 +87,7 @@ export function WithExpression({ value, isExpression, onToggleExpression, onChan
     useEffect(() => { onCommitRef.current = onCommit }, [onCommit])
 
     return (
-        <ExpressionContext.Provider value={{ value, onChange, onCommitRef, node, displayName }}>
+        <ExpressionContext.Provider value={{ value, onChange, onCommitRef, node, displayName, itemScoped }}>
             <div
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}

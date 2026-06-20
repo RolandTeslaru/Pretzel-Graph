@@ -7,13 +7,13 @@ export const Blueprint = defineBlueprint({
     icon: "Funnel",
     accent: "utility",
     fields: [
-        FieldBuilder.Boolean({
+        FieldBuilder.itemScoped(FieldBuilder.Boolean({
             id: "condition",
             displayName: "Condition",
             initialValue: true,
             isExpression: true,
-            tooltip: "Evaluated once per item — use $in to reference the current item.",
-        }),
+            tooltip: "Evaluated once per item — use $item for the current element, $in for the node's inputs.",
+        })),
     ],
     inputs: [
         InputBuilder.UnresolvedList({
@@ -26,7 +26,12 @@ export const Blueprint = defineBlueprint({
     outputs: [
         OutputBuilder.UnresolvedList({
             id: "filtered",
-            displayName: "Filtered",
+            displayName: "Kept",
+            polymorphicGroupId: "data",
+        }),
+        OutputBuilder.UnresolvedList({
+            id: "discarded",
+            displayName: "Discarded",
             polymorphicGroupId: "data",
         }),
     ],

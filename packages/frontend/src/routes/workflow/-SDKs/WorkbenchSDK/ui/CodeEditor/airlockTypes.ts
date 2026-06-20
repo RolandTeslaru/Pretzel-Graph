@@ -58,17 +58,33 @@ export function getIncomingShape(nodeId: Workflow.Node.Id): Record<string, unkno
     return result
 }
 
+// Element type for `$item` in item-scoped fields. If exactly one incoming port carries an
+// array, `$item` is typed as that array's element (sampled) — driving real autocomplete; when
+// it's ambiguous (zero or many incoming arrays) or empty, falls back to `any`.
+export function getItemType(nodeId: Workflow.Node.Id): string {
+    const arrays = Object.values(getIncomingShape(nodeId)).filter(Array.isArray) as unknown[][]
+    if (arrays.length !== 1 || arrays[0].length === 0) return 'any'
+
+    const elems = Array.from(
+        new Set(arrays[0].slice(0, MAX_ARRAY_SAMPLE).map((v) => tsLiteralType(v, 1))),
+    )
+    return elems.join(' | ')
+}
+
 // Object type with the workflow's real node ids as literal keys → id autocomplete.
 function keyedByNodeIds(ids: Workflow.Node.Id[], valueType: string, extraKeys: string[] = []): string {
     const keys = [...ids.map((id) => `${JSON.stringify(id)}: ${valueType}`), ...extraKeys]
     return keys.length ? `{ ${keys.join('; ')} }` : 'Record<string, never>'
 }
 
-export function buildAirlockDts(nodeId: Workflow.Node.Id): string {
+// `itemScoped` is set when editing a field declared via FieldBuilder.itemScoped — only then are
+// `$item` / `$itemIndex` in scope (the node binds them per-element at runtime), so they're
+// surfaced in autocomplete exclusively for those fields.
+export function buildAirlockDts(nodeId: Workflow.Node.Id, options?: { itemScoped?: boolean }): string {
     const ids = Object.keys(WorkbenchSDK.state.data.nodes) as Workflow.Node.Id[]
     const configKey = `${JSON.stringify(WorkflowDomain.WORKFLOW_CONFIG_NODE_ID)}: Record<string, any>`
 
-    return [
+    const lines = [
         `interface WorkflowNode {`,
         `    id: string;`,
         `    blueprintId: string;`,
@@ -89,5 +105,12 @@ export function buildAirlockDts(nodeId: Workflow.Node.Id): string {
         `declare const $config: Record<string, any>;`,
         `declare const $igniter: any;`,
         `declare const $chatId: string | undefined;`,
-    ].join('\n')
+    ]
+
+    if (options?.itemScoped) {
+        lines.push(`declare const $item: ${getItemType(nodeId)};`)
+        lines.push(`declare const $itemIndex: number;`)
+    }
+
+    return lines.join('\n')
 }
