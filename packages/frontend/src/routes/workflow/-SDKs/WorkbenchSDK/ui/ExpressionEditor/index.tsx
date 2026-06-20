@@ -23,10 +23,12 @@ interface Props {
     displayName: string,
     onChange: (val: string) => void,
     onClose: () => void,
-    initialValue: string
+    initialValue: string,
+    // editing an item-scoped field → expose $item / $itemIndex in autocomplete
+    itemScoped?: boolean,
 }
 
-export const ExpressionEditor = ({ node, displayName, onChange, onClose, initialValue }: Props) => {
+export const ExpressionEditor = ({ node, displayName, onChange, onClose, initialValue, itemScoped }: Props) => {
     const [result, setResult] = useState<AirlockSDK.Result>({ ok: true, value: undefined })
     const extraLibRef = useRef<{ dispose(): void } | null>(null)
 
@@ -45,8 +47,8 @@ export const ExpressionEditor = ({ node, displayName, onChange, onClose, initial
         const ts = monaco.languages.typescript.typescriptDefaults;
         ts.setDiagnosticsOptions({ ...ts.getDiagnosticsOptions(), diagnosticCodesToIgnore: [1108] });
         extraLibRef.current?.dispose();
-        extraLibRef.current = ts.addExtraLib(buildAirlockDts(node.id), 'ts:airlock-globals.d.ts');
-    }, [node.id])
+        extraLibRef.current = ts.addExtraLib(buildAirlockDts(node.id, { itemScoped }), 'ts:airlock-globals.d.ts');
+    }, [node.id, itemScoped])
 
     // live preview — same rewrite + WorkflowView the worker runs at runtime
     const preview = useMemo(
