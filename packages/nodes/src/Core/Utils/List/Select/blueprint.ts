@@ -2,7 +2,7 @@ import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pre
 
 export const Blueprint = defineBlueprint({
     id: "Core.Utils.List.Select",
-    displayName: "Select Element",
+    displayName: "Select Item",
     description: "Selects a single element from a list input.",
     icon: "Brackets",
     accent: "utility",
