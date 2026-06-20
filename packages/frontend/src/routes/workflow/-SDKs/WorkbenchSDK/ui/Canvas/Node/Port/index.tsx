@@ -81,59 +81,63 @@ export const Port: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, is
     const glowColor = `var(--port-${port.variant}-glow)`;
 
     return (
-        <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-                <Handle
-                    type={type}
-                    position={position}
-                    isConnectable={!isWorkflowLocked}
-                    style={{
-                        ...handleStyle,
-                        [position === Position.Left ? "left" : "right"]: "-2px" // push further out (default is -4/-5px)
-                    }}
-                    id={port.id}
-                    isValidConnection={isValidConnectionCallback}
-                    className="group transition-all outline-none"
-                    onClick={() => {
-                        // ShelfSDK.actions.searchFilter.setDataTypes(new Set(port.variant))
-                    }}
-                >
-                    {/* Visual Representation of the Handle */}
-                    <div
-                        className={cn(
-                            "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 pointer-events-none",
-                            // Incompatible handle is smaller and transparent. Compatible/normal is fixed size with thick border.
-                            isNullHandle ? "w-3 h-3 border-3" : "w-3 h-3 border-3",
-                            // Glow only if hovered OR if actively dragging a compatible connection
-                            !isNullHandle && (isDraggedHandleCompatible
-                                ? `w-4 h-4 border-white!
+
+        <Handle
+            type={type}
+            position={position}
+            isConnectable={!isWorkflowLocked}
+            style={{
+                ...handleStyle,
+                [position === Position.Left ? "left" : "right"]: "-2px" // push further out (default is -4/-5px)
+            }}
+            id={port.id}
+            isValidConnection={isValidConnectionCallback}
+            className="group transition-all outline-none"
+            onClick={() => {
+                // ShelfSDK.actions.searchFilter.setDataTypes(new Set(port.variant))
+            }}
+        >
+            {/* Visual Representation of the Handle */}
+            <div
+                className={cn(
+                    "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 pointer-events-none",
+                    // Incompatible handle is smaller and transparent. Compatible/normal is fixed size with thick border.
+                    isNullHandle ? "w-3 h-3 border-3" : "w-3 h-3 border-3",
+                    // Glow only if hovered OR if actively dragging a compatible connection
+                    !isNullHandle && (isDraggedHandleCompatible
+                        ? `w-4 h-4 border-white!
                                     shadow-[0_0_4px_1px_var(--tw-ring-color),0_0_10px_3px_var(--tw-ring-color),0_0_20px_5px_var(--tw-ring-color)]
                                     dark:shadow-[0_0_8px_2px_var(--tw-ring-color),0_0_20px_4px_var(--tw-ring-color),0_0_40px_8px_var(--tw-ring-color),0_0_60px_10px_var(--tw-ring-color)]
                                     `
-                                : `
+                        : `
                                 group-hover:w-4 group-hover:h-4 hover:border-white!
                                     group-hover:shadow-[0_0_4px_1px_var(--tw-ring-color),0_0_10px_3px_var(--tw-ring-color),0_0_20px_5px_var(--tw-ring-color)]
                                     dark:group-hover:shadow-[0_0_8px_2px_var(--tw-ring-color),0_0_20px_4px_var(--tw-ring-color),0_0_40px_8px_var(--tw-ring-color),0_0_60px_10px_var(--tw-ring-color)]`
-                            )
-                        )}
-                        style={{
-                            backgroundColor: centerColor, // Light inside
-                            borderColor: borderColor,    // Dark/Accent thick border
-                            '--tw-ring-color': glowColor // Glow matches border
-                        } as React.CSSProperties}
-                    />
-                </Handle>
+                    )
+                )}
+                style={{
+                    backgroundColor: centerColor, // Light inside
+                    borderColor: borderColor,    // Dark/Accent thick border
+                    '--tw-ring-color': glowColor // Glow matches border
+                } as React.CSSProperties}
+            />
+        </Handle>
 
-            </Tooltip.Trigger>
-            <Tooltip.Content side={position === Position.Left ? "left" : "right"} sideOffset={3}>
-                <HandleTooltipContent
-                    draggedHandle={draggedHandle}
-                    handleType={type}
-                    port={port}
-                    nodeId={nodeId}
-                    isDraggedHandleCompatible={isDraggedHandleCompatible}
-                />
-            </Tooltip.Content>
-        </Tooltip.Root>
+
     )
 }
+
+// <Tooltip.Root>
+//     <Tooltip.Trigger asChild></Tooltip.Trigger>
+
+//                 </Tooltip.Trigger>
+//     <Tooltip.Content side={position === Position.Left ? "left" : "right"} sideOffset={3}>
+//         <HandleTooltipContent
+//             draggedHandle={draggedHandle}
+//             handleType={type}
+//             port={port}
+//             nodeId={nodeId}
+//             isDraggedHandleCompatible={isDraggedHandleCompatible}
+//         />
+//     </Tooltip.Content>
+// </Tooltip.Root>

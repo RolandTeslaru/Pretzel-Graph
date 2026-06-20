@@ -2,7 +2,7 @@ import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pre
 
 export const Blueprint = defineBlueprint({
     id: "Core.Utils.List.Slice",
-    displayName: "Slice List",
+    displayName: "Slice",
     description: "Returns a sub-array from a list using start and end indices.",
     icon: "Scissors",
     accent: "utility",

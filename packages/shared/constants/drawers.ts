@@ -80,6 +80,7 @@ export const CORE_DRAWERS = {
       "Core.Utils.JsonInjector",
       "Core.Utils.List.Select",
       "Core.Utils.List.Slice",
+      "Core.Utils.List.Filter",
     ],
   },
   utilities: {
