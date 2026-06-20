@@ -9,9 +9,31 @@ import type { Vault } from "@pretzel-graph/shared/domain"
 export type InferFields<D> = 0 extends (1 & D) ? any
     : D extends { fields: infer T }
     ? T extends readonly { id: string }[]
-    ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
+    ? { [K in T[number]as K extends { itemScoped: true }
+        ? never                                                     // item-scoped → not in this.fields
+        : K extends { __literalId?: infer Id extends string }
         ? Id
         : K extends { id: infer Id extends string } ? Id : never
+        ]: K extends { initialValue: infer IV } ? IV : any
+    }
+    : never
+    : Record<string, never>;
+
+/**
+ * Complement of InferFields: only the item-scoped fields, keyed by literal id, mapped to
+ * their value type. These are NOT in `this.fields` — they're evaluated per-item via
+ * RuntimeNode.evalItemField. Keying off the required literal `{ itemScoped: true }` (set by
+ * FieldBuilder.itemScoped) so the optional `itemScoped?: boolean` on every field's base
+ * never false-matches.
+ */
+export type InferItemFields<D> = 0 extends (1 & D) ? any
+    : D extends { fields: infer T }
+    ? T extends readonly { id: string }[]
+    ? { [K in T[number]as K extends { itemScoped: true }
+        ? (K extends { __literalId?: infer Id extends string }
+            ? Id
+            : K extends { id: infer Id extends string } ? Id : never)
+        : never
         ]: K extends { initialValue: infer IV } ? IV : any
     }
     : never

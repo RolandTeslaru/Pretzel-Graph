@@ -20,21 +20,34 @@ export class AirlockScope implements Airlock.API {
     ) {}
 
     // set→run→clear is one sync block → atomic, so re-fired/concurrent nodes can't clobber globals.
-    public executeSync<T>(globals: Record<string, unknown>, run: (evaluate: Airlock.EvaluateFn) => T): T {
+    public executeSync<T>(
+        globals: Record<string, unknown>,
+        run: (evaluate: Airlock.EvaluateFn, setTransient: Airlock.SetTransientFn) => T,
+    ): T {
         const g = this.context.global;
 
-        for (const [name, value] of Object.entries(globals)) {
-            if (RESERVED_GLOBALS.has(name))
-                throw new AirlockError(`"${name}" is a reserved persistent global and cannot be set transiently`);
-            g.setSync(name, value, { copy: true });
-        }
+        // Every key touched during the block (initial + transient rebinds) — cleared once on exit.
+        const touched = new Set<string>();
 
-        
+        const setGlobals = (next: Record<string, unknown>) => {
+            for (const [name, value] of Object.entries(next)) {
+                if (RESERVED_GLOBALS.has(name))
+                    throw new AirlockError(`"${name}" is a reserved persistent global and cannot be set transiently`);
+                g.setSync(name, value, { copy: true });
+                touched.add(name);
+            }
+        };
+
+        setGlobals(globals);
+
         try {
-            return run((expr, coerceTo) => this.runScript(this.service.compileExpression(expr, coerceTo)));
+            return run(
+                (expr, coerceTo) => this.runScript(this.service.compileExpression(expr, coerceTo)),
+                setGlobals,
+            );
         } finally {
             if (!this.service.isDisposed)
-                for (const name of Object.keys(globals))
+                for (const name of touched)
                     g.deleteSync(name);
         }
     }

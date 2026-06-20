@@ -21,6 +21,7 @@ export const StringField = memo<RendererProps<'String'>>(({ field, nodeId, class
         nodeId,
         displayName: field.displayName,
         reconcile: field.reconcile,
+        itemScoped: field.itemScoped,
         className,
     }
 

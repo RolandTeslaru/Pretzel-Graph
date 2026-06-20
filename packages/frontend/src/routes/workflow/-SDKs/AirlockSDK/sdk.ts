@@ -32,9 +32,19 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
     private buildGlobals(nodeId: Workflow.Node.Id): Record<string, unknown> {
         const ws = WorkbenchSDK.state
         const session = ExecutionSDK.state.currentExecution?.session
+        const incoming = executionSelectors.getNodeIncomingData(ws, nodeId, session) ?? {}
+
+        // For item-scoped fields, preview $item against a representative element: the first item of
+        // the single incoming array (matching getItemType's autocomplete inference). When ambiguous,
+        // $item / $itemIndex stay present-but-undefined → preview as undefined, never a ReferenceError.
+        const arrays = Object.values(incoming).filter(Array.isArray) as unknown[][]
+        const sampleItem = arrays.length === 1 && arrays[0].length > 0 ? arrays[0][0] : undefined
+
         return {
             [Airlock.GLOBALS.workflow]: Expression.toWorkflowView(ws.workflowId, ws.data),
-            [Airlock.GLOBALS.in]: executionSelectors.getNodeIncomingData(ws, nodeId, session) ?? {},
+            [Airlock.GLOBALS.in]: incoming,
+            [Airlock.GLOBALS.item]: sampleItem,
+            [Airlock.GLOBALS.itemIndex]: sampleItem !== undefined ? 0 : undefined,
             [Airlock.GLOBALS.nodeId]: nodeId,
             [Airlock.GLOBALS.igniter]: undefined,
             [Airlock.GLOBALS.chatId]: undefined,

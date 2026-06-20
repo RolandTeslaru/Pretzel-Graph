@@ -20,9 +20,11 @@ export namespace Airlock {
     export const GLOBALS = {
         workflow: "__workflow__",
         igniter:  "__igniter__",
-        chatId:   "__chatId__",
-        in:       "__in__",
-        nodeId:   "__node_id__",
+        chatId:    "__chatId__",
+        in:        "__in__",
+        item:      "__item__",
+        itemIndex: "__item_index__",
+        nodeId:    "__node_id__",
     } as const
 
     const CONFIG_NODE_KEY = Workflow.WORKFLOW_CONFIG_NODE_ID
@@ -32,12 +34,15 @@ export namespace Airlock {
         config:   `${GLOBALS.workflow}.staticValues[${JSON.stringify(CONFIG_NODE_KEY)}]`,
         igniter:  GLOBALS.igniter,
         chatId:   GLOBALS.chatId,
-        in:       GLOBALS.in,
-        node:     `${GLOBALS.workflow}.nodes[${GLOBALS.nodeId}]`,
+        in:        GLOBALS.in,
+        item:      GLOBALS.item,
+        itemIndex: GLOBALS.itemIndex,
+        node:      `${GLOBALS.workflow}.nodes[${GLOBALS.nodeId}]`,
     }
 
     // Matches $root at a word boundary; rewrites only the root, leaving member access intact.
-    const SIGIL = /\$(workflow|config|igniter|chatId|in|node)\b/g
+    // `itemIndex` precedes `item` so the longer root wins the alternation.
+    const SIGIL = /\$(workflow|config|igniter|chatId|in|itemIndex|item|node)\b/g
 
     export function rewrite(source: Source): string {
         return source.replace(SIGIL, (_m, root: string) => STATIC_ROOTS[root])
@@ -85,9 +90,14 @@ export namespace Airlock {
 
     export type EvaluateFn = (expr: Source.Expression, coerceTo?: CoerceTo) => unknown
 
+    // Rebind transient globals (e.g. $item) mid-block, within the same atomic executeSync run.
+    // Keys are tracked and cleared when the block exits; reserved persistent globals are rejected.
+    export type SetTransientFn = (globals: Record<string, unknown>) => void
+
     export interface API {
         // Set globals, run synchronously, clear — atomic on the single worker thread.
-        executeSync<T>(globals: Record<string, unknown>, run: (evaluate: EvaluateFn) => T): T
+        // `setTransient` lets the run callback rebind per-iteration globals (item loops) in-block.
+        executeSync<T>(globals: Record<string, unknown>, run: (evaluate: EvaluateFn, setTransient: SetTransientFn) => T): T
         // Run code-mode source async; `incoming` is passed as $in (the fn param), copied per call.
         executeAsyncCode(code: Source.Code, nodeId: Workflow.Node.Id, incoming: unknown): Promise<unknown>
     }

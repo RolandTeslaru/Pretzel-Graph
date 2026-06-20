@@ -15,6 +15,10 @@ export namespace Field {
         reconcile: z.boolean(),
         hidden: z.boolean().optional(),
 
+        // When true, this field is NOT eagerly evaluated by the engine; the node evaluates it
+        // per-item via RuntimeNode.evalItemField, with $item bound to the current element.
+        itemScoped: z.boolean().optional(),
+
         displayName: z.string(),
         description: z.string().optional(),
         tooltip: z.string().optional(),
@@ -400,5 +404,10 @@ export namespace Field {
     ]);
 
     export type Schema = z.infer<typeof Schema>;
+
+    /** Not every variant supports expressions — narrows before reading `field.isExpression`. */
+    export function isExpression(field: Field.Schema): boolean {
+        return "isExpression" in field && field.isExpression === true;
+    }
 }
 export type Field = z.infer<typeof Field.Schema>;
