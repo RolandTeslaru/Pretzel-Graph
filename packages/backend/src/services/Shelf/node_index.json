@@ -1,6 +1,6 @@
 {
-  "version": "1781947606163",
-  "generatedAt": "2026-06-20T09:26:46.163Z",
+  "version": "1781961534814",
+  "generatedAt": "2026-06-20T13:18:54.814Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -3506,8 +3506,9 @@
           "advanced": false,
           "required": false,
           "reconcile": false,
+          "itemScoped": true,
           "displayName": "Condition",
-          "tooltip": "Evaluated once per item — use $in to reference the current item.",
+          "tooltip": "Evaluated once per item — use $item for the current element, $in for the node's inputs.",
           "variant": "Boolean",
           "initialValue": true,
           "isExpression": true
@@ -3606,7 +3607,14 @@
       "outputs": [
         {
           "id": "filtered",
-          "displayName": "Filtered",
+          "displayName": "Kept",
+          "polymorphicGroupId": "data",
+          "variant": "UnresolvedList",
+          "originalVariant": "UnresolvedList"
+        },
+        {
+          "id": "discarded",
+          "displayName": "Discarded",
           "polymorphicGroupId": "data",
           "variant": "UnresolvedList",
           "originalVariant": "UnresolvedList"

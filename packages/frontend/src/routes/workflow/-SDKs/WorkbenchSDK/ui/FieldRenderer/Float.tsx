@@ -23,6 +23,7 @@ export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, classNa
         nodeId,
         displayName: field.displayName,
         reconcile: field.reconcile,
+        itemScoped: field.itemScoped,
         className,
     }
 

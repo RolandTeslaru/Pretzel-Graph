@@ -1,5 +1,5 @@
 import { Airlock, Chat, Execution, Foundations, Realtime, Vault, Workflow } from "@pretzel-graph/shared/domain";
-import { InferCredentials, InferCredentialValues, InferFields, InferInputs, InferOutputs } from "./types";
+import { InferCredentials, InferCredentialValues, InferFields, InferInputs, InferItemFields, InferOutputs } from "./types";
 import type { CompilationContext } from "./compiler-context";
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
@@ -19,6 +19,10 @@ export abstract class RuntimeNode<
     public readonly emit: RuntimeNode.ExecutionContext["emit"];
     public fields: InferFields<T_Blueprint>
     public readonly credentials: InferCredentials<T_Blueprint>
+
+    /** Projected incoming-port bag from the last evaluateFields pass — reused as `$in` when
+     *  evaluating item-scoped fields, so per-item eval sees the same inputs as node-level eval. */
+    private projectedIn: Record<Port.Input.Id, Projection> = {};
 
     protected isWaiting: boolean = false;
 
@@ -84,8 +88,11 @@ export abstract class RuntimeNode<
         inputs: InferInputs<T_Blueprint>
     ): Promise<Partial<InferOutputs<T_Blueprint>>>;
 
+
+
+
     public evaluateFields(
-        incoming: Record<Port.Id, Projection> | Record<string, unknown>
+        incoming: Record<Port.Id, Projection>
     ): InferFields<T_Blueprint> {
         const fields = mapFieldValues<T_Blueprint>(this.workflowNode.id, this.context.workflowData);
         const evaluated: Record<Foundations.Field.Id, unknown> = { ...fields };
@@ -93,11 +100,12 @@ export abstract class RuntimeNode<
         // Project each port value to its plain-object form before injecting as @in —
         // raw LC instances (BaseChatModel, BaseRetriever, etc.) contain functions that
         // can't be structured-cloned into the isolate.
-        const projectedIncoming: Record<string, unknown> = {};
+        const projectedIncoming: Record<Port.Input.Id, Projection> = {};
         for (const input of this.workflowNode.inputs) {
-            const value = (incoming as Record<string, unknown>)[input.id as string];
-            projectedIncoming[input.id as string] = Synthesizer.project(value, input.variant);
+            const value = incoming[input.id];
+            projectedIncoming[input.id] = Synthesizer.project(value, input.variant);
         }
+        this.projectedIn = projectedIncoming;
 
         // Set `@in` once for this firing, evaluate every isExpression field synchronously,
         // then it's cleared — one copy of `incoming`, atomic against concurrent firings.
@@ -110,11 +118,16 @@ export abstract class RuntimeNode<
                 },
                 (evaluate) => {
                     for (const field of this.workflowNode.fields) {
-                        if (field.variant === "CaseList") {
-                            const raw = evaluated[field.id as Foundations.Field.Id] as Foundations.Field.CaseList.Value | undefined;
-                            if (!Array.isArray(raw)) continue;
+                        // Item-scoped fields are resolved per-element via evalItemField, not here —
+                        // `$item` isn't bound during this node-level pass.
+                        if (field.itemScoped === true) continue;
 
-                            evaluated[field.id as Foundations.Field.Id] = raw.map(entry =>
+                        if (field.variant === "CaseList") {
+                            const raw = evaluated[field.id]
+                            if (!Array.isArray(raw)) 
+                                continue;
+
+                            evaluated[field.id] = raw.map(entry =>
                                 entry.isExpression && typeof entry.value === "string"
                                     ? { ...entry, value: !!evaluate(Airlock.Source.asExpression(entry.value)) }
                                     : entry
@@ -122,11 +135,11 @@ export abstract class RuntimeNode<
                             continue;
                         }
 
-                        if (!("isExpression" in field) || field.isExpression !== true) continue;
-                        const raw = evaluated[field.id as Foundations.Field.Id];
+                        if (!Foundations.Field.isExpression(field)) continue;
+                        const raw = evaluated[field.id];
                         if (typeof raw !== "string") continue;
 
-                        evaluated[field.id as Foundations.Field.Id] = evaluate(
+                        evaluated[field.id] = evaluate(
                             Airlock.Source.asExpression(raw),
                             Airlock.coerceTargetForVariant(field.variant),
                         );
@@ -135,6 +148,91 @@ export abstract class RuntimeNode<
             );
 
         return evaluated as InferFields<T_Blueprint>;
+    }
+
+    /**
+     * Iterates `items` once, binding `$item` to the current element (and `$in` to this node's
+     * projected inputs), and runs `fn` per element. The whole loop is a single atomic airlock
+     * block: stable globals set once, only `$item` rebound per iteration.
+     *
+     * `fn` receives an `evalField` that resolves any item-scoped field (declared via
+     * `FieldBuilder.itemScoped`) against the currently-bound element — so multiple item fields can
+     * be evaluated in the same iteration without re-looping. Non-expression item fields return
+     * their static value. Returns `fn`'s result per element, in order.
+     */
+    protected mapItems<R>(
+        items: unknown[],
+        fn: (ctx: {
+            item: unknown,
+            index: number,
+            evalField: <K extends keyof InferItemFields<T_Blueprint> & string>(
+                fieldId: K,
+                coerceTo?: Airlock.CoerceTo,
+            ) => InferItemFields<T_Blueprint>[K],
+        }) => R,
+        options?: {
+            /** Port variant used to project eachand element before it crosses into the isolate. */
+            itemVariant?: Port.Variant,
+        },
+    ): R[] {
+        const variant = options?.itemVariant ?? "Unresolved";
+
+        // Resolve raw value + isExpression once per field, reused across every iteration.
+        const rawValues = mapFieldValues<T_Blueprint>(this.workflowNode.id, this.context.workflowData)
+        const meta      = new Map<Foundations.Field.Id, { raw: unknown, isExpression: boolean }>();
+        
+        for (const field of this.workflowNode.fields) 
+            meta.set(field.id, { 
+                raw: rawValues[field.id], 
+                isExpression: Foundations.Field.isExpression(field) 
+            });
+
+        return this.context.airlockAPI.executeSync(
+            {
+                [Airlock.GLOBALS.in]:     this.projectedIn,
+                [Airlock.GLOBALS.nodeId]: this.workflowNode.id,
+            },
+            (evaluate, setTransient) => {
+                const evalField = (<K extends keyof InferItemFields<T_Blueprint>>(
+                    fieldId: K,
+                    coerceTo?: Airlock.CoerceTo,
+                ) => {
+                    const m = meta.get(fieldId as Foundations.Field.Id);
+                    // Static field → its resolved value as-is; expression → evaluated against $item.
+                    if (!m || !m.isExpression || typeof m.raw !== "string")
+                        return m?.raw as InferItemFields<T_Blueprint>[K];
+                    
+                    return evaluate(Airlock.Source.asExpression(m.raw), coerceTo) as InferItemFields<T_Blueprint>[K];
+                });
+
+                return items.map((item, index) => {
+                    setTransient({
+                        [Airlock.GLOBALS.item]:      Synthesizer.project(item, variant),
+                        [Airlock.GLOBALS.itemIndex]: index,
+                    });
+                    return fn({ item, index, evalField });
+                });
+            },
+        );
+    }
+
+    /**
+     * Convenience over `mapItems` for the single-field case: evaluates one item-scoped field per
+     * element. For multiple item fields per element, use `mapItems` directly to share one loop.
+     */
+    protected evalItemField<K extends keyof InferItemFields<T_Blueprint> & string>(
+        fieldId: K,
+        items: unknown[],
+        options?: {
+            coerceTo?: Airlock.CoerceTo,
+            itemVariant?: Port.Variant,
+        },
+    ): Array<InferItemFields<T_Blueprint>[K]> {
+        return this.mapItems(
+            items,
+            ({ evalField }) => evalField(fieldId, options?.coerceTo),
+            { itemVariant: options?.itemVariant },
+        );
     }
 
 

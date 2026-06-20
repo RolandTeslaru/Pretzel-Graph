@@ -51,6 +51,17 @@ export namespace FieldBuilder {
     const buildIsExpression = (isExpression?: boolean) =>
         isExpression ? { isExpression: true as const } : {}
 
+    /**
+     * Marks a field as item-scoped: the engine skips it during eager field evaluation, and the
+     * node resolves it per-element via RuntimeNode.evalItemField with $item bound. Excluded from
+     * `this.fields` (InferFields) and surfaced in `evalItemField`'s key set (InferItemFields).
+     *
+     * @example FieldBuilder.itemScoped(FieldBuilder.Boolean({ id: "condition", isExpression: true, ... }))
+     */
+    export function itemScoped<F extends { id: string }>(field: F): F & { itemScoped: true } {
+        return { ...field, itemScoped: true };
+    }
+
 
 
 

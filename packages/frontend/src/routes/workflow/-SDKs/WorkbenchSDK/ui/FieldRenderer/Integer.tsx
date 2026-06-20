@@ -23,6 +23,7 @@ export const IntegerField = memo<RendererProps<'Integer'>>(({ field, nodeId, cla
         nodeId,
         displayName: field.displayName,
         reconcile: field.reconcile,
+        itemScoped: field.itemScoped,
         className,
     }
 

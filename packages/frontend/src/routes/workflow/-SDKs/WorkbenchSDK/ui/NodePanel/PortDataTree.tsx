@@ -5,7 +5,22 @@ import type { Tree as TreeType } from '@/components/Tree/domain'
 import type { Foundations } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
-export type PortBranchMeta = { displayName?: string; variant?: Foundations.Port.Variant }
+export type PortBranchMeta = {
+    displayName?: string
+    variant?: Foundations.Port.Variant
+    // Set when the port projects to a leaf value (primitive / empty array / empty object), so the
+    // root branch can render the value instead of "[object Object]" from the meta itself.
+    isLeafValue?: boolean
+    leafValue?: unknown
+}
+
+// Compact one-line preview for a port-root leaf value. Arrays read as a count ("0 items"),
+// empty objects as "{}".
+function formatLeafValue(value: unknown): string {
+    if (Array.isArray(value)) return `${value.length} item${value.length === 1 ? '' : 's'}`
+    if (value !== null && typeof value === 'object') return Object.keys(value).length === 0 ? '{}' : '{…}'
+    return String(value)
+}
 
 export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSibling, onToggle }: TreeType.Branch.RenderProps<PortBranchMeta>) {
     const label = branch.data?.displayName ?? branch.key
@@ -44,9 +59,17 @@ export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSi
                 <></>
             )}
             <span className="whitespace-nowrap text-[11px] font-medium text-foreground">{label}</span>
-            {isLeaf && branch.data !== undefined && (
-                <span className="ml-auto whitespace-nowrap text-muted-foreground text-[11px] pl-1">{String(branch.data)}</span>
-            )}
+            {isPortRoot
+                // Port root: `data` is the port meta. Show the stashed value summary — arrays render a
+                // count even when expandable (e.g. "5 items"), primitives/empty objects their value.
+                ? branch.data?.isLeafValue && (
+                    <span className="ml-auto whitespace-nowrap text-muted-foreground text-[11px] pl-1">{formatLeafValue(branch.data.leafValue)}</span>
+                )
+                // Nested value leaf: `data` is the raw JSON value.
+                : isLeaf && branch.data !== undefined && (
+                    <span className="ml-auto whitespace-nowrap text-muted-foreground text-[11px] pl-1">{String(branch.data)}</span>
+                )
+            }
         </div>
     )
 }
