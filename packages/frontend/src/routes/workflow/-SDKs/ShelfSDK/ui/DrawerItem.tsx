@@ -37,7 +37,7 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
             className='w-4 size-4 h-4 my-auto '
             style={{ color: blueprint.iconColor ? `var(--${blueprint.iconColor})` : undefined }}
           />
-          <p className='text-sm my-auto truncate flex-1 min-w-0'>
+          <p className='text-sm my-auto truncate flex-1 min-w-0 select-none'>
             {blueprint.displayName}
           </p>
           <SystemIcons.GripVertical className='w-[18px] h-[18px] text-muted-foreground ml-auto my-auto ' />

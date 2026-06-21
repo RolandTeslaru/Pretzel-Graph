@@ -66,7 +66,12 @@ const MonacoMount = ({ theme, height, defaultLanguage, defaultValue, onChange, b
         )
     }, [theme, height, defaultLanguage, defaultValue, onChange, beforeMount, options])
 
-    return <div ref={containerRef} className={className ?? "absolute inset-0"} />
+    return <div ref={containerRef} className={(className ?? "absolute inset-0" ) + `
+        [&_.monaco-editor]:bg-transparent! [&_.monaco-editor-background]:bg-transparent! [&_.monaco-editor_.margin]:bg-transparent!
+        [&_.sticky-widget]:bg-transparent! [&_.sticky-widget]:shadow-none! [&_.sticky-widget-line-numbers]:bg-transparent! [&_.sticky-widget-line-numbers]:shadow-none! [&_.sticky-line-content]:bg-transparent! [&_.sticky-line-number]:bg-transparent! [&_.sticky-line-number-inner]:bg-transparent!
+        [&_.scroll-decoration]:shadow-none! [&_.scroll-decoration]:hidden!
+
+    `} />
 }
 
 export const MonacoEditor = (props: MonacoEditorProps) => {
