@@ -12,9 +12,9 @@ const SectionTabs = memo(() => {
 
         >
             <Tabs.List className='w-full' variant='primary' size='sm'>
-                <Tabs.Trigger className='w-full font-semibold' value="core">Core</Tabs.Trigger>
+                <Tabs.Trigger className='w-full font-semibold select-none' value="core">Core</Tabs.Trigger>
                 {/* <Tabs.Trigger className='w-full font-semibold' value="mcp">MCP</Tabs.Trigger> */}
-                <Tabs.Trigger className='w-full font-semibold' value="bundle">Integrations</Tabs.Trigger>
+                <Tabs.Trigger className='w-full font-semibold select-none' value="bundle">Integrations</Tabs.Trigger>
             </Tabs.List>
         </Tabs.Root>
     )

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { debounce } from 'lodash'
 import type { BeforeMount } from '@monaco-editor/react'
 import type { Airlock, Workflow } from '@pretzel-graph/shared/domain';
-import { Dialog } from '@pretzel-graph/standard-ui/foundations';
+import { Dialog, ScrollArea } from '@pretzel-graph/standard-ui/foundations';
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
 import FloatContainer from '@/components/FloatContainer';
 import { MonacoEditor } from '@/components/MonacoEditor';
@@ -10,12 +10,12 @@ import { AirlockSDK } from '@/routes/workflow/-SDKs/AirlockSDK';
 import { buildAirlockDts } from '../CodeEditor/airlockTypes';
 import IncomingPanel from '../NodePanel/IncomingPanel';
 import OutgoingPanel from '../NodePanel/OutgoingPanel';
+import JsonView from 'react18-json-view';
 
-function formatResult(value: unknown): string {
+function formatResult(value: unknown) {
     if (value === undefined) return 'undefined'
     if (typeof value === 'string') return value
-    try { return JSON.stringify(value, null, 2) ?? String(value) }
-    catch { return String(value) }
+    return value
 }
 
 interface Props {
@@ -56,7 +56,7 @@ export const ExpressionEditor = ({ node, displayName, onChange, onClose, initial
         [node.id]
     )
     useEffect(() => {
-        setResult(AirlockSDK.previewExpression(initialValue as Airlock.Source.Expression, node.id)) 
+        setResult(AirlockSDK.previewExpression(initialValue as Airlock.Source.Expression, node.id))
         return () => preview.cancel()
     }, [preview, initialValue, node.id])
 
@@ -68,12 +68,15 @@ export const ExpressionEditor = ({ node, displayName, onChange, onClose, initial
     return (
         <div className="flex flex-row gap-5 h-[85vh] w-[90vw]">
 
-            <div className='bg-card/80 overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10 backdrop-blur-lg'>
+            <div className='bg-card/80 w-[30%] overflow-hidden min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10 backdrop-blur-lg'>
                 <IncomingPanel />
             </div>
 
-            <div className="flex flex-col min-w-[70vw] gap-5">
-                <div className=' flex-col relative gap-2 h-full flex-1 overflow-hidden bg-card/80  border-border border rounded-2xl shadow-xl shadow-black/10 backdrop-blur-lg'>
+            <div className="flex flex-col w-[70%] bg-card/80  border-border border rounded-2xl shadow-xl shadow-black/10 backdrop-blur-lg">
+                <div className={`
+                    flex-col relative gap-2 h-full flex-1 overflow-hidden
+                    
+                `}>
                     <FloatContainer className="absolute top-2 left-2 w-fit h-12 py-1! px-3 backdrop-blur-md z-10">
                         <SystemIcons.MathFunction className=" size-4 my-auto" />
                         <Dialog.Title className="font-mono text-sm">Expression Editor</Dialog.Title>
@@ -89,23 +92,27 @@ export const ExpressionEditor = ({ node, displayName, onChange, onClose, initial
                         </p>
                     </div>
 
-                    <div className="flex-1 h-full min-h-0 overflow-hidden relative [&_.monaco-editor]:bg-transparent! [&_.monaco-editor-background]:bg-transparent! [&_.monaco-editor_.margin]:bg-transparent!">
-                        <MonacoEditor
-                            defaultLanguage="typescript"
-                            defaultValue={initialValue}
-                            onChange={handleChange}
-                            beforeMount={beforeMount}
-                        />
-                    </div>
+                    <MonacoEditor
+                        defaultLanguage="typescript"
+                        height="100%"
+                        defaultValue={initialValue}
+                        onChange={handleChange}
+                        beforeMount={beforeMount}
+                    />
                 </div>
 
-                <div className='relative bg-card/80 w-full h-[30%] border-border border rounded-2xl shadow-xl shadow-black/10 backdrop-blur-lg overflow-hidden'>
-                    <FloatContainer className="absolute top-2 left-2 w-fit h-12 py-1! px-3 backdrop-blur-md z-10">
-                        <Dialog.Title className="font-mono text-sm">Result</Dialog.Title>
-                    </FloatContainer>
-                    <pre className={"absolute inset-0 pt-12 px-4 pb-4 overflow-auto font-mono text-xs whitespace-pre-wrap break-words " + (result.ok ? "text-foreground" : "text-destructive")}>
-                        {result.ok ? formatResult(result.value) : result.error}
-                    </pre>
+                <div className='relative border-t border-border w-full h-[30%] text-[11px]  overflow-hidden'>
+                    <ScrollArea.Root className='h-full'>    
+                        <JsonView
+                            src={result.ok ? formatResult(result.value) : result.error}
+                            collapsed={3}
+                            theme="default"
+                            className={"px-4 py-2 " + (result.ok ? "text-foreground" : "text-destructive")}
+                        />
+                        {/* <pre className={"pt-2 px-4  inset-0 overflow-auto font-mono text-xs whitespace-pre-wrap break-words " + (result.ok ? "text-foreground" : "text-destructive")}>
+                            {result.ok ? formatResult(result.value) : result.error}
+                        </pre> */}
+                    </ScrollArea.Root>
                 </div>
             </div>
 
