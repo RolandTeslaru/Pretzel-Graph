@@ -6,6 +6,12 @@ import { SystemSDK } from '@/SDKs/SystemSDK'
 
 const LazyEditor = lazy(() => import('@monaco-editor/react'))
 
+// Roots whose unmount is deferred (queued, not yet run) — keyed by container so a StrictMode
+// dev-only mount→cleanup→mount probe (same container DOM node, re-runs synchronously before the
+// queued microtask fires) can cancel the pending unmount and reuse the same root instead of
+// calling createRoot() again on a container that's still attached to a live root.
+const pendingUnmounts = new WeakMap<HTMLElement, Root>()
+
 const loadingFallback = (
     <div className="absolute inset-0 flex gap-4 items-center justify-center">
         <p className="text-sm font-medium text-primary-foreground animate-pulse">
@@ -35,11 +41,29 @@ const MonacoMount = ({ theme, height, defaultLanguage, defaultValue, onChange, b
     const rootRef = useRef<Root | null>(null)
 
     useEffect(() => {
-        if (!containerRef.current) return
-        const root = createRoot(containerRef.current)
+        const container = containerRef.current
+        if (!container) return
+
+        // A StrictMode probe (or a fast close→reopen) can remount on the exact same container
+        // before the previous cleanup's deferred unmount has actually run — reuse that root
+        // instead of creating a second one on a container that's still attached to a live root.
+        const pending = pendingUnmounts.get(container)
+        const root = pending ?? createRoot(container)
+        pendingUnmounts.delete(container)
         rootRef.current = root
+
         return () => {
-            root.unmount()
+            // Deferred: this cleanup can itself run inside the outer tree's commit (e.g. the
+            // dialog unmounting on close). Unmounting this nested root synchronously in that
+            // case races with React's still-in-progress commit ("Attempted to synchronously
+            // unmount a root while React was already rendering") — queue it for afterward instead.
+            pendingUnmounts.set(container, root)
+            queueMicrotask(() => {
+                if (pendingUnmounts.get(container) === root) {
+                    pendingUnmounts.delete(container)
+                    root.unmount()
+                }
+            })
             rootRef.current = null
         }
     }, [])
