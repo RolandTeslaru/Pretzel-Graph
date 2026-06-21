@@ -36,7 +36,10 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
     // preserves the original source text verbatim apart from the stripped spans, so it won't
     // reformat/re-emit (e.g. add a stray trailing semicolon the way a real emitter would).
     private stripTypes(source: string): string {
-        return transform(source, { transforms: ["typescript"] }).code
+        // disableESTransforms: sucrase's "typescript" preset also downlevels optional chaining /
+        // nullish coalescing into inline helper functions by default — unnecessary here since both
+        // the browser preview and isolated-vm support them natively. We only want type-stripping.
+        return transform(source, { transforms: ["typescript"], disableESTransforms: true }).code
     }
 
     // Globals keyed by the names the Airlock rewrite emits. $igniter / $chatId are
