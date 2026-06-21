@@ -96,7 +96,7 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
                 onClick={() => ShelfSDK.actions.drawer.toggle(drawer.id)}
             >
                 <LazyIcon name={drawer.icon} className={`min-w-4 size-4 h-4 my-auto ${isOpen ? "text-primary" : ""}`} />
-                <p className='text-sm font-medium text-card-foreground my-auto w-full text-left!'>
+                <p className='text-sm font-medium text-card-foreground my-auto w-full text-left! select-none'>
                     {drawer.displayName}
                 </p>
                 {

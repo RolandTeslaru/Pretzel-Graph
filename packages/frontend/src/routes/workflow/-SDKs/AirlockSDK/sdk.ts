@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { immer } from "zustand/middleware/immer"
+import { transform } from "sucrase"
 import { Airlock, Expression, type Workflow } from "@pretzel-graph/shared/domain"
 import { SDK } from "@/SDKs/SDKManager"
 import { BaseSDK } from "@/SDKs/Base"
@@ -27,6 +28,17 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
     private worker: Worker | null = null
     private pending = new Map<string, (msg: { result?: unknown; error?: string }) => void>()
 
+    // The editor accepts real TypeScript (type annotations, `as` casts, ...) for autocomplete,
+    // but nothing downstream runs it through tsc — `new Function`/the isolate only understand
+    // plain JS. sucrase is a tokenizer-based type-stripper (correctly resolves the `:`/`<`/`as`
+    // ambiguity with ternaries, comparisons, and identifiers — unlike a naive regex), but tiny
+    // and synchronous: no full type-checker/Program, no Monaco worker round-trip. It also
+    // preserves the original source text verbatim apart from the stripped spans, so it won't
+    // reformat/re-emit (e.g. add a stray trailing semicolon the way a real emitter would).
+    private stripTypes(source: string): string {
+        return transform(source, { transforms: ["typescript"] }).code
+    }
+
     // Globals keyed by the names the Airlock rewrite emits. $igniter / $chatId are
     // runtime-only → present-but-undefined so referencing them previews as undefined, not a ReferenceError.
     private buildGlobals(nodeId: Workflow.Node.Id): Record<string, unknown> {
@@ -53,13 +65,14 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
 
     // Synchronous, main-thread. Pure expressions only → ~zero hang risk, instant per-keystroke.
     public previewExpression(
-        expr: Airlock.Source.Expression, 
-        nodeId: Workflow.Node.Id, 
+        expr: Airlock.Source.Expression,
+        nodeId: Workflow.Node.Id,
         coerceTo?: Airlock.CoerceTo
     ): AirlockSDK.Result {
         if (!expr?.trim()) return { ok: true, value: undefined }
         try {
-            const parsed = Airlock.parseExpression(Airlock.Source.asExpression(expr), coerceTo)
+            const stripped = Airlock.Source.asExpression(this.stripTypes(expr))
+            const parsed = Airlock.parseExpression(stripped, coerceTo)
             const g = this.buildGlobals(nodeId)
             const keys = Object.keys(g)
             // eslint-disable-next-line no-new-func
@@ -71,20 +84,21 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
     }
 
     // Async, off-thread. Arbitrary code → real terminate() deadline; a hung run can't freeze the UI.
-    public runCode(
-        code: Airlock.Source.Code, 
+    public async runCode(
+        code: Airlock.Source.Code,
         nodeId: Workflow.Node.Id
     ): Promise<AirlockSDK.Result> {
-        return new Promise((resolve) => {
-            let parsed: string
-            let globals: Record<string, unknown>
-            try {
-                parsed = Airlock.parseCode(Airlock.Source.asCode(code))
-                globals = this.buildGlobals(nodeId)
-            } catch (err) {
-                return resolve({ ok: false, error: err instanceof Error ? err.message : String(err) })
-            }
+        let parsed: string
+        let globals: Record<string, unknown>
+        try {
+            const stripped = Airlock.Source.asCode(this.stripTypes(code))
+            parsed = Airlock.parseCode(stripped)
+            globals = this.buildGlobals(nodeId)
+        } catch (err) {
+            return { ok: false, error: err instanceof Error ? err.message : String(err) }
+        }
 
+        return new Promise((resolve) => {
             const worker = this.ensureWorker()
             const id = crypto.randomUUID()
             const timer = setTimeout(() => {
