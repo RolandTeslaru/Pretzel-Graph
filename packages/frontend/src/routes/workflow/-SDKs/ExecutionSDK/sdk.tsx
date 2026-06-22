@@ -22,10 +22,11 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
             currentExecution: undefined,
             executionHistory: [],
             awaitedConfirmation: new Set(),
-            selectedIgniter: "workbench_manual",
             selectors: executionSDKSelectors,
-            recordExecution: false,
-            isCurrentExecutionRecording: false,
+            igniterAttributes: {
+                record: false,
+                debug: false
+            }
         })),
         shallow
     )
@@ -134,9 +135,11 @@ export namespace ExecutionSDK {
         executionHistory: Execution.Meta[]
         awaitedConfirmation: Set<AwaitedConfirmation>
         selectors: ExecutionSDKSelectors
-        selectedIgniter: Execution.Igniter["variant"],
-        recordExecution: boolean
-        isCurrentExecutionRecording: boolean
+        igniterAttributes: {
+            record: boolean,
+            debug: boolean,
+        },
+        
     }
 
     export type Reducers = _ExecutionSessionReducers

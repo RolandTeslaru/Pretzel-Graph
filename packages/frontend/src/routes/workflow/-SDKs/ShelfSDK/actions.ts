@@ -113,8 +113,8 @@ export type _ShelfActions = {
     };
     setSection: (section: Shelf.Section) => void;
     searchFilter: {
-        setQuery: DropFirstArg<ShelfSDK.Reducers["searchFilter"]["setQuery"]>;
-        setDataTypes: DropFirstArg<ShelfSDK.Reducers["searchFilter"]["setDataTypes"]>;
+        setQuery:       DropFirstArg<ShelfSDK.Reducers["searchFilter"]["setQuery"]>;
+        setDataTypes:   DropFirstArg<ShelfSDK.Reducers["searchFilter"]["setDataTypes"]>;
         toggleDataType: DropFirstArg<ShelfSDK.Reducers["searchFilter"]["toggleDataType"]>;
     };
 

@@ -70,7 +70,7 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
                     if (event.metrics) unit.metrics = event.metrics;
                 },
                 patchUnitFailed: (s, event) => {
-                    const rec = _sdk.reducers.currentExecution.recording.ensure(s);
+                    const rec = _sdk.reducers.currentExecution.recording.ensure(s); 
                     const unit = rec.units[event.unitId];
                     if (!unit) return;
                     unit.status   = "failed";
@@ -85,12 +85,11 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
                 },
             },
         },
-        setSelectedIgniter: (s, variant) => {
-            s.selectedIgniter = variant;
-        },
-        setRecordExecution: (s, value) => {
-            s.recordExecution = value;
-        },
+        igniter: {
+            setShouldRecord: (s, record) => { s.igniterAttributes.record = record; },
+            setShouldDebug: (s, debug) => { s.igniterAttributes.debug = debug; }
+        }
+
     } satisfies _ExecutionSessionReducers;
 }
 
@@ -110,6 +109,8 @@ export interface _ExecutionSessionReducers {
             patchRelationCreateBatch: (state: State, event: Execution.Event.Recording.Relation.CreateBatch) => void;
         };
     };
-    setSelectedIgniter: (state: State, variant: Execution.Igniter["variant"]) => void;
-    setRecordExecution: (state: State, value: boolean) => void;
+    igniter: {
+        setShouldRecord: (state: State, record: boolean) => void;
+        setShouldDebug: (state: State, debug: boolean) => void;
+    },
 }

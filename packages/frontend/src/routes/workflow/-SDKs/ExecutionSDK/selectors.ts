@@ -13,13 +13,35 @@ export const executionSDKSelectors = {
         const projection = s.currentExecution?.session.node_output_projections[sourceNodeId]?.[sourcePortId]
         return Array.isArray(projection) ? projection.length : undefined
     },
+    currentExecution: {
+        running: {
+            isRecording: (s) => {
+                const value = s.currentExecution?.status === "running" && s.currentExecution.igniter.record
+                return value ?? false
+            },
+            isDebugging: (s) => {
+                const value = s.currentExecution?.status === "running" && s.currentExecution.igniter.debug
+                return value ?? false
+            }
+        }
+    }
 } satisfies ExecutionSDKSelectors
 
 export interface ExecutionSDKSelectors {
     getNodeStatus:    (state: ExecutionSDK.State, nodeId: Workflow.Node.Id) => Execution.Session.NodeStatus
     getEdgeStatus:    (state: ExecutionSDK.State, edgeId: Workflow.Edge.Id) => Execution.Session.EdgeState
     getEdgeItemCount: (state: ExecutionSDK.State, sourceNodeId: Workflow.Node.Id, sourcePortId: Foundations.Port.Output.Id) => number | undefined
+    currentExecution: {
+        running: {
+            isRecording: (state: ExecutionSDK.State) => boolean
+            isDebugging: (state: ExecutionSDK.State) => boolean
+        }
+    }
 }
+
+
+
+
 
 export function getOrderedTracks(recording: Execution.Recording | null): Execution.Recording.Track[] {
     if (!recording) return [];
