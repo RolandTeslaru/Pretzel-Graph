@@ -36,6 +36,7 @@ export namespace Workflow {
             inputs:       z.array(Port.Input.Schema),
             outputs:      z.array(Port.Output.Schema),
             webhooks:     z.array(Webhook.Schema).optional(),
+            itemScope:    z.string().optional(),  // input port id iterated for item-scoped fields
 
             isMinimized:  z.boolean().default(false),
             isFlipped:    z.boolean().optional(),

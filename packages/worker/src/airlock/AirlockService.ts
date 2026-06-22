@@ -3,6 +3,7 @@ import ts from "typescript";
 import { Airlock, Chat, Execution, Expression, Workflow } from "@pretzel-graph/shared/domain";
 
 import { AirlockScope } from "./AirlockScope";
+import { installLazyBootstrap } from "./LazyInput";
 import { AirlockError } from "./errors";
 
 const TRANSPILE_OPTIONS: ts.TranspileOptions = {
@@ -96,6 +97,12 @@ export class AirlockService {
 
         const context = this.isolate.createContextSync();
         const global = context.global;
+
+        installLazyBootstrap(context);
+
+        // Execution-scoped mutable scratch ($globals / $nodeGlobals). Set once, never cleared,
+        // survives across re-fires, dies with the isolate at execution end.
+        global.setSync(Airlock.GLOBALS.globals, {}, { copy: true });
 
         global.setSync(Airlock.GLOBALS.workflow, wfCopy.copyInto());
         global.setSync(Airlock.GLOBALS.igniter, perScope.igniter, { copy: true });

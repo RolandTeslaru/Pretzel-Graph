@@ -47,6 +47,7 @@ export const nodeLifecycleReducers = {
             outputs     : blueprint.outputs,
             webhooks    : blueprint.webhooks ?? [],
             credentials : blueprint.credentials ?? [],
+            itemScope   : blueprint.itemScope,
 
             icon        : blueprint.icon,
             description : blueprint.description,
@@ -125,6 +126,7 @@ export const nodeLifecycleReducers = {
             outputs     : blueprint.outputs,
             webhooks    : blueprint.webhooks ?? [],
             credentials : blueprint.credentials ?? [],
+            itemScope   : blueprint.itemScope,
 
             icon        : blueprint.icon,
             description : blueprint.description,
@@ -265,6 +267,7 @@ export const nodeLifecycleReducers = {
         node.fields = blueprint.fields as Workflow.Node['fields']
         node.inputs = blueprint.inputs as Workflow.Node['inputs']
         node.outputs = blueprint.outputs as Workflow.Node['outputs']
+        node.itemScope = blueprint.itemScope;
         node.accent = blueprint.accent;
 
         // Seed from existing values, then fill gaps with initialValue
