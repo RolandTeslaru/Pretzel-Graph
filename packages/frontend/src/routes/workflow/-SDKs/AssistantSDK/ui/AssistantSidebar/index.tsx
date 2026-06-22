@@ -29,10 +29,10 @@ const AssistantSidebarContent = memo(() => {
     return (
         <div className='flex flex-col h-full relative'>
             <AssistantSidebarHeader />
-            <div className='pointer-events-none absolute top-0 left-0 w-full h-2/3 z-0 -scale-x-100'>
+            <AssistantPanel messagesAreaClassname='pt-[60px]' />
+            <div className='pointer-events-none absolute top-0 left-0 w-full h-2/3 z-[-1] -scale-x-100'>
                 <AuroraRays />
             </div>
-            <AssistantPanel messagesAreaClassname='pt-[60px]' />
         </div>
     )
 })

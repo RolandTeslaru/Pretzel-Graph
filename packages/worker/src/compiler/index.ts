@@ -12,6 +12,7 @@ import { isUUID } from "../utils";
 
 import { produce } from "immer";
 import { AggexEngine } from "src/engine";
+import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 
 
 export class WorkflowCompiler {
@@ -74,13 +75,13 @@ export class WorkflowCompiler {
             compiledGraph: graph,
             activeNodes: new Set(),
             errorChannel: new Map(),
+            // "Execute up until this point": abort once this node completes (full graph runs normally).
+            stopAtNodeId: execution.igniter.variant === "workbench_step" ? execution.igniter.targetNodeId : undefined,
             enclosingNodeAPI,
             ...apis,
         } satisfies AggexEngine.Execution.Context
 
         ctxRef.current = engineExecutionCtx;
-
-
 
         // Add nodes to the graph
         for (const wfNode of Object.values(nodes))
@@ -111,7 +112,7 @@ export class WorkflowCompiler {
         startNodes.forEach(nodeId => {
             graph.addDependency(S2Graph.START_VERTEX_ID, nodeId);
         });
-        
+
         await this.handleIgniter(engine, execution.igniter);
 
         return engineExecutionCtx;
@@ -131,10 +132,10 @@ export class WorkflowCompiler {
         for (const node of Object.values(workflowData.nodes)) {
             const values = mapFieldValues(node.id, workflowData);
             for (const field of node.fields) {
-                if (!("isExpression" in field) || field.isExpression !== true) 
-                    continue;
+                if(Field.isExpression(field) === false)
+                    continue
 
-                const raw = values[field.id as Foundations.Field.Id];
+                const raw = values[field.id];
                 
                 if (typeof raw !== "string") 
                     continue;
@@ -280,6 +281,7 @@ export class WorkflowCompiler {
 
         const { compiledGraph: graph } = engineExecutionCtx;
 
+        // Check if its a subworkflow with a dependency
         if (!RuntimeNode) {
             if (wfNode.dependency) {
                 const { dependencies } = engineExecutionCtx.workflowData;
@@ -302,22 +304,20 @@ export class WorkflowCompiler {
             )
         }
 
+        // Fields are arrays in the json, map them to key value records
         const fieldValues = mapFieldValues(wfNode.id, engineExecutionCtx.workflowData);
-        const nodeInstance = new RuntimeNode!(wfNode, nodeExecutionCtx);
 
-        await nodeInstance.compile(compilationCtx)
-
-        const vertexId = wfNode.id as unknown as Vertex.Id;
+        const instance = new RuntimeNode!(wfNode, nodeExecutionCtx);
+        await instance.compile(compilationCtx)
 
         graph.addVertex(wfNode.id);
 
-        engine.registerNode(vertexId, wfNode, nodeInstance);
-
+        engine.registerNode(wfNode.id, wfNode, instance);
 
         // Set vertex execution strategy based on node fields. Default is "AND"
         if (Object.hasOwn(fieldValues, "signalDependency"))
             graph.setVertexStrategy(
-                vertexId,
+                wfNode.id as unknown as Vertex.Id,
                 fieldValues["signalDependency" as Foundations.Field.Id] as Vertex.STRATEGY
             );
     }
