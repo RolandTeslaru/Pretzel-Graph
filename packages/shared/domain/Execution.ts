@@ -70,7 +70,8 @@ export namespace Execution {
     export namespace Igniter {
 
         export const Base = z.object({
-            record: z.boolean().default(false),
+            record: z.boolean().optional(),
+            debug: z.boolean().optional(),
         })
 
         export const WorkbenchManual = Base.extend({
