@@ -63,6 +63,9 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
             [Airlock.GLOBALS.nodeId]: nodeId,
             [Airlock.GLOBALS.igniter]: undefined,
             [Airlock.GLOBALS.chatId]: undefined,
+            // Execution-scoped scratch ($globals / $nodeGlobals). Fresh per preview — side effects
+            // don't persist across keystrokes, which is the right preview semantic.
+            [Airlock.GLOBALS.globals]: {},
         }
     }
 

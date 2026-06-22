@@ -6,6 +6,7 @@ export const Blueprint = defineBlueprint({
     description: "Keeps only the list items for which the condition evaluates to true.",
     icon: "Funnel",
     accent: "utility",
+    itemScope: "list",
     fields: [
         FieldBuilder.itemScoped(FieldBuilder.Boolean({
             id: "condition",
