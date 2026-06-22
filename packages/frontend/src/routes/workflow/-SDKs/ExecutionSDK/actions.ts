@@ -3,6 +3,7 @@ import { api } from "@/SDKs/ApiInterceptorSDK";
 import { ExecutionSDK, type ExecutionSDKImpl } from "./sdk"
 import { toast } from "sonner";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
+import type { DropFirstArg } from "@/SDKs/types";
 
 export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
@@ -28,6 +29,9 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
         const executionId = Execution.createId();
         sdk.subscribeToEvents(executionId);
 
+        igniter.record = sdk.state.igniterAttributes.record;
+        igniter.debug = sdk.state.igniterAttributes.debug;
+
         // Seed a stub currentExecution so events arriving before the HTTP
         // response have somewhere to land. The real Execution replaces it
         // once the run API resolves.
@@ -44,7 +48,6 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 created_at: now,
                 updated_at: now,
             };
-            s.isCurrentExecutionRecording = igniter.record ?? false;
         });
 
         const executionCreationPromise = Execution.API.run(api, {
@@ -65,7 +68,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
         })
 
         try {
-            const { execution, isRecording } = await executionCreationPromise;
+            const { execution } = await executionCreationPromise;
 
             if (!execution) {
                 toast.error("No worker available, execution failed to start")
@@ -74,7 +77,6 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
             sdk.setState(s => {
                 s.currentExecution = { ...execution, status: "running" }
-                s.isCurrentExecutionRecording = isRecording
             })
 
             return execution.id;
@@ -154,7 +156,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             sdk.setState(s => {
                 s.currentExecution = undefined;
                 s.executionHistory = [];
-                s.isCurrentExecutionRecording = false;
+                s.igniterAttributes = { record: false, debug: false }
             })
         },
         addAwaitedConfirmation: (event) => {
@@ -175,11 +177,9 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 sdk.setState(s => { sdk.reducers.currentExecution?.recording.set(s, null) });
             }
         },
-        setSelectedIgniter: (variant) => {
-            sdk.setState(s => { sdk.reducers.setSelectedIgniter(s, variant) });
-        },
-        setRecordExecution: (value) => {
-            sdk.setState(s => { sdk.reducers.setRecordExecution(s, value) });
+        igniter: {
+            setShouldRecord: (record) => { sdk.setState(s => { sdk.reducers.igniter.setShouldRecord(s, record) }) },
+            setShouldDebug: (debug) => { sdk.setState(s => { sdk.reducers.igniter.setShouldDebug(s, debug) }) }
         },
         runStep: (targetNodeId: Workflow.Node.Id) => run({ variant: "workbench_step", targetNodeId, record: false }),
     } satisfies ExecutionSDKActions
@@ -204,6 +204,8 @@ export type ExecutionSDKActions = {
 
     loadLiveRecording: (executionId: Execution.Id) => Promise<void>,
 
-    setSelectedIgniter: (variant: Execution.Igniter["variant"]) => void,
-    setRecordExecution: (value: boolean) => void,
+    igniter: {
+        setShouldRecord: DropFirstArg<ExecutionSDK.Reducers["igniter"]["setShouldRecord"]>,
+        setShouldDebug: DropFirstArg<ExecutionSDK.Reducers["igniter"]["setShouldDebug"]>,
+    }
 }
