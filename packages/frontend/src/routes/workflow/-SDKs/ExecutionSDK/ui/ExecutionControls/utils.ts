@@ -1,7 +1,7 @@
 import { ExecutionSDK } from '../../sdk'
 
 export const handleRun = () => {
-  ExecutionSDK.actions.run({ variant: "workbench_manual", record: ExecutionSDK.state.recordExecution });
+  ExecutionSDK.actions.run({ variant: "workbench_manual" });
 }
 
 export const handlePause = () => {

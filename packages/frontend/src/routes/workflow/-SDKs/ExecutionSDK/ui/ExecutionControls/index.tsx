@@ -19,13 +19,11 @@ const ExecutionControls = ({ canRun }: Props) => {
   const [
     currentExecution,
     awaitedConfirmation,
-    recordExecution,
-    isCurrentExecutionRecording
+    igniterAttributes,
   ] = ExecutionSDK.useStore(s => [
     s.currentExecution,
     s.awaitedConfirmation,
-    s.recordExecution,
-    s.isCurrentExecutionRecording
+    s.igniterAttributes,
   ]);
 
   let status = "idle"
@@ -99,8 +97,15 @@ const ExecutionControls = ({ canRun }: Props) => {
                       <DropdownMenu.StaticItem>
                         <SystemIcons.Film className="mr-2" />
                         Record
-                        <Switch size={"md"} className='ml-auto' checked={recordExecution} onCheckedChange={(checked) => {
-                          ExecutionSDK.actions.setRecordExecution(checked)
+                        <Switch size={"md"} className='ml-auto' checked={igniterAttributes.record} onCheckedChange={(checked) => {
+                          ExecutionSDK.actions.igniter.setShouldRecord(checked)
+                        }} />
+                      </DropdownMenu.StaticItem>
+                      <DropdownMenu.StaticItem>
+                        <SystemIcons.SearchCode className="mr-2" />
+                        Debug
+                        <Switch size={"md"} className='ml-auto' checked={igniterAttributes.debug} onCheckedChange={(checked) => {
+                          ExecutionSDK.actions.igniter.setShouldDebug(checked)
                         }} />
                       </DropdownMenu.StaticItem>
                     </DropdownMenu.Group>
