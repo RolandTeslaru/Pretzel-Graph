@@ -21,6 +21,9 @@ export interface AggexHooks {
 }
 
 export class AggexEngine {
+    /** Abort reason marking an intentional "execute up until this point" stop (vs a real termination). */
+    public static readonly STOP_AT_TARGET_REASON = "stop_at_target";
+
     private s2Engine:        S2Engine = new S2Engine();
     private flightRecorder:  FlightRecorderService | null = null;
 
@@ -31,8 +34,8 @@ export class AggexEngine {
 
     private nodeRuntimeMap = new Map<Vertex.Id, { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> }>();
 
-    public registerNode(vertexId: Vertex.Id, wfNode: Workflow.Node, instance: RuntimeNode<Blueprint>): void {
-        this.nodeRuntimeMap.set(vertexId, { wfNode, instance });
+    public registerNode(vertexId: Vertex.Id | Workflow.Node.Id, wfNode: Workflow.Node, instance: RuntimeNode<Blueprint>): void {
+        this.nodeRuntimeMap.set(vertexId as Vertex.Id, { wfNode, instance });
     }
 
     public readonly instanceRegistryAPI = {
@@ -77,8 +80,11 @@ export class AggexEngine {
 
             new Promise((resolve, reject) => {
                 ctx.abortAPI.signal.addEventListener("abort", () => {
+                    // A "stop at target" abort is an intentional, successful stop — not a
+                    // user/timeout termination — so surface it as completed.
+                    const stoppedAtTarget = ctx.abortAPI.signal.reason === AggexEngine.STOP_AT_TARGET_REASON;
                     resolve({
-                        status: "terminated" as const,
+                        status: stoppedAtTarget ? "completed" as const : "terminated" as const,
                         duration: (performance.now() - start) / 1000
                 });
                 }, { once: true })
@@ -661,6 +667,11 @@ export class AggexEngine {
 
         this.flightRecorder?.onNodeCompleted(entry.wfNode.id, ctx);
 
+        // "Execute up until this point": the target ran and its output is now persisted +
+        // emitted — stop the rest of the workflow.
+        if (ctx.stopAtNodeId === entry.wfNode.id)
+            ctx.abortAPI.abort(AggexEngine.STOP_AT_TARGET_REASON);
+
         await this.awaitPause(ctx);
     }
 
@@ -1078,6 +1089,12 @@ export namespace AggexEngine {
             activeNodes:   Set<Workflow.Node.Id | Vertex.Id>;
             /** Out-of-band error propagation channel, keyed by the edge the error travels. */
             errorChannel:  Map<Workflow.Edge.Id, ErrorEnvelope>;
+            /**
+             * "Execute up until this point": once this node completes, the run aborts. The
+             * full graph compiles/runs normally (portals, cycles, sub-workflows resolve
+             * natively); we just cap execution at the target. Undefined on a normal run.
+             */
+            stopAtNodeId?: Workflow.Node.Id;
         }
 
     }

@@ -57,8 +57,11 @@ export namespace Airlock {
     }
 
     // Self-invoking sync IIFE returning the (optionally coerced) value.
+    // The body is wrapped as an argument/parenthesized expression, so a trailing
+    // statement `;` (e.g. the ASI semicolon ts.transpileModule appends) must be
+    // stripped first — `Boolean(x;)` is a syntax error.
     export function parseExpression(expr: Source.Expression, coerceTo?: CoerceTo): ParsedSource {
-        const rewritten = rewrite(expr)
+        const rewritten = rewrite(expr).trim().replace(/;+$/, "")
         const inner = coerceTo ? `${COERCE_FN[coerceTo]}(${rewritten})` : `(${rewritten})`
         return `(function(){ return ${inner}; })()` as ParsedSource
     }

@@ -4,9 +4,12 @@ import { DialogSDK } from '@/SDKs/DialogSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { AlertDialog, ContextMenu } from '@pretzel-graph/standard-ui/foundations'
+import { Workbench } from '@pretzel-graph/shared/domain'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { openEditWorkflowDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { api } from '@/SDKs/ApiInterceptorSDK'
+import { toast } from 'sonner'
 
 interface WorkflowCardProps {
     workflow: Library.WorkflowMeta
@@ -67,6 +70,12 @@ function WorkflowCardContextMenu({ workflow, children }: WorkflowCardContextMenu
                 >
                     Copy ID
                 </ContextMenu.Item>
+                <ContextMenu.Item
+                    icon={<SystemIcons.Download className='size-4' />}
+                    onClick={() => downloadWorkflowJson(workflow)}
+                >
+                    Download JSON
+                </ContextMenu.Item>
                 <ContextMenu.Separator />
                 <ContextMenu.Item
                     variant='destructive'
@@ -78,6 +87,26 @@ function WorkflowCardContextMenu({ workflow, children }: WorkflowCardContextMenu
             </ContextMenu.Content>
         </ContextMenu.Root>
     )
+}
+
+async function downloadWorkflowJson(workflow: Library.WorkflowMeta) {
+    try {
+        const { workflow: full } = await Workbench.API.Workflow.get(api, { workflowId: workflow.id })
+        if (!full) {
+            toast.error("Failed to fetch workflow")
+            return
+        }
+        const blob = new Blob([JSON.stringify(full, null, 2)], { type: "application/json" })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `${workflow.display_name || workflow.id}.json`
+        a.click()
+        URL.revokeObjectURL(url)
+    } catch (error) {
+        console.error("Failed to download workflow:", error)
+        toast.error("Failed to download workflow")
+    }
 }
 
 export function openDeleteWorkflowDialog(workflow: Library.WorkflowMeta) {
