@@ -24,9 +24,25 @@ const ExecutionHistoryPanel = () => {
 
     const workflowId = WorkbenchSDK.useStore(s => s.workflowId);
     const executionHistory = ExecutionSDK.useStore(s => s.executionHistory)
+    const currentExecutionId = ExecutionSDK.useStore(s => s.currentExecution?.id)
 
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
+
+    const downloadCurrentExecution = () => {
+        const execution = ExecutionSDK.state.currentExecution;
+        if (!execution) {
+            toast.error("No session loaded to download")
+            return;
+        }
+        const blob = new Blob([JSON.stringify(execution, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `execution-${execution.id}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
 
 
     QuerySDK.useQuery(
@@ -42,7 +58,10 @@ const ExecutionHistoryPanel = () => {
             <div className='px-2 py-1 flex flex-col gap-2'>
                 <div className='flex flex-row w-full'>
                     <h3 className='text-sm font-semibold my-auto h-auto'>Execution History</h3>
-                    <Button size="icon-xs" variant="ghost" className='ml-auto' onClick={() => {
+                    <Button size="icon-xs" variant="ghost" className='ml-auto' disabled={!currentExecutionId} onClick={downloadCurrentExecution}>
+                        <SystemIcons.Download className='scale-75'/>
+                    </Button>
+                    <Button size="icon-xs" variant="ghost" onClick={() => {
                         QuerySDK.client.invalidateQueries({ queryKey: [`execution-history`, workflowId] })
                     }}>
                         <SystemIcons.RefreshCcw className='scale-75'/>

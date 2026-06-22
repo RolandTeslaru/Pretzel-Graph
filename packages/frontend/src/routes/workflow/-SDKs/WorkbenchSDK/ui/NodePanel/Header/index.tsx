@@ -3,6 +3,7 @@ import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../sdk'
+import { ExecutionSDK } from '../../../../ExecutionSDK/sdk'
 import { OptionsDropdown } from './OptionsDropdown'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import Tipped from '@/components/Tipped'
@@ -56,8 +57,8 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                     </div>
                 ) : (
                     <div className='flex flex-row gap-2'>
-                        <Tipped label="Run">
-                            <Button size="icon-xs" variant="ghost-success">
+                        <Tipped label="Run up to here">
+                            <Button size="icon-xs" variant="ghost-success" onClick={() => ExecutionSDK.actions.runStep(node.id)}>
                                 <SystemIcons.Play />
                             </Button>
                         </Tipped>

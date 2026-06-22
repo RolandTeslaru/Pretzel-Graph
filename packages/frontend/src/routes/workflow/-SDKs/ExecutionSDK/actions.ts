@@ -5,84 +5,88 @@ import { toast } from "sonner";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 
 export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
-    return {
-        run: async (igniter: Execution.Igniter) => {
-            const confirmStartedEvent = sdk.useAwaitConfirmation("started")
 
-            if (sdk.state.currentExecution && ["running", "paused"].includes(sdk.state.currentExecution.status)) {
-                toast.warning("A workflow is already running")
-                confirmStartedEvent();
-                return sdk.state.currentExecution.id;
-            }
+    const run = async (igniter: Execution.Igniter): Promise<Execution.Id | null> => {
+        const confirmStartedEvent = sdk.useAwaitConfirmation("started")
 
-            // Pre check before running the workflow
-            WorkbenchSDK.actions.workflow.validate()
-            if (Validation.workflowHasIssues(WorkbenchSDK.state.issues)) {
-                toast.error("Workflow has nodes with missing fields or inputs. Please fix them before running.")
-                confirmStartedEvent();
-                return null
-            }
+        // Check if there's already a running or paused execution. If so, we don't allow starting a new one.
+        if (sdk.state.currentExecution && ["running", "paused"].includes(sdk.state.currentExecution.status)) {
+            toast.warning("A workflow is already running")
+            confirmStartedEvent();
+            return sdk.state.currentExecution.id;
+        }
 
-            // Generate the ID eagerly
-            const executionId = Execution.createId();
-            sdk.subscribeToEvents(executionId);
+        // Pre check before running the workflow
+        WorkbenchSDK.actions.workflow.validate()
+        if (Validation.workflowHasIssues(WorkbenchSDK.state.issues)) {
+            toast.error("Workflow has nodes with missing fields or inputs. Please fix them before running.")
+            confirmStartedEvent();
+            return null
+        }
 
-            // Seed a stub currentExecution so events arriving before the HTTP
-            // response have somewhere to land. The real Execution replaces it
-            // once the run API resolves.
-            const now = new Date().toISOString();
-            sdk.setState(s => {
-                s.currentExecution = {
-                    id:          executionId,
-                    workflow_id: WorkbenchSDK.state.workflowId,
-                    igniter,
-                    status:      "pending",
-                    duration:    0,
-                    session:     Execution.Session.createInitial(),
-                    recording:   null,
-                    created_at:  now,
-                    updated_at:  now,
-                };
-                s.isCurrentExecutionRecording = igniter.record ?? false;
-            });
+        // Generate the ID eagerly
+        const executionId = Execution.createId();
+        sdk.subscribeToEvents(executionId);
 
-            const executionCreationPromise = Execution.API.run(api, {
-                workflowId: WorkbenchSDK.state.workflowId,
-                workflowData: WorkbenchSDK.state.data,
-                executionId,
+        // Seed a stub currentExecution so events arriving before the HTTP
+        // response have somewhere to land. The real Execution replaces it
+        // once the run API resolves.
+        const now = new Date().toISOString();
+        sdk.setState(s => {
+            s.currentExecution = {
+                id: executionId,
+                workflow_id: WorkbenchSDK.state.workflowId,
                 igniter,
-                chat_id: sdk.chatSDK.state.currentChatId ?? undefined,
-            });
+                status: "pending",
+                duration: 0,
+                session: Execution.Session.createInitial(),
+                recording: null,
+                created_at: now,
+                updated_at: now,
+            };
+            s.isCurrentExecutionRecording = igniter.record ?? false;
+        });
 
-            toast.promise(executionCreationPromise, {
-                loading: "Preparing workflow execution",
-                error: (error) => {
-                    const SystemError = error?.response?.data?.error;
-                    const message = SystemError?.message || error.message;
-                    return `Workflow execution failed to start: ${message}`
-                }
+        const executionCreationPromise = Execution.API.run(api, {
+            workflowId: WorkbenchSDK.state.workflowId,
+            workflowData: WorkbenchSDK.state.data,
+            executionId,
+            igniter,
+            chat_id: sdk.chatSDK.state.currentChatId ?? undefined,
+        });
+
+        toast.promise(executionCreationPromise, {
+            loading: "Preparing workflow execution",
+            error: (error) => {
+                const SystemError = error?.response?.data?.error;
+                const message = SystemError?.message || error.message;
+                return `Workflow execution failed to start: ${message}`
+            }
+        })
+
+        try {
+            const { execution, isRecording } = await executionCreationPromise;
+
+            if (!execution) {
+                toast.error("No worker available, execution failed to start")
+                return null;
+            }
+
+            sdk.setState(s => {
+                s.currentExecution = { ...execution, status: "running" }
+                s.isCurrentExecutionRecording = isRecording
             })
 
-            try {
-                const { execution, isRecording } = await executionCreationPromise;
+            return execution.id;
+        } catch {
+            return null;
+        } finally {
+            confirmStartedEvent();
+        }
+    }
 
-                if (!execution) {
-                    toast.error("No worker available, execution failed to start")
-                    return null;
-                }
-
-                sdk.setState(s => {
-                    s.currentExecution = { ...execution, status: "running" }
-                    s.isCurrentExecutionRecording = isRecording
-                })
-                            
-                return execution.id;
-            } catch {
-                return null;
-            } finally {
-                confirmStartedEvent();
-            }
-        },
+    const actions = {
+        run,
         pause: async (executionId) => {
             const confirmEvent = sdk.useAwaitConfirmation("paused")
 
@@ -100,7 +104,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
         terminate: async (executionId) => {
             const confirmEvent = sdk.useAwaitConfirmation("terminated")
             const { success } = await Execution.API.terminate(api, { executionId });
-            if (success){
+            if (success) {
                 sdk.setState(s => { sdk.reducers.currentExecution.setStatus(s, "terminated") })
                 toast.info('Workflow execution terminated')
             }
@@ -148,8 +152,8 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
         },
         clear: () => {
             sdk.setState(s => {
-                s.currentExecution           = undefined;
-                s.executionHistory           = [];
+                s.currentExecution = undefined;
+                s.executionHistory = [];
                 s.isCurrentExecutionRecording = false;
             })
         },
@@ -177,21 +181,25 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
         setRecordExecution: (value) => {
             sdk.setState(s => { sdk.reducers.setRecordExecution(s, value) });
         },
+        runStep: (targetNodeId: Workflow.Node.Id) => run({ variant: "workbench_step", targetNodeId, record: false }),
     } satisfies ExecutionSDKActions
+
+    return actions;
 }
 
 export type ExecutionSDKActions = {
 
-    run:                 (igniter: Execution.Igniter) => Promise<Execution.Id | null>,
+    run: (igniter: Execution.Igniter) => Promise<Execution.Id | null>,
+    runStep: (targetNodeId: Workflow.Node.Id) => Promise<Execution.Id | null>,
     setCurrentExecution: (execution: Execution) => void,
-    loadHistory:         (workflowId: Workflow.Id) => Promise<Execution.Meta[]>,
-    clear:               () => void,
-    pause:     (executionId: Execution.Id) => Promise<boolean>,
+    loadHistory: (workflowId: Workflow.Id) => Promise<Execution.Meta[]>,
+    clear: () => void,
+    pause: (executionId: Execution.Id) => Promise<boolean>,
     terminate: (executionId: Execution.Id) => Promise<boolean>,
-    resume:    (executionId: Execution.Id) => Promise<boolean>,
-    suspend:   (executionId: Execution.Id) => Promise<boolean>,
+    resume: (executionId: Execution.Id) => Promise<boolean>,
+    suspend: (executionId: Execution.Id) => Promise<boolean>,
 
-    addAwaitedConfirmation:    (event: ExecutionSDK.AwaitedConfirmation) => void,
+    addAwaitedConfirmation: (event: ExecutionSDK.AwaitedConfirmation) => void,
     removeAwaitedConfirmation: (event: ExecutionSDK.AwaitedConfirmation) => void,
 
     loadLiveRecording: (executionId: Execution.Id) => Promise<void>,
