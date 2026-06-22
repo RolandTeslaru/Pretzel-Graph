@@ -60,10 +60,12 @@ export namespace Blueprint {
     export type Meta = z.infer<typeof Meta.Schema>
 
     export const Schema = Meta.Schema.extend({
-        fields:   z.array(Field.Schema).readonly(),
-        inputs:   z.array(Port.Input.Schema).readonly(),
-        outputs:  z.array(Port.Output.Schema).readonly(),
-        webhooks: z.array(Webhook.Schema).readonly().optional(),
+        fields:    z.array(Field.Schema).readonly(),
+        inputs:    z.array(Port.Input.Schema).readonly(),
+        outputs:   z.array(Port.Output.Schema).readonly(),
+        webhooks:  z.array(Webhook.Schema).readonly().optional(),
+        // Input port id whose array is iterated for this node's item-scoped fields.
+        itemScope: z.string().optional(),
     }).readonly()
 
 

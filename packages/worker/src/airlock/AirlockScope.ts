@@ -2,6 +2,7 @@ import ivm from "isolated-vm";
 import { Airlock, Workflow } from "@pretzel-graph/shared/domain";
 
 import type { AirlockService } from "./AirlockService";
+import { bindLazyGlobal, type LazyBinding } from "./LazyInput";
 import { AirlockError, AirlockTerminationError } from "./errors";
 
 // Persistent scope globals — set once at creation, never transiently.
@@ -9,7 +10,12 @@ const RESERVED_GLOBALS: ReadonlySet<string> = new Set([
     Airlock.GLOBALS.workflow,
     Airlock.GLOBALS.igniter,
     Airlock.GLOBALS.chatId,
+    Airlock.GLOBALS.globals,
 ]);
+
+// Large, bound-once globals routed through the lazy bridge instead of copy:true. `$item` stays
+// copied — it's per-element in a hot loop where per-iteration bridge-install would regress.
+const LAZY_GLOBALS: ReadonlySet<string> = new Set([Airlock.GLOBALS.in]);
 
 // One ivm.Context per env, reused across re-fires. Shares the service's isolate + cache via `compiler`.
 export class AirlockScope implements Airlock.API {
@@ -26,15 +32,22 @@ export class AirlockScope implements Airlock.API {
     ): T {
         const g = this.context.global;
 
-        // Every key touched during the block (initial + transient rebinds) — cleared once on exit.
+        // Every copied key touched during the block (initial + transient rebinds) — cleared on exit.
         const touched = new Set<string>();
+        // Lazy-bound globals (host-backed proxies) — released on exit / before re-bind.
+        const lazyBindings = new Map<string, LazyBinding>();
 
         const setGlobals = (next: Record<string, unknown>) => {
             for (const [name, value] of Object.entries(next)) {
                 if (RESERVED_GLOBALS.has(name))
                     throw new AirlockError(`"${name}" is a reserved persistent global and cannot be set transiently`);
-                g.setSync(name, value, { copy: true });
-                touched.add(name);
+                if (LAZY_GLOBALS.has(name)) {
+                    lazyBindings.get(name)?.release();
+                    lazyBindings.set(name, bindLazyGlobal(this.context, name, value));
+                } else {
+                    g.setSync(name, value, { copy: true });
+                    touched.add(name);
+                }
             }
         };
 
@@ -49,6 +62,8 @@ export class AirlockScope implements Airlock.API {
             if (!this.service.isDisposed)
                 for (const name of touched)
                     g.deleteSync(name);
+            for (const binding of lazyBindings.values())
+                binding.release();
         }
     }
 

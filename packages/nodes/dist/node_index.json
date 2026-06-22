@@ -1,6 +1,6 @@
 {
-  "version": "1781961534814",
-  "generatedAt": "2026-06-20T13:18:54.814Z",
+  "version": "1782148353241",
+  "generatedAt": "2026-06-22T17:12:33.241Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -3619,7 +3619,8 @@
           "variant": "UnresolvedList",
           "originalVariant": "UnresolvedList"
         }
-      ]
+      ],
+      "itemScope": "list"
     },
     "Core.Utils.List.Select": {
       "id": "Core.Utils.List.Select",
