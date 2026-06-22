@@ -70,3 +70,42 @@
 - [ ] Query-key composition: include `dependsOn` field values in the resource-loader query key so editing an upstream field auto-invalidates dependent loaders.
 - [ ] Postgres node operations: `select` / `insert` / `update` / `upsert` / `delete` — each reconciles in `schema` / `table` ResourceLoader fields (+ un-park the schema/table loaders; cast `fieldValues` for reconcile-added fields). Then column loader / resource-mapper grid; SSH tunneling; MySQL / Mongo adapters.
 - [ ] Postgres credential SSL: replace the `Use SSL` boolean (currently verify-against-system-CAs) with an n8n-style ssl-mode (`disable`/`require`/`verify-full`) + explicit "allow self-signed" opt-in, to support self-hosted / self-signed Postgres.
+
+## Debug Mode (warm-kernel stepping) — [spec](SPECS/debug-mode.md)
+
+> Builds on the working `pause` mechanism (instances-alive-by-not-serializing) and complements "Execute up until this point" (`stopAtNodeId`). Never serializes → sidesteps the instance-revival wall entirely.
+
+### Phase 1 — Engine: super-step barrier + frontier
+- [ ] **worker (S2):** add `stepMode` + re-armable `stepBarrier` to `S2Engine.ExecutionContext`; in `fireVertex`, gate `fireVertexDependents` behind the barrier when `stepMode` (mirror the existing pause-gate placement at `S2/engine.ts:205→210`). Off by default → zero change to normal runs.
+- [ ] **worker (S2):** expose `getRunnableFrontier(): Set<Vertex.Id>` (vertices passing `canVertexRun`) and `getVertexGateState(id)` (`{ signalsHave, signalsNeed, dataReady }`) for the UI.
+- [ ] **worker (S2):** `overrides.releaseOneSuperStep()` — snapshot the frontier, fire each, re-arm the barrier so dependents wait. Optional `releaseOneNode(id)` for single-node granularity.
+
+### Phase 2 — DebugController + ignite-paused
+- [ ] **shared:** `Execution.Igniter` add `workbench_debug` variant; `Execution.Signal` add `debug:step` / `debug:fireNode {nodeId}` / `debug:continue` / `debug:reset`; `Execution.Status` add `debugging`; `Execution.Event` add `debug:frontier`.
+- [ ] **worker:** `debug-controller.ts` — state machine over one paused engine; maps signals → `overrides`/`schedulerAPI`; emits `debug:frontier` after each batch.
+- [ ] **worker (compiler):** `workbench_debug` compiles the FULL graph normally but ignites paused (pause/stepMode before firing `__START__`).
+- [ ] **worker (engine):** route `onNodeCompleted` through the DebugController barrier in debug mode; surface `isNodeRunnable` (publicize `canNodeRun`).
+
+### Phase 3 — Life Support
+- [ ] **worker:** `life-support.ts` — `open/keep-alive/idle-evict/teardown`; lock extension; idle-eviction timer (reset by `debug:heartbeat`); dispose engine + airlock isolate on evict/continue/terminate.
+- [ ] **worker:** caps — `MAX_CONCURRENT_DEBUG_SESSIONS`, per-session memory ceiling, graceful refusal over budget. Decide dedicated debug worker pool vs normal queue (open question #5).
+- [ ] **worker:** keep the warm engine in `runningEnginesMap` for the session lifetime; don't complete the job until `debug:continue`/evict.
+
+### Phase 4 — Backend + Frontend
+- [ ] **backend:** `startDebug` / `debugStep` / `debugFireNode` / `debugContinue` endpoints (mirror `pause`/`suspend`); set/clear `debugging` status.
+- [ ] **frontend:** `ExecutionSDK` actions `startDebug(target?)` / `step()` / `fireNode(id)` / `continue()`; consume `debug:frontier`.
+- [ ] **frontend:** Debug toolbar (Step / Continue / Stop) + per-node fire affordance + canvas frontier highlight; show the inputs a node *will read* before firing (no blind fires).
+
+### Open questions (resolve during impl — see spec)
+- [ ] Igniter shape (new variant vs `debug:true` flag); manual-fire gating (always vs `canVertexRun`-only); step granularity (super-step vs node); side-effect honesty in UI; queue model (dedicated pool); reconnect/grace policy; cycle-step legibility vs short-circuit guard; resumable debug sessions explicitly out of scope (needs the parked revival layer).
+
+## Item-scoped source port — [spec](SPECS/item-scoped-source-port.md)
+
+Port on the **blueprint** (`itemScope: "list"`, compile-time-checked against input ids); field keeps the **boolean** `itemScoped: true`. `Field.ts` / `FieldBuilder.itemScoped` / `InferItemFields` unchanged.
+
+- [ ] **node-sdk:** `builders/index.ts` — `defineBlueprint` gains `itemScope?: TInputs[number]["id"]` (config + `DefineBlueprintReturn` + threaded onto the blueprint). Optional runtime assert `itemScope` ∈ input ids.
+- [ ] **nodes:** `Core/Utils/List/Filter/blueprint.ts` — add `itemScope: "list"`. Typecheck node-sdk + nodes; confirm a wrong port literal is a type error.
+- [ ] **frontend:** `airlockTypes.ts` — `getItemType(nodeId, port)` reads `getIncomingShape(nodeId)[port]` (drop the single-array heuristic); `buildAirlockDts({ itemSourcePort })` gates/types on it.
+- [ ] **frontend:** FieldRenderers (Boolean/String/Integer/Float/Json/MultiOption) pass `itemSourcePort: field.itemScoped ? blueprint.itemScope : undefined`; `withExpression.tsx` + `ExpressionEditor` prop `itemScoped?: boolean` → `itemSourcePort?: string`; thread into `AirlockSDK.previewExpression`.
+- [ ] **frontend:** `AirlockSDK.buildGlobals`/`previewExpression` — sample `$item` from `incoming[port][0]` when a port is given; present-but-`undefined` otherwise. Typecheck frontend; verify on `Filter.condition`.
+- [ ] **follow-up (deferred):** runtime auto-resolve of the iterated list from `inputs[Blueprint.itemScope]`; optional `CaseList.tsx` `itemSourcePort` forwarding. (Per-field ports / multi-loop binding explicitly out of scope.)

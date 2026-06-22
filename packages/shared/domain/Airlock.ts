@@ -25,6 +25,7 @@ export namespace Airlock {
         item:      "__item__",
         itemIndex: "__item_index__",
         nodeId:    "__node_id__",
+        globals:   "__globals__",
     } as const
 
     const CONFIG_NODE_KEY = Workflow.WORKFLOW_CONFIG_NODE_ID
@@ -38,11 +39,15 @@ export namespace Airlock {
         item:      GLOBALS.item,
         itemIndex: GLOBALS.itemIndex,
         node:      `${GLOBALS.workflow}.nodes[${GLOBALS.nodeId}]`,
+        // Execution-scoped mutable scratch. `$nodeGlobals` is `$globals[<this node id>]`,
+        // auto-created (`??= {}`) so reads/writes never hit undefined.
+        globals:     GLOBALS.globals,
+        nodeGlobals: `(${GLOBALS.globals}[${GLOBALS.nodeId}] ??= {})`,
     }
 
     // Matches $root at a word boundary; rewrites only the root, leaving member access intact.
-    // `itemIndex` precedes `item` so the longer root wins the alternation.
-    const SIGIL = /\$(workflow|config|igniter|chatId|in|itemIndex|item|node)\b/g
+    // `itemIndex` precedes `item`, and `nodeGlobals` precedes `node`, so the longer root wins.
+    const SIGIL = /\$(workflow|config|igniter|chatId|in|itemIndex|item|nodeGlobals|node|globals)\b/g
 
     export function rewrite(source: Source): string {
         return source.replace(SIGIL, (_m, root: string) => STATIC_ROOTS[root])

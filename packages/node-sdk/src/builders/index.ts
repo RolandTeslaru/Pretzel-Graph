@@ -45,6 +45,8 @@ type DefineBlueprintReturn<
     readonly toolCompatible: TToolCompatible;
     readonly credentials: TCredentials;
     readonly flags?: TFlags;
+    // Input port id whose array is iterated for this node's item-scoped fields (FieldBuilder.itemScoped).
+    readonly itemScope?: string;
 }
 
 const hiddenToolField = FieldBuilder.Boolean({
@@ -121,7 +123,12 @@ export function defineBlueprint<
     toolCompatible?: TToolCompatible;
     credentials?: TCredentials;
     flags?: TFlags;
+    itemScope?: string;
 }): DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TWebhooks, TToolCompatible, TCredentials, TFlags> {
+
+    // itemScope is a free string — validate it names a real input port at module load.
+    if (config.itemScope !== undefined && !config.inputs.some(i => (i.id as string) === config.itemScope))
+        throw new Error(`defineBlueprint(${config.id}): itemScope "${config.itemScope}" is not a declared input port id`);
 
     const baseFields = [
         ...config.fields,
@@ -148,5 +155,6 @@ export function defineBlueprint<
         toolCompatible: config.toolCompatible as TToolCompatible,
         credentials: (config.credentials ?? []) as unknown as TCredentials,
         flags: config.flags,
+        itemScope: config.itemScope,
     };
 }
