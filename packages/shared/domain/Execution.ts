@@ -77,6 +77,14 @@ export namespace Execution {
             variant: z.literal("workbench_manual"),
         })
 
+        // Partial "run to here" from the editor. Executes only `targetNodeId` and the
+        // minimal upstream sub-chain missing from the seeded session; cached upstreams
+        // are replayed (fired without re-running). See worker compiler/partial.ts.
+        export const WorkbenchStep = Base.extend({
+            variant: z.literal("workbench_step"),
+            targetNodeId: Workflow.Node.Id,
+        })
+
         export const SubWorkflow = Base.extend({
             variant: z.literal("sub_workflow"),
             parentNodeId: Workflow.Node.Id,
@@ -114,6 +122,7 @@ export namespace Execution {
 
         export const Schema = z.discriminatedUnion("variant", [
             WorkbenchManual,
+            WorkbenchStep,
             SubWorkflow,
             ChatMessage,
             Webhook,
