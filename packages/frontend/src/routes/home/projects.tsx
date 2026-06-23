@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
+import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { FileSystemTree } from '@/SDKs/LibrarySDK/ui/FileSystemTree'
 import { ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 
@@ -8,11 +9,18 @@ const BOOTSTRAP_STALE_TIME = 60_000
 
 export const Route = createFileRoute('/home/projects')({
     loader: async () => {
-        await QuerySDK.client.fetchQuery({
-            queryKey: ['library', 'bootstrap'],
-            queryFn: () => LibrarySDK.actions.bootstrap.get(),
-            staleTime: BOOTSTRAP_STALE_TIME,
-        })
+        await Promise.all([
+            QuerySDK.client.fetchQuery({
+                queryKey: ['library', 'bootstrap'],
+                queryFn: () => LibrarySDK.actions.bootstrap.get(),
+                staleTime: BOOTSTRAP_STALE_TIME,
+            }),
+            QuerySDK.client.fetchQuery({
+                queryKey: ['version-control', 'active-workflows'],
+                queryFn: () => VersionControlSDK.actions.listActiveWorkflows(),
+                staleTime: BOOTSTRAP_STALE_TIME,
+            }),
+        ])
 
         return null
     },
@@ -23,6 +31,12 @@ function ProjectsLayout() {
     QuerySDK.useQuery(['library', 'bootstrap'], () => LibrarySDK.actions.bootstrap.get(), {
         staleTime: BOOTSTRAP_STALE_TIME,
     })
+
+    QuerySDK.useQuery(
+        ['version-control', 'active-workflows'],
+        () => VersionControlSDK.actions.listActiveWorkflows(),
+        { staleTime: BOOTSTRAP_STALE_TIME },
+    )
 
 
     return (

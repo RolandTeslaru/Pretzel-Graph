@@ -19,7 +19,10 @@ export type OmitId<T> = Omit<T, "id">
 
 export namespace FieldBuilder {
 
-    export type BaseProps<TId extends string, TReq extends boolean = false> = {
+    /** When TItem is the literal `true`, carry `{ itemScoped: true }` so InferItemFields picks it up. */
+    export type ItemScopedFlag<TItem extends boolean> = TItem extends true ? { itemScoped: true } : {};
+
+    export type BaseProps<TId extends string, TReq extends boolean = false, TItem extends boolean = false> = {
         id: TId;
         required?: TReq;
         advanced?: boolean;
@@ -27,6 +30,12 @@ export namespace FieldBuilder {
         displayName: string;
         tooltip?: string;
         reconcile?: boolean;
+        /**
+         * Marks the field item-scoped: skipped during eager field eval, resolved per-element via
+         * RuntimeNode.evalItemField with $item bound. Pass the literal `true` so the type survives
+         * into InferItemFields. (Equivalent to wrapping with FieldBuilder.itemScoped.)
+         */
+        itemScoped?: TItem;
     }
 
     /** Shorthand: return type for every builder */
@@ -34,7 +43,7 @@ export namespace FieldBuilder {
         LiteralField<TId, V, F, TReq, THasInit>
 
     export const buildBase = <TId extends string>(
-        props: BaseProps<TId, boolean>
+        props: BaseProps<TId, boolean, boolean>
     ) => {
         return {
             id: props.id as TId & Foundations.Field.Id,
@@ -44,6 +53,7 @@ export namespace FieldBuilder {
             advanced: props.advanced ?? false,
             reconcile: props.reconcile ?? false,
             hidden: props.hidden,
+            ...buildItemScoped(props.itemScoped),
         } satisfies { id: TId & Foundations.Field.Id } & OmitId<Foundations.Field.Base>
     }
 
@@ -51,10 +61,16 @@ export namespace FieldBuilder {
     const buildIsExpression = (isExpression?: boolean) =>
         isExpression ? { isExpression: true as const } : {}
 
+    /** Only include `itemScoped` when explicitly true — keeps it out of serialization otherwise. */
+    const buildItemScoped = (itemScoped?: boolean) =>
+        itemScoped ? { itemScoped: true as const } : {}
+
     /**
      * Marks a field as item-scoped: the engine skips it during eager field evaluation, and the
      * node resolves it per-element via RuntimeNode.evalItemField with $item bound. Excluded from
      * `this.fields` (InferFields) and surfaced in `evalItemField`'s key set (InferItemFields).
+     *
+     * Prefer the inline `itemScoped: true` config prop; this wrapper remains for backward compat.
      *
      * @example FieldBuilder.itemScoped(FieldBuilder.Boolean({ id: "condition", isExpression: true, ... }))
      */
@@ -65,10 +81,9 @@ export namespace FieldBuilder {
 
 
 
-
-    export function UniqueString<TId extends string, TReq extends boolean = false>(
-        config: { prefix?: string; length?: number; placeholder?: string; isExpression?: boolean; } & BaseProps<TId, TReq>
-    ): Ret<TId, "UniqueString", Foundations.Field.UniqueString, TReq, true> {
+    export function UniqueString<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(
+        config: { prefix?: string; length?: number; placeholder?: string; isExpression?: boolean; } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "UniqueString", Foundations.Field.UniqueString, TReq, true> & ItemScopedFlag<TItem> {
         return {
             ...buildBase(config),
             variant: "UniqueString",
@@ -78,23 +93,23 @@ export namespace FieldBuilder {
             // Placeholder; real value is generated per-node at create time.
             initialValue: "",
             ...buildIsExpression(config.isExpression),
-        };
+        } as Ret<TId, "UniqueString", Foundations.Field.UniqueString, TReq, true> & ItemScopedFlag<TItem>;
     }
 
-    export function String<TId extends string, TReq extends boolean = false>(
-        config: { initialValue: string; multiline?: boolean; placeholder?: string; isExpression?: boolean; } & BaseProps<TId, TReq>
-    ): Ret<TId, "String", Foundations.Field.String, TReq, true>;
-    export function String<TId extends string, TReq extends boolean = false>(
-        config: { multiline?: boolean; placeholder?: string; isExpression?: boolean; } & BaseProps<TId, TReq>
-    ): Ret<TId, "String", Foundations.Field.String, TReq, false>;
-    export function String<TId extends string, TReq extends boolean = false>(
+    export function String<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(
+        config: { initialValue: string; multiline?: boolean; placeholder?: string; isExpression?: boolean; } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "String", Foundations.Field.String, TReq, true> & ItemScopedFlag<TItem>;
+    export function String<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(
+        config: { multiline?: boolean; placeholder?: string; isExpression?: boolean; } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "String", Foundations.Field.String, TReq, false> & ItemScopedFlag<TItem>;
+    export function String<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(
         config: {
             initialValue?: string;
             multiline?: boolean;
             placeholder?: string;
             isExpression?: boolean;
-        } & BaseProps<TId, TReq>
-    ): Ret<TId, "String", Foundations.Field.String, TReq, boolean> {
+        } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "String", Foundations.Field.String, TReq, boolean> & ItemScopedFlag<TItem> {
         return {
             ...buildBase(config),
             variant: "String",
@@ -102,27 +117,27 @@ export namespace FieldBuilder {
             initialValue: config.initialValue ?? "",
             multiline: config.multiline ?? false,
             ...buildIsExpression(config.isExpression),
-        };
+        } as Ret<TId, "String", Foundations.Field.String, TReq, boolean> & ItemScopedFlag<TItem>;
     }
 
 
 
 
-    export function Integer<TId extends string, TReq extends boolean = false>(config: {
+    export function Integer<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue: number; min?: number; max?: number; step?: number; slider?: boolean; isExpression?: boolean;
-    } & BaseProps<TId, TReq>): Ret<TId, "Integer", Foundations.Field.Integer, TReq, true>;
-    export function Integer<TId extends string, TReq extends boolean = false>(config: {
+    } & BaseProps<TId, TReq, TItem>): Ret<TId, "Integer", Foundations.Field.Integer, TReq, true> & ItemScopedFlag<TItem>;
+    export function Integer<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         min?: number; max?: number; step?: number; slider?: boolean; isExpression?: boolean;
-    } & BaseProps<TId, TReq>): Ret<TId, "Integer", Foundations.Field.Integer, TReq, false>;
-    export function Integer<TId extends string, TReq extends boolean = false>(config: {
+    } & BaseProps<TId, TReq, TItem>): Ret<TId, "Integer", Foundations.Field.Integer, TReq, false> & ItemScopedFlag<TItem>;
+    export function Integer<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue?: number;
         min?: number;
         max?: number;
         step?: number;
         slider?: boolean;
         isExpression?: boolean;
-    } & BaseProps<TId, TReq>
-    ): Ret<TId, "Integer", Foundations.Field.Integer, TReq, boolean> {
+    } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "Integer", Foundations.Field.Integer, TReq, boolean> & ItemScopedFlag<TItem> {
         return {
             ...buildBase(config),
             variant: "Integer",
@@ -132,27 +147,27 @@ export namespace FieldBuilder {
             step: config.step ?? 1,
             slider: config.slider,
             ...buildIsExpression(config.isExpression),
-        };
+        } as Ret<TId, "Integer", Foundations.Field.Integer, TReq, boolean> & ItemScopedFlag<TItem>;
     }
 
 
 
 
-    export function Float<TId extends string, TReq extends boolean = false>(config: {
+    export function Float<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue: number; min?: number; max?: number; step?: number; slider?: boolean; isExpression?: boolean;
-    } & BaseProps<TId, TReq>): Ret<TId, "Float", Foundations.Field.Float, TReq, true>;
-    export function Float<TId extends string, TReq extends boolean = false>(config: {
+    } & BaseProps<TId, TReq, TItem>): Ret<TId, "Float", Foundations.Field.Float, TReq, true> & ItemScopedFlag<TItem>;
+    export function Float<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         min?: number; max?: number; step?: number; slider?: boolean; isExpression?: boolean;
-    } & BaseProps<TId, TReq>): Ret<TId, "Float", Foundations.Field.Float, TReq, false>;
-    export function Float<TId extends string, TReq extends boolean = false>(config: {
+    } & BaseProps<TId, TReq, TItem>): Ret<TId, "Float", Foundations.Field.Float, TReq, false> & ItemScopedFlag<TItem>;
+    export function Float<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue?: number;
         min?: number;
         max?: number;
         step?: number;
         slider?: boolean;
         isExpression?: boolean;
-    } & BaseProps<TId, TReq>
-    ): Ret<TId, "Float", Foundations.Field.Float, TReq, boolean> {
+    } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "Float", Foundations.Field.Float, TReq, boolean> & ItemScopedFlag<TItem> {
         return {
             ...buildBase(config),
             variant: "Float",
@@ -162,28 +177,28 @@ export namespace FieldBuilder {
             step: config.step ?? 0.1,
             slider: config.slider,
             ...buildIsExpression(config.isExpression),
-        };
+        } as Ret<TId, "Float", Foundations.Field.Float, TReq, boolean> & ItemScopedFlag<TItem>;
     }
 
 
 
-    export function Boolean<TId extends string, TReq extends boolean = false>(config: {
+    export function Boolean<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue: boolean; isExpression?: boolean;
-    } & BaseProps<TId, TReq>): Ret<TId, "Boolean", Foundations.Field.Boolean, TReq, true>;
-    export function Boolean<TId extends string, TReq extends boolean = false>(
-        config: { isExpression?: boolean } & BaseProps<TId, TReq>
-    ): Ret<TId, "Boolean", Foundations.Field.Boolean, TReq, false>;
-    export function Boolean<TId extends string, TReq extends boolean = false>(config: {
+    } & BaseProps<TId, TReq, TItem>): Ret<TId, "Boolean", Foundations.Field.Boolean, TReq, true> & ItemScopedFlag<TItem>;
+    export function Boolean<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(
+        config: { isExpression?: boolean } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "Boolean", Foundations.Field.Boolean, TReq, false> & ItemScopedFlag<TItem>;
+    export function Boolean<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue?: boolean;
         isExpression?: boolean;
-    } & BaseProps<TId, TReq>
-    ): Ret<TId, "Boolean", Foundations.Field.Boolean, TReq, boolean> {
+    } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "Boolean", Foundations.Field.Boolean, TReq, boolean> & ItemScopedFlag<TItem> {
         return {
             ...buildBase(config),
             variant: "Boolean",
             initialValue: config.initialValue ?? false,
             ...buildIsExpression(config.isExpression),
-        };
+        } as Ret<TId, "Boolean", Foundations.Field.Boolean, TReq, boolean> & ItemScopedFlag<TItem>;
     }
 
 
@@ -197,14 +212,15 @@ export namespace FieldBuilder {
     export function MultiOption<
         TId extends string,
         TReq extends boolean = false,
+        const TItem extends boolean = false,
         const TOptions extends readonly MultiOptionItem[] = readonly MultiOptionItem[]
     >(config: {
         initialValue: TOptions[number]["value"];
         options: TOptions;
         variant?: "select" | "tab";
         isExpression?: boolean;
-    } & BaseProps<TId, TReq>
-    ): Ret<TId, "MultiOption", Foundations.Field.MultiOption, TReq, true> & {
+    } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "MultiOption", Foundations.Field.MultiOption, TReq, true> & ItemScopedFlag<TItem> & {
         initialValue: TOptions[number]["value"];
         options: TOptions;
     } {
@@ -215,7 +231,7 @@ export namespace FieldBuilder {
             options: config.options as unknown as Foundations.Field.MultiOption["options"],
             kind: config.variant ?? "select",
             ...buildIsExpression(config.isExpression),
-        } as Ret<TId, "MultiOption", Foundations.Field.MultiOption, TReq, true> & {
+        } as unknown as Ret<TId, "MultiOption", Foundations.Field.MultiOption, TReq, true> & ItemScopedFlag<TItem> & {
             initialValue: TOptions[number]["value"];
             options: TOptions;
         };
@@ -223,67 +239,67 @@ export namespace FieldBuilder {
 
 
 
-    export function File<TId extends string, TReq extends boolean = false>(config: {
+    export function File<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue: string; fileTypes?: string[]; isExpression?: boolean;
-    } & BaseProps<TId, TReq>): Ret<TId, "File", Foundations.Field.File, TReq, true>;
-    export function File<TId extends string, TReq extends boolean = false>(config: {
+    } & BaseProps<TId, TReq, TItem>): Ret<TId, "File", Foundations.Field.File, TReq, true> & ItemScopedFlag<TItem>;
+    export function File<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         fileTypes?: string[]; isExpression?: boolean;
-    } & BaseProps<TId, TReq>): Ret<TId, "File", Foundations.Field.File, TReq, false>;
-    export function File<TId extends string, TReq extends boolean = false>(config: {
+    } & BaseProps<TId, TReq, TItem>): Ret<TId, "File", Foundations.Field.File, TReq, false> & ItemScopedFlag<TItem>;
+    export function File<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue?: string;
         fileTypes?: string[];
         isExpression?: boolean;
-    } & BaseProps<TId, TReq>
-    ): Ret<TId, "File", Foundations.Field.File, TReq, boolean> {
+    } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "File", Foundations.Field.File, TReq, boolean> & ItemScopedFlag<TItem> {
         return {
             ...buildBase(config),
             variant: "File",
             initialValue: config.initialValue ?? "",
             fileTypes: config.fileTypes,
             ...buildIsExpression(config.isExpression),
-        };
+        } as Ret<TId, "File", Foundations.Field.File, TReq, boolean> & ItemScopedFlag<TItem>;
     }
 
 
 
-    export function List<TId extends string, TReq extends boolean = false>(config: {
+    export function List<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue: string[]; isExpression?: boolean;
-    } & BaseProps<TId, TReq>): Ret<TId, "List", Foundations.Field.List, TReq, true>;
-    export function List<TId extends string, TReq extends boolean = false>(
-        config: { isExpression?: boolean } & BaseProps<TId, TReq>
-    ): Ret<TId, "List", Foundations.Field.List, TReq, false>;
-    export function List<TId extends string, TReq extends boolean = false>(config: {
+    } & BaseProps<TId, TReq, TItem>): Ret<TId, "List", Foundations.Field.List, TReq, true> & ItemScopedFlag<TItem>;
+    export function List<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(
+        config: { isExpression?: boolean } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "List", Foundations.Field.List, TReq, false> & ItemScopedFlag<TItem>;
+    export function List<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue?: string[];
         isExpression?: boolean;
-    } & BaseProps<TId, TReq>
-    ): Ret<TId, "List", Foundations.Field.List, TReq, boolean> {
+    } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "List", Foundations.Field.List, TReq, boolean> & ItemScopedFlag<TItem> {
         return {
             ...buildBase(config),
             variant: "List",
             initialValue: config.initialValue ?? [],
             ...buildIsExpression(config.isExpression),
-        };
+        } as Ret<TId, "List", Foundations.Field.List, TReq, boolean> & ItemScopedFlag<TItem>;
     }
 
 
 
-    export function Json<TId extends string, TReq extends boolean = false>(config: {
+    export function Json<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue: any; isExpression?: boolean;
-    } & BaseProps<TId, TReq>): Ret<TId, "Json", Foundations.Field.Json, TReq, true>;
-    export function Json<TId extends string, TReq extends boolean = false>(
-        config: { isExpression?: boolean } & BaseProps<TId, TReq>
-    ): Ret<TId, "Json", Foundations.Field.Json, TReq, false>;
-    export function Json<TId extends string, TReq extends boolean = false>(config: {
+    } & BaseProps<TId, TReq, TItem>): Ret<TId, "Json", Foundations.Field.Json, TReq, true> & ItemScopedFlag<TItem>;
+    export function Json<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(
+        config: { isExpression?: boolean } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "Json", Foundations.Field.Json, TReq, false> & ItemScopedFlag<TItem>;
+    export function Json<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue?: any;
         isExpression?: boolean;
-    } & BaseProps<TId, TReq>
-    ): Ret<TId, "Json", Foundations.Field.Json, TReq, boolean> {
+    } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "Json", Foundations.Field.Json, TReq, boolean> & ItemScopedFlag<TItem> {
         return {
             ...buildBase(config),
             variant: "Json",
             initialValue: config.initialValue ?? {},
             ...buildIsExpression(config.isExpression),
-        };
+        } as Ret<TId, "Json", Foundations.Field.Json, TReq, boolean> & ItemScopedFlag<TItem>;
     }
 
 
@@ -300,23 +316,23 @@ export namespace FieldBuilder {
         };
     }
 
-    export function Secret<TId extends string, TReq extends boolean = false>(config: {
+    export function Secret<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue: string; isExpression?: boolean;
-    } & BaseProps<TId, TReq>): Ret<TId, "Secret", Foundations.Field.Secret, TReq, true>;
-    export function Secret<TId extends string, TReq extends boolean = false>(
-        config: { isExpression?: boolean } & BaseProps<TId, TReq>
-    ): Ret<TId, "Secret", Foundations.Field.Secret, TReq, false>;
-    export function Secret<TId extends string, TReq extends boolean = false>(config: {
+    } & BaseProps<TId, TReq, TItem>): Ret<TId, "Secret", Foundations.Field.Secret, TReq, true> & ItemScopedFlag<TItem>;
+    export function Secret<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(
+        config: { isExpression?: boolean } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "Secret", Foundations.Field.Secret, TReq, false> & ItemScopedFlag<TItem>;
+    export function Secret<TId extends string, TReq extends boolean = false, const TItem extends boolean = false>(config: {
         initialValue?: string;
         isExpression?: boolean;
-    } & BaseProps<TId, TReq>
-    ): Ret<TId, "Secret", Foundations.Field.Secret, TReq, boolean> {
+    } & BaseProps<TId, TReq, TItem>
+    ): Ret<TId, "Secret", Foundations.Field.Secret, TReq, boolean> & ItemScopedFlag<TItem> {
         return {
             ...buildBase(config),
             variant: "Secret",
             initialValue: config.initialValue ?? "",
             ...buildIsExpression(config.isExpression),
-        };
+        } as Ret<TId, "Secret", Foundations.Field.Secret, TReq, boolean> & ItemScopedFlag<TItem>;
     }
 
 

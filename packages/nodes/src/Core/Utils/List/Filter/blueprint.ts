@@ -8,13 +8,14 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     itemScope: "list",
     fields: [
-        FieldBuilder.itemScoped(FieldBuilder.Boolean({
+        FieldBuilder.Boolean({
             id: "condition",
             displayName: "Condition",
             initialValue: true,
             isExpression: true,
+            itemScoped: true,
             tooltip: "Evaluated once per item — use $item for the current element, $in for the node's inputs.",
-        })),
+        }),
     ],
     inputs: [
         InputBuilder.UnresolvedList({

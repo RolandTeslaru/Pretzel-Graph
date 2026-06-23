@@ -9,6 +9,7 @@ import PromptInput from './PromptInput'
 import { Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { WorkbenchSDK } from '../../../WorkbenchSDK/sdk'
 import { NodeBadge } from '@/components/NodeBadge'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 interface Props {
   messagesAreaClassname?: string
@@ -54,6 +55,10 @@ const ConversationArea: React.FC<Props> = ({ messagesAreaClassname}) => {
             <p className='absolute left-1/2 -translate-x-1/2 text-nowrap top-1/2 -translate-y-1/2 text-xs text-foreground flex items-center gap-1 opacity-50'>
                 Add a <NodeBadge icon="MessagesSquare" label="Chat Output" accent="port-Message" /> node to view responses.
             </p>
+        )}
+
+        {messageIds.length === 0 && !isLoading && (
+            <SystemIcons.Pretzel className='text-secondary-foreground/10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' style={{ width: 48, height: 48 }} />
         )}
         <div className={"flex flex-col gap-4 py-2 px-2 mt-auto pb-[130px] pt-13" }>
           {isLoading && (

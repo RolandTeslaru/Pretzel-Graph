@@ -144,7 +144,7 @@ export const Content = memo(({ uowId }: Props) => {
                             {Object.entries(uow.metrics).map(([key, metric]) => (
                                 <div key={key} className='flex flex-row gap-2 justify-between'>
                                     <p className='text-xs text-muted-foreground'>{metric.displayName}</p>
-                                    <p className='text-xs text-foreground/50'>{formatMetric(metric)}</p>
+                                    <p className={`text-xs text-foreground/50 ${metric.type === "currency_usd" ? "text-green-500 font-mono" : ""}`}>{formatMetric(metric)}</p>
                                 </div>
                             ))}
                         </AccordionItem>
