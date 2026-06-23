@@ -429,7 +429,18 @@ export class Synthesizer {
     public static chatMessageToLC(msg: Chat.Message): LC.BaseMessage {
         switch (msg.role) {
             case "human":  return new HumanMessage(msg.content);
-            case "ai":     return new AIMessage(msg.content);
+            case "ai": {
+                const a = msg as Chat.Message.AI;
+                return new AIMessage({
+                    content: a.content,
+                    tool_calls: (a.data.tool_calls ?? []).map(tc => ({
+                        id:   tc.id,
+                        name: tc.name,
+                        args: tc.arguments,
+                        type: "tool_call" as const,
+                    })),
+                });
+            }
             case "system": return new SystemMessage(msg.content);
             case "tool": {
                 const t = msg as Chat.Message.Tool;

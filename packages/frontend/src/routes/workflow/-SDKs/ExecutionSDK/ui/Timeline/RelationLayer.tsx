@@ -69,7 +69,7 @@ const RelationLayer = React.memo(({
             } else if (gap >= 25) {
                 // Enough horizontal room: right → down → right (orthogonal elbow)
                 const midX = sx + gap / 2
-                const r = Math.min(10, vDist / 2, gap / 2)
+                const r = Math.min(8, vDist / 2, gap / 2)
                 d = [
                     `M ${sx},${sy}`,
                     `H ${midX - r}`,
@@ -132,11 +132,11 @@ const RelationLayer = React.memo(({
                     <marker
                         key={`marker-${arrow.id}`}
                         id={`arrow-tip-${arrow.id}`}
-                        markerWidth="6" markerHeight="6"
-                        refX="5" refY="3"
+                        markerWidth="4" markerHeight="4"
+                        refX="3" refY="2"
                         orient="auto"
                     >
-                        <path d="M0,0 L6,3 L0,6 Z" fill={arrow.color} fillOpacity={0.7} />
+                        <path d="M0,0 L4,2 L0,4 Z" fill={arrow.color} fillOpacity={0.7} />
                     </marker>
                 ))}
             </defs>

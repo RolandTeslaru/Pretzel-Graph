@@ -1,3 +1,7 @@
+import Dither from '@/components/Dither/Dither'
+import { ditherCtx } from '@/components/Dither/ditherCtx'
+import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { createFileRoute, Link } from '@tanstack/react-router'
 
 
@@ -6,10 +10,14 @@ export const Route = createFileRoute('/')({
 })
 
 function Landing() {
+    const theme = SystemSDK.useStore(s => s.theme)
     return (
         <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-                <h1 className="text-3xl font-bold">PretzelGraph</h1>
+            <div className="text-center z-10">
+                <div className="flex items-center justify-center gap-2">
+                    <SystemIcons.Pretzel className="size-10 fill-primary" />
+                    <h1 className="text-3xl font-bold">PretzelGraph</h1>
+                </div>
                 <p className="mt-2 text-sm opacity-70">Visual agent workflow editor.</p>
                 <Link
                     to="/home"
@@ -17,6 +25,20 @@ function Landing() {
                 >
                     Go to Home →
                 </Link>
+            </div>
+            <div className="pointer-events-none w-full fixed inset-0 z-0">
+                <Dither
+                    ctx={ditherCtx}
+                    waveColorVar="--primary"
+                    bgColor={theme === "dark" ? [0.08, 0.08, 0.08] : [0.88, 0.88, 0.88]}
+                    disableAnimation={false}
+                    enableMouseInteraction={false}
+                    mouseRadius={0.3}
+                    colorNum={5.5}
+                    waveAmplitude={0.20}
+                    waveFrequency={1.4}
+                    waveSpeed={0.05}
+                />
             </div>
         </div>
     )

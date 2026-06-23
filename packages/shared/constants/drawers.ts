@@ -115,6 +115,7 @@ export const CORE_DRAWERS = {
     blueprintIds: [
       "Core.Utils.Tool.Runner",
       "Core.Utils.Tool.Catalog",
+      "Core.Utils.Tool.Custom",
     ],
   },
   human_review: {
