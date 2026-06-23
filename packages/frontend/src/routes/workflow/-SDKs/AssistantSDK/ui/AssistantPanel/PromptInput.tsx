@@ -73,7 +73,7 @@ const PromptTextArea = ({ value, onChange, onSend }: { value: string, onChange: 
 const SendButton = ({ disabled }: { disabled: boolean }) => {
     return (
         <InputGroupButton
-            variant="default"
+            variant="language-model"
             className={`ml-auto transition-opacity ${disabled ? 'opacity-50 cursor-not-allowed' : 'opacity-100 hover:opacity-90'}`}
             type="submit"
             onClick={(e) => { if (disabled) e.preventDefault() }}

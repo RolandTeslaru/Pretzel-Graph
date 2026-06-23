@@ -328,7 +328,7 @@ export namespace Execution {
         error:       SystemError.Schema.nullish(),
         session:     Session.Schema,     // embedded; no separate id
         recording:   Recording.Schema.nullable().default(null),
-        chat_id:     Chat.Id.optional(), // if applicable
+        chat_id:     Chat.Id.nullish(), // if applicable
         created_at:  supabaseTimestamp,
         updated_at:  supabaseTimestamp,
     })
