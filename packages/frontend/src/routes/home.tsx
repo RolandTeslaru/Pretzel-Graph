@@ -4,7 +4,6 @@ import { useMemo, type ComponentType } from 'react'
 import type { BaseIconProps } from '@pretzel-graph/standard-ui/icons/baseIcon'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { PretzelGraphDropdown } from '@/components/PretzelGraphDropdown'
 import Dither from '@/components/Dither/Dither'
 import { ditherCtx } from '@/components/Dither/ditherCtx'
@@ -20,18 +19,11 @@ export const Route = createFileRoute('/home')({
         }
     },
     loader: async () => {
-        await Promise.all([
-            QuerySDK.client.fetchQuery({
-                queryKey: ['library', 'bootstrap'],
-                queryFn: () => LibrarySDK.actions.bootstrap.get(),
-                staleTime: HOME_STALE_TIME,
-            }),
-            QuerySDK.client.fetchQuery({
-                queryKey: ['version-control', 'active-workflows'],
-                queryFn: () => VersionControlSDK.actions.listActiveWorkflows(),
-                staleTime: HOME_STALE_TIME,
-            }),
-        ])
+        await QuerySDK.client.fetchQuery({
+            queryKey: ['library', 'bootstrap'],
+            queryFn: () => LibrarySDK.actions.bootstrap.get(),
+            staleTime: HOME_STALE_TIME,
+        })
 
         return null
     },
@@ -60,12 +52,6 @@ const NAV_BOTTOM: NavEntry[] = [
 
 
 function HomeLayout() {
-    QuerySDK.useQuery(
-        ['version-control', 'active-workflows'],
-        () => VersionControlSDK.actions.listActiveWorkflows(),
-        { staleTime: HOME_STALE_TIME },
-    )
-
     const theme = SystemSDK.useStore(s => s.theme)
     const pathname = useRouterState({ select: (s) => s.location.pathname })
     const currentNav =  useMemo(() => {
