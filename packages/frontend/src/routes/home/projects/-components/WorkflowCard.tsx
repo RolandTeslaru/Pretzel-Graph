@@ -31,9 +31,9 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
                 />
                 <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm text-center truncate">{workflow.display_name || 'Untitled'}</p>
-                    {workflow.description && (
-                        <p className="text-xs opacity-60 truncate mt-0.5">{workflow.description}</p>
-                    )}
+                    {/* {workflow.description && (
+                        <p className="text-xs opacity-60 truncate max-w-30 mt-0.5">{workflow.description}</p>
+                    )} */}
                 </div>
             </Link>
         </WorkflowCardContextMenu>
