@@ -1,6 +1,6 @@
 {
-  "version": "1782236970875",
-  "generatedAt": "2026-06-23T17:49:30.875Z",
+  "version": "1782315224880",
+  "generatedAt": "2026-06-24T15:33:44.880Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -3898,7 +3898,7 @@
       "displayName": "Compose Message",
       "icon": "Mail",
       "accent": "port-Message",
-      "description": "Converts any data into a Human, System, or Tool message by serializing it into the message content.",
+      "description": "Builds a Human, System, or Tool message from a content string. Supports expressions to interpolate incoming data.",
       "credentials": [],
       "fields": [
         {
@@ -3921,6 +3921,18 @@
             }
           ],
           "kind": "tab"
+        },
+        {
+          "id": "content",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Content",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": true,
+          "placeholder": "Message content",
+          "isExpression": true
         },
         {
           "id": "signalDependency",
@@ -4002,17 +4014,7 @@
           "kind": "select"
         }
       ],
-      "inputs": [
-        {
-          "id": "data",
-          "displayName": "Data",
-          "polymorphicGroupId": "data",
-          "internal": false,
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved",
-          "required": true
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "message",

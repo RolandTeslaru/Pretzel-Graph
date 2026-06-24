@@ -71,9 +71,9 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                             dialogsSize,
                             index,
                             blockTransparency: dialogsSize - index > 1,
-                            // Stack-darkening brightness for this depth. UnstyledTemplate doesn't apply
-                            // it on its wrapper (would trap backdrop-filter) — the caller puts it on its
-                            // own surfaces instead.
+                            // Stack-darkening brightness for this depth (animated). UnstyledTemplate
+                            // callers apply this on their own surfaces (the styled Template applies it on
+                            // its wrapper instead).
                             surfaceStyle: {
                                 filter: `brightness(${1 / (dialogsSize - index)})`,
                                 transition: "filter 400ms ease-in-out",
@@ -104,7 +104,9 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     style={{
                         ...delayStyle,
                         transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
-                        // filter: `brightness(${1 / -(index - dialogsSize)})`,
+                        // Stack-darkening lives on the wrapper here (single-surface dialog, nothing
+                        // nested to trap). UnstyledTemplate omits it and hands `surfaceStyle` to the caller.
+                        filter: `brightness(${1 / (dialogsSize - index)})`,
                     }}
                     darkenBackground={index === 0}
                     blockTransparency={blockTransparency}
