@@ -4,6 +4,7 @@ import { projectionsToDummyTree } from '@/components/Tree/toTree'
 import type { Tree as TreeType } from '@/components/Tree/domain'
 import type { Foundations } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
+import { DialogSDK } from '@/SDKs/DialogSDK'
 
 export type PortBranchMeta = {
     displayName?: string
@@ -22,54 +23,85 @@ function formatLeafValue(value: unknown): string {
     return String(value)
 }
 
+// One column of vertical tree lines per ancestor level. The innermost column draws the
+// corner/elbow into this row; outer columns draw a pass-through line only when the ancestor
+// at that depth still has siblings below it.
+function IndentGuides({ level, ancestorIsLast, isLastSibling }: { level: number; ancestorIsLast: boolean[]; isLastSibling: boolean }) {
+    const line = "absolute inset-y-0 left-[7px] border-l border-accent-foreground/20"
+
+    return Array.from({ length: level }).map((_, i) => {
+        const isInnermost = i === level - 1
+
+        let guide = null
+        if (isInnermost) {
+            guide = isLastSibling
+                ? <span className="absolute top-0 h-1/2 left-[7px] right-1.5 border-l border-b border-accent-foreground/20 rounded-bl-lg" />
+                : <span className={line} />
+        } else if (!ancestorIsLast[i + 1]) {
+            guide = <span className={line} />
+        }
+
+        return <span key={i} className="shrink-0 w-5 relative self-stretch">{guide}</span>
+    })
+}
+
+function openValueDialog(label: string, value: string) {
+    const id = `port-value-${label}`
+    DialogSDK.actions.push(id, (props) => (
+        <DialogSDK.Template {...props} className="w-[640px] max-w-[90vw] p-4">
+            <div className="flex flex-col gap-2 overflow-auto">
+                <span className="text-xs font-semibold text-muted-foreground">{label}</span>
+                <pre className="max-h-[60vh] whitespace-pre-wrap break-words rounded-md bg-input/50 p-3 text-xs">{value}</pre>
+            </div>
+        </DialogSDK.Template>
+    ))
+}
+
+// Right-aligned value cell. The text truncates; an expand button appears on row hover
+// (CSS-only via the parent's `group`) to open the full value in a dialog.
+function ValuePreview({ label, value }: { label: string; value: string }) {
+    return (
+        <>
+            <span className="ml-auto truncate text-muted-foreground text-[11px] pl-1">{value}</span>
+            <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); openValueDialog(label, value) }}
+                className="shrink-0 hidden group-hover:flex items-center ml-1 text-muted-foreground hover:text-foreground"
+            >
+                <SystemIcons.Maximize2 className="h-3 w-3" />
+            </button>
+        </>
+    )
+}
+
 export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSibling, onToggle }: TreeType.Branch.RenderProps<PortBranchMeta>) {
     const label = branch.data?.displayName ?? branch.key
     const isPortRoot = level === 0
     const variant = isPortRoot ? branch.data?.variant : undefined
 
+    // Port roots show a one-line summary of their stashed value; nested leaves show the raw value.
+    let value: string | null = null
+    if (isPortRoot && branch.data?.isLeafValue) value = formatLeafValue(branch.data.leafValue)
+    else if (!isPortRoot && isLeaf && branch.data !== undefined) value = String(branch.data)
+
     return (
         <div
-            className="flex items-center h-6 pr-1 pl-1 rounded-md cursor-pointer select-none hover:bg-accent/50 text-sm"
+            className="group flex items-center h-6 px-1 rounded-md cursor-pointer select-none hover:bg-accent/50 text-sm"
             style={variant ? { backgroundColor: `color-mix(in srgb, var(--port-${variant}) 15%, transparent)` } : undefined}
             onClick={onToggle}
         >
-            {Array.from({ length: level }).map((_, i) => {
-                const isInnermost = i === level - 1
+            <IndentGuides level={level} ancestorIsLast={branch.ancestorIsLast} isLastSibling={isLastSibling} />
 
-                return (
-                    <span key={i} className="shrink-0 w-5 relative self-stretch">
-                        {isInnermost ? (
-                            isLastSibling ? (
-                                <span className="absolute top-0 h-1/2 left-[7px] right-1.5 border-l border-b border-accent-foreground/20 rounded-bl-lg" />
-                            ) : (
-                                <span className="absolute inset-y-0 left-[7px] border-l border-accent-foreground/20" />
-                            )
-                        ) : !branch.ancestorIsLast[i + 1] ? (
-                            <span className="absolute inset-y-0 left-[7px] border-l border-accent-foreground/20" />
-                        ) : null}
-                    </span>
-                )
-            })}
-            {!isLeaf ? (
+            {!isLeaf && (
                 <SystemIcons.ChevronRight
                     className="shrink-0 h-4 w-4 text-muted-foreground transition-transform duration-150"
                     style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
                 />
-            ) : (
-                <></>
             )}
+
             <span className="whitespace-nowrap text-[11px] font-medium text-foreground">{label}</span>
-            {isPortRoot
-                // Port root: `data` is the port meta. Show the stashed value summary — arrays render a
-                // count even when expandable (e.g. "5 items"), primitives/empty objects their value.
-                ? branch.data?.isLeafValue && (
-                    <span className="ml-auto whitespace-nowrap text-muted-foreground text-[11px] pl-1">{formatLeafValue(branch.data.leafValue)}</span>
-                )
-                // Nested value leaf: `data` is the raw JSON value.
-                : isLeaf && branch.data !== undefined && (
-                    <span className="ml-auto whitespace-nowrap text-muted-foreground text-[11px] pl-1">{String(branch.data)}</span>
-                )
-            }
+
+            {value !== null && <ValuePreview label={label} value={value} />}
         </div>
     )
 }

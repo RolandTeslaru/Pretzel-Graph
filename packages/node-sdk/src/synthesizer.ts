@@ -388,6 +388,13 @@ export class Synthesizer {
             updated_at: new Date().toISOString(),
         };
 
+        const meta = {
+            name:              msg.name ?? null,
+            lc_id:             msg.id ?? null,
+            additional_kwargs: msg.additional_kwargs ?? null,
+            response_metadata: msg.response_metadata ?? null,
+        };
+
         switch (msg._getType()) {
             case "ai": {
                 const lcMsg = msg as LC.AIMessage;
@@ -401,11 +408,14 @@ export class Synthesizer {
                             name:      tc.name,
                             arguments: tc.args,
                         })),
+                        invalid_tool_calls: lcMsg.invalid_tool_calls ?? [],
+                        usage_metadata:     lcMsg.usage_metadata ?? null,
+                        ...meta,
                     },
                 } satisfies Chat.Message.AI;
             }
             case "human":
-                return { ...base, role: "human" } satisfies Chat.Message.Human;
+                return { ...base, role: "human", data: meta } satisfies Chat.Message.Human;
             case "tool": {
                 const lcMsg = msg as LC.ToolMessage;
                 return {
@@ -414,12 +424,14 @@ export class Synthesizer {
                     data: {
                         tool_call_id: Chat.ToolCall.Id.parse(lcMsg.tool_call_id),
                         tool_name:    lcMsg.name ?? "",
-                        status:       "success" as const,
+                        status:       lcMsg.status ?? "success",
+                        artifact:     lcMsg.artifact ?? null,
+                        ...meta,
                     },
                 } satisfies Chat.Message.Tool;
             }
             case "system":
-                return { ...base, role: "system" } satisfies Chat.Message.System;
+                return { ...base, role: "system", data: meta } satisfies Chat.Message.System;
             default:
                 throw new Error(`Unsupported LangChain message type "${msg._getType()}"`);
         }
@@ -427,8 +439,16 @@ export class Synthesizer {
 
 
     public static chatMessageToLC(msg: Chat.Message): LC.BaseMessage {
+        const meta = {
+            name:              msg.data?.name ?? undefined,
+            id:                msg.data?.lc_id ?? undefined,
+            additional_kwargs: msg.data?.additional_kwargs ?? undefined,
+            response_metadata: msg.data?.response_metadata ?? undefined,
+        };
+
         switch (msg.role) {
-            case "human":  return new HumanMessage(msg.content);
+            case "human":  return new HumanMessage({ content: msg.content, ...meta });
+            case "system": return new SystemMessage({ content: msg.content, ...meta });
             case "ai": {
                 const a = msg as Chat.Message.AI;
                 return new AIMessage({
@@ -439,12 +459,27 @@ export class Synthesizer {
                         args: tc.arguments,
                         type: "tool_call" as const,
                     })),
+                    invalid_tool_calls: (a.data.invalid_tool_calls ?? []).map(tc => ({
+                        id:    tc.id ?? undefined,
+                        name:  tc.name ?? undefined,
+                        args:  tc.args ?? undefined,
+                        error: tc.error ?? undefined,
+                        type:  "invalid_tool_call" as const,
+                    })),
+                    usage_metadata:     a.data.usage_metadata ?? undefined,
+                    ...meta,
                 });
             }
-            case "system": return new SystemMessage(msg.content);
             case "tool": {
                 const t = msg as Chat.Message.Tool;
-                return new ToolMessage({ content: t.content, tool_call_id: t.data.tool_call_id, name: t.data.tool_name });
+                return new ToolMessage({
+                    ...meta,
+                    content:      t.content,
+                    tool_call_id: t.data.tool_call_id,
+                    name:         t.data.tool_name,
+                    status:       t.data.status,
+                    artifact:     t.data.artifact ?? undefined,
+                });
             }
         }
     }

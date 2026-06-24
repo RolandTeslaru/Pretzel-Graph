@@ -44,9 +44,24 @@ export namespace Chat {
             name: z.string(),
             arguments: z.record(z.string(), z.unknown()),
         })
+        export const Invalid = z.object({
+            id: z.string().nullish(),
+            name: z.string().nullish(),
+            args: z.string().nullish(),
+            error: z.string().nullish(),
+        })
         export const Status = z.enum(["success", "error"])
         export type Status = z.infer<typeof Status>
     }
+
+    export const UsageMetadata = z.object({
+        input_tokens: z.number(),
+        output_tokens: z.number(),
+        total_tokens: z.number(),
+        input_token_details: z.record(z.string(), z.number()).optional(),
+        output_token_details: z.record(z.string(), z.number()).optional(),
+    }).loose()
+    export type UsageMetadata = z.infer<typeof UsageMetadata>
 
 
     export namespace Message {
@@ -73,9 +88,17 @@ export namespace Chat {
             return z.literal(value);
         }
 
+        // Fields common to every LangChain BaseMessage (content lives on Base).
+        const LcMeta = {
+            name:               z.string().nullish(),
+            lc_id:              z.string().nullish(),
+            additional_kwargs:  z.record(z.string(), z.unknown()).nullish(),
+            response_metadata:  z.record(z.string(), z.unknown()).nullish(),
+        }
+
         export const Human = Base.extend({
             role: configLiteral("human"),
-            data: z.object({}).optional(),
+            data: z.object({ ...LcMeta }).optional(),
         })
 
         export const AI = Base.extend({
@@ -83,6 +106,9 @@ export namespace Chat {
             data: z.object({
                 isProcessing: z.boolean(),
                 tool_calls: z.array(ToolCall.Schema).optional(),
+                invalid_tool_calls: z.array(ToolCall.Invalid).optional(),
+                usage_metadata: UsageMetadata.nullish(),
+                ...LcMeta,
             }),
         })
 
@@ -94,12 +120,14 @@ export namespace Chat {
                 tool_name: z.string(),
                 status: ToolCall.Status,
                 error: z.string().optional(),
+                artifact: z.unknown().nullish(),
+                ...LcMeta,
             }),
         })
 
         export const System = Base.extend({
             role: configLiteral("system"),
-            data: z.object({}).optional(),
+            data: z.object({ ...LcMeta }).optional(),
         })
 
         export interface AI extends z.infer<typeof Message.AI> { }
