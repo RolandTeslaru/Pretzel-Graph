@@ -45,13 +45,20 @@ function IndentGuides({ level, ancestorIsLast, isLastSibling }: { level: number;
     })
 }
 
-function openValueDialog(label: string, value: string) {
-    const id = `port-value-${label}`
+function openValueDialog(label: string, value: string, breadcrumbs: string[]) {
+    const id = `port-value-${breadcrumbs.join('.')}`
     DialogSDK.actions.push(id, (props) => (
-        <DialogSDK.Template {...props} className="w-[640px] max-w-[90vw] p-4">
-            <div className="flex flex-col gap-2 overflow-auto">
-                <span className="text-xs font-semibold text-muted-foreground">{label}</span>
-                <pre className="max-h-[60vh] whitespace-pre-wrap break-words rounded-md bg-input/50 p-3 text-xs">{value}</pre>
+        <DialogSDK.Template {...props} className="w-[640px] max-w-[90vw] overflow-hidden">
+            <div className="flex flex-col p-4 h-full gap-2 overflow-auto max-h-[60vh] ">
+                <div className="flex items-center flex-wrap gap-0.5 text-[11px] text-muted-foreground">
+                    {breadcrumbs.map((crumb, i) => (
+                        <span key={i} className="flex items-center gap-0.5">
+                            {i > 0 && <SystemIcons.ChevronRight className="h-3 w-3 opacity-50" />}
+                            <span className={i === breadcrumbs.length - 1 ? 'font-semibold text-foreground' : ''}>{crumb}</span>
+                        </span>
+                    ))}
+                </div>
+                <pre className="p-1 rounded-md bg-input/60 whitespace-pre-wrap break-words text-xs">{value}</pre>
             </div>
         </DialogSDK.Template>
     ))
@@ -59,13 +66,13 @@ function openValueDialog(label: string, value: string) {
 
 // Right-aligned value cell. The text truncates; an expand button appears on row hover
 // (CSS-only via the parent's `group`) to open the full value in a dialog.
-function ValuePreview({ label, value }: { label: string; value: string }) {
+function ValuePreview({ label, value, breadcrumbs }: { label: string; value: string; breadcrumbs: string[] }) {
     return (
         <>
             <span className="ml-auto truncate text-muted-foreground text-[11px] pl-1">{value}</span>
             <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); openValueDialog(label, value) }}
+                onClick={(e) => { e.stopPropagation(); openValueDialog(label, value, breadcrumbs) }}
                 className="shrink-0 hidden group-hover:flex items-center ml-1 text-muted-foreground hover:text-foreground"
             >
                 <SystemIcons.Maximize2 className="h-3 w-3" />
@@ -101,7 +108,7 @@ export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSi
 
             <span className="whitespace-nowrap text-[11px] font-medium text-foreground">{label}</span>
 
-            {value !== null && <ValuePreview label={label} value={value} />}
+            {value !== null && <ValuePreview label={label} value={value} breadcrumbs={[label]} />}
         </div>
     )
 }

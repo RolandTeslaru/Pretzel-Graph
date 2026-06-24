@@ -71,6 +71,36 @@ export function getItemType(nodeId: Workflow.Node.Id): string {
     return elems.join(' | ')
 }
 
+// Field variant → TS primitive. Anything not listed falls back to its initialValue
+// shape (or `any`), so List/Json/MultiOption etc. still get a best-effort type.
+const VARIANT_TS: Partial<Record<Foundations.Field.Variant, string>> = {
+    Integer: 'number',
+    Float: 'number',
+    String: 'string',
+    UniqueString: 'string',
+    Password: 'string',
+    Secret: 'string',
+    Script: 'string',
+    Boolean: 'boolean',
+}
+
+// Object type built from the workflow's config fields → `$config` key autocomplete.
+// Mirrors the runtime bag Expression.resolveWorkflowConfig produces (field id → value).
+export function getConfigType(): string {
+    const fields = WorkbenchSDK.state.data.fields ?? []
+    if (fields.length === 0) return 'Record<string, any>'
+
+    const entries = fields.map((field) => {
+        const variant = (field as { variant?: Foundations.Field.Variant }).variant
+        const type =
+            (variant && VARIANT_TS[variant]) ??
+            ('initialValue' in field ? tsLiteralType((field as { initialValue?: unknown }).initialValue, 1) : 'any')
+        return `${key(field.id)}: ${type}`
+    })
+
+    return `{ ${entries.join('; ')} }`
+}
+
 // Object type with the workflow's real node ids as literal keys → id autocomplete.
 function keyedByNodeIds(ids: Workflow.Node.Id[], valueType: string, extraKeys: string[] = []): string {
     const keys = [...ids.map((id) => `${JSON.stringify(id)}: ${valueType}`), ...extraKeys]
@@ -82,7 +112,7 @@ function keyedByNodeIds(ids: Workflow.Node.Id[], valueType: string, extraKeys: s
 // surfaced in autocomplete exclusively for those fields.
 export function buildAirlockDts(nodeId: Workflow.Node.Id, options?: { itemScoped?: boolean }): string {
     const ids = Object.keys(WorkbenchSDK.state.data.nodes) as Workflow.Node.Id[]
-    const configKey = `${JSON.stringify(WorkflowDomain.WORKFLOW_CONFIG_NODE_ID)}: Record<string, any>`
+    const configKey = `${JSON.stringify(WorkflowDomain.WORKFLOW_CONFIG_NODE_ID)}: ${getConfigType()}`
 
     const lines = [
         `interface WorkflowNode {`,
@@ -102,7 +132,7 @@ export function buildAirlockDts(nodeId: Workflow.Node.Id, options?: { itemScoped
         `    edges: Record<string, { source: { nodeId: string; portId: string }; target: { nodeId: string; portId: string } }>;`,
         `    credentialInstanceIds: Record<string, string>;`,
         `};`,
-        `declare const $config: Record<string, any>;`,
+        `declare const $config: ${getConfigType()};`,
         `declare const $igniter: any;`,
         `declare const $chatId: string | undefined;`,
         // Execution-scoped mutable scratch. Values are set at runtime and can be anything

@@ -1,9 +1,9 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Utils.Message.Compose",
     displayName: "Compose Message",
-    description: "Converts any data into a Human, System, or Tool message by serializing it into the message content.",
+    description: "Builds a Human, System, or Tool message from a content string. Supports expressions to interpolate incoming data.",
     icon: "Mail",
     accent: "port-Message",
     fields: [
@@ -19,15 +19,16 @@ export const Blueprint = defineBlueprint({
             variant: "tab",
             reconcile: true,
         }),
-    ],
-    inputs: [
-        InputBuilder.Unresolved({
-            id: "data",
-            displayName: "Data",
-            polymorphicGroupId: "data",
-            required: true
+        FieldBuilder.String({
+            id: "content",
+            displayName: "Content",
+            initialValue: "",
+            multiline: true,
+            placeholder: "Message content",
+            isExpression: true,
         }),
     ],
+    inputs: [],
     outputs: [
         OutputBuilder.Message({
             id: "message",

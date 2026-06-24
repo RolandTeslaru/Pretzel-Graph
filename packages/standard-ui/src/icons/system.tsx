@@ -111,6 +111,14 @@ export const Minimize2: React.FC<BaseIconProps> = (props) => (
     <BaseIcon size={15} {...props}><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"></path></BaseIcon>
 )
 
+// Material Symbols glyph (filled, 960 grid) — overrides BaseIcon's Lucide defaults.
+export const Compress: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon viewBox="0 -960 960 960" fill="currentColor" {...props}>
+        <path d="M160-400v-80h640v80H160Zm0-120v-80h640v80H160ZM440-80v-128l-64 64-56-56 160-160 160 160-56 56-64-62v126h-80Zm40-560L320-800l56-56 64 64v-128h80v128l64-64 56 56-160 160Z"/>
+    </BaseIcon>
+)
+Compress.displayName = "Compress"
+
 
 
 

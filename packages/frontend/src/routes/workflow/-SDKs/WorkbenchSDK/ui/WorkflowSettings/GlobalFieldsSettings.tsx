@@ -148,6 +148,27 @@ function FieldEditor({ field, index, onChange, onIdChange, onVariantChange, onRe
                 <InitialValueEditor field={field} onChange={onChange} />
             </FieldRow>
 
+            {(field.variant === 'Integer' || field.variant === 'Float') && (
+                <FieldRow label="Min / Max">
+                    <div className="flex gap-2">
+                        <Input
+                            size="sm"
+                            type="number"
+                            placeholder="min"
+                            value={field.min ?? ''}
+                            onChange={(e) => onChange({ ...field, min: parseBound(field.variant, e.target.value) } as GlobalField)}
+                        />
+                        <Input
+                            size="sm"
+                            type="number"
+                            placeholder="max"
+                            value={field.max ?? ''}
+                            onChange={(e) => onChange({ ...field, max: parseBound(field.variant, e.target.value) } as GlobalField)}
+                        />
+                    </div>
+                </FieldRow>
+            )}
+
             <FieldRow label="Required">
                 <Checkbox
                     className='ml-auto'
@@ -171,13 +192,16 @@ function InitialValueEditor({ field, onChange }: { field: GlobalField; onChange:
             <Input
                 size="sm"
                 type="number"
+                min={field.min}
+                max={field.max}
                 value={String(field.initialValue)}
                 placeholder="Initial value"
                 onChange={(e) => {
-                    const value = field.variant === 'Integer'
+                    const parsed = field.variant === 'Integer'
                         ? Number.parseInt(e.target.value || '0', 10)
                         : Number.parseFloat(e.target.value || '0')
-                    onChange({ ...field, initialValue: Number.isFinite(value) ? value : 0 } as GlobalField)
+                    const value = clamp(Number.isFinite(parsed) ? parsed : 0, field.min, field.max)
+                    onChange({ ...field, initialValue: value } as GlobalField)
                 }}
             />
         )
@@ -191,6 +215,18 @@ function InitialValueEditor({ field, onChange }: { field: GlobalField; onChange:
             onChange={(e) => onChange({ ...field, initialValue: e.target.value } as GlobalField)}
         />
     )
+}
+
+function parseBound(variant: 'Integer' | 'Float', raw: string): number | undefined {
+    if (raw === '') return undefined
+    const value = variant === 'Integer' ? Number.parseInt(raw, 10) : Number.parseFloat(raw)
+    return Number.isFinite(value) ? value : undefined
+}
+
+function clamp(value: number, min?: number, max?: number): number {
+    if (min !== undefined && value < min) return min
+    if (max !== undefined && value > max) return max
+    return value
 }
 
 function createField(variant: GlobalFieldVariant, id: Foundations.Field.Id, displayName: string): GlobalField {
