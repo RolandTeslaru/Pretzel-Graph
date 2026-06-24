@@ -58,14 +58,14 @@ const Content: AlertDialogComponents.Content = ({
       className={cn(
         `${theme || ""} fixed left-[50%] top-[50%] z-50 rounded-2xl
          border border-border outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0
-         transition-[opacity,transform] duration-400 ease-in-out
+         transition-[opacity,transform,filter] duration-400 ease-in-out
          data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-70 
          data-[state=open]:zoom-in-70 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 
          data-[state=open]:slide-in-from-top-[48%]
          shadow-2xl shadow-neutral-500/60 dark:shadow-black/60
          `,
-        blockTransparency ? 'bg-card' : ' bg-card/80 dark:bg-card/80 backdrop-blur-sm',
-        className
+        className,
+        blockTransparency ? 'bg-card! backdrop-blur-none!' : 'bg-card/80 dark:bg-card/80 backdrop-blur-sm',
       )}
       style={{
         // boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.5)",

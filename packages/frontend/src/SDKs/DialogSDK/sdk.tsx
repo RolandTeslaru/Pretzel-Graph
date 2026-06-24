@@ -62,17 +62,32 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
         const dialogs = this.useStore(state => state.dialogs)
 
         return (<>
-            {Array.from(dialogs).map(([dialogId, entry], index) =>
-                <React.Fragment key={dialogId}>
-                    {entry.renderer({ entry, dialogsSize: dialogs.size, index })}
-                </React.Fragment>
-            )}
+            {Array.from(dialogs).map(([dialogId, entry], index) => {
+                const dialogsSize = dialogs.size
+                return (
+                    <React.Fragment key={dialogId}>
+                        {entry.renderer({
+                            entry,
+                            dialogsSize,
+                            index,
+                            blockTransparency: dialogsSize - index > 1,
+                            // Stack-darkening brightness for this depth. UnstyledTemplate doesn't apply
+                            // it on its wrapper (would trap backdrop-filter) — the caller puts it on its
+                            // own surfaces instead.
+                            surfaceStyle: {
+                                filter: `brightness(${1 / (dialogsSize - index)})`,
+                                transition: "filter 400ms ease-in-out",
+                            },
+                        })}
+                    </React.Fragment>
+                )
+            })}
         </>)
     })
 
     public readonly actions = createDialogSDKActions(this);
 
-    public readonly Template: DialogSDK.Template = ({ children, entry, dialogsSize, index, className, dismissible = true }) => {
+    public readonly Template: DialogSDK.Template = ({ children, entry, dialogsSize, index, blockTransparency, className, dismissible = true }) => {
         const delayStyle = useAnimationDelay();
         const scale_offset = (index - (dialogsSize - 1)) * 8;
         const y_offset = (index - (dialogsSize - 1)) * 40;
@@ -89,10 +104,10 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     style={{
                         ...delayStyle,
                         transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
-                        filter: `brightness(${1 / -(index - dialogsSize)})`,
+                        // filter: `brightness(${1 / -(index - dialogsSize)})`,
                     }}
                     darkenBackground={index === 0}
-                    blockTransparency={dialogsSize - index > 1}
+                    blockTransparency={blockTransparency}
                     className={className}
                     onInteractOutside={blockDismiss}
                     onEscapeKeyDown={blockDismiss}
@@ -104,7 +119,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
     }
 
 
-    public readonly AlertTemplate: DialogSDK.AlertTemplate = ({ children, entry, dialogsSize, index, className, onCancel, onApprove, type = "warning", dismissible = true }) => {
+    public readonly AlertTemplate: DialogSDK.AlertTemplate = ({ children, entry, dialogsSize, index, blockTransparency, className, onCancel, onApprove, type = "warning", dismissible = true }) => {
         const delayStyle = useAnimationDelay();
         const scale_offset = (index - (dialogsSize - 1)) * 8;
         const y_offset = (index - (dialogsSize - 1)) * 40;
@@ -124,7 +139,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                         filter: `brightness(${1 / -(index - dialogsSize)})`,
                     }}
                     darkenBackground={index === 0}
-                    blockTransparency={dialogsSize - index > 1}
+                    blockTransparency={blockTransparency}
                     className={`flex flex-row max-w-[600px] ${className || ""}`}
                     onEscapeKeyDown={blockDismiss}
                 >
@@ -166,6 +181,40 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
         )
     }
 
+    // Chrome-less stacking shell. Applies the stack transform + entry animation but NOT the
+    // brightness `filter` — a `filter` on this wrapper would form a backdrop root and trap
+    // descendant `backdrop-filter`s. Instead the brightness is handed to children via
+    // `surfaceStyle` so they apply it on their own surfaces, where backdrop-blur still works.
+    public readonly UnstyledTemplate: DialogSDK.UnstyledTemplate = ({ children, entry, dialogsSize, index, className, dismissible = true }) => {
+        const delayStyle = useAnimationDelay();
+        const scale_offset = (index - (dialogsSize - 1)) * 8;
+        const y_offset = (index - (dialogsSize - 1)) * 40;
+        const finalScale = 1 + scale_offset / 100;
+
+        const blockDismiss = dismissible ? undefined : (e: Event) => e.preventDefault();
+
+        return (
+            <Dialog.Root
+                open={entry.isOpen}
+                onOpenChange={() => { if (dismissible) DialogSDK.actions.pop(entry.dialogId) }}
+            >
+                <Dialog.Content
+                    unstyled
+                    style={{
+                        ...delayStyle,
+                        transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
+                    }}
+                    darkenBackground={index === 0}
+                    className={className}
+                    onInteractOutside={blockDismiss}
+                    onEscapeKeyDown={blockDismiss}
+                >
+                    {children}
+                </Dialog.Content>
+            </Dialog.Root>
+        )
+    }
+
 }
 
 export const DialogSDK = SDK.get<DialogSDKImpl>("Dialog")
@@ -199,12 +248,19 @@ export namespace DialogSDK {
         entry: Omit<Entry, "renderer">,
         dialogsSize: number
         index: number
+        // True when another dialog is stacked on top of this one — i.e. it sits in the
+        // background and should render solid (no transparency / blur).
+        blockTransparency: boolean
+        // Stack-darkening brightness filter for this dialog's depth. Applied automatically on
+        // the styled Template's wrapper; UnstyledTemplate hands it to the caller to apply on
+        // its own surfaces (so descendant backdrop-filters aren't trapped).
+        surfaceStyle: React.CSSProperties
         dismissible?: boolean
         onCancel?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, entry: Omit<Entry, "renderer">, dialogsSize: number, index: number) => void
         onApprove?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, entry: Omit<Entry, "renderer">, dialogsSize: number, index: number) => void
     }
 
     export type Template = React.FC<TemplateProps>
-    export type UnstyledTemplate = React.FC<TemplateProps>
     export type AlertTemplate = React.FC<AlertTemplateProps>
+    export type UnstyledTemplate = React.FC<TemplateProps>
 }
