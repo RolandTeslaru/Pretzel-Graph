@@ -19,9 +19,9 @@ export const ScriptField = memo(({ field, nodeId, className }: RendererProps<'Sc
 
                     DialogSDK.actions
                              .push("ScriptDialog", (dialogProps) => (
-                                <DialogSDK.Template {...dialogProps} className='overflow-hidden! border-none! bg-white/0! shadow-none! flex flex-row gap-4'>
-                                    <CodeEditorContent node={node} displayName={field.displayName} onChange={onChange} onClose={flush} initialValue={snapshot} />
-                                </DialogSDK.Template>
+                                <DialogSDK.UnstyledTemplate {...dialogProps}>
+                                    <CodeEditorContent node={node} displayName={field.displayName} onChange={onChange} onClose={flush} initialValue={snapshot} blockTransparency={dialogProps.blockTransparency} surfaceStyle={dialogProps.surfaceStyle} />
+                                </DialogSDK.UnstyledTemplate>
                             ))
                 }}
             >

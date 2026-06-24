@@ -1,16 +1,21 @@
+import type { CSSProperties } from 'react'
 import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import ConversationArea from '../ConversationArea'
 import ChatList from './ChatList'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { ChatSDK } from '../../sdk'
 
-const FullscreenChat = () => {
+const FullscreenChat = ({ blockTransparency, surfaceStyle }: { blockTransparency: boolean; surfaceStyle: CSSProperties }) => {
+    // In the background render solid; on top, frosted glass. `surfaceStyle` carries the stack
+    // brightness — applied per card here so each card's backdrop-blur isn't trapped by a filtered ancestor.
+    const surface = blockTransparency ? 'bg-card' : 'bg-card/80 backdrop-blur-lg'
+
     return (
         <div className="flex flex-row gap-10 h-[90vh]">
-            <div className='bg-card/80 border border-border/50 rounded-2xl shadow-sm shadow-black/10 w-[250px] p-0 backdrop-blur-lg overflow-hidden'>
+            <div style={surfaceStyle} className={`${surface} border border-border/50 rounded-2xl shadow-sm shadow-black/10 w-[250px] p-0 overflow-hidden`}>
                 <ChatList />
             </div>
-            <div className='lg:w-[800px] bg-card/80 border border-border/50 rounded-2xl shadow-sm shadow-black/10 overflow-hidden backdrop-blur-lg'>
+            <div style={surfaceStyle} className={`${surface} lg:w-[800px] border border-border/50 rounded-2xl shadow-sm shadow-black/10 overflow-hidden`}>
                 <Header/>
                 <ConversationArea />
             </div>

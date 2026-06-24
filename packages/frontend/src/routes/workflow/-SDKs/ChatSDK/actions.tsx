@@ -196,9 +196,9 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
             },
             openFullscreen: () => {
                 DialogSDK.actions.push("fullscreen-chat", (props) => (
-                    <DialogSDK.Template className="border-none! shadow-none! bg-white/0!" {...props}>
-                        <FullscreenChat />
-                    </DialogSDK.Template>
+                    <DialogSDK.UnstyledTemplate {...props}>
+                        <FullscreenChat blockTransparency={props.blockTransparency} surfaceStyle={props.surfaceStyle} />
+                    </DialogSDK.UnstyledTemplate>
                 ))
 
                 setTimeout(() => {
