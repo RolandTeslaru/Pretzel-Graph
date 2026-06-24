@@ -10,15 +10,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        _inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { role } = this.fields;
-        const { data } = inputs;
-
-        const content = typeof data === "string"
-            ? data
-            : JSON.stringify(data, null, 2);
+        const { role, content } = this.fields;
 
         switch (role) {
             case "Human":
