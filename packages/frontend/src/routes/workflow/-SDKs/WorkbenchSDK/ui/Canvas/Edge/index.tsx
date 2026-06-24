@@ -85,9 +85,10 @@ const CanvasEdge = memo(({
 
     const sourceNode = WorkbenchSDK.useStore(s => s.data.nodes[source as Workflow.Node.Id])
 
-    const [edgeStatus, itemCount] = ExecutionSDK.useStore(s => [
+    const [edgeStatus, itemCount, sourceErrored] = ExecutionSDK.useStore(s => [
         s.selectors.getEdgeStatus(s, edgeId),
         s.selectors.getEdgeItemCount(s, sourceNodeId, sourcePortId),
+        s.selectors.getNodeStatus(s, sourceNodeId).status === "failed",
     ])
 
     const handleDelete = useCallback((e: React.MouseEvent) => {
@@ -115,7 +116,9 @@ const CanvasEdge = memo(({
         : "var(--status-waiting)"
         : defaultColor;
 
-    const displayColor = selected ? 'var(--secondary-foreground)' : statusColor;
+    const displayColor = selected
+        ? 'var(--secondary-foreground)'
+        : sourceErrored ? 'var(--destructive)' : statusColor;
 
     const edgeStyle: React.CSSProperties = {
         ...style,

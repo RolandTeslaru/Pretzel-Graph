@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { debounce } from 'lodash'
 import type { BeforeMount } from '@monaco-editor/react'
 import type { Airlock, Workflow } from '@pretzel-graph/shared/domain';
@@ -26,9 +27,11 @@ interface Props {
     initialValue: string,
     // editing an item-scoped field → expose $item / $itemIndex in autocomplete
     itemScoped?: boolean,
+    blockTransparency: boolean,
+    surfaceStyle: CSSProperties,
 }
 
-export const ExpressionEditor = ({ node, displayName, onChange, onClose, initialValue, itemScoped }: Props) => {
+export const ExpressionEditor = ({ node, displayName, onChange, onClose, initialValue, itemScoped, blockTransparency, surfaceStyle }: Props) => {
     const [result, setResult] = useState<AirlockSDK.Result>({ ok: true, value: undefined })
     const extraLibRef = useRef<{ dispose(): void } | null>(null)
 
@@ -65,14 +68,18 @@ export const ExpressionEditor = ({ node, displayName, onChange, onClose, initial
         preview(val)
     }, [onChange, preview])
 
+    // In the background render solid; on top, frosted glass. `surfaceStyle` carries the stack
+    // brightness — applied per card so each card's backdrop-blur isn't trapped by a filtered ancestor.
+    const surface = blockTransparency ? 'bg-card' : 'bg-card/80 backdrop-blur-lg'
+
     return (
         <div className="flex flex-row gap-5 h-[85vh] w-[90vw]">
 
-            <div className='bg-card/80 w-[30%] overflow-hidden min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10 backdrop-blur-lg'>
+            <div style={surfaceStyle} className={`${surface} w-[30%] overflow-hidden min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
                 <IncomingPanel />
             </div>
 
-            <div className="flex flex-col w-[70%] bg-card/80  border-border border rounded-2xl shadow-xl shadow-black/10 backdrop-blur-lg">
+            <div style={surfaceStyle} className={`${surface} flex flex-col w-[70%] border-border border rounded-2xl shadow-xl shadow-black/10`}>
                 <div className={`
                     flex-col relative gap-2 h-full flex-1 overflow-hidden
                     

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
+import type { CSSProperties } from 'react'
 import type { BeforeMount } from '@monaco-editor/react'
 import { buildAirlockDts } from './airlockTypes';
 import type { Workflow } from '@pretzel-graph/shared/domain';
@@ -14,10 +15,12 @@ interface Props {
     displayName: string,
     onChange: (val: string) => void,
     onClose: () => void,
-    initialValue: string
+    initialValue: string,
+    blockTransparency: boolean,
+    surfaceStyle: CSSProperties,
 }
 
-export const CodeEditorContent = ({ node, displayName, onChange, onClose, initialValue }: Props) => {
+export const CodeEditorContent = ({ node, displayName, onChange, onClose, initialValue, blockTransparency, surfaceStyle }: Props) => {
     const extraLibRef = useRef<{ dispose(): void } | null>(null)
 
     // commit the buffered script to the store when the editor closes
@@ -32,15 +35,19 @@ export const CodeEditorContent = ({ node, displayName, onChange, onClose, initia
         extraLibRef.current = ts.addExtraLib(buildAirlockDts(node.id), 'ts:airlock-globals.d.ts');
     }, [node.id])
 
+    // In the background render solid; on top, frosted glass. `surfaceStyle` carries the stack
+    // brightness — applied per card so each card's backdrop-blur isn't trapped by a filtered ancestor.
+    const surface = blockTransparency ? 'bg-card' : 'bg-card/80 backdrop-blur-lg'
+
     return (
         <div className="flex flex-row gap-5 h-[85vh] w-[90vw]">
 
-            <div className='bg-card/80 overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10 backdrop-blur-lg'>
+            <div style={surfaceStyle} className={`${surface} overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
                 <IncomingPanel />
             </div>
 
 
-            <div className='flex  min-w-[50vw] flex-col relative gap-2 h-full flex-1 overflow-hidden bg-card/80  border-border border rounded-2xl shadow-xl shadow-black/10 backdrop-blur-lg'>
+            <div style={surfaceStyle} className={`${surface} flex min-w-[50vw] flex-col relative gap-2 h-full flex-1 overflow-hidden border-border border rounded-2xl shadow-xl shadow-black/10`}>
                 <FloatContainer className="absolute top-2 left-2 w-fit h-12 py-1! px-3 backdrop-blur-md z-10">
                     <SystemIcons.FileCode className=" size-4 my-auto" />
                     <Dialog.Title className="font-mono text-sm">Code Editor</Dialog.Title>
@@ -66,7 +73,7 @@ export const CodeEditorContent = ({ node, displayName, onChange, onClose, initia
                 </div>
             </div>
 
-            <div className='bg-card/80 overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10 backdrop-blur-lg'>
+            <div style={surfaceStyle} className={`${surface} overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
                 <OutgoingPanel />
             </div>
         </div>

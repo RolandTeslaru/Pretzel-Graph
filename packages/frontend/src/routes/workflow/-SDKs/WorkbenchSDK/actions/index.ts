@@ -104,11 +104,11 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         ui: {
             openNodePanelFullscreen: () => {
                 DialogSDK.actions.push("fullscreen-node-panel", (props) => (
-                    React.createElement(DialogSDK.Template, { className: "border-none! shadow-none! bg-white/0!", ...props },
+                    React.createElement(DialogSDK.UnstyledTemplate, { ...props },
                         React.createElement(
                             React.Suspense,
                             { fallback: null },
-                            React.createElement(FullScreenNodePanel)
+                            React.createElement(FullScreenNodePanel, { blockTransparency: props.blockTransparency, surfaceStyle: props.surfaceStyle })
                         )
                     )
                 ))
