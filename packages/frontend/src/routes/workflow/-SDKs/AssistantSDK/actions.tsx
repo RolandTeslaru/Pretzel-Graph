@@ -1,7 +1,7 @@
 import { Assistant } from "@pretzel-graph/shared/domain";
 import { DialogSDK } from "@/SDKs/DialogSDK";
 import type { AssistantSDKImpl } from "./sdk";
-import FullscreenAssistant from "./ui/FullscreenAssistant";
+import FullscreenAssistant from "./ui/Fullscreen";
 
 export function createAssistantSDKActions(sdk: AssistantSDKImpl) {
     return {

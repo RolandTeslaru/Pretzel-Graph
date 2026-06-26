@@ -14,6 +14,7 @@ export const executionSDKSelectors = {
         return Array.isArray(projection) ? projection.length : undefined
     },
     currentExecution: {
+        isRunning: (s) => s.currentExecution?.status === "running",
         running: {
             isRecording: (s) => {
                 const value = s.currentExecution?.status === "running" && s.currentExecution.igniter.record
@@ -32,6 +33,7 @@ export interface ExecutionSDKSelectors {
     getEdgeStatus:    (state: ExecutionSDK.State, edgeId: Workflow.Edge.Id) => Execution.Session.EdgeState
     getEdgeItemCount: (state: ExecutionSDK.State, sourceNodeId: Workflow.Node.Id, sourcePortId: Foundations.Port.Output.Id) => number | undefined
     currentExecution: {
+        isRunning: (state: ExecutionSDK.State) => boolean
         running: {
             isRecording: (state: ExecutionSDK.State) => boolean
             isDebugging: (state: ExecutionSDK.State) => boolean

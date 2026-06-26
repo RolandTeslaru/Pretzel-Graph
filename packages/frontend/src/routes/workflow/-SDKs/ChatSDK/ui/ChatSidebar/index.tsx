@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { ChatSDK } from '../../sdk'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
-import MessagesArea from '../ConversationArea'
-import ChatSidebarHeader from './header'
+import ConversationArea from '../ConversationArea'
+import Header from './header'
 
 
 const ChatSidebar = () => {
@@ -27,10 +27,11 @@ export default ChatSidebar
 
 
 const ChatSidebarContent = () => {
+
     return (
         <div className='flex flex-col h-full'>
-            <ChatSidebarHeader />
-            <MessagesArea messagesAreaClassname='pt-[60px]' />
+            <Header />
+            <ConversationArea/>
         </div>
     )
 }

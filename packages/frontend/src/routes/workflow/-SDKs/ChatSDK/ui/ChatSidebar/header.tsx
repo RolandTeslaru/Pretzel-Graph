@@ -1,10 +1,11 @@
 import { ChatSDK } from '../../sdk'
-import ChatSelect from './ChatSelect'
+import SelectChat from './SelectChat'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { AnimatePresence, motion } from 'framer-motion'
+import FloatContainer from '@/components/FloatContainer'
 
-const ChatSidebarHeader = () => {
+const Header = () => {
 
     const currentChatName = ChatSDK.useStore(s => s.chats[s.currentChatId]?.name)
 
@@ -31,8 +32,10 @@ const ChatSidebarHeader = () => {
                     )}
                 </AnimatePresence>
             </div>
+            
             <p className='text-xs h-auto my-auto truncate font-medium'>{currentChatName}</p>
-            <div className='flex flex-row gap-2 border border-border bg-card rounded-full ml-auto my-auto h-auto p-0.5 shadow-md shadow-black/10'>
+            
+            <FloatContainer className="ml-auto h-7.5! backdrop-blur-md">
                 <Button size="icon-xs" variant="ghost" className="" onClick={() => ChatSDK.actions.chat.new()}>
                     <SystemIcons.Plus className='text-secondary-foreground' />
                 </Button>
@@ -43,7 +46,7 @@ const ChatSidebarHeader = () => {
                         </Button>
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content align="end" sideOffset={6} className='w-72'>
-                        <ChatSelect />
+                        <SelectChat />
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
                 <Button size="icon-xs" variant="ghost" className=""
@@ -51,9 +54,9 @@ const ChatSidebarHeader = () => {
                 >
                     <SystemIcons.Maximize2 className='text-secondary-foreground' />
                 </Button>
-            </div>
+            </FloatContainer>
         </div>
     )
 }
 
-export default ChatSidebarHeader
+export default Header
