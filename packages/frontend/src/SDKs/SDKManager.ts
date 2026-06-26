@@ -2,6 +2,8 @@ import { singleton, container } from "tsyringe";
 
 // Registry: Maps SDK name -> Class Constructor
 const sdkRegistry = new Map<string, any>();
+// Resolved instances, keyed by name so they survive HMR re-evaluation
+const sdkInstances = new Map<string, any>();
 
 /**
  * SDK - Decorator + Manager
@@ -23,11 +25,11 @@ function createSDKDecorator(name: string) {
         // Apply singleton behavior
         singleton()(target);
 
-        // Register in our central registry
-        if (sdkRegistry.has(name)) {
-            console.warn(`[SDK] Overwriting SDK: ${name}`);
+        // Keep the first registration. On HMR re-eval a new class identity is
+        // produced; reusing the original (with its resolved instance) preserves state.
+        if (!sdkRegistry.has(name)) {
+            sdkRegistry.set(name, target);
         }
-        sdkRegistry.set(name, target);
 
         return target;
     };
@@ -35,11 +37,16 @@ function createSDKDecorator(name: string) {
 
 // Attach utility methods to the decorator function
 createSDKDecorator.get = function <T>(name: string): T {
+    if (sdkInstances.has(name)) {
+        return sdkInstances.get(name) as T;
+    }
     const SDKClass = sdkRegistry.get(name);
     if (!SDKClass) {
         throw new Error(`[SDK] SDK "${name}" is not registered. Did you forget to import it?`);
     }
-    return container.resolve(SDKClass) as T;
+    const instance = container.resolve(SDKClass);
+    sdkInstances.set(name, instance);
+    return instance as T;
 };
 
 createSDKDecorator.has = function (name: string): boolean {

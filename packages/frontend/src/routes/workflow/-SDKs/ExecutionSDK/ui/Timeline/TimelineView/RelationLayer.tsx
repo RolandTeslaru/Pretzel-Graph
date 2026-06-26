@@ -1,15 +1,15 @@
 import React, { useMemo } from "react"
 import { Execution } from "@pretzel-graph/shared/domain"
 import type { Workflow } from "@pretzel-graph/shared/domain"
-import type { TimeScale } from "./time-scale"
-import type { TimelineLayout } from "../../selectors"
+import type { TimeScale } from "../time-scale"
+import type { TimelineLayout } from "../../../selectors"
+import { useTimelineViewerStore } from "../../../timeline-viewer-store"
 
 interface RelationLayerProps {
     recording:    Execution.Recording
     nodes:        Record<Workflow.Node.Id, Workflow.Node>
     scale:        TimeScale
     layout:       TimelineLayout
-    showRemnants: boolean
     totalWidth:   number
     totalHeight:  number
 }
@@ -19,10 +19,10 @@ const RelationLayer = React.memo(({
     nodes,
     scale,
     layout,
-    showRemnants,
     totalWidth,
     totalHeight,
 }: RelationLayerProps) => {
+    const showRemnants = useTimelineViewerStore(s => s.showRemnants)
     const arrows = useMemo(() => {
         const subRow  = Execution.Recording.Timeline.UOW_PORT_HEIGHT
         const padY    = Execution.Recording.Timeline.TRACK_PADDING_Y

@@ -14,7 +14,7 @@ interface Props {
 export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
     const dep = node.dependency
     const hasWorkflowDependency = !!dep
-    const dependencyUpdate = WorkbenchSDK.useStore(s =>
+    const publishedDependencyUpdate = WorkbenchSDK.useStore(s =>
         dep?.mode === "publication" && dep.workflowId
             ? s.selectors.dependency.published.getUpdateInfo(s, dep.workflowId)
             : null
@@ -24,6 +24,8 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
             ? s.selectors.dependency.draft.getUpdateInfo(s, dep.workflowId)
             : null
     )
+
+    const showExtrasPanel = publishedDependencyUpdate || draftDependencyUpdate || hasWorkflowDependency
 
     return (
         <div className='flex flex-row gap-1'>
@@ -50,24 +52,7 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
                         <SystemIcons.ArrowLeftRight />
                     </Button>
                 </Tipped>
-                {hasWorkflowDependency && (
-                    <Tipped label="Open workflow">
-                        <Button variant="ghost-active" size="icon-xs" className='h-6!'
-                            onClick={() => WorkbenchSDK.openWorkflowWindow(dep!.workflowId!)}
-                        >
-                            <SystemIcons.Graph/>
-                        </Button>
-                    </Tipped>
-                )}
-                {dependencyUpdate && (
-                    <Tipped label="Update workflow">
-                        <Button variant="ghost-active" size="icon-xs" className='h-6!'
-                            onClick={() => WorkbenchSDK.actions.dependency.published.update(dependencyUpdate)}
-                        >
-                            <SystemIcons.ArrowBigUpDash />
-                        </Button>
-                    </Tipped>
-                )}
+                
                 <Tipped label="Run">
                     <Button variant="ghost-success" size="icon-xs" className='text-xs'>
                         <SystemIcons.Play />
@@ -78,17 +63,37 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
                 )}
                 <OptionsDropdown node={node} />
             </div>
-                {draftDependencyUpdate && (
-            <div className='bg-card border-border border rounded-full h-[30px] p-0.5 shadow-md shadow-black/10'>
-                    <Tipped label="Update draft workflow">
-                        <Button variant="ghost-active" size="icon-xs" className='h-6!'
-                            onClick={() => WorkbenchSDK.actions.dependency.draft.update(draftDependencyUpdate)}
-                        >
-                            <SystemIcons.ArrowBigUpDash />
-                        </Button>
-                    </Tipped>
-            </div>
-                )}
+            {showExtrasPanel && (
+                <div className='bg-card border-border border rounded-full h-[30px] p-0.5 shadow-md shadow-black/10'>
+                    {hasWorkflowDependency && (
+                        <Tipped label="Open workflow">
+                            <Button variant="ghost-primary" size="icon-xs" className='h-6!'
+                                onClick={() => WorkbenchSDK.openWorkflowWindow(dep!.workflowId!)}
+                            >
+                                <SystemIcons.Graph />
+                            </Button>
+                        </Tipped>
+                    )}
+                    {draftDependencyUpdate && 
+                        <Tipped label="Update draft workflow">
+                            <Button variant="ghost-active" size="icon-xs" className='h-6!'
+                                onClick={() => WorkbenchSDK.actions.dependency.draft.update(draftDependencyUpdate)}
+                            >
+                                <SystemIcons.ArrowBigUpDash />
+                            </Button>
+                        </Tipped>
+                    }
+                    {publishedDependencyUpdate && (
+                        <Tipped label="Update workflow">
+                            <Button variant="ghost-active" size="icon-xs" className='h-6!'
+                                onClick={() => WorkbenchSDK.actions.dependency.published.update(publishedDependencyUpdate)}
+                            >
+                                <SystemIcons.ArrowBigUpDash />
+                            </Button>
+                        </Tipped>
+                    )}
+                </div>
+            )}
         </div>
     )
 })

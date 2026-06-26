@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { DropdownMenu, Input } from '@pretzel-graph/standard-ui/foundations'
 import { ChatSDK } from '../../sdk'
 
-
-
-const ChatSelect = () => {
+const SelectChat = () => {
   const [query, setQuery] = useState('')
 
   const chats = ChatSDK.useStore(s => s.chats);
@@ -38,4 +36,4 @@ const ChatSelect = () => {
   )
 }
 
-export default ChatSelect
+export default SelectChat

@@ -93,7 +93,7 @@ code {
   --primary-hover: theme(--color-amber-500);
   --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
 
-  --secondary: var(--color-neutral-200);
+  --secondary: var(--color-neutral-300);
   --secondary-foreground:var(--color-neutral-700);
 
   --accent: theme(--color-neutral-300);
@@ -382,6 +382,24 @@ code {
         350% 50%;
     }
   }
+}
+
+/* Braille pulse spinner */
+.braille-pulse {
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+.braille-pulse::after {
+  display: block;
+  content: "\2800\2836\2800";
+  animation: braille-pulse 900ms linear infinite;
+}
+@keyframes braille-pulse {
+  0% { content: "\2800\2836\2800"; }
+  20% { content: "\2830\28FF\2806"; }
+  40% { content: "\28BE\28C9\2877"; }
+  60% { content: "\28CF\2800\28F9"; }
+  80% { content: "\2841\2800\2888"; }
 }
 
 @layer base {

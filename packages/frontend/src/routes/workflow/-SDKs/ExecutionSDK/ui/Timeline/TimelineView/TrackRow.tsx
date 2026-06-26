@@ -2,8 +2,8 @@ import React from "react"
 import { Execution } from "@pretzel-graph/shared/domain"
 import type { Workflow } from "@pretzel-graph/shared/domain"
 import UoWBlock from "./UoWBlock"
-import type { TimeScale } from "./time-scale"
-import type { TimelineTrackLayout } from "../../selectors"
+import type { TimeScale } from "../time-scale"
+import type { TimelineTrackLayout } from "../../../selectors"
 
 interface TrackRowProps {
     trackLayout: TimelineTrackLayout
