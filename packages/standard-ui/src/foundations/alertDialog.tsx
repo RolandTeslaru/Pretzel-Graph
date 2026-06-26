@@ -65,7 +65,7 @@ const Content: AlertDialogComponents.Content = ({
          shadow-2xl shadow-neutral-500/60 dark:shadow-black/60
          `,
         className,
-        blockTransparency ? 'bg-card! backdrop-blur-none!' : 'bg-card/80 dark:bg-card/80 backdrop-blur-sm',
+        blockTransparency ? 'bg-card! backdrop-blur-none!' : 'bg-card/70 dark:bg-card/70 backdrop-blur-sm',
       )}
       style={{
         // boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.5)",

@@ -46,7 +46,7 @@ export const DependencySelector = memo<Props>(({ nodeId, className }) => {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-auto bg-card/80! min-h-7 w-full px-2 py-1 text-left"
+                className="h-auto bg-card/70! min-h-7 w-full px-2 py-1 text-left"
                 onClick={openDialog}
             >
                 <span className="flex min-w-0 items-center gap-2 mr-auto">

@@ -3,7 +3,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Button } from '@pretzel-graph/standard-ui/foundations'
 import FloatContainer from '@/components/FloatContainer'
 
-const AssistantSidebarHeader = () => {
+const Header = () => {
     return (
         <div className='flex flex-row gap-2 absolute top-2 w-[calc(100%-16px)] left-2 z-20'>
             <div
@@ -25,12 +25,9 @@ const AssistantSidebarHeader = () => {
                 <Button size="icon-xs" variant="ghost" onClick={() => AssistantSDK.actions.ui.openFullscreen()}>
                     <SystemIcons.Maximize2 className='text-secondary-foreground' />
                 </Button>
-                <Button size="icon-xs" variant="ghost" onClick={() => AssistantSDK.actions.ui.setSidebarVisibility(false)}>
-                    <SystemIcons.X className='text-secondary-foreground' />
-                </Button>
             </FloatContainer>
         </div>
     )
 }
 
-export default AssistantSidebarHeader
+export default Header

@@ -8,7 +8,7 @@ import { ChatSDK } from '../../sdk'
 const FullscreenChat = ({ blockTransparency, surfaceStyle }: { blockTransparency: boolean; surfaceStyle: CSSProperties }) => {
     // In the background render solid; on top, frosted glass. `surfaceStyle` carries the stack
     // brightness — applied per card here so each card's backdrop-blur isn't trapped by a filtered ancestor.
-    const surface = blockTransparency ? 'bg-card' : 'bg-card/80 backdrop-blur-lg'
+    const surface = blockTransparency ? 'bg-card' : 'bg-card/70 backdrop-blur-lg'
 
     return (
         <div className="flex flex-row gap-10 h-[90vh]">

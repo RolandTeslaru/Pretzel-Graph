@@ -81,7 +81,7 @@ const Content: DialogComponents.Content = ({
           ? ''
           : classNames(
               'rounded-2xl border border-border shadow-2xl shadow-neutral-500/60 dark:shadow-black/60',
-              blockTransparency ? 'bg-card! backdrop-blur-none!' : 'bg-card/80 backdrop-blur-sm',
+              blockTransparency ? 'bg-card! backdrop-blur-none!' : 'bg-card/70 backdrop-blur-sm',
             ),
         className,
       )}

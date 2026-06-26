@@ -1,18 +1,11 @@
 import { useEffect, useRef } from 'react'
 import TrackColumn from '../TrackColumn'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import type { TimelineLayout } from '../../../selectors'
-import type { Workflow } from '@pretzel-graph/shared/domain'
+import { useTimelineFrame } from '../frame-context'
 
-interface Props {
-    labelsRef: React.RefObject<HTMLDivElement | null>
-    onScroll:  () => void
-    layout:    TimelineLayout
-    nodes:     Record<Workflow.Node.Id, Workflow.Node>
-}
-
-const TracksPanel = ({ labelsRef, onScroll, layout, nodes }: Props) => {
-    // panelRef drives drag positioning; labelsRef (from parent) drives scroll sync
+const TracksPanel = () => {
+    const { labelsRef, onLabelScroll, layout, nodes } = useTimelineFrame()
+    // panelRef drives drag positioning; labelsRef (from context) drives scroll sync
     const panelRef = useRef<HTMLDivElement>(null)
     const dragRef  = useRef<{ startX: number; origLeft: number } | null>(null)
 
@@ -57,7 +50,7 @@ const TracksPanel = ({ labelsRef, onScroll, layout, nodes }: Props) => {
             </div>
 
             {/* Scrollable track list — labelsRef so parent handleScroll can sync scrollTop */}
-            <div ref={labelsRef} onScroll={onScroll} className="flex-1 overflow-y-auto overflow-x-hidden px-1 pb-2">
+            <div ref={labelsRef} onScroll={onLabelScroll} className="flex-1 overflow-y-auto overflow-x-hidden px-1 pb-2">
                 <TrackColumn layout={layout} nodes={nodes} />
             </div>
         </div>

@@ -43,6 +43,12 @@ export const buttonVariants = cva(
           hover:bg-muted shadow-none hover:text-foreground dark:hover:bg-muted
           aria-expanded:bg-muted aria-expanded:text-foreground
         `,
+        "ghost-primary": `
+          shadow-none text-primary
+          hover:bg-primary/15 hover:text-primary dark:hover:bg-primary/20
+          aria-expanded:bg-primary/15 aria-expanded:text-primary
+          dark:aria-expanded:bg-primary/20
+        `,
         "ghost-success": `
           shadow-none text-emerald-600 dark:text-emerald-500
           hover:bg-emerald-400/20 hover:text-emerald-800 dark:hover:text-emerald-300

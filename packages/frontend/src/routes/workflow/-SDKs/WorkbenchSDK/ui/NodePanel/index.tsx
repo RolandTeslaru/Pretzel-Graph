@@ -45,9 +45,9 @@ const NodeSidebar = () => {
                     <Content clickedNode={clickedNode} />
                 </StackSDK.Template>
             ))
-        } else {
+        } else
             StackSDK.actions.pop("nodeSidebar" as StackSDK.Panel.Id)
-        }
+            
     }, [clickedNode, isFullscreen])
 
     return null

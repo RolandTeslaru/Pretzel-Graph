@@ -9,7 +9,7 @@ import type { Foundations } from '@pretzel-graph/shared/domain'
 const ShelfSidebar = () => {
     return (
         <div className={`
-            flex flex-col absolute z-20 left-5 top-24 bottom-24 w-[230px] bg-card/80 backdrop-blur-lg 
+            flex flex-col absolute z-20 left-5 top-24 bottom-24 w-[230px] bg-card/70 backdrop-blur-lg 
             border border-border rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10`}
         >
             <Search />

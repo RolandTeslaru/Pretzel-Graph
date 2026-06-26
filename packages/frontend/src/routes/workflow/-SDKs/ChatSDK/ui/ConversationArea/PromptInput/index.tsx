@@ -1,15 +1,15 @@
 import { useRef } from 'react'
-import type { KeyboardEvent } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@pretzel-graph/standard-ui/foundations/input-group'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { ChatSDK } from '../../sdk'
+import { ChatSDK } from '../../../sdk'
 import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { DialogSDK } from '@/SDKs/DialogSDK'
-import AddImageDialogContent from './AddImageDialog'
-import AddFileDialogContent from './AddFileDialog'
-import { WorkbenchSDK } from '../../../WorkbenchSDK/sdk'
+import AddImageDialogContent from './dialogs/AddImageDialog'
+import AddFileDialogContent from './dialogs/AddFileDialog'
+import { WorkbenchSDK } from '../../../../WorkbenchSDK/sdk'
 import { NodeBadge } from '@/components/NodeBadge'
+import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk'
 
 type PromptFormValues = {
     prompt: string
@@ -55,10 +55,16 @@ const PromptInput: React.FC<Props> = ({ className }) => {
                     control={control}
                     rules={{ required: true, validate: (val) => val.trim().length > 0 }}
                     render={({ field }) => (
-                        <PromptTextArea
+                        <InputGroupTextarea
                             value={field.value}
-                            onChange={field.onChange}
-                            onSend={() => formRef.current?.requestSubmit()}
+                            onChange={(e) => field.onChange(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    formRef.current?.requestSubmit();
+                                }
+                            }}
+                            placeholder="Ask, Search or Chat..."
                             disabled={!hasChatInputNode}
                         />
                     )}
@@ -66,7 +72,7 @@ const PromptInput: React.FC<Props> = ({ className }) => {
 
                 <InputGroupAddon align="block-end">
                     <ArtifactAddButton disabled={!hasChatInputNode} />
-                    <SendButton disabled={!isValid || !hasChatInputNode} />
+                    <SendButton  disabled={!isValid || !hasChatInputNode} />
                 </InputGroupAddon>
             </InputGroup>
         </form>
@@ -75,26 +81,9 @@ const PromptInput: React.FC<Props> = ({ className }) => {
 
 export default PromptInput
 
-const PromptTextArea = ({ value, onChange, onSend, disabled }: { value: string, onChange: (val: string) => void, onSend: () => void, disabled: boolean }) => {
-    const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            onSend();
-        }
-    }
-
-    return (
-        <InputGroupTextarea
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask, Search or Chat..."
-            disabled={disabled}
-        />
-    )
-}
-
 const SendButton = ({ disabled }: { disabled: boolean }) => {
+
+    // Note dont add disabled because it disables the whole text area for some dumb reason
     return (
         <InputGroupButton
             variant="default"
@@ -104,8 +93,10 @@ const SendButton = ({ disabled }: { disabled: boolean }) => {
                 if (disabled) e.preventDefault();
             }}
         >
-            <span>Send</span>
-            <SystemIcons.ArrowUp />
+                <>
+                    <span>Send</span>
+                    <SystemIcons.ArrowUp />
+                </>
         </InputGroupButton>
     )
 }

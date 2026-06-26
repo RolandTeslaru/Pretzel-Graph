@@ -1,8 +1,8 @@
 import { memo, useEffect } from 'react'
 import { AssistantSDK } from '../../sdk'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
-import AssistantPanel from '../AssistantPanel'
-import AssistantSidebarHeader from './header'
+import AssistantPanel from '../ConversationArea'
+import Header from './header'
 import { AuroraRays } from '@/components/AuroraRays/AuroraRays'
 
 const AssistantSidebar = () => {
@@ -28,7 +28,7 @@ export default AssistantSidebar
 const AssistantSidebarContent = memo(() => {
     return (
         <div className='flex flex-col h-full relative'>
-            <AssistantSidebarHeader />
+            <Header />
             <AssistantPanel messagesAreaClassname='pt-[60px]' />
             <div className='pointer-events-none absolute top-0 left-0 w-full h-2/3 z-[-1] -scale-x-100'>
                 <AuroraRays />
