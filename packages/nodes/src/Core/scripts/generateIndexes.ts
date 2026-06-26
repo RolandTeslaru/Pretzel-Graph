@@ -100,6 +100,9 @@ export async function generateIndex(includeDbBlueprints = false) {
                 fields: mergeFieldsById(baseBlueprint.fields, dependencyFields),
                 inputs,
                 outputs,
+                flags: {
+                    SHOW_DEPENDENCY_SELECTOR: false
+                },
                 dependency: { workflowId: row.id, mode: "publication" as const },
             };
             console.log(`Processing public workflow: ${bp.id} (${bp.dependency?.workflowId}) with ${inputs.length} inputs, ${outputs.length} outputs, and ${dependencyFields.length} dependency fields`)

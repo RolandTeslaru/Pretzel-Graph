@@ -136,7 +136,7 @@ export const nodeLifecycleReducers = {
             accent      : blueprint.accent,
             iconColor   : blueprint.iconColor,
             dependency  : node.dependency ?? blueprint.dependency,
-            flags       : blueprint.flags ?? {},
+            flags       : node.flags ?? blueprint.flags ?? {},
             toolCompatible: blueprint.toolCompatible,
         })
 
@@ -214,6 +214,7 @@ export const nodeLifecycleReducers = {
             iconColor    : originalNode.iconColor,
             dependency   : originalNode.dependency,
             flags        : originalNode.flags ?? {},
+            itemScope    : originalNode.itemScope,
             toolCompatible: originalNode.toolCompatible,
         })
 

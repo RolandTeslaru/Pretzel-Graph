@@ -63,6 +63,7 @@ export const CORE_DRAWERS = {
     icon: "MessageSquareCode",
     blueprintIds: [
       "Core.Utils.Message.Compose",
+      "Core.Utils.Compactor",
     ],
   },
   files_and_knowledge: {
