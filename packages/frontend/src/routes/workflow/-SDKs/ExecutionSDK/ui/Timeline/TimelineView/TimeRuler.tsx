@@ -1,6 +1,6 @@
 import React, { useMemo } from "react"
 import { Execution } from "@pretzel-graph/shared/domain"
-import type { TimeScale } from "./time-scale"
+import type { TimeScale } from "../time-scale"
 
 interface TimeRulerProps {
     totalWidth: number

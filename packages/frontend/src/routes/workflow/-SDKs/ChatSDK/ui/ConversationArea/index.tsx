@@ -1,9 +1,9 @@
 import { memo, useCallback, useEffect, useRef } from 'react'
 import { ChatSDK } from '@/routes/workflow/-SDKs/ChatSDK/sdk'
 import { ScrollArea } from '@pretzel-graph/standard-ui/foundations/scrollArea'
-import HumanMessageBubble from './HumanMessageBubble'
-import AIMessageBubble from './AIMessageBubble'
-import ToolBubble from './ToolBubble'
+import HumanMessageBubble from './bubbles/HumanMessage'
+import AIMessageBubble from './bubbles/AIMessage'
+import ToolBubble from './bubbles/Tool'
 import { Chat } from '@pretzel-graph/shared/domain'
 import PromptInput from './PromptInput'
 import { Spinner } from '@pretzel-graph/standard-ui/foundations'
@@ -11,16 +11,16 @@ import { WorkbenchSDK } from '../../../WorkbenchSDK/sdk'
 import { NodeBadge } from '@/components/NodeBadge'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
-interface Props {
-  messagesAreaClassname?: string
-}
 
-const ConversationArea: React.FC<Props> = ({ messagesAreaClassname}) => {
+
+const ConversationArea: React.FC = () => {
 
   const hasChatOutputNode = WorkbenchSDK.useStore(s => {
         return Object.values(s.data.nodes).some(node => node.blueprintId === "Core.Chat.Output");
     })
     
+
+
 
   const [messageIds, isLoading, lastMessageContent] = ChatSDK.useStore(s => {
 
@@ -50,13 +50,19 @@ const ConversationArea: React.FC<Props> = ({ messagesAreaClassname}) => {
   return (
     <>
       <PromptInput className='absolute z-10 bottom-2 left-1/2 -translate-x-1/2 w-[calc(100%-16px)] backdrop-blur-md bg-input/80 shadow-md! '/>
-      <ScrollArea.Root className="flex-1 overflow-hidden h-full relative mask-[linear-gradient(to_bottom,transparent,black_64px,black_calc(100%-64px),transparent)]" ref={scrollRef} onScroll={handleScroll}>
+      <ScrollArea.Root className={`
+        flex-1 overflow-hidden h-full relative
+        mask-[linear-gradient(to_bottom,transparent,black_74px,black_calc(100%-74px),transparent)]
+      `} ref={scrollRef} onScroll={handleScroll}>
+        
+        {/* Chat Output Node message */}
         {!hasChatOutputNode && (
             <p className='absolute left-1/2 -translate-x-1/2 text-nowrap top-1/2 -translate-y-1/2 text-xs text-foreground flex items-center gap-1 opacity-50'>
                 Add a <NodeBadge icon="MessagesSquare" label="Chat Output" accent="port-Message" /> node to view responses.
             </p>
         )}
 
+        {/* Watermark */}
         {messageIds.length === 0 && !isLoading && (
             <SystemIcons.Pretzel className='text-secondary-foreground/10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' style={{ width: 48, height: 48 }} />
         )}
@@ -66,8 +72,8 @@ const ConversationArea: React.FC<Props> = ({ messagesAreaClassname}) => {
               <Spinner/>
             </div>
           )}
-          {messageIds.map((id) => (
-            <MessageItem key={id} id={id} />
+          {messageIds.map((id, index) => (
+              <MessageItem key={index} id={id} />
           ))}
         </div>
       </ScrollArea.Root>
@@ -80,17 +86,14 @@ const MessageItem = memo(({ id }: { id: Chat.Message.Id }) => {
 
   if (!message) return null;
 
-  if (message.role === "human") {
+  if (message.role === "human")
     return <HumanMessageBubble message={message} />;
-  }
 
-  if (message.role === "ai") {
+  if (message.role === "ai")
     return <AIMessageBubble message={message} />;
-  }
 
-  if (message.role === "tool") {
+  if (message.role === "tool")
     return <ToolBubble message={message} />;
-  }
 
   return null;
 }, (prevProps, nextProps) => {

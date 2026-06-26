@@ -1,9 +1,9 @@
 import React from "react"
 import { cn } from "@/utils/styleUtils"
 import { Execution } from "@pretzel-graph/shared/domain"
-import { ExecutionSDK } from "../../sdk"
-import { useTimelineViewerStore, timelineViewerActions } from "../../timeline-viewer-store"
-import type { TimeScale } from "./time-scale"
+import { ExecutionSDK } from "../../../sdk"
+import { useTimelineViewerStore, timelineViewerActions } from "../../../timeline-viewer-store"
+import type { TimeScale } from "../time-scale"
 
 interface UoWBlockProps {
     unitId:    Execution.Recording.UnitOfWork.Id

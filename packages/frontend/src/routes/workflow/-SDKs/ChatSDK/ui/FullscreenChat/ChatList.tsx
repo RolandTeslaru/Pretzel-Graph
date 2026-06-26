@@ -1,6 +1,6 @@
 import { ChatSDK } from '../../sdk'
 import { Input } from '@pretzel-graph/standard-ui/foundations/input'
-import { ContextMenu } from '@pretzel-graph/standard-ui/foundations'
+import { ContextMenu, Separator } from '@pretzel-graph/standard-ui/foundations'
 import type { Chat } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
@@ -26,13 +26,13 @@ function formatChatDate(iso: string): string {
     })
 }
 
-const ChatListItem = ({ chat, isCurrent }: { chat: Chat, isCurrent: boolean }) => {
+const Item = ({ chat, isCurrent }: { chat: Chat, isCurrent: boolean }) => {
     const formattedDate = formatChatDate(chat.created_at)
 
     return (
         <ContextMenu.Root>
             <ContextMenu.Trigger asChild>
-                <div className={`${isCurrent ? 'bg-primary/30 text-primary' : 'group hover:bg-secondary/60 active:bg-secondary/80'} flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors duration-150`}
+                <div className={`${isCurrent ? 'bg-primary/30 text-primary' : 'group hover:bg-secondary active:bg-secondary/80'} flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors duration-150`}
                     onClick={() => {
                         ChatSDK.actions.chat.load(chat.id);
                     }}
@@ -68,14 +68,16 @@ const ChatList = () => {
     return (
         <div className='flex flex-col h-full overflow-hidden'>
             {/* Search bar */}
-            <div className='p-2 border-b border-border/60 shrink-0'>
+            <div className='p-2'>
                 <Input placeholder="Search chats..." className='rounded-xl'/>
             </div>
+
+            <Separator className={"w-[calc(100%-16px)] mx-auto"} />
 
             {/* Scrollable list */}
             <div className='flex flex-col overflow-y-auto flex-1 py-1'>
                 {Object.values(chats).map((chat) => (
-                    <ChatListItem key={chat.id} chat={chat} isCurrent={chat.id === currentchatId} />
+                    <Item key={chat.id} chat={chat} isCurrent={chat.id === currentchatId} />
                 ))}
             </div>
         </div>
