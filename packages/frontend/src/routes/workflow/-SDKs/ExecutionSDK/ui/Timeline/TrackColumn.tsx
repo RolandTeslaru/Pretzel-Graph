@@ -12,12 +12,12 @@ const TrackColumn = ({ layout, nodes }: TrackColumnProps) => {
     return (
         <div style={{ position: "relative", height: layout.totalHeight }}>
             {layout.tracks.map(tl => {
-                const node = nodes[tl.track.id]
-                const label = node?.displayName ?? tl.track.id
+                const node = nodes[tl.trackId]
+                const label = node?.displayName ?? tl.trackId
 
                 return (
                     <div
-                        key={tl.track.id}
+                        key={tl.trackId}
                         style={{ position: "absolute", top: tl.top, height: tl.height, left: 0, right: 0 }}
                         className="flex items-center gap-2 px-1 border-b border-border/50"
                     >

@@ -9,7 +9,6 @@ import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import { Workflow, Foundations, Validation } from "@pretzel-graph/shared/domain"
 import { withCyclesRecompute } from '../../utils/actions'
 import { ExecutionSDK } from '../../../ExecutionSDK/sdk'
-import { timelineViewerActions } from '../../../ExecutionSDK/timeline-viewer-store'
 
 type NodeDriver = WorkbenchSDK.NodeDriver | WorkbenchSDK.CycleSelectionNodeDriver
 type EdgeDriver = WorkbenchSDK.EdgeDriver
@@ -270,8 +269,8 @@ export const createCanvasCallbacks = (
             ShelfSDK.actions
                 .searchFilter.setDataTypes(null);
 
-            timelineViewerActions.selectUoW(null)
-                
+            ExecutionSDK.actions
+                .timeline.selectUoW(null)
         },
         onEdgeClick: (event, edge) => {
             if (!edge.sourceHandle || !edge.targetHandle) return;

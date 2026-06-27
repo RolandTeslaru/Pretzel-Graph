@@ -166,7 +166,7 @@ export namespace Execution {
 
         export namespace DataBank {
             export namespace PortSnapshot {
-                export const Id = z.string().brand("ExecutionRecordingPortSnapshotId")
+                export const Id = z.string().brand("Execution.Recording.PortSnapshot.Id")
                 export type Id = z.infer<typeof Id>
 
                 // Deterministic — always uowId:portId, no need to pass around separately
@@ -215,7 +215,7 @@ export namespace Execution {
         // same track. Times are ms relative to origin (0 = execution start).
 
         export namespace UnitOfWork {
-            export const Id = z.string().brand("ExecutionRecordingUnitOfWorkId")
+            export const Id = z.string().brand("Execution.Recording.UnitOfWork.Id")
             export type Id = z.infer<typeof Id>
 
             export const createId = (nodeId: Workflow.Node.Id): Id =>
@@ -258,7 +258,7 @@ export namespace Execution {
         // "dataRemnant" — source ran in a prior cycle; target read its stale output (dashed arrow)
 
         export namespace Relation {
-            export const Id = z.string().brand("ExecutionRecordingRelationId")
+            export const Id = z.string().brand("Execution.Recording.Relation.Id")
             export type Id = z.infer<typeof Id>
 
             export const formatId = (source: UnitOfWork.Id, edgeId: Workflow.Edge.Id, target: UnitOfWork.Id): Id =>
@@ -493,7 +493,7 @@ export namespace Execution {
     // Single signal channel per execution: execution:<executionId>:signal
 
     export namespace Signal {
-        export const Channel = Realtime.Channel.brand("ExecutionSignalChannel")
+        export const Channel = Realtime.Channel.brand("Execution.Signal.Channel")
         export type Channel = z.infer<typeof Channel>
 
         export const getChannel = (executionId: Execution.Id) =>

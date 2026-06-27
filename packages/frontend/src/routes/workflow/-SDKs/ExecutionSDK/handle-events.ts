@@ -74,19 +74,19 @@ const reduceEvent = (
 
         // Recording
         case "unit:started":
-            r.recording.patchUnitStarted(s, e.unit);
+            r.recording.unit.patchStarted(s, e.unit);
             return null;
         case "unit:completed":
-            r.recording.patchUnitCompleted(s, e);
+            r.recording.unit.patchCompleted(s, e);
             return null;
         case "unit:failed":
-            r.recording.patchUnitFailed(s, e);
+            r.recording.unit.patchFailed(s, e);
             return null;
         case "relation:createBatch":
-            r.recording.patchRelationCreateBatch(s, e);
+            r.recording.relation.patchCreateBatch(s, e);
             return null;
         case "recording:completed":
-            s.isCurrentExecutionRecording = false;
+            // s.isCurrentExecutionRecording = false;
             return null;
         case "recording:fullyUploaded":
             // No state mutation — purely loads the finalized recording.
@@ -114,6 +114,9 @@ const flush = (sdk: ExecutionSDKImpl) => {
             const fx = reduceEvent(sdk, s, e);
             if (fx) effects.push(fx);
         }
+        // Layout is maintained incrementally per-event; recompute scale + sizes
+        // once for the whole batch (they depend on durations/totalDuration).
+        sdk.reducers.timeline.recompute(s);
     });
     for (const fx of effects) fx();
 };
