@@ -25,11 +25,21 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const { systemMessage } = inputs;
 
+        const isAnthropic = this.getProviderName(inputs.languageModel) === "anthropic";
+
         const languageModel = inputs.tools?.length && inputs.languageModel.bindTools
             ? inputs.languageModel.bindTools(inputs.tools)
             : inputs.languageModel;
 
         const messages = [systemMessage, ...inputs.messages].filter((m): m is LC.BaseMessage => m != null);
+
+        // Anthropic prefix caching: cache_control on the last content block, cloned so we never
+        if (isAnthropic && messages.length) {
+            if (messages[0] instanceof LC.SystemMessage) 
+                messages[0] = cacheLastBlock(messages[0]);
+
+            messages[messages.length - 1] = cacheLastBlock(messages[messages.length - 1]);
+        }
 
         const stream = await languageModel.stream(messages, {
             signal: this.context.abortAPI.signal,
@@ -122,4 +132,36 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         return metrics;
     }
+
+
+    protected getProviderName(model: LC.BaseChatModel): string | undefined {
+        return model._llmType?.(); // ensure model is initialized
+    }
+}
+
+// Anthropic prefix caching: cache_control on the last content block, cloned so we never
+// mutate shared history. System anchor covers tools+system; tail anchor is cumulative.
+function cacheLastBlock(msg: LC.BaseMessage): LC.BaseMessage {
+
+    let blocks: any[] = [];
+
+    if(typeof msg.content === "string") {
+        if (msg.content)
+            blocks = [{ type: "text", text: msg.content }];
+        else
+            blocks = [];
+    }
+    else {
+        blocks = msg.content.map(b => typeof b === "string" ? { type: "text", text: b } : { ...b });
+    }
+
+    if (!blocks.length) 
+        return msg;
+    
+    blocks[blocks.length - 1] = { 
+        ...blocks[blocks.length - 1], 
+        cache_control: { type: "ephemeral" } 
+    };
+    
+    return Object.assign(Object.create(Object.getPrototypeOf(msg)), msg, { content: blocks });
 }
