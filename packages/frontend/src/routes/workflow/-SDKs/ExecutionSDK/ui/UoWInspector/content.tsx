@@ -1,39 +1,15 @@
 import React, { memo } from 'react'
 import { ExecutionSDK } from '../../sdk'
-import { Execution, Workflow } from '@pretzel-graph/shared/domain'
+import { Execution } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../WorkbenchSDK/sdk'
 import { UoWInspectorFooter } from './footer'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { Badge, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import { Accordion } from '@pretzel-graph/standard-ui/foundations/accordion'
+import { formatDuration, formatStartedAt, formatMetric } from './utils'
 
 interface Props {
     uowId: Execution.Recording.UnitOfWork.Id
-}
-
-/** Formats a millisecond duration into a compact human-readable string. */
-function formatDuration(ms: number | undefined): string {
-    if (ms === undefined) return '—'
-    if (ms < 1)    return '< 1ms'
-    if (ms < 1000) return `${Math.round(ms)}ms`
-    return `${(ms / 1000).toFixed(2)}s`
-}
-
-/** Formats a ms-from-origin timestamp as a relative offset string. */
-function formatStartedAt(ms: number): string {
-    if (ms < 1000) return `+${Math.round(ms)}ms`
-    return `+${(ms / 1000).toFixed(2)}s`
-}
-
-function formatMetric(metric: Execution.Recording.Metric): string {
-    switch (metric.type) {
-        case "duration_ms":  return typeof metric.value === "number" ? formatDuration(metric.value) : String(metric.value)
-        case "currency_usd": return typeof metric.value === "number" ? `$${metric.value.toFixed(6)}` : String(metric.value)
-        case "tokens":       return typeof metric.value === "number" ? metric.value.toLocaleString() : String(metric.value)
-        case "number":       return typeof metric.value === "number" ? metric.value.toLocaleString() : String(metric.value)
-        case "string":
-        default:             return String(metric.value)
-    }
 }
 
 const DEFAULT_OPEN_DRAWERS = ["general", "fields", "metrics"]
@@ -60,21 +36,22 @@ const AccordionItem = ({ label, value, children }: AccordionItemProps) => (
 
 export const Content = memo(({ uowId }: Props) => {
 
-    const uow = ExecutionSDK.useStore(s => s.currentExecution?.recording?.units[uowId])
+    const [uow, snapshotedNode] = ExecutionSDK.useStore(s => {
+        const uow = s.selectors.recording.getUoW(s, uowId)
+        if (!uow)
+            return [undefined, undefined]
 
-    const fallbackNode = WorkbenchSDK.useStore(s => s.selectors.node.get(s, uow?.trackId ?? "" as Workflow.Node.Id))
-
-    const recordingNode = ExecutionSDK.useStore(s => {
-        const trackId = uow?.trackId
-        if (!trackId) return undefined
-
-        const nodeId = s.currentExecution?.recording?.tracks[trackId]?.id
-        if (!nodeId) return undefined
-
-        return s.currentExecution?.recording?.workflowDataSnapshot?.nodes[nodeId]
+        const snapshotedNode = s.selectors.recording.getSnapshotedNode(s, uow.trackId)
+        return [uow, snapshotedNode]
     })
 
-    const node = recordingNode ?? fallbackNode
+    const node = WorkbenchSDK.useStore(s => {
+        const trackId = uow?.trackId
+        if (!trackId)
+            return undefined
+
+        return snapshotedNode ?? s.selectors.node.get(s, trackId)
+    })
 
     if (!uow || !node) {
         return (

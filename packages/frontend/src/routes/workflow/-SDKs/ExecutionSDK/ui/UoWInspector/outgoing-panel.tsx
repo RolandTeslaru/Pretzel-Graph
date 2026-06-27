@@ -1,21 +1,30 @@
 import { useMemo } from 'react'
 import { ExecutionSDK } from '../../sdk'
-import { useTimelineViewerStore } from '../../timeline-viewer-store'
 import { WorkbenchSDK } from '../../../WorkbenchSDK/sdk'
 import { PortProjectionsView } from '../../../WorkbenchSDK/ui/NodePanel/PortDataTree'
 import type { Execution, Workflow } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 const OutgoingPanel = () => {
-    const uowId = useTimelineViewerStore(s => s.selectedUoW)
-    const recording = ExecutionSDK.useStore(s => s.currentExecution?.recording)
-    const uow = uowId ? recording?.units[uowId] : undefined
+    const [uow, snapshotedNode, dataBank] = ExecutionSDK.useStore(s => {
+        const uow = s.selectors.recording.getSelectedUoW(s)
+        if (!uow)
+            return [undefined, undefined, undefined]
 
+        const snapshotedNode = s.selectors.recording.getSnapshotedNode(s, uow.trackId)
+        const dataBank = s.selectors.recording.getDatabank(s)
+        if (!dataBank)
+            return [undefined, undefined, undefined]
+
+        return [uow, snapshotedNode, dataBank]
+    })
     const trackId = uow?.trackId
+
     const node = WorkbenchSDK.useStore(s => {
-        if (!trackId) return undefined
-        const snap = recording?.workflowDataSnapshot?.nodes[trackId]
-        return snap ?? s.selectors.node.get(s, trackId as Workflow.Node.Id)
+        if (!trackId) 
+            return undefined
+        
+        return snapshotedNode ?? s.selectors.node.get(s, trackId)
     })
 
     return (
@@ -24,7 +33,7 @@ const OutgoingPanel = () => {
                 <SystemIcons.LogOut size={20} />
                 <p className='h-auto my-auto text-sm'>Outgoing Data</p>
             </div>
-            {uow && node && recording && <Content uow={uow} node={node} recording={recording} />}
+            {uow && node  && <Content uow={uow} node={node} dataBank={dataBank} />}
         </div>
     )
 }
@@ -34,20 +43,22 @@ export default OutgoingPanel
 const Content = ({
     uow,
     node,
-    recording,
+    dataBank
 }: {
     uow: Execution.Recording.UnitOfWork
     node: Workflow.Node
-    recording: Execution.Recording
+    dataBank: Execution.Recording.DataBank
 }) => {
+
     const projections = useMemo(() => {
         const result: Record<string, Record<string, unknown>> = {}
         for (const [portId, snapId] of Object.entries(uow.outputSnapshot)) {
-            const snap = recording.dataBank.snapshots[snapId]
-            if (snap?.value !== undefined) result[portId] = snap.value as Record<string, unknown>
+            const snap = dataBank.snapshots[snapId]
+            if (snap?.value !== undefined) 
+                result[portId] = snap.value as Record<string, unknown>
         }
         return result
-    }, [uow.outputSnapshot, recording.dataBank.snapshots])
+    }, [uow.outputSnapshot, dataBank.snapshots])
 
     return (
         <PortProjectionsView

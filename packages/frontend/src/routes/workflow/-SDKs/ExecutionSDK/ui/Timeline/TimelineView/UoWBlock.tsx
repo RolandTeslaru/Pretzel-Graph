@@ -2,15 +2,11 @@ import React from "react"
 import { cn } from "@/utils/styleUtils"
 import { Execution } from "@pretzel-graph/shared/domain"
 import { ExecutionSDK } from "../../../sdk"
-import { useTimelineViewerStore, timelineViewerActions } from "../../../timeline-viewer-store"
-import type { TimeScale } from "../time-scale"
 
 interface UoWBlockProps {
-    unitId:    Execution.Recording.UnitOfWork.Id
-    scale:     TimeScale
-    accent?:   string
-    height:    number
-    topOffset: number
+    unitId:  Execution.Recording.UnitOfWork.Id
+    accent?: string
+    height:  number
 }
 
 const STATUS_CLASSES: Record<Execution.Recording.UnitOfWork.Status, string> = {
@@ -19,14 +15,17 @@ const STATUS_CLASSES: Record<Execution.Recording.UnitOfWork.Status, string> = {
     failed:    "opacity-90",
 }
 
-const UoWBlock = React.memo(({ unitId, scale, accent, height, topOffset }: UoWBlockProps) => {
+const UoWBlock = React.memo(({ unitId, accent, height }: UoWBlockProps) => {
     // Slice-subscribe to just this unit so a status tick on one UoW re-renders
     // only its block, independent of the parent TrackRow / the recording ref.
-    // Immer structural-shares unchanged units, so this is reference-stable.
-    const unit = ExecutionSDK.useStore(s => s.currentExecution?.recording?.units[unitId])
-    const selectedUoW = useTimelineViewerStore(s => s.selectedUoW)
+    // scale rides the same subscription: it's reference-stable except on zoom,
+    // so unrelated ticks don't re-render, and zoom re-renders only the blocks.
+    const [unit, isSelected, scale] = ExecutionSDK.useStore(s => [
+        s.selectors.recording.getUoW(s, unitId),
+        s.timeline.selectedUoW === unitId,
+        s.timeline.scale,
+    ])
     if (!unit) return null
-    const isSelected = selectedUoW === unit.id
 
     const x = scale.xFor(unit.startedAt)
     const rawW = scale.widthFor(unit.startedAt, unit.duration ?? 0)
@@ -43,12 +42,12 @@ const UoWBlock = React.memo(({ unitId, scale, accent, height, topOffset }: UoWBl
         <div
             role="button"
             tabIndex={0}
-            onClick={() => timelineViewerActions.selectUoW(isSelected ? null : unit.id)}
-            onKeyDown={e => e.key === "Enter" && timelineViewerActions.selectUoW(isSelected ? null : unit.id)}
+            onClick={() => ExecutionSDK.actions.timeline.selectUoW(isSelected ? null : unit.id)}
+            onKeyDown={e => e.key === "Enter" && ExecutionSDK.actions.timeline.selectUoW(isSelected ? null : unit.id)}
             style={{
                 position: "absolute",
                 left: x,
-                top: topOffset,
+                top: Execution.Recording.Timeline.TRACK_PADDING_Y,
                 width: w,
                 height,
                 zIndex: 1,
