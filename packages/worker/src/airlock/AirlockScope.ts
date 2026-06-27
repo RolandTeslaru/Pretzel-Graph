@@ -11,6 +11,7 @@ const RESERVED_GLOBALS: ReadonlySet<string> = new Set([
     Airlock.GLOBALS.igniter,
     Airlock.GLOBALS.chatId,
     Airlock.GLOBALS.globals,
+    Airlock.GLOBALS.metrics,
 ]);
 
 // Large, bound-once globals routed through the lazy bridge instead of copy:true. `$item` stays
@@ -89,6 +90,16 @@ export class AirlockScope implements Airlock.API {
             throw err instanceof Error ? err : new AirlockError(String(err), err);
         } finally {
             fn?.release();
+        }
+    }
+
+    // Deep-copy a persistent global out to the host. Returns undefined if the isolate is gone.
+    public readGlobal<T = unknown>(name: string): T | undefined {
+        if (this.service.isDisposed) return undefined;
+        try {
+            return this.context.global.getSync(name, { copy: true }) as T;
+        } catch {
+            return undefined;
         }
     }
 
