@@ -161,7 +161,7 @@ export class WorkflowCompiler {
     ) {
         const portAPI = {
             write: (nodeId, outputId, value) =>
-                engine.portAPI.write(ctxRef.current, nodeId, outputId, value),
+                engine.nodeIO.writePort(ctxRef.current, nodeId, outputId, value),
         } satisfies RuntimeNode.ExecutionContext["portAPI"];
 
         const propagationAPI = {
