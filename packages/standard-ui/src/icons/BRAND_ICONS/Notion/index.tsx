@@ -1,4 +1,5 @@
-const SvgNotionLogo = (props) => (
+import type { SVGProps } from "react"
+const SvgNotionLogo = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"

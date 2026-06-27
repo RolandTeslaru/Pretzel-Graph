@@ -1,4 +1,5 @@
-export const SvgMilvus = (props) => (
+import type { SVGProps } from "react"
+export const SvgMilvus = (props: SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1600" {...props}>
     <path
       fill="none"

@@ -1,4 +1,5 @@
-const SvgKlaviyo = (props) => (
+import type { SVGProps } from "react"
+const SvgKlaviyo = (props: SVGProps<SVGSVGElement>) => (
   <svg
     version="1.1"
     xmlns="http://www.w3.org/2000/svg"

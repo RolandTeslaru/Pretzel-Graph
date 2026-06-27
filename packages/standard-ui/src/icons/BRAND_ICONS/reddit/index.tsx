@@ -1,4 +1,5 @@
-const RedditIconSVG = (props) => (
+import type { SVGProps } from "react"
+const RedditIconSVG = (props: SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 16 16" width="20" height="20" {...props}>
     <path
       fill="#fe3155"

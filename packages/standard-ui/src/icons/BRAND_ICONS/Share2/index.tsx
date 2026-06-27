@@ -1,4 +1,5 @@
-const SvgShare2 = (props) => (
+import type { SVGProps } from "react"
+const SvgShare2 = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     x="0px"

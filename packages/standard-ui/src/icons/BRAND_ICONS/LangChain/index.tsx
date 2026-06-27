@@ -1,4 +1,5 @@
-const SvgLangChainIcon = (props) => (
+import type { SVGProps } from "react"
+const SvgLangChainIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 81 41"
     fill="none"

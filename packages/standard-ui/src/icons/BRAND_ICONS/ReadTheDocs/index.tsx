@@ -1,4 +1,5 @@
-const SvgReadthedocsioIcon = (props) => (
+import type { SVGProps } from "react"
+const SvgReadthedocsioIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" {...props}>
     <path
       fill="#32322a"

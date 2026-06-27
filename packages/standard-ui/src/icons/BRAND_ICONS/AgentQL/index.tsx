@@ -1,4 +1,5 @@
-const SvgAgentQL = (props) => (
+import type { SVGProps } from "react"
+const SvgAgentQL = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="512"
     height="512"

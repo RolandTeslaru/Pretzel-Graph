@@ -1,4 +1,5 @@
-const SvgCloudflareIcon = (props) => (
+import type { SVGProps } from "react"
+const SvgCloudflareIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 209.51 94.74" {...props}>
     <path
       fill="#f4801f"

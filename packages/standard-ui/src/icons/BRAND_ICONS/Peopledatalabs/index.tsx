@@ -1,4 +1,5 @@
-const Icon = (props) => (
+import type { SVGProps } from "react"
+const Icon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="21"
     height="21"

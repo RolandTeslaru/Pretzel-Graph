@@ -1,4 +1,5 @@
-const SvgPineconeLogo = (props) => {
+import type { SVGProps } from "react"
+const SvgPineconeLogo = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => {
   const color = props.isDark ? "#fff" : "#000";
 
   return (

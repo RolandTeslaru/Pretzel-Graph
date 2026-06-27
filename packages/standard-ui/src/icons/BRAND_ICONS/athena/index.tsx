@@ -1,5 +1,6 @@
+import type { SVGProps } from "react"
 import { cn } from "../../../utils/cn";
-export const AthenaComponent = ({ className, ...props }) => (
+export const AthenaComponent = ({ className, ...props }: SVGProps<SVGSVGElement> & Record<string, any>) => (
   <svg
     width="300"
     className={cn("dark:invert", className)}

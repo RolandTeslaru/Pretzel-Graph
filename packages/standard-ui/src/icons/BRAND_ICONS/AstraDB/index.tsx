@@ -1,4 +1,5 @@
-const AstraSVG = (props) => (
+import type { SVGProps } from "react"
+const AstraSVG = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => (
   <svg
     width="167"
     height="68"

@@ -1,4 +1,5 @@
-const SvgJSIcon = (props) => (
+import type { SVGProps } from "react"
+const SvgJSIcon = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => (
   <svg
     viewBox="0 0 16 16"
     fill="none"

@@ -1,4 +1,5 @@
-const ArXivIcon = (props) => {
+import type { SVGProps } from "react"
+const ArXivIcon = (props: SVGProps<SVGSVGElement>) => {
   return (
     <svg
       width="189"

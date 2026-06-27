@@ -1,4 +1,5 @@
-const HCDSVG = (props) => (
+import type { SVGProps } from "react"
+const HCDSVG = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => (
   <svg
     viewBox="12 33 72 29"
     fill="none"

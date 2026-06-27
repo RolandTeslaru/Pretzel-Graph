@@ -1,4 +1,5 @@
-const ClaudeSVG = (props) => {
+import type { SVGProps } from "react"
+const ClaudeSVG = (props: SVGProps<SVGSVGElement>) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

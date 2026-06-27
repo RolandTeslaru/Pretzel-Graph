@@ -1,4 +1,5 @@
-const JigsawStackIconSVG = (props) => (
+import type { SVGProps } from "react"
+const JigsawStackIconSVG = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="278"

@@ -1,6 +1,6 @@
 import { WorkbenchSDK } from '../sdk';
 import { debounce } from '@/decorators/debounce';
-import { toast, type PromiseData } from 'sonner';
+import { toast } from 'sonner';
 import { Foundations, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { api } from '@/SDKs/ApiInterceptorSDK';
 import { workflowReducers } from '../reducers/workflow';
@@ -62,7 +62,7 @@ export const withAsyncCommit = <TArgs extends any[], TReturn>(fn: (...args: TArg
     };
 };
 
-export const createToastPromise = <T>(promise: Promise<T>, options: PromiseData<T>): Promise<T> => {
+export const createToastPromise = <T>(promise: Promise<T>, options: Parameters<typeof toast.promise>[1]): Promise<T> => {
     toast.promise(promise, options)
     return promise
 }

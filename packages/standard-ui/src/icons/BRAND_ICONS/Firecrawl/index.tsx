@@ -1,4 +1,5 @@
-const SvgFirecrawlLogo = (props) => (
+import type { SVGProps } from "react"
+const SvgFirecrawlLogo = (props: SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="-33 0 255 255"
     xmlns="http://www.w3.org/2000/svg"

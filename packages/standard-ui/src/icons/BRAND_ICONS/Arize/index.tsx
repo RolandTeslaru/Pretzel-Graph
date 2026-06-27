@@ -1,4 +1,5 @@
-const SvgArize = (props) => (
+import type { SVGProps } from "react"
+const SvgArize = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="823"

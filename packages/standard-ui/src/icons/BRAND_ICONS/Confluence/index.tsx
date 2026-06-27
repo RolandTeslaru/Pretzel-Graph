@@ -1,4 +1,5 @@
-const ConfluenceIcon = (props) => (
+import type { SVGProps } from "react"
+const ConfluenceIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="32"
     height="32"

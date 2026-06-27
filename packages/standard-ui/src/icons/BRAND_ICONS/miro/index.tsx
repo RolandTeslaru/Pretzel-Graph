@@ -1,4 +1,5 @@
-const SvgMiro = (props) => (
+import type { SVGProps } from "react"
+const SvgMiro = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="1em"
     height="1em"

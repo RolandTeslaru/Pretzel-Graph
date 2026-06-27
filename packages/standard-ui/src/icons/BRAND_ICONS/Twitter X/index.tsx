@@ -1,4 +1,5 @@
-const TwitterXSVG = (props) => {
+import type { SVGProps } from "react"
+const TwitterXSVG = (props: SVGProps<SVGSVGElement> & { isDark?: boolean }) => {
   return props.isDark ? (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -19,7 +20,6 @@ const TwitterXSVG = (props) => {
         fontFamily="none"
         fontWeight="none"
         fontSize="none"
-        textAnchor="none"
         style={{ mixBlendMode: "normal" }}
       >
         <g transform="scale(8.53333,8.53333)">

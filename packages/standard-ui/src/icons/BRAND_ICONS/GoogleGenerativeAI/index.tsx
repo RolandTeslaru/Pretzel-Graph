@@ -1,4 +1,5 @@
-const SvgGoogleGenerativeAI = (props) => (
+import type { SVGProps } from "react"
+const SvgGoogleGenerativeAI = (props: SVGProps<SVGSVGElement>) => (
   <svg
     fill="none"
     xmlns="http://www.w3.org/2000/svg"

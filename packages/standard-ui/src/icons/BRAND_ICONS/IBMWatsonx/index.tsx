@@ -1,4 +1,5 @@
-const SvgWatsonxAI = (props) => (
+import type { SVGProps } from "react"
+const SvgWatsonxAI = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => (
   <svg
     fill={props.isDark ? "#ffffff" : "#0A0A0A"}
     fillRule="evenodd"

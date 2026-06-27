@@ -1,4 +1,5 @@
-const Icon = (props) => (
+import type { SVGProps } from "react"
+const Icon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     version="1.1"
     xmlns="http://www.w3.org/2000/svg"
@@ -8,7 +9,7 @@ const Icon = (props) => (
     width="20"
     height="20"
     viewBox="0 0 80 80"
-    style={{ enableBackground: "new 0 0 80 80" }}
+    style={{ }}
     xmlSpace="preserve"
     preserveAspectRatio="xMidYMid meet"
     {...props}

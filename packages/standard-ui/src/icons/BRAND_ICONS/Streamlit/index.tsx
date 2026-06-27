@@ -1,4 +1,5 @@
-export default function SvgStreamlit(props) {
+import type { SVGProps } from "react"
+export default function SvgStreamlit(props: SVGProps<SVGSVGElement> & { isDark?: boolean }) {
   return (
     <svg
       viewBox="0 0 301 165"

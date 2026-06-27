@@ -1,4 +1,5 @@
-const SvgVertexAi = (props) => (
+import type { SVGProps } from "react"
+const SvgVertexAi = (props: SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 32 32" width="1em" height="1em" {...props}>
     <path
       fill="#80868b"
