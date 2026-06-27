@@ -3,10 +3,9 @@ import { Execution } from "@pretzel-graph/shared/domain"
 import type { Workflow } from "@pretzel-graph/shared/domain"
 import type { TimeScale } from "../time-scale"
 import type { TimelineLayout } from "../../../selectors"
-import { useTimelineViewerStore } from "../../../timeline-viewer-store"
+import { ExecutionSDK } from "../../../sdk"
 
 interface RelationLayerProps {
-    recording:    Execution.Recording
     nodes:        Record<Workflow.Node.Id, Workflow.Node>
     scale:        TimeScale
     layout:       TimelineLayout
@@ -15,23 +14,28 @@ interface RelationLayerProps {
 }
 
 const RelationLayer = React.memo(({
-    recording,
     nodes,
     scale,
     layout,
     totalWidth,
     totalHeight,
 }: RelationLayerProps) => {
-    const showRemnants = useTimelineViewerStore(s => s.showRemnants)
+    const [units, relations, showRemnants] = ExecutionSDK.useStore(s => [
+        s.selectors.recording.getUnits(s),
+        s.selectors.recording.getRelations(s),
+        s.timeline.showRemnants,
+    ])
+
     const arrows = useMemo(() => {
+        if (!units || !relations) return []
         const subRow  = Execution.Recording.Timeline.UOW_PORT_HEIGHT
         const padY    = Execution.Recording.Timeline.TRACK_PADDING_Y
 
-        return Object.values(recording.relations).flatMap(rel => {
+        return Object.values(relations).flatMap(rel => {
             if (rel.type === "dataRemnant" && !showRemnants) return []
 
-            const srcUnit = recording.units[rel.source]
-            const tgtUnit = recording.units[rel.target]
+            const srcUnit = units[rel.source]
+            const tgtUnit = units[rel.target]
             if (!srcUnit || !tgtUnit) return []
 
             const srcLayout = layout.byTrackId.get(srcUnit.trackId)
@@ -111,7 +115,7 @@ const RelationLayer = React.memo(({
                 color: portColor,
             }]
         })
-    }, [recording, nodes, scale, layout, showRemnants])
+    }, [units, relations, nodes, scale, layout, showRemnants])
 
     if (arrows.length === 0) return null
 

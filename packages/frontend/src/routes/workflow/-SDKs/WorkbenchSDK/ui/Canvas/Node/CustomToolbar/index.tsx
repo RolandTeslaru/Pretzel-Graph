@@ -64,7 +64,7 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
                 <OptionsDropdown node={node} />
             </div>
             {showExtrasPanel && (
-                <div className='bg-card border-border border rounded-full h-[30px] p-0.5 shadow-md shadow-black/10'>
+                <div className='bg-card flex flex-row gap-1 border-border border rounded-full h-[30px] p-0.5 shadow-md shadow-black/10'>
                     {hasWorkflowDependency && (
                         <Tipped label="Open workflow">
                             <Button variant="ghost-primary" size="icon-xs" className='h-6!'

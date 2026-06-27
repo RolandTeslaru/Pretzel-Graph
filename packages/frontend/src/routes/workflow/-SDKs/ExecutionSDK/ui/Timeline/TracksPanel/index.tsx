@@ -1,11 +1,17 @@
 import { useEffect, useRef } from 'react'
 import TrackColumn from '../TrackColumn'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { useTimelineFrame } from '../frame-context'
+import { ExecutionSDK } from '../../../sdk'
+import { resolveTimelineNodes } from '../../../selectors'
+import { WorkbenchSDK } from '../../../../WorkbenchSDK/sdk'
 
 const TracksPanel = () => {
-    const { labelsRef, onLabelScroll, layout, nodes } = useTimelineFrame()
-    // panelRef drives drag positioning; labelsRef (from context) drives scroll sync
+    const layout = ExecutionSDK.useStore(s => s.timeline.layout)
+    const recording = ExecutionSDK.useStore(s => s.currentExecution?.recording ?? null)
+    const workbenchNodes = WorkbenchSDK.useStore(s => s.data.nodes)
+    const nodes = resolveTimelineNodes(recording, workbenchNodes)
+    const { labelsRef } = ExecutionSDK.runtime.timeline
+    // panelRef drives drag positioning; labelsRef (on the SDK) drives scroll sync
     const panelRef = useRef<HTMLDivElement>(null)
     const dragRef  = useRef<{ startX: number; origLeft: number } | null>(null)
 
@@ -50,7 +56,7 @@ const TracksPanel = () => {
             </div>
 
             {/* Scrollable track list — labelsRef so parent handleScroll can sync scrollTop */}
-            <div ref={labelsRef} onScroll={onLabelScroll} className="flex-1 overflow-y-auto overflow-x-hidden px-1 pb-2">
+            <div ref={labelsRef} onScroll={ExecutionSDK.syncTimelineLabelScroll} className="flex-1 overflow-y-auto overflow-x-hidden px-1 pb-2">
                 <TrackColumn layout={layout} nodes={nodes} />
             </div>
         </div>
