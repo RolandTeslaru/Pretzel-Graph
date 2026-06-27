@@ -13,6 +13,34 @@ export const executionSDKSelectors = {
         const projection = s.currentExecution?.session.node_output_projections[sourceNodeId]?.[sourcePortId]
         return Array.isArray(projection) ? projection.length : undefined
     },
+    recording: {
+        get: (s) => {
+            return s.currentExecution?.recording ?? null
+        },
+        getUoW: (s, id) => {
+            return s.currentExecution?.recording?.units[id]
+        },
+        getTrack: (s, trackId) => {
+            return s.currentExecution?.recording?.tracks[trackId]
+        },
+        getUnits: (s) => {
+            return s.currentExecution?.recording?.units
+        },
+        getRelations: (s) => {
+            return s.currentExecution?.recording?.relations
+        },
+        getSelectedUoW: (s) => {
+            const id = s.timeline.selectedUoW
+            if (!id) return undefined
+            return s.currentExecution?.recording?.units[id]
+        },
+        getSnapshotedNode: (s, nodeId) => {
+            return s.currentExecution?.recording?.workflowDataSnapshot?.nodes[nodeId]
+        },
+        getDatabank: (s) => {
+            return s.currentExecution?.recording?.dataBank
+        },
+    },
     currentExecution: {
         isRunning: (s) => s.currentExecution?.status === "running",
         running: {
@@ -24,7 +52,7 @@ export const executionSDKSelectors = {
                 const value = s.currentExecution?.status === "running" && s.currentExecution.igniter.debug
                 return value ?? false
             }
-        }
+        },
     }
 } satisfies ExecutionSDKSelectors
 
@@ -32,6 +60,16 @@ export interface ExecutionSDKSelectors {
     getNodeStatus:    (state: ExecutionSDK.State, nodeId: Workflow.Node.Id) => Execution.Session.NodeStatus
     getEdgeStatus:    (state: ExecutionSDK.State, edgeId: Workflow.Edge.Id) => Execution.Session.EdgeState
     getEdgeItemCount: (state: ExecutionSDK.State, sourceNodeId: Workflow.Node.Id, sourcePortId: Foundations.Port.Output.Id) => number | undefined
+    recording: {
+        get:               (state: ExecutionSDK.State) => Execution.Recording | null
+        getUoW:            (state: ExecutionSDK.State, id: Execution.Recording.UnitOfWork.Id) => Execution.Recording.UnitOfWork | undefined
+        getTrack:          (state: ExecutionSDK.State, trackId: Workflow.Node.Id) => Execution.Recording.Track | undefined
+        getUnits:          (state: ExecutionSDK.State) => Record<Execution.Recording.UnitOfWork.Id, Execution.Recording.UnitOfWork> | undefined
+        getRelations:      (state: ExecutionSDK.State) => Record<Execution.Recording.Relation.Id, Execution.Recording.Relation> | undefined
+        getSelectedUoW:    (state: ExecutionSDK.State) => Execution.Recording.UnitOfWork | undefined
+        getSnapshotedNode: (state: ExecutionSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node | undefined
+        getDatabank:       (state: ExecutionSDK.State) => Execution.Recording.DataBank | undefined
+    }
     currentExecution: {
         isRunning: (state: ExecutionSDK.State) => boolean
         running: {
@@ -66,10 +104,13 @@ export function getTotalDuration(recording: Execution.Recording | null): number 
 // ─── Timeline layout ────────────────────────────────────────────────────────
 // Track height comes from the node's declared port count so it's stable
 // from the start of execution, not derived from relations (which stream in
-// over time).
+// over time). Layout is pure geometry keyed by trackId — it grows only when a
+// track is born, never on a unit/status tick (those re-render via slice
+// subscriptions on the track / unit). It is maintained on ExecutionSDK state;
+// this builder is the one-shot rebuild for the non-live load path.
 
 export interface TimelineTrackLayout {
-    track:       Execution.Recording.Track
+    trackId:     Workflow.Node.Id
     top:         number
     height:      number   // total row height including TRACK_PADDING_Y × 2
     blockHeight: number   // UoW block height = rows × UOW_PORT_HEIGHT (no padding)
@@ -83,48 +124,45 @@ export interface TimelineLayout {
     totalHeight:  number
 }
 
+export const emptyTimelineLayout = (): TimelineLayout => ({ tracks: [], byTrackId: new Map(), totalHeight: 0 })
+
+// Geometry for a single track row, from the node's declared port count.
+export function buildTrackLayout(
+    trackId: Workflow.Node.Id,
+    top:     number,
+    nodes:   Record<Workflow.Node.Id, Workflow.Node>,
+): TimelineTrackLayout {
+    const node        = nodes[trackId]
+    const inputPorts  = node?.inputs.map(p => p.id)  ?? []
+    const outputPorts = node?.outputs.map(p => p.id) ?? []
+    const rows        = Math.max(1, inputPorts.length, outputPorts.length)
+    const blockHeight = rows * Execution.Recording.Timeline.UOW_PORT_HEIGHT
+    const height      = blockHeight + Execution.Recording.Timeline.TRACK_PADDING_Y * 2
+    return { trackId, top, height, blockHeight, inputPorts, outputPorts }
+}
+
 export function getTimelineLayout(
     recording: Execution.Recording | null,
     nodes:     Record<Workflow.Node.Id, Workflow.Node>,
-    // Optional caller-owned cache (a useRef Map) for structural sharing: a track's
-    // layout is reused as long as its track ref, top offset and block height are
-    // unchanged. A status tick mutates units[id], not tracks[id], so the track ref
-    // stays stable and the layout (and thus the memoized TrackRow) doesn't churn.
-    // Only a track that gains a unit / shifts position gets a fresh layout object.
-    cache?:    Map<Workflow.Node.Id, TimelineTrackLayout>,
 ): TimelineLayout {
-    if (!recording) {
-        return { tracks: [], byTrackId: new Map(), totalHeight: 0 }
+    const layout = emptyTimelineLayout()
+    if (!recording) return layout
+
+    for (const track of getOrderedTracks(recording)) {
+        const row = buildTrackLayout(track.id, layout.totalHeight, nodes)
+        layout.tracks.push(row)
+        layout.byTrackId.set(track.id, row)
+        layout.totalHeight = row.top + row.height
     }
+    return layout
+}
 
-    const ordered = getOrderedTracks(recording)
-
-    let top = 0
-    const tracks: TimelineTrackLayout[] = []
-    const byTrackId = new Map<Workflow.Node.Id, TimelineTrackLayout>()
-
-    for (const track of ordered) {
-        const node        = nodes[track.id]
-        const inputPorts  = node?.inputs.map(p => p.id)  ?? []
-        const outputPorts = node?.outputs.map(p => p.id) ?? []
-
-        const rows        = Math.max(1, inputPorts.length, outputPorts.length)
-        const blockHeight = rows * Execution.Recording.Timeline.UOW_PORT_HEIGHT
-        const height      = blockHeight + Execution.Recording.Timeline.TRACK_PADDING_Y * 2
-
-        const prev = cache?.get(track.id)
-        let layout: TimelineTrackLayout
-        if (prev && prev.track === track && prev.top === top && prev.blockHeight === blockHeight) {
-            layout = prev
-        } else {
-            layout = { track, top, height, blockHeight, inputPorts, outputPorts }
-            cache?.set(track.id, layout)
-        }
-
-        tracks.push(layout)
-        byTrackId.set(track.id, layout)
-        top += height
-    }
-
-    return { tracks, byTrackId, totalHeight: top }
+// Nodes feeding the timeline: the execution's frozen snapshot if populated,
+// else the live workbench graph (during a live run the snapshot may be empty).
+export function resolveTimelineNodes(
+    recording:     Execution.Recording | null,
+    workbenchNodes: Record<Workflow.Node.Id, Workflow.Node>,
+): Record<Workflow.Node.Id, Workflow.Node> {
+    const snapshot = recording?.workflowDataSnapshot?.nodes
+    return (snapshot && Object.keys(snapshot).length > 0) ? snapshot : workbenchNodes
 }

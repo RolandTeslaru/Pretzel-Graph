@@ -1,11 +1,11 @@
 import React, { memo, useEffect } from 'react'
-import { useTimelineViewerStore } from '../../timeline-viewer-store'
+import { ExecutionSDK } from '../../sdk'
 import { StackSDK } from '../../../StackSDK'
 import { Content } from "./content"
 
 const UoWInspectorSidebar = () => {
 
-  const uowId = useTimelineViewerStore(s => s.selectedUoW)
+  const uowId = ExecutionSDK.useStore(s => s.timeline.selectedUoW)
 
   useEffect(() => {
     if (uowId) {

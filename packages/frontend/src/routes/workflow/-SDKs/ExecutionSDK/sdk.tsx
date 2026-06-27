@@ -5,8 +5,9 @@ import { Execution } from "@pretzel-graph/shared/domain";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { createExecutionSDKActions, type ExecutionSDKActions } from "./actions";
-import { _createExecutionReducers_, type _ExecutionSessionReducers } from "./reducers";
-import { executionSDKSelectors, type ExecutionSDKSelectors } from "./selectors";
+import { _createExecutionReducers_, initialTimelineState, type _ExecutionSessionReducers } from "./reducers";
+import { executionSDKSelectors, type ExecutionSDKSelectors, type TimelineLayout } from "./selectors";
+import type { TimeScale, TimelineViewMode } from "./ui/Timeline/time-scale";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { handleExecutionEvents } from "./handle-events";
@@ -26,7 +27,8 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
             igniterAttributes: {
                 record: false,
                 debug: false
-            }
+            },
+            timeline: initialTimelineState(),
         })),
         shallow
     )
@@ -43,6 +45,28 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
     public readonly runtime = {
         unsubscribeFromEvents: null as (() => void) | null,
         subscribedExecutionId:  null as Execution.Id | null,
+        // Plain ref objects (no useRef) so the timeline's DOM refs live on the
+        // SDK and don't have to be drilled / contexted through the component tree.
+        timeline: {
+            scrollRef: { current: null as HTMLDivElement | null },
+            rulerRef:  { current: null as HTMLDivElement | null },
+            labelsRef: { current: null as HTMLDivElement | null },
+        },
+    }
+
+    // Scroll sync: the main canvas drives the ruler (x) and labels (y).
+    public syncTimelineScroll = () => {
+        const { scrollRef, rulerRef, labelsRef } = this.runtime.timeline;
+        const sc = scrollRef.current;
+        if (!sc) return;
+        if (rulerRef.current)  rulerRef.current.scrollLeft  = sc.scrollLeft;
+        if (labelsRef.current) labelsRef.current.scrollTop  = sc.scrollTop;
+    }
+    public syncTimelineLabelScroll = () => {
+        const { scrollRef, labelsRef } = this.runtime.timeline;
+        const lb = labelsRef.current;
+        if (!lb) return;
+        if (scrollRef.current) scrollRef.current.scrollTop = lb.scrollTop;
     }
 
     public subscribeToEvents(executionId: Execution.Id) {
@@ -139,7 +163,16 @@ export namespace ExecutionSDK {
             record: boolean,
             debug: boolean,
         },
-        
+        timeline: {
+            zoom:          number
+            viewMode:      TimelineViewMode
+            showRemnants:  boolean
+            selectedUoW:   Execution.Recording.UnitOfWork.Id | null
+            layout:        TimelineLayout
+            scale:         TimeScale
+            totalDuration: number
+            totalWidth:    number
+        }
     }
 
     export type Reducers = _ExecutionSessionReducers

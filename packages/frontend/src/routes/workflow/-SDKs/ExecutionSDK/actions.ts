@@ -48,6 +48,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 created_at: now,
                 updated_at: now,
             };
+            sdk.reducers.timeline.reset(s);
         });
 
         const executionCreationPromise = Execution.API.run(api, {
@@ -145,7 +146,10 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             return success;
         },
         setCurrentExecution: (execution: Execution) => {
-            sdk.setState(s => { sdk.reducers.currentExecution.set(s, execution) });
+            sdk.setState(s => {
+                sdk.reducers.currentExecution.set(s, execution);
+                sdk.reducers.timeline.rebuild(s);
+            });
         },
         loadHistory: async (workflowId: Workflow.Id) => {
             const { executions } = await Execution.API.Meta.list(api, { workflowId });
@@ -157,6 +161,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 s.currentExecution = undefined;
                 s.executionHistory = [];
                 s.igniterAttributes = { record: false, debug: false }
+                sdk.reducers.timeline.reset(s);
             })
         },
         addAwaitedConfirmation: (event) => {
@@ -172,14 +177,27 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
         loadLiveRecording: async (executionId) => {
             try {
                 const { recording } = await Execution.API.Recording.getLive(api, { executionId });
-                sdk.setState(s => { sdk.reducers.currentExecution?.recording.set(s, recording) });
+                sdk.setState(s => {
+                    sdk.reducers.currentExecution.recording.set(s, recording);
+                    sdk.reducers.timeline.rebuild(s);
+                });
             } catch {
-                sdk.setState(s => { sdk.reducers.currentExecution?.recording.set(s, null) });
+                sdk.setState(s => {
+                    sdk.reducers.currentExecution.recording.set(s, null);
+                    sdk.reducers.timeline.rebuild(s);
+                });
             }
         },
         igniter: {
             setShouldRecord: (record) => { sdk.setState(s => { sdk.reducers.igniter.setShouldRecord(s, record) }) },
             setShouldDebug: (debug) => { sdk.setState(s => { sdk.reducers.igniter.setShouldDebug(s, debug) }) }
+        },
+        timeline: {
+            setZoom:        (zoom) => { sdk.setState(s => { sdk.reducers.timeline.setZoom(s, zoom) }) },
+            setViewMode:    (mode) => { sdk.setState(s => { sdk.reducers.timeline.setViewMode(s, mode) }) },
+            toggleViewMode: ()     => { sdk.setState(s => { sdk.reducers.timeline.toggleViewMode(s) }) },
+            toggleRemnants: ()     => { sdk.setState(s => { sdk.reducers.timeline.toggleRemnants(s) }) },
+            selectUoW:      (id)   => { sdk.setState(s => { sdk.reducers.timeline.selectUoW(s, id) }) },
         },
         runStep: (targetNodeId: Workflow.Node.Id) => run({ variant: "workbench_step", targetNodeId, record: false }),
     } satisfies ExecutionSDKActions
@@ -207,5 +225,13 @@ export type ExecutionSDKActions = {
     igniter: {
         setShouldRecord: DropFirstArg<ExecutionSDK.Reducers["igniter"]["setShouldRecord"]>,
         setShouldDebug: DropFirstArg<ExecutionSDK.Reducers["igniter"]["setShouldDebug"]>,
+    },
+
+    timeline: {
+        setZoom:        DropFirstArg<ExecutionSDK.Reducers["timeline"]["setZoom"]>,
+        setViewMode:    DropFirstArg<ExecutionSDK.Reducers["timeline"]["setViewMode"]>,
+        toggleViewMode: DropFirstArg<ExecutionSDK.Reducers["timeline"]["toggleViewMode"]>,
+        toggleRemnants: DropFirstArg<ExecutionSDK.Reducers["timeline"]["toggleRemnants"]>,
+        selectUoW:      DropFirstArg<ExecutionSDK.Reducers["timeline"]["selectUoW"]>,
     }
 }

@@ -1,20 +1,25 @@
 import React from "react"
-import { Execution } from "@pretzel-graph/shared/domain"
-import type { Workflow } from "@pretzel-graph/shared/domain"
 import UoWBlock from "./UoWBlock"
-import type { TimeScale } from "../time-scale"
+import { ExecutionSDK } from "../../../sdk"
+import { WorkbenchSDK } from "../../../../WorkbenchSDK/sdk"
 import type { TimelineTrackLayout } from "../../../selectors"
 
 interface TrackRowProps {
     trackLayout: TimelineTrackLayout
-    nodes:       Record<Workflow.Node.Id, Workflow.Node>
-    scale:       TimeScale
 }
 
-const TrackRow = React.memo(({ trackLayout, nodes, scale }: TrackRowProps) => {
-    const { track, top, height, blockHeight } = trackLayout
-    const node   = nodes[track.id]
-    const accent = node?.accent ?? undefined
+const TrackRow = React.memo(({ trackLayout }: TrackRowProps) => {
+    const { trackId, top, height, blockHeight } = trackLayout
+    // Slice-subscribe to the live track so a new unit on this track re-renders
+    // only this row — layout (geometry) stays stable.
+    const [track, snapNode] = ExecutionSDK.useStore(s => [
+        s.selectors.recording.getTrack(s, trackId),
+        s.selectors.recording.getSnapshotedNode(s, trackId),
+    ])
+    // accent: snapshot node if present, else the live workbench (draft) node —
+    // subscribed so a draft recolor reflects even when the execution is quiet.
+    const accent = WorkbenchSDK.useStore(s => (snapNode ?? s.selectors.node.get(s, trackId))?.accent)
+    if (!track) return null
 
     return (
         <div
@@ -31,10 +36,8 @@ const TrackRow = React.memo(({ trackLayout, nodes, scale }: TrackRowProps) => {
                 <UoWBlock
                     key={uowId}
                     unitId={uowId}
-                    scale={scale}
                     accent={accent}
                     height={blockHeight}
-                    topOffset={Execution.Recording.Timeline.TRACK_PADDING_Y}
                 />
             ))}
         </div>

@@ -1,23 +1,31 @@
 import { Execution } from "@pretzel-graph/shared/domain"
-import { useTimelineFrame } from "../frame-context"
+import { ExecutionSDK } from "../../../sdk"
+import { resolveTimelineNodes } from "../../../selectors"
+import { WorkbenchSDK } from "../../../../WorkbenchSDK/sdk"
 import TimeRuler from "./TimeRuler"
 import TrackRow from "./TrackRow"
 import RelationLayer from "./RelationLayer"
 
 const TimelineView = () => {
-    const {
-        rulerRef,
-        scrollRef,
-        onScroll,
-        recording,
-        nodes,
-        layout,
-        scale,
-        totalDuration,
-        totalWidth,
-        scrollWidth,
-        totalHeight,
-    } = useTimelineFrame()
+
+    const [tracks, totalHeight] = ExecutionSDK.useStore(s => [
+        s.timeline.layout.tracks,
+        s.timeline.layout.totalHeight,
+    ])
+
+    const { layout, scale, totalWidth, totalDuration } = ExecutionSDK.useStore(s => ({
+        layout:        s.timeline.layout,
+        scale:         s.timeline.scale,
+        totalWidth:    s.timeline.totalWidth,
+        totalDuration: s.timeline.totalDuration,
+    }))
+    const recording = ExecutionSDK.useStore(s => s.currentExecution?.recording ?? null)
+    const workbenchNodes = WorkbenchSDK.useStore(s => s.data.nodes)
+    if (!recording) return null
+
+    const nodes = resolveTimelineNodes(recording, workbenchNodes)
+    const scrollWidth = totalWidth + Math.max(window.innerWidth, totalWidth)
+    const { scrollRef, rulerRef } = ExecutionSDK.runtime.timeline
 
     return (
         <div className="flex h-full overflow-hidden min-w-[200vw]">
@@ -26,7 +34,6 @@ const TimelineView = () => {
                 className="flex-1 overflow-hidden"
                 style={{
                     display: "grid",
-                    // gridTemplateColumns: `${TRACK_LABEL_W}px 1fr`,
                     gridTemplateRows: `${Execution.Recording.Timeline.RULER_H}px 1fr`,
                 }}
             >
@@ -46,26 +53,23 @@ const TimelineView = () => {
                 {/* Scrollable track canvas */}
                 <div
                     ref={scrollRef}
-                    onScroll={onScroll}
+                    onScroll={ExecutionSDK.syncTimelineScroll}
                     style={{ overflowX: "auto", overflowY: "auto" }}
                     className="pl-[180px] pb-20"
                 >
                     <div style={{ position: "relative", width: scrollWidth, height: totalHeight }}>
-                        {layout.tracks.map(tl => (
+                        {tracks.map(tl => (
                             <TrackRow
-                                key={tl.track.id}
+                                key={tl.trackId}
                                 trackLayout={tl}
-                                nodes={nodes}
-                                scale={scale}
                             />
                         ))}
                         <RelationLayer
-                            recording={recording}
                             nodes={nodes}
                             scale={scale}
                             layout={layout}
                             totalWidth={totalWidth}
-                            totalHeight={totalHeight}
+                            totalHeight={layout.totalHeight}
                         />
                     </div>
                 </div>
