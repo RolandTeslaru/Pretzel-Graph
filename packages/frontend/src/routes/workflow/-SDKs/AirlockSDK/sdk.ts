@@ -1,6 +1,5 @@
 import { create } from "zustand"
 import { immer } from "zustand/middleware/immer"
-import { transform } from "sucrase"
 import { Airlock, Expression, type Workflow } from "@pretzel-graph/shared/domain"
 import { SDK } from "@/SDKs/SDKManager"
 import { BaseSDK } from "@/SDKs/Base"
@@ -35,11 +34,17 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
     // and synchronous: no full type-checker/Program, no Monaco worker round-trip. It also
     // preserves the original source text verbatim apart from the stripped spans, so it won't
     // reformat/re-emit (e.g. add a stray trailing semicolon the way a real emitter would).
-    private stripTypes(source: string): string {
+    // Lazy-loaded + cached: sucrase (~104KB gz) only enters the bundle the first time a preview
+    // actually runs, instead of weighing down the initial app load for users who never open it.
+    private transform: typeof import("sucrase").transform | null = null
+    private async stripTypes(source: string): Promise<string> {
+        if (!this.transform) {
+            this.transform = (await import("sucrase")).transform
+        }
         // disableESTransforms: sucrase's "typescript" preset also downlevels optional chaining /
         // nullish coalescing into inline helper functions by default — unnecessary here since both
         // the browser preview and isolated-vm support them natively. We only want type-stripping.
-        return transform(source, { transforms: ["typescript"], disableESTransforms: true }).code
+        return this.transform(source, { transforms: ["typescript"], disableESTransforms: true }).code
     }
 
     // Globals keyed by the names the Airlock rewrite emits. $igniter / $chatId are
@@ -69,15 +74,16 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
         }
     }
 
-    // Synchronous, main-thread. Pure expressions only → ~zero hang risk, instant per-keystroke.
-    public previewExpression(
+    // Main-thread, pure expressions only → ~zero hang risk. Async only to lazy-load the type-stripper
+    // on first use; once cached it's effectively instant per-keystroke.
+    public async previewExpression(
         expr: Airlock.Source.Expression,
         nodeId: Workflow.Node.Id,
         coerceTo?: Airlock.CoerceTo
-    ): AirlockSDK.Result {
+    ): Promise<AirlockSDK.Result> {
         if (!expr?.trim()) return { ok: true, value: undefined }
         try {
-            const stripped = Airlock.Source.asExpression(this.stripTypes(expr))
+            const stripped = Airlock.Source.asExpression(await this.stripTypes(expr))
             const parsed = Airlock.parseExpression(stripped, coerceTo)
             const g = this.buildGlobals(nodeId)
             const keys = Object.keys(g)
@@ -97,7 +103,7 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
         let parsed: string
         let globals: Record<string, unknown>
         try {
-            const stripped = Airlock.Source.asCode(this.stripTypes(code))
+            const stripped = Airlock.Source.asCode(await this.stripTypes(code))
             parsed = Airlock.parseCode(stripped)
             globals = this.buildGlobals(nodeId)
         } catch (err) {

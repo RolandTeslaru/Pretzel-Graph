@@ -241,7 +241,7 @@ export namespace DialogSDK {
 
 
     export interface AlertTemplateProps extends TemplateProps {
-        type: "default" | "warning" | "danger"
+        type?: "default" | "warning" | "danger" | "accent"
     }
 
     export interface TemplateProps {
