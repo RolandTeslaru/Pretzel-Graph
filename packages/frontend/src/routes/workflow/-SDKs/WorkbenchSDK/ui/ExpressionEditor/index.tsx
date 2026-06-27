@@ -55,11 +55,11 @@ export const ExpressionEditor = ({ node, displayName, onChange, onClose, initial
 
     // live preview — same rewrite + WorkflowView the worker runs at runtime
     const preview = useMemo(
-        () => debounce((val: string) => setResult(AirlockSDK.previewExpression(val as Airlock.Source.Expression, node.id)), 500),
+        () => debounce((val: string) => { AirlockSDK.previewExpression(val as Airlock.Source.Expression, node.id).then(setResult) }, 500),
         [node.id]
     )
     useEffect(() => {
-        setResult(AirlockSDK.previewExpression(initialValue as Airlock.Source.Expression, node.id))
+        AirlockSDK.previewExpression(initialValue as Airlock.Source.Expression, node.id)?.then(setResult)
         return () => preview.cancel()
     }, [preview, initialValue, node.id])
 

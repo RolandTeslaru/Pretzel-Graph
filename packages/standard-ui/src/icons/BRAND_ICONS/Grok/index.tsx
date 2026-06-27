@@ -1,4 +1,5 @@
-const SvgGrok = ({ isDark, ...props }) => (
+import type { SVGProps } from "react"
+const SvgGrok = ({ isDark, ...props }: SVGProps<SVGSVGElement> & Record<string, any>) => (
   <svg
     fill="none"
     xmlns="http://www.w3.org/2000/svg"

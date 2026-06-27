@@ -186,7 +186,7 @@ export const nodeLifecycleReducers = {
 
         nodeLifecycleReducers.validate(s, nodeId);
     },
-    duplicate: (s, originalNode, position, overrides) => {
+    duplicate: (s, originalNode, position?, overrides?) => {
         s.isDirty = true
         if (!position) {
             position = cloneDeep(s.selectors.layout.node.get(s, originalNode.id) ?? { x: 0, y: 0 })

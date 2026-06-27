@@ -27,7 +27,7 @@ const SidebarAccordionItem = ({ label, value, children }: SidebarAccordionItemPr
         <Accordion.Trigger className='px-3 cursor-pointer hover:no-underline'>
             <h4 className='text-sm font-semibold text-foreground tracking-tight'>{label}</h4>
         </Accordion.Trigger>
-        <Accordion.Content className='flex flex-col gap-1 bg-secondary/60 py-2'>
+        <Accordion.Content className='flex flex-col gap-1 bg-background/60 py-3'>
             {children}
         </Accordion.Content>
     </Accordion.Item>
