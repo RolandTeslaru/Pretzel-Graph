@@ -93,7 +93,7 @@ code {
   --primary-hover: theme(--color-amber-500);
   --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
 
-  --secondary: var(--color-neutral-300);
+  --secondary: var(--color-neutral-200);
   --secondary-foreground:var(--color-neutral-700);
 
   --accent: theme(--color-neutral-300);

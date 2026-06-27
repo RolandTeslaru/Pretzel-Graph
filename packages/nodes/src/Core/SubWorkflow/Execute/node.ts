@@ -1,7 +1,7 @@
 import { RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
-import { Execution, Workflow } from "@pretzel-graph/shared/domain";
+import { Airlock, Execution, Workflow } from "@pretzel-graph/shared/domain";
 import { AggexEngine, WorkflowCompiler } from "@pretzel-graph/worker";
 import { System } from "@pretzel-graph/shared/system";
 import { Node as ExposeInputPortNode } from "../ExposeInputPort/node";
@@ -19,6 +19,9 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private subEnvironment!: ReturnType<RuntimeNode.ExecutionContext["subWorkflowAPI"]["createEnv"]>;
     private subEngineCtx!: AggexEngine.Execution.Context;
+
+    /** Author-written `$metrics` rollups from the sub-workflow, read back after the sub-run. */
+    private aggregatedMetrics?: Record<string, Execution.Recording.Metric>;
 
 
 
@@ -55,7 +58,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             parentWorkflowIgniter: igniter,
         }
 
-        const subExecution: Execution = {
+        const execution: Execution = {
             id:          this.context.executionId,
             workflow_id: subWorkflowId,
             recording:   null,
@@ -84,7 +87,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         this.subEngineCtx = await this.subEnvironment.compile(
             subWorkflowId,
             childWorkflowData,
-            subExecution,
+            execution,
             this.context.emit,
             childCompilationCtx,
             enclosingNodeAPI,
@@ -102,6 +105,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         try {
             await this.subEnvironment.run(this.subEngineCtx);
 
+            this.aggregatedMetrics = normalizeMetrics(
+                this.subEngineCtx.airlockAPI.readGlobal<Record<string, unknown>>(Airlock.GLOBALS.metrics),
+            );
+
             // getPropagationStrategy() returns "none" — ExposeOutputPort nodes propagate
             // parent outputs via enclosingNodeAPI as they fire; returning {} here avoids
             // a second fan-out signal from the engine on completion.
@@ -112,6 +119,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             });
             throw new Error(`Error executing sub-workflow: ${err instanceof Error ? err.message : String(err)}`);
         }
+    }
+
+
+
+    protected override onRecordMetrics(): Record<string, Execution.Recording.Metric> | undefined {
+        return this.aggregatedMetrics;
     }
 
 
@@ -140,4 +153,49 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             instance.injectedData = dynamicInputs[exposeNodeId];
         }
     }
+}
+
+
+
+const METRIC_TYPES = new Set<Execution.Recording.Metric.Type>([
+    "number", "string", "duration_ms", "currency_usd", "tokens",
+]);
+
+const isMetricType = (t: unknown): t is Execution.Recording.Metric.Type =>
+    typeof t === "string" && METRIC_TYPES.has(t as Execution.Recording.Metric.Type);
+
+// Normalizes the author-written `$metrics` bag into UoW metrics. Each entry is either a raw
+// scalar (`$metrics.count = 5`) or a full descriptor (`$metrics.cost = { value, type, displayName }`).
+// Non-conforming entries are dropped so a malformed write can't break the timeline renderer.
+function normalizeMetrics(
+    raw: Record<string, unknown> | undefined,
+): Record<string, Execution.Recording.Metric> | undefined {
+    if (!raw || typeof raw !== "object") return undefined;
+
+    const out: Record<string, Execution.Recording.Metric> = {};
+
+    for (const [key, val] of Object.entries(raw)) {
+        if (typeof val === "number" || typeof val === "string") {
+            out[key] = {
+                displayName: key,
+                value:       val,
+                type:        typeof val === "number" ? "number" : "string",
+            };
+            continue;
+        }
+
+        if (val && typeof val === "object") {
+            const d = val as { value?: unknown; type?: unknown; displayName?: unknown };
+            if (typeof d.value !== "number" && typeof d.value !== "string") continue;
+            out[key] = {
+                displayName: typeof d.displayName === "string" ? d.displayName : key,
+                value:       d.value,
+                type:        isMetricType(d.type)
+                    ? d.type
+                    : (typeof d.value === "number" ? "number" : "string"),
+            };
+        }
+    }
+
+    return Object.keys(out).length > 0 ? out : undefined;
 }

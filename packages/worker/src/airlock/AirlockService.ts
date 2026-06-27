@@ -89,7 +89,7 @@ export class AirlockService {
     // One Context per env; injects the shared workflow copy + per-scope globals once.
     public createScope(
         workflowId: Workflow.Id,
-        perScope: { igniter: Execution.Igniter; chatId?: Chat.Id },
+        perScope: { igniter: Execution.Igniter; chatId?: Chat.Id | null },
     ): AirlockScope {
         const wfCopy = this.workflowCopies.get(workflowId);
         if (!wfCopy)
@@ -103,6 +103,9 @@ export class AirlockService {
         // Execution-scoped mutable scratch ($globals / $nodeGlobals). Set once, never cleared,
         // survives across re-fires, dies with the isolate at execution end.
         global.setSync(Airlock.GLOBALS.globals, {}, { copy: true });
+
+        // Per-env metric scratch ($metrics) — author-written rollups, read back at the sub-run boundary.
+        global.setSync(Airlock.GLOBALS.metrics, {}, { copy: true });
 
         global.setSync(Airlock.GLOBALS.workflow, wfCopy.copyInto());
         global.setSync(Airlock.GLOBALS.igniter, perScope.igniter, { copy: true });
