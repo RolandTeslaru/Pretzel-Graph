@@ -1,4 +1,5 @@
-const SvgMistralIcon = (props) => (
+import type { SVGProps } from "react"
+const SvgMistralIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 129 91"
     version="1.1"

@@ -1,4 +1,5 @@
-export const SvgOllama = (props) => {
+import type { SVGProps } from "react"
+export const SvgOllama = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => {
   const color = props.isDark ? "#fff" : "#000";
 
   return (

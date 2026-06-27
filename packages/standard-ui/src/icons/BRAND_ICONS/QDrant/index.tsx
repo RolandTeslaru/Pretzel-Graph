@@ -1,4 +1,5 @@
-const SvgQDrant = (props) => (
+import type { SVGProps } from "react"
+const SvgQDrant = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="168.419 120.023 131.984 152.407"

@@ -1,4 +1,5 @@
-const SvgPerplexity = (props) => (
+import type { SVGProps } from "react"
+const SvgPerplexity = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 512 509.64" // Adjust viewBox if needed

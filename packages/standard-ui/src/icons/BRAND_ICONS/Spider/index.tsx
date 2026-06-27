@@ -1,4 +1,5 @@
-const SvgSpiderIcon = (props) => (
+import type { SVGProps } from "react"
+const SvgSpiderIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 36 34"
     xmlns="http://www.w3.org/2000/svg"

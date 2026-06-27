@@ -1,4 +1,5 @@
-const Icon = (props) => (
+import type { SVGProps } from "react"
+const Icon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0,0,256,256"
@@ -20,7 +21,6 @@ const Icon = (props) => (
       fontFamily="none"
       fontWeight="none"
       fontSize="none"
-      textAnchor="none"
       style={{ mixBlendMode: "normal" }}
     >
       <g transform="scale(5.12,5.12)">

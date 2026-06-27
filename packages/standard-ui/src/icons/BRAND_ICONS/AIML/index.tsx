@@ -1,6 +1,7 @@
+import type { SVGProps } from "react"
 import { cn } from "../../../utils/cn";
 // @ts-ignore
-export const AIMLComponent = ({ className, ...props }) => (
+export const AIMLComponent = ({ className, ...props }: SVGProps<SVGSVGElement> & Record<string, any>) => (
   <svg
     className={cn("dark:invert", className)}
     width="225"

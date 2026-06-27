@@ -1,4 +1,5 @@
-const SvgCrewAiIcon = (props) => (
+import type { SVGProps } from "react"
+const SvgCrewAiIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="32"
     height="32"

@@ -1,4 +1,5 @@
-const SvgDocling = (props) => (
+import type { SVGProps } from "react"
+const SvgDocling = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="1em"
     height="1em"

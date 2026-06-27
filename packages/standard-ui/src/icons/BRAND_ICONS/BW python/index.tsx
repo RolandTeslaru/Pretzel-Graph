@@ -1,4 +1,5 @@
-export const BWSvgPython = (props) => (
+import type { SVGProps } from "react"
+export const BWSvgPython = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => (
   <svg
     width="16"
     height="16"

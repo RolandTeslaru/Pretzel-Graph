@@ -1,4 +1,5 @@
-const XAISVG = ({ isDark, ...props }) => (
+import type { SVGProps } from "react"
+const XAISVG = ({ isDark, ...props }: SVGProps<SVGSVGElement> & Record<string, any>) => (
   <svg
     fill="currentColor"
     fillRule="evenodd"

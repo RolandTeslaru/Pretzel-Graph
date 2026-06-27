@@ -1,4 +1,5 @@
-const CassandraSVG = (props) => (
+import type { SVGProps } from "react"
+const CassandraSVG = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="24"
     height="24"

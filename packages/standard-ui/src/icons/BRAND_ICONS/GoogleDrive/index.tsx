@@ -1,4 +1,5 @@
-const SvgGoogleDrive = (props) => (
+import type { SVGProps } from "react"
+const SvgGoogleDrive = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="1em"
     height="1em"

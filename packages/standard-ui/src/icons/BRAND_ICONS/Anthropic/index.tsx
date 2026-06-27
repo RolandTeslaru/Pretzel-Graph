@@ -1,4 +1,5 @@
-const SvgAnthropicBox = ({ isDark: _isDark, ...props }) => {
+import type { SVGProps } from "react"
+const SvgAnthropicBox = ({ isDark: _isDark, ...props }: SVGProps<SVGSVGElement> & Record<string, any>) => {
   return (
     <svg
       width="38"

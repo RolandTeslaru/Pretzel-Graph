@@ -1,4 +1,5 @@
-const DeepSeekSVG = (props) => (
+import type { SVGProps } from "react"
+const DeepSeekSVG = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => (
   <svg
     version="1.0"
     xmlns="http://www.w3.org/2000/svg"

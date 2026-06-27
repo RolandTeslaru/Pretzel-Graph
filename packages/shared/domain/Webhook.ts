@@ -3,7 +3,6 @@ import type { AxiosInstance } from "axios";
 import { Realtime } from "./Realtime";
 
 const WorkflowId = z.uuid().brand("WorkflowId");
-type WorkflowId = z.infer<typeof WorkflowId>;
 
 const ExecutionId = z.uuid().brand("ExecutionId");
 type ExecutionId = z.infer<typeof ExecutionId>;

@@ -1,4 +1,5 @@
-const SvgGroqLogo = ({ ...props }) => (
+import type { SVGProps } from "react"
+const SvgGroqLogo = ({ ...props }: SVGProps<SVGSVGElement> & Record<string, any>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     aria-label="groq logo"

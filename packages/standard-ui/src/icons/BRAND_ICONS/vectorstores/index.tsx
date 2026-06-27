@@ -1,4 +1,5 @@
-const SvgVectorStores = (props) => (
+import type { SVGProps } from "react"
+const SvgVectorStores = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => (
   <svg
     fill={props.isDark ? "#ffffff" : "#0A0A0A"}
     fillRule="evenodd"

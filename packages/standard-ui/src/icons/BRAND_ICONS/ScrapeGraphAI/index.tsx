@@ -1,4 +1,5 @@
-const ScrapeGraphAI = (props) => {
+import type { SVGProps } from "react"
+const ScrapeGraphAI = (props: SVGProps<SVGSVGElement>) => {
   return (
     <svg
       id="svg"

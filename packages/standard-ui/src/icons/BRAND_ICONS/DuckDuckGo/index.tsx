@@ -1,4 +1,5 @@
-const SvgDuckDuckGo = ({ ...props }) => (
+import type { SVGProps } from "react"
+const SvgDuckDuckGo = ({ ...props }: SVGProps<SVGSVGElement> & Record<string, any>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 122.88 122.88"

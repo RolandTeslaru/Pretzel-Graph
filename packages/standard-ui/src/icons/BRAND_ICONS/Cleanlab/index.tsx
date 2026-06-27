@@ -1,4 +1,5 @@
-const SvgCleanlab = (props) => {
+import type { SVGProps } from "react"
+const SvgCleanlab = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => {
   return (
     <svg
       width={697}

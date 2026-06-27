@@ -1,4 +1,5 @@
-const UpstashIcon = (props) => (
+import type { SVGProps } from "react"
+const UpstashIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 256 341"
     version="1.1"

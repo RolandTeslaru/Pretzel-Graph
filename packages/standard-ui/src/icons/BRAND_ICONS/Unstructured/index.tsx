@@ -1,4 +1,5 @@
-const SvgGoogleGenerativeAI = (props) => (
+import type { SVGProps } from "react"
+const SvgGoogleGenerativeAI = (props: SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"

@@ -1,4 +1,5 @@
-const SvgCometAPI = ({ isDark = false, ...props }) => (
+import type { SVGProps } from "react"
+const SvgCometAPI = ({ isDark = false, ...props }: SVGProps<SVGSVGElement> & Record<string, any>) => (
   <svg
     width="24"
     height="24"

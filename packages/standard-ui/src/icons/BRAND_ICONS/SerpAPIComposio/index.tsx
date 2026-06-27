@@ -1,4 +1,5 @@
-const SvgSerpSearchAPI = (props) => (
+import type { SVGProps } from "react"
+const SvgSerpSearchAPI = (props: SVGProps<SVGSVGElement>) => (
   <svg
     version="1.0"
     viewBox="0 0 610 610"

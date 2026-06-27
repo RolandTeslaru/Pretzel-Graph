@@ -1,4 +1,5 @@
-const NvidiaSVG = (props) => (
+import type { SVGProps } from "react"
+const NvidiaSVG = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => (
   <svg
     version="1.1"
     id="svg2"

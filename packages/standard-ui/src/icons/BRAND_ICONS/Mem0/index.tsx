@@ -1,4 +1,5 @@
-export default function SvgMem0(props) {
+import type { SVGProps } from "react"
+export default function SvgMem0(props: SVGProps<SVGSVGElement> & { isDark?: boolean }) {
   return (
     <svg
       viewBox="0 0 126 127"

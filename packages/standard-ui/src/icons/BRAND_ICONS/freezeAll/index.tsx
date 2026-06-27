@@ -1,6 +1,7 @@
+import type { SVGProps } from "react"
 import { cn } from "../../../utils/cn";
 
-const FreezeAllSvg = ({ className, ...props }) => {
+const FreezeAllSvg = ({ className, ...props }: SVGProps<SVGSVGElement> & Record<string, any>) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

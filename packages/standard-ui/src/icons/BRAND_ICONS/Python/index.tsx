@@ -1,4 +1,5 @@
-export const SvgPython = (props) => (
+import type { SVGProps } from "react"
+export const SvgPython = (props: SVGProps<SVGSVGElement>) => (
   <svg
     version="1.0"
     viewBox="0 0 810 810"

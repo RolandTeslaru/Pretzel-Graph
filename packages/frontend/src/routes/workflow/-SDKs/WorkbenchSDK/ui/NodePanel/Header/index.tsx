@@ -48,7 +48,7 @@ export const NodeSidebarHeader = ({ node, isEditing, onEditStart, onEditFinish }
                     </h4>
                 )}
             </div>
-            <FloatContainer className='ml-auto'>
+            <FloatContainer className='ml-auto backdrop-blur-md'>
                 {isEditing ? (
                     <div className='flex flex-row gap-2 ml-auto my-auto h-auto'>
                         <Button size="xs" className='rounded-full' variant="success" onClick={onEditFinish}>

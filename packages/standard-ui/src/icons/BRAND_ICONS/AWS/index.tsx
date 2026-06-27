@@ -1,10 +1,10 @@
-const SvgAWS = (props) => (
+import type { SVGProps } from "react"
+const SvgAWS = (props: SVGProps<SVGSVGElement> & { isDark?: boolean; isWhite?: boolean }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     xmlSpace="preserve"
     id="Layer_1"
     style={{
-      enableBackground: "new 0 0 304 182",
     }}
     viewBox="0 0 304 182"
     {...props}
