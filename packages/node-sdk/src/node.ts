@@ -107,45 +107,41 @@ export abstract class RuntimeNode<
         }
         this.projectedIn = projectedIncoming;
 
-        // Set `@in` once for this firing, evaluate every isExpression field synchronously,
-        // then it's cleared — one copy of `incoming`, atomic against concurrent firings.
-        this.context
-            .airlockAPI
-            .executeSync(
-                {
-                    [Airlock.GLOBALS.in]: projectedIncoming,
-                    [Airlock.GLOBALS.nodeId]: this.workflowNode.id,
-                },
-                (evaluate) => {
-                    for (const field of this.workflowNode.fields) {
-                        // Item-scoped fields are resolved per-element via evalItemField, not here —
-                        // `$item` isn't bound during this node-level pass.
-                        if (field.itemScoped === true) continue;
+        this.context.airlockAPI.executeSync(
+            {
+                [Airlock.GLOBALS.in]: projectedIncoming,
+                [Airlock.GLOBALS.nodeId]: this.workflowNode.id,
+            },
+            (evaluate) => {
+                for (const field of this.workflowNode.fields) {
+                    // Item-scoped fields are resolved per-element via evalItemField, not here —
+                    // `$item` isn't bound during this node-level pass.
+                    if (field.itemScoped === true) continue;
 
-                        if (field.variant === "CaseList") {
-                            const raw = evaluated[field.id]
-                            if (!Array.isArray(raw)) 
-                                continue;
-
-                            evaluated[field.id] = raw.map(entry =>
-                                entry.isExpression && typeof entry.value === "string"
-                                    ? { ...entry, value: !!evaluate(Airlock.Source.asExpression(entry.value)) }
-                                    : entry
-                            );
+                    if (field.variant === "CaseList") {
+                        const raw = evaluated[field.id]
+                        if (!Array.isArray(raw)) 
                             continue;
-                        }
 
-                        if (!Foundations.Field.isExpression(field)) continue;
-                        const raw = evaluated[field.id];
-                        if (typeof raw !== "string") continue;
-
-                        evaluated[field.id] = evaluate(
-                            Airlock.Source.asExpression(raw),
-                            Airlock.coerceTargetForVariant(field.variant),
+                        evaluated[field.id] = raw.map(entry =>
+                            entry.isExpression && typeof entry.value === "string"
+                                ? { ...entry, value: !!evaluate(Airlock.Source.asExpression(entry.value)) }
+                                : entry
                         );
+                        continue;
                     }
-                },
-            );
+
+                    if (!Foundations.Field.isExpression(field)) continue;
+                    const raw = evaluated[field.id];
+                    if (typeof raw !== "string") continue;
+
+                    evaluated[field.id] = evaluate(
+                        Airlock.Source.asExpression(raw),
+                        Airlock.coerceTargetForVariant(field.variant),
+                    );
+                }
+            },
+        );
 
         return evaluated as InferFields<T_Blueprint>;
     }
@@ -435,18 +431,13 @@ export namespace RuntimeNode {
     };
 
     export type LoaderContext<T_Blueprint extends Blueprint = Blueprint> = {
-        /** Typed static field values, keyed by field literal id — same shape as `this.fields`. */
         fieldValues: InferFields<T_Blueprint>;
-        /** Typed credential instances, keyed by template id — same shape as `this.credentials`. */
         credentials: InferCredentials<T_Blueprint>;
-        /** Decryption capability — identical surface to ExecutionContext.credentialsAPI. */
         credentialsAPI: {
             getInstance(instanceId: Vault.Credential.Instance.Id): Vault.Credential.Instance | undefined;
             getDecryptedValue<T = unknown>(blob: Vault.Credential.Instance.EncryptedBlob<T>): InferCredentialValues<T>;
         };
-        /** Search string typed by the user, if any */
         searchQuery?: string;
-        /** Pagination cursor from a previous call */
         paginationCursor?: string;
     };
 
@@ -455,14 +446,15 @@ export namespace RuntimeNode {
 
     export interface ExecutionContext {
         readonly executionId: Execution.Id,
-        readonly chat_id: Chat.Id | undefined,
+        readonly chat_id: Chat.Id | null | undefined,
         readonly session: Execution.Session,
         readonly updateSession: (recipe: (draft: Execution.Session) => void) => void,
         readonly emit: <T_Event extends Realtime.Event>(event: T_Event) => void,
         readonly workflowData: Workflow.Data,
         readonly workflowId: Workflow.Id,
         readonly workflowCache: Workflow.Cache,
-        /** Sandboxed expression/code evaluation for this workflow env (one Context per env). */
+
+        // APIS
         readonly airlockAPI: Airlock.API,
         readonly credentialsAPI: {
             getInstance(instanceId: Vault.Credential.Instance.Id): Vault.Credential.Instance | undefined
