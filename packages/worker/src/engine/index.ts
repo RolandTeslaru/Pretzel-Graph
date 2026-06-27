@@ -78,20 +78,26 @@ export class AggexEngine {
                 })
             ),
 
-            new Promise((resolve, reject) => {
-                ctx.abortAPI.signal.addEventListener("abort", () => {
-                    // A "stop at target" abort is an intentional, successful stop — not a
-                    // user/timeout termination — so surface it as completed.
-                    const stoppedAtTarget = ctx.abortAPI.signal.reason === AggexEngine.STOP_AT_TARGET_REASON;
-                    resolve({
-                        status: stoppedAtTarget ? "completed" as const : "terminated" as const,
-                        duration: (performance.now() - start) / 1000
-                });
-                }, { once: true })
-            })
+            this.createRejectionPromise(ctx, start)
         ])
 
         return result;
+    }
+
+
+
+    private createRejectionPromise(ctx: AggexEngine.Execution.Context, start: number){
+        return new Promise<AggexEngine.Execution.Result>((resolve, reject) => {
+            ctx.abortAPI.signal.addEventListener("abort", () => {
+                // A "stop at target" abort is an intentional, successful stop — not a
+                // user/timeout termination — so surface it as completed.
+                const stoppedAtTarget = ctx.abortAPI.signal.reason === AggexEngine.STOP_AT_TARGET_REASON;
+                resolve({
+                    status: stoppedAtTarget ? "completed" as const : "terminated" as const,
+                    duration: (performance.now() - start) / 1000
+                });
+            }, { once: true })
+        })
     }
 
 

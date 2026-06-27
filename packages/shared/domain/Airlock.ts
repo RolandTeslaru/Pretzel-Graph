@@ -26,6 +26,7 @@ export namespace Airlock {
         itemIndex: "__item_index__",
         nodeId:    "__node_id__",
         globals:   "__globals__",
+        metrics:   "__metrics__",
     } as const
 
     const CONFIG_NODE_KEY = Workflow.WORKFLOW_CONFIG_NODE_ID
@@ -43,11 +44,14 @@ export namespace Airlock {
         // auto-created (`??= {}`) so reads/writes never hit undefined.
         globals:     GLOBALS.globals,
         nodeGlobals: `(${GLOBALS.globals}[${GLOBALS.nodeId}] ??= {})`,
+        // Per-env metric scratch. Authors write rollups (`$metrics.cost = ...`); the enclosing
+        // Execute Sub-Workflow node reads it back after the sub-run and surfaces it as UoW metrics.
+        metrics:     GLOBALS.metrics,
     }
 
     // Matches $root at a word boundary; rewrites only the root, leaving member access intact.
     // `itemIndex` precedes `item`, and `nodeGlobals` precedes `node`, so the longer root wins.
-    const SIGIL = /\$(workflow|config|igniter|chatId|in|itemIndex|item|nodeGlobals|node|globals)\b/g
+    const SIGIL = /\$(workflow|config|igniter|chatId|in|itemIndex|item|nodeGlobals|node|globals|metrics)\b/g
 
     export function rewrite(source: Source): string {
         return source.replace(SIGIL, (_m, root: string) => STATIC_ROOTS[root])
@@ -108,5 +112,7 @@ export namespace Airlock {
         executeSync<T>(globals: Record<string, unknown>, run: (evaluate: EvaluateFn, setTransient: SetTransientFn) => T): T
         // Run code-mode source async; `incoming` is passed as $in (the fn param), copied per call.
         executeAsyncCode(code: Source.Code, nodeId: Workflow.Node.Id, incoming: unknown): Promise<unknown>
+        // Deep-copy a persistent scope global out to the host (e.g. `$metrics` after a sub-run).
+        readGlobal<T = unknown>(name: string): T | undefined
     }
 }
