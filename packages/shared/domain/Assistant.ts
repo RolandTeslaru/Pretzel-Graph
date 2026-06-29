@@ -181,10 +181,10 @@ export namespace Assistant {
     export namespace Signal {
 
         export namespace MessageSent {
-            export const channel = Realtime.Channel.brand("AssistantMessageSentSignalChannel")
-            export type channel = z.infer<typeof channel>
+            export const Channel = Realtime.Channel.brand("Assistant.Signal.MessageSent.Channel")
+            export type Channel = z.infer<typeof Channel>
 
-            export const getChannel = (executionId: ExecutionId) => `assistant:message_sent:${executionId}` as channel
+            export const getChannel = (executionId: ExecutionId) => `assistant:message_sent:${executionId}` as Channel
 
             export const Schema = Realtime.Signal.Base.extend({
                 assistantId: Assistant.Id,
@@ -194,10 +194,10 @@ export namespace Assistant {
         }
 
         export namespace HumanResponded {
-            export const channel = Realtime.Channel.brand("AssistantHumanRespondedSignalChannel")
-            export type channel = z.infer<typeof channel>
+            export const Channel = Realtime.Channel.brand("Assistant.Signal.HumanResponded.Channel")
+            export type Channel = z.infer<typeof Channel>
 
-            export const getChannel = (executionId: ExecutionId) => `assistant:human_responded:${executionId}` as channel
+            export const getChannel = (executionId: ExecutionId) => `assistant:human_responded:${executionId}` as Channel
 
             export const Schema = Realtime.Signal.Base.extend({
                 assistantId: Assistant.Id,

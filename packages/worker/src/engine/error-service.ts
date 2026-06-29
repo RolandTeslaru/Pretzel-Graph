@@ -133,7 +133,7 @@ export class ErrorService {
      * (router-style); the carrying node is recorded `failed` so the path lights up.
      *
      * Throws (→ terminate) when:
-     *   - the envelope's `path` already contains this node → `CyclicalUncaughtRuntimeNodeError`
+     *   - the envelope's `path` already contains this node → `CyclicalRuntimeNodeError`
      *   - this node has no wired outgoing edges → `UncaughtRuntimeNodeError`
      */
     private propagate(

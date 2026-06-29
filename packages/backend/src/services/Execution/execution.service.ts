@@ -54,7 +54,7 @@ export class ExecutionService {
         payload: Execution.API.Run.Request,
     ): Promise<Execution.API.Run.Response> {
         const supabase = createAuthenticatedClient(token);
-        const ownerId = await this.ownership.assertWorkflow(supabase, payload.workflowId, userId);
+        const ownerId = await this.ownership.assertWorkflow(payload.workflowId, userId);
         return this.runCore(supabase, ownerId, payload, payload.igniter);
     }
 
@@ -195,7 +195,7 @@ export class ExecutionService {
         const { executionId } = payload;
         const supabase = createAuthenticatedClient(token);
 
-        await this.ownership.assertExecution(supabase, executionId, userId);
+        await this.ownership.assertExecution(executionId, userId);
 
         const eventChannel  = Execution.Event.getChannel(executionId);
         const signalChannel = Execution.Signal.getChannel(executionId);
@@ -224,12 +224,14 @@ export class ExecutionService {
         const { executionId } = payload;
         const supabase = createAuthenticatedClient(token);
 
-        await this.ownership.assertExecution(supabase, executionId, userId);
+        await this.ownership.assertExecution(executionId, userId);
 
-        const eventChannel  = Execution.Event.getChannel(executionId);
-        const signalChannel = Execution.Signal.getChannel(executionId);
-
+        const eventChannel = Execution.Event.getChannel(executionId);
+        
         const confirmation = this.realtime.withEventConfirmation(eventChannel, 'resumed');
+
+
+        const signalChannel = Execution.Signal.getChannel(executionId);
 
         this.realtime.emitSignal<Execution.Signal.Resume>({
             channel: signalChannel,
@@ -251,9 +253,8 @@ export class ExecutionService {
         payload: Execution.API.Heartbeat.Request,
     ): Promise<Execution.API.Heartbeat.Response> {
         const { executionId } = payload;
-        const supabase = createAuthenticatedClient(token);
 
-        await this.ownership.assertExecution(supabase, executionId, userId);
+        await this.ownership.assertExecution(executionId, userId);
 
         const channel = Execution.Signal.getChannel(executionId)
 
@@ -276,7 +277,7 @@ export class ExecutionService {
         const supabase = createAuthenticatedClient(token);
         const { executionId } = payload;
 
-        await this.ownership.assertExecution(supabase, executionId, userId);
+        await this.ownership.assertExecution(executionId, userId);
 
         const eventChannel  = Execution.Event.getChannel(executionId);
         const signalChannel = Execution.Signal.getChannel(executionId);
@@ -305,7 +306,7 @@ export class ExecutionService {
         const { executionId } = payload;
 
         const supabase = createAuthenticatedClient(token);
-        await this.ownership.assertExecution(supabase, executionId, userId);
+        await this.ownership.assertExecution(executionId, userId);
 
         const eventChannel  = Execution.Event.getChannel(executionId);
         const signalChannel = Execution.Signal.getChannel(executionId);
@@ -372,7 +373,7 @@ export class ExecutionService {
         const { executionId } = payload;
         const supabase = createAuthenticatedClient(token);
 
-        await this.ownership.assertExecution(supabase, executionId, userId);
+        await this.ownership.assertExecution(executionId, userId);
 
         const execution = await this.database.get(supabase, executionId);
 
@@ -398,8 +399,7 @@ export class ExecutionService {
             userId:  Auth.User.Id,
             payload: Execution.API.Recording.GetLive.Request,
         ): Promise<Execution.API.Recording.GetLive.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            await this.ownership.assertExecution(supabase, payload.executionId, userId);
+            await this.ownership.assertExecution(payload.executionId, userId);
             const key = Execution.Event.getChannel(payload.executionId);
             const raw = await this.redis.get(key);
             if (!raw) throw new SystemError(SystemError.Code.NOT_FOUND, 'Live recording not found or expired');
@@ -419,7 +419,7 @@ export class ExecutionService {
             const supabase = createAuthenticatedClient(token);
             const { executionId } = payload;
 
-            await this.ownership.assertExecution(supabase, executionId, userId);
+            await this.ownership.assertExecution(executionId, userId);
 
             const meta = await this.database.meta.get(supabase, executionId);
 
