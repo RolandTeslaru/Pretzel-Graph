@@ -36,7 +36,7 @@ export class NodeIOService {
             d.node_output_projections[nodeId][outputId] = projection;
         });
 
-        ctx.emit<Execution.Event.SessionUpdate>({
+        ctx.realtimeAPI.emit<Execution.Event.SessionUpdate>({
             executionId: ctx.executionId,
             workflowId:  ctx.workflowId,
             type:        "update",

@@ -192,7 +192,10 @@ Inside a node you have:
 
 Helpers on the base class:
 - `this.AbortablePromise((resolve, reject, signal) => …)` — a promise that rejects on abort.
-- `this.CreateSignalPromise(channel, schema, timeout)` — wait for a Redis pub/sub signal (used by human-in-the-loop / wait patterns).
+
+Realtime, via `this.context.realtimeAPI`:
+- `this.context.realtimeAPI.emit(event)` — publish an event (engine → user).
+- `this.context.realtimeAPI.awaitSignal(channel, schema, timeout)` — wait for a Redis pub/sub signal (used by human-in-the-loop / wait patterns). Bound to the execution's abort signal, so it rejects + cleans up on terminate/suspend.
 
 ---
 

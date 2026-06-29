@@ -86,7 +86,7 @@ export class SessionService {
 
         ctx.updateSession(d => { Object.assign(d.node_status, nodeStatusUpdate); });
 
-        ctx.emit<Execution.Event.Node.Started>({
+        ctx.realtimeAPI.emit<Execution.Event.Node.Started>({
             executionId:   ctx.executionId,
             workflowId:    ctx.workflowId,
             type:          "node:started",
@@ -164,7 +164,7 @@ export class SessionService {
             Object.assign(d.node_status, nodeStatusUpdate);
         });
 
-        ctx.emit<Execution.Event.Node.Completed>({
+        ctx.realtimeAPI.emit<Execution.Event.Node.Completed>({
             executionId:   ctx.executionId,
             workflowId:    ctx.workflowId,
             type:          "node:completed",
@@ -199,7 +199,7 @@ export class SessionService {
 
         ctx.updateSession(d => { Object.assign(d.node_status, nodeStatusUpdate); });
 
-        ctx.emit<Execution.Event.Node.Waiting>({
+        ctx.realtimeAPI.emit<Execution.Event.Node.Waiting>({
             executionId:   ctx.executionId,
             workflowId:    ctx.workflowId,
             type:          "node:waiting",
@@ -229,7 +229,7 @@ export class SessionService {
 
         ctx.updateSession(d => { Object.assign(d.node_status, nodeStatusUpdate); });
 
-        ctx.emit<Execution.Event.Node.Error>({
+        ctx.realtimeAPI.emit<Execution.Event.Node.Error>({
             executionId:   ctx.executionId,
             workflowId:    ctx.workflowId,
             type:          "node:error",
