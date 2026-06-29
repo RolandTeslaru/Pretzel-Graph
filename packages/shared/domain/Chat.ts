@@ -211,10 +211,10 @@ export namespace Chat {
     export namespace Signal {
 
         export namespace MessageSent {
-            export const channel = Realtime.Channel.brand("ChatMessageSentSignalChannel")
-            export type channel = z.infer<typeof channel>
+            export const Channel = Realtime.Channel.brand("Chat.Signal.MessageSent.Channel");
+            export type Channel = z.infer<typeof Channel>
 
-            export const getChannel = (executionId: ExecutionId) => `chat:message_sent:${executionId}` as channel
+            export const getChannel = (executionId: ExecutionId) => `chat:message_sent:${executionId}` as Channel
 
             export const Schema = Realtime.Signal.Base.extend({
                 chatId: Chat.Id,
@@ -224,10 +224,10 @@ export namespace Chat {
         }
 
         export namespace HumanResponeded {
-            export const channel = Realtime.Channel.brand("ChatHumanRespondedSignalChannel")
-            export type channel = z.infer<typeof channel>
+            export const Channel = Realtime.Channel.brand("Chat.Signal.HumanResponded.Channel");
+            export type Channel = z.infer<typeof Channel>;
 
-            export const getChannel = (executionId: ExecutionId) => `chat:human_responded:${executionId}` as channel
+            export const getChannel = (executionId: ExecutionId) => `chat:human_responded:${executionId}` as Channel
 
             export const Schema = Realtime.Signal.Base.extend({
                 chatId: Chat.Id,

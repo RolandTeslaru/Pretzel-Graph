@@ -24,19 +24,21 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 
     // Cache key: "userId:channel" -> allowed/denied + TTL
-    private ownershipCache   = new Map<string, CacheEntry>();
-    private wsSubscriptions  = new Map<Realtime.Channel, Set<WebSocket>>();
+    private ownershipCache = new Map<string, CacheEntry>();
+    private wsSubscriptions = new Map<Realtime.Channel, Set<WebSocket>>();
     private socketIdentities = new WeakMap<WebSocket, SocketIdentity>();
 
     constructor(private readonly ownership: PermissionService) {
-        this.redisSub.on('message', (channel, serializedEvent) => {
-            const clients = this.wsSubscriptions.get(channel as Realtime.Channel);
+
+        this.redisSub.on('message', (channel: Realtime.Channel, serializedEvent: string) => {
+
+            const clients = this.wsSubscriptions.get(channel);
             if (!clients)
-                return; 
+                return;
+
             clients.forEach(ws => {
-                if (ws.readyState === WebSocket.OPEN) {
+                if (ws.readyState === WebSocket.OPEN)
                     ws.send(serializedEvent);
-                }
             });
         });
     }
@@ -76,7 +78,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
                 return;
             }
 
-            this.socketIdentities.set(ws, { userId: userId as Auth.User.Id });
+            this.socketIdentities.set(ws, { userId });
         } catch {
             ws.close(1008, 'Authentication failed');
             return;
@@ -123,9 +125,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         // Only cache when the resource was found (owned or denied).
         // Don't cache not-found — frontend subscribes preemptively before resource creation.
         if (result !== 'not_found') {
-            const cacheEntry: CacheEntry =  { 
-                allowed: result === 'owned', 
-                expiresAt: Date.now() + OWNERSHIP_CACHE_TTL_MS 
+            const cacheEntry: CacheEntry = {
+                allowed: result === 'owned',
+                expiresAt: Date.now() + OWNERSHIP_CACHE_TTL_MS
             }
             this.ownershipCache.set(cacheKey, cacheEntry);
         }
@@ -138,24 +140,31 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
      * - 'denied': resource exists but belongs to another user (cacheable)
      * - 'not_found': resource doesn't exist yet — allow preemptive subscribe (not cached)
      */
-    private async queryOwnership(userId: Auth.User.Id, channel: Realtime.Channel): Promise<'owned' | 'denied' | 'not_found'> {
-        if (channel.startsWith('execution:')) {
-            const executionId = channel.slice('execution:'.length) as Execution.Id;
-            const ownerId = await this.ownership.loadExecutionOwner(executionId);
-            if (!ownerId) return 'not_found';
-            return ownerId === userId ? 'owned' : 'denied';
-        }
+    private async queryOwnership(
+        userId: Auth.User.Id, 
+        channel: Realtime.Channel
+    ): Promise<'owned' | 'denied' | 'not_found'> {
+        // Channel grammar: <prefix>:<resourceId>[:<sub>...]. The resourceId is always the
+        // second segment, so any trailing qualifiers (e.g. :signal:resolved:<reqId>) still
+        // resolve to the owning resource rather than slipping through as not_found.
+        const [prefix, id] = channel.split(':');
 
-        if (channel.startsWith('chat:')) {
-            const chatId = channel.slice('chat:'.length) as Chat.Id;
-            const ownerId = await this.ownership.loadChatOwner(chatId);
-            if (!ownerId) return 'not_found';
-            return ownerId === userId ? 'owned' : 'denied';
-        }
+        // Channel prefix → ownership domain. Several prefixes may map to the same domain:
+        // human-review channels carry an executionId and authorize via execution ownership.
+        const loaders = {
+            execution:      this.ownership.loadExecutionOwner,
+            'human-review': this.ownership.loadExecutionOwner,
+            chat:           this.ownership.loadChatOwner,
+        } as const;
 
-        // Unknown channel prefix — treat as denied
-        return 'denied';
+        const loader = loaders[prefix as keyof typeof loaders];
+        if (!loader) return 'denied'; // unknown channel prefix
+
+        const ownerId = await loader.call(this.ownership, id as any);
+        if (!ownerId) return 'not_found';
+        return ownerId === userId ? 'owned' : 'denied';
     }
+
 
     private async subscribe(ws: WebSocket, channel: Realtime.Channel) {
         const identity = this.socketIdentities.get(ws);
