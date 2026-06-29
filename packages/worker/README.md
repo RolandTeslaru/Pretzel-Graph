@@ -12,11 +12,24 @@ A workflow is **not** a DAG walk. It's run by **S²Engine** — a *Bulk Asynchro
 |---|---|---|
 | `S2Graph` / `Vertex` | `S2/graph.ts` | The graph: vertices (+ AND/OR/XOR strategy, runCount), arcs, `dependenciesMap`/`dependentsMap`. `__START__` is the entry vertex. |
 | `S2Engine` | `S2/engine.ts` | Pure signal scheduler. Knows nothing about nodes — drives firing via signal accumulation + hooks. |
-| `AggexEngine` | `engine/index.ts` | Wraps S2Engine. Maps vertices ↔ `RuntimeNode` instances, implements the hooks that actually execute nodes, and exposes `portAPI`/`propagationAPI`/`schedulerAPI`/`instanceRegistryAPI` to nodes. |
+| `AggexEngine` | `engine/index.ts` | Wraps S2Engine. Owns the `S2Hooks` (`onNodeFired`/`onNodeExecuted`/`onNodeCompleted`/`onNodeWaiting`/`onNodeError`/`canNodeRun`), the `nodeRuntimeMap` (vertex ↔ `RuntimeNode`), pause/resume + abort, and composes the six engine services below. Delegates the real work to them. |
 | `WorkflowCompiler` | `compiler/index.ts` | Builds the `S2Graph` + execution context, instantiates/registers nodes, wires edges, finds start nodes, handles the igniter. |
-| `FlightRecorderService` | `engine/flight-recorder-service.ts` | Observability — records fired/executed/completed/failed per node. |
+| `FlightRecorderService` | `engine/flight-recorder-service.ts` | Time-travel recording — builds an `Execution.Recording` of UnitsOfWork, signal/dataRemnant relations, a DataBank of port snapshots, and per-node metrics. Gated by `igniter.record`. |
 
 The engine layering is deliberate: **S2Engine is a domain-agnostic scheduler**; all node/port/workflow knowledge lives in `AggexEngine`, injected as `S2Hooks`.
+
+### Engine services (`engine/*-service.ts`)
+
+`AggexEngine` is a thin orchestrator; each concern is a service constructed with `new XService(this)` and reached via `engine.<name>`. The node-facing API closures in the compiler delegate straight into these.
+
+| Service | File | Owns |
+|---|---|---|
+| `SessionService` | `session-service.ts` | The **live `Execution.Session` projection**: every `node_status`/`edge_state`/output mutation + every `node:started`/`completed`/`waiting`/`error` emit. `createEdgeStateUpdate` + `getEventChannel` are the shared primitives other services emit through. |
+| `NodeIOService` | `node-io-service.ts` | The **data plane**: `getIncomingData` (resolve inputs from edges/static/`initialValue`, `Synthesizer.ensureReference` to the input variant), `projectOutputs` (`Synthesizer.project`), and `writePort`. Distinguishes `undefined` (nothing produced → wait) from `null` (produced-but-empty → settled). |
+| `RoutingService` | `routing-service.ts` | `resolveRouterSignals` (which downstream branches a router took, by output ports present in the result) and `canRunByDependencies` (the data-dependency gate). |
+| `PropagationService` | `propagation-service.ts` | Edge-aware manual fan-out: `emitPort` / `emitNode` mark outgoing edges `waiting` (+runCount), signal each target via the scheduler, and emit the edge-state update. The **blessed** path for `getPropagationStrategy() === "none"` nodes. |
+| `SchedulerService` | `scheduler-service.ts` | The single typed boundary to `s2Engine.overrides.*` — translates `Node.Id → Vertex.Id` and forwards `fireNode`/`signalNode`/`removeSignal`/`clearSignals`/`scheduleCheck`. **Raw** (no edge bookkeeping) — plumbing nodes only. |
+| `ErrorService` | `error-service.ts` | `onErrorStrategy` dispatch (terminate/do_nothing/propagate), the out-of-band `errorChannel` envelope routing, Catch interception, and `record` (mark a node `failed` on both the session + the flight recorder). See **Error handling** below. |
 
 ---
 
@@ -146,7 +159,7 @@ ErrorEnvelope = { id: string; error: SystemError.Serialized; path: Node.Id[] }
 
 `propagateError(nodeId, envelope)`:
 1. **Cycle check** — `envelope.path.includes(nodeId)` → throw
-   `CyclicalUncaughtRuntimeNodeError(path)` → terminate. (Fires on the *first*
+   `CyclicalRuntimeNodeError(path)` → terminate. (Fires on the *first*
    revisit, before the `runCount`/`delta` short-circuit guard would.)
 2. **Terminal check** — no wired outgoing edges → throw
    `UncaughtRuntimeNodeError(path)` → terminate (the error was never caught).
@@ -168,7 +181,7 @@ incoming envelope fires the node immediately, bypassing the data gate (an
 overwrites the status with `completed` — but S2 still drives the returned target
 set, so propagation continues.
 
-### Catch node (`Core.Routing.Catch`, `flags.catchesError`)
+### Catch node (`Core.Routing.CatchError`, `flags.catchesError`)
 
 Identified by the blueprint flag (engine stays generic — no hardcoded id). On an
 incoming envelope, `materializeCaughtError` writes the serialized error to the
@@ -284,9 +297,11 @@ Cache = {
 `inputHandlesMap` is how `getIncomingData` finds the edge feeding a given input port; the `EdgesMap`s drive edge-state updates and `findStartNodes` (a node absent from every `incomingEdgesMap` entry as a target = a start node).
 
 ## Pause / resume / abort / sub-workflows
-- **Pause**: `pause()` sets a gate awaited after each node completes (`awaitPause`); `resume()` releases it.
-- **Abort**: `abortAPI.signal`; `run()` races ignite vs abort → `"terminated"`.
-- **Sub-workflows**: `subWorkflowAPI.createEnv()` spins up a nested `AggexEngine` + `WorkflowCompiler` (used by `Core.SubWorkflow.Execute`); nested nodes get an `enclosingNodeAPI` to write/emit on the parent's ports.
+- **Pause**: `pause()` sets a gate awaited after each node completes (`awaitPause`); `resume()` releases it. The worker arms a max-pause timeout that aborts + resumes if a pause runs too long.
+- **Abort**: `abortAPI.signal`; `run()` races ignite vs abort. A plain abort → `"terminated"`; an abort whose reason is `AggexEngine.STOP_AT_TARGET_REASON` resolves as `"completed"` (see below).
+- **Execute up until this point** (`stopAtNodeId`): set from a `workbench_step` igniter (`igniter.targetNodeId`). The **full graph compiles and runs normally** — portals, cycles, sub-workflows all resolve natively — and `onNodeCompleted` aborts the run with `STOP_AT_TARGET_REASON` the moment the target node finishes. The structural "upstream cone" alternative in `compiler/partial.ts` is **parked / not wired** (it can't see portal teleport edges); read its header for the parked replay-from-cache design and why serialization of live LangChain/resource handles shelved it.
+- **Sub-workflows**: `subWorkflowAPI.createEnv()` spins up a nested `AggexEngine` + `WorkflowCompiler` (used by `Core.SubWorkflow.Execute`), **reusing the same airlock isolate** (same tenant); nested nodes get an `enclosingNodeAPI` to write/emit on the parent's ports.
+- **Flight recording**: only attached when `igniter.record` is set. On completion the `Execution.Recording` is persisted via `Execution.API.update` and published to Redis (`Execution.Recording.LIVE_TTL_SECONDS`) for the timeline viewer.
 
 ---
 

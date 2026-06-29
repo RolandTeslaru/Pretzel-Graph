@@ -8,14 +8,18 @@ export class RealtimeService implements OnModuleDestroy {
     private readonly redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
     private readonly redisPub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 
-    private readonly waiters = new Map<string, Set<(event: Realtime.Event) => void>>();
+    private readonly waiters = new Map<Realtime.Channel, Set<(event: Realtime.Event) => void>>();
 
     constructor() {
-        this.redisSub.on('message', (channel, msg) => {
+        this.redisSub.on('message', (channel: Realtime.Channel, msg: string) => {
             const channelWaiters = this.waiters.get(channel);
-            if (!channelWaiters) return;
+            if (!channelWaiters) 
+                return;
+            
             const event = JSON.parse(msg) as Realtime.Event;
-            for (const waiter of channelWaiters) waiter(event);
+            
+            for (const waiter of channelWaiters) 
+                waiter(event);
         });
     }
 
@@ -32,9 +36,12 @@ export class RealtimeService implements OnModuleDestroy {
         eventType: string,
         timeoutMs: number = 5000
     ): Promise<boolean> {
+        
         return new Promise<boolean>((resolve) => {
+            
             const waiter = (event: Realtime.Event) => {
-                if (event.type !== eventType) return;
+                if (event.type !== eventType) 
+                    return;
                 clearTimeout(timeout);
                 cleanup();
                 resolve(true);
@@ -43,8 +50,10 @@ export class RealtimeService implements OnModuleDestroy {
             // Removes the waiter and unsubscribes if no more waiters remain on this channel
             const cleanup = () => {
                 const channelWaiters = this.waiters.get(eventChannel);
+                
                 if (channelWaiters) {
                     channelWaiters.delete(waiter);
+                    
                     if (channelWaiters.size === 0) {
                         this.waiters.delete(eventChannel);
                         this.redisSub.unsubscribe(eventChannel);

@@ -11,6 +11,7 @@ import { Realtime } from "./Realtime"
 import { type AxiosInstance } from "axios"
 import { Vault } from "./Vault"
 import { Blueprint } from "./Foundations/Blueprint"
+import { HumanReview as HumanReviewD } from "./HumanReview"
 
 export namespace Execution {
 
@@ -506,12 +507,13 @@ export namespace Execution {
         export const Resume    = Base.extend({ type: z.literal("resume") })
         export const Suspend   = Base.extend({ type: z.literal("suspend") })
         export const Heartbeat = Base.extend({ type: z.literal("heartbeat") })
-
+        
         export type Terminate = z.infer<typeof Terminate>
         export type Pause     = z.infer<typeof Pause>
         export type Resume    = z.infer<typeof Resume>
         export type Suspend   = z.infer<typeof Suspend>
         export type Heartbeat = z.infer<typeof Heartbeat>
+
 
         export const Schema = z.discriminatedUnion("type", [
             Terminate, Pause, Resume, Suspend, Heartbeat,

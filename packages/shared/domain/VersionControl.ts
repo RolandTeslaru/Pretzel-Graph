@@ -30,7 +30,7 @@ export namespace VersionControl {
     // Signals are emitted by the backend when a publication changes state.
     // Subscribers (e.g. the webhook server) use them to keep caches in sync.
     export namespace Signal {
-        export const Channel = Realtime.Channel.brand("VersionControlChannel")
+        export const Channel = Realtime.Channel.brand("VersionControl.Signal.Channel")
         export type Channel = z.infer<typeof Channel>
 
         export const Action = z.enum(["published", "activated", "deactivated", "removed"])
