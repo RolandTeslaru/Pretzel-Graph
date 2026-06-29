@@ -1,6 +1,6 @@
 {
-  "version": "1782484369612",
-  "generatedAt": "2026-06-26T14:32:49.612Z",
+  "version": "1782765427304",
+  "generatedAt": "2026-06-29T20:37:07.305Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -4528,6 +4528,206 @@
         }
       ]
     },
+    "Core.Utils.WorkbenchPoll": {
+      "id": "Core.Utils.WorkbenchPoll",
+      "displayName": "Workbench Poll",
+      "icon": "ShieldQuestionMark",
+      "accent": "utility",
+      "description": "Pauses the run and asks a human in the workbench to approve, choose, or fill a form.",
+      "credentials": [],
+      "fields": [
+        {
+          "id": "variant",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Mode",
+          "tooltip": "What the workbench dialog asks the human for.",
+          "variant": "MultiOption",
+          "initialValue": "confirm",
+          "options": [
+            {
+              "value": "confirm",
+              "displayName": "Approve / Reject"
+            },
+            {
+              "value": "choice",
+              "displayName": "Choice"
+            },
+            {
+              "value": "form",
+              "displayName": "Form"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "title",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Title",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "Review required"
+        },
+        {
+          "id": "message",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Message",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "Approve this action?"
+        },
+        {
+          "id": "timeoutMs",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Timeout (ms)",
+          "tooltip": "How long to wait for a response before the node times out.",
+          "variant": "Integer",
+          "initialValue": 86400000,
+          "min": 0,
+          "step": 1
+        },
+        {
+          "id": "approveLabel",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Approve label",
+          "variant": "String",
+          "initialValue": "Approve",
+          "multiline": false,
+          "placeholder": ""
+        },
+        {
+          "id": "rejectLabel",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Reject label",
+          "variant": "String",
+          "initialValue": "Reject",
+          "multiline": false,
+          "placeholder": ""
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "input",
+          "displayName": "Input",
+          "tooltip": "Optional data passed through on the chosen branch.",
+          "polymorphicGroupId": "data",
+          "internal": false,
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "approved",
+          "displayName": "Approved",
+          "tooltip": "Fires when the human approves.",
+          "polymorphicGroupId": "data",
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
+        },
+        {
+          "id": "rejected",
+          "displayName": "Rejected",
+          "tooltip": "Fires when the human rejects.",
+          "polymorphicGroupId": "data",
+          "variant": "Unresolved",
+          "originalVariant": "Unresolved"
+        }
+      ]
+    },
     "Core.Webhook": {
       "id": "Core.Webhook",
       "displayName": "Webhook",
@@ -8918,13 +9118,13 @@
       ],
       "inputs": [
         {
-          "id": "ExposedInputPort-dc4cm",
+          "id": "input",
           "displayName": "Input",
           "variant": "MessageList",
           "required": true
         },
         {
-          "id": "ExposedInputPort-pr8uz",
+          "id": "model",
           "displayName": "Summarization LLM",
           "variant": "LanguageModel",
           "required": true
@@ -8933,12 +9133,12 @@
       "outputs": [
         {
           "id": "Core.SubWorkflow.ExposeOutputPort-0062j",
-          "displayName": "Compacted",
+          "displayName": "On Compact",
           "variant": "MessageList"
         },
         {
           "id": "Core.SubWorkflow.ExposeOutputPort-m4s9s",
-          "displayName": "Passthrough",
+          "displayName": "Out",
           "variant": "MessageList"
         }
       ],

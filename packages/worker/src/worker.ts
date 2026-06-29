@@ -9,6 +9,7 @@ import { container, singleton } from 'tsyringe';
 import { WorkflowCompiler } from './compiler';
 import { AirlockService } from './airlock';
 import { AxiosService } from './axios';
+import { RealtimeService } from './realtime';
 
 const LOCK_EXTEND_INTERVAL_MS = 15_000;
 const LOCK_EXTEND_DURATION_MS = 30_000;
@@ -28,6 +29,8 @@ export class AggexWorkerImpl {
     private redisPub    = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
     private redisSub    = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
     private redisWorker = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
+
+    private realtime    = new RealtimeService()
 
     public init() {
         this.redisSub.on("message", (ch: Execution.Signal.Channel, msg: string) => {
@@ -168,7 +171,7 @@ export class AggexWorkerImpl {
                 engine.attachFlightRecorder(recorder);
 
             // Compile and register execution context
-            executionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.emit, engine, airlock, credentialInstances);
+            executionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.realtime, engine, airlock, credentialInstances);
             this.runningExecutionContextsMap.set(executionId, executionCtx);
 
             const result = await engine.run(executionCtx);

@@ -21,6 +21,11 @@ export namespace HumanReview {
             executionId: Execution.Id,
             title: z.string().optional(),
             message: z.string().optional(),
+            // Epoch ms when the node created the request. Orders the inbox + gives the
+            // absolute deadline when combined with timeoutMs (createdAt + timeoutMs).
+            createdAt: z.number(),
+            // How long the node parks waiting for a response before it times out.
+            timeoutMs: z.number().default(24 * 60 * 60_000),
         })
 
         // Approve / Reject → 2 ports (approved | rejected)
@@ -76,33 +81,46 @@ export namespace HumanReview {
     }
     export type Resolution = z.infer<typeof Resolution.Schema>
 
-    // Engine → user. emit()'d by the node onto its own channel; the gateway authorizes via
-    // execution ownership (human-review prefix → loadExecutionOwner) and forwards to the workbench.
     export namespace Event {
+        export const Channel = Realtime.Channel.brand("HumanReview.Event.Channel")
+        export type Channel = z.infer<typeof Channel>
+
+        // executionId in segment 2 so the gateway authorizes via execution ownership
+        export const getChannel = (executionId: Execution.Id): Channel =>
+            `human-review:${executionId}` as Channel
+
+        // Request surfaced to the user — opens the dialog in the workbench.
         export namespace Sent {
-            export const Channel = Realtime.Channel.brand("HumanReview.Event.Sent.Channel")
-            export type Channel = z.infer<typeof Channel>
-
-            // executionId in segment 2 so the gateway authorizes via execution ownership
-            export const getChannel = (executionId: Execution.Id): Channel =>
-                `human-review:${executionId}:sent` as Channel
-
             export const Schema = Realtime.Event.Base.extend({
                 type: z.literal("human-review:sent"),
                 request: Request.Schema,
             })
             export type Schema = z.infer<typeof Schema>
         }
+
+        // Confirmation: the node consumed the human's answer and un-parked. Closes the dialog
+        // in the workbench, and lets the resolve route's awaitEvent resolve.
+        export namespace Resolved {
+            export const Schema = Realtime.Event.Base.extend({
+                type: z.literal("human-review:resolved"),
+                requestId: Request.Id,
+                resolution: Resolution.Schema,
+            })
+            export type Schema = z.infer<typeof Schema>
+        }
+
+        export const Schema = z.discriminatedUnion("type", [Sent.Schema, Resolved.Schema])
+        export type Schema = z.infer<typeof Schema>
     }
 
-    // User → engine. Published by the authed resolve route, consumed by the node's CreateSignalPromise.
+    // User → engine. Published by the authed resolve route, consumed by the node's realtimeAPI.awaitSignal.
     export namespace Signal {
-        export namespace Resolved {
-            export const Channel = Realtime.Channel.brand("HumanReview.Signal.Resolved.Channel")
+        export namespace HumanResponded {
+            export const Channel = Realtime.Channel.brand("HumanReview.Signal.HumanResponded.Channel")
             export type Channel = z.infer<typeof Channel>
 
             export const getChannel = (executionId: Execution.Id, requestId: Request.Id): Channel =>
-                `human-review:${executionId}:signal:resolved:${requestId}` as Channel
+                `human-review:${executionId}:signal:responded:${requestId}` as Channel
 
             export const Schema = Realtime.Signal.Base.extend({
                 resolution: Resolution.Schema,

@@ -1,4 +1,4 @@
-import { Airlock, Execution, Foundations, Vault } from "@pretzel-graph/shared/domain";
+import { Airlock, Execution, Foundations, Realtime, Vault } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { CatalogueService, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
@@ -13,6 +13,7 @@ import { isUUID } from "../utils";
 import { produce } from "immer";
 import { AggexEngine } from "src/engine";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
+import { RealtimeService } from "../realtime";
 
 
 export class WorkflowCompiler {
@@ -22,7 +23,7 @@ export class WorkflowCompiler {
         workflowId:          Workflow.Id,
         workflowData:        Workflow.Data,
         execution:           Execution,
-        emit:                RuntimeNode.ExecutionContext["emit"],
+        realtime:            RealtimeService,
         engine:              AggexEngine,
         airlock:             AirlockService,
         credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
@@ -48,7 +49,7 @@ export class WorkflowCompiler {
         });
 
         const ctxRef = { current: null! as AggexEngine.Execution.Context };
-        const apis = this.createAPIs(engine, airlock, ctxRef, execution, workflowData, credentialInstances);
+        const apis = this.createAPIs(engine, airlock, ctxRef, execution, workflowData, credentialInstances, realtime);
 
         const nodeExecutionCtx = {
             executionId: execution.id,
@@ -58,7 +59,6 @@ export class WorkflowCompiler {
             workflowCache,
             airlockAPI: airlockScope,
             get session() { return execution.session; },
-            emit,
             enclosingNodeAPI,
             ...apis,
         } satisfies RuntimeNode.ExecutionContext
@@ -71,7 +71,6 @@ export class WorkflowCompiler {
             workflowCache,
             airlockAPI: airlockScope,
             get session() { return execution.session; },
-            emit,
             compiledGraph: graph,
             activeNodes: new Set(),
             errorChannel: new Map(),
@@ -158,6 +157,7 @@ export class WorkflowCompiler {
         execution:           Execution,
         workflowData:        Workflow.Data,
         credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
+        realtime:            RealtimeService,
     ) {
         const portAPI = {
             write: (nodeId, outputId, value) =>
@@ -203,8 +203,8 @@ export class WorkflowCompiler {
                 return {
                     // Reuse the SAME airlock ref → shared isolate (same tenant); the child
                     // compile registers its own workflow copy + creates its own scope on it.
-                    compile: (workflowId, workflowData, execution, emit, compilationCtx, enclosingNodeAPI) =>
-                        subCompiler.compile(workflowId, workflowData, execution, emit, subEngine, airlock, credentialInstances, compilationCtx, enclosingNodeAPI),
+                    compile: (workflowId, workflowData, execution, compilationCtx, enclosingNodeAPI) =>
+                        subCompiler.compile(workflowId, workflowData, execution, realtime, subEngine, airlock, credentialInstances, compilationCtx, enclosingNodeAPI),
                     run: (ctx: unknown) => subEngine.run(ctx as AggexEngine.Execution.Context),
                 };
             },
@@ -234,6 +234,16 @@ export class WorkflowCompiler {
             abort:  (reason?: any) => abortController.abort(reason),
         };
 
+        // Per-execution facade over the shared service: emit out, await signals in. awaitSignal
+        // is bound to this execution's abort signal so parks reject + clean up on terminate/suspend.
+        const realtimeAPI = {
+            emit: <T_Event extends Realtime.Event>(event: T_Event) => realtime.emit(event),
+            awaitSignal: <S>(channel: Realtime.Channel, schema: { parse: (data: unknown) => S }, timeout: number) =>
+                realtime.awaitSignal(channel, schema, timeout, abortAPI.signal),
+            emitAndAwaitSignal: <E extends Realtime.Event, S>(event: E, signalChannel: Realtime.Channel, signalSchema: { parse: (data: unknown) => S }, timeout: number) =>
+                realtime.emitAndAwaitSignal(event, signalChannel, signalSchema, timeout, abortAPI.signal),
+        } satisfies RuntimeNode.ExecutionContext["realtimeAPI"];
+
         const updateSession = (r: (draft: Execution.Session) => void) => {
             execution.session = produce(execution.session, r);
         };
@@ -241,7 +251,7 @@ export class WorkflowCompiler {
         return {
             portAPI, propagationAPI, instanceRegistryAPI, workflowQueryAPI,
             schedulerAPI, subWorkflowAPI, dependencyAPI, credentialsAPI,
-            abortAPI, updateSession,
+            abortAPI, realtimeAPI, updateSession,
         };
     }
 

@@ -56,7 +56,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         await Webhook.Test.API.register(AxiosService.api, { workflowId, path, method });
         console.log(`[WebhookNode] Waiting for test payload on channel=${Webhook.Test.ResolveSignal.getChannel(this.context.executionId)}`);
 
-        const signal = await this.CreateSignalPromise(
+        const signal = await this.context.realtimeAPI.awaitSignal(
             Webhook.Test.ResolveSignal.getChannel(this.context.executionId),
             Webhook.Test.ResolveSignal.Schema,
             TEST_WAIT_MS
