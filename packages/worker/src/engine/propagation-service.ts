@@ -35,7 +35,7 @@ export class PropagationService {
         for (const edge of edges)
             this.engine.scheduler.signalNode(ctx, edge.target.nodeId, nodeId);
 
-        ctx.emit<Execution.Event.SessionUpdate>({
+        ctx.realtimeAPI.emit<Execution.Event.SessionUpdate>({
             executionId: ctx.executionId,
             workflowId:  ctx.workflowId,
             type:        "update",
@@ -73,7 +73,7 @@ export class PropagationService {
             this.engine.scheduler.signalNode(ctx, edge.target.nodeId, nodeId);
         }
 
-        ctx.emit<Execution.Event.SessionUpdate>({
+        ctx.realtimeAPI.emit<Execution.Event.SessionUpdate>({
             executionId: ctx.executionId,
             workflowId:  ctx.workflowId,
             type:        "update",

@@ -112,13 +112,13 @@ sequenceDiagram
     alt not owner / missing
         P--xC: 404 NOT_FOUND
     else owner
-        Svc->>G: withEventConfirmation(eventChannel, "paused") [await echo]
-        Svc->>R: emitSignal → publish execution:{id}:signal [service.ts:205]
+        Note over Svc: signalAndAwaitEvent — register waiter, then emit
+        Svc->>R: subscribe execution:{id} (await "paused")
+        Svc->>R: publish execution:{id}:signal (pause) [service.ts]
         R-->>W: message
-        Note over W: handleSignal() → engine.pause() [worker.ts:44]
+        Note over W: handleSignal() → engine.pause() [worker.ts:47]
         W->>R: publish execution:{id} "paused" (event)
-        R-->>G: message
-        G-->>Svc: confirmation resolves
+        R-->>Svc: "paused" event → awaitEvent resolves
         Svc->>C: 200 { success: true }
     end
 ```
@@ -138,9 +138,11 @@ the authenticated controller is the sole chokepoint for upstream.
 
 ### Round-trip confirmation
 Signal routes turn fire-and-forget pub/sub into a synchronous response via
-`realtime.withEventConfirmation(eventChannel, '<type>')` (service.ts:203): the backend subscribes
-to the *event* the worker will echo back, emits the signal, then `await`s that event before
-resolving the HTTP response and writing the DB. e.g. `pause` waits for the `paused` event.
+`realtime.signalAndAwaitEvent(signal, eventChannel, '<type>')`: it registers a waiter on the
+*event* the worker will echo back (the `awaitEvent` primitive), emits the signal, then `await`s
+that event before resolving the HTTP response and writing the DB. e.g. `pause` waits for the
+`paused` event. The bare `awaitEvent` is also used standalone where the trigger isn't a signal —
+`runCore` waits for `started` after enqueuing the BullMQ job.
 
 ---
 
@@ -172,8 +174,8 @@ event channel without needing their own ownership table. See `queryOwnership`'s 
 | `execution:<id>`                                 | down (event)  | execution | worker `emit()` → gateway → owner's sockets | `Execution.Event.getChannel` |
 | `execution:<id>:signal`                          | up (signal)   | execution | backend `emitSignal` → worker `handleSignal` | `Execution.Signal.getChannel` |
 | `chat:<id>`                                      | down (event)  | chat      | node `emit()` → gateway → owner's sockets | `Chat.Event.*` |
-| `human-review:<execId>:sent`                     | down (event)  | execution | node `emit()` → gateway → owner's sockets | `HumanReview.Event.Sent.getChannel` |
-| `human-review:<execId>:signal:resolved:<reqId>`  | up (signal)   | execution | backend route → worker `CreateSignalPromise` | `HumanReview.Signal.Resolved.getChannel` |
+| `human-review:<execId>`                            | down (event)  | execution | node `emit()` → gateway → owner's sockets | `HumanReview.Event.getChannel` (types `sent` / `resolved`) |
+| `human-review:<execId>:signal:responded:<reqId>`   | up (signal)   | execution | backend route → worker `awaitSignal` | `HumanReview.Signal.HumanResponded.getChannel` |
 
 Note: only gateway-subscribed (downstream) channels are actually authorized by `queryOwnership`.
 The upstream/worker-consumed channels (`:signal`, resolution) are guarded at their HTTP publish
@@ -183,16 +185,22 @@ route instead — but they still follow the segment-2 rule so a stray WS subscri
 
 ## Applying this to a Human-Review node
 
-- **Request (engine → user)** = an **Event** the node `emit()`s on its **own** channel
-  `human-review:<execId>:sent` (extends `Realtime.Event.Base`, so `emit` accepts it), kept off the
-  already-overloaded `execution:<id>` event channel. The gateway authorizes it via **execution**
-  ownership (the `human-review` prefix maps to `loadExecutionOwner`), so the workbench subscribes and
-  only the execution's owner receives it — no new ownership table. (`HumanReview.Event.Sent`.)
-- **Resolution (user → engine)** = a **Signal** on the dedicated per-request channel
-  `human-review:<execId>:signal:resolved:<reqId>`, consumed by the node's `CreateSignalPromise`
-  (matches the Webhook node). It enters through a **new authenticated HTTP route**
-  (`POST /execution/human-review/resolve`) mirroring `pause`: `assertExecution` then `emitSignal`.
-  The single authenticated HTTP chokepoint + `assertExecution` guards it.
+- **Request (engine → user)** = an **Event** (`type: "human-review:sent"`) the node `emit()`s on the
+  shared per-execution channel `human-review:<execId>`, kept off the already-overloaded
+  `execution:<id>` event channel. Like every Event namespace, all human-review event types share one
+  channel and the workbench discriminates by `type` (`HumanReview.Event.Schema` is a
+  `discriminatedUnion`). The gateway authorizes via **execution** ownership (the `human-review`
+  prefix maps to `loadExecutionOwner`) — no new ownership table. (`HumanReview.Event.Sent`.)
+- **Response (user → engine)** = a **Signal** on the dedicated per-request channel
+  `human-review:<execId>:signal:responded:<reqId>`, consumed by the node's
+  `realtimeAPI.awaitSignal` (matches the Webhook node). It enters through a **new authenticated
+  HTTP route** (`POST /execution/human-review/resolve`) mirroring `pause`: `assertExecution` then
+  `emitSignal`. The single authenticated HTTP chokepoint + `assertExecution` guards it.
+  (`HumanReview.Signal.HumanResponded`.)
+- **Resolved (engine → user)** = a confirmation **Event** (`type: "human-review:resolved"`, same
+  `human-review:<execId>` channel) the node `emit()`s after it consumes the answer and un-parks.
+  Closes the workbench dialog, and lets the resolve route's `awaitEvent` resolve (so the round-trip is
+  `signalAndAwaitEvent`). (`HumanReview.Event.Resolved`.)
 
 End-to-end, a review pauses the node, surfaces a dialog via the event lane, and resumes via the
 signal lane:
@@ -208,16 +216,20 @@ sequenceDiagram
     participant Svc as ExecutionService
     participant P as PermissionService
 
-    Note over N: onRun() fires, node parks
-    N->>R: emit Event execution:{id} "human-review:request"
+    Note over N: onRun() fires — emitAndAwaitSignal
+    N->>R: subscribe human-review:{execId}:signal:responded:{reqId} (awaitSignal)
+    N->>R: emit Event human-review:{execId} "human-review:sent"
     R-->>G: message
-    G-->>C: request event (owner-authorized) ✅
+    G-->>C: sent event (owner-authorized via execution) ✅
     Note over C: dialog renders (confirm / choice / form)
     C->>Ctl: POST /execution/human-review/resolve { execId, requestId, resolution } + JWT
     Note over Ctl: SupabaseAuthGuard — authn
     Ctl->>Svc: resolveReview(...)
     Svc->>P: assertExecution(...) — authz
-    Svc->>R: emitSignal resolution (channel A: per-request, or B: shared signal)
-    R-->>N: message (CreateSignalPromise resolves, or handleSignal routes to node)
+    Svc->>R: emitSignal → publish human-review:{execId}:signal:responded:{reqId}
+    R-->>N: responded signal → awaitSignal resolves
     Note over N: map resolution → output ports, node un-parks
+    N->>R: emit Event human-review:{execId} "human-review:resolved"
+    R-->>G: message
+    G-->>C: resolved event → close dialog ✅
 ```

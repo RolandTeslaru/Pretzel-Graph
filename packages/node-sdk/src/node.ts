@@ -1,11 +1,9 @@
 import { Airlock, Chat, Execution, Foundations, Realtime, Vault, Workflow } from "@pretzel-graph/shared/domain";
 import { InferCredentials, InferCredentialValues, InferFields, InferInputs, InferItemFields, InferOutputs } from "./types";
 import type { CompilationContext } from "./compiler-context";
-import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
-import Redis from "ioredis";
 import { mapFieldValues } from "./utils/mapFieldValues";
 import { Synthesizer } from "./synthesizer";
 
@@ -16,7 +14,7 @@ export abstract class RuntimeNode<
 
 > {
 
-    public readonly emit: RuntimeNode.ExecutionContext["emit"];
+    public readonly emit: RuntimeNode.ExecutionContext["realtimeAPI"]["emit"];
     public fields: InferFields<T_Blueprint>
     public readonly credentials: InferCredentials<T_Blueprint>
 
@@ -49,7 +47,7 @@ export abstract class RuntimeNode<
     ) {
         this.fields = mapFieldValues<T_Blueprint>(this.workflowNode.id, context.workflowData);
         this.credentials = this.mapCredentials();
-        this.emit = context.emit;
+        this.emit = context.realtimeAPI.emit;
     }
 
     private mapCredentials(): InferCredentials<T_Blueprint> {
@@ -381,40 +379,6 @@ export abstract class RuntimeNode<
 
 
 
-    protected CreateSignalPromise<T>(
-        signalChannel: Realtime.Channel,
-        schema:        { parse: (data: unknown) => T },
-        timeout:       number,
-    ): Promise<T> {
-        return this.AbortablePromise((_resolve, _reject, abortSignal) => {
-            const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
-
-            const cleanup = () => {
-                clearTimeout(timer);
-                redis.unsubscribe(signalChannel).catch(() => {});
-                redis.disconnect();
-            };
-
-            const resolve = (value: T)     => { cleanup(); _resolve(value); };
-            const reject  = (reason?: any) => { cleanup(); _reject(reason); };
-
-            const timer = setTimeout(() => reject(new Error('Signal timed out')), timeout);
-
-            abortSignal.addEventListener('abort', cleanup, { once: true });
-
-            redis.subscribe(signalChannel, (err) => {
-                if (err) reject(err);
-            });
-
-            redis.on('message', (_channel, raw) => {
-                try {
-                    resolve(schema.parse(JSON.parse(raw)));
-                } catch (e) {
-                    reject(e);
-                }
-            });
-        });
-    }
 }
 
 
@@ -449,7 +413,20 @@ export namespace RuntimeNode {
         readonly chat_id: Chat.Id | null | undefined,
         readonly session: Execution.Session,
         readonly updateSession: (recipe: (draft: Execution.Session) => void) => void,
-        readonly emit: <T_Event extends Realtime.Event>(event: T_Event) => void,
+        readonly realtimeAPI: {
+            emit: <T_Event extends Realtime.Event>(event: T_Event) => void,
+            awaitSignal: <S>(
+                channel: Realtime.Channel,
+                schema:  { parse: (data: unknown) => S },
+                timeout: number,
+            ) => Promise<S>,
+            emitAndAwaitSignal: <E extends Realtime.Event, S>(
+                event:         E,
+                signalChannel: Realtime.Channel,
+                signalSchema:  { parse: (data: unknown) => S },
+                timeout:       number,
+            ) => Promise<S>,
+        },
         readonly workflowData: Workflow.Data,
         readonly workflowId: Workflow.Id,
         readonly workflowCache: Workflow.Cache,
@@ -513,7 +490,6 @@ export namespace RuntimeNode {
                     workflowId: Workflow.Id,
                     workflowData: Workflow.Data,
                     execution: Execution,
-                    emit: ExecutionContext["emit"],
                     compilationCtx: CompilationContext,
                     enclosingNodeAPI?: ExecutionContext["enclosingNodeAPI"],
                 ) => Promise<unknown>,

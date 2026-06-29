@@ -88,7 +88,7 @@ export class FlightRecorderService {
 
         const inputHandles = ctx.workflowCache.inputHandlesMap[nodeId] ?? {}
 
-        ctx.emit<Execution.Event.Recording.Unit.Started>({
+        ctx.realtimeAPI.emit<Execution.Event.Recording.Unit.Started>({
             channel:     Execution.Event.getChannel(this.executionId),
             workflowId:  this.workflowId,
             executionId: this.executionId,
@@ -132,7 +132,7 @@ export class FlightRecorderService {
         }
 
         if (incomingRelations.length > 0)
-            ctx.emit<Execution.Event.Recording.Relation.CreateBatch>({
+            ctx.realtimeAPI.emit<Execution.Event.Recording.Relation.CreateBatch>({
                 channel:     Execution.Event.getChannel(this.executionId),
                 workflowId:  this.workflowId,
                 executionId: this.executionId,
@@ -175,7 +175,7 @@ export class FlightRecorderService {
         const metrics = this.collectMetrics(nodeId, unitId, "completed", unit.duration!, ctx)
         if (metrics) unit.metrics = metrics
 
-        ctx.emit<Execution.Event.Recording.Unit.Completed>({
+        ctx.realtimeAPI.emit<Execution.Event.Recording.Unit.Completed>({
             channel:        Execution.Event.getChannel(this.executionId),
             workflowId:     this.workflowId,
             executionId:    this.executionId,
@@ -209,7 +209,7 @@ export class FlightRecorderService {
         const metrics = this.collectMetrics(nodeId, unitId, "failed", unit.duration!, ctx)
         if (metrics) unit.metrics = metrics
 
-        ctx.emit<Execution.Event.Recording.Unit.Failed>({
+        ctx.realtimeAPI.emit<Execution.Event.Recording.Unit.Failed>({
             channel:     Execution.Event.getChannel(this.executionId),
             workflowId:  this.workflowId,
             executionId: this.executionId,
