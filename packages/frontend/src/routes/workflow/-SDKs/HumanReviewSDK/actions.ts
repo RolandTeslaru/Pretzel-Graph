@@ -9,6 +9,7 @@ export function _createHumanReviewActions_(sdk: HumanReviewSDKImpl) {
     return {
         addRequest:    (...props) => { setState(s => { reducers.addRequest(s, ...props) }) },
         removeRequest: (...props) => { setState(s => { reducers.removeRequest(s, ...props) }) },
+        bringToFront:  (...props) => { setState(s => { reducers.bringToFront(s, ...props) }) },
     } satisfies _HumanReviewSDKActions_
 }
 
@@ -16,4 +17,5 @@ export function _createHumanReviewActions_(sdk: HumanReviewSDKImpl) {
 export interface _HumanReviewSDKActions_ {
     addRequest:    DropFirstArg<HumanReviewSDK.Reducers['addRequest']>
     removeRequest: DropFirstArg<HumanReviewSDK.Reducers['removeRequest']>
+    bringToFront:  DropFirstArg<HumanReviewSDK.Reducers['bringToFront']>
 }

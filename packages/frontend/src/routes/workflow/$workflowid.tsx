@@ -26,6 +26,7 @@ import TimelineViewer from './-SDKs/ExecutionSDK/ui/Timeline'
 import UoWInspectorSidebar from './-SDKs/ExecutionSDK/ui/UoWInspector/sidebar'
 import { toast } from 'sonner'
 import { router } from '@/main'
+import { RequestStacker } from './-SDKs/HumanReviewSDK/ui/RequestStacker'
 
 let isViteFullReloadPending = false
 let isBrowserUnloadPending = false
@@ -210,6 +211,7 @@ function WorkflowLayoutComponent() {
                     <SpotlightSearch />
                     <StackSDK.UIOverlay />
                     <BottomLeftPanel />
+                    <RequestStacker/>
                 </div>
                 {/* Drawer — always mounted, height animates between 0 and open height */}
 
