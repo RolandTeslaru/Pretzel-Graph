@@ -88,7 +88,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             subWorkflowId,
             childWorkflowData,
             execution,
-            this.context.emit,
             childCompilationCtx,
             enclosingNodeAPI,
         ) as AggexEngine.ExecutionContext;

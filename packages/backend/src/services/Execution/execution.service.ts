@@ -153,7 +153,7 @@ export class ExecutionService {
             throw error;
         }
 
-        const started = await this.realtime.withEventConfirmation(
+        const started = await this.realtime.awaitEvent(
             Execution.Event.getChannel(executionId),
             'started',
             10_000
@@ -197,18 +197,12 @@ export class ExecutionService {
 
         await this.ownership.assertExecution(executionId, userId);
 
-        const eventChannel  = Execution.Event.getChannel(executionId);
-        const signalChannel = Execution.Signal.getChannel(executionId);
+        const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Pause>(
+            { channel: Execution.Signal.getChannel(executionId), type: 'pause', executionId },
+            Execution.Event.getChannel(executionId),
+            'paused',
+        );
 
-        const confirmation = this.realtime.withEventConfirmation(eventChannel, 'paused');
-
-        this.realtime.emitSignal<Execution.Signal.Pause>({
-            channel: signalChannel,
-            type: 'pause',
-            executionId,
-        });
-
-        const success = await confirmation;
         if (success) await this.database.update(supabase, { executionId, status: 'paused' });
         return { success };
     }
@@ -226,20 +220,12 @@ export class ExecutionService {
 
         await this.ownership.assertExecution(executionId, userId);
 
-        const eventChannel = Execution.Event.getChannel(executionId);
-        
-        const confirmation = this.realtime.withEventConfirmation(eventChannel, 'resumed');
+        const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Resume>(
+            { channel: Execution.Signal.getChannel(executionId), type: 'resume', executionId },
+            Execution.Event.getChannel(executionId),
+            'resumed',
+        );
 
-
-        const signalChannel = Execution.Signal.getChannel(executionId);
-
-        this.realtime.emitSignal<Execution.Signal.Resume>({
-            channel: signalChannel,
-            type: 'resume',
-            executionId,
-        });
-
-        const success = await confirmation;
         if (success) await this.database.update(supabase, { executionId, status: 'running' });
         return { success };
     }
@@ -279,18 +265,12 @@ export class ExecutionService {
 
         await this.ownership.assertExecution(executionId, userId);
 
-        const eventChannel  = Execution.Event.getChannel(executionId);
-        const signalChannel = Execution.Signal.getChannel(executionId);
+        const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Suspend>(
+            { channel: Execution.Signal.getChannel(executionId), type: 'suspend', executionId },
+            Execution.Event.getChannel(executionId),
+            'suspended',
+        );
 
-        const confirmation = this.realtime.withEventConfirmation(eventChannel, 'suspended');
-
-        this.realtime.emitSignal<Execution.Signal.Suspend>({
-            channel: signalChannel,
-            type: 'suspend',
-            executionId,
-        });
-
-        const success = await confirmation;
         if (success) await this.database.update(supabase, { executionId, status: 'suspended' });
         return { success };
     }
@@ -308,18 +288,12 @@ export class ExecutionService {
         const supabase = createAuthenticatedClient(token);
         await this.ownership.assertExecution(executionId, userId);
 
-        const eventChannel  = Execution.Event.getChannel(executionId);
-        const signalChannel = Execution.Signal.getChannel(executionId);
+        const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Terminate>(
+            { channel: Execution.Signal.getChannel(executionId), type: 'terminate', executionId },
+            Execution.Event.getChannel(executionId),
+            'terminated',
+        );
 
-        const confirmation = this.realtime.withEventConfirmation(eventChannel, 'terminated');
-
-        this.realtime.emitSignal<Execution.Signal.Terminate>({
-            channel: signalChannel,
-            type: 'terminate',
-            executionId,
-        });
-
-        const success = await confirmation;
         if (success) await this.database.update(supabase, { executionId, status: 'terminated' });
         return { success };
     }

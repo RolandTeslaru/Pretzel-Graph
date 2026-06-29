@@ -183,7 +183,7 @@ export class ErrorService {
             ctx, edgeIdMap, "waiting", s => { s.runCount += 1; },
         );
 
-        ctx.emit<Execution.Event.SessionUpdate>({
+        ctx.realtimeAPI.emit<Execution.Event.SessionUpdate>({
             executionId:   ctx.executionId,
             workflowId:    ctx.workflowId,
             type:          "update",

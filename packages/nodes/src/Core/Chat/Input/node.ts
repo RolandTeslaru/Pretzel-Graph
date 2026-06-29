@@ -59,7 +59,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         await Webhook.Test.API.register(api, { workflowId, path: Node.WEBHOOK_PATH, method: "POST" });
 
-        const signal = await this.CreateSignalPromise(
+        const signal = await this.context.realtimeAPI.awaitSignal(
             Chat.Signal.MessageSent.getChannel(this.context.executionId),
             Chat.Signal.MessageSent.Schema,
             Node.WEBHOOK_TIMEOUT

@@ -24,14 +24,13 @@ export class RealtimeService implements OnModuleDestroy {
     }
 
     /**
-     * Request-reply pattern over Redis pub/sub.
-     * Subscribes to the event channel BEFORE the caller emits a signal,
-     * then waits for the worker to publish a matching confirmation event.
-     * Resolves `true` if the worker confirms, `false` if it times out.
+     * Await a typed event on a channel, with a timeout. Resolves `true` when an event of
+     * `eventType` arrives, `false` on timeout. The general primitive — the trigger may be a
+     * signal (see signalAndAwaitEvent) or anything else (e.g. a worker picking up a queued job).
      *
-     * Must be called before `emitSignal` to avoid missing the response.
+     * Register this BEFORE causing the event, or a fast reply can land before we're listening.
      */
-    public withEventConfirmation(
+    public awaitEvent(
         eventChannel: Realtime.Channel,
         eventType: string,
         timeoutMs: number = 5000
@@ -77,6 +76,20 @@ export class RealtimeService implements OnModuleDestroy {
 
     public emitSignal<T extends Realtime.Signal>(signal: T){
         this.redisPub.publish(signal.channel, JSON.stringify(signal));
+    }
+
+    // Send a signal then await the worker's confirmation event. Registers the waiter BEFORE
+    // emitting so a fast reply can't land before we're listening. Resolves true if confirmed,
+    // false on timeout. Mirror of the worker's emitAndAwaitSignal.
+    public signalAndAwaitEvent<Sig extends Realtime.Signal>(
+        signal:       Sig,
+        eventChannel: Realtime.Channel,
+        eventType:    string,
+        timeoutMs:    number = 5000,
+    ): Promise<boolean> {
+        const confirmation = this.awaitEvent(eventChannel, eventType, timeoutMs);
+        this.emitSignal(signal);
+        return confirmation;
     }
 
     onModuleDestroy() {
