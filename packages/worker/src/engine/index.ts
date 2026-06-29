@@ -396,7 +396,7 @@ export namespace AggexEngine {
          * An in-flight error travelling the graph out-of-band (NOT through typed
          * output ports). Keyed by edge in `ctx.errorChannel`. `path` is the ordered
          * trace of nodes the error has visited — used for cycle detection (a node
-         * re-appearing → `CyclicalUncaughtRuntimeNodeError`) and debugging.
+         * re-appearing → `CyclicalRuntimeNodeError`) and debugging.
          */
         export interface ErrorEnvelope {
             id:    string;

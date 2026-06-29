@@ -179,11 +179,10 @@ export class AggexWorkerImpl {
 
             await Execution.API.update(AxiosService.api, { executionId, status, session, recording });
 
-            if (status === 'terminated') {
+            if (status === 'terminated')
                 this.emit<Execution.Event.Terminated>({ executionId, workflowId, type: "terminated", channel: eventChannel });
-            } else {
+            else
                 this.emit<Execution.Event.Completed>({ executionId, workflowId, type: "completed", channel: eventChannel, session });
-            }
 
             if (recording) {
                 await this.redisPub.set(
