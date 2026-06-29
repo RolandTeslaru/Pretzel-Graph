@@ -4,7 +4,7 @@ import { createWithEqualityFn } from "zustand/traditional";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { enableMapSet } from "immer";
-import { HumanReview, Execution } from "@pretzel-graph/shared/domain";
+import { HumanReview, Execution, Workflow } from "@pretzel-graph/shared/domain";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { ExecutionSDK } from "../ExecutionSDK/sdk";
 import { _createHumanReviewActions_, type _HumanReviewSDKActions_ } from "./actions";
@@ -17,9 +17,10 @@ export class HumanReviewSDKImpl extends BaseSDK<HumanReviewSDK.State> {
 
     constructor() { super() }
 
+    // Insertion order = stack order; the LAST request is the front card.
     public readonly useStore: BaseSDK.Store<HumanReviewSDK.State> = createWithEqualityFn(
         immer<HumanReviewSDK.State>(() => ({
-            requests: new Map(),
+            requests: createDummyRequests(),   // DUMMY: remove when wiring real events
         })),
         shallow,
     )
@@ -51,6 +52,7 @@ export class HumanReviewSDKImpl extends BaseSDK<HumanReviewSDK.State> {
                 this.actions.addRequest(event.request);
                 break;
             case "human-review:resolved":
+                // Delete is enough — AnimatePresence keeps the card mounted to play its exit.
                 this.actions.removeRequest(event.requestId);
                 break;
         }
@@ -58,6 +60,27 @@ export class HumanReviewSDKImpl extends BaseSDK<HumanReviewSDK.State> {
 }
 
 export const HumanReviewSDK = SDK.get<HumanReviewSDKImpl>("HumanReview")
+
+
+// ─── DUMMY DATA (remove) — seeds the stack so RequestStacker can be eyeballed ──────────────
+function createDummyRequests(): HumanReviewSDK.State["requests"] {
+    const base = (n: number) => ({
+        nodeId:      `node-${n}` as Workflow.Node.Id,
+        executionId: "dummy-exec" as Execution.Id,
+        createdAt:   Date.now() - (5 - n) * 1000,   // staggered so order is visible
+        timeoutMs:   60_000,
+    })
+
+    const requests: HumanReview.Request[] = [
+        { id: "dummy-1" as HumanReview.Request.Id, ...base(1), title: "Deploy to production?", message: "The agent wants to deploy build #4821.", variant: "confirm", approveLabel: "Deploy", rejectLabel: "Cancel" },
+        { id: "dummy-2" as HumanReview.Request.Id, ...base(1), title: "Approve Tool usage?", message: "The agent wants to deploy build #4821.", variant: "confirm", approveLabel: "Deploy", rejectLabel: "Cancel" },
+        // { id: "dummy-2" as HumanReview.Request.Id, ...base(2), title: "Pick an environment", message: "Where should this run?", variant: "choice", options: [{ label: "Staging", value: "staging" }, { label: "Production", value: "prod" }], multiple: false, allowCustom: false },
+        // { id: "dummy-3" as HumanReview.Request.Id, ...base(3), title: "Refund details", message: "Confirm the refund amount and reason.", variant: "form", fields: [] },
+        // { id: "dummy-4" as HumanReview.Request.Id, ...base(4), title: "Approve the summary?", message: "Review the generated report before sending.", variant: "confirm", approveLabel: "Send", rejectLabel: "Discard" },
+    ]
+
+    return new Map(requests.map(r => [r.id, r]))
+}
 
 
 // Bind the review subscription to the execution currently in view. Owned here (not in
