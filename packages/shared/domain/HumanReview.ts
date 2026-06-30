@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { type AxiosInstance } from "axios"
 import { Workflow } from "./Workflow"
 import { Execution } from "./Execution"
 import { Field } from "./Foundations/Field"
@@ -123,9 +124,35 @@ export namespace HumanReview {
                 `human-review:${executionId}:signal:responded:${requestId}` as Channel
 
             export const Schema = Realtime.Signal.Base.extend({
+                type: z.literal("human-review:responded"),
                 resolution: Resolution.Schema,
             })
             export type Schema = z.infer<typeof Schema>
+        }
+    }
+
+    // ─── API ────────────────────────────────────────────────────────────────
+    // Frontend → backend HTTP. The browser never touches Redis; the authed route below
+    // verifies execution ownership then publishes the HumanResponded signal upstream.
+    export namespace API {
+
+        // Named HumanResponded (the upstream user→engine action), NOT Resolved — Event.Resolved
+        // is the DOWNSTREAM confirmation the worker emits after it consumes this signal.
+        export namespace HumanResponded {
+            export const Request = z.object({
+                executionId: Execution.Id,
+                requestId:   HumanReview.Request.Id,
+                resolution:  Resolution.Schema,
+            })
+            export type Request = z.infer<typeof Request>
+
+            export const Response = z.object({ success: z.boolean() })
+            export type Response = z.infer<typeof Response>
+        }
+
+        export async function humanResponded(api: AxiosInstance, req: HumanResponded.Request): Promise<HumanResponded.Response> {
+            const { data } = await api.post<HumanResponded.Response>('/api/human-review/respond', req)
+            return data
         }
     }
 }
