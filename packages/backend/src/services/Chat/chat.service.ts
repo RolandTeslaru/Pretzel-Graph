@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { createAuthenticatedClient } from '@/utils/supabase';
 import { Auth, Chat } from '@pretzel-graph/shared/domain';
 import { ChatDatabase } from './chat.database';
+import { PermissionService } from '../Permission/permission.service';
 
 @Injectable()
 export class ChatService {
-    constructor(private readonly database: ChatDatabase) {}
+    constructor(
+        private readonly database: ChatDatabase,
+        private readonly ownership: PermissionService,
+    ) {}
 
     async create(
         token: string,
@@ -14,6 +18,9 @@ export class ChatService {
     ): Promise<Chat.API.Create.Response> {
         const supabase = createAuthenticatedClient(token);
         const { workflow_id, name } = payload;
+
+        // Don't let a chat be attached to a workflow the user doesn't own.
+        await this.ownership.assertWorkflow(workflow_id, userId);
 
         const chat = await this.database.chat.create(
             supabase, userId, workflow_id, name
@@ -29,6 +36,9 @@ export class ChatService {
     ): Promise<Chat.API.Ensure.Response> {
         const supabase = createAuthenticatedClient(token);
         const { chatId, workflow_id, name } = payload;
+
+        await this.ownership.assertWorkflow(workflow_id, userId);
+
         const chat = await this.database.chat.ensure(supabase, userId, chatId, workflow_id, name);
         return { chat };
     }
