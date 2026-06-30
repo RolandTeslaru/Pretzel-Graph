@@ -11,8 +11,11 @@ const RING_C = 2 * Math.PI * RING_R;
 
 // Depleting countdown ring tied to the request's createdAt → createdAt + timeoutMs window.
 // Driven by rAF mutating the circle via ref — no per-frame state, no re-renders.
-const TimeoutRing = ({ createdAt, timeoutMs }: { createdAt: number; timeoutMs: number }) => {
+// Fires onExpire once when the window closes.
+const TimeoutRing = ({ createdAt, timeoutMs, onExpire }: { createdAt: number; timeoutMs: number; onExpire: () => void }) => {
     const circleRef = useRef<SVGCircleElement>(null);
+    const onExpireRef = useRef(onExpire);
+    onExpireRef.current = onExpire;
 
     useEffect(() => {
         let raf = 0;
@@ -20,6 +23,7 @@ const TimeoutRing = ({ createdAt, timeoutMs }: { createdAt: number; timeoutMs: n
             const remaining = Math.max(0, 1 - (Date.now() - createdAt) / timeoutMs);
             circleRef.current?.style.setProperty("stroke-dashoffset", `${RING_C * (1 - remaining)}`);
             if (remaining > 0) raf = requestAnimationFrame(tick);
+            else onExpireRef.current();
         };
         tick();
         return () => cancelAnimationFrame(raf);
@@ -63,9 +67,9 @@ const Card = ({ request, index, stackSize }: CardProps) => {
     return (
         <motion.div
             layout
-            initial={{ opacity: 0 }}
+            initial={{ y: "100%", opacity: 0 }}
             animate={{ y: yOffset, opacity: 1, scale, filter: `brightness(${brightness})` }}
-            exit={{ x: "100%", opacity: 0 }}
+            exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             style={{ zIndex: 20 + index }}
             onClick={handleClick}
@@ -83,7 +87,7 @@ const Card = ({ request, index, stackSize }: CardProps) => {
                 {request.variant === "choice"  && <ChoiceCard request={request} />}
                 {request.variant === "form"    && <FormCard request={request} />}
 
-                <TimeoutRing createdAt={request.createdAt} timeoutMs={request.timeoutMs} />
+                <TimeoutRing createdAt={request.createdAt} timeoutMs={request.timeoutMs} onExpire={() => HumanReviewSDK.actions.removeRequest(request.id)} />
             </div>
         </motion.div>
     )

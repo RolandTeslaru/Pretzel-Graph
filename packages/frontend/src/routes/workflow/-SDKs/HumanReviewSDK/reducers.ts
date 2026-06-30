@@ -8,6 +8,9 @@ export const humanReviewReducers = {
     removeRequest: (s, requestId) => {
         s.requests.delete(requestId)
     },
+    clearAll: (s) => {
+        s.requests.clear()
+    },
     // Rebuild the Map with `requestId` last → it becomes the front card. New Map ref so the
     // Object.is-subscribed overlay re-renders.
     bringToFront: (s, requestId) => {
@@ -25,5 +28,6 @@ export const humanReviewReducers = {
 interface HumanReviewSDKReducers {
     addRequest:    (state: HumanReviewSDK.State, request: HumanReview.Request) => void
     removeRequest: (state: HumanReviewSDK.State, requestId: HumanReview.Request.Id) => void
+    clearAll:      (state: HumanReviewSDK.State) => void
     bringToFront:  (state: HumanReviewSDK.State, requestId: HumanReview.Request.Id) => void
 }

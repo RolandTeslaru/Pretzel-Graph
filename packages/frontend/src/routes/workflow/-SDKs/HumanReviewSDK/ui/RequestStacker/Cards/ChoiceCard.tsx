@@ -59,7 +59,7 @@ export const ChoiceCard = ({ request }: { request: ChoiceRequest }) => {
                         key={i}
                         variant="ghost"
                         className={`
-                            ${selectedOptions.has(opt.value) && "bg-sky-500/20! hover:bg-sky-500/30!"} 
+                            ${selectedOptions.has(opt.value) && "bg-sky-500/30! hover:bg-sky-500/40!"} 
                             bg-white/10 hover:bg-white/20 dark:bg-black/10 dark:hover:bg-black/20 
                             text-sm font-medium text-white dark:text-black hover:text-white dark:hover:text-black px-2 py-1 rounded-xl`}
                         onClick={() => handleSelect(opt.value)}
@@ -71,7 +71,7 @@ export const ChoiceCard = ({ request }: { request: ChoiceRequest }) => {
             {allowCustom && (
                 <Input variant="ghost-no-focus" placeholder="Enter custom option..." value={customOption} onChange={(e) => setCustomOption(e.target.value)} />
             )}
-            <Button variant="ghost" disabled={sending} className="bg-sky-500 hover:bg-sky-600 text-sm font-medium text-white  hover:text-white  px-2 py-1 rounded-xl" onClick={handleOnSend}>
+            <Button variant="ghost" disabled={sending} className="bg-sky-500 hover:bg-sky-600 dark:hover:bg-sky-600 text-sm font-medium text-white  hover:text-white  px-2 py-1 rounded-xl" onClick={handleOnSend}>
                 {sending
                     ? <Spinner className="w-4 h-4" />
                     : <>{request.sendLabel ?? "Send"} <SystemIcons.ArrowRight className="w-4 h-4 ml-1" /></>}
