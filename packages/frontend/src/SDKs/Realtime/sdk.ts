@@ -43,6 +43,43 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
         };
     }
 
+    // Resolve once an event of `type` lands on `channel`, then auto-unsubscribe.
+    // Frontend mirror of the backend RealtimeService.awaitEvent. timeoutMs <= 0 waits forever;
+    // pass an abortSignal to stop waiting early (rejects with AbortError).
+    public useAwaitEvent<E extends Realtime.Event>(
+        channel:     Realtime.Channel,
+        type:        E["type"],
+        timeoutMs:   number = 5000,
+        abortSignal?: AbortSignal,
+    ): Promise<E> {
+        return new Promise<E>((resolve, reject) => {
+            let timer: ReturnType<typeof setTimeout> | null = null;
+
+            const cleanup = () => {
+                if (timer) clearTimeout(timer);
+                abortSignal?.removeEventListener("abort", onAbort);
+                unsubscribe();
+            };
+            const onAbort = () => { cleanup(); reject(new DOMException("aborted", "AbortError")); };
+
+            const unsubscribe = this.subscribeToChannel<Realtime.Event>(channel, (event) => {
+                if (event.type !== type) return;
+                cleanup();
+                resolve(event as E);
+            });
+
+            if (abortSignal?.aborted) return onAbort();
+            abortSignal?.addEventListener("abort", onAbort);
+
+            if (timeoutMs > 0) {
+                timer = setTimeout(() => {
+                    cleanup();
+                    reject(new Error(`useAwaitEvent: timed out after ${timeoutMs}ms waiting for "${type}" on ${channel}`));
+                }, timeoutMs);
+            }
+        });
+    }
+
     private send(message: any) {
         if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
             console.warn("RealtimeSDK: Socket not connected, cannot send message", message, `. ${this.socket ? `The socket does exist but it is in state ${this.socket.readyState}` : "The socket does not exist"}`);

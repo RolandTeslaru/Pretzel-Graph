@@ -2,6 +2,9 @@ import { memo, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { HumanReview } from "@pretzel-graph/shared/domain";
 import { HumanReviewSDK } from "../../sdk";
+import { ConfirmationCard } from "./Cards/ConfirmationCard";
+import { ChoiceCard } from "./Cards/ChoiceCard";
+import { FormCard } from "./Cards/FormCard";
 
 const RING_R = 10;
 const RING_C = 2 * Math.PI * RING_R;
@@ -72,15 +75,13 @@ const Card = ({ request, index, stackSize }: CardProps) => {
                 ${!isFront ? "cursor-pointer" : ""}
             `}
         >
-            <div className="p-2.5  pt-3 text-white dark:text-black gap-3 flex flex-col">
+            <div className="p-2.5  text-white dark:text-black gap-3 flex flex-col">
                 <div className="font-semibold">{request.title}</div>
                 {request.message && <div className="text-xs opacity-70">{request.message}</div>}
-                {request.variant === "confirm" && (
-                    <div className="flex gap-2">
-                        <button className="bg-red-500 w-1/2 text-sm font-medium text-white px-2 py-1 rounded-xl">Reject</button>
-                        <button className="bg-emerald-500 w-1/2 text-sm font-medium text-white px-2 py-1 rounded-xl">Accept</button>
-                    </div>
-                )}
+
+                {request.variant === "confirm" && <ConfirmationCard request={request} />}
+                {request.variant === "choice"  && <ChoiceCard request={request} />}
+                {request.variant === "form"    && <FormCard request={request} />}
 
                 <TimeoutRing createdAt={request.createdAt} timeoutMs={request.timeoutMs} />
             </div>
