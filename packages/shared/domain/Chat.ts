@@ -7,9 +7,6 @@ import { supabaseTimestamp } from "./zod-utils";
 import { SystemError } from "./SystemError";
 import { Auth } from "./Auth";
 
-const ExecutionId = z.uuid().brand("ExecutionId");
-type ExecutionId = z.infer<typeof ExecutionId>;
-
 export namespace Chat {
 
     export const Id = z.uuid().brand("ChatId")
@@ -204,34 +201,6 @@ export namespace Chat {
         export namespace Row {
             export const Chat = Schema.extend({
                 user_id: Auth.User.Id,
-            })
-        }
-    }
-
-    export namespace Signal {
-
-        export namespace MessageSent {
-            export const Channel = Realtime.Channel.brand("Chat.Signal.MessageSent.Channel");
-            export type Channel = z.infer<typeof Channel>
-
-            export const getChannel = (executionId: ExecutionId) => `chat:message_sent:${executionId}` as Channel
-
-            export const Schema = Realtime.Signal.Base.extend({
-                chatId: Chat.Id,
-                message: Chat.Message.Schema,
-            })
-            export type Schema = z.infer<typeof Schema>
-        }
-
-        export namespace HumanResponeded {
-            export const Channel = Realtime.Channel.brand("Chat.Signal.HumanResponded.Channel");
-            export type Channel = z.infer<typeof Channel>;
-
-            export const getChannel = (executionId: ExecutionId) => `chat:human_responded:${executionId}` as Channel
-
-            export const Schema = Realtime.Signal.Base.extend({
-                chatId: Chat.Id,
-                message: Chat.Message.Human,
             })
         }
     }
