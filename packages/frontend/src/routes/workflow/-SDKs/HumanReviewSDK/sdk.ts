@@ -4,7 +4,7 @@ import { createWithEqualityFn } from "zustand/traditional";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { enableMapSet } from "immer";
-import { HumanReview, Execution, Workflow } from "@pretzel-graph/shared/domain";
+import { HumanReview, Execution } from "@pretzel-graph/shared/domain";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { ExecutionSDK } from "../ExecutionSDK/sdk";
 import { _createHumanReviewActions_, type _HumanReviewSDKActions_ } from "./actions";
@@ -86,6 +86,13 @@ export const HumanReviewSDK = SDK.get<HumanReviewSDKImpl>("HumanReview")
 // Bind the review subscription to the execution currently in view. Owned here (not in
 // ExecutionSDK) so the dependency points feature → core, never the reverse.
 ExecutionSDK.subscribe((state, prev) => {
+
+    const sel = ExecutionSDK.selectors;
+
+    // running → not-running edge: the run stopped, so drop any requests still parked in the UI.
+    if (sel.currentExecution.isRunning(prev) && !sel.currentExecution.isRunning(state))
+        HumanReviewSDK.actions.clearAll();
+
     if (state.currentExecution?.id === prev.currentExecution?.id)
         return
 
@@ -93,8 +100,14 @@ ExecutionSDK.subscribe((state, prev) => {
         HumanReviewSDK.runtime.unsubscribeFromEvents?.();
         HumanReviewSDK.runtime.unsubscribeFromEvents = null;
         HumanReviewSDK.runtime.subscribedExecutionId = null;
+
+
+        HumanReviewSDK.actions.clearAll();
         return
     }
+
+    if(sel.currentExecution.isRunning(state) === false)
+        HumanReviewSDK.actions.clearAll();
 
     HumanReviewSDK.subscribeToEvents(state.currentExecution.id)
 })
