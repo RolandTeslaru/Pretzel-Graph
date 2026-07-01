@@ -14,18 +14,17 @@ interface Props {
 export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
     const dep = node.dependency
     const hasWorkflowDependency = !!dep
-    const publishedDependencyUpdate = WorkbenchSDK.useStore(s =>
-        dep?.mode === "publication" && dep.workflowId
-            ? s.selectors.dependency.published.getUpdateInfo(s, dep.workflowId)
-            : null
-    )
-    const draftDependencyUpdate = WorkbenchSDK.useStore(s =>
-        dep?.mode === "draft" && dep.workflowId
-            ? s.selectors.dependency.draft.getUpdateInfo(s, dep.workflowId)
-            : null
-    )
 
-    const showExtrasPanel = publishedDependencyUpdate || draftDependencyUpdate || hasWorkflowDependency
+    const [dependencyUpdate, mode] = WorkbenchSDK.useStore(s => s.selectors.node.getDependencyUpdate(s, node.id) ?? [null, null])
+
+    const showExtrasPanel = dependencyUpdate || hasWorkflowDependency || node.toolCompatible
+
+    const handleDependencyUpdate = () => {
+        if(mode === "draft")
+            WorkbenchSDK.actions.dependency.draft.update(dependencyUpdate as Workflow.Dependency.Draft.UpdateInfo)
+        else if(mode === "publication")
+            WorkbenchSDK.actions.dependency.published.update(dependencyUpdate as Workflow.Dependency.Publication.UpdateInfo)
+    }
 
     return (
         <div className='flex flex-row gap-1'>
@@ -58,13 +57,13 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
                         <SystemIcons.Play />
                     </Button>
                 </Tipped>
-                {node.toolCompatible && (
-                    <ToolButton node={node} />
-                )}
                 <OptionsDropdown node={node} />
             </div>
             {showExtrasPanel && (
                 <div className='bg-card flex flex-row gap-1 border-border border rounded-full h-[30px] p-0.5 shadow-md shadow-black/10'>
+                    {node.toolCompatible && (
+                        <ToolButton node={node} />
+                    )}
                     {hasWorkflowDependency && (
                         <Tipped label="Open workflow">
                             <Button variant="ghost-primary" size="icon-xs" className='h-6!'
@@ -74,24 +73,15 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
                             </Button>
                         </Tipped>
                     )}
-                    {draftDependencyUpdate && 
-                        <Tipped label="Update draft workflow">
+                    {dependencyUpdate && 
+                        <Tipped label={`Update ${mode} workflow`}>
                             <Button variant="ghost-active" size="icon-xs" className='h-6!'
-                                onClick={() => WorkbenchSDK.actions.dependency.draft.update(draftDependencyUpdate)}
+                                onClick={handleDependencyUpdate}
                             >
                                 <SystemIcons.ArrowBigUpDash />
                             </Button>
                         </Tipped>
                     }
-                    {publishedDependencyUpdate && (
-                        <Tipped label="Update workflow">
-                            <Button variant="ghost-active" size="icon-xs" className='h-6!'
-                                onClick={() => WorkbenchSDK.actions.dependency.published.update(publishedDependencyUpdate)}
-                            >
-                                <SystemIcons.ArrowBigUpDash />
-                            </Button>
-                        </Tipped>
-                    )}
                 </div>
             )}
         </div>
@@ -107,7 +97,7 @@ const ToolButton: React.FC<Props> = memo(({ node }) => {
 
     return (
         <Tipped label={isTool ? "Revert to node" : "Convert to tool"}>
-            <Button variant="ghost" size="icon-xs" className={`h-6! ${isTool ? 'bg-(--port-Tool)/20 text-(--port-Tool) ' : ''}`}
+            <Button variant="ghost" size="icon-xs" className={`h-6! ${isTool ? 'bg-(--port-Tool)/20 ' : ''} text-(--port-Tool) `}
                 onClick={() => {
                     if (isTool) WorkbenchSDK.actions.tool.revert(node.id);
                     else WorkbenchSDK.actions.tool.convert(node.id);
