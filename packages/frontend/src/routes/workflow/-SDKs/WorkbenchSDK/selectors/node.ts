@@ -21,6 +21,12 @@ export interface NodeSelectors {
     // Legacy `@`-sigil context — still feeds webhook field resolution (webhook-renderer). Slated
     // for removal alongside Expression.evaluate; not used by the Airlock `$` preview path.
     getExpressionContext: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session?: Execution.Session) => Expression.Context
+    hasDraftDependency: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
+    hasPublishedDependency: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
+    getDependencyUpdate: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => [ 
+        Workflow.Dependency.Publication.UpdateInfo | Workflow.Dependency.Draft.UpdateInfo,
+        "draft" | "publication"
+    ] | null
 }
 
 export const nodeSelectors = {
@@ -83,4 +89,48 @@ export const nodeSelectors = {
         incoming: executionSelectors.getNodeIncomingData(s, nodeId, session) ?? {},
         workflowConfig: Expression.resolveWorkflowConfig(s.data),
     }),
+    hasDraftDependency: (s, nodeId) => {
+        const node = s.data.nodes[nodeId];
+        if (!node?.dependency) 
+            return false;
+        
+        const { workflowId, mode } = node.dependency;
+        if(!workflowId) 
+            return false
+        return mode === "draft" && workflowId in s.data.dependencies.draft;
+    },
+    hasPublishedDependency: (s, nodeId) => {
+        const node = s.data.nodes[nodeId];
+        if (!node?.dependency) 
+            return false;
+        
+        const { workflowId, mode } = node.dependency;
+        if(!workflowId) 
+            return false
+        return mode === "publication" && workflowId in s.data.dependencies.published;
+    },
+    getDependencyUpdate: (s, nodeId) => {
+        const node = s.data.nodes[nodeId];
+
+        if(node.dependency){
+            const { workflowId, mode } = node.dependency;
+            
+            if(!workflowId) 
+                return null
+
+            if(mode === "publication"){
+                const update = s.dependencyUpdates.published[workflowId] ?? null
+                if(update)
+                    return [update, "publication"]
+            }
+            
+            if(mode === "draft"){
+                const update = s.dependencyUpdates.draft[workflowId] ?? null
+                if(update)
+                    return [update, "draft"]
+            }
+        }
+        
+        return null
+    }
 } satisfies NodeSelectors

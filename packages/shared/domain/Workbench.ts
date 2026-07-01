@@ -1,8 +1,7 @@
 import type { AxiosInstance } from "axios"
 import z from "zod"
 import { Workflow as WorkflowNs } from "./Workflow"
-import { VersionControlPublication } from "./VersionControlPublication"
-import { Foundations } from "./index"
+import { Foundations } from "./Foundations"
 import { Vault } from "./Vault"
 
 export namespace Workbench {
@@ -86,7 +85,7 @@ export namespace Workbench {
                     export const Request = z.object({
                         dependencies: z.array(z.object({
                             workflowId:    WorkflowNs.Id,
-                            publicationId: VersionControlPublication.Id,
+                            publicationId: WorkflowNs.Dependency.Publication.Id,
                         })),
                     })
                     export type Request = z.infer<typeof Request>

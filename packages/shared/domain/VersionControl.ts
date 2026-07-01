@@ -2,18 +2,31 @@ import z from "zod";
 import type { AxiosInstance } from "axios";
 import { Workflow } from "./Workflow";
 import { Realtime } from "./Realtime";
-import { VersionControlPublication } from "./VersionControlPublication";
+import { Auth } from "./Auth";
 
 export namespace VersionControl {
+    // Canonical version-control publication record. workflow_data binds to the
+    // current Workflow via a getter (Workflow is fully loaded before this module
+    // through the domain barrel, and via the ./Workflow import here).
     export namespace Publication {
-        export const Id = VersionControlPublication.Id;
+        // Same brand as Workflow.Dependency.Publication.Id (structural).
+        export const Id = z.uuid().brand("PublicationId");
         export type Id = z.infer<typeof Id>
 
-        export const Schema = VersionControlPublication.createSchema(Workflow.Data.Schema)
+        export const Schema = z.object({
+            id:            Id,
+            workflow_id:   Workflow.Id,
+            version:       z.number(),
+            name:          z.string(),
+            description:   z.string().nullable(),
+            get workflow_data() { return Workflow.Data.Schema; },
+            is_active:     z.boolean(),
+            published_at:  z.coerce.date(),
+        })
 
         export namespace Database {
             export namespace Row {
-                export const Schema = VersionControlPublication.Database.createRowSchema(Workflow.Data.Schema)
+                export const Schema = Publication.Schema.extend({ user_id: Auth.User.Id })
             }
             export type Row = z.infer<typeof Row.Schema>
         }
