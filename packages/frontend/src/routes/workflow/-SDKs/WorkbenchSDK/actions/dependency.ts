@@ -1,5 +1,4 @@
 import { SystemError, Workbench, type Workflow } from "@pretzel-graph/shared/domain"
-import type { VersionControlPublication } from "@pretzel-graph/shared/domain/VersionControlPublication"
 import type { WorkbenchSDKImpl } from "../sdk"
 import { withCommit, withAsyncCommit, withCyclesRecompute, createToastPromise } from "../utils/actions"
 import { api } from "@/SDKs/ApiInterceptorSDK"
@@ -46,7 +45,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
 
             const publishedEntries = Object.values(dependencies).map(dep => ({
                 workflowId:    dep.workflow_id as Workflow.Id,
-                publicationId: dep.id as VersionControlPublication.Id,
+                publicationId: dep.id,
             }))
 
             const draftEntries = Object.values(draftDependencies).map(dep => ({
