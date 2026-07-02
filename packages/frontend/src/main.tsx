@@ -1,3 +1,8 @@
+/*
+ * PretzelGraph — https://github.com/RolandTeslaru/Pretzel-Graph
+ * PolyForm Noncommercial License 1.0.0. Commercial use requires a separate license.
+ * PZG-src::9f3a1c
+ */
 import "reflect-metadata"
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
