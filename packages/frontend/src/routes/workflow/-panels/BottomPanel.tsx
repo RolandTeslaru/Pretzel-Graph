@@ -68,7 +68,7 @@ export const BottomPanel = () => {
                 </div>
 
                 <motion.div
-                    className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border overflow-visible'
+                    className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/80 backdrop-blur-sm border border-border overflow-visible'
                     layout
                     transition={{ layout: { type: "spring", stiffness: 400, damping: 30 } }}
                 >

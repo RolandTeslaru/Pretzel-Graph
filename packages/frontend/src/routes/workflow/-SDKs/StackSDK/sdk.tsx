@@ -117,7 +117,7 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                 className={`
                     overflow-hidden
                     ${className || ''}
-                    fixed flex flex-col right-5 top-24 bottom-24 w-87.5 bg-card/70 backdrop-blur-lg 
+                    fixed flex flex-col right-5 top-24 bottom-24 w-87.5 bg-card/80 backdrop-blur-lg 
                     border border-border rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10
                     ${!isFront ? 'cursor-pointer' : ''}
                 `}
@@ -178,7 +178,7 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                 className={`
                     overflow-hidden
                     ${className || ''}
-                    fixed flex flex-col bg-card/70 backdrop-blur-lg
+                    fixed flex flex-col bg-card/80 backdrop-blur-lg
                     border border-border rounded-2xl shadow-lg dark:shadow-black/30 light:shadow-black/10
                     ${!isFront ? 'cursor-pointer' : ''}
                 `}
