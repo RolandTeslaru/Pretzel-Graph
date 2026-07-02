@@ -124,7 +124,7 @@ export const CORE_DRAWERS = {
     id: "human_review",
     icon: "ShieldUser",
     blueprintIds: [
-      "Core.Utils.WorkbenchPoll",
+      "Core.Workbench.Review",
     ],
   },
 } as const as Record<Shelf.Drawer.Id, Shelf.Drawer>

@@ -48,7 +48,7 @@ const TracksPanel = () => {
         <div
             ref={panelRef}
             style={{ left: 20 }}
-            className="border border-border/70 top-2 w-[150px] h-[calc(100%-20px)] rounded-lg absolute z-20 bg-card/70 backdrop-blur-md shadow-md shadow-black/10 flex flex-col overflow-hidden"
+            className="border border-border/70 top-2 w-[150px] h-[calc(100%-20px)] rounded-lg absolute z-20 bg-card/80 backdrop-blur-md shadow-md shadow-black/10 flex flex-col overflow-hidden"
         >
             {/* Grip — never scrolls */}
             <div className="flex-none flex items-center justify-center h-[19px] cursor-grab active:cursor-grabbing" onMouseDown={onMouseDown}>
