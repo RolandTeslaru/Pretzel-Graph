@@ -77,9 +77,9 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         if (!searchEngineId)
             throw new Error("Google Search: Search Engine ID is required.");
 
-        const searchType = this.fields.searchType as GoogleSearchType;
-        const safeSearch = this.fields.safeSearch as GoogleSafeSearch;
-        const num = clampMaxResults(this.fields.maxResults);
+        const searchType = this.fieldValues.searchType as GoogleSearchType;
+        const safeSearch = this.fieldValues.safeSearch as GoogleSafeSearch;
+        const num = clampMaxResults(this.fieldValues.maxResults);
 
         const response = await axios.get<GoogleCustomSearchResponse>("https://www.googleapis.com/customsearch/v1", {
             params: {

@@ -1,11 +1,11 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { InferFields, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { InferFieldValues, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 import { cloneDeep } from "lodash";
 import { Blueprint } from "./blueprint";
 
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    changedFieldId: keyof InferFields<typeof Blueprint>,
+    changedFieldId: keyof InferFieldValues<typeof Blueprint>,
     newValue: Foundations.Field.Value,
 ): Foundations.Blueprint => {
     const next = cloneDeep(blueprint);

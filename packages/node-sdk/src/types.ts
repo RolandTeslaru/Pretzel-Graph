@@ -6,11 +6,11 @@ import type { Vault } from "@pretzel-graph/shared/domain"
  * Uses __literalId phantom for literal key names.
  * Maps each config field to its initialValue type.
  */
-export type InferFields<D> = 0 extends (1 & D) ? any
+export type InferFieldValues<D> = 0 extends (1 & D) ? any
     : D extends { fields: infer T }
     ? T extends readonly { id: string }[]
     ? { [K in T[number]as K extends { itemScoped: true }
-        ? never                                                     // item-scoped → not in this.fields
+        ? never                                                     // item-scoped → not in this.fieldValues
         : K extends { __literalId?: infer Id extends string }
         ? Id
         : K extends { id: infer Id extends string } ? Id : never
@@ -20,8 +20,8 @@ export type InferFields<D> = 0 extends (1 & D) ? any
     : Record<string, never>;
 
 /**
- * Complement of InferFields: only the item-scoped fields, keyed by literal id, mapped to
- * their value type. These are NOT in `this.fields` — they're evaluated per-item via
+ * Complement of InferFieldValues: only the item-scoped fields, keyed by literal id, mapped to
+ * their value type. These are NOT in `this.fieldValues` — they're evaluated per-item via
  * RuntimeNode.evalItemField. Keying off the required literal `{ itemScoped: true }` (set by
  * FieldBuilder.itemScoped) so the optional `itemScoped?: boolean` on every field's base
  * never false-matches.
@@ -40,7 +40,7 @@ export type InferItemFields<D> = 0 extends (1 & D) ? any
     : Record<string, never>;
 
 /**
- * Like InferFields, but only includes fields where initialValue was
+ * Like InferFieldValues, but only includes fields where initialValue was
  * explicitly provided at the builder call site (__hasInitialValue is true).
  */
 export type InferFieldsWithInitial<D> = D extends { fields: infer T }

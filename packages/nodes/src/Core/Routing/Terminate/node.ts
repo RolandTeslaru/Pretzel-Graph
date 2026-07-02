@@ -11,10 +11,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         _inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { mode } = this.fields;
+        const { mode } = this.fieldValues;
 
         if (mode === "error") {
-            const message = (this.fields as Record<string, unknown>).message as string;
+            const message = (this.fieldValues as Record<string, unknown>).message as string;
             throw new Error(message?.trim() || "Workflow terminated.");
         }
 

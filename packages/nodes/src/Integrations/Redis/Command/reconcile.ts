@@ -1,5 +1,5 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { InferFields, FieldBuilder } from "@pretzel-graph/node-sdk";
+import { InferFieldValues, FieldBuilder } from "@pretzel-graph/node-sdk";
 import { cloneDeep } from "lodash";
 
 /**
@@ -8,12 +8,12 @@ import { cloneDeep } from "lodash";
  *   - GET    → key only
  *   - DELETE → key only
  *
- * NOTE: fields added here are NOT in `InferFields<typeof Blueprint>` (derived from the static
+ * NOTE: fields added here are NOT in `InferFieldValues<typeof Blueprint>` (derived from the static
  * base blueprint), so `onRun` reads `value` / `ttl` via a cast.
  */
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    changedFieldId: keyof InferFields<Foundations.Blueprint>,
+    changedFieldId: keyof InferFieldValues<Foundations.Blueprint>,
     newValue: Foundations.Field.Value,
 ): Foundations.Blueprint => {
     const next = cloneDeep(blueprint);

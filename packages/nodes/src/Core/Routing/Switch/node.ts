@@ -13,7 +13,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<Partial<InferOutputs<typeof Blueprint>>> { // we dont really know what routes will be generated, so we return partial outputs
 
-        const { cases } = this.fields;
+        const { cases } = this.fieldValues;
         const { input } = inputs;
 
         // cases are pre-evaluated by evaluateFields() — value is always a plain boolean here.

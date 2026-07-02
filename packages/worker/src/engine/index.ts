@@ -203,7 +203,7 @@ export class AggexEngine {
 
         const allDependencies = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
 
-        const dataDependency = entry.instance.fields["dataDependency" as Field.Id];
+        const dataDependency = entry.instance.fieldValues["dataDependency" as Field.Id];
 
         const inputs = this.nodeIO.getIncomingData(
             ctx,
@@ -231,7 +231,7 @@ export class AggexEngine {
 
         this.flightRecorder?.onNodeExecuted(wfNode.id, signals, allDependencies, inputs, fields, ctx);
 
-        const isTool = nodeInstance.fields["isConvertedToTool" as Field.Id] === true;
+        const isTool = nodeInstance.fieldValues["isConvertedToTool" as Field.Id] === true;
 
         let result;
         try {

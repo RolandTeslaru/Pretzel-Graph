@@ -15,12 +15,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        if(this.fields.direction === "in") {
+        if(this.fieldValues.direction === "in") {
             
             const outNodes = this.context
                 .workflowQueryAPI
                 .getNodesByBlueprint<typeof Blueprint>(Blueprint.id)
-                .filter(({ fields, node }) => (fields["portalId"] === this.fields.portalId) && (fields["direction"] === "out") && (node.id !== this.workflowNode.id));
+                .filter(({ fields, node }) => (fields["portalId"] === this.fieldValues.portalId) && (fields["direction"] === "out") && (node.id !== this.workflowNode.id));
     
             for (const { node } of outNodes) {
                 const instance = this.context.instanceRegistryAPI.get(node.id);
