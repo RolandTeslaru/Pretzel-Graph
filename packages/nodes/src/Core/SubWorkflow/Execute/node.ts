@@ -1,5 +1,5 @@
 import { RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Airlock, Execution, Workflow } from "@pretzel-graph/shared/domain";
 import { AggexEngine, WorkflowCompiler } from "@pretzel-graph/worker";
@@ -96,10 +96,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        this.injectInputNodeValues(inputs);
+        this.injectInputNodeValues(incoming);
 
         try {
             await this.subEnvironment.run(this.subEngineCtx);
@@ -134,7 +134,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
 
 
-    private injectInputNodeValues(inputs: InferInputs<typeof Blueprint>): void {
+    private injectInputNodeValues(incoming: InferIncoming<typeof Blueprint>): void {
         const exposeInputNodes = this.subEngineCtx.workflowQueryAPI
             .getNodesByBlueprint("Core.SubWorkflow.ExposeInputPort" as any);
 
@@ -144,7 +144,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 continue;
 
             const exposeNodeId = instance.fieldValues.exposed_port_id;
-            const dynamicInputs = inputs as Record<string, unknown>;
+            const dynamicInputs = incoming as Record<string, unknown>;
             System.log.debug("[ExecuteSubWorkflow:onRun] injecting exposed input port", {
                 exposed_port_id: exposeNodeId,
                 value:           JSON.stringify(dynamicInputs[exposeNodeId])?.slice(0, 100),

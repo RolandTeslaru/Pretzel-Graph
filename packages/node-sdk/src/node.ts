@@ -1,5 +1,5 @@
 import { Airlock, Chat, Execution, Foundations, Realtime, Vault, Workflow } from "@pretzel-graph/shared/domain";
-import { InferCredentials, InferCredentialValues, InferFieldValues, InferInputs, InferItemFields, InferOutputs } from "./types";
+import { InferCredentials, InferCredentialValues, InferFieldValues, InferIncoming, InferItemFields, InferOutputs } from "./types";
 import type { CompilationContext } from "./compiler-context";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
@@ -70,20 +70,20 @@ export abstract class RuntimeNode<
      * fields must be pre-evaluated by the engine via evaluateFields().
      */
     public async run(
-        inputs: InferInputs<T_Blueprint>,
+        incoming: InferIncoming<T_Blueprint>,
         fields: InferFieldValues<T_Blueprint>,
     ): Promise<Partial<InferOutputs<T_Blueprint>>> {
         this.isWaiting = false;
         this.fieldValues = fields;
 
-        return this.onRun(inputs);
+        return this.onRun(incoming);
     }
 
 
 
 
     protected abstract onRun(
-        inputs: InferInputs<T_Blueprint>
+        incoming: InferIncoming<T_Blueprint>
     ): Promise<Partial<InferOutputs<T_Blueprint>>>;
 
 
@@ -234,19 +234,19 @@ export abstract class RuntimeNode<
 
 
     public async buildTool(
-        inputs: InferInputs<T_ToolBlueprint>,
+        incoming: InferIncoming<T_ToolBlueprint>,
         fields: InferFieldValues<T_Blueprint>,
     ): Promise<InferOutputs<T_ToolBlueprint>> {
         this.isWaiting = false;
         this.fieldValues = fields;
-        return this.onBuildTool(inputs);
+        return this.onBuildTool(incoming);
     }
 
 
 
 
     protected onBuildTool(
-        inputs: InferInputs<T_ToolBlueprint>
+        incoming: InferIncoming<T_ToolBlueprint>
     ): Promise<InferOutputs<T_ToolBlueprint>> {
         throw new Error("This node cannot be converted to a tool");
     }
@@ -256,7 +256,7 @@ export abstract class RuntimeNode<
 
 
     public async wait(
-        partialInputs: InferInputs<T_Blueprint>,
+        partialInputs: InferIncoming<T_Blueprint>,
         dependencyResolutionMap: Record<Workflow.Node.Id, boolean>,
         fields: InferFieldValues<T_Blueprint>,
     ): Promise<void> {
@@ -269,7 +269,7 @@ export abstract class RuntimeNode<
 
     
     protected onWait(
-        inputs: InferInputs<T_Blueprint>
+        incoming: InferIncoming<T_Blueprint>
     ): Promise<void> | void {}
 
 
@@ -323,7 +323,7 @@ export abstract class RuntimeNode<
 
 
     protected onRecordMetrics(args: {
-        inputs:   InferInputs<T_Blueprint>,
+        inputs:   InferIncoming<T_Blueprint>,
         outputs:  Partial<InferOutputs<T_Blueprint>>,
         unitId:   Execution.Recording.UnitOfWork.Id,
         status:   Execution.Recording.UnitOfWork["status"],
@@ -333,7 +333,7 @@ export abstract class RuntimeNode<
     }
 
     public recordMetrics(args: {
-        inputs:   InferInputs<T_Blueprint>,
+        inputs:   InferIncoming<T_Blueprint>,
         outputs:  Partial<InferOutputs<T_Blueprint>>,
         unitId:   Execution.Recording.UnitOfWork.Id,
         status:   Execution.Recording.UnitOfWork["status"],

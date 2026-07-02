@@ -6,7 +6,7 @@ import {
 } from "@coinbase/agentkit";
 import { tool } from "@langchain/core/tools";
 
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint, ToolBlueprint } from "./blueprint";
@@ -62,7 +62,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const actions = this.agentkit.getActions();
         const getBalanceAction = actions.find(a => a.name === "get_balance");
@@ -70,8 +70,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         if (!getBalanceAction)
             throw new Error("ERC-20 Token: get_balance action not available on this network.");
 
-        const address = inputs.targetAddress?.trim() || this.walletProvider.getAddress();
-        const tokenAddress = inputs.tokenAddress?.trim() || undefined;
+        const address = incoming.targetAddress?.trim() || this.walletProvider.getAddress();
+        const tokenAddress = incoming.tokenAddress?.trim() || undefined;
 
         const result = await getBalanceAction.invoke({
             ...(tokenAddress ? { tokenAddress } : {}),
@@ -87,7 +87,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onBuildTool(
-        inputs: InferInputs<typeof ToolBlueprint>,
+        incoming: InferIncoming<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
         const actions = this.agentkit.getActions();
         const find = (name: string) => {

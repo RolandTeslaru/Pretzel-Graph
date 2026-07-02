@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { HumanReview } from "@pretzel-graph/shared/domain";
 
@@ -14,7 +14,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<Partial<InferOutputs<typeof Blueprint>>> {
         const execId  = this.context.executionId;
         const request = HumanReview.Request.Schema.parse(this.buildRequest());
@@ -39,7 +39,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             resolution,
         }));
 
-        return this.mapResolution(resolution, inputs);
+        return this.mapResolution(resolution, incoming);
     }
 
     // reconcile-added fields aren't in InferFieldValues, so the variant config is read via cast.
@@ -70,14 +70,14 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     // aren't in the static InferOutputs, so the result is cast.
     private mapResolution(
         resolution: HumanReview.Resolution,
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Partial<InferOutputs<typeof Blueprint>> {
         let result: Record<string, unknown>;
         switch (resolution.variant) {
             case "confirm":
                 result = resolution.approved
-                    ? { approved: inputs.input ?? null }
-                    : { rejected: inputs.input ?? null };
+                    ? { approved: incoming.input ?? null }
+                    : { rejected: incoming.input ?? null };
                 break;
             case "choice":
                 result = { value: resolution.values };

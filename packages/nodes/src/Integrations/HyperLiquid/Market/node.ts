@@ -2,7 +2,7 @@ import axios from "axios";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint, ToolBlueprint } from "./blueprint";
@@ -49,10 +49,10 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const { interval, lookbackHours } = this.fieldValues;
-        const coin = (inputs.coin ?? "").trim();
+        const coin = (incoming.coin ?? "").trim();
 
         if (!coin)
             throw new Error("HyperLiquid Market: 'coin' input is required (e.g. BTC, ETH).");
@@ -64,7 +64,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onBuildTool(
-        inputs: InferInputs<typeof ToolBlueprint>,
+        incoming: InferIncoming<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
         const { interval: defaultInterval, lookbackHours: defaultLookback } = this.fieldValues;
 

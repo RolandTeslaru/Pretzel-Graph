@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs, redis, toRedisCreds } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs, redis, toRedisCreds } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 @RegisterNode(Blueprint.id)
@@ -7,7 +7,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        _inputs: InferInputs<typeof Blueprint>,
+        _incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const creds = toRedisCreds(this.context.credentialsAPI.getDecryptedValue(this.credentials.redis.blob));
         const client = await redis.get(creds);
