@@ -42,7 +42,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
     protected override async onCompile() {
         const { cdpKeyId, cdpKeySecret, walletSecret } = this.context.credentialsAPI.getDecryptedValue(this.credentials.coinbaseApi.blob);
-        const { networkId, walletAddress } = this.fields;
+        const { networkId, walletAddress } = this.fieldValues;
 
         if (!cdpKeyId || !cdpKeySecret || !walletSecret)
             throw new Error("ERC-20 Token: CDP Key ID, CDP Key Secret, and Wallet Secret are all required.");
@@ -92,7 +92,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         const actions = this.agentkit.getActions();
         const find = (name: string) => {
             const action = actions.find(a => a.name === name);
-            if (!action) throw new Error(`ERC-20 Token: action '${name}' not available on network '${this.fields.networkId}'.`);
+            if (!action) throw new Error(`ERC-20 Token: action '${name}' not available on network '${this.fieldValues.networkId}'.`);
             return toLangChainTool(action);
         };
 

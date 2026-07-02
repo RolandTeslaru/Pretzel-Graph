@@ -1,4 +1,4 @@
-import { InferFields, RegisterNode } from "@pretzel-graph/node-sdk"
+import { InferFieldValues, RegisterNode } from "@pretzel-graph/node-sdk"
 import { Blueprint } from "./blueprint"
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
@@ -37,7 +37,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         }
 
         const chatId = this.context.chat_id;
-        if (chatId && this.fields.write_to_session) {
+        if (chatId && this.fieldValues.write_to_session) {
             const dbMessage: Chat.Message.Human = {
                 id: Chat.Message.createId(),
                 role: "human",

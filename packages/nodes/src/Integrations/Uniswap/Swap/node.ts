@@ -81,7 +81,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
         const { privateKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.uniswapApi.blob);
-        this.clients = buildClients({ ...this.fields, privateKey });
+        this.clients = buildClients({ ...this.fieldValues, privateKey });
     }
 
     protected override async onRun(

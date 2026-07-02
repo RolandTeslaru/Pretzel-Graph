@@ -57,8 +57,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const schema = this.fields.schema?.value ?? ""
-        const table  = this.fields.table?.value  ?? ""
+        const schema = this.fieldValues.schema?.value ?? ""
+        const table  = this.fieldValues.table?.value  ?? ""
         console.log(`[ResourceLoaderTest] schema="${schema}" table="${table}"`);
         return { output: inputs.input };
     }

@@ -49,8 +49,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     private async waitForTestPayload(): Promise<Webhook.Payload> {
         const { workflowId } = this.context;
 
-        const path   = this.fields.path   as Webhook.Path;
-        const method = this.fields.method as Webhook.Method;
+        const path   = this.fieldValues.path   as Webhook.Path;
+        const method = this.fieldValues.method as Webhook.Method;
 
         console.log(`[WebhookNode] Registering test webhook [${method}] /${workflowId}/${path}`);
         await Webhook.Test.API.register(AxiosService.api, { workflowId, path, method });

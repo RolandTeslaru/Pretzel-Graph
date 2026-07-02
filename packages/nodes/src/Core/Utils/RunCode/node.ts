@@ -12,7 +12,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { code } = this.fields;
+        const { code } = this.fieldValues;
 
         try {
             const result = await this.context.airlockAPI.executeAsyncCode(

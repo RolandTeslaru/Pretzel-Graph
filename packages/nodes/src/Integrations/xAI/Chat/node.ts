@@ -12,7 +12,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
-        this.llm = new ChatXAI(this.fields);
+        this.llm = new ChatXAI(this.fieldValues);
     }
 
     protected override async onRun(

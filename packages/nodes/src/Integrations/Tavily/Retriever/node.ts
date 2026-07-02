@@ -11,7 +11,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.tavilyApi.blob);
-        const { maxResults, searchDepth, includeAnswer } = this.fields;
+        const { maxResults, searchDepth, includeAnswer } = this.fieldValues;
 
         const retriever = new TavilySearchAPIRetriever({
             apiKey,

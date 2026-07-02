@@ -51,7 +51,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const { interval, lookbackHours } = this.fields;
+        const { interval, lookbackHours } = this.fieldValues;
         const coin = (inputs.coin ?? "").trim();
 
         if (!coin)
@@ -66,7 +66,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     protected override async onBuildTool(
         inputs: InferInputs<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
-        const { interval: defaultInterval, lookbackHours: defaultLookback } = this.fields;
+        const { interval: defaultInterval, lookbackHours: defaultLookback } = this.fieldValues;
 
         const getCandles = tool(
             async ({ coin, interval, lookbackHours }) => {

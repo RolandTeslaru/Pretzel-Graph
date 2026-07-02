@@ -44,8 +44,8 @@ export class RoutingService {
 
         const { instance, wfNode } = entry;
 
-        const signalDep = instance.fields["signalDependency" as Field.Id];
-        const dataDep   = instance.fields["dataDependency" as Field.Id];
+        const signalDep = instance.fieldValues["signalDependency" as Field.Id];
+        const dataDep   = instance.fieldValues["dataDependency" as Field.Id];
 
         if(signalDep === "AND")
             return true;

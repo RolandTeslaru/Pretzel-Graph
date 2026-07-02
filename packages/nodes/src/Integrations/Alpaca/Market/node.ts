@@ -37,7 +37,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         const { apiKeyId, apiSecret } = this.context.credentialsAPI.getDecryptedValue(this.credentials.alpacaApi.blob);
         const credentials = requireAlpacaCredentials(apiKeyId, apiSecret);
         this.dataClient = createAlpacaDataClient(credentials);
-        this.tradingClient = createAlpacaTradingClient(this.fields.environment as AlpacaEnvironment, credentials);
+        this.tradingClient = createAlpacaTradingClient(this.fieldValues.environment as AlpacaEnvironment, credentials);
     }
 
     protected override async onRun(
@@ -47,14 +47,14 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         if (!symbol)
             throw new Error("Alpaca Market: 'symbol' input is required (e.g. AAPL, MSFT).");
 
-        const timeframe = toAlpacaTimeframe(this.fields.timespan as any, this.fields.multiplier);
-        const limit = Math.min(Math.max(this.fields.maxBars, 1), 5000);
+        const timeframe = toAlpacaTimeframe(this.fieldValues.timespan as any, this.fieldValues.multiplier);
+        const limit = Math.min(Math.max(this.fieldValues.maxBars, 1), 5000);
 
         const [bars, newsData] = await Promise.all([
             fetchBars(this.dataClient, {
                 symbol,
                 timeframe,
-                lookbackHours: this.fields.lookbackHours,
+                lookbackHours: this.fieldValues.lookbackHours,
                 limit,
             }),
             fetchNews(this.dataClient, {
@@ -72,16 +72,16 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     protected override async onBuildTool(
         inputs: InferInputs<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
-        const defaultTimeframe = toAlpacaTimeframe(this.fields.timespan as any, this.fields.multiplier);
-        const defaultLookbackHours = this.fields.lookbackHours;
-        const defaultMaxBars = this.fields.maxBars;
+        const defaultTimeframe = toAlpacaTimeframe(this.fieldValues.timespan as any, this.fieldValues.multiplier);
+        const defaultLookbackHours = this.fieldValues.lookbackHours;
+        const defaultMaxBars = this.fieldValues.maxBars;
 
         const getBars = tool(
             async ({ symbol, timespan, multiplier, lookbackHours, maxBars, includeBars }) => {
                 const normalizedSymbol = normalizeSymbol(symbol);
                 const timeframe = toAlpacaTimeframe(
-                    (timespan ?? this.fields.timespan) as any,
-                    multiplier ?? this.fields.multiplier,
+                    (timespan ?? this.fieldValues.timespan) as any,
+                    multiplier ?? this.fieldValues.multiplier,
                 );
 
                 const effectiveLookback = lookbackHours ?? defaultLookbackHours;

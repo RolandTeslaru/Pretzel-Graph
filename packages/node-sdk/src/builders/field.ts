@@ -68,7 +68,7 @@ export namespace FieldBuilder {
     /**
      * Marks a field as item-scoped: the engine skips it during eager field evaluation, and the
      * node resolves it per-element via RuntimeNode.evalItemField with $item bound. Excluded from
-     * `this.fields` (InferFields) and surfaced in `evalItemField`'s key set (InferItemFields).
+     * `this.fieldValues` (InferFieldValues) and surfaced in `evalItemField`'s key set (InferItemFields).
      *
      * Prefer the inline `itemScoped: true` config prop; this wrapper remains for backward compat.
      *

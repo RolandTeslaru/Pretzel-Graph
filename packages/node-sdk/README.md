@@ -45,7 +45,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        return { message: `${this.fields.greeting}, ${inputs.name}!` };
+        return { message: `${this.fieldValues.greeting}, ${inputs.name}!` };
     }
 }
 ```
@@ -99,7 +99,7 @@ Fields are the node's **static config form**. Every builder shares these `BasePr
 | `CaseList` / `Condition` / `Variadic` | — | routing / branching constructs |
 | `ResourceLoader` | `{ mode, value }` | dynamic dropdown backed by a loader — see below |
 
-Read field values at runtime via **`this.fields.<id>`** (typed by `InferFields`).
+Read field values at runtime via **`this.fieldValues.<id>`** (typed by `InferFieldValues`).
 
 ---
 
@@ -170,7 +170,7 @@ Class-level controls:
 - `static loaders = defineLoaders<typeof Blueprint>()({ ... })` — ResourceLoader data sources (see below).
 
 Inside a node you have:
-- `this.fields` — evaluated field values (`InferFields`).
+- `this.fieldValues` — evaluated field values (`InferFieldValues`).
 - `this.credentials` — credential instances (`InferCredentials`).
 - `this.emit(event)` — emit a realtime event.
 - `this.context` — the `ExecutionContext` (APIs below).
@@ -203,7 +203,7 @@ Realtime, via `this.context.realtimeAPI`:
 
 All derived from `typeof Blueprint` (the static blueprint), keyed by field/port literal id:
 
-- `InferFields<B>` — `this.fields` shape
+- `InferFieldValues<B>` — `this.fieldValues` shape
 - `InferInputs<B>` — `onRun` argument
 - `InferOutputs<B>` — `onRun` return
 - `InferCredentials<B>` — `this.credentials` shape
@@ -226,7 +226,7 @@ static loaders = defineLoaders<typeof Blueprint>()({
 });
 ```
 
-`LoaderContext` gives `fieldValues` (typed `InferFields`), `credentials` + `credentialsAPI` (same as execution), `searchQuery`, `paginationCursor`. A field declares `loaderId: "schemaSearch"` and may declare `dependsOn: ["otherField"]` so changing the dependency re-fetches.
+`LoaderContext` gives `fieldValues` (typed `InferFieldValues`), `credentials` + `credentialsAPI` (same as execution), `searchQuery`, `paginationCursor`. A field declares `loaderId: "schemaSearch"` and may declare `dependsOn: ["otherField"]` so changing the dependency re-fetches.
 
 ---
 
@@ -246,7 +246,7 @@ export const reconcile = (blueprint, changedFieldId, newValue) => {
 };
 ```
 
-**Important wrinkle:** the base blueprint = the **default** field set (reconcile only runs on *change*, never at node creation). And `InferFields` reflects the *static base* — fields/ports added by reconcile are **not** in the inferred type, so `onRun`/loaders read them via a cast (`(this.fields as Record<string, unknown>).value`). See `Integrations/Redis/Command` and `Integrations/MongoDB/Operation`.
+**Important wrinkle:** the base blueprint = the **default** field set (reconcile only runs on *change*, never at node creation). And `InferFieldValues` reflects the *static base* — fields/ports added by reconcile are **not** in the inferred type, so `onRun`/loaders read them via a cast (`(this.fieldValues as Record<string, unknown>).value`). See `Integrations/Redis/Command` and `Integrations/MongoDB/Operation`.
 
 ---
 
@@ -261,7 +261,7 @@ Ready-made singletons + cred mappers: `postgres` / `toPgCreds`, `mysql` / `toMyS
 
 ```ts
 const creds = toPgCreds(this.context.credentialsAPI.getDecryptedValue(this.credentials.postgres.blob));
-const result = await postgres.withConnection(creds, c => c.query(this.fields.query));
+const result = await postgres.withConnection(creds, c => c.query(this.fieldValues.query));
 return { rows: result.rows };
 ```
 

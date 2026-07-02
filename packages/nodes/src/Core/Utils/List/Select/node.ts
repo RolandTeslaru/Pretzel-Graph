@@ -12,7 +12,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { strategy, index } = this.fields;
+        const { strategy, index } = this.fieldValues;
         const { list } = inputs;
 
         if (!Array.isArray(list) || list.length === 0) {

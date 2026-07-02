@@ -12,16 +12,16 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const creds = toRedisCreds(this.context.credentialsAPI.getDecryptedValue(this.credentials.redis.blob));
         const client = await redis.get(creds);
 
-        const operation = this.fields.operation;
-        const key = this.fields.key;
+        const operation = this.fieldValues.operation;
+        const key = this.fieldValues.key;
 
         switch (operation) {
             case "GET":
                 return { result: await client.get(key) };
 
             case "SET": {
-                // value / ttl are reconcile-added, so not in InferFields — read via cast.
-                const f = this.fields as Record<string, unknown>;
+                // value / ttl are reconcile-added, so not in InferFieldValues — read via cast.
+                const f = this.fieldValues as Record<string, unknown>;
                 const value = String(f.value ?? "");
                 const ttl = Number(f.ttl ?? 0);
                 const result = ttl > 0

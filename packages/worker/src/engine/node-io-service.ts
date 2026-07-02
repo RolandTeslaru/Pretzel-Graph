@@ -33,7 +33,7 @@ export class NodeIOService {
             d.node_output_projections[nodeId] ??= {};
 
             d.node_output_instances[nodeId][outputId] = value;
-            d.node_output_projections[nodeId][outputId] = projection;
+        d.node_output_projections[nodeId][outputId] = projection;
         });
 
         ctx.realtimeAPI.emit<Execution.Event.SessionUpdate>({

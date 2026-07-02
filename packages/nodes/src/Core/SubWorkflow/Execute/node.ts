@@ -129,7 +129,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
 
     private injectWorkflowConfigValues(childWorkflowData: Workflow.Data): void {
-        childWorkflowData.staticValues[Workflow.WORKFLOW_CONFIG_NODE_ID] = this.fields;
+        childWorkflowData.staticValues[Workflow.WORKFLOW_CONFIG_NODE_ID] = this.fieldValues;
     }
 
 
@@ -143,7 +143,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             if (!(instance instanceof ExposeInputPortNode))
                 continue;
 
-            const exposeNodeId = instance.fields.exposed_port_id;
+            const exposeNodeId = instance.fieldValues.exposed_port_id;
             const dynamicInputs = inputs as Record<string, unknown>;
             System.log.debug("[ExecuteSubWorkflow:onRun] injecting exposed input port", {
                 exposed_port_id: exposeNodeId,

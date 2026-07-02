@@ -1,5 +1,5 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { InferFields } from "@pretzel-graph/node-sdk";
+import { InferFieldValues } from "@pretzel-graph/node-sdk";
 import { cloneDeep } from "lodash";
 
 /**
@@ -10,12 +10,12 @@ import { cloneDeep } from "lodash";
  * upsert / delete are added, this is where their `schema` / `table` ResourceLoader fields get
  * added/removed based on `newValue`.
  *
- * NOTE: fields added here are NOT reflected in `InferFields<typeof Blueprint>` (derived from
+ * NOTE: fields added here are NOT reflected in `InferFieldValues<typeof Blueprint>` (derived from
  * the static base blueprint), so loaders reading reconcile-added fields need a cast.
  */
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    changedFieldId: keyof InferFields<Foundations.Blueprint>,
+    changedFieldId: keyof InferFieldValues<Foundations.Blueprint>,
     newValue: Foundations.Field.Value,
 ): Foundations.Blueprint => {
     const next = cloneDeep(blueprint);

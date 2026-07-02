@@ -35,8 +35,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const status = this.fields.status as MarketStatus;
-        const limit = clampLimit(this.fields.maxResults, 20);
+        const status = this.fieldValues.status as MarketStatus;
+        const limit = clampLimit(this.fieldValues.maxResults, 20);
         const query = (inputs.query ?? "").trim();
 
         // Over-fetch so the local substring filter has something to narrow.
@@ -50,8 +50,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     protected override async onBuildTool(
         _inputs: InferInputs<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
-        const defaultStatus = this.fields.status as MarketStatus;
-        const defaultLimit = clampLimit(this.fields.maxResults, 20);
+        const defaultStatus = this.fieldValues.status as MarketStatus;
+        const defaultLimit = clampLimit(this.fieldValues.maxResults, 20);
 
         const searchMarkets = tool(
             async ({ query, status, limit }) => {

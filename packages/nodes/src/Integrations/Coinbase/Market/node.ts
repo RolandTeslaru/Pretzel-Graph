@@ -127,7 +127,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const { dataSource } = this.fields;
+        const { dataSource } = this.fieldValues;
         const query = (inputs.query ?? "").trim();
 
         if (!query)

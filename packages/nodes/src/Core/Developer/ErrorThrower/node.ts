@@ -11,7 +11,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const { error } = this.fields;
+        const { error } = this.fieldValues;
 
         throw new Error(error || "Intentional error");
     }
