@@ -1,5 +1,5 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { InferFields, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { InferFieldValues, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 import { cloneDeep } from "lodash";
 
 const queryField = () => FieldBuilder.Json({
@@ -37,12 +37,12 @@ const documentsField = () => FieldBuilder.Json({
  *   - update → query + update
  *   - delete → query
  *
- * NOTE: fields added here are not in `InferFields<typeof Blueprint>`, so `onRun` reads them
- * via a cast (the documented reconcile/InferFields wrinkle).
+ * NOTE: fields added here are not in `InferFieldValues<typeof Blueprint>`, so `onRun` reads them
+ * via a cast (the documented reconcile/InferFieldValues wrinkle).
  */
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    changedFieldId: keyof InferFields<Foundations.Blueprint>,
+    changedFieldId: keyof InferFieldValues<Foundations.Blueprint>,
     newValue: Foundations.Field.Value,
 ): Foundations.Blueprint => {
     const next = cloneDeep(blueprint);

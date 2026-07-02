@@ -46,7 +46,7 @@ export class ErrorService {
         if (error instanceof AirlockTerminationError)
             throw aggexError;
 
-        const strategy = entry?.instance.fields["onErrorStrategy" as Field.Id] ?? "terminate";
+        const strategy = entry?.instance.fieldValues["onErrorStrategy" as Field.Id] ?? "terminate";
 
         switch (strategy) {
             case "terminate": {

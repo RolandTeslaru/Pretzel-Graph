@@ -5,7 +5,7 @@
  * Uses __literalId phantom for literal key names.
  * Maps each config field to its initialValue type.
  */
-export type InferFields<D> = 0 extends (1 & D) ? any
+export type InferFieldValues<D> = 0 extends (1 & D) ? any
     : D extends { fields: infer T }
     ? T extends readonly { id: string }[]
     ? { [K in T[number]as K extends { __literalId?: infer Id extends string }
@@ -17,7 +17,7 @@ export type InferFields<D> = 0 extends (1 & D) ? any
     : Record<string, never>;
 
 /**
- * Like InferFields, but only includes fields where initialValue was
+ * Like InferFieldValues, but only includes fields where initialValue was
  * explicitly provided at the builder call site (__hasInitialValue is true).
  */
 export type InferFieldsWithInitial<D> = D extends { fields: infer T }

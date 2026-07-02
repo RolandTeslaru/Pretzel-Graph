@@ -52,20 +52,20 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ): Promise<InferOutputs<typeof Blueprint>> {
         // User-added input ports are resolved into `inputs` and captured here, exposed to
         // the code as $in.inputs. Tool args the model supplies arrive as $in.args per call.
-        const schema = jsonSchemaToZod(this.fields.argsSchema);
+        const schema = jsonSchemaToZod(this.fieldValues.argsSchema);
 
         const customTool = tool(
             async (args) => {
                 const result = await this.context.airlockAPI.executeAsyncCode(
-                    Airlock.Source.asCode(this.fields.code),
+                    Airlock.Source.asCode(this.fieldValues.code),
                     this.workflowNode.id,
                     { args, inputs },
                 );
                 return typeof result === "string" ? result : JSON.stringify(result);
             },
             {
-                name: this.fields.toolName || "custom_tool",
-                description: this.fields.toolDescription || "A custom user-defined tool.",
+                name: this.fieldValues.toolName || "custom_tool",
+                description: this.fieldValues.toolDescription || "A custom user-defined tool.",
                 schema,
             },
         );

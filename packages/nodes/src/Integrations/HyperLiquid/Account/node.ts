@@ -47,7 +47,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const address = requireAddress(inputs.address, this.fields.defaultAddress);
+        const address = requireAddress(inputs.address, this.fieldValues.defaultAddress);
 
         const [state, openOrders] = await Promise.all([
             post<ClearinghouseState>({ type: "clearinghouseState", user: address }),
@@ -62,7 +62,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     protected override async onBuildTool(
         inputs: InferInputs<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
-        const { defaultAddress } = this.fields;
+        const { defaultAddress } = this.fieldValues;
 
         const addressSchema = z.object({
             address: z.string().optional().describe("EVM 0x wallet address. Optional if a default is configured on the node."),

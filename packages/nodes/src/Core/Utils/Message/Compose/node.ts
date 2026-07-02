@@ -13,7 +13,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         _inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { role, content } = this.fields;
+        const { role, content } = this.fieldValues;
 
         switch (role) {
             case "Human":
@@ -21,7 +21,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             case "System":
                 return { message: new SystemMessage(content) };
             case "Tool": {
-                const toolCallId = (this.fields as any).toolCallId as string;
+                const toolCallId = (this.fieldValues as any).toolCallId as string;
                 if (!toolCallId) {
                     throw new Error("Tool Call ID is required for Tool messages");
                 }

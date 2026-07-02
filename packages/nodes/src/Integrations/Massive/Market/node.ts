@@ -42,7 +42,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         if (!ticker)
             throw new Error("Massive Market: 'ticker' input is required (e.g. AAPL, MSFT).");
 
-        const { timespan, multiplier, lookbackHours, adjusted } = this.fields;
+        const { timespan, multiplier, lookbackHours, adjusted } = this.fieldValues;
 
         const [candles, snapshot] = await Promise.all([
             fetchAggs(this.client, {
@@ -63,7 +63,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     protected override async onBuildTool(
         inputs: InferInputs<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
-        const { timespan: defaultTimespan, multiplier: defaultMultiplier, lookbackHours: defaultLookback, adjusted } = this.fields;
+        const { timespan: defaultTimespan, multiplier: defaultMultiplier, lookbackHours: defaultLookback, adjusted } = this.fieldValues;
 
         const getCandles = tool(
             async ({ ticker, timespan, multiplier, lookbackHours }) => {

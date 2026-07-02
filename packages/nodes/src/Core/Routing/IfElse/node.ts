@@ -15,7 +15,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         // condition is pre-evaluated by evaluateFields() — a plain boolean here.
         // Legacy nodes that still hold a condition-tree object coerce to the default (true).
-        const result = !!this.fields.condition;
+        const result = !!this.fieldValues.condition;
 
         return result
             ? { true: inputs.input }

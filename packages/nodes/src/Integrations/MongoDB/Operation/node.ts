@@ -23,11 +23,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ): Promise<InferOutputs<typeof Blueprint>> {
         const creds = toMongoCreds(this.context.credentialsAPI.getDecryptedValue(this.credentials.mongoDb.blob));
         const client = await mongo.get(creds);
-        const coll = client.db(creds.database).collection(this.fields.collection);
+        const coll = client.db(creds.database).collection(this.fieldValues.collection);
 
-        // query / limit / update / documents are reconcile-added — not in InferFields — so cast.
-        const f = this.fields as Record<string, unknown>;
-        const operation = this.fields.operation;
+        // query / limit / update / documents are reconcile-added — not in InferFieldValues — so cast.
+        const f = this.fieldValues as Record<string, unknown>;
+        const operation = this.fieldValues.operation;
 
         switch (operation) {
             case "find": {

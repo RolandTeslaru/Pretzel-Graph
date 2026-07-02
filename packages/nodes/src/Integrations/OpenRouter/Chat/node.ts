@@ -12,7 +12,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
-        this.llm = new ChatOpenRouter(this.fields as any);
+        this.llm = new ChatOpenRouter(this.fieldValues as any);
     }
 
     protected override async onRun(
