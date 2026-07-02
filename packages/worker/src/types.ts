@@ -40,7 +40,7 @@ export type InferFieldsWithInitial<D> = D extends { fields: infer T }
  * Uses __reference phantom if present (set by InputBuilder.Message → BaseMessage, etc.)
  * Falls back to initialValue type, then `any`.
  */
-export type InferInputs<D> = 0 extends (1 & D) ? any
+export type InferIncoming<D> = 0 extends (1 & D) ? any
     : D extends { inputs: infer T }
     ? T extends readonly { id: string }[]
     ? { [K in T[number]as K extends { __literalId?: infer Id extends string }

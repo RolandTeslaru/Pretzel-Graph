@@ -1,7 +1,7 @@
 import { RegisterNode, Synthesizer } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { InternalChatAPI } from "../internal-api";
 
 @RegisterNode(Blueprint.id)
@@ -10,9 +10,9 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public static readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const { overwrite, append } = inputs;
+        const { overwrite, append } = incoming;
 
         const chatId = this.context.chat_id;
 

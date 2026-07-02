@@ -2,7 +2,7 @@ import { RegisterNode, Synthesizer } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint"
 import { Workflow } from "@pretzel-graph/shared/domain";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferFieldValues, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferFieldValues, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 
 import { Chat } from "@pretzel-graph/shared/domain";
 import { InternalChatAPI } from "../internal-api";
@@ -24,10 +24,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     }
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>
+        incoming: InferIncoming<typeof Blueprint>
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { messages: lcMessages } = inputs
+        const { messages: lcMessages } = incoming
 
         if (!this.chatId)
             return {};

@@ -1,7 +1,7 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint, ToolBlueprint } from "./blueprint";
@@ -44,11 +44,11 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const status = this.fieldValues.status as KalshiStatusField;
         const limit = clampLimit(this.fieldValues.maxResults, 20);
-        const eventTicker = (inputs.eventTicker ?? "").trim();
+        const eventTicker = (incoming.eventTicker ?? "").trim();
 
         const markets = await this.listMarkets({ status, limit, eventTicker });
         const summary = summarizeMarkets(eventTicker, status, markets);
@@ -57,7 +57,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onBuildTool(
-        _inputs: InferInputs<typeof ToolBlueprint>,
+        _incoming: InferIncoming<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
         const defaultStatus = this.fieldValues.status as KalshiStatusField;
         const defaultLimit = clampLimit(this.fieldValues.maxResults, 20);

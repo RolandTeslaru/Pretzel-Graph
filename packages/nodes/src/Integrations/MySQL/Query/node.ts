@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs, mysql, toMySqlCreds } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs, mysql, toMySqlCreds } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 @RegisterNode(Blueprint.id)
@@ -11,7 +11,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     // exists once reconcile adds it for those operations.
 
     protected override async onRun(
-        _inputs: InferInputs<typeof Blueprint>,
+        _incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const creds = toMySqlCreds(this.context.credentialsAPI.getDecryptedValue(this.credentials.mysql.blob));
         const sql = this.fieldValues.query;

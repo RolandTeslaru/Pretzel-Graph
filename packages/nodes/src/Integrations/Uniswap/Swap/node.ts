@@ -15,7 +15,7 @@ import axios from "axios";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "./blueprint";
@@ -85,7 +85,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     }
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const { wallet, public: publicClient, chainId } = this.clients;
         const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.uniswapApi.blob);

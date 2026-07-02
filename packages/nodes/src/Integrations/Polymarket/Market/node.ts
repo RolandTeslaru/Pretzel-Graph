@@ -1,7 +1,7 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint, ToolBlueprint } from "./blueprint";
@@ -33,11 +33,11 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const status = this.fieldValues.status as MarketStatus;
         const limit = clampLimit(this.fieldValues.maxResults, 20);
-        const query = (inputs.query ?? "").trim();
+        const query = (incoming.query ?? "").trim();
 
         // Over-fetch so the local substring filter has something to narrow.
         const markets = await fetchMarkets(this.gamma, { status, limit: query ? Math.max(limit, 100) : limit });
@@ -48,7 +48,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onBuildTool(
-        _inputs: InferInputs<typeof ToolBlueprint>,
+        _incoming: InferIncoming<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
         const defaultStatus = this.fieldValues.status as MarketStatus;
         const defaultLimit = clampLimit(this.fieldValues.maxResults, 20);

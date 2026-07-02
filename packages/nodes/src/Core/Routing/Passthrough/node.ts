@@ -1,6 +1,6 @@
 import { RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
-import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -10,12 +10,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
         const result: Record<string, unknown> = {};
 
-        for (const [key, value] of Object.entries(inputs)) {
+        for (const [key, value] of Object.entries(incoming)) {
             const index = key.replace("input_", "");
             // never emit undefined (means "still waiting"), but allow null (means "exposed but nothing injected")
             result[`output_${index}`] = value ?? null;
