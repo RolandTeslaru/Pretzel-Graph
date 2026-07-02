@@ -2,6 +2,7 @@
   "name": "pretzel-graph",
   "version": "0.0.1",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently \"npm run dev --workspace=packages/worker\" \"npm run watch:indexes --workspace=packages/nodes\" --names \"WORKER,INDEX\" --prefix-colors \"green,blue\""
