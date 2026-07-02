@@ -12,7 +12,7 @@ const FullScreenContent = ({ clickedNode, blockTransparency, surfaceStyle }: Ful
   // In the background (another dialog stacked on top) render solid; on top, frosted glass.
   // `surfaceStyle` carries the stack-darkening brightness filter — applied per card here
   // (not on the dialog wrapper) so each card's backdrop-blur isn't trapped by a filtered ancestor.
-  const surface = blockTransparency ? 'bg-card' : 'bg-card/70 backdrop-blur-md'
+  const surface = blockTransparency ? 'bg-card' : 'bg-card/80 backdrop-blur-md'
 
   return (
     <>

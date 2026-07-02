@@ -1,6 +1,6 @@
 {
-  "version": "1782765427304",
-  "generatedAt": "2026-06-29T20:37:07.305Z",
+  "version": "1782984566673",
+  "generatedAt": "2026-07-02T09:29:26.673Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -4528,9 +4528,198 @@
         }
       ]
     },
-    "Core.Utils.WorkbenchPoll": {
-      "id": "Core.Utils.WorkbenchPoll",
-      "displayName": "Workbench Poll",
+    "Core.Webhook": {
+      "id": "Core.Webhook",
+      "displayName": "Webhook",
+      "icon": "Webhook",
+      "accent": "utility",
+      "description": "Starts the workflow from inbound webhook requests.",
+      "credentials": [],
+      "fields": [
+        {
+          "id": "path",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Path",
+          "tooltip": "Unique suffix appended to your webhook server base path.",
+          "variant": "UniqueString",
+          "initialValue": "",
+          "length": 32,
+          "placeholder": "webhook-abc123"
+        },
+        {
+          "id": "method",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "HTTP Method",
+          "tooltip": "Method accepted by this webhook route.",
+          "variant": "MultiOption",
+          "initialValue": "POST",
+          "options": [
+            {
+              "value": "GET"
+            },
+            {
+              "value": "POST"
+            },
+            {
+              "value": "PUT"
+            },
+            {
+              "value": "PATCH"
+            },
+            {
+              "value": "DELETE"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "responseMode",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Response Mode",
+          "tooltip": "Whether the webhook response should be sent immediately with an empty body, or delayed until the workflow finishes executing and includes a response payload.",
+          "variant": "MultiOption",
+          "initialValue": "onReceived",
+          "options": [
+            {
+              "value": "onReceived",
+              "displayName": "On Received"
+            },
+            {
+              "value": "workflowCompletion",
+              "displayName": "When Workflow Completes"
+            },
+            {
+              "value": "manual",
+              "displayName": "Manual"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "body",
+          "displayName": "Body",
+          "tooltip": "Webhook request body.",
+          "variant": "Data"
+        },
+        {
+          "id": "headers",
+          "displayName": "Headers",
+          "tooltip": "Webhook request headers.",
+          "variant": "Data"
+        },
+        {
+          "id": "query",
+          "displayName": "Query",
+          "tooltip": "Webhook query parameters.",
+          "variant": "Data"
+        },
+        {
+          "id": "params",
+          "displayName": "Params",
+          "tooltip": "Webhook path parameters.",
+          "variant": "Data"
+        }
+      ],
+      "webhooks": [
+        {
+          "id": "req",
+          "method": "${{ @fields[\"method\"] }}",
+          "path": "${{ @fields[\"path\"] }}",
+          "responseMode": "${{ @fields[\"responseMode\"] }}"
+        }
+      ]
+    },
+    "Core.Workbench.Review": {
+      "id": "Core.Workbench.Review",
+      "displayName": "Workbench Review",
       "icon": "ShieldQuestionMark",
       "accent": "utility",
       "description": "Pauses the run and asks a human in the workbench to approve, choose, or fill a form.",
@@ -4725,195 +4914,6 @@
           "polymorphicGroupId": "data",
           "variant": "Unresolved",
           "originalVariant": "Unresolved"
-        }
-      ]
-    },
-    "Core.Webhook": {
-      "id": "Core.Webhook",
-      "displayName": "Webhook",
-      "icon": "Webhook",
-      "accent": "utility",
-      "description": "Starts the workflow from inbound webhook requests.",
-      "credentials": [],
-      "fields": [
-        {
-          "id": "path",
-          "advanced": false,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Path",
-          "tooltip": "Unique suffix appended to your webhook server base path.",
-          "variant": "UniqueString",
-          "initialValue": "",
-          "length": 32,
-          "placeholder": "webhook-abc123"
-        },
-        {
-          "id": "method",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "HTTP Method",
-          "tooltip": "Method accepted by this webhook route.",
-          "variant": "MultiOption",
-          "initialValue": "POST",
-          "options": [
-            {
-              "value": "GET"
-            },
-            {
-              "value": "POST"
-            },
-            {
-              "value": "PUT"
-            },
-            {
-              "value": "PATCH"
-            },
-            {
-              "value": "DELETE"
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "responseMode",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Response Mode",
-          "tooltip": "Whether the webhook response should be sent immediately with an empty body, or delayed until the workflow finishes executing and includes a response payload.",
-          "variant": "MultiOption",
-          "initialValue": "onReceived",
-          "options": [
-            {
-              "value": "onReceived",
-              "displayName": "On Received"
-            },
-            {
-              "value": "workflowCompletion",
-              "displayName": "When Workflow Completes"
-            },
-            {
-              "value": "manual",
-              "displayName": "Manual"
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "signalDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Signal Dependency",
-          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All signals required",
-              "description": "Fire only once every upstream signal has arrived."
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one signal required",
-              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
-            },
-            {
-              "value": "XOR",
-              "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "Wait & Join",
-              "description": "Wait until every wired input port has resolved, then read all of them."
-            },
-            {
-              "value": "OR",
-              "displayName": "Follow Trigger",
-              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "onErrorStrategy",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "On Error",
-          "tooltip": "What happens when this node's execution throws.",
-          "variant": "MultiOption",
-          "initialValue": "propagate",
-          "options": [
-            {
-              "value": "terminate",
-              "displayName": "Terminate workflow",
-              "description": "Fail the whole run."
-            },
-            {
-              "value": "propagate",
-              "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges."
-            },
-            {
-              "value": "do_nothing",
-              "displayName": "Do nothing",
-              "description": "Swallow the error — no signal, no termination. Downstream stalls."
-            }
-          ],
-          "kind": "select"
-        }
-      ],
-      "inputs": [],
-      "outputs": [
-        {
-          "id": "body",
-          "displayName": "Body",
-          "tooltip": "Webhook request body.",
-          "variant": "Data"
-        },
-        {
-          "id": "headers",
-          "displayName": "Headers",
-          "tooltip": "Webhook request headers.",
-          "variant": "Data"
-        },
-        {
-          "id": "query",
-          "displayName": "Query",
-          "tooltip": "Webhook query parameters.",
-          "variant": "Data"
-        },
-        {
-          "id": "params",
-          "displayName": "Params",
-          "tooltip": "Webhook path parameters.",
-          "variant": "Data"
-        }
-      ],
-      "webhooks": [
-        {
-          "id": "req",
-          "method": "${{ @fields[\"method\"] }}",
-          "path": "${{ @fields[\"path\"] }}",
-          "responseMode": "${{ @fields[\"responseMode\"] }}"
         }
       ]
     },
@@ -8993,6 +8993,145 @@
         }
       ]
     },
+    "Core.Agent": {
+      "id": "Core.Agent",
+      "displayName": "Agent",
+      "icon": "Bot",
+      "accent": "port-LanguageModel",
+      "description": "Executes a saved sub-workflow and returns its output.",
+      "flags": {
+        "SHOW_DEPENDENCY_SELECTOR": false
+      },
+      "credentials": [],
+      "fields": [
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "output_all_messages",
+          "variant": "Boolean",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "description": "",
+          "displayName": "Output All Messages",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "sys_message",
+          "displayName": "System Message",
+          "variant": "Message",
+          "required": false
+        },
+        {
+          "id": "language_model",
+          "displayName": "Language Model",
+          "variant": "LanguageModel",
+          "required": true
+        },
+        {
+          "id": "tools",
+          "displayName": "Tools",
+          "variant": "ToolList",
+          "required": false
+        },
+        {
+          "id": "input_message",
+          "displayName": "Messages",
+          "variant": "MessageList",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "Core.SubWorkflow.ExposeOutputPort-cfa4s",
+          "displayName": "Output",
+          "variant": "MessageList"
+        }
+      ],
+      "dependency": {
+        "workflowId": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0",
+        "mode": "publication"
+      }
+    },
     "Core.Utils.Compactor": {
       "id": "Core.Utils.Compactor",
       "displayName": "Compactor",
@@ -9144,145 +9283,6 @@
       ],
       "dependency": {
         "workflowId": "ac147960-ed28-44ed-8808-1e4348a6dda8",
-        "mode": "publication"
-      }
-    },
-    "Core.Agent": {
-      "id": "Core.Agent",
-      "displayName": "Agent",
-      "icon": "Bot",
-      "accent": "port-LanguageModel",
-      "description": "Executes a saved sub-workflow and returns its output.",
-      "flags": {
-        "SHOW_DEPENDENCY_SELECTOR": false
-      },
-      "credentials": [],
-      "fields": [
-        {
-          "id": "signalDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Signal Dependency",
-          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All signals required",
-              "description": "Fire only once every upstream signal has arrived."
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one signal required",
-              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
-            },
-            {
-              "value": "XOR",
-              "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "Wait & Join",
-              "description": "Wait until every wired input port has resolved, then read all of them."
-            },
-            {
-              "value": "OR",
-              "displayName": "Follow Trigger",
-              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "onErrorStrategy",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "On Error",
-          "tooltip": "What happens when this node's execution throws.",
-          "variant": "MultiOption",
-          "initialValue": "propagate",
-          "options": [
-            {
-              "value": "terminate",
-              "displayName": "Terminate workflow",
-              "description": "Fail the whole run."
-            },
-            {
-              "value": "propagate",
-              "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges."
-            },
-            {
-              "value": "do_nothing",
-              "displayName": "Do nothing",
-              "description": "Swallow the error — no signal, no termination. Downstream stalls."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "output_all_messages",
-          "variant": "Boolean",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "description": "",
-          "displayName": "Output All Messages",
-          "initialValue": false
-        }
-      ],
-      "inputs": [
-        {
-          "id": "sys_message",
-          "displayName": "System Message",
-          "variant": "Message",
-          "required": false
-        },
-        {
-          "id": "language_model",
-          "displayName": "Language Model",
-          "variant": "LanguageModel",
-          "required": true
-        },
-        {
-          "id": "tools",
-          "displayName": "Tools",
-          "variant": "ToolList",
-          "required": false
-        },
-        {
-          "id": "input_message",
-          "displayName": "Messages",
-          "variant": "MessageList",
-          "required": true
-        }
-      ],
-      "outputs": [
-        {
-          "id": "Core.SubWorkflow.ExposeOutputPort-cfa4s",
-          "displayName": "Output",
-          "variant": "MessageList"
-        }
-      ],
-      "dependency": {
-        "workflowId": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0",
         "mode": "publication"
       }
     }
