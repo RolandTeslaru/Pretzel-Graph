@@ -3,8 +3,8 @@ import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pre
 // `variant` drives the field schema + output ports via reconcile. Base (confirm) is
 // variant + title + message + approve/reject labels → approved | rejected ports.
 export const Blueprint = defineBlueprint({
-    id: "Core.Utils.WorkbenchPoll",
-    displayName: "Workbench Poll",
+    id: "Core.Workbench.Review",
+    displayName: "Workbench Review",
     description: "Pauses the run and asks a human in the workbench to approve, choose, or fill a form.",
     icon: "ShieldQuestionMark",
     accent: "utility",
