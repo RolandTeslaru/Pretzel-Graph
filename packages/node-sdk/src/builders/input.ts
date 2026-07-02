@@ -48,7 +48,7 @@ export namespace InputBuilder {
     // ---- Port Inputs (runtime object references) ----
     // These receive LangChain class instances at runtime.
     // Explicit return types ensure phantom properties (__literalId, __reference, __required) are
-    // visible to InferInputs for key extraction, value type resolution, and optionality.
+    // visible to InferIncoming for key extraction, value type resolution, and optionality.
 
     export function Message<TId extends string, TReq extends boolean = false>(
         config: { initialValue?: string } & BaseProps<TId, TReq>

@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
@@ -12,7 +12,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public injectedData: unknown = undefined;
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
         if(this.fieldValues.direction === "in") {
@@ -26,7 +26,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 const instance = this.context.instanceRegistryAPI.get(node.id);
                 if (!(instance instanceof Node)) continue;
     
-                instance.injectedData = inputs.input;
+                instance.injectedData = incoming.input;
                 this.context.schedulerAPI.fireNode(node.id as Workflow.Node.Id);
             }
 

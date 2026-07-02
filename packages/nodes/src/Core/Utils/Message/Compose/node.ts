@@ -1,7 +1,7 @@
 import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 
 @RegisterNode(Blueprint.id)
@@ -10,7 +10,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        _inputs: InferInputs<typeof Blueprint>,
+        _incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
         const { role, content } = this.fieldValues;

@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs, defineLoaders } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs, defineLoaders } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 @RegisterNode(Blueprint.id)
@@ -55,11 +55,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     // ── Execution ─────────────────────────────────────────────────────────────
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const schema = this.fieldValues.schema?.value ?? ""
         const table  = this.fieldValues.table?.value  ?? ""
         console.log(`[ResourceLoaderTest] schema="${schema}" table="${table}"`);
-        return { output: inputs.input };
+        return { output: incoming.input };
     }
 }

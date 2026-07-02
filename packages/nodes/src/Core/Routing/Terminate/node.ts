@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 @RegisterNode(Blueprint.id)
@@ -8,7 +8,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     // `message` is reconciled in for the `error` mode, so it isn't on the inferred field type.
     protected override async onRun(
-        _inputs: InferInputs<typeof Blueprint>,
+        _incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
         const { mode } = this.fieldValues;

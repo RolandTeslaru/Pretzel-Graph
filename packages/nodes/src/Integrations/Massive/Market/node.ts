@@ -1,7 +1,7 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint, ToolBlueprint } from "./blueprint";
@@ -36,9 +36,9 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const ticker = normalizeTicker(inputs.ticker);
+        const ticker = normalizeTicker(incoming.ticker);
         if (!ticker)
             throw new Error("Massive Market: 'ticker' input is required (e.g. AAPL, MSFT).");
 
@@ -61,7 +61,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onBuildTool(
-        inputs: InferInputs<typeof ToolBlueprint>,
+        incoming: InferIncoming<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
         const { timespan: defaultTimespan, multiplier: defaultMultiplier, lookbackHours: defaultLookback, adjusted } = this.fieldValues;
 

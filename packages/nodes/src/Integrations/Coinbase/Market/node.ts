@@ -2,7 +2,7 @@ import axios from "axios";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint, ToolBlueprint } from "./blueprint";
@@ -125,10 +125,10 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const { dataSource } = this.fieldValues;
-        const query = (inputs.query ?? "").trim();
+        const query = (incoming.query ?? "").trim();
 
         if (!query)
             throw new Error("DeFi Market Data: query input is required.");
@@ -144,7 +144,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     }
 
     protected override async onBuildTool(
-        inputs: InferInputs<typeof ToolBlueprint>,
+        incoming: InferIncoming<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
 
         const getPrice = tool(

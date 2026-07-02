@@ -2,7 +2,7 @@ import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferFieldValues, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferFieldValues, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -12,7 +12,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
         const { stringField } = this.fieldValues;
@@ -24,7 +24,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             embeddingsInput,
             vectorStoreInput,
             toolInput
-        } = inputs;
+        } = incoming;
 
         return {
             messageOutput:         messageInput,
@@ -36,13 +36,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             vectorStoreOutput:     vectorStoreInput,
             toolOutput:            toolInput,
             dataFrameOutput:       { data: "frame" },
-            unresolvedOutput:      inputs.unresolvedInput,
-            unresolvedScalarOutput: inputs.unresolvedScalarInput,
-            unresolvedListOutput:  inputs.unresolvedListInput,
-            toolListOutput:        inputs.toolListInput,
-            messageListOutput:     inputs.messageListInput,
-            dataOutput:            inputs.dataInput,
-            dataListOutput:        inputs.dataListInput,
+            unresolvedOutput:      incoming.unresolvedInput,
+            unresolvedScalarOutput: incoming.unresolvedScalarInput,
+            unresolvedListOutput:  incoming.unresolvedListInput,
+            toolListOutput:        incoming.toolListInput,
+            messageListOutput:     incoming.messageListInput,
+            dataOutput:            incoming.dataInput,
+            dataListOutput:        incoming.dataListInput,
         };
     }
 

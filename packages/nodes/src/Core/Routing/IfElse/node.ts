@@ -1,6 +1,6 @@
 import { RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
-import { InferInputs, InferOutputs, OneOf } from "@pretzel-graph/node-sdk";
+import { InferIncoming, InferOutputs, OneOf } from "@pretzel-graph/node-sdk";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -10,7 +10,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<OneOf<InferOutputs<typeof Blueprint>>> {
 
         // condition is pre-evaluated by evaluateFields() — a plain boolean here.
@@ -18,7 +18,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const result = !!this.fieldValues.condition;
 
         return result
-            ? { true: inputs.input }
-            : { false: inputs.input };
+            ? { true: incoming.input }
+            : { false: incoming.input };
     }
 }

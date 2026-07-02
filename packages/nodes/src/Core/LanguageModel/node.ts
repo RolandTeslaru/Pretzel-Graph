@@ -1,12 +1,12 @@
 import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferFieldValues, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferFieldValues, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { LC } from "@pretzel-graph/node-sdk";
 import { Execution } from "@pretzel-graph/shared/domain";
 import { computeCost } from "./pricing";
 
-type Inputs = InferInputs<typeof Blueprint>
+type Inputs = InferIncoming<typeof Blueprint>
 type Outputs = InferOutputs<typeof Blueprint>
 
 @RegisterNode(Blueprint.id)
@@ -17,21 +17,21 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     private ttftMs: number | undefined;
 
     protected override async onRun(
-        inputs: Inputs
+        incoming: Inputs
     ): Promise<Outputs> {
 
         this.ttftMs = undefined;
         const runStartedAt = performance.now();
 
-        const { systemMessage } = inputs;
+        const { systemMessage } = incoming;
 
-        const isAnthropic = this.getProviderName(inputs.languageModel) === "anthropic";
+        const isAnthropic = this.getProviderName(incoming.languageModel) === "anthropic";
 
-        const languageModel = inputs.tools?.length && inputs.languageModel.bindTools
-            ? inputs.languageModel.bindTools(inputs.tools)
-            : inputs.languageModel;
+        const languageModel = incoming.tools?.length && incoming.languageModel.bindTools
+            ? incoming.languageModel.bindTools(incoming.tools)
+            : incoming.languageModel;
 
-        const messages = [systemMessage, ...inputs.messages].filter((m): m is LC.BaseMessage => m != null);
+        const messages = [systemMessage, ...incoming.messages].filter((m): m is LC.BaseMessage => m != null);
 
         // Anthropic prefix caching: cache_control on the last content block, cloned so we never
         if (isAnthropic && messages.length) {
