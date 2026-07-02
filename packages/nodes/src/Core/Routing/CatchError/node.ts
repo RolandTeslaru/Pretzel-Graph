@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 @RegisterNode(Blueprint.id)
@@ -13,8 +13,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     protected override PROPAGATION_STRATEGY = "router" as const
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<Partial<InferOutputs<typeof Blueprint>>> {
-        return { passthrough: inputs.input } as Partial<InferOutputs<typeof Blueprint>>;
+        return { passthrough: incoming.input } as Partial<InferOutputs<typeof Blueprint>>;
     }
 }

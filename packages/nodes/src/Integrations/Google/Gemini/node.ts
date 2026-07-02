@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { Workflow } from "@pretzel-graph/shared/domain";
@@ -31,7 +31,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     }
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         return {
             languageModel: this.llm

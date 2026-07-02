@@ -35,7 +35,7 @@ export const Blueprint = defineBlueprint({
 
 ```ts
 // packages/nodes/src/Integrations/Acme/Hello/node.ts
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 @RegisterNode(Blueprint.id)
@@ -43,9 +43,9 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        return { message: `${this.fieldValues.greeting}, ${inputs.name}!` };
+        return { message: `${this.fieldValues.greeting}, ${incoming.name}!` };
     }
 }
 ```
@@ -123,7 +123,7 @@ Shared props: `id`, `displayName`, `tooltip?`, `placeholder?`, `required?` (inpu
 
 **Choosing Data vs DataList:** one value → `Data`; a collection that should fan out per-item → `DataList`. (A SQL query's rows = `DataList`; a single summary object = `Data`.)
 
-Read input values in `onRun` via the `inputs` argument (typed by `InferInputs`); return outputs as `{ <outputId>: value }` (typed by `InferOutputs`).
+Read input values in `onRun` via the `incoming` argument (typed by `InferIncoming`); return outputs as `{ <outputId>: value }` (typed by `InferOutputs`).
 
 ---
 
@@ -156,12 +156,12 @@ Subclass `RuntimeNode<typeof Blueprint>` (optionally `<typeof Blueprint, typeof 
 
 | Hook | When | Returns |
 |---|---|---|
-| `onRun(inputs)` *(required)* | normal execution | `Partial<InferOutputs>` |
-| `onWait(inputs)` | node is waiting on partial inputs | — |
+| `onRun(incoming)` *(required)* | normal execution | `Partial<InferOutputs>` |
+| `onWait(incoming)` | node is waiting on partial inputs | — |
 | `onCompile(ctx)` | once, at graph compile time | — |
 | `onIgniter(igniter)` | a trigger fires the node | — |
 | `onWebhook(payload)` | an inbound webhook arrives | — |
-| `onBuildTool(inputs)` | node is converted to a LangChain tool (`toolCompatible`) | tool output |
+| `onBuildTool(incoming)` | node is converted to a LangChain tool (`toolCompatible`) | tool output |
 | `onRecordMetrics({inputs,outputs,unitId,status,duration})` | after a run, to record metrics | `Record<id, Metric>` |
 
 Class-level controls:
@@ -204,7 +204,7 @@ Realtime, via `this.context.realtimeAPI`:
 All derived from `typeof Blueprint` (the static blueprint), keyed by field/port literal id:
 
 - `InferFieldValues<B>` — `this.fieldValues` shape
-- `InferInputs<B>` — `onRun` argument
+- `InferIncoming<B>` — `onRun` argument
 - `InferOutputs<B>` — `onRun` return
 - `InferCredentials<B>` — `this.credentials` shape
 - `InferCredentialValues<T>` — decrypted credential values

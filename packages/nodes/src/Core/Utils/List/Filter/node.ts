@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 @RegisterNode(Blueprint.id)
@@ -7,10 +7,10 @@ export class Node extends RuntimeNode<Blueprint> {
     public readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        inputs: InferInputs<Blueprint>,
+        incoming: InferIncoming<Blueprint>,
     ): Promise<InferOutputs<Blueprint>> {
 
-        const { list } = inputs;
+        const { list } = incoming;
 
         if (!Array.isArray(list))
             return { filtered: [], discarded: [] };

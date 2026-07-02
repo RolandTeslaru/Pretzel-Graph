@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint, ToolBlueprint } from "./blueprint";
 import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
 import { tool } from "@langchain/core/tools";
@@ -28,17 +28,17 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const documents = await this.retriever._getRelevantDocuments(inputs.query);
+        const documents = await this.retriever._getRelevantDocuments(incoming.query);
 
         return { documents };
     }
 
 
     protected override async onBuildTool(
-        inputs: InferInputs<typeof ToolBlueprint>,
+        incoming: InferIncoming<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
         return {
             tool: tool(

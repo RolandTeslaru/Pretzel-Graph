@@ -1,7 +1,7 @@
 import { InferFieldValues, RegisterNode } from "@pretzel-graph/node-sdk"
 import { Blueprint } from "./blueprint"
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { HumanMessage } from "@langchain/core/messages";
 import { Chat, Execution, Webhook } from "@pretzel-graph/shared/domain";
 import { api } from "../../../services/AxiosService";

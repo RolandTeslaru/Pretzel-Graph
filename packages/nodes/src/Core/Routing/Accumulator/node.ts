@@ -1,7 +1,7 @@
 import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -9,16 +9,16 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const { append, overwrite } = inputs;
+        const { append, overwrite } = incoming;
 
         const previousState: unknown[] =
             this.context.session.node_output_instances[this.workflowNode.id]?.state ?? [];
 
-        const incoming = Array.isArray(append) ? append.flat() : append != null ? [append] : [];
+        const appendItems = Array.isArray(append) ? append.flat() : append != null ? [append] : [];
 
-        let newState = [...previousState, ...incoming];
+        let newState = [...previousState, ...appendItems];
 
         if (overwrite !== undefined) {
             if (Array.isArray(overwrite)) {

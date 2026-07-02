@@ -83,7 +83,7 @@ type _InferInputsRaw<T extends readonly { id: string }[]> = {
     [K in T[number] as K extends { __required?: true } ? never : _InputKey<K>]?: _InputValue<K>
 };
 
-export type InferInputs<D> = 0 extends (1 & D) ? any
+export type InferIncoming<D> = 0 extends (1 & D) ? any
     : D extends { inputs: infer T }
     ? T extends readonly { id: string }[]
     ? { [K in keyof _InferInputsRaw<T>]: _InferInputsRaw<T>[K] }

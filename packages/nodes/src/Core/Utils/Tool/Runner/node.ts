@@ -1,7 +1,7 @@
 import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { LC } from "@pretzel-graph/node-sdk";
 
 @RegisterNode(Blueprint.id)
@@ -10,10 +10,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
     protected override async onRun(
-        inputs: InferInputs<typeof Blueprint>,
+        incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { tools, input } = inputs;
+        const { tools, input } = incoming;
 
         const aiMessage = input as any as LC.AIMessage;
 
