@@ -10,7 +10,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { start, end } = this.fields;
+        const { start, end } = this.fieldValues;
         const { list } = inputs;
 
         if (!Array.isArray(list)) {

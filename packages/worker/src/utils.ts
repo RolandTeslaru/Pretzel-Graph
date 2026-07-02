@@ -1,5 +1,5 @@
 import { Workflow } from "@pretzel-graph/shared/domain";
-import { InferFields } from "./types";
+import { InferFieldValues } from "./types";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 
@@ -10,7 +10,7 @@ export const uid = {
 export function mapFieldValues<T_Blueprint extends Blueprint>(
     nodeId: Workflow.Node.Id,
     workflowData: Workflow.Data
-): InferFields<T_Blueprint> {
+): InferFieldValues<T_Blueprint> {
     const node = workflowData.nodes[nodeId];
     const staticValues = workflowData.staticValues[nodeId] ?? {};
 
@@ -25,7 +25,7 @@ export function mapFieldValues<T_Blueprint extends Blueprint>(
             resolved[fieldId] = field.initialValue as Field.Value;
     }
 
-    return resolved as InferFields<T_Blueprint>
+    return resolved as InferFieldValues<T_Blueprint>
 }
 
 

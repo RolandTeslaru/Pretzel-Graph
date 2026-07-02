@@ -14,7 +14,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         _inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const creds = toMySqlCreds(this.context.credentialsAPI.getDecryptedValue(this.credentials.mysql.blob));
-        const sql = this.fields.query;
+        const sql = this.fieldValues.query;
         const [rows] = await mysql.withConnection(creds, c => c.query(sql));
         return { rows: rows as unknown[] };
     }

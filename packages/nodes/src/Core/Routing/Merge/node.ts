@@ -12,7 +12,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const output: unknown[] = Object.values(inputs).map(value => value ?? []).flat(this.fields.flattenDepth)
+        const output: unknown[] = Object.values(inputs).map(value => value ?? []).flat(this.fieldValues.flattenDepth)
 
         return { output };
     }

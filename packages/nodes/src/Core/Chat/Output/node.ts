@@ -2,7 +2,7 @@ import { RegisterNode, Synthesizer } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint"
 import { Workflow } from "@pretzel-graph/shared/domain";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferFields, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferFieldValues, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 
 import { Chat } from "@pretzel-graph/shared/domain";
 import { InternalChatAPI } from "../internal-api";
@@ -43,7 +43,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             messages
         });
 
-        if(this.fields.write_to_session)
+        if(this.fieldValues.write_to_session)
             await InternalChatAPI.messageAdd({ messages });
 
         return {};

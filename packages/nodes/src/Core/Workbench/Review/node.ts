@@ -42,9 +42,9 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         return this.mapResolution(resolution, inputs);
     }
 
-    // reconcile-added fields aren't in InferFields, so the variant config is read via cast.
+    // reconcile-added fields aren't in InferFieldValues, so the variant config is read via cast.
     private buildRequest() {
-        const f = this.fields as Record<string, any>;
+        const f = this.fieldValues as Record<string, any>;
         const base = {
             id:          crypto.randomUUID() as HumanReview.Request.Id,
             nodeId:      this.workflowNode.id,

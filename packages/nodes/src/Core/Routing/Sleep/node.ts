@@ -2,7 +2,7 @@ import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferFields, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferFieldValues, InferInputs, InferOutputs } from "@pretzel-graph/node-sdk";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -15,7 +15,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { duration } = this.fields;
+        const { duration } = this.fieldValues;
         const { trigger } = inputs;
 
         await this.AbortablePromise((resolve, reject, signal) => {

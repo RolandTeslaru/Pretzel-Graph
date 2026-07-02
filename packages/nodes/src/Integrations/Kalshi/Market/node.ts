@@ -46,8 +46,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     protected override async onRun(
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
-        const status = this.fields.status as KalshiStatusField;
-        const limit = clampLimit(this.fields.maxResults, 20);
+        const status = this.fieldValues.status as KalshiStatusField;
+        const limit = clampLimit(this.fieldValues.maxResults, 20);
         const eventTicker = (inputs.eventTicker ?? "").trim();
 
         const markets = await this.listMarkets({ status, limit, eventTicker });
@@ -59,8 +59,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     protected override async onBuildTool(
         _inputs: InferInputs<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
-        const defaultStatus = this.fields.status as KalshiStatusField;
-        const defaultLimit = clampLimit(this.fields.maxResults, 20);
+        const defaultStatus = this.fieldValues.status as KalshiStatusField;
+        const defaultLimit = clampLimit(this.fieldValues.maxResults, 20);
 
         const getMarkets = tool(
             async ({ status, eventTicker, limit }) => {

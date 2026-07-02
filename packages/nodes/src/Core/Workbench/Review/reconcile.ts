@@ -1,5 +1,5 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { InferFields, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { InferFieldValues, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 import { cloneDeep } from "lodash";
 
 // Variant-specific field ids removed before re-adding the new variant's set.
@@ -17,7 +17,7 @@ const asField = (b: unknown) => b as unknown as Foundations.Field;
 //   form    → form field defs         → values port (collected object)
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    changedFieldId: keyof InferFields<Foundations.Blueprint>,
+    changedFieldId: keyof InferFieldValues<Foundations.Blueprint>,
     newValue: Foundations.Field.Value,
 ): Foundations.Blueprint => {
     const next = cloneDeep(blueprint);

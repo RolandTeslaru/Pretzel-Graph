@@ -17,7 +17,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const { code } = this.fields;
+        const { code } = this.fieldValues;
 
         try {
             // Sandboxed (isolated-vm) async code: @in is passed as the fn param, so re-fires

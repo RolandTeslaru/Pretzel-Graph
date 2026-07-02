@@ -13,7 +13,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         inputs: InferInputs<typeof Blueprint>,
     ): Promise<Partial<InferOutputs<typeof Blueprint>>> {
 
-        const { cases } = this.fields;
+        const { cases } = this.fieldValues;
         const { input } = inputs;
 
         const result: Partial<InferOutputs<typeof Blueprint>> = {};

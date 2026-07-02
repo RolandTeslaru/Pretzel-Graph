@@ -1,5 +1,5 @@
 import { Airlock, Chat, Execution, Foundations, Realtime, Vault, Workflow } from "@pretzel-graph/shared/domain";
-import { InferCredentials, InferCredentialValues, InferFields, InferInputs, InferItemFields, InferOutputs } from "./types";
+import { InferCredentials, InferCredentialValues, InferFieldValues, InferInputs, InferItemFields, InferOutputs } from "./types";
 import type { CompilationContext } from "./compiler-context";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
@@ -15,7 +15,7 @@ export abstract class RuntimeNode<
 > {
 
     public readonly emit: RuntimeNode.ExecutionContext["realtimeAPI"]["emit"];
-    public fields: InferFields<T_Blueprint>
+    public fieldValues: InferFieldValues<T_Blueprint>
     public readonly credentials: InferCredentials<T_Blueprint>
 
     /** Projected incoming-port bag from the last evaluateFields pass — reused as `$in` when
@@ -45,7 +45,7 @@ export abstract class RuntimeNode<
         public readonly workflowNode: Workflow.Node,
         protected readonly context: RuntimeNode.ExecutionContext
     ) {
-        this.fields = mapFieldValues<T_Blueprint>(this.workflowNode.id, context.workflowData);
+        this.fieldValues = mapFieldValues<T_Blueprint>(this.workflowNode.id, context.workflowData);
         this.credentials = this.mapCredentials();
         this.emit = context.realtimeAPI.emit;
     }
@@ -71,10 +71,10 @@ export abstract class RuntimeNode<
      */
     public async run(
         inputs: InferInputs<T_Blueprint>,
-        fields: InferFields<T_Blueprint>,
+        fields: InferFieldValues<T_Blueprint>,
     ): Promise<Partial<InferOutputs<T_Blueprint>>> {
         this.isWaiting = false;
-        this.fields = fields;
+        this.fieldValues = fields;
 
         return this.onRun(inputs);
     }
@@ -91,7 +91,7 @@ export abstract class RuntimeNode<
 
     public evaluateFields(
         incoming: Record<Port.Id, Projection>
-    ): InferFields<T_Blueprint> {
+    ): InferFieldValues<T_Blueprint> {
         const fields = mapFieldValues<T_Blueprint>(this.workflowNode.id, this.context.workflowData);
         const evaluated: Record<Foundations.Field.Id, unknown> = { ...fields };
 
@@ -141,7 +141,7 @@ export abstract class RuntimeNode<
             },
         );
 
-        return evaluated as InferFields<T_Blueprint>;
+        return evaluated as InferFieldValues<T_Blueprint>;
     }
 
     /**
@@ -235,10 +235,10 @@ export abstract class RuntimeNode<
 
     public async buildTool(
         inputs: InferInputs<T_ToolBlueprint>,
-        fields: InferFields<T_Blueprint>,
+        fields: InferFieldValues<T_Blueprint>,
     ): Promise<InferOutputs<T_ToolBlueprint>> {
         this.isWaiting = false;
-        this.fields = fields;
+        this.fieldValues = fields;
         return this.onBuildTool(inputs);
     }
 
@@ -258,10 +258,10 @@ export abstract class RuntimeNode<
     public async wait(
         partialInputs: InferInputs<T_Blueprint>,
         dependencyResolutionMap: Record<Workflow.Node.Id, boolean>,
-        fields: InferFields<T_Blueprint>,
+        fields: InferFieldValues<T_Blueprint>,
     ): Promise<void> {
         this.isWaiting = true;
-        this.fields = fields;
+        this.fieldValues = fields;
         return this.onWait(partialInputs);
     }
     
@@ -395,7 +395,7 @@ export namespace RuntimeNode {
     };
 
     export type LoaderContext<T_Blueprint extends Blueprint = Blueprint> = {
-        fieldValues: InferFields<T_Blueprint>;
+        fieldValues: InferFieldValues<T_Blueprint>;
         credentials: InferCredentials<T_Blueprint>;
         credentialsAPI: {
             getInstance(instanceId: Vault.Credential.Instance.Id): Vault.Credential.Instance | undefined;
@@ -464,7 +464,7 @@ export namespace RuntimeNode {
         readonly workflowQueryAPI: {
             getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: Foundations.Blueprint.Id) => Array<{
                 node: Workflow.Node,
-                fields: InferFields<T_Blueprint>,
+                fields: InferFieldValues<T_Blueprint>,
             }>,
             getNodeOutput: (nodeId: Workflow.Node.Id, portId: Port.Output.Id) => unknown,
         },
