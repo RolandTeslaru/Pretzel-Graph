@@ -67,11 +67,7 @@ class CatalogueServiceImpl {
 
         } catch (error: any) {
             if (error.code === "MODULE_NOT_FOUND" || error.code === "ERR_MODULE_NOT_FOUND") {
-                return (
-                    blueprint: Foundations.Blueprint,
-                    _changedFieldId: Foundations.Field.Id,
-                    _newValue: Foundations.Field.Value
-                ) => blueprint;
+                return (blueprint: Foundations.Blueprint) => blueprint;
             }
 
             console.error(`[CatalogueService] Failed to load reconcile for '${blueprintId}':`, error);

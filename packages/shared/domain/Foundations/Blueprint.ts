@@ -13,7 +13,7 @@ export namespace Blueprint {
     export const Id = z.string().brand("BlueprintId")
     export type Id = z.infer<typeof Id>
 
-    export const ReconciledId = z.string().brand("ReconciledBlueprintId")
+    export const ReconciledId = Blueprint.Id.brand("ReconciledId")
     export type ReconciledId = z.infer<typeof ReconciledId>
 
     export const createReconciledId = (
@@ -23,7 +23,6 @@ export namespace Blueprint {
         anticipate? : Partial<Record<Field.Id, Field.Value>>
     ): Blueprint.ReconciledId => {
         const parts = fields
-            .filter(f => f.reconcile)
             .map(f => `${f.id}=${String(anticipate?.[f.id] ?? values[f.id] ?? f.initialValue)}`)
             .sort()
             .join(",");
@@ -45,15 +44,19 @@ export namespace Blueprint {
 
         export const Schema = z.object({
             id:                   Blueprint.Id,
-            displayName:          z.string(),
-            icon:                 z.string(),
-            accent:               z.string().optional(),
-            iconColor:            z.string().optional(),
             toolCompatible:       z.boolean().optional(),
-            description:          z.string().optional(),
             dependency:           Dependency.Schema.optional(),
             flags:                z.record(z.string(), z.unknown()).optional(),
             credentials:          z.array(Vault.Credential.Template.Schema).readonly().optional(),
+            
+            displayName:          z.string(),
+            description:          z.string().optional(),
+
+            ui:                   z.object({
+                icon:                 z.string(),
+                accent:               z.string().optional(),
+                iconColor:            z.string().optional(),
+            }),
         })
         
     }
@@ -81,11 +84,13 @@ export namespace Blueprint {
             ...extractExposedPorts(dep.workflow_data),
             fields:      mergeFieldsById(baseBlueprint.fields, dep.workflow_data.fields ?? []),
             displayName: dep.display_name,
-            icon:        dep.icon ?? baseBlueprint.icon,
-            accent:      dep.accent ?? baseBlueprint.accent,
-            // Don't inherit the container's iconColor — a dependency has its own
-            // visual identity (icon/accent). Only use one the dependency declares.
-            iconColor:   dep.iconColor ?? undefined,
+            ui: {
+                icon:        dep.icon ?? baseBlueprint.ui.icon,
+                accent:      dep.accent ?? baseBlueprint.ui.accent,
+                // Don't inherit the container's iconColor — a dependency has its own
+                // visual identity (icon/accent). Only use one the dependency declares.
+                iconColor:   dep.iconColor ?? undefined,
+            },
         } satisfies Blueprint
     }
 }

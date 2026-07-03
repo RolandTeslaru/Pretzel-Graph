@@ -24,13 +24,14 @@ export namespace Workflow {
 
     // Re-export the sub-module namespaces. `export import` carries the value,
     // the type, and nested members (e.g. Node.Id as both value and type).
-    export import Node        = NodeMod.Node
-    export import Edge        = EdgeMod.Edge
-    export import Data        = DataMod.Data
-    export import Layout      = DataMod.Data.Layout
-    export import Viewport    = DataMod.Data.Viewport
-    export import Dependency  = DepMod.Dependency
-    export import Cache       = CacheMod.Cache
+    export import Node         = NodeMod.Node
+    export import HydratedNode = NodeMod.HydratedNode
+    export import Edge         = EdgeMod.Edge
+    export import Data         = DataMod.Data
+    export import Layout       = DataMod.Data.Layout
+    export import Viewport     = DataMod.Data.Viewport
+    export import Dependency   = DepMod.Dependency
+    export import Cache        = CacheMod.Cache
 
     export const createCache        = CacheMod.createCache
     export const deriveArcs         = CacheMod.deriveArcs
