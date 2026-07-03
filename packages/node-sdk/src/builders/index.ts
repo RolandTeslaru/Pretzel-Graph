@@ -33,9 +33,7 @@ type DefineBlueprintReturn<
     readonly id: TId & Blueprint.Id;
     readonly displayName: string;
     readonly description: string;
-    readonly icon: string;
-    readonly accent?: string;
-    readonly iconColor?: string;
+    readonly ui: { readonly icon: string; readonly accent?: string; readonly iconColor?: string };
     readonly fields: TToolCompatible extends true
         ? readonly [...TFields, ...typeof executionStrategyFields, typeof hiddenToolField]
         : readonly [...TFields, ...typeof executionStrategyFields];
@@ -145,9 +143,7 @@ export function defineBlueprint<
         id: config.id as TId & Blueprint.Id,
         displayName: config.displayName,
         description: config.description,
-        icon: config.icon,
-        accent: config.accent,
-        iconColor: config.iconColor,
+        ui: { icon: config.icon, accent: config.accent, iconColor: config.iconColor },
         fields,
         inputs: config.inputs,
         outputs: config.outputs,

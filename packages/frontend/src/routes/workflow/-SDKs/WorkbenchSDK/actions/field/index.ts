@@ -36,11 +36,12 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
                     if (!blueprint)
                         throw new Error(`Could not extract blueprint from node ${nodeId}`);
 
-                    const fieldValues = sel.field.getValues(sdk.state, nodeId);
+                    // Merge the just-set value in — getValues is read pre-commit, so it's stale.
+                    const fieldValues = { ...sel.field.getValues(sdk.state, nodeId), [field.id]: value };
 
                     const reconciledBlueprint = await createToastPromise(
                         ShelfSDK.actions.getReconciledBlueprint(
-                            blueprint, field.id, value, fieldValues,
+                            blueprint, fieldValues,
                             {
                                 onApiFetch: () => {
                                     setState(s => { reducers.field.markAsReconciling(s, nodeId, field.id) })

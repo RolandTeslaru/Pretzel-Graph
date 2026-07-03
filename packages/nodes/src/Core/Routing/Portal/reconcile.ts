@@ -1,43 +1,25 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
 import { InferFieldValues, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
-import { cloneDeep } from "lodash";
 import { Blueprint } from "./blueprint";
 
+// out → emits a single output, no inputs; in → accepts a single input, no outputs.
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    changedFieldId: keyof InferFieldValues<typeof Blueprint>,
-    newValue: Foundations.Field.Value,
+    fieldValues: InferFieldValues<typeof Blueprint>,
 ): Foundations.Blueprint => {
-    const next = cloneDeep(blueprint);
-    if (changedFieldId !== "direction") return next;
-
-    if (newValue === "out") {
-        // @ts-expect-error swap icon for out direction
-        next.icon = "PortalOut";
-        // @ts-expect-error no inputs when acting as an out node
-        next.inputs = [];
-        // @ts-expect-error emit unresolved output
-        next.outputs = [
-            OutputBuilder.Unresolved({
-                id: "output",
-                displayName: "Output",
-                polymorphicGroupId: "portal",
-            }),
-        ];
+    const ui = blueprint.ui as { icon: string };
+    if (fieldValues.direction === "out") {
+        ui.icon = "PortalOut";
+        // @ts-expect-error swap ports: out node has no inputs, one unresolved output
+        blueprint.inputs = [];
+        // @ts-expect-error
+        blueprint.outputs = [OutputBuilder.Unresolved({ id: "output", displayName: "Output", polymorphicGroupId: "portal" })];
     } else {
-        // @ts-expect-error restore icon for in direction
-        next.icon = "PortalIn";
-        // @ts-expect-error restore singular input
-        next.inputs = [
-            InputBuilder.Unresolved({
-                id: "input",
-                displayName: "Input",
-                polymorphicGroupId: "portal",
-            }),
-        ];
-        // @ts-expect-error no outputs when acting as an in node
-        next.outputs = [];
+        ui.icon = "PortalIn";
+        // @ts-expect-error swap ports: in node has one unresolved input, no outputs
+        blueprint.inputs = [InputBuilder.Unresolved({ id: "input", displayName: "Input", polymorphicGroupId: "portal" })];
+        // @ts-expect-error
+        blueprint.outputs = [];
     }
-
-    return next;
+    return blueprint;
 };

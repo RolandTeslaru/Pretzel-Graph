@@ -1,48 +1,47 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
 import { InferFieldValues, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
-import { cloneDeep } from "lodash";
-
-// Variant-specific field ids removed before re-adding the new variant's set.
-const VARIANT_FIELD_IDS = [
-    "approveLabel", "rejectLabel",   // confirm
-    "options", "multiple", "allowCustom",  // choice
-    "formFields",  // form
-] as Foundations.Field.Id[];
+import { Blueprint } from "./blueprint";
 
 const asField = (b: unknown) => b as unknown as Foundations.Field;
 
-// Swaps fields + output ports when `variant` changes:
-//   confirm → approve/reject labels  → approved | rejected ports
-//   choice  → options/multiple/custom → value port (the chosen value(s))
-//   form    → form field defs         → values port (collected object)
+// Variant-specific field ids stripped before adding the selected variant's set.
+const VARIANT_FIELD_IDS = [
+    "approveLabel", "rejectLabel",         // confirm
+    "options", "multiple", "allowCustom",  // choice
+    "formFields",                          // form
+] as Foundations.Field.Id[];
+
+// Swaps fields + output ports by `variant`:
+//   confirm → approve/reject labels → approved|rejected ports
+//   choice  → options/multiple/custom → value port
+//   form    → form field defs → values port
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    changedFieldId: keyof InferFieldValues<Foundations.Blueprint>,
-    newValue: Foundations.Field.Value,
+    fieldValues: InferFieldValues<typeof Blueprint>,
 ): Foundations.Blueprint => {
-    const next = cloneDeep(blueprint);
-    if (changedFieldId !== "variant") return next;
+    const kept = blueprint.fields.filter(f => !VARIANT_FIELD_IDS.includes(f.id));
 
-    const fields = new Map(next.fields.map(f => [f.id, f]));
-    VARIANT_FIELD_IDS.forEach(id => fields.delete(id));
-    const add = (b: unknown) => { const f = asField(b); fields.set(f.id, f); };
-
+    let variantFields: Foundations.Field[];
     let outputs: unknown[];
-    switch (newValue) {
+    switch (fieldValues.variant) {
         case "choice":
-            add(FieldBuilder.Json({ id: "options", displayName: "Options", initialValue: [{ label: "Option 1", value: "1" }], tooltip: "Array of { label, value }." }));
-            add(FieldBuilder.Boolean({ id: "multiple", displayName: "Allow multiple", initialValue: false }));
-            add(FieldBuilder.Boolean({ id: "allowCustom", displayName: "Allow custom answer", initialValue: false }));
+            variantFields = [
+                asField(FieldBuilder.Json({ id: "options", displayName: "Options", initialValue: [{ label: "Option 1", value: "1" }], tooltip: "Array of { label, value }." })),
+                asField(FieldBuilder.Boolean({ id: "multiple", displayName: "Allow multiple", initialValue: false })),
+                asField(FieldBuilder.Boolean({ id: "allowCustom", displayName: "Allow custom answer", initialValue: false })),
+            ];
             outputs = [OutputBuilder.Data({ id: "value", displayName: "Value", tooltip: "The chosen value(s)." })];
             break;
         case "form":
-            add(FieldBuilder.Json({ id: "formFields", displayName: "Form fields", initialValue: [], tooltip: "Field definitions to render in the dialog." }));
+            variantFields = [asField(FieldBuilder.Json({ id: "formFields", displayName: "Form fields", initialValue: [], tooltip: "Field definitions to render in the dialog." }))];
             outputs = [OutputBuilder.Data({ id: "values", displayName: "Values", tooltip: "The collected form values." })];
             break;
         case "confirm":
         default:
-            add(FieldBuilder.String({ id: "approveLabel", displayName: "Approve label", initialValue: "Approve" }));
-            add(FieldBuilder.String({ id: "rejectLabel", displayName: "Reject label", initialValue: "Reject" }));
+            variantFields = [
+                asField(FieldBuilder.String({ id: "approveLabel", displayName: "Approve label", initialValue: "Approve" })),
+                asField(FieldBuilder.String({ id: "rejectLabel", displayName: "Reject label", initialValue: "Reject" })),
+            ];
             outputs = [
                 OutputBuilder.Unresolved({ id: "approved", displayName: "Approved", polymorphicGroupId: "data" }),
                 OutputBuilder.Unresolved({ id: "rejected", displayName: "Rejected", polymorphicGroupId: "data" }),
@@ -50,9 +49,9 @@ export const reconcile = (
             break;
     }
 
-    // @ts-expect-error rebuild the readonly fields tuple from the working map
-    next.fields = [...fields.values()];
+    // @ts-expect-error rebuild the readonly fields tuple
+    blueprint.fields = [...kept, ...variantFields];
     // @ts-expect-error swap the output ports for this variant
-    next.outputs = outputs;
-    return next;
+    blueprint.outputs = outputs;
+    return blueprint;
 };
