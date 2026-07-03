@@ -167,9 +167,7 @@ export namespace InputBuilder {
         return {
             ...buildBase(config),
             variant: "Unresolved" as const,
-            polymorphicGroupId: config.polymorphicGroupId,
-            // Stores the blueprint variant so the port can be restored correctly on disconnection
-            originalVariant: "Unresolved" as const,
+            polymorphicGroupId: config.polymorphicGroupId as unknown as Port.PolymorphicGroupId,
         };
     }
 
@@ -179,8 +177,7 @@ export namespace InputBuilder {
         return {
             ...buildBase(config),
             variant: "UnresolvedScalar" as const,
-            polymorphicGroupId: config.polymorphicGroupId,
-            originalVariant: "UnresolvedScalar" as const,
+            polymorphicGroupId: config.polymorphicGroupId as unknown as Port.PolymorphicGroupId,
         };
     }
 
@@ -190,8 +187,7 @@ export namespace InputBuilder {
         return {
             ...buildBase(config),
             variant: "UnresolvedList" as const,
-            polymorphicGroupId: config.polymorphicGroupId,
-            originalVariant: "UnresolvedList" as const,
+            polymorphicGroupId: config.polymorphicGroupId as unknown as Port.PolymorphicGroupId,
         };
     }
 }

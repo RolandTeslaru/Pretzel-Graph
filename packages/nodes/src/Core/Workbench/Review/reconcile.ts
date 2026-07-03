@@ -1,5 +1,5 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { InferFieldValues, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { InferReconcilingFieldValues, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 const asField = (b: unknown) => b as unknown as Foundations.Field;
@@ -17,7 +17,7 @@ const VARIANT_FIELD_IDS = [
 //   form    → form field defs → values port
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    fieldValues: InferFieldValues<typeof Blueprint>,
+    fieldValues: InferReconcilingFieldValues<typeof Blueprint>,
 ): Foundations.Blueprint => {
     const kept = blueprint.fields.filter(f => !VARIANT_FIELD_IDS.includes(f.id));
 

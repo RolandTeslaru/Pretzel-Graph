@@ -135,7 +135,6 @@ export namespace Port {
 
         export const Unresolved = Base.extend({
             variant: portLiteral("Unresolved"),
-            originalVariant: z.enum(["Unresolved", "UnresolvedScalar", "UnresolvedList"]),
         })
         export type Unresolved = z.infer<typeof Unresolved>
 
@@ -270,7 +269,7 @@ export namespace Port {
     }
 
     export function isPolymorphic(port: Input | Output | null): boolean {
-        return !!port && "originalVariant" in port && port.originalVariant !== undefined;
+        return !!port && "polymorphicGroupId" in port && port.polymorphicGroupId !== undefined;
     }
 
     const _LIST_PROMOTION_MAP = {
