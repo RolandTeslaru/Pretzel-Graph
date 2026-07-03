@@ -45,9 +45,18 @@ export abstract class RuntimeNode<
         public readonly workflowNode: Workflow.Node,
         protected readonly context: RuntimeNode.ExecutionContext
     ) {
-        this.fieldValues = mapFieldValues<T_Blueprint>(this.workflowNode.id, context.workflowData);
+        this.fieldValues = mapFieldValues<T_Blueprint>(this.blueprint.fields, this.staticValues);
         this.credentials = this.mapCredentials();
         this.emit = context.realtimeAPI.emit;
+    }
+
+    /** Resolved (post-reconcile) blueprint for this node, stashed on the context by the compiler. */
+    protected get blueprint(): T_Blueprint {
+        return this.context.catalogueAPI.getBlueprint(this.workflowNode.id) as T_Blueprint;
+    }
+
+    protected get staticValues(): Record<Foundations.Field.Id, Foundations.Field.Value> {
+        return this.context.workflowData.staticValues[this.workflowNode.id] ?? {};
     }
 
     private mapCredentials(): InferCredentials<T_Blueprint> {
@@ -92,14 +101,14 @@ export abstract class RuntimeNode<
     public evaluateFields(
         incoming: Record<Port.Id, Projection>
     ): InferFieldValues<T_Blueprint> {
-        const fields = mapFieldValues<T_Blueprint>(this.workflowNode.id, this.context.workflowData);
+        const fields = mapFieldValues<T_Blueprint>(this.blueprint.fields, this.staticValues);
         const evaluated: Record<Foundations.Field.Id, unknown> = { ...fields };
 
         // Project each port value to its plain-object form before injecting as @in —
         // raw LC instances (BaseChatModel, BaseRetriever, etc.) contain functions that
         // can't be structured-cloned into the isolate.
         const projectedIncoming: Record<Port.Input.Id, Projection> = {};
-        for (const input of this.workflowNode.inputs) {
+        for (const input of this.blueprint.inputs) {
             const value = incoming[input.id];
             projectedIncoming[input.id] = Synthesizer.project(value, input.variant);
         }
@@ -111,7 +120,7 @@ export abstract class RuntimeNode<
                 [Airlock.GLOBALS.nodeId]: this.workflowNode.id,
             },
             (evaluate) => {
-                for (const field of this.workflowNode.fields) {
+                for (const field of this.blueprint.fields) {
                     // Item-scoped fields are resolved per-element via evalItemField, not here —
                     // `$item` isn't bound during this node-level pass.
                     if (field.itemScoped === true) continue;
@@ -172,10 +181,10 @@ export abstract class RuntimeNode<
         const variant = options?.itemVariant ?? "Unresolved";
 
         // Resolve raw value + isExpression once per field, reused across every iteration.
-        const rawValues = mapFieldValues<T_Blueprint>(this.workflowNode.id, this.context.workflowData)
+        const rawValues = mapFieldValues<T_Blueprint>(this.blueprint.fields, this.staticValues)
         const meta      = new Map<Foundations.Field.Id, { raw: unknown, isExpression: boolean }>();
-        
-        for (const field of this.workflowNode.fields) 
+
+        for (const field of this.blueprint.fields)
             meta.set(field.id, { 
                 raw: rawValues[field.id], 
                 isExpression: Foundations.Field.isExpression(field) 
@@ -430,6 +439,11 @@ export namespace RuntimeNode {
         readonly workflowData: Workflow.Data,
         readonly workflowId: Workflow.Id,
         readonly workflowCache: Workflow.Cache,
+        // Resolves each node's post-reconcile blueprint from the catalogue cache (warmed by the
+        // compiler). Read sites join against this instead of the slim workflow node.
+        readonly catalogueAPI: {
+            getBlueprint: (nodeId: Workflow.Node.Id) => Foundations.Blueprint,
+        },
 
         // APIS
         readonly airlockAPI: Airlock.API,
