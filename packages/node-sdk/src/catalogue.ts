@@ -1,6 +1,7 @@
 import { container, singleton } from "tsyringe";
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import type { RuntimeNode } from "./node";
+import { pickReconcilingValues } from "./utils/mapFieldValues";
 
 export type NodeConstructor = {
     new(
@@ -96,7 +97,8 @@ class CatalogueServiceImpl {
         const reconciler = await this.getReconciler(blueprintId);
         if (!reconciler) return base;
 
-        const reconciled = reconciler(structuredClone(base), fieldValues);
+        // Reconcilers see only reconcile-field values — the same set that keys reconciledId.
+        const reconciled = reconciler(structuredClone(base), pickReconcilingValues(base.fields, fieldValues));
         this.blueprintCache.set(reconciledId, reconciled);
         return reconciled;
     }

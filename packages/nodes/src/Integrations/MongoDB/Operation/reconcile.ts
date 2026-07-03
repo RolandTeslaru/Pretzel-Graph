@@ -1,5 +1,5 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { InferFieldValues, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { InferReconcilingFieldValues, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 const asField = (b: unknown) => b as unknown as Foundations.Field;
@@ -22,12 +22,12 @@ const documentsField = () => asField(FieldBuilder.Json({
 
 // Derives per-operation fields + result port from `operation`:
 //   find → query+limit (DataList) | insert → documents | update → query+update | delete → query
-// NOTE: reconcile-added fields aren't in InferFieldValues, so onRun reads them via a cast.
+// NOTE: reconcile-added fields aren't in InferReconcilingFieldValues, so onRun reads them via a cast.
 const OP_FIELD_IDS = ["query", "limit", "update", "documents"] as Foundations.Field.Id[];
 
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    fieldValues: InferFieldValues<typeof Blueprint>,
+    fieldValues: InferReconcilingFieldValues<typeof Blueprint>,
 ): Foundations.Blueprint => {
     const kept = blueprint.fields.filter(f => !OP_FIELD_IDS.includes(f.id));
 

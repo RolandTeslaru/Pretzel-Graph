@@ -47,13 +47,12 @@ type DefineBlueprintReturn<
     readonly itemScope?: string;
 }
 
-const hiddenToolField = FieldBuilder.Boolean({
+const hiddenToolField = FieldBuilder.reconciling(FieldBuilder.Boolean({
     id: "isConvertedToTool",
     displayName: "Tool Mode",
     hidden: true,
-    reconcile: true,
     initialValue: false,
-});
+}));
 
 
 
