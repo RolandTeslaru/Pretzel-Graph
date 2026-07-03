@@ -26,6 +26,10 @@ class CatalogueServiceImpl {
 
     private nodesRoot: string = "";
 
+    // Base + reconciled blueprints in one map. ReconciledId is a Blueprint.Id sub-brand,
+    // so a reconciled variant keys the same cache as its base.
+    private blueprintCache = new Map<Foundations.Blueprint.Id, Foundations.Blueprint>();
+
     public setNodesRoot(rootPath: string) {
         this.nodesRoot = rootPath;
     }
@@ -52,6 +56,59 @@ class CatalogueServiceImpl {
             console.error(`[CatalogueService] Failed to load node '${blueprintId}':`, error);
             return null;
         }
+    }
+
+    public async loadBlueprint(blueprintId: Foundations.Blueprint.Id): Promise<Foundations.Blueprint | null> {
+        const cached = this.blueprintCache.get(blueprintId);
+        if (cached) return cached;
+
+        if (!this.nodesRoot)
+            throw new Error(`[CatalogueService] nodesRoot not set. Call setNodesRoot() before loading blueprints.`);
+
+        const relativePath = blueprintId.replace(/\./g, "/");
+        const fullPath = `${this.nodesRoot}/${relativePath}/blueprint`;
+
+        try {
+            const module = await import(fullPath);
+            const blueprint = (module.Blueprint ?? null) as Foundations.Blueprint | null;
+            if (blueprint) this.blueprintCache.set(blueprintId, blueprint);
+            return blueprint;
+
+        } catch (error) {
+            console.error(`[CatalogueService] Failed to load blueprint '${blueprintId}':`, error);
+            return null;
+        }
+    }
+
+    // Resolve the (possibly reconciled) blueprint for a node's field values. Pure + content-addressed:
+    // the reconciler folds structure from base off `fieldValues`, keyed/cached by reconciledId.
+    public async reconcile(
+        blueprintId: Foundations.Blueprint.Id,
+        fieldValues: Record<Foundations.Field.Id, Foundations.Field.Value>,
+    ): Promise<Foundations.Blueprint | null> {
+        const base = await this.loadBlueprint(blueprintId);
+        if (!base) return null;
+
+        const reconciledId = Foundations.Blueprint.createReconciledId(blueprintId, base.fields, fieldValues);
+        const cached = this.blueprintCache.get(reconciledId);
+        if (cached) return cached;
+
+        const reconciler = await this.getReconciler(blueprintId);
+        if (!reconciler) return base;
+
+        const reconciled = reconciler(structuredClone(base), fieldValues);
+        this.blueprintCache.set(reconciledId, reconciled);
+        return reconciled;
+    }
+
+    // Sync cache read for the hot path — the compiler warms the cache (loadBlueprint/reconcile/
+    // registerBlueprint) during prepareNode, so execution-time lookups never hit the async import.
+    public getBlueprint(id: Foundations.Blueprint.Id): Foundations.Blueprint | undefined {
+        return this.blueprintCache.get(id);
+    }
+
+    public registerBlueprint(id: Foundations.Blueprint.Id, blueprint: Foundations.Blueprint): void {
+        this.blueprintCache.set(id, blueprint);
     }
 
     public async getReconciler(blueprintId: Foundations.Blueprint.Id) {
