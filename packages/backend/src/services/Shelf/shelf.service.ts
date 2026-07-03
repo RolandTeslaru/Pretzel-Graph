@@ -3,6 +3,7 @@ import { Shelf } from '@pretzel-graph/shared/domain';
 import { ALL_DRAWERS, SECTIONS } from '@pretzel-graph/shared/constants/drawers';
 import { CatalogueService } from "@pretzel-graph/node-sdk"
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
+import { cloneDeep } from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -70,13 +71,15 @@ export class ShelfService {
     async reconcileBlueprint(
         payload: Shelf.API.Blueprint.Reconcile.Request
     ): Promise<Shelf.API.Blueprint.Reconcile.Response> {
-        const { blueprint, fieldId, newValue } = payload;
-        const reconcileFn = await CatalogueService.getReconciler(blueprint.id);
+        const { blueprintId, fieldValues } = payload;
+        const { blueprint } = this.getBlueprint({ blueprintId });
 
+        const reconcileFn = await CatalogueService.getReconciler(blueprintId);
         if (!reconcileFn)
-            throw new Error(`Reconciler for node ${blueprint.id} not found`);
+            throw new Error(`Reconciler for node ${blueprintId} not found`);
 
-        const reconciledBlueprint = reconcileFn(blueprint, fieldId, newValue);
+        // Reconcilers mutate a fresh deep copy of the base and return it.
+        const reconciledBlueprint = reconcileFn(cloneDeep(blueprint), fieldValues);
 
         return { reconciledBlueprint };
     }

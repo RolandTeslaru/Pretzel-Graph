@@ -32,15 +32,22 @@ export namespace Port {
         return z.literal(value);
     }
 
+    export const PolymorphicGroupId = z.string().brand("PolymorphicGroupId")
+    export type PolymorphicGroupId = z.infer<typeof PolymorphicGroupId>
+
+    export const GroupId = z.string().brand("GroupId")
+    export type GroupId = z.infer<typeof GroupId>
+
     export const Base = z.object({
         id: Port.Id,
 
-        displayName: z.string().optional(),
-        tooltip: z.string().optional(),
-        polymorphicGroupId: z.string().optional(),
-        groupId: z.string().brand("GroupId").optional(),
-        internal: z.boolean().optional(),
+        displayName:   z.string().optional(),
+        tooltip:       z.string().optional(),
+        internal:      z.boolean().optional(),
         isAddedByUser: z.boolean().optional(),
+    
+        polymorphicGroupId: PolymorphicGroupId.optional(),
+        groupId:            GroupId.optional(),
     })
     export interface Base extends z.infer<typeof Base> { }
 
