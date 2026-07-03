@@ -13,7 +13,9 @@ export namespace Data {
             Node.Id,
             z.object({
                 x: z.number(),
-                y: z.number()
+                y: z.number(),
+                isMinimized: z.boolean().optional(),
+                isFlipped:   z.boolean().optional(),
             })
         );
     }
