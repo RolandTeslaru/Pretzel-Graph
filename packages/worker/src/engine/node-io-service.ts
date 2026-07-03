@@ -128,6 +128,25 @@ export class NodeIOService {
     }
 
 
+    // A node's live ports: the resolved (post-reconcile) blueprint's ports plus any user-added ones.
+    public readonly getInputPorts = (
+        ctx:    AggexEngine.Execution.Context,
+        nodeId: Workflow.Node.Id,
+    ): Port.Input[] => {
+        const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);
+        const added = ctx.workflowData.nodes[nodeId].addedInputs ?? [];
+        return [...blueprint.inputs, ...added];
+    }
+
+    public readonly getOutputPorts = (
+        ctx:    AggexEngine.Execution.Context,
+        nodeId: Workflow.Node.Id,
+    ): Port.Output[] => {
+        const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);
+        const added = ctx.workflowData.nodes[nodeId].addedOutputs ?? [];
+        return [...blueprint.outputs, ...added];
+    }
+
     private getOutputPort(ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id, outputId: Port.Output.Id): Port.Output {
         const node = ctx.workflowData.nodes[nodeId];
         if (!node)

@@ -95,8 +95,11 @@ export async function generateIndex(includeDbBlueprints = false) {
                 ...baseBlueprint,
                 id: blueprintId,
                 displayName: row.display_name,
-                icon: row.icon ?? baseBlueprint.icon,
-                accent: row.accent ?? baseBlueprint.accent,
+                ui: {
+                    icon: row.icon ?? baseBlueprint.ui.icon,
+                    accent: row.accent ?? baseBlueprint.ui.accent,
+                    iconColor: baseBlueprint.ui.iconColor,
+                },
                 fields: mergeFieldsById(baseBlueprint.fields, dependencyFields),
                 inputs,
                 outputs,

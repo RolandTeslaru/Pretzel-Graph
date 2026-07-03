@@ -6,19 +6,18 @@
 import { Airlock, Execution, Foundations, Realtime, Vault } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { CatalogueService, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
+import { CatalogueService, RuntimeNode, mapFieldValues, type NodeConstructor } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
-import { decryptCredentialBlob } from "src/credentials";
 
 import { AggexCompilerError } from "../errors";
 import { AirlockService } from "../airlock";
 import { S2Graph, Vertex } from "../S2/graph";
 import { isUUID } from "../utils";
 
-import { produce } from "immer";
 import { AggexEngine } from "src/engine";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { RealtimeService } from "../realtime";
+import { createContexts } from "./contexts";
 
 
 export class WorkflowCompiler {
@@ -44,52 +43,26 @@ export class WorkflowCompiler {
         // START vertex — S2Engine ignites from here
         graph.addVertex(S2Graph.START_VERTEX_ID);
 
-        // AIRLOCK — register this workflow's @workflow copy (dedup by id), warm the script
-        // cache, and create this env's sandbox scope (one Context, reused across re-fires).
+        // AIRLOCK — register this workflow's @workflow copy (dedup by id) and create this env's
+        // sandbox scope (one Context, reused across re-fires). Expression cache is warmed after
+        // nodes are prepared (it needs their resolved blueprints).
         airlock.registerWorkflow(workflowId, workflowData);
-        this.warmExpressionCache(airlock, workflowData);
         const airlockScope = airlock.createScope(workflowId, {
             igniter: execution.igniter,
             chatId:  execution.chat_id,
         });
 
-        const ctxRef = { current: null! as AggexEngine.Execution.Context };
-        const apis = this.createAPIs(engine, airlock, ctxRef, execution, workflowData, credentialInstances, realtime);
+        const { nodeExecutionCtx, engineExecutionCtx } = createContexts({
+            engine, airlock, execution, workflowId, workflowData, workflowCache,
+            airlockScope, graph, credentialInstances, realtime, enclosingNodeAPI,
+        });
 
-        const nodeExecutionCtx = {
-            executionId: execution.id,
-            workflowId,
-            chat_id: execution.chat_id,
-            workflowData,
-            workflowCache,
-            airlockAPI: airlockScope,
-            get session() { return execution.session; },
-            enclosingNodeAPI,
-            ...apis,
-        } satisfies RuntimeNode.ExecutionContext
-
-        const engineExecutionCtx = {
-            executionId: execution.id,
-            workflowId,
-            chat_id: execution.chat_id,
-            workflowData,
-            workflowCache,
-            airlockAPI: airlockScope,
-            get session() { return execution.session; },
-            compiledGraph: graph,
-            activeNodes: new Set(),
-            errorChannel: new Map(),
-            // "Execute up until this point": abort once this node completes (full graph runs normally).
-            stopAtNodeId: execution.igniter.variant === "workbench_step" ? execution.igniter.targetNodeId : undefined,
-            enclosingNodeAPI,
-            ...apis,
-        } satisfies AggexEngine.Execution.Context
-
-        ctxRef.current = engineExecutionCtx;
-
-        // Add nodes to the graph
+        // Add nodes to the graph (populates engineExecutionCtx.blueprints)
         for (const wfNode of Object.values(nodes))
             await this.prepareNode(engine, engineExecutionCtx, nodeExecutionCtx, wfNode, compilationCtx);
+
+        // Warm the expression cache now that every node's resolved blueprint is available.
+        this.warmExpressionCache(airlock, engineExecutionCtx);
 
         // Add Edges. Might also get ran multiple times because nodes can have multiple edges between them because of ports.
         for (const edge of Object.values(edges)) {
@@ -132,10 +105,13 @@ export class WorkflowCompiler {
      * expression is left to surface at runtime via the node's `onError` (so we swallow
      * compile errors here rather than abort the whole workflow compile).
      */
-    private warmExpressionCache(airlock: AirlockService, workflowData: Workflow.Data): void {
-        for (const node of Object.values(workflowData.nodes)) {
-            const values = mapFieldValues(node.id, workflowData);
-            for (const field of node.fields) {
+    private warmExpressionCache(airlock: AirlockService, ctx: AggexEngine.Execution.Context): void {
+        for (const node of Object.values(ctx.workflowData.nodes)) {
+            const blueprint = ctx.catalogueAPI.getBlueprint(node.id);
+            const staticValues = ctx.workflowData.staticValues[node.id] ?? {};
+            const values = mapFieldValues(blueprint.fields, staticValues);
+
+            for (const field of blueprint.fields) {
                 if(Field.isExpression(field) === false)
                     continue
 
@@ -153,114 +129,6 @@ export class WorkflowCompiler {
             }
         }
     }
-
-
-    private createAPIs(
-        engine:              AggexEngine,
-        airlock:             AirlockService,
-        ctxRef:              { current: AggexEngine.Execution.Context },
-        execution:           Execution,
-        workflowData:        Workflow.Data,
-        credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
-        realtime:            RealtimeService,
-    ) {
-        const portAPI = {
-            write: (nodeId, outputId, value) =>
-                engine.nodeIO.writePort(ctxRef.current, nodeId, outputId, value),
-        } satisfies RuntimeNode.ExecutionContext["portAPI"];
-
-        const propagationAPI = {
-            emitPort: (nodeId, outputId) =>
-                engine.propagationAPI.emitPort(ctxRef.current, nodeId, outputId),
-            emitNode: (nodeId) =>
-                engine.propagationAPI.emitNode(ctxRef.current, nodeId),
-        } satisfies RuntimeNode.ExecutionContext["propagationAPI"];
-
-        const instanceRegistryAPI = {
-            get:    (nodeId: Workflow.Node.Id) => engine.instanceRegistryAPI.get(nodeId),
-            getAll: ()                         => engine.instanceRegistryAPI.getAll(),
-        } satisfies RuntimeNode.ExecutionContext["instanceRegistryAPI"];
-
-        const workflowQueryAPI = {
-            getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: T_Blueprint["id"]) =>
-                Object.values(ctxRef.current.workflowData.nodes)
-                    .filter(n => n.blueprintId === blueprintId)
-                    .map(n => ({
-                        node:   n,
-                        fields: mapFieldValues<T_Blueprint>(n.id, ctxRef.current.workflowData),
-                    })),
-            getNodeOutput: (nodeId, portId) =>
-                ctxRef.current.session.node_output_instances[nodeId]?.[portId],
-        } satisfies RuntimeNode.ExecutionContext["workflowQueryAPI"];
-
-        const schedulerAPI = {
-            fireNode:      (nodeId, signals)    => engine.schedulerAPI.fireNode(ctxRef.current, nodeId, signals),
-            signalNode:    (nodeId, fromNodeId) => engine.schedulerAPI.signalNode(ctxRef.current, nodeId, fromNodeId),
-            removeSignal:  (nodeId, fromNodeId) => engine.schedulerAPI.removeSignal(ctxRef.current, nodeId, fromNodeId),
-            clearSignals:  (nodeId)             => engine.schedulerAPI.clearSignals(ctxRef.current, nodeId),
-            scheduleCheck: (nodeId)             => engine.schedulerAPI.scheduleCheck(ctxRef.current, nodeId),
-        } satisfies RuntimeNode.ExecutionContext["schedulerAPI"];
-
-        const subWorkflowAPI = {
-            createEnv: () => {
-                const subEngine   = new AggexEngine();
-                const subCompiler = new WorkflowCompiler();
-                return {
-                    // Reuse the SAME airlock ref → shared isolate (same tenant); the child
-                    // compile registers its own workflow copy + creates its own scope on it.
-                    compile: (workflowId, workflowData, execution, compilationCtx, enclosingNodeAPI) =>
-                        subCompiler.compile(workflowId, workflowData, execution, realtime, subEngine, airlock, credentialInstances, compilationCtx, enclosingNodeAPI),
-                    run: (ctx: unknown) => subEngine.run(ctx as AggexEngine.Execution.Context),
-                };
-            },
-        } satisfies RuntimeNode.ExecutionContext["subWorkflowAPI"];
-
-        const dependencyAPI = {
-            getPublished: (wfId: Workflow.Id) => {
-                const dep = workflowData.dependencies?.published?.[wfId];
-                if (!dep) throw new Error(`Missing published dependency "${wfId}"`);
-                return dep;
-            },
-            getDraft: (wfId: Workflow.Id) => {
-                const draft = workflowData.dependencies?.draft?.[wfId];
-                if (!draft) throw new Error(`Missing draft dependency "${wfId}"`);
-                return draft;
-            },
-        } satisfies RuntimeNode.ExecutionContext["dependencyAPI"];
-
-        const credentialsAPI: RuntimeNode.ExecutionContext["credentialsAPI"] = {
-            getInstance:       (instanceId) => credentialInstances[instanceId],
-            getDecryptedValue: (blob)       => decryptCredentialBlob(blob) as any,
-        };
-
-        const abortController = new AbortController();
-        const abortAPI = {
-            signal: abortController.signal,
-            abort:  (reason?: any) => abortController.abort(reason),
-        };
-
-        // Per-execution facade over the shared service: emit out, await signals in. awaitSignal
-        // is bound to this execution's abort signal so parks reject + clean up on terminate/suspend.
-        const realtimeAPI = {
-            emit: <T_Event extends Realtime.Event>(event: T_Event) => realtime.emit(event),
-            awaitSignal: <S>(channel: Realtime.Channel, schema: { parse: (data: unknown) => S }, timeout: number) =>
-                realtime.awaitSignal(channel, schema, timeout, abortAPI.signal),
-            emitAndAwaitSignal: <E extends Realtime.Event, S>(event: E, signalChannel: Realtime.Channel, signalSchema: { parse: (data: unknown) => S }, timeout: number) =>
-                realtime.emitAndAwaitSignal(event, signalChannel, signalSchema, timeout, abortAPI.signal),
-        } satisfies RuntimeNode.ExecutionContext["realtimeAPI"];
-
-        const updateSession = (r: (draft: Execution.Session) => void) => {
-            execution.session = produce(execution.session, r);
-        };
-
-        return {
-            portAPI, propagationAPI, instanceRegistryAPI, workflowQueryAPI,
-            schedulerAPI, subWorkflowAPI, dependencyAPI, credentialsAPI,
-            abortAPI, realtimeAPI, updateSession,
-        };
-    }
-
-
 
 
     private async handleIgniter(
@@ -285,6 +153,44 @@ export class WorkflowCompiler {
 
 
 
+    // Resolve a node absent from the catalogue as a subworkflow dependency, falling back to the
+    // Core.SubWorkflow.Execute node. Throws if it isn't a dependency or the dependency is missing.
+    private async resolveDependencyNode(
+        wfNode:             Workflow.Node,
+        engineExecutionCtx: AggexEngine.Execution.Context,
+    ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Foundations.Blueprint | null }> {
+        if (!wfNode.dependency)
+            throw new AggexCompilerError(
+                SystemError.Code.COMPILATION_NODE_NOT_FOUND,
+                `Could not find node with blueprintId "${wfNode.blueprintId}" in the catalogue`,
+                { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
+            );
+
+        const { dependencies } = engineExecutionCtx.workflowData;
+        const { workflowId, mode } = wfNode.dependency;
+        const hasDep = mode === "publication"
+            ? !!dependencies?.published?.[workflowId]
+            : !!dependencies?.draft?.[workflowId];
+        if (!hasDep)
+            throw new AggexCompilerError(
+                SystemError.Code.COMPILATION_MISSING_SUBWORKFLOW_DEPENDENCY,
+                `Missing dependency "${workflowId}" for node "${wfNode.id}"`,
+                { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId, missingDependencyId: workflowId } }
+            );
+
+        const executeId = "Core.SubWorkflow.Execute" as Foundations.Blueprint.Id;
+        const RuntimeNode = await CatalogueService.getNode(executeId);
+        if (!RuntimeNode)
+            throw new AggexCompilerError(
+                SystemError.Code.COMPILATION_NODE_NOT_FOUND,
+                `Core.SubWorkflow.Execute node not found in the catalogue`,
+                { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
+            );
+
+        const blueprint = await CatalogueService.loadBlueprint(executeId);
+        return { RuntimeNode, blueprint };
+    }
+
     private async prepareNode(
         engine:             AggexEngine,
         engineExecutionCtx: AggexEngine.Execution.Context,
@@ -292,37 +198,38 @@ export class WorkflowCompiler {
         wfNode:             Workflow.Node,
         compilationCtx:     WorkflowCompiler.Compilation.Context,
     ): Promise<void> {
-        let RuntimeNode = await CatalogueService.getNode(wfNode.blueprintId);
 
         const { compiledGraph: graph } = engineExecutionCtx;
+        const staticValues = engineExecutionCtx.workflowData.staticValues[wfNode.id] ?? {};
 
-        // Check if its a subworkflow with a dependency
-        if (!RuntimeNode) {
-            if (wfNode.dependency) {
-                const { dependencies } = engineExecutionCtx.workflowData;
-                const { workflowId, mode } = wfNode.dependency;
-                const hasDep = mode === "publication"
-                    ? !!dependencies?.published?.[workflowId]
-                    : !!dependencies?.draft?.[workflowId];
-                if (!hasDep)
-                    throw new AggexCompilerError(
-                        SystemError.Code.COMPILATION_MISSING_SUBWORKFLOW_DEPENDENCY,
-                        `Missing dependency "${workflowId}" for node "${wfNode.id}"`,
-                        { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId, missingDependencyId: workflowId } }
-                    );
-                RuntimeNode =  await CatalogueService.getNode("Core.SubWorkflow.Execute" as Foundations.Blueprint.Id);
-            }
-            else throw new AggexCompilerError(
+        let RuntimeNode = await CatalogueService.getNode(wfNode.blueprintId);
+        const base = await CatalogueService.loadBlueprint(wfNode.blueprintId);
+
+        // Reconcile off the base field values — the reconcile discriminator always lives on base,
+        // so mapping over base (not the resolved blueprint) avoids the chicken-and-egg.
+        let blueprint = wfNode.reconciledBlueprintId && base
+            ? await CatalogueService.reconcile(wfNode.blueprintId, mapFieldValues(base.fields, staticValues))
+            : base;
+
+        // Not in the catalogue — resolve it as a subworkflow dependency (or throw).
+        if (!RuntimeNode && !blueprint)
+            ({ RuntimeNode, blueprint } = await this.resolveDependencyNode(wfNode, engineExecutionCtx));
+
+        if (!RuntimeNode || !blueprint)
+            throw new AggexCompilerError(
                 SystemError.Code.COMPILATION_NODE_NOT_FOUND,
-                `Could not find node with blueprintId "${wfNode.blueprintId}" in the catalogue`,
+                `Could not resolve node "${wfNode.id}" (${wfNode.blueprintId})`,
                 { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
-            )
-        }
+            );
 
-        // Fields are arrays in the json, map them to key value records
-        const fieldValues = mapFieldValues(wfNode.id, engineExecutionCtx.workflowData);
+        // Register the resolved blueprint before instantiation — read sites resolve it via
+        // ctx.catalogueAPI.getBlueprint, keyed by reconciledBlueprintId ?? blueprintId.
+        CatalogueService.registerBlueprint(wfNode.reconciledBlueprintId ?? wfNode.blueprintId, blueprint);
 
-        const instance = new RuntimeNode!(wfNode, nodeExecutionCtx);
+        // Final field values off the resolved blueprint (includes reconcile-added fields).
+        const fieldValues = mapFieldValues(blueprint.fields, staticValues);
+
+        const instance = new RuntimeNode(wfNode, nodeExecutionCtx);
         await instance.compile(compilationCtx)
 
         graph.addVertex(wfNode.id);
