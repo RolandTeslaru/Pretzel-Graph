@@ -55,7 +55,7 @@ export class PropagationService {
 
         const allEdgeIds: Record<string, Workflow.Edge.Id> = {};
 
-        for (const output of node.outputs)
+        for (const output of this.engine.nodeIO.getOutputPorts(ctx, nodeId))
             for (const edge of Object.values(ctx.workflowData.edges))
                 if (edge.source.nodeId === nodeId && edge.source.portId === output.id)
                     allEdgeIds[edge.id] = edge.id;

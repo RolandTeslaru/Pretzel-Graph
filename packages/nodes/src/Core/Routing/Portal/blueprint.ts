@@ -8,17 +8,16 @@ export const Blueprint = defineBlueprint({
     accent: "group-routing",
     iconColor: "color-sky-400",
     fields: [
-        FieldBuilder.MultiOption({
+        FieldBuilder.reconciling(FieldBuilder.MultiOption({
             id: "direction",
             variant: "tab",
             initialValue: "in",
             displayName: "Direction",
-            reconcile: true,
             options: [
                 { value: "in", displayName: "In" },
-                { value: "out", displayName: "Out" },     
+                { value: "out", displayName: "Out" },
             ]
-        }),
+        })),
         FieldBuilder.UniqueString({
             id: "portalId",
             displayName: "Portal ID",

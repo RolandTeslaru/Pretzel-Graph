@@ -9,10 +9,9 @@ export const Blueprint = defineBlueprint({
     accent: "port-LanguageModel",
     credentials: [OpenRouter],
     fields: [
-        FieldBuilder.MultiOption({
+        FieldBuilder.reconciling(FieldBuilder.MultiOption({
             id: "provider",
             displayName: "Provider",
-            reconcile: true,
             options: [
                 { value: "Anthropic" },
                 { value: "Google" },
@@ -25,7 +24,7 @@ export const Blueprint = defineBlueprint({
             ],
             initialValue: "Google",
             tooltip: "Filter the model list by provider.",
-        }),
+        })),
         FieldBuilder.MultiOption({
             id: "model",
             displayName: "Model",

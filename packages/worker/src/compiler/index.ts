@@ -191,15 +191,13 @@ export class WorkflowCompiler {
         return { RuntimeNode, blueprint };
     }
 
-    private async prepareNode(
-        engine:             AggexEngine,
-        engineExecutionCtx: AggexEngine.Execution.Context,
-        nodeExecutionCtx:   RuntimeNode.ExecutionContext,
+    // Resolve a node's definitive class + blueprint: load base, reconcile if needed, fall back to a
+    // subworkflow dependency, and register the resolved blueprint under its read-site key so
+    // ctx.catalogueAPI.getBlueprint can find it during instantiation. Throws if unresolvable.
+    private async resolveNode(
         wfNode:             Workflow.Node,
-        compilationCtx:     WorkflowCompiler.Compilation.Context,
-    ): Promise<void> {
-
-        const { compiledGraph: graph } = engineExecutionCtx;
+        engineExecutionCtx: AggexEngine.Execution.Context,
+    ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Foundations.Blueprint }> {
         const staticValues = engineExecutionCtx.workflowData.staticValues[wfNode.id] ?? {};
 
         let RuntimeNode = await CatalogueService.getNode(wfNode.blueprintId);
@@ -216,15 +214,30 @@ export class WorkflowCompiler {
             ({ RuntimeNode, blueprint } = await this.resolveDependencyNode(wfNode, engineExecutionCtx));
 
         if (!RuntimeNode || !blueprint)
-            throw new AggexCompilerError(
-                SystemError.Code.COMPILATION_NODE_NOT_FOUND,
-                `Could not resolve node "${wfNode.id}" (${wfNode.blueprintId})`,
-                { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
-            );
+            throw new AggexCompilerError(SystemError.Code.COMPILATION_NODE_NOT_FOUND, `Could not resolve node "${wfNode.id}" (${wfNode.blueprintId})`, { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } });
 
         // Register the resolved blueprint before instantiation — read sites resolve it via
-        // ctx.catalogueAPI.getBlueprint, keyed by reconciledBlueprintId ?? blueprintId.
+        // ctx.catalogueAPI.getBlueprint, keyed by reconciledBlueprintId ?? blueprintId. loadBlueprint/
+        // reconcile already auto-cache base + reconciled under those keys, so this is mainly for
+        // dependency nodes: their blueprint is Core.SubWorkflow.Execute's (cached under that id), which
+        // wouldn't otherwise be reachable under the dependency's own blueprintId that read sites use.
         CatalogueService.registerBlueprint(wfNode.reconciledBlueprintId ?? wfNode.blueprintId, blueprint);
+
+        return { RuntimeNode, blueprint };
+    }
+
+    private async prepareNode(
+        engine:             AggexEngine,
+        engineExecutionCtx: AggexEngine.Execution.Context,
+        nodeExecutionCtx:   RuntimeNode.ExecutionContext,
+        wfNode:             Workflow.Node,
+        compilationCtx:     WorkflowCompiler.Compilation.Context,
+    ): Promise<void> {
+
+        const { compiledGraph: graph } = engineExecutionCtx;
+        const staticValues = engineExecutionCtx.workflowData.staticValues[wfNode.id] ?? {};
+
+        const { RuntimeNode, blueprint } = await this.resolveNode(wfNode, engineExecutionCtx);
 
         // Final field values off the resolved blueprint (includes reconcile-added fields).
         const fieldValues = mapFieldValues(blueprint.fields, staticValues);

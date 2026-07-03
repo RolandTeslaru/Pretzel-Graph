@@ -249,7 +249,7 @@ export class AggexEngine {
             return this.errors.handle(ctx, vertexId, err);
         }
 
-        const projectedResult = this.nodeIO.projectOutputs(result, wfNode);
+        const projectedResult = this.nodeIO.projectOutputs(ctx, result, wfNode);
         this.session.onNodeExecuted(ctx, wfNode.id, result, projectedResult);
 
         switch (nodeInstance.getPropagationStrategy()) {
