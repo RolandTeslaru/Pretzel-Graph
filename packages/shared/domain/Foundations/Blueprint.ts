@@ -23,6 +23,7 @@ export namespace Blueprint {
         anticipate? : Partial<Record<Field.Id, Field.Value>>
     ): Blueprint.ReconciledId => {
         const parts = fields
+            .filter(f => f.reconcile)
             .map(f => `${f.id}=${String(anticipate?.[f.id] ?? values[f.id] ?? f.initialValue)}`)
             .sort()
             .join(",");
