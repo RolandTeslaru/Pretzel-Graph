@@ -177,8 +177,7 @@ export namespace OutputBuilder {
         return {
             ...buildBase(config),
             variant: "Unresolved" as const,
-            polymorphicGroupId: config.polymorphicGroupId,
-            originalVariant: "Unresolved" as const,
+            polymorphicGroupId: config.polymorphicGroupId as unknown as Port.PolymorphicGroupId,
         };
     }
 
@@ -188,8 +187,7 @@ export namespace OutputBuilder {
         return {
             ...buildBase(config),
             variant: "UnresolvedScalar" as const,
-            polymorphicGroupId: config.polymorphicGroupId,
-            originalVariant: "UnresolvedScalar" as const,
+            polymorphicGroupId: config.polymorphicGroupId as unknown as Port.PolymorphicGroupId,
         };
     }
 
@@ -199,8 +197,7 @@ export namespace OutputBuilder {
         return {
             ...buildBase(config),
             variant: "UnresolvedList" as const,
-            polymorphicGroupId: config.polymorphicGroupId,
-            originalVariant: "UnresolvedList" as const,
+            polymorphicGroupId: config.polymorphicGroupId as unknown as Port.PolymorphicGroupId,
         };
     }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Shelf } from '@pretzel-graph/shared/domain';
 import { ALL_DRAWERS, SECTIONS } from '@pretzel-graph/shared/constants/drawers';
-import { CatalogueService } from "@pretzel-graph/node-sdk"
+import { CatalogueService, pickReconcilingValues } from "@pretzel-graph/node-sdk"
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { cloneDeep } from 'lodash';
 import * as fs from 'fs';
@@ -78,8 +78,11 @@ export class ShelfService {
         if (!reconcileFn)
             throw new Error(`Reconciler for node ${blueprintId} not found`);
 
-        // Reconcilers mutate a fresh deep copy of the base and return it.
-        const reconciledBlueprint = reconcileFn(cloneDeep(blueprint), fieldValues);
+        // Reconcilers mutate a fresh deep copy of the base and see only reconcile-field values.
+        const reconciledBlueprint = reconcileFn(
+            cloneDeep(blueprint),
+            pickReconcilingValues(blueprint.fields, fieldValues),
+        );
 
         return { reconciledBlueprint };
     }

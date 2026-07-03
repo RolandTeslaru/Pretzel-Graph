@@ -57,14 +57,13 @@ export class NodeIOService {
         incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set(),
         keepMissingPorts = false,
     ): Record<Port.Input.Id, any> => {
-        const wfNode = ctx.workflowData.nodes[nodeId];
         const staticValues = ctx.workflowData.staticValues[nodeId] ?? {};
 
         const resolved: Record<Port.Input.Id, any> = {};
 
         const incomingEdgeByPort = ctx.workflowCache.inputHandlesMap[nodeId]
 
-        for (const input of wfNode.inputs) {
+        for (const input of this.getInputPorts(ctx, nodeId)) {
             const edgeId = incomingEdgeByPort[input.id]
             const edge = ctx.workflowData.edges[edgeId];
 
@@ -109,12 +108,13 @@ export class NodeIOService {
     }
 
     public readonly projectOutputs = (
+        ctx: AggexEngine.Execution.Context,
         result: Record<string, any>,
         wfNode: Workflow.Node
     ): Record<Port.Output.Id, Projection> => {
         const projected: Record<Port.Output.Id, Projection> = {};
 
-        for (const output of wfNode.outputs) {
+        for (const output of this.getOutputPorts(ctx, wfNode.id)) {
             const key = output.id;
             if (key in result){
                 if(result[key] === undefined)
@@ -155,7 +155,7 @@ export class NodeIOService {
                 `Cannot write output for unknown node "${nodeId}"`,
             );
 
-        const output = node.outputs.find(output => output.id === outputId);
+        const output = this.getOutputPorts(ctx, nodeId).find(output => output.id === outputId);
         if (!output)
             throw new AggexExecutionError(
                 SystemError.Code.EXECUTION_NODE_FAILED,

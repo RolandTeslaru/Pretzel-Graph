@@ -29,7 +29,6 @@ export const extractExposedPorts = (wfData: Workflow.Data): ExposedPorts => {
                 displayName: node.displayName,
                 variant: port.variant,
                 required: isRequired,
-                ...(Port.isUnresolvedLike(port.variant) && { originalVariant: port.variant }),
             } as Port.Input
         } else if (node.blueprintId === "Core.SubWorkflow.ExposeOutputPort") {
             const port = node.inputs[0] as Port;
@@ -38,7 +37,6 @@ export const extractExposedPorts = (wfData: Workflow.Data): ExposedPorts => {
                 id: Port.Output.Id.parse(node.id),
                 displayName: node.displayName,
                 variant: port.variant,
-                ...(Port.isUnresolvedLike(port.variant) && { originalVariant: port.variant }),
             } as Port.Output);
         }
     });

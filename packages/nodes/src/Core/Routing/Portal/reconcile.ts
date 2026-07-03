@@ -1,11 +1,11 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { InferFieldValues, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { InferReconcilingFieldValues, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 // out → emits a single output, no inputs; in → accepts a single input, no outputs.
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    fieldValues: InferFieldValues<typeof Blueprint>,
+    fieldValues: InferReconcilingFieldValues<typeof Blueprint>,
 ): Foundations.Blueprint => {
     const ui = blueprint.ui as { icon: string };
     if (fieldValues.direction === "out") {
