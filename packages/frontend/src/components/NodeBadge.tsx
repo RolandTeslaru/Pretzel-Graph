@@ -21,11 +21,11 @@ export const NodeBadge = ({ icon, label, accent, className = '' }: NodeBadgeProp
   </span>
 )
 
-export const NodeBadgeFromNode = ({ node, accent = true, className }: { node: Workflow.Node; accent?: boolean; className?: string }) => (
+export const NodeBadgeFromNode = ({ ui, accent = true, className }: { ui: any; accent?: boolean; className?: string }) => (
   <NodeBadge
-    icon={node.icon as string}
-    label={node.displayName}
-    accent={accent ? node.accent : undefined}
+    icon={ui.icon as string}
+    label={ui.displayName}
+    accent={accent ? ui.accent : undefined}
     className={className}
   />
 )

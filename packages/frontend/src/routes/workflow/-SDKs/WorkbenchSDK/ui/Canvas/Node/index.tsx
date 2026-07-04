@@ -18,48 +18,43 @@ import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk';
 const CanvasNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const nodeId = props.id as Workflow.Node.Id;
 
-  const node = WorkbenchSDK.useStore(s => s.data.nodes[nodeId]);
+  const hyNode = WorkbenchSDK.useNode(nodeId);
 
   // Handle positions (Left<->Right) flip with node.isFlipped / isMinimized.
   // XYFlow caches handle bounds, so tell it to re-measure and reroute edges.
   const updateNodeInternals = useUpdateNodeInternals()
   useEffect(() => {
     updateNodeInternals(nodeId)
-  }, [nodeId, node?.ui?.isFlipped, node?.ui?.isMinimized, updateNodeInternals])
+  }, [nodeId, hyNode?.ui?.isFlipped, hyNode?.ui?.isMinimized, updateNodeInternals])
 
-  if (!node)
+  if (!hyNode)
     return null;
 
-  return <Content nodeId={nodeId} />
+  return <Content hyNode={hyNode} />
 })
 
 export default CanvasNode
 
 
 
-const Content = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
+const Content = memo(({ hyNode }: { hyNode: Workflow.HydratedNode }) => {
 
-  const [node, blueprint, ui] = WorkbenchSDK.useNode(nodeId);
-
-  const [workflowId, isNodeClicked, hasUpdate] = WorkbenchSDK.useStore(s => [
-    s.workflowId,
-    s.clickedNodeId === node.id,
-    s.selectors.dependency.doesNodeHaveUpdate(s, node.id)
+  const [isNodeClicked, hasUpdate] = WorkbenchSDK.useStore(s => [
+    s.clickedNodeId === hyNode.id,
+    s.selectors.dependency.doesNodeHaveUpdate(s, hyNode.id)
   ])
 
-  const isWorkflowLocked = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.locked ?? false);
-
-  const isMinimized = ui.isMinimized;
-  const isDisabled = node.isDisabled
+  const isMinimized = hyNode.ui.isMinimized;
+  const isDisabled = hyNode.isDisabled
 
   let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
 
-  const executionStatus = ExecutionSDK.useStore(s => s.selectors.getNodeStatus(s, node.id));
+  const executionStatus = ExecutionSDK.useStore(s => s.selectors.getNodeStatus(s, hyNode.id));
 
-  if (ui.accent) {
-    backgroundColor = `color-mix(in srgb, var(--${ui.accent}) 40%, var(--node-accent-base))`;
-    borderColor =  `color-mix(in srgb, var(--${ui.accent}) 50%, var(--border))`;
+  if (hyNode.ui.accent) {
+    backgroundColor = `color-mix(in srgb, var(--${hyNode.ui.accent}) 40%, var(--node-accent-base))`;
+    borderColor =  `color-mix(in srgb, var(--${hyNode.ui.accent}) 50%, var(--border))`;
   }
 
 
@@ -67,7 +62,7 @@ const Content = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
     <>
       <NodeToolbar isVisible={isNodeClicked} position={Position.Top}>
         <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-200 ease-out origin-bottom">
-          <NodeCustomToolbar node={node} blueprint={blueprint} />
+          <NodeCustomToolbar hyNode={hyNode}/>
         </div>
       </NodeToolbar>
 
@@ -78,16 +73,16 @@ const Content = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
           isDisabled ? "opacity-50" : "opacity-100",
         )}
         style={{ backgroundColor, borderColor, borderWidth: 2 }}
-        id={node.id}
+        id={hyNode.id}
       >
-        <NodeHeader executionStatus={executionStatus} ui={ui} node={node} isWorkflowLocked={isWorkflowLocked} hasUpdate={hasUpdate} />
+        <NodeHeader executionStatus={executionStatus} hyNode={hyNode} hasUpdate={hasUpdate} />
 
         {!isMinimized &&
           <div className='dark:bg-black/50 bg-card/80 py-2 gap-2 flex flex-col  rounded-b-[26px] rounded-t-xl shadow-md shadow-black/10 min-h-8 pzg-9f3a1c'
 
           >
-            <NodeInputs nodeId={node.id} isWorkflowLocked={isWorkflowLocked} isFlipped={ui.isFlipped} />
-            <NodeOutputs nodeId={node.id} isWorkflowLocked={isWorkflowLocked} isFlipped={ui.isFlipped} />
+            <NodeInputs nodeId={hyNode.id} inputs={hyNode.inputs} isFlipped={hyNode.ui.isFlipped} />
+            <NodeOutputs nodeId={hyNode.id} outputs={hyNode.outputs} isFlipped={hyNode.ui.isFlipped} />
           </div>
         }
 

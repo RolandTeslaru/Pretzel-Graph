@@ -31,6 +31,27 @@ export namespace Blueprint {
         return `${blueprintId}:${parts}` as Blueprint.ReconciledId;
     }
 
+    // Reconciled ids are `${blueprintId}:${field=value,...}`. Base ids never contain a colon.
+    export const isReconciledId = (id: string): id is Blueprint.ReconciledId => id.includes(":");
+
+    export const extractBlueprintId = (id: Blueprint.ReconciledId | string): Blueprint.Id =>
+        id.split(":")[0] as Blueprint.Id;
+
+    export const parseReconciledId = (id: Blueprint.ReconciledId | string): {
+        blueprintId: Blueprint.Id;
+        fieldValues: Record<Field.Id, Field.Value>;
+    } => {
+        const [blueprintId, parts] = id.split(":") as [Blueprint.Id, string | undefined];
+        const fieldValues: Record<Field.Id, Field.Value> = {};
+        if (parts)
+            for (const pair of parts.split(",")) {
+                const eq = pair.indexOf("=");
+                if (eq === -1) continue;
+                fieldValues[pair.slice(0, eq) as Field.Id] = pair.slice(eq + 1);
+            }
+        return { blueprintId, fieldValues };
+    }
+
 
 
     export namespace Meta {

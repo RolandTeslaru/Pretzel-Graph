@@ -20,24 +20,12 @@ export const Blueprint = defineBlueprint({
             polymorphicGroupId: "passthrough_0",
             groupId: "passthrough",
         }),
-        InputBuilder.Unresolved({
-            id: "input_1",
-            displayName: "Input 1",
-            polymorphicGroupId: "passthrough_1",
-            groupId: "passthrough",
-        }),
     ],
     outputs: [
         OutputBuilder.Unresolved({
             id: "output_0",
             displayName: "Output 0",
             polymorphicGroupId: "passthrough_0",
-            groupId: "passthrough",
-        }),
-        OutputBuilder.Unresolved({
-            id: "output_1",
-            displayName: "Output 1",
-            polymorphicGroupId: "passthrough_1",
             groupId: "passthrough",
         }),
     ],

@@ -1,6 +1,6 @@
 {
-  "version": "1783108263700",
-  "generatedAt": "2026-07-03T19:51:03.700Z",
+  "version": "1783190318004",
+  "generatedAt": "2026-07-04T18:38:38.004Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -2257,15 +2257,6 @@
           "groupId": "passthrough",
           "variant": "Unresolved",
           "required": false
-        },
-        {
-          "id": "input_1",
-          "displayName": "Input 1",
-          "internal": false,
-          "polymorphicGroupId": "passthrough_1",
-          "groupId": "passthrough",
-          "variant": "Unresolved",
-          "required": false
         }
       ],
       "outputs": [
@@ -2273,13 +2264,6 @@
           "id": "output_0",
           "displayName": "Output 0",
           "polymorphicGroupId": "passthrough_0",
-          "groupId": "passthrough",
-          "variant": "Unresolved"
-        },
-        {
-          "id": "output_1",
-          "displayName": "Output 1",
-          "polymorphicGroupId": "passthrough_1",
           "groupId": "passthrough",
           "variant": "Unresolved"
         }
