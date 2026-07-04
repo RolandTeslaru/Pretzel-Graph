@@ -1,10 +1,8 @@
 import { Validation, Foundations, type Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../../sdk";
-import { workbenchSelectors } from "../../selectors";
 import { fieldVariadicReducers, type FieldVariadicReducers } from "./variadic";
 import { fieldConditionReducers, type FieldConditionReducers } from "./condition";
 import { fieldCaseListReducers, type FieldCaseListReducers } from "./caseList";
-import { nodeSelectors } from "../../selectors/node";
 
 type S       = WorkbenchSDK.State
 type NodeId  = Workflow.Node.Id
@@ -29,7 +27,7 @@ export const fieldReducers = {
         const node = s.selectors.node.get(s, nodeId)
         if (!node) return
 
-        const fields = nodeSelectors.getFields(s, nodeId)
+        const fields = s.selectors.node.getFields(s, nodeId)
         const staticValues = s.reducers.node.ensureStaticValues(s, nodeId)
 
         for (const sibling of fields) {

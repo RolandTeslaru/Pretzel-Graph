@@ -1,6 +1,5 @@
 import type { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
-import { edgeReducers } from "./edge";
 
 export const portReducers = {
     addInput: (s, nodeId, port) => {
@@ -20,7 +19,7 @@ export const portReducers = {
 
         const edgeId = s.cache.inputHandlesMap[nodeId]?.[portId];
         if (edgeId)
-            edgeReducers.remove(s, edgeId);
+            s.reducers.edge.remove(s, edgeId);
 
         node.addedInputs = node.addedInputs?.filter(p => p.id !== portId)
     },
@@ -32,7 +31,7 @@ export const portReducers = {
 
         const edgeId = s.cache.outputHandlesMap[nodeId]?.[portId];
         if (edgeId)
-            edgeReducers.remove(s, edgeId);
+            s.reducers.edge.remove(s, edgeId);
 
         node.addedOutputs = node.addedOutputs?.filter(p => p.id !== portId) as typeof node.addedOutputs;
     },

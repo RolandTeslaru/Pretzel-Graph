@@ -1,11 +1,7 @@
 import { cloneDeep } from "lodash";
-import { inputReducers } from "../input";
-import { edgeReducers } from "../edge";
 import type { WorkbenchSDK } from "../../sdk";
 import type { Workflow } from "@pretzel-graph/shared/domain";
 import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
-import { nodeSelectors } from "../../selectors/node";
-import type { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 
 type S      = WorkbenchSDK.State
 type NodeId = Workflow.Node.Id
@@ -16,13 +12,13 @@ export const fieldVariadicReducers = {
     add: (s, nodeId, groupId) => {
         s.isDirty = true;
         const node      = s.selectors.node.get(s, nodeId);
-        const blueprint = nodeSelectors.getBlueprint(s, nodeId);
+        const blueprint = s.selectors.node.getBlueprint(s, nodeId);
 
         // Live ports only give us the slot count / last index. New slots are cloned from the
         // BASE blueprint port so they carry its pristine unresolved variant — cloning from the
         // resolved live port would bake the group's resolved variant into every new slot.
-        const inputs     = nodeSelectors.getInputs(s, nodeId).filter(i => i.groupId === groupId);
-        const outputs    = nodeSelectors.getOutputs(s, nodeId).filter(o => o.groupId === groupId);
+        const inputs     = s.selectors.node.getInputs(s, nodeId).filter(i => i.groupId === groupId);
+        const outputs    = s.selectors.node.getOutputs(s, nodeId).filter(o => o.groupId === groupId);
         const baseInput  = blueprint.inputs.find(i => i.groupId === groupId);
         const baseOutput = blueprint.outputs.find(o => o.groupId === groupId);
 
@@ -63,14 +59,14 @@ export const fieldVariadicReducers = {
         const outputs = node.addedOutputs?.filter(o => o.groupId === groupId) ?? [];
 
         if (inputs.length > 0) {
-            inputReducers.remove(s, nodeId, inputs[inputs.length - 1].id);
+            s.reducers.input.remove(s, nodeId, inputs[inputs.length - 1].id);
         }
         if (outputs.length > 0) {
             const lastOutput = outputs[outputs.length - 1];
             // Disconnect any edge wired to the output before removing the port
             const edgeId = s.cache.outputHandlesMap[nodeId]?.[lastOutput.id];
             if (edgeId)
-                edgeReducers.remove(s, edgeId);
+                s.reducers.edge.remove(s, edgeId);
             const idx = node.addedOutputs?.findIndex(o => o.id === lastOutput.id);
             if (idx !== undefined && idx !== -1)
                 node.addedOutputs?.splice(idx, 1);

@@ -1,11 +1,6 @@
 import { Foundations, Validation, Vault, Workflow } from "@pretzel-graph/shared/domain";
 import { cloneDeep } from 'lodash';
 import type { WorkbenchSDK } from "../../sdk";
-import { edgeReducers } from "../edge";
-import { cacheReducers } from "../cache";
-import { layoutReducers } from "../layout";
-import { dependencyReducers } from "../dependency";
-import { nodeValueReducers } from "./values";
 import { ShelfSDK } from "../../../ShelfSDK/sdk";
 
 type S      = WorkbenchSDK.State
@@ -20,7 +15,7 @@ export const nodeLifecycleReducers = {
         const dependency = nodes[deletedNodeId]?.dependency;
 
         // Delete all edges
-        nodeLifecycleReducers.disconnect(s, deletedNodeId);
+        s.reducers.node.disconnect(s, deletedNodeId);
 
         if (nodes[deletedNodeId])
             delete nodes[deletedNodeId];
@@ -28,12 +23,12 @@ export const nodeLifecycleReducers = {
         delete staticValues[deletedNodeId];
         delete s.data.credentialInstanceIds[deletedNodeId];
 
-        cacheReducers.deleteNode(s, deletedNodeId);
-        layoutReducers.node.remove(s, deletedNodeId);
-        nodeLifecycleReducers.clearIssues(s, deletedNodeId);
+        s.reducers.cache.deleteNode(s, deletedNodeId);
+        s.reducers.layout.node.remove(s, deletedNodeId);
+        s.reducers.node.clearIssues(s, deletedNodeId);
 
         if(dependency)
-            dependencyReducers.removeUnused(s);
+            s.reducers.dependency.removeUnused(s);
     },
     create: (s, blueprint, position, staticValues) => {
         s.isDirty = true;
@@ -55,27 +50,27 @@ export const nodeLifecycleReducers = {
 
         s.data.nodes[nodeId] = newNode;
 
-        nodeValueReducers.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs, staticValues);
-        nodeValueReducers.populateCredentialInstances(s, nodeId);
+        s.reducers.node.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs, staticValues);
+        s.reducers.node.populateCredentialInstances(s, nodeId);
 
-        layoutReducers.node.add(s, nodeId, position);
-        cacheReducers.createNode(s, newNode);
-        nodeLifecycleReducers.validate(s, nodeId);
+        s.reducers.layout.node.add(s, nodeId, position);
+        s.reducers.cache.createNode(s, newNode);
+        s.reducers.node.validate(s, nodeId);
 
         return nodeId;
     },
     disconnect: (s, nodeId) => {
         s.isDirty = true;
 
-        const inNodes = cacheReducers.ensureIncomingNodeEdges(s, nodeId);
-        const outNodes = cacheReducers.ensureOutgoingNodeEdges(s, nodeId);
+        const inNodes = s.reducers.cache.ensureIncomingNodeEdges(s, nodeId);
+        const outNodes = s.reducers.cache.ensureOutgoingNodeEdges(s, nodeId);
 
         Object.entries(inNodes).forEach(([_inNodeId, edgeId]) => {
-            edgeReducers.remove(s, edgeId as Workflow.Edge.Id);
+            s.reducers.edge.remove(s, edgeId as Workflow.Edge.Id);
         })
 
         Object.entries(outNodes).forEach(([_outNodeId, edgeId]) => {
-            edgeReducers.remove(s, edgeId as Workflow.Edge.Id);
+            s.reducers.edge.remove(s, edgeId as Workflow.Edge.Id);
         })
 
         // If the node has a polymorphic port group, unresolve it to restore the original variants of the polymorphic ports
@@ -116,21 +111,21 @@ export const nodeLifecycleReducers = {
         // Clear dependency before remove so it doesn't trigger dependencyReducers.removeUnused while the node
         // is temporarily absent — the dependency is already captured in newNode above.
         s.data.nodes[nodeId].dependency = undefined
-        nodeLifecycleReducers.remove(s, nodeId)
+        s.reducers.node.remove(s, nodeId)
 
         s.data.nodes[nodeId] = newNode;
-        cacheReducers.createNode(s, newNode);
+        s.reducers.cache.createNode(s, newNode);
 
         // Restore the carried-over values/credentials (kept where keys still exist,
         // gaps filled with the new blueprint's defaults).
-        nodeValueReducers.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs, staticValues);
-        nodeValueReducers.populateCredentialInstances(s, nodeId, credentialInstances);
+        s.reducers.node.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs, staticValues);
+        s.reducers.node.populateCredentialInstances(s, nodeId, credentialInstances);
 
         if (nodeLayout)
-            layoutReducers.node.add(s, nodeId, nodeLayout);
+            s.reducers.layout.node.add(s, nodeId, nodeLayout);
 
         incomingEdges.forEach(oldEdge => {
-            edgeReducers.create(s, {
+            s.reducers.edge.create(s, {
                 source: oldEdge.source.nodeId,
                 sourceHandle: oldEdge.source.portId,
                 target: oldEdge.target.nodeId,
@@ -139,7 +134,7 @@ export const nodeLifecycleReducers = {
         })
 
         outgoingEdges.forEach(oldEdge => {
-            edgeReducers.create(s, {
+            s.reducers.edge.create(s, {
                 source: oldEdge.source.nodeId,
                 sourceHandle: oldEdge.source.portId,
                 target: oldEdge.target.nodeId,
@@ -151,9 +146,9 @@ export const nodeLifecycleReducers = {
         // If the original node had a dependency, run GC now that the new node is fully
         // in place — removeUnused will correctly keep deps still referenced and clean up any that aren't.
         if (hadDependency)
-            dependencyReducers.removeUnused(s);
+            s.reducers.dependency.removeUnused(s);
 
-        nodeLifecycleReducers.validate(s, nodeId);
+        s.reducers.node.validate(s, nodeId);
     },
     duplicate: (s, originalNode, position?, overrides?) => {
         s.isDirty = true
@@ -169,11 +164,11 @@ export const nodeLifecycleReducers = {
         // may pass a snapshot taken at copy time so later edits don't leak in.
         s.data.nodes[newNodeId] = newNode;
         s.data.staticValues[newNodeId] = cloneDeep(overrides?.staticValues ?? s.data.staticValues[originalNode.id]);
-        nodeValueReducers.populateCredentialInstances(s, newNodeId, overrides?.credentialInstanceIds ?? s.data.credentialInstanceIds[originalNode.id]);
+        s.reducers.node.populateCredentialInstances(s, newNodeId, overrides?.credentialInstanceIds ?? s.data.credentialInstanceIds[originalNode.id]);
 
-        layoutReducers.node.add(s, newNodeId, position);
-        cacheReducers.createNode(s, newNode);
-        nodeLifecycleReducers.validate(s, newNodeId);
+        s.reducers.layout.node.add(s, newNodeId, position);
+        s.reducers.cache.createNode(s, newNode);
+        s.reducers.node.validate(s, newNodeId);
 
         return newNode;
     },
@@ -199,7 +194,7 @@ export const nodeLifecycleReducers = {
             const edgeId = inputHandles[oldInput.id];
 
             if (edgeId && (!newInput || newInput.variant !== oldInput.variant)) {
-                edgeReducers.remove(s, edgeId);
+                s.reducers.edge.remove(s, edgeId);
             }
         }
 
@@ -212,22 +207,22 @@ export const nodeLifecycleReducers = {
             const edgeId = outputHandles[oldOutput.id];
 
             if (edgeId && (!newOutput || newOutput.variant !== oldOutput.variant))
-                edgeReducers.remove(s, edgeId);
+                s.reducers.edge.remove(s, edgeId);
         }
 
         // Point the node at the reconciled blueprint; fields/ports now derive from it.
         node.reconciledBlueprintId = reconciledBlueprintId;
 
         // Seed from existing values, then fill gaps with initialValue
-        nodeValueReducers.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs);
+        s.reducers.node.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs);
     },
     wipe: (s, nodeId, replace = {}) => {
         const node = s.data.nodes[nodeId];
         if (!node) return;
         s.isDirty = true;
 
-        nodeLifecycleReducers.disconnect(s, nodeId);
-        cacheReducers.deleteNode(s, nodeId);
+        s.reducers.node.disconnect(s, nodeId);
+        s.reducers.cache.deleteNode(s, nodeId);
 
         const wiped: Workflow.Node = {
             blueprintId : node.blueprintId,
@@ -242,8 +237,8 @@ export const nodeLifecycleReducers = {
         s.data.staticValues[nodeId] = {};
         delete s.data.credentialInstanceIds[nodeId];
 
-        cacheReducers.createNode(s, wiped);
-        nodeLifecycleReducers.clearIssues(s, nodeId);
+        s.reducers.cache.createNode(s, wiped);
+        s.reducers.node.clearIssues(s, nodeId);
     },
     validate: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
