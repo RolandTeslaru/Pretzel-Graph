@@ -4,6 +4,7 @@ import { cacheReducers } from "./cache";
 import { inputReducers } from "./input";
 import { nodeReducers } from "./node";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
+import { nodeSelectors } from "../selectors/node";
 
 // TODO: rename handles to ports
 export const edgeReducers = {
@@ -23,8 +24,11 @@ export const edgeReducers = {
         const sourceNode = s.data.nodes[sourceNodeId];
         const targetNode = s.data.nodes[targetNodeId];
         
-        const sourcePort = sourceNode.outputs.find(o => o.id === sourcePortId);
-        const targetPort = targetNode.inputs.find(i => i.id === targetPortId);
+        const sourceOutputs = nodeSelectors.getOutputs(s, sourceNodeId);
+        const targetInputs = nodeSelectors.getInputs(s, targetNodeId);
+
+        const sourcePort = sourceOutputs.find(o => o.id === sourcePortId);
+        const targetPort = targetInputs.find(i => i.id === targetPortId);
 
         
         if (!sourcePort || !targetPort){
@@ -100,8 +104,11 @@ export const edgeReducers = {
         const sourceNode = s.data.nodes[sourceNodeId]!;
         const targetNode = s.data.nodes[targetNodeId]!;
 
-        const sourcePort = sourceNode?.outputs.find(o => o.id === sourcePortId);
-        const targetPort = targetNode?.inputs.find(i => i.id === targetPortId);
+        const sourceOutputs = nodeSelectors.getOutputs(s, sourceNodeId);
+        const targetInputs = nodeSelectors.getInputs(s, targetNodeId);
+
+        const sourcePort = sourceOutputs.find(o => o.id === sourcePortId);
+        const targetPort = targetInputs.find(i => i.id === targetPortId);
 
         if(!sourcePort || !targetPort)
             throw new Error(`Cannot remove edge ${edgeId}, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)

@@ -4,6 +4,7 @@ import { workbenchSelectors } from "../../selectors";
 import { fieldVariadicReducers, type FieldVariadicReducers } from "./variadic";
 import { fieldConditionReducers, type FieldConditionReducers } from "./condition";
 import { fieldCaseListReducers, type FieldCaseListReducers } from "./caseList";
+import { nodeSelectors } from "../../selectors/node";
 
 type S       = WorkbenchSDK.State
 type NodeId  = Workflow.Node.Id
@@ -27,7 +28,9 @@ export const fieldReducers = {
         const node = s.selectors.node.get(s, nodeId)
         if (!node) return
 
-        for (const sibling of node.fields) {
+        const fields = nodeSelectors.getFields(s, nodeId)
+
+        for (const sibling of fields) {
             if (
                 sibling.variant === "ResourceLoader" &&
                 sibling.id !== changedFieldId &&

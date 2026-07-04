@@ -21,11 +21,12 @@ const OutgoingPanel = () => {
 export default OutgoingPanel
 
 const Content = ({ nodeId, execution }: { nodeId: Workflow.Node.Id; execution: Execution }) => {
-  const node = WorkbenchSDK.useStore(s => s.selectors.node.get(s, nodeId))
-  if (!node) return null
+
+  const outputs = WorkbenchSDK.useOutputs(nodeId)
+
   return (
     <PortProjectionsView
-      ports={node.outputs}
+      ports={outputs}
       projections={execution.session.node_output_projections[nodeId] as Record<string, Record<string, unknown>> ?? {}}
       emptyMessage="No output data yet."
     />

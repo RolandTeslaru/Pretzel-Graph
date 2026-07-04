@@ -1,6 +1,6 @@
 import ivm from "isolated-vm";
 import ts from "typescript";
-import { Airlock, Chat, Execution, Expression, Workflow } from "@pretzel-graph/shared/domain";
+import { Airlock, Chat, Execution, Workflow } from "@pretzel-graph/shared/domain";
 
 import { AirlockScope } from "./AirlockScope";
 import { installLazyBootstrap } from "./LazyInput";
@@ -27,7 +27,7 @@ export class AirlockService {
     private readonly isolate: ivm.Isolate;
     private readonly timeoutMs: number;
 
-    private readonly workflowCopies = new Map<Workflow.Id, ivm.ExternalCopy<Expression.WorkflowView>>();
+    private readonly workflowCopies = new Map<Workflow.Id, ivm.ExternalCopy<Airlock.WorkflowView>>();
     private readonly scripts = new Map<Airlock.ParsedSource, ivm.Script>();
     // Syntactic-only TS→JS strip, keyed on raw source — paid once per unique expression/code
     // string even when the same field is re-evaluated per item (mapItems hot loop).
@@ -46,7 +46,7 @@ export class AirlockService {
         if (this.workflowCopies.has(workflowId))
             return;
 
-        const view = Expression.toWorkflowView(workflowId, data);
+        const view = Airlock.toWorkflowView(workflowId, data);
         this.workflowCopies.set(workflowId, new ivm.ExternalCopy(view));
     }
 

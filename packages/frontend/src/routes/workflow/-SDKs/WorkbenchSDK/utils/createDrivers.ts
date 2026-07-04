@@ -1,6 +1,8 @@
-import type { Foundations, Validation, Workflow } from "@pretzel-graph/shared/domain"
+import type { Validation, Workflow } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDK } from "../sdk"
 import { MarkerType } from "@xyflow/react";
+import { resolvePorts } from "./resolvePorts";
+import { ShelfSDK } from "../../ShelfSDK/sdk";
 
 export function createNodeDriver(node: Workflow.Node, wfData: Workflow.Data): WorkbenchSDK.NodeDriver {
     return {
@@ -13,7 +15,13 @@ export function createNodeDriver(node: Workflow.Node, wfData: Workflow.Data): Wo
 
 export function createEdgeDriver(edge: Workflow.Edge, wfData: Workflow.Data): WorkbenchSDK.EdgeDriver | null {
     const node = wfData.nodes[edge.source.nodeId]
-    const output = node?.outputs.find((o: Foundations.Port.Output) => o.id === edge.source.portId);
+    if (!node) return null
+
+    const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId]
+    if (!blueprint) return null
+
+    const outputs = resolvePorts(blueprint.outputs, node.addedOutputs, node.polymorphicResolutions)
+    const output = outputs.find(o => o.id === edge.source.portId);
 
     if (!output)
         return null

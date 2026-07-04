@@ -226,7 +226,6 @@ export class AggexEngine {
         }
 
         System.log.debug("node executing", {
-            name:           wfNode.displayName,
             nodeId:         wfNode.id,
             dataDependency: dataDependency ?? "OR",
             signals:        [...signals],

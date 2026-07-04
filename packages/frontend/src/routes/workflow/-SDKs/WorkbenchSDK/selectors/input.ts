@@ -1,6 +1,7 @@
 import type { Execution, Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
 import type { WorkbenchSDK } from "../sdk";
+import { nodeSelectors } from './node';
 
 export interface InputSelectors {
     get:           (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => Port.Input | null
@@ -13,7 +14,9 @@ export const inputSelectors = {
         const node = s.data.nodes[nodeId]
         if (!node) return null;
 
-        return node.inputs.find(i => i.id === inputId) ?? null;
+        const inputs = nodeSelectors.getInputs(s, nodeId);
+
+        return inputs.find(i => i.id === inputId) ?? null;
     },
     hasEdge: (s, nodeId, inputId) => !!s.cache.inputHandlesMap[nodeId][inputId],
     getProjection: (s, nodeId, inputPortId, session) => {

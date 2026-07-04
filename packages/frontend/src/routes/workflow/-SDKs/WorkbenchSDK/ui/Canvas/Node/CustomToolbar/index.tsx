@@ -6,18 +6,20 @@ import React, { memo } from 'react'
 import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field'
 import { OptionsDropdown } from './OptionsDropdown'
 import Tipped from '@/components/Tipped'
+import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 
 interface Props {
     node: Workflow.Node
+    blueprint: Blueprint
 }
 
-export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
+export const NodeCustomToolbar: React.FC<Props> = memo(({ node, blueprint }) => {
     const dep = node.dependency
     const hasWorkflowDependency = !!dep
 
     const [dependencyUpdate, mode] = WorkbenchSDK.useStore(s => s.selectors.node.getDependencyUpdate(s, node.id) ?? [null, null])
 
-    const showExtrasPanel = dependencyUpdate || hasWorkflowDependency || node.toolCompatible
+    const showExtrasPanel = dependencyUpdate || hasWorkflowDependency || blueprint.toolCompatible
 
     const handleDependencyUpdate = () => {
         if(mode === "draft")
@@ -29,13 +31,13 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
     return (
         <div className='flex flex-row gap-1'>
             <div className='bg-card border border-border rounded-full p-0.5 gap-1 flex flex-row shadow-md shadow-black/10'>
-                <Tipped label={node.isMinimized ? "Expand" : "Collapse"}>
+                <Tipped label={node.ui?.isMinimized ? "Expand" : "Collapse"}>
                     <Button variant="ghost" size="icon-xs" className='h-6!'
                         onClick={() => {
-                            WorkbenchSDK.actions.node.setMinimized(node.id, !node.isMinimized)
+                            WorkbenchSDK.actions.node.setMinimized(node.id, !node.ui?.isMinimized)
                         }}
                     >
-                        {node.isMinimized ?
+                        {node.ui?.isMinimized ?
                             <SystemIcons.Maximize2 />
                             :
                             <SystemIcons.Minimize2 />
@@ -45,7 +47,7 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
                 <Tipped label="Flip">
                     <Button variant="ghost" size="icon-xs" className='h-6!'
                         onClick={() => {
-                            WorkbenchSDK.actions.node.setFlipped(node.id, !node.isFlipped)
+                            WorkbenchSDK.actions.node.setFlipped(node.id, !node.ui?.isFlipped)
                         }}
                     >
                         <SystemIcons.ArrowLeftRight />
@@ -57,12 +59,12 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
                         <SystemIcons.Play />
                     </Button>
                 </Tipped>
-                <OptionsDropdown node={node} />
+                <OptionsDropdown node={node} blueprint={blueprint} />
             </div>
             {showExtrasPanel && (
                 <div className='bg-card flex flex-row gap-1 border-border border rounded-full h-[30px] p-0.5 shadow-md shadow-black/10'>
-                    {node.toolCompatible && (
-                        <ToolButton node={node} />
+                    {blueprint.toolCompatible && (
+                        <ToolButton node={node} blueprint={blueprint} />
                     )}
                     {hasWorkflowDependency && (
                         <Tipped label="Open workflow">
@@ -89,7 +91,7 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ node }) => {
 })
 
 
-const ToolButton: React.FC<Props> = memo(({ node }) => {
+const ToolButton = memo(({ node }: { node: Workflow.Node }) => {
     const [isTool, isReconciling] = WorkbenchSDK.useStore(s => [
         s.selectors.node.isTool(s, node.id),
         s.selectors.field.isReconciling(s, node.id, "isConvertedToTool" as Field.Id)

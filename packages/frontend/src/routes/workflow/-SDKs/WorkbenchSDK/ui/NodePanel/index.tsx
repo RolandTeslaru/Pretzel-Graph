@@ -1,6 +1,9 @@
 import { ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import React, { useMemo, memo, useEffect, useState } from 'react'
 import { WorkbenchSDK } from '../../sdk'
+import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
+import { resolvePorts } from '../../utils/resolvePorts'
+import type { NodeUI } from '../../selectors/node'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
@@ -35,20 +38,23 @@ const SidebarAccordionItem = ({ label, value, children }: SidebarAccordionItemPr
 
 const NodeSidebar = () => {
 
-    const clickedNode = WorkbenchSDK.useStore(s => s.selectors.getClickedNode(s));
+    const clickedNodeId = WorkbenchSDK.useStore(s => s.selectors.getClickedNode(s)?.id ?? "" as Workflow.Node.Id);
     const isFullscreen = DialogSDK.useStore(s => s.selectors.isDialogOpen(s, "fullscreen-node-panel"));
 
+    const bundle = WorkbenchSDK.useNode(clickedNodeId)
+
+
     useEffect(() => {
-        if (clickedNode && !isFullscreen) {
+        if (clickedNodeId && !isFullscreen) {
             StackSDK.actions.push("nodeSidebar" as StackSDK.Panel.Id, (props) => (
                 <StackSDK.Template {...props}>
-                    <Content clickedNode={clickedNode} />
+                    <Content bundle={bundle} />
                 </StackSDK.Template>
             ))
         } else
             StackSDK.actions.pop("nodeSidebar" as StackSDK.Panel.Id)
             
-    }, [clickedNode, isFullscreen])
+    }, [clickedNodeId, isFullscreen])
 
     return null
 }
@@ -57,19 +63,29 @@ export default NodeSidebar
 
 
 interface Props {
-    clickedNode: Workflow.Node
+    bundle: WorkbenchSDK.NodeBundle
     showFooter?: boolean
 }
 
-export const Content = memo(({ clickedNode: node, showFooter = true }: Props) => {
-    const [isEditing, setIsEditing] = useState(false)
-    const connectedPorts = WorkbenchSDK.useStore(s => s.selectors.node.getConnectedPorts(s, node.id))
 
-    const [ fields, executionStrategyFields, inputs, connectedInputs, webhooks ] = useMemo(() => {
+
+interface ContentProps {
+    bundle: WorkbenchSDK.NodeBundle
+    showFooter?: boolean
+}
+
+export const Content = ({ bundle, showFooter = true }: ContentProps) => {
+    const [isEditing, setIsEditing] = useState(false)
+
+    const [node, blueprint, ui, connectedPorts] = bundle
+
+    const [ fields, executionStrategyFields, inputs, connectedInputs ] = useMemo(() => {
+        const _inputs = resolvePorts(blueprint.inputs, node.addedInputs, node.polymorphicResolutions);
+
         const connectedInputs: Foundations.Port.Input[] = [];
         const inputs: Foundations.Port.Input[] = [];
 
-        node.inputs.filter(inp => !inp.internal).forEach(input => {
+        _inputs.filter(inp => !inp.internal).forEach(input => {
             if (connectedPorts[input.id])
                 connectedInputs.push(input);
             else if(input.variant in INPUT_RENDERER_MAP)
@@ -79,12 +95,12 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
         const fields: Foundations.Field[] = []
         const executionStrategyFields: Foundations.Field[] = []
 
-        node.fields.forEach(field => {
+        blueprint.fields.forEach(field => {
             if (field.id === "signalDependency" || field.id === "dataDependency" || field.id === "onErrorStrategy"){
                 executionStrategyFields.push(field)
                 return
             }
-                
+
             fields.push(field)
         })
 
@@ -94,11 +110,12 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
             executionStrategyFields,
             inputs,
             connectedInputs,
-            node.webhooks || []
         ];
-    }, [connectedPorts, node.inputs, node.fields]);
+    }, [connectedPorts, blueprint, node.addedInputs, node.polymorphicResolutions]);
 
-    const credentials = node.credentials ?? []
+    const credentials = blueprint.credentials ?? []
+    const webhooks = blueprint.webhooks ?? []
+    const flags = blueprint.flags ?? {}
 
     const defaultOpen = useMemo(() => {
         const sections: string[] = ["execution-strategy", "output", "webhooks"];
@@ -118,6 +135,8 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
         <>
             <NodeSidebarHeader
                 node={node}
+                ui={ui}
+                blueprint={blueprint}
                 isEditing={isEditing}
                 onEditStart={() => setIsEditing(true)}
                 onEditFinish={() => setIsEditing(false)}
@@ -157,7 +176,7 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
                         </SidebarAccordionItem>
                     )}
                         <SidebarAccordionItem label='Fields' value='fields'>
-                            {node.flags?.SHOW_DEPENDENCY_SELECTOR ? <DependencySelector className="px-4" nodeId={node.id} /> : null}
+                            {flags?.SHOW_DEPENDENCY_SELECTOR ? <DependencySelector className="px-4" nodeId={node.id} /> : null}
 
                             {fields.map(field => field.hidden ? null : (
                                 <div key={field.id} className='px-4 py-1 min-w-0'>
@@ -178,4 +197,4 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
             {showFooter && <NodeSidebarFooter node={node} />}
         </>
     )
-})
+}
