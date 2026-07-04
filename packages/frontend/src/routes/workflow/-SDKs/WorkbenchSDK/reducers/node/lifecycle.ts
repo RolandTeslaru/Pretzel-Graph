@@ -41,10 +41,7 @@ export const nodeLifecycleReducers = {
         const newNode: Workflow.Node = {
             id          : nodeId,
             blueprintId : blueprint.id,
-            ui: {
-                displayName: blueprint.ui.displayName,
-                description: blueprint.ui.description
-            },
+            ui: {},
             dependency  : blueprint.dependency,
         }
 

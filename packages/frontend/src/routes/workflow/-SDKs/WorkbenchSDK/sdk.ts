@@ -55,7 +55,8 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 reconcilingFields: {},
                 stronglyConnectedComponents: [],
                 dependencyUpdates: { published: {}, draft: {} },
-                selectors: workbenchSelectors
+                selectors: workbenchSelectors,
+                reducers: workbenchReducers
             })), {
             limit: this.TEMPORAL_STACK_SIZE,
             partialize: (s) => ({
@@ -165,18 +166,16 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public useField<T>(nodeId: Workflow.Node.Id, field: Foundations.Field) {
         const fieldId = field.id;
 
-        const [storeValue, issue, isReconciling, isExpression] = this.useStore(s => {
-            const staticVals = s.data.staticValues[nodeId]
-            if (!staticVals)
-                return [undefined, null, false, false] as const
+        const initialValue = 'initialValue' in field ? field.initialValue : undefined;
 
+        const [storeValue, issue, isReconciling, isExpression] = this.useStore(s => {
             const isReconciling = s.reconcilingFields[nodeId]?.has(fieldId) ?? false
-            const fieldMeta = s.selectors.field.get(s, nodeId, fieldId)
-            const isExpression = (fieldMeta && 'isExpression' in fieldMeta && fieldMeta.isExpression) ?? false
+            // @ts-expect-error
+            const isExpression = field.isExpression ?? false
 
             return [
-                staticVals[fieldId] as T,
-                s.issues.nodes[nodeId]?.fields[fieldId] ?? null,
+                s.selectors.node.getStaticValue(s, nodeId, fieldId, initialValue) as T,
+                s.selectors.field.getIssue(s, nodeId, fieldId),
                 isReconciling,
                 isExpression
             ] as const
@@ -225,15 +224,12 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public useInput<T>(nodeId: Workflow.Node.Id, input: Foundations.Port.Input) {
         const inputId = input.id;
 
-        const [storeValue, issue] = this.useStore(s => {
-            const staticVals = s.data.staticValues[nodeId]
-            if (!staticVals)
-                return [null, null] as const
-            return [
-                staticVals[inputId] as T,
-                s.issues.nodes[nodeId]?.inputs[inputId] ?? null
-            ] as const
-        });
+        const initialValue = 'initialValue' in input ? input.initialValue : undefined;
+        
+        const [storeValue, issue] = this.useStore(s => [
+            s.selectors.node.getStaticValue(s, nodeId, inputId, initialValue),
+            s.selectors.input.getIssue(s, nodeId, inputId)
+        ] as const);
 
         const [localValue, setLocalValue] = useState<T>(storeValue as T);
         const localRef = useRef<T>(storeValue as T);
@@ -310,6 +306,7 @@ export namespace WorkbenchSDK {
             draft:     Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>
         }
         selectors: WorkbenchSDKSelectors
+        reducers: typeof workbenchReducers
     }
 
     export interface Handle {

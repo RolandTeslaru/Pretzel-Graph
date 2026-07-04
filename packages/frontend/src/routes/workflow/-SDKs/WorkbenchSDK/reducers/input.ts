@@ -5,8 +5,7 @@ import { edgeReducers } from "./edge";
 export const inputReducers = {
     setValue: (s, nodeId, inputId, value) => {
         s.isDirty = true;
-        s.data.staticValues[nodeId] ??= {}
-        s.data.staticValues[nodeId][inputId] = value
+        s.reducers.node.ensureStaticValues(s, nodeId)[inputId] = value
     },
     remove: (s, nodeId, inputId) => {
         s.isDirty = true;

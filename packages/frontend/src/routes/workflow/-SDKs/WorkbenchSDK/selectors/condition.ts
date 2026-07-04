@@ -14,7 +14,9 @@ export interface ConditionSelectors {
 
 export const conditionSelectors = {
     getValue: (s, nodeId, fieldId) =>
-        s.data.staticValues[nodeId]?.[fieldId] ?? null,
+        s.data.staticValues[nodeId]?.[fieldId]
+            ?? (s.selectors.field.get(s, nodeId, fieldId) as Field.Condition | null)?.initialValue
+            ?? null,
     getRule: (s, nodeId, fieldId, ruleId) => {
         const condition = conditionSelectors.getValue(s, nodeId, fieldId)
         if (!condition) return null
