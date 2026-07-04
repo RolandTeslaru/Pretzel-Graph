@@ -44,7 +44,7 @@ export const BottomPanel = () => {
         <div className='bottom-5 flex flex-row left-1/2 -translate-x-1/2 z-100 absolute gap-2'>
             <AnimatePresence>
                 {executionHasError && (
-                    <Popover.Root>
+                    <Popover.Root key="execution-error">
                         <Popover.Trigger asChild>
                             <motion.div
                                 className='absolute right-[calc(100%+16px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/90 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'
@@ -63,11 +63,12 @@ export const BottomPanel = () => {
                         </Popover.Content>
                     </Popover.Root>
                 )}
-                <div className='p-1 w-auto bg-card/90 backdrop-blur-sm border border-border rounded-full flex shadow-md shadow-black/10'>
+                <div key="temporal-controls" className='p-1 w-auto bg-card/90 backdrop-blur-sm border border-border rounded-full flex shadow-md shadow-black/10'>
                     <TemporalControls />
                 </div>
 
                 <motion.div
+                    key="controls"
                     className='relative shadow-md shadow-black/10 flex flex-row p-1 gap-2 rounded-xl bg-card/80 backdrop-blur-sm border border-border overflow-visible'
                     layout
                     transition={{ layout: { type: "spring", stiffness: 400, damping: 30 } }}
@@ -79,7 +80,7 @@ export const BottomPanel = () => {
 
 
                 {showAttributesPanel && (
-                    <div className='px-2 w-auto bg-card/90 backdrop-blur-sm border border-border rounded-full flex gap-3 cursor-pointer'>
+                    <div key="attributes" className='px-2 w-auto bg-card/90 backdrop-blur-sm border border-border rounded-full flex gap-3 cursor-pointer'>
                         {showRecordingIcon && (
                             <Tipped label={isActivelyRecording ? 'Recording' : 'Ready To Record'}>
                                 <div className='h-full flex flex-row gap-1.5'>
@@ -100,7 +101,7 @@ export const BottomPanel = () => {
                 )}
 
                 {hasIssues && (
-                    <Popover.Root>
+                    <Popover.Root key="issues">
                         <Popover.Trigger asChild>
                             <motion.div
                                 className='absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 p-1 h-10 w-10 bg-card/90 backdrop-blur-sm border border-border rounded-full flex cursor-pointer'

@@ -3,6 +3,8 @@ import { type EdgeProps, getBezierPath } from '@xyflow/react';
 import { WorkbenchSDK } from '../../../sdk';
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
+import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk';
+import { resolvePorts } from '../../../utils/resolvePorts';
 import CanvasEdgeLabel from './label';
 
 const GLINT_MAX_LEN = 60;   // length on a straight edge
@@ -100,7 +102,14 @@ const CanvasEdge = memo(({
     if (!sourceNode) {
         return null;
     }
-    const output = sourceNode.outputs.find(o => o.id === sourcePortId);
+
+    // Resolve the source node's outputs inline (not via the useOutputs hook) so this stays after
+    // the guard above without violating rules-of-hooks. Reactive through sourceNode, which carries
+    // reconciledBlueprintId / addedOutputs / polymorphicResolutions.
+    const sourceBlueprint = ShelfSDK.state.blueprints[sourceNode.reconciledBlueprintId ?? sourceNode.blueprintId];
+    const output = sourceBlueprint
+        && resolvePorts(sourceBlueprint.outputs, sourceNode.addedOutputs, sourceNode.polymorphicResolutions)
+            .find(o => o.id === sourcePortId);
     if (!output) {
         return null;
     }

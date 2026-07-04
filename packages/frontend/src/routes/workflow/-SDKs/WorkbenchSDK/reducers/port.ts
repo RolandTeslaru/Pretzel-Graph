@@ -6,9 +6,12 @@ export const portReducers = {
     addInput: (s, nodeId, port) => {
         s.isDirty = true;
         const node = s.data.nodes[nodeId];
-        if (!node) return;
+        if (!node) 
+            return;
 
-        node.inputs.push(port);
+        node.addedInputs = node.addedInputs ?? [];
+
+        node.addedInputs.push(port);
     },
     removeInput: (s, nodeId, portId) => {
         s.isDirty = true;
@@ -19,33 +22,37 @@ export const portReducers = {
         if (edgeId)
             edgeReducers.remove(s, edgeId);
 
-        node.inputs = node.inputs.filter(p => p.id !== portId)
+        node.addedInputs = node.addedInputs?.filter(p => p.id !== portId)
     },
     removeOutput: (s, nodeId, portId) => {
         s.isDirty = true;
         const node = s.data.nodes[nodeId];
-        if (!node) return;
+        if (!node) 
+            return;
 
         const edgeId = s.cache.outputHandlesMap[nodeId]?.[portId];
         if (edgeId)
             edgeReducers.remove(s, edgeId);
 
-        node.outputs = node.outputs.filter(p => p.id !== portId) as typeof node.outputs;
+        node.addedOutputs = node.addedOutputs?.filter(p => p.id !== portId) as typeof node.addedOutputs;
     },
     addOutput: (s, nodeId, port) => {
         s.isDirty = true;
         const node = s.data.nodes[nodeId];
-        if (!node) return;
+        if (!node) 
+            return;
 
-        node.outputs.push(port as typeof node.outputs[number]);
+        node.addedOutputs = node.addedOutputs ?? [];
+        node.addedOutputs.push(port as typeof node.addedOutputs[number]);
     },
     setOutputDisplayName: (s, nodeId, portId, displayName) => {
         s.isDirty = true;
         const node = s.data.nodes[nodeId];
         if (!node) return;
 
-        const port = node.outputs.find(p => p.id === portId);
-        if (port) port.displayName = displayName;
+        const port = node.addedOutputs?.find(p => p.id === portId);
+        if (port) 
+            port.displayName = displayName;
     },
 } satisfies PortReducers
 

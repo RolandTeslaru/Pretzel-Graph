@@ -7,6 +7,7 @@ import * as DataMod from "./data"
 import * as DepMod from "./dependency"
 import * as CacheMod from "./cache"
 import { WorkflowId, FolderId } from "./ids"
+import { WORKFLOW_DATA_VERSION } from "./migrate"
 
 export namespace Workflow {
     export const Id = WorkflowId
@@ -77,6 +78,7 @@ export namespace Workflow {
         created_at:     new Date(),
         updated_at:     new Date(),
         data: {
+            version:               WORKFLOW_DATA_VERSION,
             fields:                [],
             nodes:                 {},
             edges:                 {},

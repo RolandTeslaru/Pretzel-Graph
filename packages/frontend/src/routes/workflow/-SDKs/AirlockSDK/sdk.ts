@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { immer } from "zustand/middleware/immer"
-import { Airlock, Expression, type Workflow } from "@pretzel-graph/shared/domain"
+import { Airlock, type Workflow } from "@pretzel-graph/shared/domain"
 import { SDK } from "@/SDKs/SDKManager"
 import { BaseSDK } from "@/SDKs/Base"
 import { WorkbenchSDK } from "@/routes/workflow/-SDKs/WorkbenchSDK/sdk"
@@ -61,7 +61,7 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
         const sampleItem = arrays.length === 1 && arrays[0].length > 0 ? arrays[0][0] : undefined
 
         return {
-            [Airlock.GLOBALS.workflow]: Expression.toWorkflowView(ws.workflowId, ws.data),
+            [Airlock.GLOBALS.workflow]: Airlock.toWorkflowView(ws.workflowId, ws.data),
             [Airlock.GLOBALS.in]: incoming,
             [Airlock.GLOBALS.item]: sampleItem,
             [Airlock.GLOBALS.itemIndex]: sampleItem !== undefined ? 0 : undefined,
