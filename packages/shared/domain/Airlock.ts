@@ -102,6 +102,55 @@ export namespace Airlock {
 
     export type EvaluateFn = (expr: Source.Expression, coerceTo?: CoerceTo) => unknown
 
+    export function resolveWorkflowConfig(
+        workflowData: Workflow.Data,
+    ): Record<Field.Id, unknown> {
+        const config: Record<Field.Id, unknown> = {};
+        const overrides = workflowData.staticValues[Workflow.WORKFLOW_CONFIG_NODE_ID] ?? {};
+
+        for (const field of workflowData.fields ?? []) {
+            if (field.id in overrides)
+                config[field.id] = overrides[field.id as Field.Id];
+            else if ("initialValue" in field)
+                config[field.id] = field.initialValue;
+        }
+
+        return config;
+    }
+
+    /**
+     * Normalized, copy-safe shape of `$workflow` injected into the Airlock sandbox.
+     *
+     * Built from what the worker actually receives (`workflowId` + `Workflow.Data`).
+     * Drops editor-only `ui` and nested `dependencies` to keep the runtime payload bounded.
+     */
+    export interface WorkflowView {
+        id: Workflow.Id;
+        fields: Field[];
+        nodes: Workflow.Data["nodes"];
+        edges: Workflow.Data["edges"];
+        staticValues: Workflow.Data["staticValues"];
+        credentialInstanceIds: Workflow.Data["credentialInstanceIds"];
+    }
+
+    export function toWorkflowView(
+        workflowId: Workflow.Id,
+        data: Workflow.Data,
+    ): WorkflowView {
+        const { ui, dependencies, ...normalized } = data;
+        return {
+            id: workflowId,
+            fields: normalized.fields,
+            nodes: normalized.nodes,
+            edges: normalized.edges,
+            credentialInstanceIds: normalized.credentialInstanceIds,
+            staticValues: {
+                ...normalized.staticValues,
+                [Workflow.WORKFLOW_CONFIG_NODE_ID]: resolveWorkflowConfig(data),
+            },
+        };
+    }
+
     // Rebind transient globals (e.g. $item) mid-block, within the same atomic executeSync run.
     // Keys are tracked and cleared when the block exits; reserved persistent globals are rejected.
     export type SetTransientFn = (globals: Record<string, unknown>) => void

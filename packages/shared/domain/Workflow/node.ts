@@ -18,10 +18,20 @@ export namespace Node {
     export const Schema = z.object({
         id:          Node.Id,
         blueprintId: z.string().brand("BlueprintId"),
-        displayName: z.string().optional(),
-        description: z.string().optional(),
         isDisabled:  z.boolean().optional(),
         dependency:  Blueprint.Meta.Dependency.Schema.optional(),
+        
+        // Per-node presentation: view-state (minimized/flipped) + optional overrides of the
+        // blueprint's ui (icon/accent/iconColor). All derived-on-read via node.getUI.
+        ui: z.object({
+            description: z.string().optional(),
+            displayName: z.string().optional(),
+            isMinimized: z.boolean().optional(),
+            isFlipped:   z.boolean().optional(),
+            icon:        z.string().optional(),
+            accent:      z.string().optional(),
+            iconColor:   z.string().optional(),
+        }),
         
         reconciledBlueprintId: Blueprint.ReconciledId.optional(),
 

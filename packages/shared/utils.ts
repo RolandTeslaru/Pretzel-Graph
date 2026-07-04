@@ -1,4 +1,4 @@
-import { Expression, Foundations, Webhook, Workflow } from "./domain";
+import { Foundations, Webhook, Workflow } from "./domain";
 import { Field } from "./domain/Foundations/Field";
 
 type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id
@@ -128,7 +128,7 @@ export function resolveWebhook(
     node: Workflow.Node,
     staticValues: Record<Field.Id, unknown>,
 ): Webhook.Resolved {
-    const ctx: Expression.Context = {
+    const ctx: LegacyExpressionContext = {
         node,
         fields: staticValues,
         incoming: {},
@@ -136,9 +136,9 @@ export function resolveWebhook(
     };
     return Webhook.ResolvedSchema.parse({
         id: webhook.id,
-        path: Expression.evaluate(webhook.path, ctx),
-        method: Expression.evaluate(webhook.method, ctx),
-        responseMode: Expression.evaluate(webhook.responseMode, ctx),
+        path: evaluateLegacyExpression(webhook.path, ctx),
+        method: evaluateLegacyExpression(webhook.method, ctx),
+        responseMode: evaluateLegacyExpression(webhook.responseMode, ctx),
     });
 }
 
@@ -147,4 +147,33 @@ export function evaluateCondition(
     resolve: Field.Condition.OperandResolver
 ): boolean {
     return evaluateRuleGroup(condition, condition.groups[condition.rootId], resolve);
+}
+
+interface LegacyExpressionContext {
+    node: Workflow.Node
+    fields: Record<Field.Id, unknown>
+    incoming: Record<string, unknown>
+    workflowConfig: Record<Field.Id, unknown>
+}
+
+const LEGACY_EXPRESSION_PATTERN = /\$\{\{\s*([\s\S]*?)\s*\}\}/;
+const LEGACY_CONTEXT_REF_PATTERN = /@([A-Za-z_][A-Za-z0-9_]*)/g;
+
+// Legacy webhook-only evaluator. Remove once webhook resolution moves to Airlock `$` globals.
+function evaluateLegacyExpression(
+    expression: string | undefined,
+    context: LegacyExpressionContext,
+): unknown {
+    if (!expression) return undefined;
+
+    const match = expression.match(LEGACY_EXPRESSION_PATTERN);
+    if (!match) return expression;
+
+    const body = match[1];
+    const rewritten = body.replace(LEGACY_CONTEXT_REF_PATTERN, "$1");
+    const keys = Object.keys(context);
+    const values = Object.values(context);
+
+    // eslint-disable-next-line no-new-func
+    return new Function(...keys, `return (${rewritten})`)(...values);
 }

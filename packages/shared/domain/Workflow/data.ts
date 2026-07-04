@@ -6,6 +6,7 @@ import { Port } from "../Foundations/Port";
 import { WorkflowId } from "./ids";
 import { Vault } from "../Vault";
 import { Dependency } from "./dependency";
+import { migrateWorkflowDataToLatest, WORKFLOW_DATA_VERSION } from "./migrate";
 
 export namespace Data {
     export namespace Layout {
@@ -14,8 +15,6 @@ export namespace Data {
             z.object({
                 x: z.number(),
                 y: z.number(),
-                isMinimized: z.boolean().optional(),
-                isFlipped:   z.boolean().optional(),
             })
         );
     }
@@ -30,7 +29,8 @@ export namespace Data {
     }
     export type Viewport = z.infer<typeof Viewport.Schema>;
 
-    export const Schema = z.object({
+    const ObjectSchema = z.object({
+        version: z.number().default(WORKFLOW_DATA_VERSION),
         fields: z.array(Field.Schema).default([]), //config
         nodes: z.record(Node.Id, Node.Schema),
         edges: z.record(Edge.Id, Edge.Schema),
@@ -63,5 +63,9 @@ export namespace Data {
             },
         }).default({ published: {}, draft: {} }),
     })
+
+    // Migrate legacy (fat-node) blobs to the latest slim shape before validation. The migrate
+    // fn sees the raw object, so v1 ports/fields survive long enough to be relocated/dropped.
+    export const Schema = z.preprocess(migrateWorkflowDataToLatest, ObjectSchema);
 }
 export type Data = z.infer<typeof Data.Schema>;

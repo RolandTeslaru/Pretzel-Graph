@@ -2,8 +2,15 @@ import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../sdk'
+import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 
-export const OptionsDropdown = ({ node, onEdit }: { node: Workflow.Node; onEdit: () => void }) => {
+interface Props {
+    node: Workflow.Node
+    blueprint: Blueprint
+    onEdit: () => void
+}
+
+export const OptionsDropdown = ({ node, blueprint, onEdit }: Props) => {
     const isTool = WorkbenchSDK.useStore(s => s.selectors.node.isTool(s, node.id));
 
     return (
@@ -28,7 +35,7 @@ export const OptionsDropdown = ({ node, onEdit }: { node: Workflow.Node; onEdit:
                         Open workflow
                     </DropdownMenu.Item>
                 )}
-                {node.toolCompatible && (
+                {blueprint.toolCompatible && (
                     <DropdownMenu.Item onClick={() => isTool ? WorkbenchSDK.actions.tool.revert(node.id) : WorkbenchSDK.actions.tool.convert(node.id)}>
                         <SystemIcons.Hammer />
                         {isTool ? "Revert to node" : "Convert to tool"}

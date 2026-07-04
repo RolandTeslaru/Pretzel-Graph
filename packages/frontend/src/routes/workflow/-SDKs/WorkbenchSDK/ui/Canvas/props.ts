@@ -149,9 +149,10 @@ export const createCanvasCallbacks = (
 
             if (
                 Validation.Connection.isValid(
-                    newConn as WorkbenchSDK.DriverConnection, 
+                    newConn as WorkbenchSDK.DriverConnection,
                     state.data,
-                    state.cache
+                    state.cache,
+                    state.selectors.getBlueprints(state)
                 ) === false
             )
                 return;
@@ -281,9 +282,8 @@ export const createCanvasCallbacks = (
                 return;
             }
 
-
-            const sourceNode = WorkbenchSDK.state.data.nodes[edge.source as Workflow.Node.Id];
-            const output = sourceNode.outputs.find(o => o.id === edge.sourceHandle as Foundations.Port.Output.Id)
+            const sourceOutputs = WorkbenchSDK.selectors.node.getOutputs(WorkbenchSDK.state, edge.source as Workflow.Node.Id);
+            const output = sourceOutputs.find(o => o.id === edge.sourceHandle as Foundations.Port.Output.Id)
 
             if (!output) return;
             const selectedAccentColor = nodeColorsName[output.variant[0]] ?? "cyan";

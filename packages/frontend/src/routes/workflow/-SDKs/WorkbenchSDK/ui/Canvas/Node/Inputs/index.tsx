@@ -46,17 +46,14 @@ const Item: React.FC<{
 })
 
 interface Props {
-    node: Workflow.Node
+    nodeId: Workflow.Node.Id
     isWorkflowLocked: boolean
     isFlipped?: boolean
 }
 
-const NodeInputs: React.FC<Props> = memo(({ node, isWorkflowLocked, isFlipped }) => {
+const NodeInputs: React.FC<Props> = memo(({ nodeId, isWorkflowLocked, isFlipped }) => {
 
-    const inputs = useMemo(() => node.inputs.filter(i => !i.internal), [node.inputs])
-
-    if(inputs.length === 0)
-        return null
+    const inputs = WorkbenchSDK.useInputs(nodeId)
 
     return (
         <div className="flex flex-col relative gap-2">
@@ -64,7 +61,7 @@ const NodeInputs: React.FC<Props> = memo(({ node, isWorkflowLocked, isFlipped })
                 <Item
                     key={input.id}
                     input={input}
-                    nodeId={node.id}
+                    nodeId={nodeId}
                     isWorkflowLocked={isWorkflowLocked}
                     isFlipped={isFlipped}
                 />

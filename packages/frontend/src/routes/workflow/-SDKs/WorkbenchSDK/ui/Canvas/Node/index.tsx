@@ -13,27 +13,33 @@ import { NodeCustomToolbar } from './CustomToolbar';
 import { cn } from '@/utils/styleUtils';
 import { StatusBorder } from './StatusBorder';
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
+import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk';
 
 const CanvasNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
-  const node = WorkbenchSDK.useStore(s => s.data.nodes[props.id as Workflow.Node.Id])
+  const nodeId = props.id as Workflow.Node.Id;
+
+  const node = WorkbenchSDK.useStore(s => s.data.nodes[nodeId]);
 
   // Handle positions (Left<->Right) flip with node.isFlipped / isMinimized.
   // XYFlow caches handle bounds, so tell it to re-measure and reroute edges.
   const updateNodeInternals = useUpdateNodeInternals()
   useEffect(() => {
-    updateNodeInternals(props.id)
-  }, [props.id, node?.isFlipped, node?.isMinimized, updateNodeInternals])
+    updateNodeInternals(nodeId)
+  }, [nodeId, node?.ui?.isFlipped, node?.ui?.isMinimized, updateNodeInternals])
 
   if (!node)
     return null;
 
-  return <Content node={node} />
+  return <Content nodeId={nodeId} />
 })
 
 export default CanvasNode
 
 
-const Content = memo(({ node }: { node: Workflow.Node }) => {
+
+const Content = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
+
+  const [node, blueprint, ui] = WorkbenchSDK.useNode(nodeId);
 
   const [workflowId, isNodeClicked, hasUpdate] = WorkbenchSDK.useStore(s => [
     s.workflowId,
@@ -43,7 +49,7 @@ const Content = memo(({ node }: { node: Workflow.Node }) => {
 
   const isWorkflowLocked = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.locked ?? false);
 
-  const isMinimized = node.isMinimized;
+  const isMinimized = ui.isMinimized;
   const isDisabled = node.isDisabled
 
   let backgroundColor = 'var(--card)';
@@ -51,18 +57,17 @@ const Content = memo(({ node }: { node: Workflow.Node }) => {
 
   const executionStatus = ExecutionSDK.useStore(s => s.selectors.getNodeStatus(s, node.id));
 
-  if (node.accent) {
-    backgroundColor = `color-mix(in srgb, var(--${node.accent}) 40%, var(--node-accent-base))`;
-    borderColor =  `color-mix(in srgb, var(--${node.accent}) 50%, var(--border))`;
+  if (ui.accent) {
+    backgroundColor = `color-mix(in srgb, var(--${ui.accent}) 40%, var(--node-accent-base))`;
+    borderColor =  `color-mix(in srgb, var(--${ui.accent}) 50%, var(--border))`;
   }
-
 
 
   return (
     <>
       <NodeToolbar isVisible={isNodeClicked} position={Position.Top}>
         <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-200 ease-out origin-bottom">
-          <NodeCustomToolbar node={node} />
+          <NodeCustomToolbar node={node} blueprint={blueprint} />
         </div>
       </NodeToolbar>
 
@@ -75,14 +80,14 @@ const Content = memo(({ node }: { node: Workflow.Node }) => {
         style={{ backgroundColor, borderColor, borderWidth: 2 }}
         id={node.id}
       >
-        <NodeHeader executionStatus={executionStatus} node={node} isWorkflowLocked={isWorkflowLocked} hasUpdate={hasUpdate} />
+        <NodeHeader executionStatus={executionStatus} ui={ui} node={node} isWorkflowLocked={isWorkflowLocked} hasUpdate={hasUpdate} />
 
-        {node.isMinimized === false &&
+        {!isMinimized &&
           <div className='dark:bg-black/50 bg-card/80 py-2 gap-2 flex flex-col  rounded-b-[26px] rounded-t-xl shadow-md shadow-black/10 min-h-8 pzg-9f3a1c'
 
           >
-            <NodeInputs node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped} />
-            <NodeOutputs node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped} />
+            <NodeInputs nodeId={node.id} isWorkflowLocked={isWorkflowLocked} isFlipped={ui.isFlipped} />
+            <NodeOutputs nodeId={node.id} isWorkflowLocked={isWorkflowLocked} isFlipped={ui.isFlipped} />
           </div>
         }
 

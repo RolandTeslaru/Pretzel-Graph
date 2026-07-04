@@ -1,16 +1,17 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { Port } from '../Port'
 import { cn } from '@/utils/styleUtils'
+import { WorkbenchSDK } from '../../../../sdk'
 
 interface NodeOutputProps {
-  node: Workflow.Node
+  nodeId: Workflow.Node.Id
   isWorkflowLocked: boolean
   output: Foundations.Port.Output
   isFlipped?: boolean
 }
 
-const Item: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFlipped }) => {
+const Item: React.FC<NodeOutputProps> = ({ nodeId, isWorkflowLocked, output, isFlipped }) => {
   return (
     <div className={cn("relative w-full flex items-center py-0.5 px-3", isFlipped ? "justify-start" : "justify-end")}>
       <div className={cn("text-sm font-medium text-foreground")}>
@@ -20,7 +21,7 @@ const Item: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFli
         type="source"
         isWorkflowLocked={isWorkflowLocked}
         port={output}
-        nodeId={node.id}
+        nodeId={nodeId}
         isFlipped={isFlipped}
       />
     </div>
@@ -29,17 +30,14 @@ const Item: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFli
 
 
 interface Props {
-  node: Workflow.Node
+  nodeId: Workflow.Node.Id
   isWorkflowLocked: boolean
   isFlipped?: boolean
 }
 
-const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped }) => {
-  const outputs = useMemo(() => {
-    return Object.values(node.outputs) as Foundations.Port.Output[]
-  }, [node.outputs])
+const NodeOutputs: React.FC<Props> = ({ nodeId, isWorkflowLocked, isFlipped }) => {
 
-  const selectedOutput = outputs[0]
+  const outputs = WorkbenchSDK.useOutputs(nodeId)
 
   if(outputs.length === 0)
     return null
@@ -49,7 +47,7 @@ const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped }) => 
       {outputs.map((output) => (
         <Item
           key={output.id}
-          node={node}
+          nodeId={nodeId}
           isWorkflowLocked={isWorkflowLocked}
           output={output}
           isFlipped={isFlipped}
