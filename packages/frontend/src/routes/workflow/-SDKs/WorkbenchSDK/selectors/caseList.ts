@@ -15,7 +15,9 @@ export interface CaseListSelectors {
 
 export const caseListSelectors = {
     getValue: (s, nodeId, fieldId) =>
-        s.data.staticValues[nodeId]?.[fieldId] ?? null,
+        s.data.staticValues[nodeId]?.[fieldId]
+            ?? (s.selectors.field.get(s, nodeId, fieldId) as Field.CaseList | null)?.initialValue
+            ?? null,
     getEntry: (s, nodeId, fieldId, portId) => {
         const caseList = caseListSelectors.getValue(s, nodeId, fieldId)
         if (!caseList) return null

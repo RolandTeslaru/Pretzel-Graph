@@ -27,7 +27,7 @@ export namespace Validation {
             ): Issue.Field | null {
                 if (!field.required) return null;
 
-                const value = workflowData.staticValues[nodeId]?.[field.id];
+                const value = workflowData.staticValues[nodeId]?.[field.id] ?? field.initialValue;
 
                 if (value === undefined || value === null || value === "")
                     return {
@@ -58,7 +58,7 @@ export namespace Validation {
                     return null;
 
                 if (input.variant === "Message" || input.variant === "Text") {
-                    const value = workflowData.staticValues[nodeId]?.[input.id];
+                    const value = workflowData.staticValues[nodeId]?.[input.id] ?? ('initialValue' in input ? input.initialValue : undefined);
                     if (value !== undefined && value !== null && value !== "")
                         return null;
 
@@ -166,8 +166,10 @@ export namespace Validation {
                         hasRouteBranchingNode = true;
 
                     const staticValues = workflowData.staticValues[nodeId];
-                    const signalDep = staticValues?.["signalDependency" as Foundations.Field.Id];
-                    const dataDep   = staticValues?.["dataDependency"   as Foundations.Field.Id];
+                    // Fall back to the execution-strategy field defaults (see node-sdk builders) —
+                    // un-seeded nodes omit these from staticValues.
+                    const signalDep = staticValues?.["signalDependency" as Foundations.Field.Id] ?? "OR";
+                    const dataDep   = staticValues?.["dataDependency"   as Foundations.Field.Id] ?? "AND";
 
                     // A node can escape the cycle only if it fires on a partial signal
                     // (OR/XOR) AND does not re-block waiting for all data (dataDep !== AND).
