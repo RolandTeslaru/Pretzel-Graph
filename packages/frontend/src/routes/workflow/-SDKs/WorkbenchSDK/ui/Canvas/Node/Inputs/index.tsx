@@ -8,9 +8,8 @@ import { InputLabel, type InputLabelSize, type InputLabelVariant } from '../../.
 const Item: React.FC<{
     input: Foundations.Port.Input
     nodeId: Workflow.Node.Id
-    isWorkflowLocked: boolean
     isFlipped?: boolean
-}> = memo(({ input, nodeId, isWorkflowLocked, isFlipped }) => {
+}> = memo(({ input, nodeId, isFlipped }) => {
     const hasEdge = WorkbenchSDK.useStore(s => s.selectors.input.hasEdge(s, nodeId, input.id))
 
     if (!input)
@@ -29,7 +28,6 @@ const Item: React.FC<{
         <div className="w-full relative px-3 py-0.5">
             <Port
                 type="target"
-                isWorkflowLocked={isWorkflowLocked}
                 port={input}
                 nodeId={nodeId}
                 isFlipped={isFlipped}
@@ -47,13 +45,11 @@ const Item: React.FC<{
 
 interface Props {
     nodeId: Workflow.Node.Id
-    isWorkflowLocked: boolean
+    inputs: Foundations.Port.Input[]
     isFlipped?: boolean
 }
 
-const NodeInputs: React.FC<Props> = memo(({ nodeId, isWorkflowLocked, isFlipped }) => {
-
-    const inputs = WorkbenchSDK.useInputs(nodeId)
+const NodeInputs: React.FC<Props> = memo(({ nodeId, inputs, isFlipped }) => {
 
     return (
         <div className="flex flex-col relative gap-2">
@@ -62,7 +58,6 @@ const NodeInputs: React.FC<Props> = memo(({ nodeId, isWorkflowLocked, isFlipped 
                     key={input.id}
                     input={input}
                     nodeId={nodeId}
-                    isWorkflowLocked={isWorkflowLocked}
                     isFlipped={isFlipped}
                 />
             ))}

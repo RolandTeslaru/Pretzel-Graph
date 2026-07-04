@@ -78,7 +78,6 @@ const CanvasRenderer = memo(() => {
             nodes={[...cycleSelectionDrivers, ...nodeDrivers]}
             edges={edgeDrivers}
             defaultViewport={data.ui.viewport}
-            // connectionLineComponent={NodeConnectionLine}
             {...canvasProps}
             {...canvasCallbacks}
         >

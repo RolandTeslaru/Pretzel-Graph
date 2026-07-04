@@ -147,12 +147,16 @@ export const nodeSelectors = {
     },
     getInputs: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
+        if(!node)
+            return [];
         const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
 
         return resolvePorts(blueprint.inputs, node.addedInputs, node.polymorphicResolutions);
     },
     getOutputs: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
+        if(!node)
+            return [];
         const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
 
         return resolvePorts(blueprint.outputs, node.addedOutputs, node.polymorphicResolutions);

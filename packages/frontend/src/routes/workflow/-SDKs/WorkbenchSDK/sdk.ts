@@ -90,53 +90,58 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
     public useNode(nodeId: Workflow.Node.Id | null) {
         const [node, connectedPorts] = this.useStore(s => {
-            if(!nodeId) return [null, null] as const;
+            if(!nodeId)
+                return [null, {}] as const;
 
             return [
-                s.selectors.node.get(s, nodeId),
+                s.data.nodes[nodeId],
                 s.selectors.node.getConnectedPorts(s, nodeId)
             ]
-        });
+        })
 
         // A slimmed Workflow.Node cannot exist without its blueprint hydrated — load() guarantees
         // it. If it's missing that's a hard bug, not a case to guard; assert both as present.
         const blueprint = ShelfSDK.useStore(s => {
-            if(!nodeId)
+            if(!node)
                 return null;
             return s.blueprints[node!.reconciledBlueprintId ?? node!.blueprintId]
         });
 
-        // Merged presentation via the shared selector; memoized on the reactive deps so the
-        // non-reactive blueprint read inside getUI stays correct.
-        const ui = useMemo(
-            () => {
-                if(!nodeId)
-                    return null;
-                return this.selectors.node.getUI(this.state, nodeId)
-            },
-            [nodeId, blueprint, node?.ui],
-        );
+        const inputs = useMemo(() => {
+            if(!node || !blueprint)
+                return [];
+            return resolvePorts(blueprint.inputs, node.addedInputs, node.polymorphicResolutions);
+        }, [blueprint, node?.addedInputs, node?.polymorphicResolutions]);
 
-        return [node, blueprint, ui, connectedPorts] as WorkbenchSDK.NodeBundle;
+        const outputs = useMemo(() => {
+            if(!node || !blueprint)
+                return [];
+            return resolvePorts(blueprint.outputs, node.addedOutputs, node.polymorphicResolutions);
+        }, [blueprint, node?.addedOutputs, node?.polymorphicResolutions]);
+
+        return useMemo(() => {
+            if (!node || !blueprint)
+                return null;
+
+            return {
+                ...node,
+                blueprint,
+                inputs,
+                outputs,
+                ui: {
+                    displayName: node.ui?.displayName ?? blueprint.ui.displayName,
+                    description: node.ui?.description ?? blueprint.ui.description,
+                    isMinimized: node.ui?.isMinimized ?? false,
+                    isFlipped:   node.ui?.isFlipped   ?? false,
+                    icon:        node.ui?.icon        ?? blueprint.ui.icon,
+                    accent:      node.ui?.accent      ?? blueprint.ui.accent,
+                    iconColor:   node.ui?.iconColor   ?? blueprint.ui.iconColor,
+                },
+                connectedPorts,
+            } as Workflow.HydratedNode;
+        }, [node, blueprint, inputs, outputs, connectedPorts]);
     }
 
-    /** A node's live input ports: base blueprint inputs + added inputs, with polymorphic variants resolved. */
-    public useInputs(nodeId: Workflow.Node.Id): Foundations.Port.Input[] {
-        const [node, blueprint] = this.useNode(nodeId);
-        return useMemo(
-            () => resolvePorts(blueprint.inputs, node.addedInputs, node.polymorphicResolutions),
-            [blueprint, node.addedInputs, node.polymorphicResolutions],
-        );
-    }
-
-    /** A node's live output ports: base blueprint outputs + added outputs, with polymorphic variants resolved. */
-    public useOutputs(nodeId: Workflow.Node.Id): Foundations.Port.Output[] {
-        const [node, blueprint] = this.useNode(nodeId);
-        return useMemo(
-            () => resolvePorts(blueprint.outputs, node.addedOutputs, node.polymorphicResolutions),
-            [blueprint, node.addedOutputs, node.polymorphicResolutions],
-        );
-    }
 
     /** A node's fields — blueprint-owned, no node-level overrides. Subscribes only to the
      *  effective blueprint id, so it re-renders on reconcile, not on unrelated node edits. */

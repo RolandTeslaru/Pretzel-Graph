@@ -3,7 +3,7 @@ import { Blueprint } from "../Foundations/Blueprint";
 import { Field } from "../Foundations/Field";
 import { Port } from "../Foundations/Port";
 import { Webhook } from "../Webhook";
-import { NodeId } from "./ids";
+import { NodeId, EdgeId } from "./ids";
 import { Dependency } from "./dependency";
 
 export namespace Node {
@@ -31,12 +31,11 @@ export namespace Node {
             icon:        z.string().optional(),
             accent:      z.string().optional(),
             iconColor:   z.string().optional(),
-        }),
+        }).default({}),
         
         reconciledBlueprintId: Blueprint.ReconciledId.optional(),
 
         polymorphicResolutions: z.record(Port.PolymorphicGroupId, Port.Variant).optional(),
-        variadicCounts:         z.record(Port.GroupId, z.number()).optional(),
 
         addedInputs: z.array(Port.Input.Schema).optional(),
         addedOutputs: z.array(Port.Output.Schema).optional(),
@@ -57,10 +56,10 @@ export namespace HydratedNode {
     export const Schema = Blueprint.Meta.Schema
         .extend(Node.Schema.omit({ addedInputs: true, addedOutputs: true }).shape)
         .extend({
-            fields: z.array(Field.Schema),
+            blueprint: Blueprint.Schema,
             inputs: z.array(Port.Input.Schema),
             outputs: z.array(Port.Output.Schema),
-            webhooks: z.array(Webhook.Schema).optional(),
+            connectedPorts: z.record(Port.Input.Id, EdgeId),
         })
 }
 export type HydratedNode = z.infer<typeof HydratedNode.Schema>

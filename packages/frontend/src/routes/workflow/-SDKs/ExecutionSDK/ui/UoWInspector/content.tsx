@@ -45,12 +45,15 @@ export const Content = memo(({ uowId }: Props) => {
         return [uow, snapshotedNode]
     })
 
-    const node = WorkbenchSDK.useStore(s => {
+    const [node, ui] = WorkbenchSDK.useStore(s => {
         const trackId = uow?.trackId
         if (!trackId)
-            return undefined
+            return [undefined, undefined]
 
-        return snapshotedNode ?? s.selectors.node.get(s, trackId)
+        return [
+            snapshotedNode ?? s.selectors.node.get(s, trackId),
+            s.selectors.node.getUI(s, trackId),
+        ]
     })
 
     if (!uow || !node) {
@@ -68,17 +71,17 @@ export const Content = memo(({ uowId }: Props) => {
                 <div
                     className='flex items-center gap-2 px-3 py-1 rounded-full backdrop-blur-md min-w-0 max-w-xs'
                     style={{
-                        backgroundColor: node.accent ? `color-mix(in srgb, var(--${node.accent}) 25%, transparent)` : 'var(--muted)',
+                        backgroundColor: node.ui.accent ? `color-mix(in srgb, var(--${ui.accent}) 25%, transparent)` : 'var(--muted)',
                     }}
                 >
                     <LazyIcon
                         className='my-auto h-4 w-4 shrink-0'
-                        name={node.icon as string}
-                        style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
+                        name={node.ui.icon as string}
+                        style={{ color: node.ui.accent ? `var(--${ui.accent}-foreground)` : undefined }}
                     />
                     <h4
                         className='text-sm font-semibold truncate min-w-0'
-                        style={{ color: node.accent ? `var(--${node.accent}-foreground)` : undefined }}
+                        style={{ color: node.ui.accent ? `var(--${ui.accent}-foreground)` : undefined }}
                     >
                         Unit of Work
                     </h4>
@@ -94,7 +97,7 @@ export const Content = memo(({ uowId }: Props) => {
                     <AccordionItem label="General" value="general">
                         <div className='flex flex-row gap-2 justify-between'>
                             <p className='text-xs text-muted-foreground'>Name</p>
-                            <p className='text-xs text-foreground/50'>{node.displayName}</p>
+                            <p className='text-xs text-foreground/50'>{ui.displayName}</p>
                         </div>
                         <div className='flex flex-row gap-2 justify-between'>
                             <p className='text-xs text-muted-foreground'>Blueprint</p>

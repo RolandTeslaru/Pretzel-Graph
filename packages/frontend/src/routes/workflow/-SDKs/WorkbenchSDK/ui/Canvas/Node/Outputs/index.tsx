@@ -6,12 +6,11 @@ import { WorkbenchSDK } from '../../../../sdk'
 
 interface NodeOutputProps {
   nodeId: Workflow.Node.Id
-  isWorkflowLocked: boolean
   output: Foundations.Port.Output
   isFlipped?: boolean
 }
 
-const Item: React.FC<NodeOutputProps> = ({ nodeId, isWorkflowLocked, output, isFlipped }) => {
+const Item: React.FC<NodeOutputProps> = ({ nodeId, output, isFlipped }) => {
   return (
     <div className={cn("relative w-full flex items-center py-0.5 px-3", isFlipped ? "justify-start" : "justify-end")}>
       <div className={cn("text-sm font-medium text-foreground")}>
@@ -19,7 +18,6 @@ const Item: React.FC<NodeOutputProps> = ({ nodeId, isWorkflowLocked, output, isF
       </div>
       <Port
         type="source"
-        isWorkflowLocked={isWorkflowLocked}
         port={output}
         nodeId={nodeId}
         isFlipped={isFlipped}
@@ -31,13 +29,11 @@ const Item: React.FC<NodeOutputProps> = ({ nodeId, isWorkflowLocked, output, isF
 
 interface Props {
   nodeId: Workflow.Node.Id
-  isWorkflowLocked: boolean
+  outputs: Foundations.Port.Output[]
   isFlipped?: boolean
 }
 
-const NodeOutputs: React.FC<Props> = ({ nodeId, isWorkflowLocked, isFlipped }) => {
-
-  const outputs = WorkbenchSDK.useOutputs(nodeId)
+const NodeOutputs: React.FC<Props> = ({ nodeId, outputs, isFlipped }) => {
 
   if(outputs.length === 0)
     return null
@@ -48,7 +44,6 @@ const NodeOutputs: React.FC<Props> = ({ nodeId, isWorkflowLocked, isFlipped }) =
         <Item
           key={output.id}
           nodeId={nodeId}
-          isWorkflowLocked={isWorkflowLocked}
           output={output}
           isFlipped={isFlipped}
         />

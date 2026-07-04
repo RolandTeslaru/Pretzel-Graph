@@ -18,7 +18,7 @@ export const inputReducers = {
             edgeReducers.remove(s, edgeId);
 
         const inputIndex = node.addedInputs?.findIndex(i => i.id === inputId);
-        if (inputIndex && inputIndex !== -1) {
+        if (inputIndex !== undefined && inputIndex !== -1) {
             node.addedInputs?.splice(inputIndex, 1);
         }
         delete staticValues[inputId];
