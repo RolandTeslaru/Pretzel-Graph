@@ -5,7 +5,7 @@ import IncomingPanel from "../IncomingPanel";
 import OutgoingPanel from "../OutgoingPanel";
 import type { Workflow } from "@pretzel-graph/shared/domain";
 
-export const NodeSidebarFooter = ({ node }: { node: Workflow.Node }) => {
+export const NodeSidebarFooter = ({ hyNode }: { hyNode: Workflow.HydratedNode }) => {
 
     const panelId = "nodeSidebar" as StackSDK.Panel.Id;
 
@@ -25,7 +25,7 @@ export const NodeSidebarFooter = ({ node }: { node: Workflow.Node }) => {
         } else {
             StackSDK.actions.pushCompanion(panelId, incomingCompanionId, "left", 250, (props) => (
                 <StackSDK.CompanionTemplate enter="right" {...props} className='right-100 top-24 bottom-24 w-62.5'>
-                    <IncomingPanel />
+                    <IncomingPanel nodeId={hyNode.id} inputs={hyNode.inputs} />
                 </StackSDK.CompanionTemplate>
             ))
         }
@@ -37,7 +37,7 @@ export const NodeSidebarFooter = ({ node }: { node: Workflow.Node }) => {
         } else {
             StackSDK.actions.pushCompanion(panelId, outgoingCompanionId, "right", 250, (props) => (
                 <StackSDK.CompanionTemplate enter="right" {...props} className='right-5 top-24 bottom-24 w-62.5'>
-                    <OutgoingPanel />
+                    <OutgoingPanel nodeId={hyNode.id} outputs={hyNode.outputs} />
                 </StackSDK.CompanionTemplate>
             ))
         }

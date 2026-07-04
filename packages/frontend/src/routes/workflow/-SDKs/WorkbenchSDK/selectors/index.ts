@@ -34,8 +34,11 @@ export const workbenchSelectors = {
     getClickedNode : (s) => s.clickedNodeId ? s.data.nodes[s.clickedNodeId] ?? null : null,
     getBlueprintIds: (_s, workflow) => {
         const ids = new Set<Foundations.Blueprint.Id>()
-        for (const node of Object.values(workflow.data.nodes))
+        for (const node of Object.values(workflow.data.nodes)){
             ids.add(node.blueprintId)
+            if(node.reconciledBlueprintId)
+                ids.add(node.reconciledBlueprintId)
+        }
         return [...ids]
     },
     getBlueprints: (s) => {

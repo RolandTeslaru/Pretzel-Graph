@@ -110,8 +110,11 @@ export const edgeReducers = {
         const sourcePort = sourceOutputs.find(o => o.id === sourcePortId);
         const targetPort = targetInputs.find(i => i.id === targetPortId);
 
-        if(!sourcePort || !targetPort)
-            throw new Error(`Cannot remove edge ${edgeId}, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
+        if(!sourcePort || !targetPort){
+            // throw new Error(`Cannot remove edge ${edgeId}, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
+            console.warn(`Cannot remove edge ${edgeId}, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
+            return
+        }
 
         if (targetNode && targetPort)
             inputReducers.validate(s, targetNodeId, targetPort);

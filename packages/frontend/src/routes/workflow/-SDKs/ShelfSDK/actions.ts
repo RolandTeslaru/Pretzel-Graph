@@ -35,10 +35,17 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
         hydrateBatch: async (blueprintIds) => {
             const have = getState().blueprints;
             const missing = [...new Set(blueprintIds)].filter(id => !have[id]);
-            if (missing.length === 0) return true;
+            
+            if (missing.length === 0) 
+                return true;
+            
             try {
                 const { blueprints } = await Shelf.API.Blueprint.getBatch(api, { blueprintIds: missing });
-                setState(s => { s.blueprints = { ...s.blueprints, ...blueprints }; });
+            
+                setState(s => { 
+                    s.blueprints = { ...s.blueprints, ...blueprints };
+                });
+            
                 return true;
             } catch (error) {
                 console.error(`Could not hydrate blueprint batch`, error);

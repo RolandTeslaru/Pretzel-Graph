@@ -1,19 +1,17 @@
-import { Workflow } from '@pretzel-graph/shared/domain'
+import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
 import React from 'react'
-import { Port } from '../../Port'
 import { WorkbenchSDK } from '../../../../../sdk'
+import { Port } from '../../Port'
 
 interface Props {
     nodeId: Workflow.Node.Id,
-    isWorkflowLocked: boolean
+    inputs: Foundations.Port.Input[],
+    outputs: Foundations.Port.Output[],
     isFlipped?: boolean
     children?: React.ReactNode
 }
 
-const MinimizedHandles: React.FC<Props> = ({ nodeId, isWorkflowLocked, isFlipped, children }) => {
-
-    const inputs = WorkbenchSDK.useInputs(nodeId)
-    const outputs = WorkbenchSDK.useOutputs(nodeId)
+const MinimizedHandles: React.FC<Props> = ({ nodeId, inputs, outputs, isFlipped, children }) => {
 
     return (
         <div className={`flex w-full py-2 ${isFlipped ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -24,7 +22,6 @@ const MinimizedHandles: React.FC<Props> = ({ nodeId, isWorkflowLocked, isFlipped
                             type="target"
                             port={input}
                             nodeId={nodeId}
-                            isWorkflowLocked={isWorkflowLocked}
                             isFlipped={isFlipped}
                         />
                     </div>
@@ -38,7 +35,6 @@ const MinimizedHandles: React.FC<Props> = ({ nodeId, isWorkflowLocked, isFlipped
                             type="source"
                             port={output}
                             nodeId={nodeId}
-                            isWorkflowLocked={isWorkflowLocked}
                             isFlipped={isFlipped}
                         />
                     </div>
