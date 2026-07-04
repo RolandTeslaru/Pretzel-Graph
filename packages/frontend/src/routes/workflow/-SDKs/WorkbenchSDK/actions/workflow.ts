@@ -43,6 +43,17 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
                 // against the stored slim nodes.
                 setState(s => { reducers.workflow.reconstructPolymorphism(s) });
 
+                // Normalize legacy fat nodes: drop stored values that equal blueprint defaults
+                // (derived on read). Needs blueprints hydrated. Marks dirty if anything changed.
+                setState(s => {
+                    for (const nodeId of Object.keys(s.data.nodes) as Workflow.Node.Id[]) {
+                        s.reducers.node.pruneDefaultStaticValues(s, nodeId);
+                        s.reducers.node.pruneDefaultUI(s, nodeId);
+                    }
+                });
+                // Persist the slimmed version (no-ops if nothing was pruned).
+                await sdk.actions.commit();
+
                 // Hydration (empty INITIAL -> loaded workflow) would otherwise be recorded
                 // as an undoable step; drop it so undo isn't armed on a fresh load.
                 (sdk.useStore as any).temporal.getState().clear();
