@@ -3,7 +3,6 @@ import type { WorkbenchSDK } from "../../sdk";
 import uid from "../../../../../../utils/uid";
 import { VaultSDK } from "@/SDKs/VaultSDK/sdk";
 import { ShelfSDK } from "../../../ShelfSDK/sdk";
-import { nodeSelectors } from "../../selectors/node";
 import { isEqual } from "lodash";
 
 type S      = WorkbenchSDK.State
@@ -26,11 +25,11 @@ export const nodeValueReducers = {
         if (!bucket) return;
 
         const initialById = new Map<string, any>();
-        for (const field of nodeSelectors.getFields(s, nodeId)) {
+        for (const field of s.selectors.node.getFields(s, nodeId)) {
             if (field.variant === "UniqueString") continue;
             if ("initialValue" in field) initialById.set(field.id, field.initialValue);
         }
-        for (const input of nodeSelectors.getInputs(s, nodeId))
+        for (const input of s.selectors.node.getInputs(s, nodeId))
             if ("initialValue" in input && input.initialValue !== undefined)
                 initialById.set(input.id, input.initialValue);
 
@@ -50,7 +49,7 @@ export const nodeValueReducers = {
         const node = s.data.nodes[nodeId];
         if (!node?.ui) return;
 
-        const bp = nodeSelectors.getBlueprint(s, nodeId);
+        const bp = s.selectors.node.getBlueprint(s, nodeId);
         for (const key of ["displayName", "description", "icon", "accent", "iconColor"] as const)
             if (node.ui[key] !== undefined && node.ui[key] === bp.ui[key]) {
                 delete node.ui[key];
@@ -91,7 +90,7 @@ export const nodeValueReducers = {
             ...(overrides ?? {}),
         };
 
-        const blueprint = nodeSelectors.getBlueprint(s, nodeId);
+        const blueprint = s.selectors.node.getBlueprint(s, nodeId);
 
         // Auto-fill any still-unassigned credential the node declares, but only when
         // exactly one matching vault instance exists (unambiguous default).
