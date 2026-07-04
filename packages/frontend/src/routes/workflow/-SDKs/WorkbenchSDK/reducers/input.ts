@@ -1,6 +1,5 @@
 import { Validation, type Foundations, type Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
-import { edgeReducers } from "./edge";
 
 export const inputReducers = {
     setValue: (s, nodeId, inputId, value) => {
@@ -14,7 +13,7 @@ export const inputReducers = {
 
         const edgeId = s.cache.inputHandlesMap[nodeId][inputId];
         if (edgeId)
-            edgeReducers.remove(s, edgeId);
+            s.reducers.edge.remove(s, edgeId);
 
         const inputIndex = node.addedInputs?.findIndex(i => i.id === inputId);
         if (inputIndex !== undefined && inputIndex !== -1) {
@@ -27,7 +26,7 @@ export const inputReducers = {
         const edgeId = s.cache.inputHandlesMap[nodeId][inputId]
 
         if (edgeId) {
-            edgeReducers.remove(s, edgeId)
+            s.reducers.edge.remove(s, edgeId)
             return true;
         }
         return false;

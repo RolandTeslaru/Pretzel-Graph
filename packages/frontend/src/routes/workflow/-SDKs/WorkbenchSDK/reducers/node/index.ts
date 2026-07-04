@@ -1,6 +1,5 @@
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../../sdk";
-import { fieldReducers } from "../field";
 import { nodeLifecycleReducers, type NodeLifecycleReducers } from "./lifecycle";
 import { nodeValueReducers, type NodeValueReducers } from "./values";
 import { nodePolymorphismReducers, type NodePolymorphismReducers } from "./polymorphism";
@@ -22,7 +21,7 @@ export const nodeReducers = {
         const node = s.data.nodes[nodeId];
         if (!node) return;
 
-        fieldReducers.setValue(s, nodeId, "signalDependency" as Foundations.Field.Id, strategy);
+        s.reducers.field.setValue(s, nodeId, "signalDependency" as Foundations.Field.Id, strategy);
     },
     setDisabled: (s, nodeId, isDisabled) => {
         s.isDirty = true;

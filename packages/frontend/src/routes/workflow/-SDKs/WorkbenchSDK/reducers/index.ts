@@ -10,8 +10,10 @@ import type { WorkbenchSDK } from "../sdk";
 import { clipboardReducers } from "./clipboard";
 import { selectionReducers } from "./selection";
 import { dependencyReducers } from "./dependency";
+import { cacheReducers } from "./cache";
 
 export const workbenchReducers = {
+    cache                   : cacheReducers,
     field                   : fieldReducers,
     edge                    : edgeReducers,
     node                    : nodeReducers,
