@@ -3,9 +3,6 @@ import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import type { WorkbenchSDK } from "../sdk";
 import { cloneDeep } from 'lodash';
 import { Algorithms } from "@pretzel-graph/shared/domain/Algorithms";
-import { dependencyReducers } from "./dependency";
-import { nodeSelectors } from "../selectors/node";
-import { nodePolymorphismReducers } from "./node/polymorphism";
 
 export const workflowReducers = {
     open: (s, workflow) => {
@@ -34,25 +31,25 @@ export const workflowReducers = {
         }
         s.dependencyUpdates = { published: {}, draft: {} }
 
-        dependencyReducers.removeUnused(s);
+        s.reducers.dependency.removeUnused(s);
 
-        workflowReducers.recomputeAllCycles(s);
+        s.reducers.workflow.recomputeAllCycles(s);
 
-        workflowReducers.validate(s);
+        s.reducers.workflow.validate(s);
     },
     // Derive polymorphicResolutions from the existing edges — replays the same resolution the
     // edge reducer does on connect. No-op for already-resolved (v2) nodes; reconstructs it for
     // migrated (v1) nodes whose resolutions weren't persisted. Requires blueprints hydrated.
     reconstructPolymorphism: (s) => {
         for (const edge of Object.values(s.data.edges)) {
-            const sourcePort = nodeSelectors.getOutputs(s, edge.source.nodeId).find(o => o.id === edge.source.portId);
-            const targetPort = nodeSelectors.getInputs(s, edge.target.nodeId).find(i => i.id === edge.target.portId);
+            const sourcePort = s.selectors.node.getOutputs(s, edge.source.nodeId).find(o => o.id === edge.source.portId);
+            const targetPort = s.selectors.node.getInputs(s, edge.target.nodeId).find(i => i.id === edge.target.portId);
             if (!sourcePort || !targetPort) continue;
 
             if (Port.isPolymorphic(targetPort) && !Port.isUnresolvedLike(sourcePort.variant))
-                nodePolymorphismReducers.resolveGroup(s, edge.target.nodeId, targetPort, sourcePort.variant);
+                s.reducers.node.polymorphism.resolveGroup(s, edge.target.nodeId, targetPort, sourcePort.variant);
             else if (Port.isPolymorphic(sourcePort) && !Port.isUnresolvedLike(targetPort.variant))
-                nodePolymorphismReducers.resolveGroup(s, edge.source.nodeId, sourcePort, targetPort.variant);
+                s.reducers.node.polymorphism.resolveGroup(s, edge.source.nodeId, sourcePort, targetPort.variant);
         }
     },
     close: (s) => {
@@ -85,8 +82,8 @@ export const workflowReducers = {
 } satisfies WorkflowReducers
 
 type WorkflowReducers = {
-    open:     (state: WorkbenchSDK.State, workflow: Workflow) => void
-    close:    (state: WorkbenchSDK.State) => void
+    open: (state: WorkbenchSDK.State, workflow: Workflow) => void
+    close: (state: WorkbenchSDK.State) => void
     validate: (state: WorkbenchSDK.State) => void
     setFields: (state: WorkbenchSDK.State, fields: Foundations.Field[]) => void
 
