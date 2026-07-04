@@ -5,13 +5,12 @@ import { WorkbenchSDK } from '../../../sdk'
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 
 interface Props {
-    node: Workflow.Node
-    blueprint: Blueprint
+    hyNode: Workflow.HydratedNode
     onEdit: () => void
 }
 
-export const OptionsDropdown = ({ node, blueprint, onEdit }: Props) => {
-    const isTool = WorkbenchSDK.useStore(s => s.selectors.node.isTool(s, node.id));
+export const OptionsDropdown = ({ hyNode, onEdit }: Props) => {
+    const isTool = WorkbenchSDK.useStore(s => s.selectors.node.isTool(s, hyNode.id));
 
     return (
         <DropdownMenu.Root>
@@ -25,33 +24,33 @@ export const OptionsDropdown = ({ node, blueprint, onEdit }: Props) => {
                     <SystemIcons.SquarePen />
                     Edit
                 </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => { WorkbenchSDK.actions.node.recreate(node.id) }}>
+                <DropdownMenu.Item onClick={() => { WorkbenchSDK.actions.node.recreate(hyNode.id) }}>
                     <SystemIcons.Undo />
                     Recreate
                 </DropdownMenu.Item>
-                {node.dependency && (
-                    <DropdownMenu.Item onClick={() => WorkbenchSDK.openWorkflowWindow(node.dependency!.workflowId)}>
+                {hyNode.dependency && (
+                    <DropdownMenu.Item onClick={() => WorkbenchSDK.openWorkflowWindow(hyNode.dependency!.workflowId)}>
                         <SystemIcons.Graph />
                         Open workflow
                     </DropdownMenu.Item>
                 )}
-                {blueprint.toolCompatible && (
-                    <DropdownMenu.Item onClick={() => isTool ? WorkbenchSDK.actions.tool.revert(node.id) : WorkbenchSDK.actions.tool.convert(node.id)}>
+                {hyNode.blueprint.toolCompatible && (
+                    <DropdownMenu.Item onClick={() => isTool ? WorkbenchSDK.actions.tool.revert(hyNode.id) : WorkbenchSDK.actions.tool.convert(hyNode.id)}>
                         <SystemIcons.Hammer />
                         {isTool ? "Revert to node" : "Convert to tool"}
                     </DropdownMenu.Item>
                 )}
                 <DropdownMenu.Separator />
-                <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(node.id)}>
+                <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(hyNode.id)}>
                     <SystemIcons.Copy />
                     Copy Node ID
                 </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(node.blueprintId)}>
+                <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(hyNode.blueprintId)}>
                     <SystemIcons.Copy />
                     Copy Blueprint ID
                 </DropdownMenu.Item>
                 <DropdownMenu.Separator />
-                <DropdownMenu.Item variant="destructive" onClick={() => WorkbenchSDK.actions.node.remove(node.id)}>
+                <DropdownMenu.Item variant="destructive" onClick={() => WorkbenchSDK.actions.node.remove(hyNode.id)}>
                     <SystemIcons.Trash2 />
                     Delete
                 </DropdownMenu.Item>

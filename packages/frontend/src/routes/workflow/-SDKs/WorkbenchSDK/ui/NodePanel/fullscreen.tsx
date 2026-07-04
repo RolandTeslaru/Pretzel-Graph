@@ -6,9 +6,9 @@ import { Content } from './index'
 import IncomingPanel from './IncomingPanel'
 import OutgoingPanel from './OutgoingPanel'
 
-type FullScreenProps = { bundle: WorkbenchSDK.NodeBundle; blockTransparency: boolean; surfaceStyle: CSSProperties }
+type FullScreenProps = { hyNode: Workflow.HydratedNode; blockTransparency: boolean; surfaceStyle: CSSProperties }
 
-const FullScreenContent = ({ bundle, blockTransparency, surfaceStyle }: FullScreenProps) => {
+const FullScreenContent = ({ hyNode, blockTransparency, surfaceStyle }: FullScreenProps) => {
   // In the background (another dialog stacked on top) render solid; on top, frosted glass.
   // `surfaceStyle` carries the stack-darkening brightness filter — applied per card here
   // (not on the dialog wrapper) so each card's backdrop-blur isn't trapped by a filtered ancestor.
@@ -17,13 +17,13 @@ const FullScreenContent = ({ bundle, blockTransparency, surfaceStyle }: FullScre
   return (
     <>
       <div style={surfaceStyle} className={`${surface} overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
-        <IncomingPanel />
+        <IncomingPanel nodeId={hyNode.id} inputs={hyNode.inputs} />
       </div>
       <div style={surfaceStyle} className={`${surface} lg:min-w-[450px] relative overflow-visible border border-border/50 rounded-2xl shadow-xl shadow-black/10`}>
-        <Content bundle={bundle} showFooter={false} />
+        <Content hyNode={hyNode} showFooter={false} />
       </div>
       <div style={surfaceStyle} className={`${surface} overflow-hidden h-full w-full min-w-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
-        <OutgoingPanel />
+        <OutgoingPanel nodeId={hyNode.id} outputs={hyNode.outputs} />
       </div>
     </>
   )
@@ -32,7 +32,7 @@ const FullScreenContent = ({ bundle, blockTransparency, surfaceStyle }: FullScre
 const FullScreenNodePanel = ({ blockTransparency, surfaceStyle }: { blockTransparency: boolean; surfaceStyle: CSSProperties }) => {
   const nodeId = WorkbenchSDK.useStore(s => s.selectors.getClickedNode(s)?.id ?? "" as Workflow.Node.Id)
 
-  const bundle = WorkbenchSDK.useNode(nodeId)
+  const hyNode = WorkbenchSDK.useNode(nodeId)
 
   useEffect(() => {
     if (!nodeId) {
@@ -40,11 +40,11 @@ const FullScreenNodePanel = ({ blockTransparency, surfaceStyle }: { blockTranspa
     }
   }, [nodeId])
 
-  if (!nodeId) return null
+  if (!hyNode) return null
 
   return (
     <div className="flex flex-row gap-5 h-[85vh] w-[90vw]">
-      <FullScreenContent bundle={bundle} blockTransparency={blockTransparency} surfaceStyle={surfaceStyle} />
+      <FullScreenContent hyNode={hyNode} blockTransparency={blockTransparency} surfaceStyle={surfaceStyle} />
     </div>
   )
 }

@@ -15,46 +15,40 @@ export const fieldVariadicReducers = {
     // and incrementing its numeric suffix (e.g. input_1 → input_2).
     add: (s, nodeId, groupId) => {
         s.isDirty = true;
-        const node    = s.selectors.node.get(s, nodeId);
+        const node      = s.selectors.node.get(s, nodeId);
+        const blueprint = nodeSelectors.getBlueprint(s, nodeId);
 
-        const inputs  = nodeSelectors.getInputs(s, nodeId).filter(i => i.groupId === groupId);
-        const outputs = nodeSelectors.getOutputs(s, nodeId).filter(o => o.groupId === groupId);
+        // Live ports only give us the slot count / last index. New slots are cloned from the
+        // BASE blueprint port so they carry its pristine unresolved variant — cloning from the
+        // resolved live port would bake the group's resolved variant into every new slot.
+        const inputs     = nodeSelectors.getInputs(s, nodeId).filter(i => i.groupId === groupId);
+        const outputs    = nodeSelectors.getOutputs(s, nodeId).filter(o => o.groupId === groupId);
+        const baseInput  = blueprint.inputs.find(i => i.groupId === groupId);
+        const baseOutput = blueprint.outputs.find(o => o.groupId === groupId);
 
-        if (inputs.length > 0) {
-            const newInput       = cloneDeep(inputs[inputs.length - 1]);
-            const oldPolyGroupId = newInput.polymorphicGroupId;
-            const lastIndex      = Number(newInput.id.split("_").slice(-1)[0]);
-            const newSuffix      = "_" + (lastIndex + 1)
+        if (baseInput && inputs.length > 0) {
+            const newIndex  = Number(inputs[inputs.length - 1].id.split("_").slice(-1)[0]) + 1;
+            const newSuffix = "_" + newIndex;
 
-            // Bump the numeric suffix on id and polymorphicGroupId
-            newInput.polymorphicGroupId = newInput.polymorphicGroupId?.replace(/_[^_]+$/, newSuffix) as Port.PolymorphicGroupId;
-            newInput.id                 = newInput.id.replace(/_[^_]+$/, newSuffix) as Port.Input.Id;
-            newInput.displayName        = newInput.displayName?.replace(/\d+$/, String(lastIndex + 1))
-
-            // When the polymorphicGroupId changes the port enters a new poly group,
-            // so reset its variant back to the original unresolved variant.
-            // if (oldPolyGroupId !== newInput.polymorphicGroupId && "originalVariant" in newInput && newInput.originalVariant) {
-            //     (newInput as any).variant = newInput.originalVariant;
-            // }
+            // Clone the pristine base port; bump the numeric suffix on id + polymorphicGroupId.
+            // groupId stays fixed — it identifies the variadic group across all its slots.
+            const newInput = cloneDeep(baseInput);
+            newInput.polymorphicGroupId = baseInput.polymorphicGroupId?.replace(/_[^_]+$/, newSuffix) as Port.PolymorphicGroupId;
+            newInput.id                 = baseInput.id.replace(/_[^_]+$/, newSuffix) as Port.Input.Id;
+            newInput.displayName        = baseInput.displayName?.replace(/\d+$/, String(newIndex));
 
             node.addedInputs = node.addedInputs ?? [];
             node.addedInputs.push(newInput);
         }
 
-        if (outputs.length > 0) {
-            const newOutput      = cloneDeep(outputs[outputs.length - 1]);
-            const oldPolyGroupId = newOutput.polymorphicGroupId;
-            const lastIndex      = Number(newOutput.id.split("_").slice(-1)[0]);
-            const newSuffix      = "_" + (lastIndex + 1)
+        if (baseOutput && outputs.length > 0) {
+            const newIndex  = Number(outputs[outputs.length - 1].id.split("_").slice(-1)[0]) + 1;
+            const newSuffix = "_" + newIndex;
 
-            // Same suffix-bumping logic for outputs
-            newOutput.polymorphicGroupId = newOutput.polymorphicGroupId?.replace(/_[^_]+$/, newSuffix) as Port.PolymorphicGroupId;;
-            newOutput.id                 = newOutput.id.replace(/_[^_]+$/, newSuffix) as Port.Output.Id;
-            newOutput.displayName        = newOutput.displayName?.replace(/\d+$/, String(lastIndex + 1))
-
-            // if (oldPolyGroupId !== newOutput.polymorphicGroupId && "originalVariant" in newOutput && newOutput.originalVariant) {
-            //     (newOutput as any).variant = newOutput.originalVariant;
-            // }
+            const newOutput = cloneDeep(baseOutput);
+            newOutput.polymorphicGroupId = baseOutput.polymorphicGroupId?.replace(/_[^_]+$/, newSuffix) as Port.PolymorphicGroupId;
+            newOutput.id                 = baseOutput.id.replace(/_[^_]+$/, newSuffix) as Port.Output.Id;
+            newOutput.displayName        = baseOutput.displayName?.replace(/\d+$/, String(newIndex));
 
             node.addedOutputs = node.addedOutputs ?? [];
             node.addedOutputs.push(newOutput);
@@ -68,17 +62,17 @@ export const fieldVariadicReducers = {
         const inputs  = node.addedInputs?.filter(i => i.groupId === groupId) ?? [];
         const outputs = node.addedOutputs?.filter(o => o.groupId === groupId) ?? [];
 
-        if (inputs.length > 1) {
+        if (inputs.length > 0) {
             inputReducers.remove(s, nodeId, inputs[inputs.length - 1].id);
         }
-        if (outputs.length > 1) {
+        if (outputs.length > 0) {
             const lastOutput = outputs[outputs.length - 1];
             // Disconnect any edge wired to the output before removing the port
             const edgeId = s.cache.outputHandlesMap[nodeId]?.[lastOutput.id];
             if (edgeId)
                 edgeReducers.remove(s, edgeId);
             const idx = node.addedOutputs?.findIndex(o => o.id === lastOutput.id);
-            if (idx && idx !== -1)
+            if (idx !== undefined && idx !== -1)
                 node.addedOutputs?.splice(idx, 1);
         }
     },
