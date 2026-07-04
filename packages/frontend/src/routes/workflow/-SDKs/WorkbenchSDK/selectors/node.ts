@@ -20,6 +20,7 @@ export interface NodeSelectors {
     getIncomingEdges:     (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Edge[]
     getOutgoingEdges:     (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Edge[]
     getStaticValues:      (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Field.Id | Port.Id, any> | null
+    getStaticValue:       (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, id: Field.Id | Port.Input.Id, fallback?: Field.Value | null) => Field.Value | null
     // Legacy webhook-only `@`-sigil context. Temporary until webhook resolution moves onto Airlock.
     getLegacyExpressionContext: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session?: Execution.Session) => LegacyExpressionContext
     hasDraftDependency: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
@@ -95,9 +96,10 @@ export const nodeSelectors = {
     getOutgoingEdges: (s, nodeId) =>
         Object.values(s.cache.outgoingEdgesMap[nodeId] ?? {}).map(edgeId => s.data.edges[edgeId]),
     getStaticValues: (s, nodeId) => s.data.staticValues[nodeId] ?? null,
+    getStaticValue: (s, nodeId, id, fallback = null) => s.data.staticValues[nodeId]?.[id] ?? fallback,
     getLegacyExpressionContext: (s, nodeId, session) => ({
         node: s.data.nodes[nodeId],
-        fields: s.data.staticValues[nodeId] ?? {},
+        fields: s.selectors.field.getValues(s, nodeId),
         incoming: executionSelectors.getNodeIncomingData(s, nodeId, session) ?? {},
         workflowConfig: Airlock.resolveWorkflowConfig(s.data),
     }),
