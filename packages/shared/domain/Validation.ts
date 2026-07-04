@@ -1,6 +1,9 @@
 import { Workflow } from "./Workflow"
 import { Port } from "./Foundations/Port"
 import { Foundations } from "./Foundations";
+import { resolvePorts } from "./resolvePorts";
+
+type Blueprints = Record<Foundations.Blueprint.Id, Foundations.Blueprint>;
 
 type Connection = {
     source: Workflow.Node.Id;
@@ -77,14 +80,14 @@ export namespace Validation {
             inputs: Record<Port.Input.Id, Issue.Input>;
         }
         export namespace Node {
-            export function check(node: Workflow.Node, workflowData: Workflow.Data, cache: Workflow.Cache) {
+            export function check(node: Workflow.Node, fields: readonly Foundations.Field[], inputs: readonly Port.Input[], workflowData: Workflow.Data, cache: Workflow.Cache) {
                 const nodeIssues: Issue.Node = { fields: {}, inputs: {} }
 
                 let numFieldIssues = 0;
                 let numInputIssues = 0;
 
 
-                for (const field of node.fields) {
+                for (const field of fields) {
                     const fieldIssue = Issue.Field.check(field, node.id, workflowData)
                     if (fieldIssue) {
                         nodeIssues.fields[field.id] = fieldIssue
@@ -92,7 +95,7 @@ export namespace Validation {
                     }
                 }
 
-                for (const input of node.inputs) {
+                for (const input of inputs) {
                     const inputIssue = Issue.Input.check(input, node.id, workflowData, cache)
                     if (inputIssue) {
                         nodeIssues.inputs[input.id] = inputIssue
@@ -111,14 +114,20 @@ export namespace Validation {
             nodes: Record<Workflow.Node.Id, Issue.Node>
             cycles: Issue.Cycle[]
         }
-        export function checkWorkflow(workflowData: Workflow.Data, cycles: Workflow.Node.Id[][], cache: Workflow.Cache) {
+        export function checkWorkflow(workflowData: Workflow.Data, cycles: Workflow.Node.Id[][], cache: Workflow.Cache, blueprints: Blueprints) {
             const issues: Issue.Workflow_ = {
                 nodes: {},
                 cycles: []
             }
 
             for (const node of Object.values(workflowData.nodes)) {
-                const nodeIssues = Node.check(node, workflowData, cache)
+                const blueprint = blueprints[node.reconciledBlueprintId ?? node.blueprintId];
+                if (!blueprint)
+                    throw new Error(`Cannot validate node ${node.id}: blueprint "${node.reconciledBlueprintId ?? node.blueprintId}" was not provided.`);
+
+                const inputs = resolvePorts(blueprint.inputs, node.addedInputs, node.polymorphicResolutions);
+
+                const nodeIssues = Node.check(node, blueprint.fields, inputs, workflowData, cache)
                 if (nodeIssues)
                     issues.nodes[node.id] = nodeIssues
             }
@@ -199,14 +208,9 @@ export namespace Validation {
 
 
     export function arePortsCompatible(
-        sourceNode: Workflow.Node,
-        sourcePortId: Port.Output.Id,
-        targetNode: Workflow.Node,
-        targetPortId: Port.Input.Id
+        sourcePort: Port.Output | undefined,
+        targetPort: Port.Input | undefined,
     ) {
-        const sourcePort = sourceNode.outputs.find(o => o.id === sourcePortId);
-        const targetPort = targetNode.inputs.find(i => i.id === targetPortId);
-
         // Edge compatibility policy:
         //   - Promotion (scalar → list) is allowed implicitly via LIST_PROMOTION_MAP.
         //   - Demotion (list → scalar) is NEVER allowed at the edge level — use a                                                 
@@ -247,7 +251,7 @@ export namespace Validation {
         if (sourcePort.variant === targetPort.variant)
             return true
 
-        if (Port.isScalarLike(sourcePort.variant) && (targetPort.variant === Port.LIST_PROMOTION_MAP[sourcePort.variant]))
+        if (Port.isScalarLike(sourcePort.variant) && (targetPort.variant === Port.promoteToList(sourcePort.variant)))
             return true;
 
         return false
@@ -266,7 +270,7 @@ export namespace Validation {
 
 
     export namespace Connection {
-        export function isValid(conn: Connection, workflowData: Workflow.Data, cache: Workflow.Cache) {
+        export function isValid(conn: Connection, workflowData: Workflow.Data, cache: Workflow.Cache, blueprints: Blueprints) {
 
             const sourceNode = workflowData.nodes[conn.source];
             const targetNode = workflowData.nodes[conn.target];
@@ -283,7 +287,15 @@ export namespace Validation {
             if (doesEdgeAlreadyExist(workflowData, sourceNode.id, sourceHandleId, targetNode.id, targetHandleId))
                 return false;
 
-            if (!arePortsCompatible(sourceNode, sourceHandleId, targetNode, targetHandleId))
+            const sourceBp = blueprints[sourceNode.reconciledBlueprintId ?? sourceNode.blueprintId];
+            const targetBp = blueprints[targetNode.reconciledBlueprintId ?? targetNode.blueprintId];
+            if (!sourceBp || !targetBp)
+                return false;
+
+            const sourcePort = resolvePorts(sourceBp.outputs, sourceNode.addedOutputs, sourceNode.polymorphicResolutions).find(o => o.id === sourceHandleId);
+            const targetPort = resolvePorts(targetBp.inputs, targetNode.addedInputs, targetNode.polymorphicResolutions).find(i => i.id === targetHandleId);
+
+            if (!arePortsCompatible(sourcePort, targetPort))
                 return false;
 
             if (isTargetPortAlreadyConnected(targetNode.id, targetHandleId, cache))

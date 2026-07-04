@@ -17,9 +17,9 @@ export const inputReducers = {
         if (edgeId)
             edgeReducers.remove(s, edgeId);
 
-        const inputIndex = node.inputs.findIndex(i => i.id === inputId);
-        if (inputIndex !== -1) {
-            node.inputs.splice(inputIndex, 1);
+        const inputIndex = node.addedInputs?.findIndex(i => i.id === inputId);
+        if (inputIndex && inputIndex !== -1) {
+            node.addedInputs?.splice(inputIndex, 1);
         }
         delete staticValues[inputId];
     },
@@ -50,7 +50,9 @@ export const inputReducers = {
         const node = s.data.nodes[nodeId];
         if (!node) return;
 
-        node.inputs.push(input);
+        node.addedInputs = node.addedInputs ?? [];
+
+        node.addedInputs.push(input);
     }
 } satisfies InputReducers
 

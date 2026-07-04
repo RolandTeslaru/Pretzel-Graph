@@ -23,12 +23,6 @@ export const nodeReducers = {
         if (!node) return;
 
         fieldReducers.setValue(s, nodeId, "signalDependency" as Foundations.Field.Id, strategy);
-
-        // When signals are AND-joined, every incoming signal must fire —
-        // which implies all data is present. The dataDependency field is
-        // meaningless in that case, so hide it from the inspector.
-        const dataDep = node.fields.find(f => f.id === "dataDependency" as Foundations.Field.Id);
-        if (dataDep) dataDep.hidden = strategy === "AND";
     },
     setDisabled: (s, nodeId, isDisabled) => {
         s.isDirty = true;
@@ -36,27 +30,36 @@ export const nodeReducers = {
     },
     setMinimized: (s, nodeId, isMinimized) => {
         s.isDirty = true;
-        s.data.nodes[nodeId].isMinimized = isMinimized;
+        const node = s.data.nodes[nodeId];
+        node.ui.isMinimized = isMinimized;
     },
     setFlipped: (s, nodeId, isFlipped) => {
         s.isDirty = true;
-        s.data.nodes[nodeId].isFlipped = isFlipped;
+        const node = s.data.nodes[nodeId];
+        node.ui.isFlipped = isFlipped;
     },
     setDisplayName: (s, nodeId, newDisplayName) => {
         s.isDirty = true;
-        s.data.nodes[nodeId].displayName = newDisplayName;
+
+        const node = s.data.nodes[nodeId];
+
+        node.ui.displayName = newDisplayName;
     },
     setDescription: (s, nodeId, newDescription) => {
         s.isDirty = true;
-        s.data.nodes[nodeId].description = newDescription;
+        const node = s.data.nodes[nodeId];
+        node.ui.description = newDescription;
     },
     setIconColor: (s, nodeId, accentToken) => {
         s.isDirty = true;
         const node = s.data.nodes[nodeId];
         if (!node) return;
         // Drop the key entirely when cleared, so it stays out of serialized JSON.
-        if (accentToken) node.iconColor = accentToken;
-        else delete node.iconColor;
+        if (accentToken) {
+            node.ui.iconColor = accentToken;
+        } else {
+            delete node.ui?.iconColor;
+        }
     },
 } satisfies NodeReducers
 

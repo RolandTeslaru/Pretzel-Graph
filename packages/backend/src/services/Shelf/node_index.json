@@ -1,15 +1,17 @@
 {
-  "version": "1782984566673",
-  "generatedAt": "2026-07-02T09:29:26.673Z",
+  "version": "1783108263700",
+  "generatedAt": "2026-07-03T19:51:03.700Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
       "id": "Core.Chat.History",
-      "displayName": "Chat History",
-      "icon": "History",
-      "accent": "port-Message",
-      "description": "Outputs the message history accumulated in the current chat session.",
       "credentials": [],
+      "ui": {
+        "displayName": "Chat History",
+        "description": "Outputs the message history accumulated in the current chat session.",
+        "icon": "History",
+        "accent": "port-Message"
+      },
       "fields": [
         {
           "id": "signalDependency",
@@ -118,11 +120,13 @@
     },
     "Core.Chat.Input": {
       "id": "Core.Chat.Input",
-      "displayName": "Chat Input",
-      "icon": "MessagesSquare",
-      "accent": "port-Message",
-      "description": "This node is a chat input",
       "credentials": [],
+      "ui": {
+        "displayName": "Chat Input",
+        "description": "This node is a chat input",
+        "icon": "MessagesSquare",
+        "accent": "port-Message"
+      },
       "fields": [
         {
           "id": "write_to_session",
@@ -234,11 +238,13 @@
     },
     "Core.Chat.Output": {
       "id": "Core.Chat.Output",
-      "displayName": "Chat Output",
-      "icon": "MessagesSquare",
-      "accent": "port-Message",
-      "description": "This node is a chat output",
       "credentials": [],
+      "ui": {
+        "displayName": "Chat Output",
+        "description": "This node is a chat output",
+        "icon": "MessagesSquare",
+        "accent": "port-Message"
+      },
       "fields": [
         {
           "id": "write_to_session",
@@ -342,11 +348,13 @@
     },
     "Core.Developer.AllBuilders": {
       "id": "Core.Developer.AllBuilders",
-      "displayName": "All Builders",
-      "icon": "Rocket",
-      "accent": "utility",
-      "description": "A developer node showcasing all available field, input, and output builders.",
       "credentials": [],
+      "ui": {
+        "displayName": "All Builders",
+        "description": "A developer node showcasing all available field, input, and output builders.",
+        "icon": "Rocket",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "stringField",
@@ -653,28 +661,25 @@
         {
           "id": "unresolvedInput",
           "displayName": "Unresolved Input",
-          "polymorphicGroupId": "unresolvedGroup",
           "internal": false,
+          "polymorphicGroupId": "unresolvedGroup",
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": true
         },
         {
           "id": "unresolvedScalarInput",
           "displayName": "Unresolved Scalar Input",
-          "polymorphicGroupId": "unresolvedScalarGroup",
           "internal": false,
+          "polymorphicGroupId": "unresolvedScalarGroup",
           "variant": "UnresolvedScalar",
-          "originalVariant": "UnresolvedScalar",
           "required": true
         },
         {
           "id": "unresolvedListInput",
           "displayName": "Unresolved List Input",
-          "polymorphicGroupId": "unresolvedListGroup",
           "internal": false,
+          "polymorphicGroupId": "unresolvedListGroup",
           "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList",
           "required": true
         },
         {
@@ -756,22 +761,19 @@
           "id": "unresolvedOutput",
           "displayName": "Unresolved Output",
           "polymorphicGroupId": "unresolvedGroup",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         },
         {
           "id": "unresolvedScalarOutput",
           "displayName": "Unresolved Scalar Output",
           "polymorphicGroupId": "unresolvedScalarGroup",
-          "variant": "UnresolvedScalar",
-          "originalVariant": "UnresolvedScalar"
+          "variant": "UnresolvedScalar"
         },
         {
           "id": "unresolvedListOutput",
           "displayName": "Unresolved List Output",
           "polymorphicGroupId": "unresolvedListGroup",
-          "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList"
+          "variant": "UnresolvedList"
         },
         {
           "id": "toolListOutput",
@@ -797,11 +799,13 @@
     },
     "Core.Developer.ConsoleLog": {
       "id": "Core.Developer.ConsoleLog",
-      "displayName": "Console Log",
-      "icon": "SquareTerminal",
-      "accent": "utility",
-      "description": "Logs input data to the console with a specified log level.",
       "credentials": [],
+      "ui": {
+        "displayName": "Console Log",
+        "description": "Logs input data to the console with a specified log level.",
+        "icon": "SquareTerminal",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "level",
@@ -943,11 +947,13 @@
     },
     "Core.Developer.ErrorThrower": {
       "id": "Core.Developer.ErrorThrower",
-      "displayName": "Error Thrower",
-      "icon": "Bug",
-      "accent": "utility",
-      "description": "Throws a configured error when the node is executed.",
       "credentials": [],
+      "ui": {
+        "displayName": "Error Thrower",
+        "description": "Throws a configured error when the node is executed.",
+        "icon": "Bug",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "error",
@@ -1045,10 +1051,9 @@
           "id": "trigger",
           "displayName": "Trigger",
           "tooltip": "Optional trigger to execute this node and throw an error.",
-          "polymorphicGroupId": "signal",
           "internal": false,
+          "polymorphicGroupId": "signal",
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -1058,18 +1063,19 @@
           "displayName": "Result",
           "tooltip": "Never produced — the node always throws. Wire it to a Catch node to test error propagation.",
           "polymorphicGroupId": "signal",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         }
       ]
     },
     "Core.Developer.Eval": {
       "id": "Core.Developer.Eval",
-      "displayName": "Runtime Node Eval",
-      "icon": "SquareTerminal",
-      "accent": "utility",
-      "description": "Dangerously executes a JavaScript script at node runtime.",
       "credentials": [],
+      "ui": {
+        "displayName": "Runtime Node Eval",
+        "description": "Dangerously executes a JavaScript script at node runtime.",
+        "icon": "SquareTerminal",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "code",
@@ -1180,12 +1186,14 @@
     },
     "Core.Developer.HttpRequest": {
       "id": "Core.Developer.HttpRequest",
-      "displayName": "HTTP Request",
-      "icon": "Globe",
-      "accent": "utility",
-      "iconColor": "color-blue-400",
-      "description": "Makes an HTTP request.",
       "credentials": [],
+      "ui": {
+        "displayName": "HTTP Request",
+        "description": "Makes an HTTP request.",
+        "icon": "Globe",
+        "accent": "utility",
+        "iconColor": "color-blue-400"
+      },
       "fields": [
         {
           "id": "method",
@@ -1348,11 +1356,13 @@
     },
     "Core.Developer.ResourceLoaderTest": {
       "id": "Core.Developer.ResourceLoaderTest",
-      "displayName": "Resource Loader Test",
-      "icon": "FlaskConical",
-      "accent": "utility",
-      "description": "Dev node for testing the ResourceLoader field. Loaders return mock data.",
       "credentials": [],
+      "ui": {
+        "displayName": "Resource Loader Test",
+        "description": "Dev node for testing the ResourceLoader field. Loaders return mock data.",
+        "icon": "FlaskConical",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "schema",
@@ -1487,11 +1497,13 @@
     },
     "Core.LanguageModel": {
       "id": "Core.LanguageModel",
-      "displayName": "Language Model",
-      "icon": "BrainCircuit",
-      "accent": "port-LanguageModel",
-      "description": "Runs a language model given a specified provider.",
       "credentials": [],
+      "ui": {
+        "displayName": "Language Model",
+        "description": "Runs a language model given a specified provider.",
+        "icon": "BrainCircuit",
+        "accent": "port-LanguageModel"
+      },
       "fields": [
         {
           "id": "stream",
@@ -1626,11 +1638,13 @@
     },
     "Core.Routing.Accumulator": {
       "id": "Core.Routing.Accumulator",
-      "displayName": "Accumulator",
-      "icon": "GitPullRequestArrow",
-      "accent": "group-routing",
-      "description": "Collects inputs over multiple executions and emits the accumulated result.",
       "credentials": [],
+      "ui": {
+        "displayName": "Accumulator",
+        "description": "Collects inputs over multiple executions and emits the accumulated result.",
+        "icon": "GitPullRequestArrow",
+        "accent": "group-routing"
+      },
       "fields": [
         {
           "id": "dataDependency",
@@ -1716,19 +1730,17 @@
         {
           "id": "overwrite",
           "displayName": "Overwrite",
-          "polymorphicGroupId": "data",
           "internal": false,
+          "polymorphicGroupId": "data",
           "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList",
           "required": false
         },
         {
           "id": "append",
           "displayName": "Append",
-          "polymorphicGroupId": "data",
           "internal": false,
+          "polymorphicGroupId": "data",
           "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList",
           "required": false
         }
       ],
@@ -1738,30 +1750,30 @@
           "displayName": "State",
           "tooltip": "The accumulated state.",
           "polymorphicGroupId": "data",
-          "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList"
+          "variant": "UnresolvedList"
         },
         {
           "id": "prevState",
           "displayName": "Previous State",
           "tooltip": "The previous accumulated state.",
           "polymorphicGroupId": "data",
-          "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList"
+          "variant": "UnresolvedList"
         }
       ]
     },
     "Core.Routing.CatchError": {
       "id": "Core.Routing.CatchError",
-      "displayName": "Catch Error",
-      "icon": "ShieldAlert",
-      "accent": "group-routing",
-      "iconColor": "destructive",
-      "description": "Catches a propagating error. Non-error data passes straight through; an incoming error is serialized to the 'On Error' output and propagation stops here.",
       "flags": {
         "catchesError": true
       },
       "credentials": [],
+      "ui": {
+        "displayName": "Catch Error",
+        "description": "Catches a propagating error. Non-error data passes straight through; an incoming error is serialized to the 'On Error' output and propagation stops here.",
+        "icon": "ShieldAlert",
+        "accent": "group-routing",
+        "iconColor": "destructive"
+      },
       "fields": [
         {
           "id": "signalDependency",
@@ -1847,10 +1859,9 @@
         {
           "id": "input",
           "displayName": "Input",
-          "polymorphicGroupId": "catch_passthrough",
           "internal": false,
+          "polymorphicGroupId": "catch_passthrough",
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -1859,8 +1870,7 @@
           "id": "passthrough",
           "displayName": "Passthrough",
           "polymorphicGroupId": "catch_passthrough",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         },
         {
           "id": "onError",
@@ -1872,11 +1882,13 @@
     },
     "Core.Routing.IfElse": {
       "id": "Core.Routing.IfElse",
-      "displayName": "If Else",
-      "icon": "Split",
-      "accent": "group-routing",
-      "description": "Routes input down one of two branches on a single true/false condition.",
       "credentials": [],
+      "ui": {
+        "displayName": "If Else",
+        "description": "Routes input down one of two branches on a single true/false condition.",
+        "icon": "Split",
+        "accent": "group-routing"
+      },
       "fields": [
         {
           "id": "condition",
@@ -1972,10 +1984,9 @@
         {
           "id": "input",
           "displayName": "Input",
-          "polymorphicGroupId": "data",
           "internal": false,
+          "polymorphicGroupId": "data",
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -1985,26 +1996,26 @@
           "displayName": "True",
           "tooltip": "Output when condition is true.",
           "polymorphicGroupId": "data",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         },
         {
           "id": "false",
           "displayName": "False",
           "tooltip": "Output when condition is false.",
           "polymorphicGroupId": "data",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         }
       ]
     },
     "Core.Routing.Merge": {
       "id": "Core.Routing.Merge",
-      "displayName": "Merge",
-      "icon": "Merge",
-      "accent": "group-routing",
-      "description": "Merges multiple inputs into a single output.",
       "credentials": [],
+      "ui": {
+        "displayName": "Merge",
+        "description": "Merges multiple inputs into a single output.",
+        "icon": "Merge",
+        "accent": "group-routing"
+      },
       "fields": [
         {
           "id": "inputPorts",
@@ -2112,21 +2123,19 @@
         {
           "id": "input_1",
           "displayName": "Input 1",
+          "internal": false,
           "polymorphicGroupId": "data",
           "groupId": "variadic_inputs_1",
-          "internal": false,
           "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList",
           "required": false
         },
         {
           "id": "input_2",
           "displayName": "Input 2",
+          "internal": false,
           "polymorphicGroupId": "data",
           "groupId": "variadic_inputs_1",
-          "internal": false,
           "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList",
           "required": false
         }
       ],
@@ -2135,18 +2144,19 @@
           "id": "output",
           "displayName": "Output",
           "polymorphicGroupId": "data",
-          "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList"
+          "variant": "UnresolvedList"
         }
       ]
     },
     "Core.Routing.Passthrough": {
       "id": "Core.Routing.Passthrough",
-      "displayName": "Passthrough",
-      "icon": "ArrowRightRight",
-      "accent": "group-routing",
-      "description": "Forwards each input directly to the output at the same index.",
       "credentials": [],
+      "ui": {
+        "displayName": "Passthrough",
+        "description": "Forwards each input directly to the output at the same index.",
+        "icon": "ArrowRightRight",
+        "accent": "group-routing"
+      },
       "fields": [
         {
           "id": "ports",
@@ -2242,21 +2252,19 @@
         {
           "id": "input_0",
           "displayName": "Input 0",
+          "internal": false,
           "polymorphicGroupId": "passthrough_0",
           "groupId": "passthrough",
-          "internal": false,
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         },
         {
           "id": "input_1",
           "displayName": "Input 1",
+          "internal": false,
           "polymorphicGroupId": "passthrough_1",
           "groupId": "passthrough",
-          "internal": false,
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -2266,27 +2274,27 @@
           "displayName": "Output 0",
           "polymorphicGroupId": "passthrough_0",
           "groupId": "passthrough",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         },
         {
           "id": "output_1",
           "displayName": "Output 1",
           "polymorphicGroupId": "passthrough_1",
           "groupId": "passthrough",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         }
       ]
     },
     "Core.Routing.Portal": {
       "id": "Core.Routing.Portal",
-      "displayName": "Portal",
-      "icon": "PortalIn",
-      "accent": "group-routing",
-      "iconColor": "color-sky-400",
-      "description": "Sends data to all Portal Out nodes sharing the same Portal ID, without a visible edge.",
       "credentials": [],
+      "ui": {
+        "displayName": "Portal",
+        "description": "Sends data to all Portal Out nodes sharing the same Portal ID, without a visible edge.",
+        "icon": "PortalIn",
+        "accent": "group-routing",
+        "iconColor": "color-sky-400"
+      },
       "fields": [
         {
           "id": "direction",
@@ -2402,10 +2410,9 @@
         {
           "id": "input",
           "displayName": "Input",
-          "polymorphicGroupId": "portal",
           "internal": false,
+          "polymorphicGroupId": "portal",
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -2413,11 +2420,13 @@
     },
     "Core.Routing.Router": {
       "id": "Core.Routing.Router",
-      "displayName": "Router",
-      "icon": "ListTree",
-      "accent": "group-routing",
-      "description": "Routes input to every output whose case is true — multiple branches can fire at once (fan-out).",
       "credentials": [],
+      "ui": {
+        "displayName": "Router",
+        "description": "Routes input to every output whose case is true — multiple branches can fire at once (fan-out).",
+        "icon": "ListTree",
+        "accent": "group-routing"
+      },
       "fields": [
         {
           "id": "cases",
@@ -2532,10 +2541,9 @@
         {
           "id": "input",
           "displayName": "Input",
-          "polymorphicGroupId": "condition",
           "internal": false,
+          "polymorphicGroupId": "condition",
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -2544,33 +2552,32 @@
           "id": "case-1",
           "displayName": "Case 1",
           "polymorphicGroupId": "condition",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         },
         {
           "id": "case-2",
           "displayName": "Case 2",
           "polymorphicGroupId": "condition",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         },
         {
           "id": "case-3",
           "displayName": "Case 3",
           "polymorphicGroupId": "condition",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         }
       ]
     },
     "Core.Routing.Sleep": {
       "id": "Core.Routing.Sleep",
-      "displayName": "Sleep",
-      "icon": "Clock",
-      "accent": "utility",
-      "iconColor": "color-indigo-400",
-      "description": "Pauses execution for a specified duration.",
       "credentials": [],
+      "ui": {
+        "displayName": "Sleep",
+        "description": "Pauses execution for a specified duration.",
+        "icon": "Clock",
+        "accent": "utility",
+        "iconColor": "color-indigo-400"
+      },
       "fields": [
         {
           "id": "duration",
@@ -2669,10 +2676,9 @@
           "id": "trigger",
           "displayName": "Trigger",
           "tooltip": "Optional trigger to start the sleep.",
-          "polymorphicGroupId": "signal",
           "internal": false,
+          "polymorphicGroupId": "signal",
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -2682,18 +2688,19 @@
           "displayName": "Done",
           "tooltip": "Outputs the trigger message after the sleep duration.",
           "polymorphicGroupId": "signal",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         }
       ]
     },
     "Core.Routing.Switch": {
       "id": "Core.Routing.Switch",
-      "displayName": "Switch",
-      "icon": "Option",
-      "accent": "group-routing",
-      "description": "Routes input to exactly one output — the first matching case among many (mutually exclusive).",
       "credentials": [],
+      "ui": {
+        "displayName": "Switch",
+        "description": "Routes input to exactly one output — the first matching case among many (mutually exclusive).",
+        "icon": "Option",
+        "accent": "group-routing"
+      },
       "fields": [
         {
           "id": "cases",
@@ -2808,10 +2815,9 @@
         {
           "id": "input",
           "displayName": "Input",
-          "polymorphicGroupId": "condition",
           "internal": false,
+          "polymorphicGroupId": "condition",
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -2820,33 +2826,32 @@
           "id": "case-1",
           "displayName": "Case 1",
           "polymorphicGroupId": "condition",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         },
         {
           "id": "case-2",
           "displayName": "Case 1",
           "polymorphicGroupId": "condition",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         },
         {
           "id": "case-3",
           "displayName": "Case 1",
           "polymorphicGroupId": "condition",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         }
       ]
     },
     "Core.Routing.Terminate": {
       "id": "Core.Routing.Terminate",
-      "displayName": "Terminate",
-      "icon": "OctagonX",
-      "accent": "group-routing",
-      "iconColor": "destructive",
-      "description": "Ends the execution when reached. 'Stop' halts the run cleanly (terminated); 'Error' fails the run with a message.",
       "credentials": [],
+      "ui": {
+        "displayName": "Terminate",
+        "description": "Ends the execution when reached. 'Stop' halts the run cleanly (terminated); 'Error' fails the run with a message.",
+        "icon": "OctagonX",
+        "accent": "group-routing",
+        "iconColor": "destructive"
+      },
       "fields": [
         {
           "id": "mode",
@@ -2954,10 +2959,9 @@
           "id": "trigger",
           "displayName": "Trigger",
           "tooltip": "Reaching this input ends the execution.",
-          "polymorphicGroupId": "signal",
           "internal": false,
+          "polymorphicGroupId": "signal",
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -2965,14 +2969,16 @@
     },
     "Core.SubWorkflow.Execute": {
       "id": "Core.SubWorkflow.Execute",
-      "displayName": "Execute Sub-Workflow",
-      "icon": "Graph",
-      "accent": "utility",
-      "description": "Executes a saved sub-workflow and returns its output.",
       "flags": {
         "SHOW_DEPENDENCY_SELECTOR": true
       },
       "credentials": [],
+      "ui": {
+        "displayName": "Execute Sub-Workflow",
+        "description": "Executes a saved sub-workflow and returns its output.",
+        "icon": "Graph",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "signalDependency",
@@ -3059,12 +3065,14 @@
     },
     "Core.SubWorkflow.ExposeInputPort": {
       "id": "Core.SubWorkflow.ExposeInputPort",
-      "displayName": "Expose Input Port",
-      "icon": "LogIn",
-      "accent": "utility",
-      "iconColor": "primary",
-      "description": "Exposes an unresolved output port for external workflow input wiring.",
       "credentials": [],
+      "ui": {
+        "displayName": "Expose Input Port",
+        "description": "Exposes an unresolved output port for external workflow input wiring.",
+        "icon": "LogIn",
+        "accent": "utility",
+        "iconColor": "primary"
+      },
       "fields": [
         {
           "id": "required",
@@ -3173,19 +3181,20 @@
           "id": "output",
           "displayName": "Output",
           "polymorphicGroupId": "expose_input_port",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         }
       ]
     },
     "Core.SubWorkflow.ExposeOutputPort": {
       "id": "Core.SubWorkflow.ExposeOutputPort",
-      "displayName": "Expose Output Port",
-      "icon": "LogOut",
-      "accent": "utility",
-      "iconColor": "primary",
-      "description": "Accepts an unresolved input port for external workflow output wiring.",
       "credentials": [],
+      "ui": {
+        "displayName": "Expose Output Port",
+        "description": "Accepts an unresolved input port for external workflow output wiring.",
+        "icon": "LogOut",
+        "accent": "utility",
+        "iconColor": "primary"
+      },
       "fields": [
         {
           "id": "signalDependency",
@@ -3271,10 +3280,9 @@
         {
           "id": "input",
           "displayName": "Input",
-          "polymorphicGroupId": "expose_output_port",
           "internal": false,
+          "polymorphicGroupId": "expose_output_port",
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -3282,11 +3290,13 @@
     },
     "Core.Text.Input": {
       "id": "Core.Text.Input",
-      "displayName": "Text Input",
-      "icon": "Type",
-      "accent": "port-Text",
-      "description": "This node is a Text input",
       "credentials": [],
+      "ui": {
+        "displayName": "Text Input",
+        "description": "This node is a Text input",
+        "icon": "Type",
+        "accent": "port-Text"
+      },
       "fields": [
         {
           "id": "signalDependency",
@@ -3389,11 +3399,13 @@
     },
     "Core.Utils.JsonInjector": {
       "id": "Core.Utils.JsonInjector",
-      "displayName": "JSON Injector",
-      "icon": "Braces",
-      "accent": "utility",
-      "description": "Injects JSON data into the flow.",
       "credentials": [],
+      "ui": {
+        "displayName": "JSON Injector",
+        "description": "Injects JSON data into the flow.",
+        "icon": "Braces",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "data",
@@ -3495,11 +3507,13 @@
     },
     "Core.Utils.List.Filter": {
       "id": "Core.Utils.List.Filter",
-      "displayName": "Filter",
-      "icon": "Funnel",
-      "accent": "utility",
-      "description": "Keeps only the list items for which the condition evaluates to true.",
       "credentials": [],
+      "ui": {
+        "displayName": "Filter",
+        "description": "Keeps only the list items for which the condition evaluates to true.",
+        "icon": "Funnel",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "condition",
@@ -3597,10 +3611,9 @@
         {
           "id": "list",
           "displayName": "List",
-          "polymorphicGroupId": "data",
           "internal": false,
+          "polymorphicGroupId": "data",
           "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList",
           "required": true
         }
       ],
@@ -3609,26 +3622,26 @@
           "id": "filtered",
           "displayName": "Kept",
           "polymorphicGroupId": "data",
-          "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList"
+          "variant": "UnresolvedList"
         },
         {
           "id": "discarded",
           "displayName": "Discarded",
           "polymorphicGroupId": "data",
-          "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList"
+          "variant": "UnresolvedList"
         }
       ],
       "itemScope": "list"
     },
     "Core.Utils.List.Select": {
       "id": "Core.Utils.List.Select",
-      "displayName": "Select Item",
-      "icon": "Brackets",
-      "accent": "utility",
-      "description": "Selects a single element from a list input.",
       "credentials": [],
+      "ui": {
+        "displayName": "Select Item",
+        "description": "Selects a single element from a list input.",
+        "icon": "Brackets",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "strategy",
@@ -3746,10 +3759,9 @@
         {
           "id": "list",
           "displayName": "List",
-          "polymorphicGroupId": "data",
           "internal": false,
+          "polymorphicGroupId": "data",
           "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList",
           "required": true
         }
       ],
@@ -3758,18 +3770,19 @@
           "id": "element",
           "displayName": "Element",
           "polymorphicGroupId": "data",
-          "variant": "UnresolvedScalar",
-          "originalVariant": "UnresolvedScalar"
+          "variant": "UnresolvedScalar"
         }
       ]
     },
     "Core.Utils.List.Slice": {
       "id": "Core.Utils.List.Slice",
-      "displayName": "Slice",
-      "icon": "Scissors",
-      "accent": "utility",
-      "description": "Returns a sub-array from a list using start and end indices.",
       "credentials": [],
+      "ui": {
+        "displayName": "Slice",
+        "description": "Returns a sub-array from a list using start and end indices.",
+        "icon": "Scissors",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "start",
@@ -3876,10 +3889,9 @@
         {
           "id": "list",
           "displayName": "List",
-          "polymorphicGroupId": "data",
           "internal": false,
+          "polymorphicGroupId": "data",
           "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList",
           "required": true
         }
       ],
@@ -3888,18 +3900,19 @@
           "id": "slice",
           "displayName": "Slice",
           "polymorphicGroupId": "data",
-          "variant": "UnresolvedList",
-          "originalVariant": "UnresolvedList"
+          "variant": "UnresolvedList"
         }
       ]
     },
     "Core.Utils.Message.Compose": {
       "id": "Core.Utils.Message.Compose",
-      "displayName": "Compose Message",
-      "icon": "Mail",
-      "accent": "port-Message",
-      "description": "Builds a Human, System, or Tool message from a content string. Supports expressions to interpolate incoming data.",
       "credentials": [],
+      "ui": {
+        "displayName": "Compose Message",
+        "description": "Builds a Human, System, or Tool message from a content string. Supports expressions to interpolate incoming data.",
+        "icon": "Mail",
+        "accent": "port-Message"
+      },
       "fields": [
         {
           "id": "role",
@@ -4025,12 +4038,14 @@
     },
     "Core.Utils.RunCode": {
       "id": "Core.Utils.RunCode",
-      "displayName": "Run Code",
-      "icon": "FileCode",
-      "accent": "utility",
-      "iconColor": "color-emerald-400",
-      "description": "Runs sandboxed JavaScript with access to the incoming data via $in.",
       "credentials": [],
+      "ui": {
+        "displayName": "Run Code",
+        "description": "Runs sandboxed JavaScript with access to the incoming data via $in.",
+        "icon": "FileCode",
+        "accent": "utility",
+        "iconColor": "color-emerald-400"
+      },
       "fields": [
         {
           "id": "code",
@@ -4132,11 +4147,13 @@
     },
     "Core.Utils.Tool.Catalog": {
       "id": "Core.Utils.Tool.Catalog",
-      "displayName": "Tool Catalog",
-      "icon": "SwatchBook",
-      "accent": "port-Tool",
-      "description": "Utility node for managing a catalog of tools.",
       "credentials": [],
+      "ui": {
+        "displayName": "Tool Catalog",
+        "description": "Utility node for managing a catalog of tools.",
+        "icon": "SwatchBook",
+        "accent": "port-Tool"
+      },
       "fields": [
         {
           "id": "tools_num",
@@ -4232,24 +4249,24 @@
         {
           "id": "tool_1",
           "displayName": "Tool 1",
-          "groupId": "tools_group",
           "internal": false,
+          "groupId": "tools_group",
           "variant": "ToolList",
           "required": false
         },
         {
           "id": "tool_2",
           "displayName": "Tool 2",
-          "groupId": "tools_group",
           "internal": false,
+          "groupId": "tools_group",
           "variant": "ToolList",
           "required": false
         },
         {
           "id": "tool_3",
           "displayName": "Tool 3",
-          "groupId": "tools_group",
           "internal": false,
+          "groupId": "tools_group",
           "variant": "ToolList",
           "required": false
         }
@@ -4264,11 +4281,13 @@
     },
     "Core.Utils.Tool.Custom": {
       "id": "Core.Utils.Tool.Custom",
-      "displayName": "Custom Tool",
-      "icon": "Hammer",
-      "accent": "port-Tool",
-      "description": "An agent tool whose behaviour is defined by sandboxed JavaScript you write.",
       "credentials": [],
+      "ui": {
+        "displayName": "Custom Tool",
+        "description": "An agent tool whose behaviour is defined by sandboxed JavaScript you write.",
+        "icon": "Hammer",
+        "accent": "port-Tool"
+      },
       "fields": [
         {
           "id": "toolName",
@@ -4416,11 +4435,13 @@
     },
     "Core.Utils.Tool.Runner": {
       "id": "Core.Utils.Tool.Runner",
-      "displayName": "Tool Runner",
-      "icon": "Play",
-      "accent": "port-Tool",
-      "description": "Executes a tool with the provided input and returns the result.",
       "credentials": [],
+      "ui": {
+        "displayName": "Tool Runner",
+        "description": "Executes a tool with the provided input and returns the result.",
+        "icon": "Play",
+        "accent": "port-Tool"
+      },
       "fields": [
         {
           "id": "signalDependency",
@@ -4530,11 +4551,13 @@
     },
     "Core.Webhook": {
       "id": "Core.Webhook",
-      "displayName": "Webhook",
-      "icon": "Webhook",
-      "accent": "utility",
-      "description": "Starts the workflow from inbound webhook requests.",
       "credentials": [],
+      "ui": {
+        "displayName": "Webhook",
+        "description": "Starts the workflow from inbound webhook requests.",
+        "icon": "Webhook",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "path",
@@ -4719,11 +4742,13 @@
     },
     "Core.Workbench.Review": {
       "id": "Core.Workbench.Review",
-      "displayName": "Workbench Review",
-      "icon": "ShieldQuestionMark",
-      "accent": "utility",
-      "description": "Pauses the run and asks a human in the workbench to approve, choose, or fill a form.",
       "credentials": [],
+      "ui": {
+        "displayName": "Workbench Review",
+        "description": "Pauses the run and asks a human in the workbench to approve, choose, or fill a form.",
+        "icon": "ShieldQuestionMark",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "variant",
@@ -4891,10 +4916,9 @@
           "id": "input",
           "displayName": "Input",
           "tooltip": "Optional data passed through on the chosen branch.",
-          "polymorphicGroupId": "data",
           "internal": false,
+          "polymorphicGroupId": "data",
           "variant": "Unresolved",
-          "originalVariant": "Unresolved",
           "required": false
         }
       ],
@@ -4904,26 +4928,20 @@
           "displayName": "Approved",
           "tooltip": "Fires when the human approves.",
           "polymorphicGroupId": "data",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         },
         {
           "id": "rejected",
           "displayName": "Rejected",
           "tooltip": "Fires when the human rejects.",
           "polymorphicGroupId": "data",
-          "variant": "Unresolved",
-          "originalVariant": "Unresolved"
+          "variant": "Unresolved"
         }
       ]
     },
     "Integrations.Alpaca.Market": {
       "id": "Integrations.Alpaca.Market",
-      "displayName": "Alpaca Market",
-      "icon": "Alpaca",
-      "accent": "port-DataList",
       "toolCompatible": true,
-      "description": "Reads US stock market data and news from Alpaca Market Data APIs.",
       "credentials": [
         {
           "id": "alpacaApi",
@@ -4951,6 +4969,12 @@
           "icon": "Alpaca"
         }
       ],
+      "ui": {
+        "displayName": "Alpaca Market",
+        "description": "Reads US stock market data and news from Alpaca Market Data APIs.",
+        "icon": "Alpaca",
+        "accent": "port-DataList"
+      },
       "fields": [
         {
           "id": "environment",
@@ -5161,10 +5185,6 @@
     },
     "Integrations.Anthropic.Chat": {
       "id": "Integrations.Anthropic.Chat",
-      "displayName": "Anthropic Chat",
-      "icon": "Anthropic",
-      "accent": "port-LanguageModel",
-      "description": "This node talks to Anthropic Claude models",
       "credentials": [
         {
           "id": "anthropicApi",
@@ -5183,6 +5203,12 @@
           "icon": "Anthropic"
         }
       ],
+      "ui": {
+        "displayName": "Anthropic Chat",
+        "description": "This node talks to Anthropic Claude models",
+        "icon": "Anthropic",
+        "accent": "port-LanguageModel"
+      },
       "fields": [
         {
           "id": "model",
@@ -5365,12 +5391,14 @@
     },
     "Integrations.Coinbase.Market": {
       "id": "Integrations.Coinbase.Market",
-      "displayName": "DeFi Market Data",
-      "icon": "Coinbase",
-      "accent": "port-Json",
       "toolCompatible": true,
-      "description": "Fetches live DeFi market data. Pyth for real-time asset prices, DeFiLlama for protocol TVL and analytics. No API key required.",
       "credentials": [],
+      "ui": {
+        "displayName": "DeFi Market Data",
+        "description": "Fetches live DeFi market data. Pyth for real-time asset prices, DeFiLlama for protocol TVL and analytics. No API key required.",
+        "icon": "Coinbase",
+        "accent": "port-Json"
+      },
       "fields": [
         {
           "id": "dataSource",
@@ -5511,11 +5539,7 @@
     },
     "Integrations.Coinbase.Token": {
       "id": "Integrations.Coinbase.Token",
-      "displayName": "ERC-20 Token",
-      "icon": "Coinbase",
-      "accent": "port-Json",
       "toolCompatible": true,
-      "description": "Read ERC-20 token balances and allowances, or transfer and approve tokens using a Coinbase-managed CDP wallet. No private key — Coinbase handles signing.",
       "credentials": [
         {
           "id": "coinbaseApi",
@@ -5557,6 +5581,12 @@
           "icon": "Coinbase"
         }
       ],
+      "ui": {
+        "displayName": "ERC-20 Token",
+        "description": "Read ERC-20 token balances and allowances, or transfer and approve tokens using a Coinbase-managed CDP wallet. No private key — Coinbase handles signing.",
+        "icon": "Coinbase",
+        "accent": "port-Json"
+      },
       "fields": [
         {
           "id": "networkId",
@@ -5730,10 +5760,6 @@
     },
     "Integrations.Google.Gemini": {
       "id": "Integrations.Google.Gemini",
-      "displayName": "Google Gemini",
-      "icon": "GoogleGemini",
-      "accent": "port-LanguageModel",
-      "description": "This node talks to google generative ai api",
       "credentials": [
         {
           "id": "googleGeminiApi",
@@ -5753,6 +5779,12 @@
           "icon": "GoogleGemini"
         }
       ],
+      "ui": {
+        "displayName": "Google Gemini",
+        "description": "This node talks to google generative ai api",
+        "icon": "GoogleGemini",
+        "accent": "port-LanguageModel"
+      },
       "fields": [
         {
           "id": "model",
@@ -5947,11 +5979,7 @@
     },
     "Integrations.Google.Search": {
       "id": "Integrations.Google.Search",
-      "displayName": "Google Search",
-      "icon": "GoogleSearch",
-      "accent": "port-DataList",
       "toolCompatible": true,
-      "description": "Searches the web using Google Custom Search and returns the results as documents.",
       "credentials": [
         {
           "id": "googleSearchApi",
@@ -5983,6 +6011,12 @@
           "icon": "Google"
         }
       ],
+      "ui": {
+        "displayName": "Google Search",
+        "description": "Searches the web using Google Custom Search and returns the results as documents.",
+        "icon": "GoogleSearch",
+        "accent": "port-DataList"
+      },
       "fields": [
         {
           "id": "maxResults",
@@ -6148,13 +6182,15 @@
     },
     "Integrations.HyperLiquid.Account": {
       "id": "Integrations.HyperLiquid.Account",
-      "displayName": "HyperLiquid Account",
-      "icon": "HyperLiquid",
-      "accent": "port-Json",
-      "iconColor": "color-cyan-500",
       "toolCompatible": true,
-      "description": "Reads HyperLiquid account state for a wallet address: positions, balance, open orders, fills. Public read-only — only a wallet address is required, never a private key.",
       "credentials": [],
+      "ui": {
+        "displayName": "HyperLiquid Account",
+        "description": "Reads HyperLiquid account state for a wallet address: positions, balance, open orders, fills. Public read-only — only a wallet address is required, never a private key.",
+        "icon": "HyperLiquid",
+        "accent": "port-Json",
+        "iconColor": "color-cyan-500"
+      },
       "fields": [
         {
           "id": "defaultAddress",
@@ -6292,13 +6328,15 @@
     },
     "Integrations.HyperLiquid.Market": {
       "id": "Integrations.HyperLiquid.Market",
-      "displayName": "HyperLiquid Market",
-      "icon": "HyperLiquid",
-      "accent": "port-DataList",
-      "iconColor": "color-cyan-500",
       "toolCompatible": true,
-      "description": "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata. No API key required.",
       "credentials": [],
+      "ui": {
+        "displayName": "HyperLiquid Market",
+        "description": "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata. No API key required.",
+        "icon": "HyperLiquid",
+        "accent": "port-DataList",
+        "iconColor": "color-cyan-500"
+      },
       "fields": [
         {
           "id": "interval",
@@ -6468,11 +6506,7 @@
     },
     "Integrations.Kalshi.Market": {
       "id": "Integrations.Kalshi.Market",
-      "displayName": "Kalshi Market",
-      "icon": "Kalshi",
-      "accent": "port-DataList",
       "toolCompatible": true,
-      "description": "Reads Kalshi prediction-market data: events, markets and order books. Requires a Kalshi API key + RSA private key (requests are RSA-PSS signed).",
       "credentials": [
         {
           "id": "kalshiApi",
@@ -6500,6 +6534,12 @@
           "icon": "Kalshi"
         }
       ],
+      "ui": {
+        "displayName": "Kalshi Market",
+        "description": "Reads Kalshi prediction-market data: events, markets and order books. Requires a Kalshi API key + RSA private key (requests are RSA-PSS signed).",
+        "icon": "Kalshi",
+        "accent": "port-DataList"
+      },
       "fields": [
         {
           "id": "status",
@@ -6657,11 +6697,7 @@
     },
     "Integrations.Massive.Market": {
       "id": "Integrations.Massive.Market",
-      "displayName": "Massive Market",
-      "icon": "Massive",
-      "accent": "port-DataList",
       "toolCompatible": true,
-      "description": "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search. Requires an API key.",
       "credentials": [
         {
           "id": "massiveApi",
@@ -6681,6 +6717,12 @@
           "icon": "Massive"
         }
       ],
+      "ui": {
+        "displayName": "Massive Market",
+        "description": "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search. Requires an API key.",
+        "icon": "Massive",
+        "accent": "port-DataList"
+      },
       "fields": [
         {
           "id": "timespan",
@@ -6867,10 +6909,6 @@
     },
     "Integrations.MongoDB.Operation": {
       "id": "Integrations.MongoDB.Operation",
-      "displayName": "MongoDB",
-      "icon": "MongoDB",
-      "accent": "utility",
-      "description": "Runs an operation against a MongoDB collection.",
       "credentials": [
         {
           "id": "mongoDb",
@@ -6942,6 +6980,12 @@
           "icon": "MongoDB"
         }
       ],
+      "ui": {
+        "displayName": "MongoDB",
+        "description": "Runs an operation against a MongoDB collection.",
+        "icon": "MongoDB",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "operation",
@@ -7096,10 +7140,6 @@
     },
     "Integrations.MySQL.Query": {
       "id": "Integrations.MySQL.Query",
-      "displayName": "MySQL",
-      "icon": "MySQL",
-      "accent": "utility",
-      "description": "Runs operations against a MySQL database.",
       "credentials": [
         {
           "id": "mysql",
@@ -7170,6 +7210,12 @@
           "icon": "MySQL"
         }
       ],
+      "ui": {
+        "displayName": "MySQL",
+        "description": "Runs operations against a MySQL database.",
+        "icon": "MySQL",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "operation",
@@ -7292,10 +7338,6 @@
     },
     "Integrations.OpenAI.Chat": {
       "id": "Integrations.OpenAI.Chat",
-      "displayName": "OpenAI Chat",
-      "icon": "OpenAI",
-      "accent": "port-LanguageModel",
-      "description": "This node talks to OpenAI's GPT chat models via the Chat Completions API",
       "credentials": [
         {
           "id": "openAiApi",
@@ -7326,6 +7368,12 @@
           "icon": "OpenAI"
         }
       ],
+      "ui": {
+        "displayName": "OpenAI Chat",
+        "description": "This node talks to OpenAI's GPT chat models via the Chat Completions API",
+        "icon": "OpenAI",
+        "accent": "port-LanguageModel"
+      },
       "fields": [
         {
           "id": "model",
@@ -7529,10 +7577,6 @@
     },
     "Integrations.OpenRouter.Chat": {
       "id": "Integrations.OpenRouter.Chat",
-      "displayName": "OpenRouter Chat",
-      "icon": "OpenRouter",
-      "accent": "port-LanguageModel",
-      "description": "Connect to hundreds of models via OpenRouter's unified API",
       "credentials": [
         {
           "id": "openRouterApi",
@@ -7551,6 +7595,12 @@
           "icon": "OpenRouter"
         }
       ],
+      "ui": {
+        "displayName": "OpenRouter Chat",
+        "description": "Connect to hundreds of models via OpenRouter's unified API",
+        "icon": "OpenRouter",
+        "accent": "port-LanguageModel"
+      },
       "fields": [
         {
           "id": "provider",
@@ -7749,12 +7799,14 @@
     },
     "Integrations.Polymarket.Market": {
       "id": "Integrations.Polymarket.Market",
-      "displayName": "Polymarket Market",
-      "icon": "Polymarket",
-      "accent": "port-DataList",
       "toolCompatible": true,
-      "description": "Reads Polymarket prediction-market data: events, markets, prices and order books (Gamma + CLOB). No API key required.",
       "credentials": [],
+      "ui": {
+        "displayName": "Polymarket Market",
+        "description": "Reads Polymarket prediction-market data: events, markets, prices and order books (Gamma + CLOB). No API key required.",
+        "icon": "Polymarket",
+        "accent": "port-DataList"
+      },
       "fields": [
         {
           "id": "status",
@@ -7912,10 +7964,6 @@
     },
     "Integrations.Postgres.Query": {
       "id": "Integrations.Postgres.Query",
-      "displayName": "Postgres",
-      "icon": "Postgres",
-      "accent": "utility",
-      "description": "Runs operations against a Postgres database.",
       "credentials": [
         {
           "id": "postgres",
@@ -7986,6 +8034,12 @@
           "icon": "Postgres"
         }
       ],
+      "ui": {
+        "displayName": "Postgres",
+        "description": "Runs operations against a Postgres database.",
+        "icon": "Postgres",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "operation",
@@ -8108,10 +8162,6 @@
     },
     "Integrations.Redis.Command": {
       "id": "Integrations.Redis.Command",
-      "displayName": "Redis",
-      "icon": "Redis",
-      "accent": "utility",
-      "description": "Runs a command against a Redis server.",
       "credentials": [
         {
           "id": "redis",
@@ -8161,6 +8211,12 @@
           "icon": "Redis"
         }
       ],
+      "ui": {
+        "displayName": "Redis",
+        "description": "Runs a command against a Redis server.",
+        "icon": "Redis",
+        "accent": "utility"
+      },
       "fields": [
         {
           "id": "operation",
@@ -8290,10 +8346,6 @@
     },
     "Integrations.Tavily.Retriever": {
       "id": "Integrations.Tavily.Retriever",
-      "displayName": "Tavily Retriever",
-      "icon": "Tavily",
-      "accent": "port-Retriever",
-      "description": "Configures a Tavily search retriever. Connect its output to a Search node or an agent.",
       "credentials": [
         {
           "id": "tavilyApi",
@@ -8312,6 +8364,12 @@
           "icon": "Tavily"
         }
       ],
+      "ui": {
+        "displayName": "Tavily Retriever",
+        "description": "Configures a Tavily search retriever. Connect its output to a Search node or an agent.",
+        "icon": "Tavily",
+        "accent": "port-Retriever"
+      },
       "fields": [
         {
           "id": "maxResults",
@@ -8447,11 +8505,7 @@
     },
     "Integrations.Tavily.Search": {
       "id": "Integrations.Tavily.Search",
-      "displayName": "Tavily Search",
-      "icon": "Tavily",
-      "accent": "port-Retriever",
       "toolCompatible": true,
-      "description": "Searches the web using Tavily and returns the results as documents.",
       "credentials": [
         {
           "id": "tavilyApi",
@@ -8470,6 +8524,12 @@
           "icon": "Tavily"
         }
       ],
+      "ui": {
+        "displayName": "Tavily Search",
+        "description": "Searches the web using Tavily and returns the results as documents.",
+        "icon": "Tavily",
+        "accent": "port-Retriever"
+      },
       "fields": [
         {
           "id": "maxResults",
@@ -8625,10 +8685,6 @@
     },
     "Integrations.Uniswap.Swap": {
       "id": "Integrations.Uniswap.Swap",
-      "displayName": "Uniswap",
-      "icon": "Uniswap",
-      "accent": "port-ToolList",
-      "description": "Provides Uniswap tools for token swapping on EVM chains. Exposes check_approval, get_quote and swap_tokens as a tool list for agents. Requires a Uniswap API key and an EVM private key for signing transactions.",
       "credentials": [
         {
           "id": "uniswapApi",
@@ -8658,6 +8714,12 @@
           "icon": "Uniswap"
         }
       ],
+      "ui": {
+        "displayName": "Uniswap",
+        "description": "Provides Uniswap tools for token swapping on EVM chains. Exposes check_approval, get_quote and swap_tokens as a tool list for agents. Requires a Uniswap API key and an EVM private key for signing transactions.",
+        "icon": "Uniswap",
+        "accent": "port-ToolList"
+      },
       "fields": [
         {
           "id": "chain",
@@ -8804,10 +8866,6 @@
     },
     "Integrations.xAI.Chat": {
       "id": "Integrations.xAI.Chat",
-      "displayName": "xAI Grok Chat",
-      "icon": "Grok",
-      "accent": "port-LanguageModel",
-      "description": "This node talks to xAI's Grok models via the xAI API",
       "credentials": [
         {
           "id": "xAiApi",
@@ -8826,6 +8884,12 @@
           "icon": "xAI"
         }
       ],
+      "ui": {
+        "displayName": "xAI Grok Chat",
+        "description": "This node talks to xAI's Grok models via the xAI API",
+        "icon": "Grok",
+        "accent": "port-LanguageModel"
+      },
       "fields": [
         {
           "id": "model",
@@ -8992,299 +9056,6 @@
           "variant": "LanguageModel"
         }
       ]
-    },
-    "Core.Agent": {
-      "id": "Core.Agent",
-      "displayName": "Agent",
-      "icon": "Bot",
-      "accent": "port-LanguageModel",
-      "description": "Executes a saved sub-workflow and returns its output.",
-      "flags": {
-        "SHOW_DEPENDENCY_SELECTOR": false
-      },
-      "credentials": [],
-      "fields": [
-        {
-          "id": "signalDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Signal Dependency",
-          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All signals required",
-              "description": "Fire only once every upstream signal has arrived."
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one signal required",
-              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
-            },
-            {
-              "value": "XOR",
-              "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "Wait & Join",
-              "description": "Wait until every wired input port has resolved, then read all of them."
-            },
-            {
-              "value": "OR",
-              "displayName": "Follow Trigger",
-              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "onErrorStrategy",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "On Error",
-          "tooltip": "What happens when this node's execution throws.",
-          "variant": "MultiOption",
-          "initialValue": "propagate",
-          "options": [
-            {
-              "value": "terminate",
-              "displayName": "Terminate workflow",
-              "description": "Fail the whole run."
-            },
-            {
-              "value": "propagate",
-              "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges."
-            },
-            {
-              "value": "do_nothing",
-              "displayName": "Do nothing",
-              "description": "Swallow the error — no signal, no termination. Downstream stalls."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "output_all_messages",
-          "variant": "Boolean",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "description": "",
-          "displayName": "Output All Messages",
-          "initialValue": false
-        }
-      ],
-      "inputs": [
-        {
-          "id": "sys_message",
-          "displayName": "System Message",
-          "variant": "Message",
-          "required": false
-        },
-        {
-          "id": "language_model",
-          "displayName": "Language Model",
-          "variant": "LanguageModel",
-          "required": true
-        },
-        {
-          "id": "tools",
-          "displayName": "Tools",
-          "variant": "ToolList",
-          "required": false
-        },
-        {
-          "id": "input_message",
-          "displayName": "Messages",
-          "variant": "MessageList",
-          "required": true
-        }
-      ],
-      "outputs": [
-        {
-          "id": "Core.SubWorkflow.ExposeOutputPort-cfa4s",
-          "displayName": "Output",
-          "variant": "MessageList"
-        }
-      ],
-      "dependency": {
-        "workflowId": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0",
-        "mode": "publication"
-      }
-    },
-    "Core.Utils.Compactor": {
-      "id": "Core.Utils.Compactor",
-      "displayName": "Compactor",
-      "icon": "Compress",
-      "accent": "utility",
-      "description": "Executes a saved sub-workflow and returns its output.",
-      "flags": {
-        "SHOW_DEPENDENCY_SELECTOR": false
-      },
-      "credentials": [],
-      "fields": [
-        {
-          "id": "signalDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Signal Dependency",
-          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All signals required",
-              "description": "Fire only once every upstream signal has arrived."
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one signal required",
-              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
-            },
-            {
-              "value": "XOR",
-              "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "Wait & Join",
-              "description": "Wait until every wired input port has resolved, then read all of them."
-            },
-            {
-              "value": "OR",
-              "displayName": "Follow Trigger",
-              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "onErrorStrategy",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "On Error",
-          "tooltip": "What happens when this node's execution throws.",
-          "variant": "MultiOption",
-          "initialValue": "propagate",
-          "options": [
-            {
-              "value": "terminate",
-              "displayName": "Terminate workflow",
-              "description": "Fail the whole run."
-            },
-            {
-              "value": "propagate",
-              "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges."
-            },
-            {
-              "value": "do_nothing",
-              "displayName": "Do nothing",
-              "description": "Swallow the error — no signal, no termination. Downstream stalls."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "summarization_prompt",
-          "variant": "String",
-          "advanced": false,
-          "required": false,
-          "multiline": false,
-          "reconcile": false,
-          "description": "",
-          "displayName": "Summarization Prompt",
-          "initialValue": "Summarize the entire conversation above into a dense factual summary. Do not answer or continue any message in it — only summarize."
-        },
-        {
-          "id": "intactExchanges",
-          "min": 0,
-          "variant": "Integer",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "description": "",
-          "displayName": "Intact exchanges",
-          "initialValue": 2
-        },
-        {
-          "id": "compactionThreshold",
-          "variant": "Integer",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "description": "",
-          "displayName": "Compaction Threshold",
-          "initialValue": 100000
-        }
-      ],
-      "inputs": [
-        {
-          "id": "input",
-          "displayName": "Input",
-          "variant": "MessageList",
-          "required": true
-        },
-        {
-          "id": "model",
-          "displayName": "Summarization LLM",
-          "variant": "LanguageModel",
-          "required": true
-        }
-      ],
-      "outputs": [
-        {
-          "id": "Core.SubWorkflow.ExposeOutputPort-0062j",
-          "displayName": "On Compact",
-          "variant": "MessageList"
-        },
-        {
-          "id": "Core.SubWorkflow.ExposeOutputPort-m4s9s",
-          "displayName": "Out",
-          "variant": "MessageList"
-        }
-      ],
-      "dependency": {
-        "workflowId": "ac147960-ed28-44ed-8808-1e4348a6dda8",
-        "mode": "publication"
-      }
     }
   }
 }

@@ -85,7 +85,7 @@ const VARIANT_TS: Partial<Record<Foundations.Field.Variant, string>> = {
 }
 
 // Object type built from the workflow's config fields → `$config` key autocomplete.
-// Mirrors the runtime bag Expression.resolveWorkflowConfig produces (field id → value).
+// Mirrors the runtime bag Airlock.resolveWorkflowConfig produces (field id → value).
 export function getConfigType(): string {
     const fields = WorkbenchSDK.state.data.fields ?? []
     if (fields.length === 0) return 'Record<string, any>'

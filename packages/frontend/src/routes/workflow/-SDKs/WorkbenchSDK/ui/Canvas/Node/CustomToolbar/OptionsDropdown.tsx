@@ -4,9 +4,11 @@ import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 import React from 'react'
+import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 
 interface Props {
     node: Workflow.Node
+    blueprint: Blueprint
 }
 
 function downloadNodeJson(node: Workflow.Node) {
@@ -19,7 +21,7 @@ function downloadNodeJson(node: Workflow.Node) {
     URL.revokeObjectURL(url)
 }
 
-export const OptionsDropdown: React.FC<Props> = ({ node }) => (
+export const OptionsDropdown: React.FC<Props> = ({ node, blueprint }) => (
     <DropdownMenu.Root>
         <DropdownMenu.Trigger className='p-0!' asChild>
             <Button variant="ghost" size="icon-xs" className='p-0! mt-0!'>

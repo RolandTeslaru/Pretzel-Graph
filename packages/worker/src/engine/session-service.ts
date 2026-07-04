@@ -181,7 +181,6 @@ export class SessionService {
         });
 
         System.log.info("node completed", {
-            name:        entry.wfNode.displayName,
             nodeId:      entry.wfNode.id,
             outputPorts: projectedOutput ? Object.keys(projectedOutput) : [],
         });

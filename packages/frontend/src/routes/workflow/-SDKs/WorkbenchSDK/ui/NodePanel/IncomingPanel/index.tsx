@@ -39,8 +39,7 @@ const IncomingPanel = () => {
 export default IncomingPanel
 
 const Content = ({ nodeId, execution }: { nodeId: Workflow.Node.Id; execution: Execution }) => {
-  const [node, cache, edges] = WorkbenchSDK.useStore(s => [
-    s.selectors.node.get(s, nodeId),
+  const [cache, edges] = WorkbenchSDK.useStore(s => [
     s.cache,
     s.data.edges,
   ])
@@ -57,11 +56,11 @@ const Content = ({ nodeId, execution }: { nodeId: Workflow.Node.Id; execution: E
     return result
   }, [cache, edges, nodeId, execution])
 
-  if (!node) return null
+  const inputs = WorkbenchSDK.useInputs(nodeId)
 
   return (
     <PortProjectionsView
-      ports={node.inputs}
+      ports={inputs}
       projections={projections}
       emptyMessage="No incoming data yet."
     />

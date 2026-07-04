@@ -2,6 +2,8 @@ import { Foundations, Vault, Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../../sdk";
 import uid from "../../../../../../utils/uid";
 import { VaultSDK } from "@/SDKs/VaultSDK/sdk";
+import { ShelfSDK } from "../../../ShelfSDK/sdk";
+import { nodeSelectors } from "../../selectors/node";
 
 type S      = WorkbenchSDK.State
 type NodeId = Workflow.Node.Id
@@ -52,11 +54,16 @@ export const nodeValueReducers = {
             ...(overrides ?? {}),
         };
 
+        const blueprint = nodeSelectors.getBlueprint(s, nodeId);
+
         // Auto-fill any still-unassigned credential the node declares, but only when
         // exactly one matching vault instance exists (unambiguous default).
-        for (const template of node.credentials ?? []) {
-            if (next[template.id] !== undefined) continue;
+        for (const template of blueprint.credentials ?? []) {
+            if (next[template.id] !== undefined) 
+                continue;
+            
             const instances = VaultSDK.selectors.byTemplateId(VaultSDK.state, template.id);
+            
             if (instances.length === 1)
                 next[template.id] = instances[0].id;
         }

@@ -1,4 +1,4 @@
-import { Foundations, Validation, Vault, Webhook, Workflow } from "@pretzel-graph/shared/domain";
+import { Foundations, Validation, Vault, Workflow } from "@pretzel-graph/shared/domain";
 import { cloneDeep } from 'lodash';
 import type { WorkbenchSDK } from "../../sdk";
 import { edgeReducers } from "../edge";
@@ -6,6 +6,7 @@ import { cacheReducers } from "../cache";
 import { layoutReducers } from "../layout";
 import { dependencyReducers } from "../dependency";
 import { nodeValueReducers } from "./values";
+import { ShelfSDK } from "../../../ShelfSDK/sdk";
 
 type S      = WorkbenchSDK.State
 type NodeId = Workflow.Node.Id
@@ -37,29 +38,16 @@ export const nodeLifecycleReducers = {
     create: (s, blueprint, position, staticValues) => {
         s.isDirty = true;
         const nodeId = Workflow.Node.createId(blueprint.id);
-        const newNode = constructNode({
+        const newNode: Workflow.Node = {
             id          : nodeId,
             blueprintId : blueprint.id,
-            displayName : blueprint.displayName,
-
-            fields      : blueprint.fields,
-            inputs      : blueprint.inputs,
-            outputs     : blueprint.outputs,
-            webhooks    : blueprint.webhooks ?? [],
-            credentials : blueprint.credentials ?? [],
-            itemScope   : blueprint.itemScope,
-
-            icon        : blueprint.icon,
-            description : blueprint.description,
-            isMinimized : false,
-            isFlipped   : false,
-            isDisabled  : false,
-            accent      : blueprint.accent,
-            iconColor   : blueprint.iconColor,
+            ui: {
+                displayName: blueprint.ui.displayName,
+                description: blueprint.ui.description
+            },
             dependency  : blueprint.dependency,
-            flags       : blueprint.flags ?? {},
-            toolCompatible: blueprint.toolCompatible,
-        })
+        }
+
 
         try {
             Workflow.Node.Schema.parse(newNode)
@@ -116,29 +104,13 @@ export const nodeLifecycleReducers = {
         const nodeLayout   = cloneDeep(s.selectors.layout.node.get(s, nodeId));
         const hadDependency = !!node.dependency;
 
-        const newNode = constructNode({
+        const newNode: Workflow.Node = {
             id          : nodeId,
             blueprintId : blueprint.id,
-            displayName : blueprint.displayName,
-
-            fields      : blueprint.fields,
-            inputs      : blueprint.inputs,
-            outputs     : blueprint.outputs,
-            webhooks    : blueprint.webhooks ?? [],
-            credentials : blueprint.credentials ?? [],
-            itemScope   : blueprint.itemScope,
-
-            icon        : blueprint.icon,
-            description : blueprint.description,
-            isMinimized : node.isMinimized,
-            isFlipped   : node.isFlipped,
             isDisabled  : node.isDisabled,
-            accent      : blueprint.accent,
-            iconColor   : blueprint.iconColor,
+            ui          : node.ui,
             dependency  : node.dependency ?? blueprint.dependency,
-            flags       : node.flags ?? blueprint.flags ?? {},
-            toolCompatible: blueprint.toolCompatible,
-        })
+        }
 
         const result = Workflow.Node.Schema.safeParse(newNode)
         if (!result.success)
@@ -194,29 +166,7 @@ export const nodeLifecycleReducers = {
             position.y += 40
         }
         const newNodeId = Workflow.Node.createId(originalNode.blueprintId)
-        const newNode = constructNode({
-            id           : newNodeId,
-            blueprintId  : originalNode.blueprintId,
-            displayName  : originalNode.displayName,
-
-            fields       : originalNode.fields,
-            inputs       : originalNode.inputs,
-            outputs      : originalNode.outputs,
-            webhooks     : originalNode.webhooks ?? [],
-            credentials  : originalNode.credentials ?? [],
-
-            icon         : originalNode.icon,
-            description  : originalNode.description,
-            isMinimized  : originalNode.isMinimized,
-            isFlipped    : originalNode.isFlipped,
-            isDisabled   : originalNode.isDisabled,
-            accent       : originalNode.accent,
-            iconColor    : originalNode.iconColor,
-            dependency   : originalNode.dependency,
-            flags        : originalNode.flags ?? {},
-            itemScope    : originalNode.itemScope,
-            toolCompatible: originalNode.toolCompatible,
-        })
+        const newNode: Workflow.Node = { ...cloneDeep(originalNode), id: newNodeId }
 
         // Values default to the source node's live state, but callers (paste)
         // may pass a snapshot taken at copy time so later edits don't leak in.
@@ -230,7 +180,7 @@ export const nodeLifecycleReducers = {
 
         return newNode;
     },
-    reconcile: (s, nodeId, blueprint) => {
+    reconcile: (s, nodeId, blueprint, reconciledBlueprintId) => {
         s.isDirty = true;
         const node = s.data.nodes[nodeId];
         if (!node)
@@ -239,11 +189,15 @@ export const nodeLifecycleReducers = {
         if (node.blueprintId !== blueprint.id)
             throw new Error(`Node ${nodeId} is not of type ${blueprint.id}`);
 
+        // Diff the node's current base ports against the reconciled ones (added ports are
+        // untouched — they survive reconcile and aren't part of the blueprint diff).
+        const oldBlueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
+
         // --- Diff inputs: remove edges for removed/variant-changed inputs ---
         const newInputsById = new Map(blueprint.inputs.map(i => [i.id, i]));
         const inputHandles = s.cache.inputHandlesMap[nodeId] ?? {};
 
-        for (const oldInput of node.inputs) {
+        for (const oldInput of oldBlueprint.inputs) {
             const newInput = newInputsById.get(oldInput.id);
             const edgeId = inputHandles[oldInput.id];
 
@@ -256,7 +210,7 @@ export const nodeLifecycleReducers = {
         const newOutputsById = new Map(blueprint.outputs.map(o => [o.id, o]));
         const outputHandles = s.cache.outputHandlesMap[nodeId] ?? {};
 
-        for (const oldOutput of node.outputs) {
+        for (const oldOutput of oldBlueprint.outputs) {
             const newOutput = newOutputsById.get(oldOutput.id);
             const edgeId = outputHandles[oldOutput.id];
 
@@ -264,12 +218,8 @@ export const nodeLifecycleReducers = {
                 edgeReducers.remove(s, edgeId);
         }
 
-        // --- Apply reconciled blueprint ---
-        node.fields = blueprint.fields as Workflow.Node['fields']
-        node.inputs = blueprint.inputs as Workflow.Node['inputs']
-        node.outputs = blueprint.outputs as Workflow.Node['outputs']
-        node.itemScope = blueprint.itemScope;
-        node.accent = blueprint.accent;
+        // Point the node at the reconciled blueprint; fields/ports now derive from it.
+        node.reconciledBlueprintId = reconciledBlueprintId;
 
         // Seed from existing values, then fill gaps with initialValue
         nodeValueReducers.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs);
@@ -283,20 +233,12 @@ export const nodeLifecycleReducers = {
         cacheReducers.deleteNode(s, nodeId);
 
         const wiped: Workflow.Node = {
-            id          : nodeId,
             blueprintId : node.blueprintId,
-            displayName : replace.displayName ?? "Wiped Node",
-            icon        : "",
-            fields      : replace.fields ?? [],
-            inputs      : replace.inputs ?? [],
-            outputs     : replace.outputs ?? [],
-            isMinimized : replace.isMinimized ?? false,
-            isFlipped   : replace.isFlipped ?? false,
-            dependency  : replace.dependency,
-            accent      : replace.accent ?? "utility",
-            flags       : replace.flags,
-            toolCompatible: replace.toolCompatible,
-            credentials: replace.credentials,
+            ui: {
+                displayName: "Wiped Node"
+            },
+            ...replace,
+            id          : nodeId,
         };
 
         s.data.nodes[nodeId]    = wiped;
@@ -315,7 +257,13 @@ export const nodeLifecycleReducers = {
         }
 
 
-        const nodeIssues = Validation.Issue.Node.check(node, s.data, s.cache);
+        const nodeIssues = Validation.Issue.Node.check(
+            node,
+            s.selectors.node.getFields(s, nodeId),
+            s.selectors.node.getInputs(s, nodeId),
+            s.data,
+            s.cache,
+        );
 
         if(!nodeIssues)
             delete s.issues.nodes[nodeId];
@@ -336,49 +284,8 @@ export interface NodeLifecycleReducers {
         staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>;
         credentialInstanceIds?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>;
     }) => Workflow.Node;
-    reconcile   : (s: S, nodeId: NodeId, blueprint: Foundations.Blueprint) => void;
+    reconcile   : (s: S, nodeId: NodeId, blueprint: Foundations.Blueprint, reconciledBlueprintId: Foundations.Blueprint.ReconciledId) => void;
     wipe        : (s: S, nodeId: NodeId, replace?: Partial<Workflow.Node>) => void;
     validate    : (s: S, nodeId: NodeId) => void;
     clearIssues : (s: S, nodeId: NodeId) => void;
-}
-
-
-/** Forces every property key to be present, while keeping each value's original type (incl. null/undefined). */
-type Explicit<T> = { [K in keyof Required<T>]: T[K] };
-
-const constructNode = ({
-    id, blueprintId, displayName, fields, inputs, outputs, webhooks, credentials, icon, description, isMinimized, isFlipped, isDisabled, accent, iconColor, toolCompatible, dependency, flags
-}: Explicit<Omit<Workflow.Node, 'fields' | 'inputs' | 'outputs' | 'webhooks' | 'credentials' | 'flags' | 'dependency'>> & {
-    fields      : readonly Foundations.Field[],
-    inputs      : readonly Foundations.Port.Input[],
-    outputs     : readonly Foundations.Port.Output[],
-    webhooks    : readonly Webhook[],
-    credentials : readonly Vault.Credential.Template[],
-    flags       : Record<string, unknown>,
-    dependency  : Workflow.Node['dependency'],
-}) => {
-    return {
-        id,
-        blueprintId,
-        displayName,
-        icon,
-        isMinimized,
-
-        // Arrays/objects/booleans collapse to `undefined` when empty/default so the
-        // serialized workflow JSON omits them entirely (keeps persisted nodes lean).
-        fields      : cloneDeep(fields) as Workflow.Node["fields"],
-        inputs      : cloneDeep(inputs) as Workflow.Node["inputs"],
-        outputs     : cloneDeep(outputs) as Workflow.Node["outputs"],
-        webhooks    : webhooks.length === 0 ? undefined : cloneDeep(webhooks) as Workflow.Node["webhooks"],
-        credentials : credentials.length === 0 ? undefined : cloneDeep(credentials) as Workflow.Node["credentials"],
-        flags       : Object.keys(flags).length === 0 ? undefined : cloneDeep(flags) as Workflow.Node["flags"],
-        dependency  : dependency === undefined ? undefined : cloneDeep(dependency) as Workflow.Node["dependency"],
-
-        description    : description ? description : undefined,
-        accent         : accent ? accent : undefined,
-        iconColor      : iconColor ? iconColor : undefined,
-        isFlipped      : isFlipped ? true : undefined,
-        isDisabled     : isDisabled ? true : undefined,
-        toolCompatible : toolCompatible ? true : undefined,
-    } satisfies Workflow.Node
 }

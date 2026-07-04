@@ -50,10 +50,9 @@ export namespace Blueprint {
             flags:                z.record(z.string(), z.unknown()).optional(),
             credentials:          z.array(Vault.Credential.Template.Schema).readonly().optional(),
             
-            displayName:          z.string(),
-            description:          z.string().optional(),
-
-            ui:                   z.object({
+            ui:                   z.object({                
+                displayName:          z.string(),
+                description:          z.string().optional(),
                 icon:                 z.string(),
                 accent:               z.string().optional(),
                 iconColor:            z.string().optional(),
@@ -84,8 +83,8 @@ export namespace Blueprint {
             ...baseBlueprint,
             ...extractExposedPorts(dep.workflow_data),
             fields:      mergeFieldsById(baseBlueprint.fields, dep.workflow_data.fields ?? []),
-            displayName: dep.display_name,
             ui: {
+                displayName: dep.display_name,
                 icon:        dep.icon ?? baseBlueprint.ui.icon,
                 accent:      dep.accent ?? baseBlueprint.ui.accent,
                 // Don't inherit the container's iconColor — a dependency has its own

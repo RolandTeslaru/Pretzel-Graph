@@ -1,17 +1,19 @@
 import { Workflow } from '@pretzel-graph/shared/domain'
-import React, { useMemo } from 'react'
+import React from 'react'
 import { Port } from '../../Port'
+import { WorkbenchSDK } from '../../../../../sdk'
 
 interface Props {
-    node: Workflow.Node
+    nodeId: Workflow.Node.Id,
     isWorkflowLocked: boolean
     isFlipped?: boolean
     children?: React.ReactNode
 }
 
-const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped, children }) => {
+const MinimizedHandles: React.FC<Props> = ({ nodeId, isWorkflowLocked, isFlipped, children }) => {
 
-    const inputs = useMemo(() => node.inputs.filter(i => !i.internal), [node.inputs])
+    const inputs = WorkbenchSDK.useInputs(nodeId)
+    const outputs = WorkbenchSDK.useOutputs(nodeId)
 
     return (
         <div className={`flex w-full py-2 ${isFlipped ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -21,7 +23,7 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped, 
                         <Port
                             type="target"
                             port={input}
-                            nodeId={node.id}
+                            nodeId={nodeId}
                             isWorkflowLocked={isWorkflowLocked}
                             isFlipped={isFlipped}
                         />
@@ -30,12 +32,12 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped, 
             </div>
             {children}
             <div className={`flex flex-col h-auto my-auto gap-4 relative ${isFlipped ? 'mr-auto' : 'ml-auto'}`}>
-                {node.outputs.map(output =>
+                {outputs.map(output =>
                     <div className='h-2 relative' key={output.id}>
                         <Port
                             type="source"
                             port={output}
-                            nodeId={node.id}
+                            nodeId={nodeId}
                             isWorkflowLocked={isWorkflowLocked}
                             isFlipped={isFlipped}
                         />

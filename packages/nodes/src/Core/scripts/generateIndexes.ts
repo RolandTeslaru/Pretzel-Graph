@@ -86,7 +86,17 @@ export async function generateIndex(includeDbBlueprints = false) {
         for (const row of data ?? []) {
             const workflowData = row.data as Workflow.Data;
             const dependencyFields = workflowData.fields ?? [];
-            const { inputs, outputs } = extractExposedPorts(workflowData);
+
+            let inputs: Foundations.Port.Input[] = [];
+            let outputs: Foundations.Port.Output[] = [];
+
+            try {
+                ({ inputs, outputs } = extractExposedPorts(workflowData))
+
+            } catch (err) {
+                console.error(`Error processing public workflow ${row.display_name} ${row.id}:`, err);
+                continue;                
+            }
 
             
             const blueprintId = PUBLIC_WORKFLOW_BLUEPRINTS_REVERSE[row.id];
@@ -94,8 +104,8 @@ export async function generateIndex(includeDbBlueprints = false) {
             const bp: Foundations.Blueprint = {
                 ...baseBlueprint,
                 id: blueprintId,
-                displayName: row.display_name,
                 ui: {
+                    displayName: row.display_name,
                     icon: row.icon ?? baseBlueprint.ui.icon,
                     accent: row.accent ?? baseBlueprint.ui.accent,
                     iconColor: baseBlueprint.ui.iconColor,
