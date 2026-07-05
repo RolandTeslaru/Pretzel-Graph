@@ -47,7 +47,7 @@ const CanvasEdge = memo(({
             const pt = p.getPointAtLength((i / N) * len);
             return { transform: `translate(${pt.x}px, ${pt.y}px)`, offset: i / N };
         });
-        const anim = el.animate(frames, { duration: 1400, iterations: Infinity, easing: 'linear' });
+        const anim = el.animate(frames, { duration: 3000, iterations: Infinity, easing: 'linear' });
         return () => anim.cancel();
     }, [edgePath]);
 
