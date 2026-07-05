@@ -136,10 +136,8 @@ const config: Config = {
                 // GPU-composited edge glint: rides the motion path via offset-distance
                 // (transform under the hood) + opacity. No geometry/paint work per frame.
                 "edge-glint": {
-                    "0%": { "offset-distance": "0%", opacity: "0" },
-                    "12%": { opacity: "0.9" },
-                    "88%": { opacity: "0.9" },
-                    "100%": { "offset-distance": "100%", opacity: "0" },
+                    "0%": { "offset-distance": "0%" },
+                    "100%": { "offset-distance": "100%" },
                 },
                 "pulse-pink": {
                     "0%, 100%": { backgroundColor: "var(--accent-pink)" },
