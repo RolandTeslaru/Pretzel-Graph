@@ -29,7 +29,6 @@ export namespace FieldBuilder {
         hidden?: boolean;
         displayName: string;
         tooltip?: string;
-        reconcile?: boolean;
         /**
          * Marks the field item-scoped: skipped during eager field eval, resolved per-element via
          * RuntimeNode.evalItemField with $item bound. Pass the literal `true` so the type survives
@@ -51,7 +50,7 @@ export namespace FieldBuilder {
             tooltip: props.tooltip,
             required: props.required ?? false,
             advanced: props.advanced ?? false,
-            reconcile: props.reconcile ?? false,
+            reconcile: false,   // set true only via FieldBuilder.reconciling(...)
             hidden: props.hidden,
             ...buildItemScoped(props.itemScoped),
         } satisfies { id: TId & Foundations.Field.Id } & OmitId<Foundations.Field.Base>
@@ -76,6 +75,17 @@ export namespace FieldBuilder {
      */
     export function itemScoped<F extends { id: string }>(field: F): F & { itemScoped: true } {
         return { ...field, itemScoped: true };
+    }
+
+    /**
+     * Marks a field as a reconcile trigger: changing it re-runs the node's reconciler, and its value
+     * is part of the reconciled identity. Carries the `reconcile: true` literal so
+     * InferReconcilingFieldValues can expose it — the reconciler may only read reconcile fields.
+     *
+     * @example FieldBuilder.reconciling(FieldBuilder.MultiOption({ id: "operation", ... }))
+     */
+    export function reconciling<F extends { id: string }>(field: F): F & { reconcile: true } {
+        return { ...field, reconcile: true };
     }
 
 

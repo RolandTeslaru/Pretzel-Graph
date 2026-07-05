@@ -11,10 +11,10 @@ interface Props {
     nodeId: Workflow.Node.Id
     dialogId: string
     searchQuery: string
-    nodeDependency: Workflow.Node.Dependency | undefined
+    depRef: Workflow.Node.DependencyRef | null
 }
 
-export const DraftSelector = memo<Props>(({ nodeId, dialogId, searchQuery, nodeDependency }) => {
+export const DraftSelector = memo<Props>(({ nodeId, dialogId, searchQuery, depRef }) => {
     const workflowMetas = LibrarySDK.useStore(s => s.workflowMetas)
 
     const options = useMemo(() => {
@@ -32,7 +32,7 @@ export const DraftSelector = memo<Props>(({ nodeId, dialogId, searchQuery, nodeD
 
     return (
         <>
-            <ScrollArea.Root className="h-64 rounded-md border border-border/60">
+            <ScrollArea.Root className="h-64 bg-secondary">
                 {options.length === 0 ? (
                     <div className="px-2 py-4 text-center text-xs text-muted-foreground">No workflows found</div>
                 ) : (
@@ -40,7 +40,7 @@ export const DraftSelector = memo<Props>(({ nodeId, dialogId, searchQuery, nodeD
                         <DraftSelectorItem
                             key={workflow.id}
                             workflow={workflow}
-                            isSelected={workflow.id === nodeDependency?.workflowId && nodeDependency.mode === "draft"}
+                            isSelected={workflow.id === depRef?.workflowId && depRef.mode === "draft"}
                             onSelect={attach}
                         />
                     ))

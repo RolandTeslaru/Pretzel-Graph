@@ -32,7 +32,6 @@ export function createCaseListActions(
                     displayName: label,
                     variant: resolvedVariant,
                     polymorphicGroupId: "condition",
-                    originalVariant: "Unresolved",
                 })
             })
 

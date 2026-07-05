@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Tree } from '@/components/Tree/Tree'
 import { projectionsToDummyTree } from '@/components/Tree/toTree'
 import type { Tree as TreeType } from '@/components/Tree/domain'
-import type { Foundations } from '@pretzel-graph/shared/domain'
+import type { Execution, Foundations } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 
@@ -113,15 +113,20 @@ export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSi
     )
 }
 
+
+
+interface Props {
+    ports: Array<{ id: string; displayName?: string; variant: Foundations.Port.Variant }>
+    projections: Execution.Session["node_output_projections"]
+    emptyMessage: string
+}
+
+
 export function PortProjectionsView({
     ports,
     projections,
     emptyMessage,
-}: {
-    ports: Array<{ id: string; displayName?: string; variant: Foundations.Port.Variant }>
-    projections: Record<string, Record<string, unknown>>
-    emptyMessage: string
-}) {
+}: Props) {
     const branchData = useMemo(
         () => Object.fromEntries(ports.map(p => [p.id, { displayName: p.displayName, variant: p.variant }])),
         [ports]

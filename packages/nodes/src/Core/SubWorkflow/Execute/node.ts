@@ -29,8 +29,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         compilationCtx: WorkflowCompiler.Compilation.Context,
     ): Promise<void> {
         const { compilePath, parentWorkflowIgniter } = compilationCtx;
-        const subWorkflowId  = this.workflowNode.dependency?.workflowId as Workflow.Id;
-        const dependencyMode = this.workflowNode.dependency?.mode ?? "publication";
+        const subWorkflowId  = this.workflowNode.dependencyRef?.workflowId as Workflow.Id;
+        const dependencyMode = this.workflowNode.dependencyRef?.mode ?? "publication";
 
         if (compilePath.includes(subWorkflowId)) {
             const cyclePath = [...compilePath, subWorkflowId];

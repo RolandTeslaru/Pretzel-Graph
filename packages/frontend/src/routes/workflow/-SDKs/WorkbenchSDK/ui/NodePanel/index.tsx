@@ -1,6 +1,8 @@
-import { ScrollArea } from '@pretzel-graph/standard-ui/foundations'
+import { Input, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import React, { useMemo, memo, useEffect, useState } from 'react'
 import { WorkbenchSDK } from '../../sdk'
+import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
+import type { NodeUI } from '../../selectors/node'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
@@ -11,7 +13,6 @@ import { NodeSidebarHeader } from './Header';
 import { NodeSidebarFooter } from './Footer';
 import WebhookRenderer from './webhook-renderer';
 import { InputItem } from './input-renderer';
-import { NodeDescription } from './node-description'
 import { CredentialPicker } from './CredentialPicker';
 import { DependencySelector } from './DependencySelector'
 
@@ -35,20 +36,22 @@ const SidebarAccordionItem = ({ label, value, children }: SidebarAccordionItemPr
 
 const NodeSidebar = () => {
 
-    const clickedNode = WorkbenchSDK.useStore(s => s.selectors.getClickedNode(s));
+    const clickedNodeId = WorkbenchSDK.useStore(s => s.selectors.getClickedNode(s)?.id ?? "" as Workflow.Node.Id);
     const isFullscreen = DialogSDK.useStore(s => s.selectors.isDialogOpen(s, "fullscreen-node-panel"));
 
+    const hyNode = WorkbenchSDK.useNode(clickedNodeId)
+
     useEffect(() => {
-        if (clickedNode && !isFullscreen) {
+        if (clickedNodeId && hyNode && !isFullscreen) {
             StackSDK.actions.push("nodeSidebar" as StackSDK.Panel.Id, (props) => (
                 <StackSDK.Template {...props}>
-                    <Content clickedNode={clickedNode} />
+                    <Content hyNode={hyNode} />
                 </StackSDK.Template>
             ))
         } else
             StackSDK.actions.pop("nodeSidebar" as StackSDK.Panel.Id)
             
-    }, [clickedNode, isFullscreen])
+    }, [clickedNodeId, isFullscreen])
 
     return null
 }
@@ -56,21 +59,21 @@ const NodeSidebar = () => {
 export default NodeSidebar
 
 
-interface Props {
-    clickedNode: Workflow.Node
+interface ContentProps {
+    hyNode: Workflow.HydratedNode
     showFooter?: boolean
 }
 
-export const Content = memo(({ clickedNode: node, showFooter = true }: Props) => {
+export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
     const [isEditing, setIsEditing] = useState(false)
-    const connectedPorts = WorkbenchSDK.useStore(s => s.selectors.node.getConnectedPorts(s, node.id))
 
-    const [ fields, executionStrategyFields, inputs, connectedInputs, webhooks ] = useMemo(() => {
+    const [ fields, executionStrategyFields, inputs, connectedInputs ] = useMemo(() => {
+
         const connectedInputs: Foundations.Port.Input[] = [];
         const inputs: Foundations.Port.Input[] = [];
 
-        node.inputs.filter(inp => !inp.internal).forEach(input => {
-            if (connectedPorts[input.id])
+        hyNode.inputs.filter(inp => !inp.internal).forEach(input => {
+            if (hyNode.connectedPorts[input.id])
                 connectedInputs.push(input);
             else if(input.variant in INPUT_RENDERER_MAP)
                 inputs.push(input);
@@ -79,12 +82,12 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
         const fields: Foundations.Field[] = []
         const executionStrategyFields: Foundations.Field[] = []
 
-        node.fields.forEach(field => {
+        hyNode.fields.forEach(field => {
             if (field.id === "signalDependency" || field.id === "dataDependency" || field.id === "onErrorStrategy"){
                 executionStrategyFields.push(field)
                 return
             }
-                
+
             fields.push(field)
         })
 
@@ -94,11 +97,12 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
             executionStrategyFields,
             inputs,
             connectedInputs,
-            node.webhooks || []
         ];
-    }, [connectedPorts, node.inputs, node.fields]);
+    }, [hyNode.connectedPorts, hyNode.blueprint, hyNode.inputs, hyNode.fields]);
 
-    const credentials = node.credentials ?? []
+    const credentials = hyNode.blueprint.credentials ?? []
+    const webhooks = hyNode.blueprint.webhooks ?? []
+    const flags = hyNode.blueprint.flags ?? {}
 
     const defaultOpen = useMemo(() => {
         const sections: string[] = ["execution-strategy", "output", "webhooks"];
@@ -117,7 +121,7 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
     return (
         <>
             <NodeSidebarHeader
-                node={node}
+                hyNode={hyNode}
                 isEditing={isEditing}
                 onEditStart={() => setIsEditing(true)}
                 onEditFinish={() => setIsEditing(false)}
@@ -125,7 +129,7 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
 
             {/* Sections */}
             <ScrollArea.Root className='mask-[linear-gradient(to_bottom,transparent,black_48px,black_calc(100%-48px),transparent)]'>
-                <NodeDescription node={node} isEditing={isEditing} />
+                <NodeDescription nodeId={hyNode.id} description={hyNode.ui.description} isEditing={isEditing} />
                 <Accordion.Root
                     type="multiple"
                     defaultValue={defaultOpen}
@@ -134,7 +138,7 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
                     {inputs.length > 0 && (
                         <SidebarAccordionItem label='Inputs' value='inputs'>
                             {inputs.map(input => (
-                                <InputItem key={input.id} input={input} nodeId={node.id} />
+                                <InputItem key={input.id} input={input} nodeId={hyNode.id} />
                             ))}
                         </SidebarAccordionItem>
                     )}
@@ -142,7 +146,7 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
                         <SidebarAccordionItem label='Webhooks' value='webhooks'>
                             {webhooks.map(webhook => (
                                 <div key={webhook.id} className='px-4 py-1 min-w-0'>
-                                    <WebhookRenderer webhook={webhook} nodeId={node.id} />
+                                    <WebhookRenderer webhook={webhook} nodeId={hyNode.id} />
                                 </div>
                             ))}
                         </SidebarAccordionItem>
@@ -151,31 +155,60 @@ export const Content = memo(({ clickedNode: node, showFooter = true }: Props) =>
                         <SidebarAccordionItem label='Credentials' value='credentials'>
                             {credentials.map(cred => (
                                 <div key={cred.id} className='px-4 py-1 min-w-0'>
-                                    <CredentialPicker credentialTemplate={cred} nodeId={node.id} />
+                                    <CredentialPicker credentialTemplate={cred} nodeId={hyNode.id} />
                                 </div>
                             ))}
                         </SidebarAccordionItem>
                     )}
                         <SidebarAccordionItem label='Fields' value='fields'>
-                            {node.flags?.SHOW_DEPENDENCY_SELECTOR ? <DependencySelector className="px-4" nodeId={node.id} /> : null}
+                            {flags?.SHOW_DEPENDENCY_SELECTOR ? <DependencySelector className="px-4" nodeId={hyNode.id} /> : null}
 
                             {fields.map(field => field.hidden ? null : (
                                 <div key={field.id} className='px-4 py-1 min-w-0'>
-                                    <FieldRenderer field={field} nodeId={node.id} />
+                                    <FieldRenderer field={field} nodeId={hyNode.id} />
                                 </div>
                             ))}
                         </SidebarAccordionItem>
                     <SidebarAccordionItem label='Execution Behavior' value='execution-strategy'>
                         {executionStrategyFields.map(field => field.hidden ? null : (
                             <div key={field.id} className='px-4 py-2'>
-                                <FieldRenderer field={field} nodeId={node.id} />
+                                <FieldRenderer field={field} nodeId={hyNode.id} />
                             </div>
                         ))}
                     </SidebarAccordionItem>
                 </Accordion.Root>
             </ScrollArea.Root>
 
-            {showFooter && <NodeSidebarFooter node={node} />}
+            {showFooter && <NodeSidebarFooter hyNode={hyNode} />}
         </>
     )
-})
+}
+
+
+
+
+export const NodeDescription = ({ nodeId, description, isEditing }: {
+    nodeId: Workflow.Node.Id,
+    description?: string
+    isEditing: boolean
+}) => {
+    if (!description && !isEditing) return <div className='py-2 px-2 pt-10'></div>
+
+    return (
+        <div className='py-2 px-2 pt-14'>
+            {isEditing ? (
+                <Input
+                    className='text-xs bg-transparent shadow-none focus-visible:ring-0 text-muted-foreground placeholder:text-muted-foreground/50'
+                    defaultValue={description}
+                    placeholder='Add a description...'
+                    onBlur={e => WorkbenchSDK.actions.node.setDescription(nodeId, e.target.value)}
+                />
+            ) : (
+                <p className='text-muted-foreground text-xs'>
+                    {description}
+                </p>
+            )}
+        </div>
+    )
+}
+

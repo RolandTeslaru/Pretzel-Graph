@@ -100,7 +100,7 @@ export class FlightRecorderService {
 
         for (const [portIdStr, edgeId] of Object.entries(inputHandles)) {
             const portId = portIdStr as Port.Input.Id
-            const edge   = ctx.workflowData.edges[edgeId]
+            const edge   = ctx.workflowCache.edges[edgeId]
             if (!edge) continue
 
             const sourceNodeId  = edge.source.nodeId

@@ -34,8 +34,14 @@ export const AddInputPortDialog = ({ nodeId, dialogId }: Props) => {
     })
 
     const onSubmit = (values: Values) => {
+        const state = WorkbenchSDK.state
+
+        
         const existingIds = new Set<string>(
-            WorkbenchSDK.state.selectors.node.get(WorkbenchSDK.state, nodeId)?.inputs.map(p => p.id) ?? []
+            [
+                ...state.selectors.node.getInputs(state, nodeId).map(p => p.id) ?? [],
+                ...state.selectors.node.get(state, nodeId)?.addedInputs?.map(p => p.id) ?? [],
+            ]
         )
         if (existingIds.has(values.id)) {
             form.setError('id', { message: `ID "${values.id}" is already in use on this node` })
