@@ -60,11 +60,16 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.HydratedNode }) => {
 
   return (
     <>
-      <NodeToolbar isVisible={isNodeClicked} position={Position.Top}>
-        <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-200 ease-out origin-bottom">
-          <NodeCustomToolbar hyNode={hyNode}/>
-        </div>
-      </NodeToolbar>
+      {/* Mount only when clicked. NodeToolbar subscribes to the viewport transform to keep
+          its screen position, so an always-mounted one re-renders every node on every
+          pan/zoom frame — 144 nodes → 144 re-renders/frame. */}
+      {isNodeClicked && (
+        <NodeToolbar isVisible position={Position.Top}>
+          <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-200 ease-out origin-bottom">
+            <NodeCustomToolbar hyNode={hyNode}/>
+          </div>
+        </NodeToolbar>
+      )}
 
       <div className={cn(
           "animate-in fade-in-0 duration-200 ease-out transition-colors",
