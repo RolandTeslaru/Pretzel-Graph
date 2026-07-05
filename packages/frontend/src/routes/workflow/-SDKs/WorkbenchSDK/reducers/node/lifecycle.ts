@@ -12,7 +12,7 @@ export const nodeLifecycleReducers = {
         const nodes = s.data.nodes
         const staticValues = s.data.staticValues
 
-        const dependency = nodes[deletedNodeId]?.dependency;
+        const depRef = nodes[deletedNodeId]?.dependencyRef;
 
         // Delete all edges
         s.reducers.node.disconnect(s, deletedNodeId);
@@ -27,7 +27,7 @@ export const nodeLifecycleReducers = {
         s.reducers.layout.node.remove(s, deletedNodeId);
         s.reducers.node.clearIssues(s, deletedNodeId);
 
-        if(dependency)
+        if(depRef)
             s.reducers.dependency.removeUnused(s);
     },
     create: (s, blueprint, position, staticValues) => {
@@ -37,7 +37,7 @@ export const nodeLifecycleReducers = {
             id          : nodeId,
             blueprintId : blueprint.id,
             ui: {},
-            dependency  : blueprint.dependency,
+            dependencyRef : blueprint.dependencyRef,
         }
 
 
@@ -94,14 +94,14 @@ export const nodeLifecycleReducers = {
         const credentialInstances = s.data.credentialInstanceIds[nodeId];
 
         const nodeLayout   = cloneDeep(s.selectors.layout.node.get(s, nodeId));
-        const hadDependency = !!node.dependency;
+        const hadDependency = !!node.dependencyRef;
 
         const newNode: Workflow.Node = {
             id          : nodeId,
             blueprintId : blueprint.id,
             isDisabled  : node.isDisabled,
             ui          : node.ui,
-            dependency  : node.dependency ?? blueprint.dependency,
+            dependencyRef : node.dependencyRef ?? blueprint.dependencyRef,
         }
 
         const result = Workflow.Node.Schema.safeParse(newNode)
@@ -110,7 +110,7 @@ export const nodeLifecycleReducers = {
 
         // Clear dependency before remove so it doesn't trigger dependencyReducers.removeUnused while the node
         // is temporarily absent — the dependency is already captured in newNode above.
-        s.data.nodes[nodeId].dependency = undefined
+        s.data.nodes[nodeId].dependencyRef = undefined
         s.reducers.node.remove(s, nodeId)
 
         s.data.nodes[nodeId] = newNode;

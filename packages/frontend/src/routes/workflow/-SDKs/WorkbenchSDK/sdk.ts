@@ -15,7 +15,7 @@ import { workbenchReducers } from "./reducers";
 import { createDrivers, reconcileNodeDrivers, reconcileEdgeDrivers } from "./utils/createDrivers";
 import { sameUndoableData } from "./utils/temporal";
 import { ShelfSDK } from "../ShelfSDK/sdk";
-import { resolvePorts } from "./utils/resolvePorts";
+import { resolveInputs, resolveOutputs } from "./utils/resolvePorts";
 import type { NodeUI } from "./selectors/node";
 import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 
@@ -90,13 +90,14 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
 
     public useNode(nodeId: Workflow.Node.Id | null) {
-        const [node, connectedPorts] = this.useStore(s => {
+        const [node, connectedPorts, dependency] = this.useStore(s => {
             if(!nodeId)
-                return [null, {}] as const;
+                return [null, {}, null] as const;
 
             return [
                 s.data.nodes[nodeId],
-                s.selectors.node.getConnectedPorts(s, nodeId)
+                s.selectors.node.getConnectedPorts(s, nodeId),
+                s.selectors.node.getDependency(s, nodeId),
             ]
         })
 
@@ -111,14 +112,20 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         const inputs = useMemo(() => {
             if(!node || !blueprint)
                 return [];
-            return resolvePorts(blueprint.inputs, node.addedInputs, node.polymorphicResolutions);
-        }, [blueprint, node?.addedInputs, node?.polymorphicResolutions]);
+            return resolveInputs(blueprint.inputs, node, dependency);
+        }, [blueprint, node?.addedInputs, node?.polymorphicResolutions, dependency]);
 
         const outputs = useMemo(() => {
             if(!node || !blueprint)
                 return [];
-            return resolvePorts(blueprint.outputs, node.addedOutputs, node.polymorphicResolutions);
-        }, [blueprint, node?.addedOutputs, node?.polymorphicResolutions]);
+            return resolveOutputs(blueprint.outputs, node, dependency);
+        }, [blueprint, node?.addedOutputs, node?.polymorphicResolutions, dependency]);
+
+        const fields = useMemo(() => {
+            if(!node || !blueprint)
+                return [];
+            return node.addedFields?.length ? [...blueprint.fields, ...node.addedFields] : blueprint.fields;
+        }, [blueprint, node?.addedFields]);
 
         return useMemo(() => {
             if (!node || !blueprint)
@@ -127,20 +134,43 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
             return {
                 ...node,
                 blueprint,
+                fields,
                 inputs,
                 outputs,
                 ui: {
-                    displayName: node.ui?.displayName ?? blueprint.ui.displayName,
+                    displayName: node.ui?.displayName ?? dependency?.display_name ?? blueprint.ui.displayName,
                     description: node.ui?.description ?? blueprint.ui.description,
                     isMinimized: node.ui?.isMinimized ?? false,
                     isFlipped:   node.ui?.isFlipped   ?? false,
-                    icon:        node.ui?.icon        ?? blueprint.ui.icon,
-                    accent:      node.ui?.accent      ?? blueprint.ui.accent,
+                    icon:        node.ui?.icon        ?? dependency?.icon   ?? blueprint.ui.icon,
+                    accent:      node.ui?.accent      ?? dependency?.accent ?? blueprint.ui.accent,
                     iconColor:   node.ui?.iconColor   ?? blueprint.ui.iconColor,
                 },
                 connectedPorts,
             } as Workflow.HydratedNode;
-        }, [node, blueprint, inputs, outputs, connectedPorts]);
+        }, [node, blueprint, fields, inputs, outputs, connectedPorts, dependency]);
+    }
+
+
+    /** A single resolved output port. Subscribes to the stable inputs (node ref, dependency record,
+     *  blueprint) and memoizes the resolve+lookup, so it recomputes on reconcile / port changes /
+     *  dependency updates — not on every render. */
+    public useOutput(nodeId: Workflow.Node.Id | null, portId: Foundations.Port.Output.Id | null) {
+        const [node, dependency] = this.useStore(s => {
+            if (!nodeId)
+                return [null, null] as const;
+            return [s.data.nodes[nodeId] ?? null, s.selectors.node.getDependency(s, nodeId)] as const;
+        });
+
+        const blueprint = ShelfSDK.useStore(s =>
+            node ? s.blueprints[node.reconciledBlueprintId ?? node.blueprintId] : null
+        );
+
+        return useMemo(() => {
+            if (!node || !blueprint || !portId)
+                return null;
+            return resolveOutputs(blueprint.outputs, node, dependency).find(o => o.id === portId) ?? null;
+        }, [blueprint, node?.addedOutputs, node?.polymorphicResolutions, dependency, portId]);
     }
 
 

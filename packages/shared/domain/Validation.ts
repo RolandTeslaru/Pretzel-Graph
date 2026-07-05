@@ -1,9 +1,18 @@
 import { Workflow } from "./Workflow"
 import { Port } from "./Foundations/Port"
 import { Foundations } from "./Foundations";
-import { resolvePorts } from "./resolvePorts";
+import { resolveInputs, resolveOutputs } from "./resolvePorts";
 
 type Blueprints = Record<Foundations.Blueprint.Id, Foundations.Blueprint>;
+
+// Resolve a node's attached subworkflow dependency record from the workflow's dependency state,
+// so its exposed ports are derived during validation just like on the read path.
+function getNodeDependency(workflowData: Workflow.Data, node: Workflow.Node): Workflow.Dependency | null {
+    const ref = node.dependencyRef;
+    if (!ref) return null;
+    const store = ref.mode === "publication" ? workflowData.dependencies.published : workflowData.dependencies.draft;
+    return store[ref.workflowId] ?? null;
+}
 
 type Connection = {
     source: Workflow.Node.Id;
@@ -125,7 +134,7 @@ export namespace Validation {
                 if (!blueprint)
                     throw new Error(`Cannot validate node ${node.id}: blueprint "${node.reconciledBlueprintId ?? node.blueprintId}" was not provided.`);
 
-                const inputs = resolvePorts(blueprint.inputs, node.addedInputs, node.polymorphicResolutions);
+                const inputs = resolveInputs(blueprint.inputs, node, getNodeDependency(workflowData, node));
 
                 const nodeIssues = Node.check(node, blueprint.fields, inputs, workflowData, cache)
                 if (nodeIssues)
@@ -294,8 +303,8 @@ export namespace Validation {
             if (!sourceBp || !targetBp)
                 return false;
 
-            const sourcePort = resolvePorts(sourceBp.outputs, sourceNode.addedOutputs, sourceNode.polymorphicResolutions).find(o => o.id === sourceHandleId);
-            const targetPort = resolvePorts(targetBp.inputs, targetNode.addedInputs, targetNode.polymorphicResolutions).find(i => i.id === targetHandleId);
+            const sourcePort = resolveOutputs(sourceBp.outputs, sourceNode, getNodeDependency(workflowData, sourceNode)).find(o => o.id === sourceHandleId);
+            const targetPort = resolveInputs(targetBp.inputs, targetNode, getNodeDependency(workflowData, targetNode)).find(i => i.id === targetHandleId);
 
             if (!arePortsCompatible(sourcePort, targetPort))
                 return false;

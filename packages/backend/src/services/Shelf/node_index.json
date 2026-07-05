@@ -1,6 +1,6 @@
 {
-  "version": "1783199375774",
-  "generatedAt": "2026-07-04T21:09:35.774Z",
+  "version": "1783247151507",
+  "generatedAt": "2026-07-05T10:25:51.507Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -9176,7 +9176,7 @@
           "variant": "MessageList"
         }
       ],
-      "dependency": {
+      "dependencyRef": {
         "workflowId": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0",
         "mode": "publication"
       }
@@ -9331,7 +9331,7 @@
           "variant": "MessageList"
         }
       ],
-      "dependency": {
+      "dependencyRef": {
         "workflowId": "ac147960-ed28-44ed-8808-1e4348a6dda8",
         "mode": "publication"
       }

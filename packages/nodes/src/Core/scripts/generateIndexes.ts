@@ -116,9 +116,9 @@ export async function generateIndex(includeDbBlueprints = false) {
                 flags: {
                     SHOW_DEPENDENCY_SELECTOR: false
                 },
-                dependency: { workflowId: row.id, mode: "publication" as const },
+                dependencyRef: { workflowId: row.id, mode: "publication" as const },
             };
-            console.log(`Processing public workflow: ${bp.id} (${bp.dependency?.workflowId}) with ${inputs.length} inputs, ${outputs.length} outputs, and ${dependencyFields.length} dependency fields`)
+            console.log(`Processing public workflow: ${bp.id} (${bp.dependencyRef?.workflowId}) with ${inputs.length} inputs, ${outputs.length} outputs, and ${dependencyFields.length} dependency fields`)
             
             db_pretzel_blueprints[blueprintId] = bp;
         }

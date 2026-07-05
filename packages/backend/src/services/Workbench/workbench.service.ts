@@ -1,17 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { createAuthenticatedClient } from '@/utils/supabase';
-import { Workflow, Workbench, Vault } from '@pretzel-graph/shared/domain';
+import { Workflow, Workbench, Vault, Foundations } from '@pretzel-graph/shared/domain';
 import { WorkbenchDatabase } from './workbench.database';
 import { VaultDatabase } from '../Vault/vault.database';
 import { decryptCredentialBlob } from '../Vault/vault.encryption';
 import { CatalogueService, RuntimeNode } from '@pretzel-graph/node-sdk';
 import { Token } from '@/domain/Token';
+import { ShelfService } from '../Shelf/shelf.service';
 
 @Injectable()
 export class WorkbenchService {
     constructor(
         private readonly database: WorkbenchDatabase,
         private readonly vaultDatabase: VaultDatabase,
+        private readonly shelfService: ShelfService,
     ) {}
 
     public readonly workflow = {
@@ -30,7 +32,17 @@ export class WorkbenchService {
         ): Promise<Workbench.API.Workflow.Get.Response> => {
             const supabase = createAuthenticatedClient(token);
             const workflow = await this.database.workflow.get(supabase, workflowId);
-            return { workflow };
+
+            const blueprintIds = new Set<Foundations.Blueprint.Id>()
+            for (const node of Object.values(workflow.data.nodes)){
+                blueprintIds.add(node.blueprintId)
+                if(node.reconciledBlueprintId)
+                    blueprintIds.add(node.reconciledBlueprintId)
+            }
+
+            const { blueprints } = await this.shelfService.getBatchBlueprints({ blueprintIds: [...blueprintIds] });
+
+            return { workflow, blueprints };
         },
 
         commit: async (

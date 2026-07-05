@@ -2,7 +2,6 @@ import { Input, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import React, { useMemo, memo, useEffect, useState } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
-import { resolvePorts } from '../../utils/resolvePorts'
 import type { NodeUI } from '../../selectors/node'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import { DialogSDK } from '@/SDKs/DialogSDK'
@@ -83,7 +82,7 @@ export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
         const fields: Foundations.Field[] = []
         const executionStrategyFields: Foundations.Field[] = []
 
-        hyNode.blueprint.fields.forEach(field => {
+        hyNode.fields.forEach(field => {
             if (field.id === "signalDependency" || field.id === "dataDependency" || field.id === "onErrorStrategy"){
                 executionStrategyFields.push(field)
                 return
@@ -99,7 +98,7 @@ export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
             inputs,
             connectedInputs,
         ];
-    }, [hyNode.connectedPorts, hyNode.blueprint, hyNode.inputs]);
+    }, [hyNode.connectedPorts, hyNode.blueprint, hyNode.inputs, hyNode.fields]);
 
     const credentials = hyNode.blueprint.credentials ?? []
     const webhooks = hyNode.blueprint.webhooks ?? []
