@@ -17,7 +17,7 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
         setFields: withCommit((...props) => setState(s => { reducers.workflow.setFields(s, ...props) })),
         load: async (workflowId, abortSignal) => {
             try {
-                const { workflow } = await Workbench.API.Workflow.get(api, { workflowId }, abortSignal)
+                const { workflow, blueprints } = await Workbench.API.Workflow.get(api, { workflowId }, abortSignal)
 
                 
                 if (!workflow)
@@ -29,11 +29,7 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
                 // Also update the library metadata cache
                 LibrarySDK.actions.workflow.upsertMeta(meta);
                 
-                // Hydrate every blueprint the nodes reference — base ids and reconciled ids alike
-                // (getBatch reconstructs reconciled ids server-side) — so derive-on-read resolves
-                // synchronously once the graph paints.
-                const blueprintIds = sdk.selectors.getBlueprintIds(sdk.state, workflow);
-                await ShelfSDK.actions.hydrateBatch(blueprintIds);
+                ShelfSDK.actions.upsertBlueprints(blueprints);
 
                 setState(s => {
                     reducers.workflow.open(s, workflow)

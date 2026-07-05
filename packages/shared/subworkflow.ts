@@ -15,7 +15,9 @@ export const extractExposedPorts = (wfData: Workflow.Data): ExposedPorts => {
     const uniqueInputPorts: Record<Port.Input.Id, Port.Input> = {};
 
     Object.values(wfData.nodes).forEach(node => {
+        
         if (node.blueprintId === "Core.SubWorkflow.ExposeInputPort") {
+
             const requiredFieldId = "required" as Field.Id;
             const isRequired = Boolean(wfData.staticValues[node.id]?.[requiredFieldId]);
             const portId = wfData.staticValues[node.id]?.["exposed_port_id" as Field.Id] as Port.Input.Id | undefined;

@@ -159,7 +159,7 @@ export class WorkflowCompiler {
         wfNode:             Workflow.Node,
         engineExecutionCtx: AggexEngine.Execution.Context,
     ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Foundations.Blueprint | null }> {
-        if (!wfNode.dependency)
+        if (!wfNode.dependencyRef)
             throw new AggexCompilerError(
                 SystemError.Code.COMPILATION_NODE_NOT_FOUND,
                 `Could not find node with blueprintId "${wfNode.blueprintId}" in the catalogue`,
@@ -167,7 +167,7 @@ export class WorkflowCompiler {
             );
 
         const { dependencies } = engineExecutionCtx.workflowData;
-        const { workflowId, mode } = wfNode.dependency;
+        const { workflowId, mode } = wfNode.dependencyRef;
         const hasDep = mode === "publication"
             ? !!dependencies?.published?.[workflowId]
             : !!dependencies?.draft?.[workflowId];

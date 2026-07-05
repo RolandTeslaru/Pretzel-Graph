@@ -15,10 +15,10 @@ interface Props {
     nodeId: Workflow.Node.Id
     dialogId: string
     searchQuery: string
-    nodeDependency: Workflow.Node.Dependency | undefined
+    depRef: Workflow.Node.DependencyRef | null
 }
 
-export const PublicationSelector = memo<Props>(({ nodeId, dialogId, searchQuery, nodeDependency }) => {
+export const PublicationSelector = memo<Props>(({ nodeId, dialogId, searchQuery, depRef }) => {
     const activeWorkflows = VersionControlSDK.useStore(s => s.activeWorkflows)
     const workflowMetas   = LibrarySDK.useStore(s => s.workflowMetas)
 
@@ -35,8 +35,11 @@ export const PublicationSelector = memo<Props>(({ nodeId, dialogId, searchQuery,
         return Object.values(activeWorkflows)
             .map(publication => ({ publication, workflowMeta: workflowMetas[publication.workflow_id] }))
             .filter(({ publication, workflowMeta }) => {
-                if (!normalized) return true
+                if (!normalized) 
+                    return true
+                
                 const name = workflowMeta   ?.display_name ?? publication.name
+                
                 return (
                     name.toLowerCase().includes(normalized) ||
                     publication.name.toLowerCase().includes(normalized) ||
@@ -59,7 +62,7 @@ export const PublicationSelector = memo<Props>(({ nodeId, dialogId, searchQuery,
 
     return (
         <>
-            <div className="max-h-64 overflow-y-auto rounded-md border border-border/60">
+            <div className="h-64 overflow-y-auto">
                 {isLoading ? (
                     <div className="flex items-center justify-center gap-2 px-2 py-4 text-xs text-muted-foreground">
                         <Spinner className="size-3.5" />
@@ -73,7 +76,7 @@ export const PublicationSelector = memo<Props>(({ nodeId, dialogId, searchQuery,
                             key={publication.id}
                             publication={publication}
                             workflowMeta={workflowMeta}
-                            isSelected={publication.workflow_id === nodeDependency?.workflowId && nodeDependency.mode === "publication"}
+                            isSelected={publication.workflow_id === depRef?.workflowId && depRef.mode === "publication"}
                             onSelect={attach}
                         />
                     ))

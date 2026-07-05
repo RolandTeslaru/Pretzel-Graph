@@ -12,14 +12,14 @@ const FullScreenContent = ({ hyNode, blockTransparency, surfaceStyle }: FullScre
   // In the background (another dialog stacked on top) render solid; on top, frosted glass.
   // `surfaceStyle` carries the stack-darkening brightness filter — applied per card here
   // (not on the dialog wrapper) so each card's backdrop-blur isn't trapped by a filtered ancestor.
-  const surface = blockTransparency ? 'bg-card' : 'bg-card/80 backdrop-blur-md'
+  const surface = blockTransparency ? 'bg-card' : 'bg-card/90 backdrop-blur-md'
 
   return (
     <>
       <div style={surfaceStyle} className={`${surface} overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
         <IncomingPanel nodeId={hyNode.id} inputs={hyNode.inputs} />
       </div>
-      <div style={surfaceStyle} className={`${surface} lg:min-w-[450px] relative overflow-visible border border-border/50 rounded-2xl shadow-xl shadow-black/10`}>
+      <div style={surfaceStyle} className={`${surface} lg:min-w-[450px] h-full flex flex-col overflow-hidden relative border border-border/50 rounded-2xl shadow-xl shadow-black/10`}>
         <Content hyNode={hyNode} showFooter={false} />
       </div>
       <div style={surfaceStyle} className={`${surface} overflow-hidden h-full w-full min-w-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>

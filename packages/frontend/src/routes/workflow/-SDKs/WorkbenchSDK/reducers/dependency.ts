@@ -1,68 +1,41 @@
-import { Foundations, type Workflow } from "@pretzel-graph/shared/domain"
+import type { Workflow } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDK } from "../sdk"
-import { ShelfSDK } from "../../ShelfSDK/sdk"
-import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow"
-import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint"
 
 function collectUsedDependencyIds(s: WorkbenchSDK.State): Set<Workflow.Id> {
     const usedIds = new Set<Workflow.Id>()
     Object.values(s.data.nodes).forEach(node => {
-        if (node.dependency && node.dependency.workflowId)
-            usedIds.add(node.dependency.workflowId)
+        if (node.dependencyRef && node.dependencyRef.workflowId)
+            usedIds.add(node.dependencyRef.workflowId)
     })
     return usedIds
 }
 
 export const dependencyReducers = {
-    published: {
-        register: (s, dependency) => {
-            s.reducers.dependency.removeUnused(s)
-            s.data.dependencies.published[dependency.workflow_id] = dependency
-        },
-    },
-    draft: {
-        register: (s, draftDependency) => {
-            s.reducers.dependency.removeUnused(s)
-            s.data.dependencies.draft[draftDependency.workflow_id] = draftDependency
-        },
+    register: (s, mode, dependency) => {
+        s.reducers.dependency.removeUnused(s)
+        if (mode === "publication")
+            s.data.dependencies.published[dependency.workflow_id] = dependency as Workflow.Dependency.Publication
+        else
+            s.data.dependencies.draft[dependency.workflow_id] = dependency as Workflow.Dependency.Draft
     },
     attachToNode: (s, nodeId, workflowId, mode, dependency) => {
-        const baseBlueprint = ShelfSDK.state.blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]
+        s.reducers.dependency.register(s, mode, dependency)
 
-        const blueprint = Blueprint.createFromDependency(dependency, baseBlueprint)
-        s.reducers.node.recreate(s, nodeId, blueprint)
-
-        // Register AFTER recreate — recreate calls remove internally, which triggers
-        // removeUnused while the node is temporarily absent, wiping any dep registered earlier.
-        if (mode === "publication")
-            s.reducers.dependency.published.register(s, dependency as Workflow.Dependency.Publication)
-        else
-            s.reducers.dependency.draft.register(s, dependency as Workflow.Dependency.Draft)
-
-        s.data.nodes[nodeId].dependency = { workflowId, mode };
+        s.data.nodes[nodeId].dependencyRef = { workflowId, mode };
         s.isDirty = true
         s.reducers.node.validate(s, nodeId)
     },
     applyUpdate: (s, mode, dependency) => {
         const workflowId = dependency.workflow_id as Workflow.Id
 
-        if (mode === "publication")
-            s.reducers.dependency.published.register(s, dependency as Workflow.Dependency.Publication)
-        else
-            s.reducers.dependency.draft.register(s, dependency as Workflow.Dependency.Draft)
+        s.reducers.dependency.register(s, mode, dependency)
+        s.isDirty = true
 
-        const affectedNodeIds = Object.values(s.data.nodes)
-            .filter(n => n.dependency?.workflowId === workflowId && n.dependency?.mode === mode)
-            .map(n => n.id)
-
-        const baseBlueprint = ShelfSDK.state.blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]
-
-        const blueprint = Blueprint.createFromDependency(dependency, baseBlueprint)
-
-        for (const affectedNodeId of affectedNodeIds) {
-            s.reducers.node.recreate(s, affectedNodeId, blueprint)
-            s.reducers.node.validate(s, affectedNodeId)
-        }
+        // Ports / ui / fields all derive from the registered record on read, so there's no node to
+        // recreate — just re-validate the nodes that reference it against their new shape.
+        for (const node of Object.values(s.data.nodes))
+            if (node.dependencyRef?.workflowId === workflowId && node.dependencyRef?.mode === mode)
+                s.reducers.node.validate(s, node.id)
 
         if (mode === "publication")
             delete s.dependencyUpdates.published[workflowId]
@@ -96,11 +69,10 @@ export interface DependencyReducers {
         mode:       "publication" | "draft",
         dependency: Workflow.Dependency.Publication | Workflow.Dependency.Draft,
     ) => void
-    published: {
-        register: (state: WorkbenchSDK.State, dependency: Workflow.Dependency.Publication) => void
-    }
-    draft: {
-        register: (state: WorkbenchSDK.State, draftDependency: Workflow.Dependency.Draft) => void
-    }
+    register: (
+        state:      WorkbenchSDK.State,
+        mode:       "publication" | "draft",
+        dependency: Workflow.Dependency.Publication | Workflow.Dependency.Draft,
+    ) => void
     removeUnused: (state: WorkbenchSDK.State) => void
 }

@@ -32,6 +32,16 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
             }
             return false;
         },
+        upsertBlueprint: (blueprint: Foundations.Blueprint) => {
+            setState(s => {
+                s.blueprints[blueprint.id] = blueprint;
+            });
+        },
+        upsertBlueprints: (blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint>) => {
+            setState(s => {
+                s.blueprints = { ...s.blueprints, ...blueprints };
+            });
+        },
         hydrateBatch: async (blueprintIds) => {
             const have = getState().blueprints;
             const missing = [...new Set(blueprintIds)].filter(id => !have[id]);
@@ -145,4 +155,7 @@ export type _ShelfActions = {
         fieldValues: Record<Foundations.Field.Id, Foundations.Field.Value>,
         callbacks?: { onApiFetch?: () => void }
     ) => Promise<Foundations.Blueprint>;
+
+    upsertBlueprint: (blueprint: Foundations.Blueprint) => void;
+    upsertBlueprints: (blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint>) => void;
 }
