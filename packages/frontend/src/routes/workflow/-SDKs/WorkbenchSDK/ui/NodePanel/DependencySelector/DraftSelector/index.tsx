@@ -32,7 +32,7 @@ export const DraftSelector = memo<Props>(({ nodeId, dialogId, searchQuery, depRe
 
     return (
         <>
-            <ScrollArea.Root className="h-64">
+            <ScrollArea.Root className="h-64 bg-secondary">
                 {options.length === 0 ? (
                     <div className="px-2 py-4 text-center text-xs text-muted-foreground">No workflows found</div>
                 ) : (
