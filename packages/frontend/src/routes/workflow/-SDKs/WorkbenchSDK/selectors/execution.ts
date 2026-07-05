@@ -23,7 +23,7 @@ export const executionSelectors = {
                     if (!edgeId)
                         return undefined;
 
-                    const edge = s.data.edges[edgeId];
+                    const edge = s.cache.edges[edgeId];
                     if (!edge)
                         return undefined;
                     if (!session)

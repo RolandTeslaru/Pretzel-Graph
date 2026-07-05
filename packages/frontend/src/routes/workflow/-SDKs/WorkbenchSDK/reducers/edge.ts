@@ -33,10 +33,8 @@ export const edgeReducers = {
         const isFirstArcBetweenNodes = s.selectors.graph.hasArcBetween(s, sourceNodeId, targetNodeId) === false; 
 
         const edgeId = edgeReducers.createId(sourceNodeId, sourcePortId, targetNodeId, targetPortId)
-        
-        const edges = s.data.edges
 
-        if (edges[edgeId])
+        if (s.cache.edges[edgeId])
             throw new Error(`Edge ${edgeId} already exists. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
 
         const newEdge: Workflow.Edge = {
@@ -51,7 +49,7 @@ export const edgeReducers = {
             }
         }
 
-        edges[edgeId] = newEdge
+        s.data.edges.push(edgeId)
 
         s.reducers.cache.addEdge(s, newEdge)
 
@@ -75,9 +73,8 @@ export const edgeReducers = {
     },
     remove: (s, edgeId) => {
         s.isDirty = true;
-        const edges = s.data.edges
 
-        const edge = edges[edgeId];
+        const edge = s.cache.edges[edgeId];
         if (!edge)
             throw new Error(`Cannot remove edge ${edgeId}, edge not found.`)
 
@@ -86,7 +83,8 @@ export const edgeReducers = {
 
         // Always remove the edge + cache references first. Port/node lookups can
         // fail (e.g. during node deletion/recreate/reconcile), but cache must stay consistent.
-        delete edges[edgeId];
+        const idx = s.data.edges.indexOf(edgeId);
+        if (idx !== -1) s.data.edges.splice(idx, 1);
         s.reducers.cache.deleteEdge(s, edge);
 
         const sourceNodeId = edge.source.nodeId;

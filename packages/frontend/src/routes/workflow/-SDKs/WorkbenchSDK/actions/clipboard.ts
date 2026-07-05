@@ -17,7 +17,7 @@ const buildPayload = (
     nodeIds: Workflow.Node.Id[],
     edgeIds: Workflow.Edge.Id[],
 ): ClipboardPayload | null => {
-    const { data } = WorkbenchSDK.state;
+    const { data, cache } = WorkbenchSDK.state;
 
     const nodes: ClipboardPayload["nodes"] = [];
     const layout: ClipboardPayload["layout"] = {};
@@ -40,7 +40,7 @@ const buildPayload = (
 
     const edges: ClipboardPayload["edges"] = [];
     for (const edgeId of edgeIds) {
-        const edge = data.edges[edgeId];
+        const edge = cache.edges[edgeId];
         if (edge) edges.push(edge);
     }
 

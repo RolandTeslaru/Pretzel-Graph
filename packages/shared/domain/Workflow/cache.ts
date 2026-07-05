@@ -1,8 +1,12 @@
 import { Port } from "../Foundations/Port";
 import { Data } from "./data";
+import { Edge } from "./edge";
 import { NodeId, EdgeId } from "./ids";
 
 export interface Cache {
+    // Expanded edges, rebuilt from the id-only `data.edges` on every cache build. This is the
+    // derived source for the fat `{id, source, target}` shape; `data.edges` stays id-only.
+    edges: Record<EdgeId, Edge>,
     // nodes coming
     incomingEdgesMap: Record<
         NodeId,     // the node where the edges are coming in
@@ -36,6 +40,7 @@ export interface Cache {
 
 export namespace Cache {
     export const INITIAL = {
+        edges: {},
         incomingEdgesMap: {},
         outgoingEdgesMap: {},
         inputHandlesMap: {},
@@ -45,6 +50,7 @@ export namespace Cache {
 
 export function createCache(data: Data): Cache {
     const cache = {
+        edges: {},
         incomingEdgesMap: {},
         outgoingEdgesMap: {},
         inputHandlesMap: {},
@@ -58,7 +64,9 @@ export function createCache(data: Data): Cache {
         cache.outputHandlesMap[node.id] = {};
     })
 
-    Object.values(data.edges).forEach(edge => {
+    // data.edges is id-only; expand each into its fat form here (the single split point).
+    data.edges.forEach(edgeId => {
+        const edge = Edge.fromId(edgeId);
         const sourceNodeId = edge.source.nodeId;
         const targetNodeId = edge.target.nodeId;
 
@@ -68,19 +76,21 @@ export function createCache(data: Data): Cache {
         // Skip dangling edges whose endpoints were removed but the edge lingered —
         // otherwise indexing into a missing node's bucket throws and the whole load fails.
         if (!cache.outgoingEdgesMap[sourceNodeId] || !cache.incomingEdgesMap[targetNodeId]) {
-            console.error(`[createCache] Skipping dangling edge ${edge.id}: missing ${!cache.outgoingEdgesMap[sourceNodeId] ? `source node "${sourceNodeId}"` : `target node "${targetNodeId}"`}`);
+            console.error(`[createCache] Skipping dangling edge ${edgeId}: missing ${!cache.outgoingEdgesMap[sourceNodeId] ? `source node "${sourceNodeId}"` : `target node "${targetNodeId}"`}`);
             return;
         }
 
+        cache.edges[edgeId] = edge;
+
         // Outgoers Edges Map
-        cache.outgoingEdgesMap[sourceNodeId][targetNodeId] = edge.id
+        cache.outgoingEdgesMap[sourceNodeId][targetNodeId] = edgeId
 
         // Ingoers Edges Map
-        cache.incomingEdgesMap[targetNodeId][sourceNodeId] = edge.id
+        cache.incomingEdgesMap[targetNodeId][sourceNodeId] = edgeId
 
-        cache.inputHandlesMap[targetNodeId][targetHandleId] = edge.id
+        cache.inputHandlesMap[targetNodeId][targetHandleId] = edgeId
 
-        cache.outputHandlesMap[sourceNodeId][sourceHandleId] = edge.id
+        cache.outputHandlesMap[sourceNodeId][sourceHandleId] = edgeId
 
     })
 

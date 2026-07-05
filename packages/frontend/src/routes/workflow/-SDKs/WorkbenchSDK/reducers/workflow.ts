@@ -11,17 +11,19 @@ export const workflowReducers = {
         // Drop edges whose source/target node no longer exists (orphaned by a node
         // deletion that didn't clean up its edges). Left in place they'd dangle in the
         // persisted blob; pruning here removes them on the next commit.
-        const pruned = Object.entries(data.edges).filter(
-            ([, edge]) => !data.nodes[edge.source.nodeId] || !data.nodes[edge.target.nodeId]
-        );
-        for (const [edgeId, edge] of pruned) {
-            console.warn(`[workflow.open] Pruning dangling edge ${edgeId}: missing ${!data.nodes[edge.source.nodeId] ? `source "${edge.source.nodeId}"` : `target "${edge.target.nodeId}"`}`);
-            delete data.edges[edgeId as Workflow.Edge.Id];
-        }
+        const keptEdges = data.edges.filter(edgeId => {
+            const edge = Workflow.Edge.fromId(edgeId);
+            const dangling = !data.nodes[edge.source.nodeId] || !data.nodes[edge.target.nodeId];
+            if (dangling)
+                console.warn(`[workflow.open] Pruning dangling edge ${edgeId}: missing ${!data.nodes[edge.source.nodeId] ? `source "${edge.source.nodeId}"` : `target "${edge.target.nodeId}"`}`);
+            return !dangling;
+        });
+        const prunedCount = data.edges.length - keptEdges.length;
+        data.edges = keptEdges;
 
         s.workflowId = workflow.id;
         s.data = data;
-        s.isDirty = pruned.length > 0;
+        s.isDirty = prunedCount > 0;
         s.cache = Workflow.createCache(data);
         s.cycles = [];
         s.stronglyConnectedComponents = [];
@@ -41,7 +43,7 @@ export const workflowReducers = {
     // edge reducer does on connect. No-op for already-resolved (v2) nodes; reconstructs it for
     // migrated (v1) nodes whose resolutions weren't persisted. Requires blueprints hydrated.
     reconstructPolymorphism: (s) => {
-        for (const edge of Object.values(s.data.edges)) {
+        for (const edge of Object.values(s.cache.edges)) {
             const sourcePort = s.selectors.node.getOutputs(s, edge.source.nodeId).find(o => o.id === edge.source.portId);
             const targetPort = s.selectors.node.getInputs(s, edge.target.nodeId).find(i => i.id === edge.target.portId);
             if (!sourcePort || !targetPort) continue;

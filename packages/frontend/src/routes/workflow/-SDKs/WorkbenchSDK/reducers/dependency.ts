@@ -1,13 +1,69 @@
 import type { Workflow } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDK } from "../sdk"
+import { resolveInputs } from "../utils/resolvePorts"
+import { ShelfSDK } from "../../ShelfSDK/sdk"
+import { isEqual } from "lodash"
 
-function collectUsedDependencyIds(s: WorkbenchSDK.State): Set<Workflow.Id> {
-    const usedIds = new Set<Workflow.Id>()
+const UI_KEYS = ["displayName", "description", "icon", "accent", "iconColor"] as const
+
+// Mode-aware: a workflow can be referenced as a publication and/or a draft, and each mode is a
+// separate stored snapshot. Keyed `${mode}:${workflowId}` so removeUnused can't retain the
+// opposite-mode copy of a still-referenced workflow.
+function collectUsedDependencyKeys(s: WorkbenchSDK.State): Set<string> {
+    const used = new Set<string>()
     Object.values(s.data.nodes).forEach(node => {
         if (node.dependencyRef && node.dependencyRef.workflowId)
-            usedIds.add(node.dependencyRef.workflowId)
+            used.add(`${node.dependencyRef.mode}:${node.dependencyRef.workflowId}`)
     })
-    return usedIds
+    return used
+}
+
+// Slim one embedded dependency snapshot in place: always drop the editor-only layout/viewport
+// (never needed for an executed dependency), and — where the node's blueprint is hydrated —
+// prune ui overrides / staticValues that equal blueprint defaults (derived on read). Dep-node
+// blueprints aren't guaranteed loaded, so node-level pruning safely skips when absent.
+function pruneWorkflowData(s: WorkbenchSDK.State, data: Workflow.Data) {
+    if ("ui" in data) {
+        // Only a fat (remnant) layout is a real change; a schema-defaulted empty ui isn't.
+        const hadLayout = Object.keys(data.ui?.layout ?? {}).length > 0
+        delete (data as { ui?: unknown }).ui
+        if (hadLayout) s.isDirty = true
+    }
+
+    for (const node of Object.values(data.nodes)) {
+        const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId]
+        if (!blueprint) continue
+
+        if (node.ui)
+            for (const key of UI_KEYS)
+                if (node.ui[key] !== undefined && node.ui[key] === blueprint.ui[key]) {
+                    delete node.ui[key]
+                    s.isDirty = true
+                }
+
+        const bucket = data.staticValues[node.id]
+        if (!bucket) continue
+
+        const initialById = new Map<string, unknown>()
+        const fields = node.addedFields?.length ? [...blueprint.fields, ...node.addedFields] : blueprint.fields
+        for (const field of fields) {
+            if (field.variant === "UniqueString") continue
+            if ("initialValue" in field) initialById.set(field.id, field.initialValue)
+        }
+        for (const input of resolveInputs(blueprint.inputs, node, null))
+            if ("initialValue" in input && input.initialValue !== undefined)
+                initialById.set(input.id, input.initialValue)
+
+        for (const key of Object.keys(bucket))
+            // @ts-expect-error - TS doesn't know the bucket is a Record<string, unknown>
+            if (initialById.has(key) && isEqual(bucket[key], initialById.get(key))) {
+                // @ts-expect-error
+                delete bucket[key]
+                s.isDirty = true
+            }
+        if (Object.keys(bucket).length === 0)
+            delete data.staticValues[node.id]
+    }
 }
 
 export const dependencyReducers = {
@@ -46,14 +102,21 @@ export const dependencyReducers = {
         else
             delete s.dependencyUpdates.draft[workflowId]
     },
+    // Retroactively slim already-persisted (remnant) dependency snapshots. New deps enter slim via
+    // `register`, but load bypasses register, so this runs from the load action's normalize pass.
+    pruneDefaults: (s) => {
+        for (const store of [s.data.dependencies.published, s.data.dependencies.draft])
+            for (const dep of Object.values(store))
+                pruneWorkflowData(s, dep.workflow_data)
+    },
     removeUnused: (s) => {
-        const usedIds = collectUsedDependencyIds(s)
+        const used = collectUsedDependencyKeys(s)
 
         for (const id of Object.keys(s.data.dependencies.published) as Workflow.Id[])
-            if (!usedIds.has(id)) delete s.data.dependencies.published[id]
+            if (!used.has(`publication:${id}`)) delete s.data.dependencies.published[id]
 
         for (const id of Object.keys(s.data.dependencies.draft) as Workflow.Id[])
-            if (!usedIds.has(id)) delete s.data.dependencies.draft[id]
+            if (!used.has(`draft:${id}`)) delete s.data.dependencies.draft[id]
     },
 } satisfies DependencyReducers
 
@@ -78,5 +141,6 @@ export interface DependencyReducers {
         mode:       "publication" | "draft",
         dependency: Workflow.Dependency.Publication | Workflow.Dependency.Draft,
     ) => void
+    pruneDefaults: (state: WorkbenchSDK.State) => void
     removeUnused: (state: WorkbenchSDK.State) => void
 }

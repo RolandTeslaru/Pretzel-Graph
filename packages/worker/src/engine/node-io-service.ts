@@ -66,7 +66,7 @@ export class NodeIOService {
 
         for (const input of this.getInputPorts(ctx, nodeId)) {
             const edgeId = incomingEdgeByPort[input.id]
-            const edge = ctx.workflowData.edges[edgeId];
+            const edge = ctx.workflowCache.edges[edgeId];
 
             if (edge) {
                 if(incomingSignals.has(edge.source.nodeId) === false){
