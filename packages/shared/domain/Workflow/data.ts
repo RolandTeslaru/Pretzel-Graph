@@ -46,11 +46,13 @@ export namespace Data {
             z.record(Vault.Credential.Template.Id, Vault.Credential.Instance.Id)
         ).default({}),
 
+        // Editor-only layout/viewport. Dropped from dependency snapshots (executed, not rendered),
+        // so it must default when absent.
         ui: z.object({
             layout: Layout.Schema,
             viewport: Viewport.Schema,
             icon_color: z.string().nullable().optional(),
-        }),
+        }).default({ layout: {}, viewport: { x: 0, y: 0, zoom: 1 } }),
 
         // Getters defer the Dependency <-> Data cycle; the z.ZodType anchors
         // are required because TS can't infer through mutual recursion.
