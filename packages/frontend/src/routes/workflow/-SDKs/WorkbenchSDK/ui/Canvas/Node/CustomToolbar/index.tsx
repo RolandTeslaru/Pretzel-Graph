@@ -100,8 +100,10 @@ const ToolButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
         <Tipped label={isTool ? "Revert to node" : "Convert to tool"}>
             <Button variant="ghost" size="icon-xs" className={`h-6! ${isTool ? 'bg-(--port-Tool)/20 ' : ''} text-(--port-Tool) `}
                 onClick={() => {
-                    if (isTool) WorkbenchSDK.actions.tool.revert(nodeId);
-                    else WorkbenchSDK.actions.tool.convert(nodeId);
+                    if (isTool) 
+                        WorkbenchSDK.actions.tool.revert(nodeId);
+                    else 
+                        WorkbenchSDK.actions.tool.convert(nodeId);
                 }}
                 disabled={isReconciling}
             >

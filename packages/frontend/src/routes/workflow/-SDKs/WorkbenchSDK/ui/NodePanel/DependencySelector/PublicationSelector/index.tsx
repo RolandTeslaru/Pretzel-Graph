@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from 'react'
-import { Button, Input, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Input, ScrollArea, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK/sdk'
@@ -62,7 +62,7 @@ export const PublicationSelector = memo<Props>(({ nodeId, dialogId, searchQuery,
 
     return (
         <>
-            <div className="h-64 overflow-y-auto">
+            <ScrollArea.Root className="h-64 bg-secondary">
                 {isLoading ? (
                     <div className="flex items-center justify-center gap-2 px-2 py-4 text-xs text-muted-foreground">
                         <Spinner className="size-3.5" />
@@ -81,7 +81,7 @@ export const PublicationSelector = memo<Props>(({ nodeId, dialogId, searchQuery,
                         />
                     ))
                 )}
-            </div>
+            </ScrollArea.Root >
         </>
     )
 })
