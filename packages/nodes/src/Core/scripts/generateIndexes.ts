@@ -75,7 +75,7 @@ export async function generateIndex(includeDbBlueprints = false) {
 
         const { data, error } = await supabase
             .from("workflows")
-            .select("id, display_name, icon, accent, data")
+            .select("id, display_name, description, icon, accent, data")
             .eq("user_id", DEV_USER_ID)
             .eq("is_public", true)
 
@@ -106,6 +106,7 @@ export async function generateIndex(includeDbBlueprints = false) {
                 id: blueprintId,
                 ui: {
                     displayName: row.display_name,
+                    description: row.description,
                     icon: row.icon ?? baseBlueprint.ui.icon,
                     accent: row.accent ?? baseBlueprint.ui.accent,
                     iconColor: baseBlueprint.ui.iconColor,
