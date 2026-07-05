@@ -16,29 +16,45 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, dialogId }
     const [searchQuery, setSearchQuery] = useState("")
     const [manualWorkflowId, setManualWorkflowId] = useState<Workflow.Id>("" as Workflow.Id)
 
-    const nodeDependency = WorkbenchSDK.useStore(s => s.data.nodes[nodeId]?.dependency)
+    const depRef = WorkbenchSDK.useStore(s => s.selectors.node.getDependencyRef(s, nodeId))
 
-    const [mode, setMode] = useState<"publication" | "draft">(nodeDependency?.mode === "publication" ? "publication" : "draft")
+    const [mode, setMode] = useState<"publication" | "draft">(depRef?.mode === "publication" ? "publication" : "draft")
 
     return (
-        <div className="flex flex-col gap-3 p-3 w-[360px]">
+        <div className="flex flex-col gap-3 p-3 w-[400px]">
             <div className='inline-flex items-center justify-between'>
                 <Dialog.Title className="text-sm font-semibold inline-flex gap-2 items-center">
                     <SystemIcons.Graph className="size-4" />
                     Select Workflow
                 </Dialog.Title>
+            </div>
+            <Dialog.Description className="text-xs text-muted-foreground w-full">
+                Select a workflow to attach as a sub workflow dependency
+            </Dialog.Description>
+
+            <div className='flex flex-row gap-2 items-center relative'>
+                <div className="relative flex items-center w-4/6">
+                    <Input
+                        className="rounded-lg!"
+                        size="sm"
+                        placeholder={mode === "draft" ? "Search workflows" : "Search published workflows"}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <SystemIcons.Search className='text-muted-foreground size-4 absolute right-2' />
+                </div>
                 <Select.Root value={mode} onValueChange={(m) => setMode(m as "publication" | "draft")}>
-                    <Select.Trigger size="xs" className='w-2/6 rounded-lg'>
+                    <Select.Trigger size="sm" className='w-2/6 rounded-lg'>
                         <Select.Value />
                     </Select.Trigger>
                     <Select.Content>
-                        <Select.Item value="draft" size="xs">
+                        <Select.Item value="draft" size="sm">
                             <span className="flex items-center gap-1.5">
                                 <SystemIcons.DraftingCompass className='size-3 text-muted-foreground' />
                                 Draft
                             </span>
                         </Select.Item>
-                        <Select.Item value="publication" size="xs">
+                        <Select.Item value="publication" size="sm">
                             <span className="flex items-center gap-1.5">
                                 <SystemIcons.ShieldCheck className='size-3 text-muted-foreground' />
                                 Published
@@ -47,25 +63,11 @@ export const DependencySelectorDialogContent = memo<Props>(({ nodeId, dialogId }
                     </Select.Content>
                 </Select.Root>
             </div>
-            <Dialog.Description className="text-xs text-muted-foreground w-full">
-                Select a workflow to attach as a sub workflow dependency
-            </Dialog.Description>
-
-            <div className='flex flex-row gap-2 items-center relative'>
-                <Input
-                    className="rounded-lg!"
-                    size="sm"
-                    placeholder={mode === "draft" ? "Search workflows" : "Search published workflows"}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <SystemIcons.Search className='text-muted-foreground size-4 absolute right-2' />
-            </div>
 
 
             {mode === "draft"
-                ? <DraftSelector nodeId={nodeId} dialogId={dialogId} searchQuery={searchQuery} nodeDependency={nodeDependency} />
-                : <PublicationSelector nodeId={nodeId} dialogId={dialogId} searchQuery={searchQuery} nodeDependency={nodeDependency} />
+                ? <DraftSelector nodeId={nodeId} dialogId={dialogId} searchQuery={searchQuery} depRef={depRef} />
+                : <PublicationSelector nodeId={nodeId} dialogId={dialogId} searchQuery={searchQuery} depRef={depRef} />
             }
 
             <div className="flex flex-col gap-1 border-t border-border pt-2">

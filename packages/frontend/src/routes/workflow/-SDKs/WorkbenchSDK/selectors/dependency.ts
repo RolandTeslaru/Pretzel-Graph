@@ -16,10 +16,10 @@ export interface DependencySelectors {
 export const dependencySelectors = {
     doesNodeHaveUpdate: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
-        if (!node?.dependency) 
+        if (!node?.dependencyRef) 
             return false;
         
-        const { workflowId, mode } = node.dependency;
+        const { workflowId, mode } = node.dependencyRef;
         if(!workflowId) 
             return false
         if (mode === "publication") 

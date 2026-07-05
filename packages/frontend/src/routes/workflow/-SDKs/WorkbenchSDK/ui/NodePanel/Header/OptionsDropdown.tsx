@@ -28,8 +28,8 @@ export const OptionsDropdown = ({ hyNode, onEdit }: Props) => {
                     <SystemIcons.Undo />
                     Recreate
                 </DropdownMenu.Item>
-                {hyNode.dependency && (
-                    <DropdownMenu.Item onClick={() => WorkbenchSDK.openWorkflowWindow(hyNode.dependency!.workflowId)}>
+                {hyNode.dependencyRef && (
+                    <DropdownMenu.Item onClick={() => WorkbenchSDK.openWorkflowWindow(hyNode.dependencyRef!.workflowId)}>
                         <SystemIcons.Graph />
                         Open workflow
                     </DropdownMenu.Item>

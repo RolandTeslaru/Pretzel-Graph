@@ -11,9 +11,22 @@ export const WORKFLOW_DATA_VERSION = 2;
 
 export function migrateWorkflowDataToLatest(raw: any): any {
     if (!raw || typeof raw !== "object") return raw;
-    if (raw.version === WORKFLOW_DATA_VERSION) return raw;
 
-    return migrateV1toV2(raw);
+    // Structural fat-node (v1) -> slim-node (v2). Skip if already slim.
+    const data = raw.version === WORKFLOW_DATA_VERSION
+        ? { ...raw, nodes: { ...raw.nodes } }
+        : migrateV1toV2(raw);
+
+    // Field-level renames, applied condition-by-condition (feature-detected, not version-gated)
+    // so they run on both freshly-migrated and already-v2 blobs, and stay idempotent.
+    for (const [id, node] of Object.entries<any>(data.nodes ?? {})) {
+        if ("dependency" in node) {
+            const { dependency, ...rest } = node;
+            data.nodes[id] = { ...rest, dependencyRef: dependency };
+        }
+    }
+
+    return data;
 }
 
 function migrateV1toV2(raw: any): any {

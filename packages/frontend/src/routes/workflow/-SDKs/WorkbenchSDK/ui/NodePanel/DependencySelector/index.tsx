@@ -16,12 +16,12 @@ interface Props {
 }
 
 export const DependencySelector = memo<Props>(({ nodeId, className }) => {
-    const nodeDep    = WorkbenchSDK.useStore(s => s.data.nodes[nodeId]?.dependency)
+    const depRef    = WorkbenchSDK.useStore(s => s.selectors.node.getDependencyRef(s, nodeId))
     const dependency = WorkbenchSDK.useStore(s => {
-        if (!nodeDep?.workflowId) return null
-        return nodeDep.mode === "publication"
-            ? s.selectors.dependency.published.get(s, nodeDep.workflowId)
-            : s.selectors.dependency.draft.get(s, nodeDep.workflowId)
+        if (!depRef?.workflowId) return null
+        return depRef.mode === "publication"
+            ? s.selectors.dependency.published.get(s, depRef.workflowId)
+            : s.selectors.dependency.draft.get(s, depRef.workflowId)
     })
 
     const openDialog = () => {
@@ -35,7 +35,7 @@ export const DependencySelector = memo<Props>(({ nodeId, className }) => {
         ))
     }
 
-    const mode = nodeDep?.mode === "publication" ? "publication" : "draft"
+    const mode = depRef?.mode === "publication" ? "publication" : "draft"
 
     const iconColor       = dependency?.accent ? `var(--${dependency.accent}-foreground)` : undefined
     const backgroundColor = dependency?.accent ? `color-mix(in srgb, var(--${dependency.accent}) 25%, transparent)` : 'var(--muted)'
