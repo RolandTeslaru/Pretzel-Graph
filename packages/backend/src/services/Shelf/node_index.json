@@ -1,6 +1,6 @@
 {
-  "version": "1783247151507",
-  "generatedAt": "2026-07-05T10:25:51.507Z",
+  "version": "1783254955904",
+  "generatedAt": "2026-07-05T12:35:55.904Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -9049,6 +9049,7 @@
       "credentials": [],
       "ui": {
         "displayName": "Agent",
+        "description": "Runs a ReAct agent loop over a language model and its tools.",
         "icon": "Bot",
         "accent": "port-LanguageModel"
       },
@@ -9189,6 +9190,7 @@
       "credentials": [],
       "ui": {
         "displayName": "Compactor",
+        "description": "Summarizes older conversation turns when history grows too large, keeping recent exchanges intact.",
         "icon": "Compress",
         "accent": "utility"
       },
