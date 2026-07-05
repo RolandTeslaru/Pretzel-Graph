@@ -26,6 +26,10 @@ export function migrateWorkflowDataToLatest(raw: any): any {
         }
     }
 
+    // Edges: legacy record<id, {id, source, target}> -> id-only array (endpoints derive from the id).
+    if (data.edges && !Array.isArray(data.edges))
+        data.edges = Object.keys(data.edges);
+
     return data;
 }
 

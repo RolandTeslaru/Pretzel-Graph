@@ -94,9 +94,9 @@ export const nodeSelectors = {
         return EMPTY_CONNECTED_PORTS
     },
     getIncomingEdges: (s, nodeId) =>
-        Object.values(s.cache.incomingEdgesMap[nodeId] ?? {}).map(edgeId => s.data.edges[edgeId]),
+        Object.values(s.cache.incomingEdgesMap[nodeId] ?? {}).map(edgeId => s.cache.edges[edgeId]),
     getOutgoingEdges: (s, nodeId) =>
-        Object.values(s.cache.outgoingEdgesMap[nodeId] ?? {}).map(edgeId => s.data.edges[edgeId]),
+        Object.values(s.cache.outgoingEdgesMap[nodeId] ?? {}).map(edgeId => s.cache.edges[edgeId]),
     getStaticValues: (s, nodeId) => s.data.staticValues[nodeId] ?? null,
     getStaticValue: (s, nodeId, id, fallback = null) => s.data.staticValues[nodeId]?.[id] ?? fallback,
     getLegacyExpressionContext: (s, nodeId, session) => ({

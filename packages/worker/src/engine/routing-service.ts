@@ -19,7 +19,7 @@ export class RoutingService {
         result: Record<string, any>
     ): Set<Vertex.Id> {
         const signals = new Set<Vertex.Id>();
-        const edges = ctx.workflowData.edges;
+        const edges = ctx.workflowCache.edges;
         const returnedKeys = new Set(Object.keys(result));
 
         for (const edge of Object.values(edges))
@@ -63,7 +63,7 @@ export class RoutingService {
 
             for (const portId in incomingInputs) {
                 const edgeId  = incomingEdgeByPort?.[portId as Port.Input.Id];
-                const isWired = !!edgeId && !!ctx.workflowData.edges[edgeId];
+                const isWired = !!edgeId && !!ctx.workflowCache.edges[edgeId];
 
                 if (isWired && incomingInputs[portId as Port.Input.Id] === undefined)
                     return false;

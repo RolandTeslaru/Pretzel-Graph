@@ -35,20 +35,12 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
                     reducers.workflow.open(s, workflow)
                 });
 
-                // Replay polymorphic resolution from edges — needs blueprints hydrated and runs
-                // against the stored slim nodes.
-                setState(s => { reducers.workflow.reconstructPolymorphism(s) });
-
-                // Normalize legacy fat nodes: drop stored values that equal blueprint defaults
-                // (derived on read). Needs blueprints hydrated. Marks dirty if anything changed.
-                setState(s => {
-                    for (const nodeId of Object.keys(s.data.nodes) as Workflow.Node.Id[]) {
-                        s.reducers.node.pruneDefaultStaticValues(s, nodeId);
-                        s.reducers.node.pruneDefaultUI(s, nodeId);
-                    }
-                });
-                // Persist the slimmed version (no-ops if nothing was pruned).
-                await sdk.actions.commit();
+                // All workflows are migrated (slim nodes, id-array edges, slim deps), so the
+                // one-time normalization passes (reconstructPolymorphism / pruneDefault* /
+                // dependency.pruneDefaults) are no-ops and were removed. `open` may still prune
+                // dangling edges, so persist only when it actually changed something.
+                if (sdk.state.isDirty)
+                    await sdk.actions.commit();
 
                 // Hydration (empty INITIAL -> loaded workflow) would otherwise be recorded
                 // as an undoable step; drop it so undo isn't armed on a fresh load.
