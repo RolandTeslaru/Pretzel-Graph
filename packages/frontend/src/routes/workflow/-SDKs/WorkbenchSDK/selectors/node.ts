@@ -4,7 +4,7 @@ import type { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
 import type { WorkbenchSDK } from "../sdk";
 import { executionSelectors } from "./execution";
 import { ShelfSDK } from '../../ShelfSDK/sdk';
-import { resolvePorts } from '../utils/resolvePorts';
+import { resolveInputs, resolveOutputs } from '../utils/resolvePorts';
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 
 const EMPTY_CONNECTED_PORTS: Record<string, Workflow.Edge.Id> = {}
@@ -23,6 +23,8 @@ export interface NodeSelectors {
     getStaticValue:       (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, id: Field.Id | Port.Input.Id, fallback?: Field.Value | null) => Field.Value | null
     // Legacy webhook-only `@`-sigil context. Temporary until webhook resolution moves onto Airlock.
     getLegacyExpressionContext: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session?: Execution.Session) => LegacyExpressionContext
+    getDependencyRef: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node.DependencyRef | null
+    getDependency: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Dependency | null
     hasDraftDependency: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
     hasPublishedDependency: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
     getDependencyUpdate: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => [ 
@@ -103,22 +105,29 @@ export const nodeSelectors = {
         incoming: executionSelectors.getNodeIncomingData(s, nodeId, session) ?? {},
         workflowConfig: Airlock.resolveWorkflowConfig(s.data),
     }),
+    getDependencyRef: (s, nodeId) => s.data.nodes[nodeId]?.dependencyRef ?? null,
+    getDependency: (s, nodeId) => {
+        const ref = s.data.nodes[nodeId]?.dependencyRef;
+        if (!ref) return null;
+        const store = ref.mode === "publication" ? s.data.dependencies.published : s.data.dependencies.draft;
+        return store[ref.workflowId] ?? null;
+    },
     hasDraftDependency: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
-        if (!node?.dependency) 
+        if (!node?.dependencyRef)
             return false;
         
-        const { workflowId, mode } = node.dependency;
+        const { workflowId, mode } = node.dependencyRef;
         if(!workflowId) 
             return false
         return mode === "draft" && workflowId in s.data.dependencies.draft;
     },
     hasPublishedDependency: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
-        if (!node?.dependency) 
+        if (!node?.dependencyRef) 
             return false;
         
-        const { workflowId, mode } = node.dependency;
+        const { workflowId, mode } = node.dependencyRef;
         if(!workflowId) 
             return false
         return mode === "publication" && workflowId in s.data.dependencies.published;
@@ -126,8 +135,8 @@ export const nodeSelectors = {
     getDependencyUpdate: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
 
-        if(node.dependency){
-            const { workflowId, mode } = node.dependency;
+        if(node.dependencyRef){
+            const { workflowId, mode } = node.dependencyRef;
             
             if(!workflowId) 
                 return null
@@ -152,22 +161,25 @@ export const nodeSelectors = {
         if(!node)
             return [];
         const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
+        const dependency = s.selectors.node.getDependency(s, nodeId);
 
-        return resolvePorts(blueprint.inputs, node.addedInputs, node.polymorphicResolutions);
+        return resolveInputs(blueprint.inputs, node, dependency);
     },
     getOutputs: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
         if(!node)
             return [];
         const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
+        const dependency = s.selectors.node.getDependency(s, nodeId);
 
-        return resolvePorts(blueprint.outputs, node.addedOutputs, node.polymorphicResolutions);
+        return resolveOutputs(blueprint.outputs, node, dependency);
     },
     getFields: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
         const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
 
-        return blueprint.fields;
+        if (!node.addedFields?.length) return blueprint.fields;
+        return [...blueprint.fields, ...node.addedFields];
     },
     getBlueprint: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
@@ -178,12 +190,15 @@ export const nodeSelectors = {
     getUI: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
         const bp = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
+        // Subworkflow nodes take their identity from the attached dependency record; node-level
+        // overrides still win, then the dependency, then the (generic container) blueprint.
+        const dep = s.selectors.node.getDependency(s, nodeId);
 
         return {
-            displayName: node?.ui?.displayName ?? bp.ui.displayName,
+            displayName: node?.ui?.displayName ?? dep?.display_name ?? bp.ui.displayName,
             description: node?.ui?.description ?? bp.ui.description,
-            icon:        node?.ui?.icon      ?? bp.ui.icon,
-            accent:      node?.ui?.accent    ?? bp.ui.accent,
+            icon:        node?.ui?.icon      ?? dep?.icon   ?? bp.ui.icon,
+            accent:      node?.ui?.accent    ?? dep?.accent ?? bp.ui.accent,
             iconColor:   node?.ui?.iconColor ?? bp.ui.iconColor,
             isMinimized: node?.ui?.isMinimized ?? false,
             isFlipped:   node?.ui?.isFlipped   ?? false,

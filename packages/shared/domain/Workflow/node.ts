@@ -10,16 +10,16 @@ export namespace Node {
     export const Id = NodeId;
     export type Id = NodeId;
 
-    export namespace Dependency {
-        export const Schema = Blueprint.Meta.Dependency.Schema
+    export namespace DependencyRef {
+        export const Schema = Blueprint.Meta.DependencyRef.Schema
     }
-    export type Dependency = z.infer<typeof Dependency.Schema>
+    export type DependencyRef = z.infer<typeof DependencyRef.Schema>
 
     export const Schema = z.object({
         id:          Node.Id,
         blueprintId: z.string().brand("BlueprintId"),
         isDisabled:  z.boolean().optional(),
-        dependency:  Blueprint.Meta.Dependency.Schema.optional(),
+        dependencyRef: Blueprint.Meta.DependencyRef.Schema.optional(),
         
         // Per-node presentation: view-state (minimized/flipped) + optional overrides of the
         // blueprint's ui (icon/accent/iconColor). All derived-on-read via node.getUI.
@@ -39,6 +39,7 @@ export namespace Node {
 
         addedInputs: z.array(Port.Input.Schema).optional(),
         addedOutputs: z.array(Port.Output.Schema).optional(),
+        addedFields: z.array(Field.Schema).optional(),
     })
 
     export function createId(blueprintId: Blueprint.Id) {
@@ -54,9 +55,10 @@ const uid = {
 
 export namespace HydratedNode {
     export const Schema = Blueprint.Meta.Schema
-        .extend(Node.Schema.omit({ addedInputs: true, addedOutputs: true }).shape)
+        .extend(Node.Schema.omit({ addedInputs: true, addedOutputs: true, addedFields: true }).shape)
         .extend({
             blueprint: Blueprint.Schema,
+            fields: z.array(Field.Schema),
             inputs: z.array(Port.Input.Schema),
             outputs: z.array(Port.Output.Schema),
             connectedPorts: z.record(Port.Input.Id, EdgeId),

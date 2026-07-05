@@ -19,7 +19,7 @@ export const PublicationSelectorItem = memo<Props>(({ publication, workflowMeta,
         <button
             type="button"
             className={cn(
-                "flex w-full items-center gap-2 border-b border-border px-2 py-1.5 text-left last:border-b-0 hover:bg-secondary",
+                "flex w-full items-center gap-2 px-2 py-1.5 text-left last:border-b-0 hover:bg-secondary",
                 isSelected && "bg-primary/20"
             )}
             onClick={() => onSelect(publication.workflow_id)}

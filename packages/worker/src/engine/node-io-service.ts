@@ -1,4 +1,5 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
+import { resolveInputs, resolveOutputs } from "@pretzel-graph/shared/domain/resolvePorts";
 import { Vertex } from "../S2/graph";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
@@ -128,14 +129,15 @@ export class NodeIOService {
     }
 
 
-    // A node's live ports: the resolved (post-reconcile) blueprint's ports plus any user-added ones.
+    // A node's live ports, via the shared resolver: reconciled blueprint ports + the node's added
+    // ports (or a subworkflow's dependency-exposed ports), with polymorphic variants replayed.
     public readonly getInputPorts = (
         ctx:    AggexEngine.Execution.Context,
         nodeId: Workflow.Node.Id,
     ): Port.Input[] => {
         const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);
-        const added = ctx.workflowData.nodes[nodeId].addedInputs ?? [];
-        return [...blueprint.inputs, ...added];
+        const node = ctx.workflowData.nodes[nodeId];
+        return resolveInputs(blueprint.inputs, node, this.getNodeDependency(ctx, node));
     }
 
     public readonly getOutputPorts = (
@@ -143,8 +145,17 @@ export class NodeIOService {
         nodeId: Workflow.Node.Id,
     ): Port.Output[] => {
         const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);
-        const added = ctx.workflowData.nodes[nodeId].addedOutputs ?? [];
-        return [...blueprint.outputs, ...added];
+        const node = ctx.workflowData.nodes[nodeId];
+        return resolveOutputs(blueprint.outputs, node, this.getNodeDependency(ctx, node));
+    }
+
+    // Resolve a node's attached subworkflow dependency record from the workflow's dependency state,
+    // so its exposed ports derive at runtime just like on the frontend / during validation.
+    private getNodeDependency(ctx: AggexEngine.Execution.Context, node: Workflow.Node): Workflow.Dependency | null {
+        const ref = node.dependencyRef;
+        if (!ref) return null;
+        const store = ref.mode === "publication" ? ctx.workflowData.dependencies.published : ctx.workflowData.dependencies.draft;
+        return store[ref.workflowId] ?? null;
     }
 
     private getOutputPort(ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id, outputId: Port.Output.Id): Port.Output {
