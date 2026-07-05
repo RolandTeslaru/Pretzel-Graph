@@ -1,4 +1,5 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
+import { resolveInputs, resolveOutputs } from "@pretzel-graph/shared/domain/resolvePorts";
 import { Vertex } from "../S2/graph";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
@@ -57,16 +58,15 @@ export class NodeIOService {
         incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set(),
         keepMissingPorts = false,
     ): Record<Port.Input.Id, any> => {
-        const wfNode = ctx.workflowData.nodes[nodeId];
         const staticValues = ctx.workflowData.staticValues[nodeId] ?? {};
 
         const resolved: Record<Port.Input.Id, any> = {};
 
         const incomingEdgeByPort = ctx.workflowCache.inputHandlesMap[nodeId]
 
-        for (const input of wfNode.inputs) {
+        for (const input of this.getInputPorts(ctx, nodeId)) {
             const edgeId = incomingEdgeByPort[input.id]
-            const edge = ctx.workflowData.edges[edgeId];
+            const edge = ctx.workflowCache.edges[edgeId];
 
             if (edge) {
                 if(incomingSignals.has(edge.source.nodeId) === false){
@@ -109,12 +109,13 @@ export class NodeIOService {
     }
 
     public readonly projectOutputs = (
+        ctx: AggexEngine.Execution.Context,
         result: Record<string, any>,
         wfNode: Workflow.Node
     ): Record<Port.Output.Id, Projection> => {
         const projected: Record<Port.Output.Id, Projection> = {};
 
-        for (const output of wfNode.outputs) {
+        for (const output of this.getOutputPorts(ctx, wfNode.id)) {
             const key = output.id;
             if (key in result){
                 if(result[key] === undefined)
@@ -128,6 +129,35 @@ export class NodeIOService {
     }
 
 
+    // A node's live ports, via the shared resolver: reconciled blueprint ports + the node's added
+    // ports (or a subworkflow's dependency-exposed ports), with polymorphic variants replayed.
+    public readonly getInputPorts = (
+        ctx:    AggexEngine.Execution.Context,
+        nodeId: Workflow.Node.Id,
+    ): Port.Input[] => {
+        const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);
+        const node = ctx.workflowData.nodes[nodeId];
+        return resolveInputs(blueprint.inputs, node, this.getNodeDependency(ctx, node));
+    }
+
+    public readonly getOutputPorts = (
+        ctx:    AggexEngine.Execution.Context,
+        nodeId: Workflow.Node.Id,
+    ): Port.Output[] => {
+        const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);
+        const node = ctx.workflowData.nodes[nodeId];
+        return resolveOutputs(blueprint.outputs, node, this.getNodeDependency(ctx, node));
+    }
+
+    // Resolve a node's attached subworkflow dependency record from the workflow's dependency state,
+    // so its exposed ports derive at runtime just like on the frontend / during validation.
+    private getNodeDependency(ctx: AggexEngine.Execution.Context, node: Workflow.Node): Workflow.Dependency | null {
+        const ref = node.dependencyRef;
+        if (!ref) return null;
+        const store = ref.mode === "publication" ? ctx.workflowData.dependencies.published : ctx.workflowData.dependencies.draft;
+        return store[ref.workflowId] ?? null;
+    }
+
     private getOutputPort(ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id, outputId: Port.Output.Id): Port.Output {
         const node = ctx.workflowData.nodes[nodeId];
         if (!node)
@@ -136,7 +166,7 @@ export class NodeIOService {
                 `Cannot write output for unknown node "${nodeId}"`,
             );
 
-        const output = node.outputs.find(output => output.id === outputId);
+        const output = this.getOutputPorts(ctx, nodeId).find(output => output.id === outputId);
         if (!output)
             throw new AggexExecutionError(
                 SystemError.Code.EXECUTION_NODE_FAILED,

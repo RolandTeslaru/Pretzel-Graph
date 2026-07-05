@@ -14,7 +14,9 @@ export const cacheReducers = {
 
         return s.cache.outgoingEdgesMap[nodeId];
     },
-    deleteEdge: (s, { source, target }) => {
+    deleteEdge: (s, { source, target, id: edgeId }) => {
+        delete s.cache.edges[edgeId];
+
         const inNodes = cacheReducers.ensureIncomingNodeEdges(s, target.nodeId);
         delete inNodes[source.nodeId]
 
@@ -24,7 +26,10 @@ export const cacheReducers = {
         delete s.cache.inputHandlesMap[target.nodeId][target.portId];
         delete s.cache.outputHandlesMap[source.nodeId][source.portId]
     },
-    addEdge: (s, { source, target, id: edgeId }) => {
+    addEdge: (s, newEdge) => {
+        const { source, target, id: edgeId } = newEdge;
+        s.cache.edges[edgeId] = newEdge;
+
         cacheReducers.ensureIncomingNodeEdges(s, target.nodeId)[source.nodeId] = edgeId;
         cacheReducers.ensureOutgoingNodeEdges(s, source.nodeId)[target.nodeId] = edgeId
 

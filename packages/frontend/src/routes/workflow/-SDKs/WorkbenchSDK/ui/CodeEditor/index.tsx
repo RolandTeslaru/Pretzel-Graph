@@ -9,6 +9,7 @@ import FloatContainer from '@/components/FloatContainer';
 import { MonacoEditor } from '@/components/MonacoEditor';
 import IncomingPanel from '../NodePanel/IncomingPanel';
 import OutgoingPanel from '../NodePanel/OutgoingPanel';
+import { WorkbenchSDK } from '../../sdk';
 
 interface Props {
     node: Workflow.Node,
@@ -39,11 +40,17 @@ export const CodeEditorContent = ({ node, displayName, onChange, onClose, initia
     // brightness — applied per card so each card's backdrop-blur isn't trapped by a filtered ancestor.
     const surface = blockTransparency ? 'bg-card' : 'bg-card/80 backdrop-blur-lg'
 
+    const hyNode = WorkbenchSDK.useNode(node.id)
+
+    if (!hyNode){
+        return null;
+    }
+
     return (
         <div className="flex flex-row gap-5 h-[85vh] w-[90vw]">
 
             <div style={surfaceStyle} className={`${surface} overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
-                <IncomingPanel />
+                <IncomingPanel nodeId={node.id} inputs={hyNode.inputs} />
             </div>
 
 
@@ -55,7 +62,7 @@ export const CodeEditorContent = ({ node, displayName, onChange, onClose, initia
 
                 <div className="absolute flex gap-1 flex-row top-2.5 right-1/2 translate-x-1/2 p-1 px-2 text-sm font-medium">
                     <p>
-                        {node.displayName}
+                        {node.ui.displayName}
                     </p>
                     <SystemIcons.ChevronRight className="size-5 mx-auto" />
                     <p>
@@ -74,7 +81,7 @@ export const CodeEditorContent = ({ node, displayName, onChange, onClose, initia
             </div>
 
             <div style={surfaceStyle} className={`${surface} overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
-                <OutgoingPanel />
+                <OutgoingPanel nodeId={node.id} outputs={hyNode.outputs} />
             </div>
         </div>
     )

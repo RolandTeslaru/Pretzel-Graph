@@ -59,7 +59,16 @@ function ExpressionInput({ placeholder, className }: {
                     DialogSDK.actions
                         .push("ExpressionEditorDialog", (dialogProps) => (
                             <DialogSDK.UnstyledTemplate {...dialogProps}>
-                                <ExpressionEditor node={node} displayName={displayName} onChange={onChange} onClose={() => onCommitRef.current()} initialValue={value} itemScoped={itemScoped} blockTransparency={dialogProps.blockTransparency} surfaceStyle={dialogProps.surfaceStyle} />
+                                <ExpressionEditor 
+                                    node={node} 
+                                    displayName={displayName} 
+                                    onChange={onChange} 
+                                    onClose={() => onCommitRef.current()} 
+                                    initialValue={value} 
+                                    itemScoped={itemScoped} 
+                                    blockTransparency={dialogProps.blockTransparency} 
+                                    surfaceStyle={dialogProps.surfaceStyle} 
+                                />
                             </DialogSDK.UnstyledTemplate>
                         ))
                 }}

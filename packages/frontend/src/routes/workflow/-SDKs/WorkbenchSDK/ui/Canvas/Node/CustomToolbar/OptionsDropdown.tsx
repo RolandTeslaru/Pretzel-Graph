@@ -4,20 +4,12 @@ import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 import React from 'react'
+import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 
 interface Props {
     node: Workflow.Node
 }
 
-function downloadNodeJson(node: Workflow.Node) {
-    const blob = new Blob([JSON.stringify(node, null, 2)], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${node.displayName || node.id}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-}
 
 export const OptionsDropdown: React.FC<Props> = ({ node }) => (
     <DropdownMenu.Root>
@@ -57,10 +49,6 @@ export const OptionsDropdown: React.FC<Props> = ({ node }) => (
             <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(node.blueprintId)}>
                 <SystemIcons.Copy />
                 Copy Blueprint ID
-            </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => downloadNodeJson(node)}>
-                <SystemIcons.Download />
-                Download JSON
             </DropdownMenu.Item>
             <DropdownMenu.Separator />
             <DropdownMenu.Item variant="destructive" onClick={() => WorkbenchSDK.actions.node.remove(node.id)}>

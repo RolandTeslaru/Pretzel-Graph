@@ -1,8 +1,5 @@
 import { Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
-import { cacheReducers } from "./cache";
-import { inputReducers } from "./input";
-import { nodeReducers } from "./node";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 
 // TODO: rename handles to ports
@@ -19,12 +16,12 @@ export const edgeReducers = {
         
         if (!sourcePortId || !targetPortId || !sourceNodeId || !targetNodeId) 
             throw new Error(`Invalid edge connection. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`);
-
-        const sourceNode = s.data.nodes[sourceNodeId];
-        const targetNode = s.data.nodes[targetNodeId];
         
-        const sourcePort = sourceNode.outputs.find(o => o.id === sourcePortId);
-        const targetPort = targetNode.inputs.find(i => i.id === targetPortId);
+        const sourceOutputs = s.selectors.node.getOutputs(s, sourceNodeId);
+        const targetInputs = s.selectors.node.getInputs(s, targetNodeId);
+
+        const sourcePort = sourceOutputs.find(o => o.id === sourcePortId);
+        const targetPort = targetInputs.find(i => i.id === targetPortId);
 
         
         if (!sourcePort || !targetPort){
@@ -36,10 +33,8 @@ export const edgeReducers = {
         const isFirstArcBetweenNodes = s.selectors.graph.hasArcBetween(s, sourceNodeId, targetNodeId) === false; 
 
         const edgeId = edgeReducers.createId(sourceNodeId, sourcePortId, targetNodeId, targetPortId)
-        
-        const edges = s.data.edges
 
-        if (edges[edgeId])
+        if (s.cache.edges[edgeId])
             throw new Error(`Edge ${edgeId} already exists. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
 
         const newEdge: Workflow.Edge = {
@@ -54,11 +49,11 @@ export const edgeReducers = {
             }
         }
 
-        edges[edgeId] = newEdge
+        s.data.edges.push(edgeId)
 
-        cacheReducers.addEdge(s, newEdge)
+        s.reducers.cache.addEdge(s, newEdge)
 
-        inputReducers.validate(s, targetNodeId, targetPort);
+        s.reducers.input.validate(s, targetNodeId, targetPort);
 
         if(
             s.selectors.node.isSourceNode(s, sourceNodeId) === false && 
@@ -69,18 +64,17 @@ export const edgeReducers = {
                 s.cyclesDirty = true;
 
         if (Port.isPolymorphic(targetPort) && !Port.isUnresolvedLike(sourcePort.variant))
-            nodeReducers.polymorphism.resolveGroup(s, targetNodeId, targetPort, sourcePort.variant);
+            s.reducers.node.polymorphism.resolveGroup(s, targetNodeId, targetPort, sourcePort.variant);
 
         else if (Port.isPolymorphic(sourcePort) && !Port.isUnresolvedLike(targetPort.variant))
-            nodeReducers.polymorphism.resolveGroup(s, sourceNodeId, sourcePort, targetPort.variant);
+            s.reducers.node.polymorphism.resolveGroup(s, sourceNodeId, sourcePort, targetPort.variant);
 
         return newEdge
     },
     remove: (s, edgeId) => {
         s.isDirty = true;
-        const edges = s.data.edges
 
-        const edge = edges[edgeId];
+        const edge = s.cache.edges[edgeId];
         if (!edge)
             throw new Error(`Cannot remove edge ${edgeId}, edge not found.`)
 
@@ -89,8 +83,9 @@ export const edgeReducers = {
 
         // Always remove the edge + cache references first. Port/node lookups can
         // fail (e.g. during node deletion/recreate/reconcile), but cache must stay consistent.
-        delete edges[edgeId];
-        cacheReducers.deleteEdge(s, edge);
+        const idx = s.data.edges.indexOf(edgeId);
+        if (idx !== -1) s.data.edges.splice(idx, 1);
+        s.reducers.cache.deleteEdge(s, edge);
 
         const sourceNodeId = edge.source.nodeId;
         const sourcePortId = edge.source.portId;
@@ -100,14 +95,20 @@ export const edgeReducers = {
         const sourceNode = s.data.nodes[sourceNodeId]!;
         const targetNode = s.data.nodes[targetNodeId]!;
 
-        const sourcePort = sourceNode?.outputs.find(o => o.id === sourcePortId);
-        const targetPort = targetNode?.inputs.find(i => i.id === targetPortId);
+        const sourceOutputs = s.selectors.node.getOutputs(s, sourceNodeId);
+        const targetInputs = s.selectors.node.getInputs(s, targetNodeId);
 
-        if(!sourcePort || !targetPort)
-            throw new Error(`Cannot remove edge ${edgeId}, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
+        const sourcePort = sourceOutputs.find(o => o.id === sourcePortId);
+        const targetPort = targetInputs.find(i => i.id === targetPortId);
+
+        if(!sourcePort || !targetPort){
+            // throw new Error(`Cannot remove edge ${edgeId}, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
+            console.warn(`Cannot remove edge ${edgeId}, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
+            return
+        }
 
         if (targetNode && targetPort)
-            inputReducers.validate(s, targetNodeId, targetPort);
+            s.reducers.input.validate(s, targetNodeId, targetPort);
 
         // Connecting two leafs, recompute and validate cycles
         if(
@@ -121,11 +122,11 @@ export const edgeReducers = {
         // Unresolve polymorphic groups if no edges remain
         if (Port.isPolymorphic(targetPort) && targetPort.polymorphicGroupId)
             if (!s.selectors.port.polymorphism.groupHasEdges(s, targetNodeId, targetPort.polymorphicGroupId))
-                nodeReducers.polymorphism.unresolveGroup(s, targetNodeId, targetPort.polymorphicGroupId);
+                s.reducers.node.polymorphism.unresolveGroup(s, targetNodeId, targetPort.polymorphicGroupId);
 
         if (Port.isPolymorphic(sourcePort) && sourcePort.polymorphicGroupId)
             if (!s.selectors.port.polymorphism.groupHasEdges(s, sourceNodeId, sourcePort.polymorphicGroupId))
-                nodeReducers.polymorphism.unresolveGroup(s, sourceNodeId, sourcePort.polymorphicGroupId);
+                s.reducers.node.polymorphism.unresolveGroup(s, sourceNodeId, sourcePort.polymorphicGroupId);
     },
     createId: Workflow.Edge.createId
 } satisfies EdgeReducers;
@@ -166,4 +167,3 @@ function doesCycleExistBetweenNodes(sourceNodeId: Workflow.Node.Id, targetNodeId
 
     return false;
 }
-

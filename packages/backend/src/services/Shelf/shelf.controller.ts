@@ -19,10 +19,10 @@ export class ShelfController {
 
     @Post('blueprint/getBatch')
     @HttpCode(200)
-    getBatchBlueprints(
+    async getBatchBlueprints(
         @ZodBody(Shelf.API.Blueprint.GetBatch.Request) body: Shelf.API.Blueprint.GetBatch.Request,
     ) {
-        return this.shelfService.getBatchBlueprints(body);
+        return await this.shelfService.getBatchBlueprints(body);
     }
 
     @Post('blueprint/getAllInSection')

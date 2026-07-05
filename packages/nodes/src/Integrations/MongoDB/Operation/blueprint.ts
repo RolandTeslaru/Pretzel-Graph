@@ -11,10 +11,9 @@ export const Blueprint = defineBlueprint({
     fields: [
         // operation drives the field schema via reconcile. Base (find default) is
         // operation + collection + query + limit; other operations swap in their fields.
-        FieldBuilder.MultiOption({
+        FieldBuilder.reconciling(FieldBuilder.MultiOption({
             id: "operation",
             displayName: "Operation",
-            reconcile: true,
             options: [
                 { value: "find",   displayName: "Find" },
                 { value: "insert", displayName: "Insert" },
@@ -23,7 +22,7 @@ export const Blueprint = defineBlueprint({
             ],
             initialValue: "find",
             tooltip: "The MongoDB operation to run.",
-        }),
+        })),
         FieldBuilder.String({
             id: "collection",
             displayName: "Collection",

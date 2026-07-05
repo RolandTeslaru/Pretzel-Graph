@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Shelf } from '@pretzel-graph/shared/domain';
 import { ALL_DRAWERS, SECTIONS } from '@pretzel-graph/shared/constants/drawers';
-import { CatalogueService } from "@pretzel-graph/node-sdk"
+import { CatalogueService, pickReconcilingValues } from "@pretzel-graph/node-sdk"
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
+import { cloneDeep } from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -27,18 +28,26 @@ export class ShelfService {
     }
 
 
-    getBatchBlueprints(
+    async getBatchBlueprints(
         payload: Shelf.API.Blueprint.GetBatch.Request
-    ): { blueprints: Record<Blueprint.Id, Blueprint> } {
+    ): Promise<{ blueprints: Record<Blueprint.Id, Blueprint> }> {
         const index = loadIndex();
         const { blueprintIds } = payload;
         const blueprints: Record<Blueprint.Id, Blueprint> = {};
 
-        blueprintIds.forEach(blueprintId => {
-            const blueprint = index.blueprints[blueprintId as Blueprint.Id];
-            if (blueprint)
-                blueprints[blueprintId as Blueprint.Id] = blueprint;
-        });
+        for (const id of blueprintIds) {
+            const blueprint = index.blueprints[id as Blueprint.Id];
+            if (blueprint) {
+                blueprints[id as Blueprint.Id] = blueprint;
+                continue;
+            }
+            // Not a base blueprint — it's a reconciled id. Reconstruct it from its encoded values.
+            if (Blueprint.isReconciledId(id)) {
+                const { blueprintId, fieldValues } = Blueprint.parseReconciledId(id);
+                const { reconciledBlueprint } = await this.reconcileBlueprint({ blueprintId, fieldValues });
+                blueprints[id as Blueprint.Id] = reconciledBlueprint;
+            }
+        }
 
         return { blueprints };
     }
@@ -70,13 +79,18 @@ export class ShelfService {
     async reconcileBlueprint(
         payload: Shelf.API.Blueprint.Reconcile.Request
     ): Promise<Shelf.API.Blueprint.Reconcile.Response> {
-        const { blueprint, fieldId, newValue } = payload;
-        const reconcileFn = await CatalogueService.getReconciler(blueprint.id);
+        const { blueprintId, fieldValues } = payload;
+        const { blueprint } = this.getBlueprint({ blueprintId });
 
+        const reconcileFn = await CatalogueService.getReconciler(blueprintId);
         if (!reconcileFn)
-            throw new Error(`Reconciler for node ${blueprint.id} not found`);
+            throw new Error(`Reconciler for node ${blueprintId} not found`);
 
-        const reconciledBlueprint = reconcileFn(blueprint, fieldId, newValue);
+        // Reconcilers mutate a fresh deep copy of the base and see only reconcile-field values.
+        const reconciledBlueprint = reconcileFn(
+            cloneDeep(blueprint),
+            pickReconcilingValues(blueprint.fields, fieldValues),
+        );
 
         return { reconciledBlueprint };
     }

@@ -1,38 +1,22 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { InferFieldValues, FieldBuilder } from "@pretzel-graph/node-sdk";
-import { cloneDeep } from "lodash";
+import { InferReconcilingFieldValues, FieldBuilder } from "@pretzel-graph/node-sdk";
+import { Blueprint } from "./blueprint";
 
-/**
- * Mutates the node's field schema when `mode` changes:
- *   - stop  → no extra field
- *   - error → reveals `message`
- *
- * NOTE: `message` is NOT in `InferFieldValues<typeof Blueprint>` (derived from the static
- * base blueprint), so `onRun` reads it via a cast.
- */
+// error mode reveals `message`; stop is field-less (the base blueprint).
+// NOTE: `message` is not in InferReconcilingFieldValues (base-derived), so onRun reads it via a cast.
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    changedFieldId: keyof InferFieldValues<Foundations.Blueprint>,
-    newValue: Foundations.Field.Value,
+    fieldValues: InferReconcilingFieldValues<typeof Blueprint>,
 ): Foundations.Blueprint => {
-    const next = cloneDeep(blueprint);
-    if (changedFieldId !== "mode") return next;
-
-    const fields = new Map(next.fields.map(f => [f.id, f]));
-
-    if (newValue === "error") {
-        fields.set("message" as Foundations.Field.Id, FieldBuilder.String({
+    if (fieldValues.mode === "error") {
+        // @ts-expect-error append the error-only field to the readonly tuple
+        blueprint.fields = [...blueprint.fields, FieldBuilder.String({
             id: "message",
             displayName: "Error Message",
             multiline: true,
             initialValue: "",
             placeholder: "Workflow terminated.",
-        }) as unknown as Foundations.Field);
-    } else {
-        fields.delete("message" as Foundations.Field.Id);
+        })];
     }
-
-    // @ts-expect-error rebuild the readonly fields tuple from the working map
-    next.fields = [...fields.values()];
-    return next;
+    return blueprint;
 };

@@ -5,6 +5,7 @@ import type { NodeActions } from "../node";
 import type { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import type { DropFirstArg } from "@/SDKs/types";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
+import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { createVariadicActions, type VariadicActions } from "./variadic";
 import { createConditionActions, type ConditionActions } from "./condition";
 import { createCaseListActions, type CaseListActions } from "./caseList";
@@ -32,15 +33,14 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
                 console.log(`Field ${field.id} requires reconciliation`)
 
                 try {
-                    const blueprint = sdk.selectors.node.extractBlueprint(sdk.state, nodeId);
-                    if (!blueprint)
-                        throw new Error(`Could not extract blueprint from node ${nodeId}`);
+                    const blueprint = sdk.selectors.node.getBlueprint(sdk.state, nodeId);
 
-                    const fieldValues = sel.field.getValues(sdk.state, nodeId);
+                    // Merge the just-set value in — getValues is read pre-commit, so it's stale.
+                    const fieldValues = { ...sel.field.getValues(sdk.state, nodeId), [field.id]: value };
 
                     const reconciledBlueprint = await createToastPromise(
                         ShelfSDK.actions.getReconciledBlueprint(
-                            blueprint, field.id, value, fieldValues,
+                            blueprint, fieldValues,
                             {
                                 onApiFetch: () => {
                                     setState(s => { reducers.field.markAsReconciling(s, nodeId, field.id) })
@@ -54,8 +54,10 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
                         }
                     );
 
+                    const reconciledBlueprintId = Blueprint.createReconciledId(blueprint.id, blueprint.fields, fieldValues);
+
                     setState(withCyclesRecompute(s => {
-                        reducers.node.reconcile(s, nodeId, reconciledBlueprint)
+                        reducers.node.reconcile(s, nodeId, reconciledBlueprint, reconciledBlueprintId)
                         reducers.field.unmarkAsReconciling(s, nodeId, field.id);
                         reducers.node.validate(s, nodeId);
                     }));

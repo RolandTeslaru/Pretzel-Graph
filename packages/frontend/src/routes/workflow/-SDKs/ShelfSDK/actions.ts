@@ -32,6 +32,36 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
             }
             return false;
         },
+        upsertBlueprint: (blueprint: Foundations.Blueprint) => {
+            setState(s => {
+                s.blueprints[blueprint.id] = blueprint;
+            });
+        },
+        upsertBlueprints: (blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint>) => {
+            setState(s => {
+                s.blueprints = { ...s.blueprints, ...blueprints };
+            });
+        },
+        hydrateBatch: async (blueprintIds) => {
+            const have = getState().blueprints;
+            const missing = [...new Set(blueprintIds)].filter(id => !have[id]);
+            
+            if (missing.length === 0) 
+                return true;
+            
+            try {
+                const { blueprints } = await Shelf.API.Blueprint.getBatch(api, { blueprintIds: missing });
+            
+                setState(s => { 
+                    s.blueprints = { ...s.blueprints, ...blueprints };
+                });
+            
+                return true;
+            } catch (error) {
+                console.error(`Could not hydrate blueprint batch`, error);
+                return false;
+            }
+        },
         hydrateBlueprint: async (blueprintId) => {
             try {
                 const { blueprint } = await Shelf.API.Blueprint.get(api, { blueprintId });
@@ -79,25 +109,26 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
                 setState(s => { sdk.reducers.searchFilter.toggleDataType(s, ...props) }),
         },
 
-        getReconciledBlueprint: async (blueprint, fieldId, newValue, fieldValues, { onApiFetch } = {}) => {
+        getReconciledBlueprint: async (blueprint, fieldValues, { onApiFetch } = {}) => {
             const reconciledId = Foundations.Blueprint.createReconciledId(
-                blueprint.id, blueprint.fields, fieldValues, { [fieldId]: newValue }
+                blueprint.id, blueprint.fields, fieldValues
             );
 
             const cached = getState().reconciledBlueprintsCache[reconciledId];
-            // if(cached)
-            //     toast.success("Using cached reconciled blueprint");
-            //  else
-            //     toast.info("Reconciling blueprint...");
             if (cached) return cached;
 
             onApiFetch?.();
 
             const { reconciledBlueprint } = await Shelf.API.Blueprint.reconcile(api, {
-                blueprint, fieldId, newValue
+                blueprintId: blueprint.id, fieldValues
             });
 
-            setState(s => { s.reconciledBlueprintsCache[reconciledId] = reconciledBlueprint });
+            setState(s => {
+                s.reconciledBlueprintsCache[reconciledId] = reconciledBlueprint;
+                // Also key it in the main blueprint map — derive-on-read (getInputs/getFields/…)
+                // resolves a node's blueprint by `reconciledBlueprintId` out of `blueprints`.
+                s.blueprints[reconciledId] = reconciledBlueprint;
+            });
             return reconciledBlueprint;
         }
     } satisfies _ShelfActions
@@ -105,6 +136,7 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
 
 export type _ShelfActions = {
     loadSection: (section: Shelf.Section) => Promise<boolean>;
+    hydrateBatch: (blueprintIds: Foundations.Blueprint.Id[]) => Promise<boolean>;
     hydrateBlueprint: (blueprintId: Foundations.Blueprint.Id) => Promise<boolean>;
     drawer: {
         open: (drawerId: Shelf.Drawer.Id) => void;
@@ -120,9 +152,10 @@ export type _ShelfActions = {
 
     getReconciledBlueprint: (
         blueprint: Foundations.Blueprint,
-        fieldId: Foundations.Field.Id,
-        newValue: Foundations.Field.Value,
         fieldValues: Record<Foundations.Field.Id, Foundations.Field.Value>,
         callbacks?: { onApiFetch?: () => void }
     ) => Promise<Foundations.Blueprint>;
+
+    upsertBlueprint: (blueprint: Foundations.Blueprint) => void;
+    upsertBlueprints: (blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint>) => void;
 }

@@ -25,12 +25,12 @@ const replaceCaseListEntry = (
 export const fieldCaseListReducers = {
     addEntry: (s, nodeId, fieldId, entry) => {
         const caseList = s.selectors.field.caseList.getValue(s, nodeId, fieldId)!
-        s.data.staticValues[nodeId][fieldId] = [...caseList, entry]
+        s.reducers.node.ensureStaticValues(s, nodeId)[fieldId] = [...caseList, entry]
         s.isDirty = true
     },
     removeEntry: (s, nodeId, fieldId, portId) => {
         const caseList = s.selectors.field.caseList.getValue(s, nodeId, fieldId)!
-        s.data.staticValues[nodeId][fieldId] = caseList.filter(entry => entry.portId !== portId)
+        s.reducers.node.ensureStaticValues(s, nodeId)[fieldId] = caseList.filter(entry => entry.portId !== portId)
         s.isDirty = true
     },
     setLabel: (s, nodeId, fieldId, portId, label) => {

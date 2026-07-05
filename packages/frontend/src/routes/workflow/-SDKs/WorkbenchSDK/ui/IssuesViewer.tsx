@@ -21,11 +21,15 @@ const IssuesViewer = () => {
                 const node = nodes[nodeId]
                 const fieldIssues = Object.values(nodeIssue.fields)
                 const inputIssues = Object.values(nodeIssue.inputs)
+
+                const state = WorkbenchSDK.state;
+                const ui = state.selectors.node.getUI(state, nodeId);
+
                 return (
                     <div key={nodeId} className='flex flex-col gap-1'>
                         <div className='flex items-center gap-0.5'>
                             {node
-                                ? <NodeBadgeFromNode node={node} accent={false} className='text-xs px-0!' />
+                                ? <NodeBadgeFromNode ui={ui} accent={false} className='text-xs px-0!' />
                                 : <p className='text-xs font-semibold text-foreground'>{nodeId}</p>
                             }
                         </div>
@@ -54,11 +58,13 @@ const IssuesViewer = () => {
                     <div className='flex flex-wrap items-center gap-1 text-xs text-muted-foreground'>
                         {cycle.nodes.map((id, i) => {
                             const n = nodes[id]
+                            const state = WorkbenchSDK.state;
+                            const ui = state.selectors.node.getUI(state, id);
                             return (
                                 <span key={id} className='flex items-center gap-1'>
                                     {i > 0 && <span>→</span>}
                                     {n
-                                        ? <NodeBadgeFromNode node={n} className='text-xs' />
+                                        ? <NodeBadgeFromNode ui={ui} className='text-xs' />
                                         : <span>{id}</span>
                                     }
                                 </span>
