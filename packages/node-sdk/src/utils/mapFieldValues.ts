@@ -34,6 +34,18 @@ export function pickReconcilingValues(
 ): Record<Field.Id, Field.Value> {
     const out: Record<Field.Id, Field.Value> = {};
     for (const field of fields)
-        if (field.reconcile) out[field.id] = values[field.id];
+        if (field.reconcile) out[field.id] = coerceForVariant(field.variant, values[field.id]);
     return out;
+}
+
+// Reconciled-id round-trip stringifies values; coerce them back to the field's type so
+// reconcilers that compare against typed literals (=== true, numeric ===) match.
+function coerceForVariant(variant: Field.Variant, value: Field.Value): Field.Value {
+    if (value === undefined || value === null) return value;
+    switch (variant) {
+        case "Boolean": return value === true || value === "true";
+        case "Integer": return typeof value === "string" ? parseInt(value, 10) : value;
+        case "Float":   return typeof value === "string" ? Number(value) : value;
+        default:        return value;
+    }
 }
