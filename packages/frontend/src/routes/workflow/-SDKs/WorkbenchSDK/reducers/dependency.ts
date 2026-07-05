@@ -13,10 +13,14 @@ function collectUsedDependencyIds(s: WorkbenchSDK.State): Set<Workflow.Id> {
 export const dependencyReducers = {
     register: (s, mode, dependency) => {
         s.reducers.dependency.removeUnused(s)
+        // Layout/viewport are editor-only; a dependency is executed, not rendered — drop the ui so it
+        // doesn't bloat the persisted parent (schema defaults it back if ever re-parsed).
+        const { ui: _ui, ...workflow_data } = dependency.workflow_data
+        const slim = { ...dependency, workflow_data } as typeof dependency
         if (mode === "publication")
-            s.data.dependencies.published[dependency.workflow_id] = dependency as Workflow.Dependency.Publication
+            s.data.dependencies.published[slim.workflow_id] = slim as Workflow.Dependency.Publication
         else
-            s.data.dependencies.draft[dependency.workflow_id] = dependency as Workflow.Dependency.Draft
+            s.data.dependencies.draft[slim.workflow_id] = slim as Workflow.Dependency.Draft
     },
     attachToNode: (s, nodeId, workflowId, mode, dependency) => {
         s.reducers.dependency.register(s, mode, dependency)
