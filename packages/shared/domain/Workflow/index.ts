@@ -81,7 +81,7 @@ export namespace Workflow {
             version:               WORKFLOW_DATA_VERSION,
             fields:                [],
             nodes:                 {},
-            edges:                 {},
+            edges:                 [],
             staticValues:          {},
             credentialInstanceIds: {},
             dependencies:          { published: {}, draft: {} },

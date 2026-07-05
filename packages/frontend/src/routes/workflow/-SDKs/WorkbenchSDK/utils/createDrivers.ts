@@ -1,4 +1,5 @@
-import type { Validation, Workflow } from "@pretzel-graph/shared/domain"
+import type { Validation } from "@pretzel-graph/shared/domain"
+import { Workflow } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDK } from "../sdk"
 
 export function createNodeDriver(node: Workflow.Node, wfData: Workflow.Data): WorkbenchSDK.NodeDriver {
@@ -26,8 +27,8 @@ export function createEdgeDriver(edge: Workflow.Edge, wfData: Workflow.Data): Wo
 
 export function createDrivers(wfData: Workflow.Data) {
     const nodeDrivers = Object.values(wfData.nodes).map(node => createNodeDriver(node, wfData))
-    const edgeDrivers = Object.values(wfData.edges)
-        .map(edge => createEdgeDriver(edge, wfData))
+    const edgeDrivers = wfData.edges
+        .map(edgeId => createEdgeDriver(Workflow.Edge.fromId(edgeId), wfData))
         .filter((d): d is WorkbenchSDK.EdgeDriver => d !== null)
 
     return { nodeDrivers, edgeDrivers }
@@ -72,8 +73,9 @@ export function reconcileEdgeDrivers(
     const prevById = new Map(prev.map(e => [e.id, e]))
     let changed = false
 
-    const next = Object.values(wfData.edges)
-        .map(edge => {
+    const next = wfData.edges
+        .map(edgeId => {
+            const edge = Workflow.Edge.fromId(edgeId)
             const existing = prevById.get(edge.id)
             const sameTopology = existing
                 && existing.source === edge.source.nodeId

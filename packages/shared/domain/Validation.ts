@@ -335,5 +335,5 @@ function doesEdgeAlreadyExist(
     targetHandleId: Port.Input.Id
 ) {
     const edgeId = Workflow.Edge.createId(sourceNodeId, sourceHandleId, targetNodeId, targetHandleId);
-    return !!workflowData.edges[edgeId]
+    return workflowData.edges.includes(edgeId)
 }

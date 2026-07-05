@@ -1,4 +1,4 @@
-import { memo, useId, useCallback } from 'react';
+import { memo, useId, useCallback, useRef, useEffect } from 'react';
 import { type EdgeProps, getBezierPath } from '@xyflow/react';
 import { WorkbenchSDK } from '../../../sdk';
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
@@ -32,6 +32,24 @@ const CanvasEdge = memo(({
     const sourcePortId = sourceHandleId as Foundations.Port.Output.Id;
 
     const markerId = useId();
+
+    // Compositor-only dot: bake the bezier into transform keyframes so the GPU moves a
+    // once-rasterized quad each frame (no repaint). Rebuilds only when the path changes.
+    const dotRef = useRef<SVGCircleElement>(null);
+    useEffect(() => {
+        const el = dotRef.current;
+        if (!el) return;
+        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        p.setAttribute('d', edgePath);
+        const len = p.getTotalLength();
+        const N = 30;
+        const frames = Array.from({ length: N + 1 }, (_, i) => {
+            const pt = p.getPointAtLength((i / N) * len);
+            return { transform: `translate(${pt.x}px, ${pt.y}px)`, offset: i / N };
+        });
+        const anim = el.animate(frames, { duration: 1400, iterations: Infinity, easing: 'linear' });
+        return () => anim.cancel();
+    }, [edgePath]);
 
     const output = WorkbenchSDK.useOutput(sourceNodeId, sourcePortId);
 
@@ -74,8 +92,6 @@ const CanvasEdge = memo(({
         shapeRendering: 'geometricPrecision',
     };
 
-    const showGlint = !selected;
-
     return (
         <g>
             <defs>
@@ -113,6 +129,12 @@ const CanvasEdge = memo(({
                     animation: (isWaiting || isPreparing) ? `edge-dash-flow 0.6s linear infinite` : undefined,
                 }}
             />
+            <circle
+                ref={dotRef}
+                r={3}
+                fill={displayColor}
+                style={{ willChange: 'transform', pointerEvents: 'none' }}
+            />
             <CanvasEdgeLabel
                 selected={selected}
                 labelX={labelX}
@@ -122,9 +144,6 @@ const CanvasEdge = memo(({
                 outputVariant={output.variant}
                 itemCount={itemCount}
                 statusColor={statusColor}
-                showGlint={showGlint}
-                edgePath={edgePath}
-                glintColor={displayColor}
             />
         </g>
     );

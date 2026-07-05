@@ -10,10 +10,7 @@ interface Props {
 }
 
 export const Content = ({ nodeId, inputs, nodeOutputProjections }: Props) => {
-  const [cache, edges] = WorkbenchSDK.useStore(s => [
-    s.cache,
-    s.data.edges,
-  ])
+  const cache = WorkbenchSDK.useStore(s => s.cache)
 
   const projections = useMemo(() => {
     const result: Execution.Session["node_output_projections"] = {}
@@ -21,8 +18,8 @@ export const Content = ({ nodeId, inputs, nodeOutputProjections }: Props) => {
     const inputHandlesMap = cache.inputHandlesMap[nodeId] ?? {}
 
     Object.entries(inputHandlesMap).forEach(([targetPortId, edgeId]) => {
-      const edge = edges[edgeId as Workflow.Edge.Id]
-      if (!edge) 
+      const edge = cache.edges[edgeId as Workflow.Edge.Id]
+      if (!edge)
         return
       
       const sourceProjection = nodeOutputProjections[edge.source.nodeId]
@@ -34,7 +31,7 @@ export const Content = ({ nodeId, inputs, nodeOutputProjections }: Props) => {
         result[targetPortId] = value
     })
     return result
-  }, [cache, edges, nodeId, nodeOutputProjections])
+  }, [cache, nodeId, nodeOutputProjections])
 
   return (
     <PortProjectionsView
