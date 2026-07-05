@@ -17,11 +17,7 @@ type CanvasEdgeLabelProps = {
     showGlint?: boolean;
     edgePath: string;
     glintColor: string;
-    glintLen: number;
 };
-
-// Thickness of the travelling glint streak (px, in flow coordinates).
-const GLINT_THICKNESS = 6;
 
 const CanvasEdgeLabel = ({
     selected,
@@ -35,10 +31,12 @@ const CanvasEdgeLabel = ({
     showGlint,
     edgePath,
     glintColor,
-    glintLen,
 }: CanvasEdgeLabelProps) => {
     return (
         <EdgeLabelRenderer>
+            {/* Cheap direction indicator: a triangle that rides the bezier via offset-path
+                (offset-distance is a transform on the compositor — no per-frame paint) and
+                rotates to point along its direction of travel (output → input). */}
             {showGlint && (
                 <div
                     className="animate-edge-glint"
@@ -46,17 +44,15 @@ const CanvasEdgeLabel = ({
                         position: 'absolute',
                         top: 0,
                         left: 0,
-                        width: glintLen,
-                        height: GLINT_THICKNESS,
-                        borderRadius: '9999px',
-                        // offset-path rides the bezier on the compositor (offset-distance
-                        // is a transform under the hood) — no per-frame style/layout/paint.
+                        width: 0,
+                        height: 0,
+                        borderTop: '5px solid transparent',
+                        borderBottom: '5px solid transparent',
+                        borderLeft: `8px solid ${glintColor}`,
                         offsetPath: `path('${edgePath}')`,
                         offsetRotate: 'auto',
-                        background: `radial-gradient(closest-side, #fff, ${glintColor} 40%, transparent)`,
-                        opacity: 0,
                         pointerEvents: 'none',
-                        willChange: 'offset-distance, opacity',
+                        willChange: 'offset-distance',
                     }}
                 />
             )}

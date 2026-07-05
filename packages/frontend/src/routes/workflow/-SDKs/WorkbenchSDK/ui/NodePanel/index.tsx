@@ -192,7 +192,7 @@ export const NodeDescription = ({ nodeId, description, isEditing }: {
     description?: string
     isEditing: boolean
 }) => {
-    if (!description && !isEditing) return null
+    if (!description && !isEditing) return <div className='py-2 px-2 pt-10'></div>
 
     return (
         <div className='py-2 px-2 pt-14'>
