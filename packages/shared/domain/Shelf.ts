@@ -109,9 +109,8 @@ export namespace Shelf {
 
             export namespace Reconcile {
                 export const Request = z.object({
-                    blueprint: Foundations.Blueprint.Schema,
-                    fieldId: Foundations.Field.Id,
-                    newValue: Foundations.Field.Value
+                    blueprintId: Foundations.Blueprint.Id,
+                    fieldValues: z.record(Foundations.Field.Id, Foundations.Field.Value)
                 })
                 export type Request = z.infer<typeof Request>
 

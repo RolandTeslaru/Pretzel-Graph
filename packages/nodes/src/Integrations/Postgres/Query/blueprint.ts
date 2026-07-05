@@ -12,16 +12,15 @@ export const Blueprint = defineBlueprint({
         // The operation drives the node's field schema via reconcile. Only "executeQuery"
         // exists for now (needs just the query field). Future operations — select / insert /
         // update / upsert / delete — will reconcile in schema / table ResourceLoader fields.
-        FieldBuilder.MultiOption({
+        FieldBuilder.reconciling(FieldBuilder.MultiOption({
             id: "operation",
             displayName: "Operation",
-            reconcile: true,
             options: [
                 { value: "executeQuery", displayName: "Execute Query" },
             ],
             initialValue: "executeQuery",
             tooltip: "What this node does against the database.",
-        }),
+        })),
         FieldBuilder.String({
             id: "query",
             displayName: "Query",

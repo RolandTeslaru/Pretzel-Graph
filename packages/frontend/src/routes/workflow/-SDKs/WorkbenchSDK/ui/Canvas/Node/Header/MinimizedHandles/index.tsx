@@ -1,17 +1,17 @@
-import { Workflow } from '@pretzel-graph/shared/domain'
-import React, { useMemo } from 'react'
+import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
+import React from 'react'
+import { WorkbenchSDK } from '../../../../../sdk'
 import { Port } from '../../Port'
 
 interface Props {
-    node: Workflow.Node
-    isWorkflowLocked: boolean
+    nodeId: Workflow.Node.Id,
+    inputs: Foundations.Port.Input[],
+    outputs: Foundations.Port.Output[],
     isFlipped?: boolean
     children?: React.ReactNode
 }
 
-const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped, children }) => {
-
-    const inputs = useMemo(() => node.inputs.filter(i => !i.internal), [node.inputs])
+const MinimizedHandles: React.FC<Props> = ({ nodeId, inputs, outputs, isFlipped, children }) => {
 
     return (
         <div className={`flex w-full py-2 ${isFlipped ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -21,8 +21,7 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped, 
                         <Port
                             type="target"
                             port={input}
-                            nodeId={node.id}
-                            isWorkflowLocked={isWorkflowLocked}
+                            nodeId={nodeId}
                             isFlipped={isFlipped}
                         />
                     </div>
@@ -30,13 +29,12 @@ const MinimizedHandles: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped, 
             </div>
             {children}
             <div className={`flex flex-col h-auto my-auto gap-4 relative ${isFlipped ? 'mr-auto' : 'ml-auto'}`}>
-                {node.outputs.map(output =>
+                {outputs.map(output =>
                     <div className='h-2 relative' key={output.id}>
                         <Port
                             type="source"
                             port={output}
-                            nodeId={node.id}
-                            isWorkflowLocked={isWorkflowLocked}
+                            nodeId={nodeId}
                             isFlipped={isFlipped}
                         />
                     </div>

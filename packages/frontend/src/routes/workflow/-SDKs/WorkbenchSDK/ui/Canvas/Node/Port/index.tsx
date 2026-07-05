@@ -9,7 +9,6 @@ import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk';
 
 interface Props {
     type: "target" | "source";
-    isWorkflowLocked: boolean
     port: Foundations.Port.Input | Foundations.Port.Output
     nodeId: Workflow.Node.Id
     isFlipped?: boolean
@@ -32,11 +31,12 @@ const isValidConnectionCallback = (conn: Connection | Edge) => {
     return isLocked ? false : Validation.Connection.isValid(
         conn as WorkbenchSDK.DriverConnection,
         state.data,
-        state.cache
+        state.cache,
+        state.selectors.getBlueprints(state)
     );
 }
 
-export const Port: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, isFlipped }) => {
+export const Port: React.FC<Props> = ({ type, port, nodeId, isFlipped }) => {
     const defaultPosition = type === "target" ? Position.Left : Position.Right;
     const flippedPosition = type === "target" ? Position.Right : Position.Left;
     const position = isFlipped ? flippedPosition : defaultPosition;
@@ -69,7 +69,8 @@ export const Port: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, is
         return Validation.Connection.isValid(
             conn as WorkbenchSDK.DriverConnection,
             state.data,
-            state.cache
+            state.cache,
+            state.selectors.getBlueprints(state)
         )
     }, [draggedHandle])
 
@@ -86,7 +87,7 @@ export const Port: React.FC<Props> = ({ type, isWorkflowLocked, port, nodeId, is
                 <Handle
                     type={type}
                     position={position}
-                    isConnectable={!isWorkflowLocked}
+                    isConnectable={true}
                     style={{
                         ...handleStyle,
                         [position === Position.Left ? "left" : "right"]: "-2px" // push further out (default is -4/-5px)

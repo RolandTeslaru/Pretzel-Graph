@@ -7,7 +7,7 @@ export const Blueprint = defineBlueprint({
     icon: "Mail",
     accent: "port-Message",
     fields: [
-        FieldBuilder.MultiOption({
+        FieldBuilder.reconciling(FieldBuilder.MultiOption({
             id: "role",
             displayName: "Role",
             options: [
@@ -17,8 +17,7 @@ export const Blueprint = defineBlueprint({
             ],
             initialValue: "Human",
             variant: "tab",
-            reconcile: true,
-        }),
+        })),
         FieldBuilder.String({
             id: "content",
             displayName: "Content",

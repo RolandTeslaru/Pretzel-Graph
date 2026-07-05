@@ -13,56 +13,56 @@ import { NodeCustomToolbar } from './CustomToolbar';
 import { cn } from '@/utils/styleUtils';
 import { StatusBorder } from './StatusBorder';
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
+import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk';
 
 const CanvasNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
-  const node = WorkbenchSDK.useStore(s => s.data.nodes[props.id as Workflow.Node.Id])
+  const nodeId = props.id as Workflow.Node.Id;
+
+  const hyNode = WorkbenchSDK.useNode(nodeId);
 
   // Handle positions (Left<->Right) flip with node.isFlipped / isMinimized.
   // XYFlow caches handle bounds, so tell it to re-measure and reroute edges.
   const updateNodeInternals = useUpdateNodeInternals()
   useEffect(() => {
-    updateNodeInternals(props.id)
-  }, [props.id, node?.isFlipped, node?.isMinimized, updateNodeInternals])
+    updateNodeInternals(nodeId)
+  }, [nodeId, hyNode?.ui?.isFlipped, hyNode?.ui?.isMinimized, updateNodeInternals])
 
-  if (!node)
+  if (!hyNode)
     return null;
 
-  return <Content node={node} />
+  return <Content hyNode={hyNode} />
 })
 
 export default CanvasNode
 
 
-const Content = memo(({ node }: { node: Workflow.Node }) => {
 
-  const [workflowId, isNodeClicked, hasUpdate] = WorkbenchSDK.useStore(s => [
-    s.workflowId,
-    s.clickedNodeId === node.id,
-    s.selectors.dependency.doesNodeHaveUpdate(s, node.id)
+const Content = memo(({ hyNode }: { hyNode: Workflow.HydratedNode }) => {
+
+  const [isNodeClicked, hasUpdate] = WorkbenchSDK.useStore(s => [
+    s.clickedNodeId === hyNode.id,
+    s.selectors.dependency.doesNodeHaveUpdate(s, hyNode.id)
   ])
 
-  const isWorkflowLocked = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.locked ?? false);
-
-  const isMinimized = node.isMinimized;
-  const isDisabled = node.isDisabled
+  const isMinimized = hyNode.ui.isMinimized;
+  const isDisabled = hyNode.isDisabled
 
   let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
 
-  const executionStatus = ExecutionSDK.useStore(s => s.selectors.getNodeStatus(s, node.id));
+  const executionStatus = ExecutionSDK.useStore(s => s.selectors.getNodeStatus(s, hyNode.id));
 
-  if (node.accent) {
-    backgroundColor = `color-mix(in srgb, var(--${node.accent}) 40%, var(--node-accent-base))`;
-    borderColor =  `color-mix(in srgb, var(--${node.accent}) 50%, var(--border))`;
+  if (hyNode.ui.accent) {
+    backgroundColor = `color-mix(in srgb, var(--${hyNode.ui.accent}) 40%, var(--node-accent-base))`;
+    borderColor =  `color-mix(in srgb, var(--${hyNode.ui.accent}) 50%, var(--border))`;
   }
-
 
 
   return (
     <>
       <NodeToolbar isVisible={isNodeClicked} position={Position.Top}>
         <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-200 ease-out origin-bottom">
-          <NodeCustomToolbar node={node} />
+          <NodeCustomToolbar hyNode={hyNode}/>
         </div>
       </NodeToolbar>
 
@@ -73,16 +73,16 @@ const Content = memo(({ node }: { node: Workflow.Node }) => {
           isDisabled ? "opacity-50" : "opacity-100",
         )}
         style={{ backgroundColor, borderColor, borderWidth: 2 }}
-        id={node.id}
+        id={hyNode.id}
       >
-        <NodeHeader executionStatus={executionStatus} node={node} isWorkflowLocked={isWorkflowLocked} hasUpdate={hasUpdate} />
+        <NodeHeader executionStatus={executionStatus} hyNode={hyNode} hasUpdate={hasUpdate} />
 
-        {node.isMinimized === false &&
+        {!isMinimized &&
           <div className='dark:bg-black/50 bg-card/80 py-2 gap-2 flex flex-col  rounded-b-[26px] rounded-t-xl shadow-md shadow-black/10 min-h-8 pzg-9f3a1c'
 
           >
-            <NodeInputs node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped} />
-            <NodeOutputs node={node} isWorkflowLocked={isWorkflowLocked} isFlipped={node.isFlipped} />
+            <NodeInputs nodeId={hyNode.id} inputs={hyNode.inputs} isFlipped={hyNode.ui.isFlipped} />
+            <NodeOutputs nodeId={hyNode.id} outputs={hyNode.outputs} isFlipped={hyNode.ui.isFlipped} />
           </div>
         }
 

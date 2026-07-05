@@ -47,7 +47,7 @@ export function _createShelfReducers_(sdk: ShelfSDKImpl) {
                 if (!blueprint)
                     return false
 
-                const hasDisplayNameCheck = searchQuery ? blueprint.displayName.toLowerCase().includes(searchQuery.toLowerCase()) : true
+                const hasDisplayNameCheck = searchQuery ? blueprint.ui.displayName.toLowerCase().includes(searchQuery.toLowerCase()) : true
 
                 const hasHandleVariant = dataTypes && dataTypes.size > 0 ? checkIfDefintionHasHandles(s, blueprint, dataTypes) : true
                 return hasDisplayNameCheck && hasHandleVariant

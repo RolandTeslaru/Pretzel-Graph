@@ -1,6 +1,18 @@
 import { Workflow } from "./Workflow"
 import { Port } from "./Foundations/Port"
 import { Foundations } from "./Foundations";
+import { resolveInputs, resolveOutputs } from "./resolvePorts";
+
+type Blueprints = Record<Foundations.Blueprint.Id, Foundations.Blueprint>;
+
+// Resolve a node's attached subworkflow dependency record from the workflow's dependency state,
+// so its exposed ports are derived during validation just like on the read path.
+function getNodeDependency(workflowData: Workflow.Data, node: Workflow.Node): Workflow.Dependency | null {
+    const ref = node.dependencyRef;
+    if (!ref) return null;
+    const store = ref.mode === "publication" ? workflowData.dependencies.published : workflowData.dependencies.draft;
+    return store[ref.workflowId] ?? null;
+}
 
 type Connection = {
     source: Workflow.Node.Id;
@@ -24,7 +36,7 @@ export namespace Validation {
             ): Issue.Field | null {
                 if (!field.required) return null;
 
-                const value = workflowData.staticValues[nodeId]?.[field.id];
+                const value = workflowData.staticValues[nodeId]?.[field.id] ?? field.initialValue;
 
                 if (value === undefined || value === null || value === "")
                     return {
@@ -55,7 +67,7 @@ export namespace Validation {
                     return null;
 
                 if (input.variant === "Message" || input.variant === "Text") {
-                    const value = workflowData.staticValues[nodeId]?.[input.id];
+                    const value = workflowData.staticValues[nodeId]?.[input.id] ?? ('initialValue' in input ? input.initialValue : undefined);
                     if (value !== undefined && value !== null && value !== "")
                         return null;
 
@@ -77,14 +89,14 @@ export namespace Validation {
             inputs: Record<Port.Input.Id, Issue.Input>;
         }
         export namespace Node {
-            export function check(node: Workflow.Node, workflowData: Workflow.Data, cache: Workflow.Cache) {
+            export function check(node: Workflow.Node, fields: readonly Foundations.Field[], inputs: readonly Port.Input[], workflowData: Workflow.Data, cache: Workflow.Cache) {
                 const nodeIssues: Issue.Node = { fields: {}, inputs: {} }
 
                 let numFieldIssues = 0;
                 let numInputIssues = 0;
 
 
-                for (const field of node.fields) {
+                for (const field of fields) {
                     const fieldIssue = Issue.Field.check(field, node.id, workflowData)
                     if (fieldIssue) {
                         nodeIssues.fields[field.id] = fieldIssue
@@ -92,7 +104,7 @@ export namespace Validation {
                     }
                 }
 
-                for (const input of node.inputs) {
+                for (const input of inputs) {
                     const inputIssue = Issue.Input.check(input, node.id, workflowData, cache)
                     if (inputIssue) {
                         nodeIssues.inputs[input.id] = inputIssue
@@ -111,14 +123,20 @@ export namespace Validation {
             nodes: Record<Workflow.Node.Id, Issue.Node>
             cycles: Issue.Cycle[]
         }
-        export function checkWorkflow(workflowData: Workflow.Data, cycles: Workflow.Node.Id[][], cache: Workflow.Cache) {
+        export function checkWorkflow(workflowData: Workflow.Data, cycles: Workflow.Node.Id[][], cache: Workflow.Cache, blueprints: Blueprints) {
             const issues: Issue.Workflow_ = {
                 nodes: {},
                 cycles: []
             }
 
             for (const node of Object.values(workflowData.nodes)) {
-                const nodeIssues = Node.check(node, workflowData, cache)
+                const blueprint = blueprints[node.reconciledBlueprintId ?? node.blueprintId];
+                if (!blueprint)
+                    throw new Error(`Cannot validate node ${node.id}: blueprint "${node.reconciledBlueprintId ?? node.blueprintId}" was not provided.`);
+
+                const inputs = resolveInputs(blueprint.inputs, node, getNodeDependency(workflowData, node));
+
+                const nodeIssues = Node.check(node, blueprint.fields, inputs, workflowData, cache)
                 if (nodeIssues)
                     issues.nodes[node.id] = nodeIssues
             }
@@ -157,8 +175,10 @@ export namespace Validation {
                         hasRouteBranchingNode = true;
 
                     const staticValues = workflowData.staticValues[nodeId];
-                    const signalDep = staticValues?.["signalDependency" as Foundations.Field.Id];
-                    const dataDep   = staticValues?.["dataDependency"   as Foundations.Field.Id];
+                    // Fall back to the execution-strategy field defaults (see node-sdk builders) —
+                    // un-seeded nodes omit these from staticValues.
+                    const signalDep = staticValues?.["signalDependency" as Foundations.Field.Id] ?? "OR";
+                    const dataDep   = staticValues?.["dataDependency"   as Foundations.Field.Id] ?? "AND";
 
                     // A node can escape the cycle only if it fires on a partial signal
                     // (OR/XOR) AND does not re-block waiting for all data (dataDep !== AND).
@@ -199,14 +219,9 @@ export namespace Validation {
 
 
     export function arePortsCompatible(
-        sourceNode: Workflow.Node,
-        sourcePortId: Port.Output.Id,
-        targetNode: Workflow.Node,
-        targetPortId: Port.Input.Id
+        sourcePort: Port.Output | undefined,
+        targetPort: Port.Input | undefined,
     ) {
-        const sourcePort = sourceNode.outputs.find(o => o.id === sourcePortId);
-        const targetPort = targetNode.inputs.find(i => i.id === targetPortId);
-
         // Edge compatibility policy:
         //   - Promotion (scalar → list) is allowed implicitly via LIST_PROMOTION_MAP.
         //   - Demotion (list → scalar) is NEVER allowed at the edge level — use a                                                 
@@ -247,7 +262,7 @@ export namespace Validation {
         if (sourcePort.variant === targetPort.variant)
             return true
 
-        if (Port.isScalarLike(sourcePort.variant) && (targetPort.variant === Port.LIST_PROMOTION_MAP[sourcePort.variant]))
+        if (Port.isScalarLike(sourcePort.variant) && (targetPort.variant === Port.promoteToList(sourcePort.variant)))
             return true;
 
         return false
@@ -266,7 +281,7 @@ export namespace Validation {
 
 
     export namespace Connection {
-        export function isValid(conn: Connection, workflowData: Workflow.Data, cache: Workflow.Cache) {
+        export function isValid(conn: Connection, workflowData: Workflow.Data, cache: Workflow.Cache, blueprints: Blueprints) {
 
             const sourceNode = workflowData.nodes[conn.source];
             const targetNode = workflowData.nodes[conn.target];
@@ -283,7 +298,15 @@ export namespace Validation {
             if (doesEdgeAlreadyExist(workflowData, sourceNode.id, sourceHandleId, targetNode.id, targetHandleId))
                 return false;
 
-            if (!arePortsCompatible(sourceNode, sourceHandleId, targetNode, targetHandleId))
+            const sourceBp = blueprints[sourceNode.reconciledBlueprintId ?? sourceNode.blueprintId];
+            const targetBp = blueprints[targetNode.reconciledBlueprintId ?? targetNode.blueprintId];
+            if (!sourceBp || !targetBp)
+                return false;
+
+            const sourcePort = resolveOutputs(sourceBp.outputs, sourceNode, getNodeDependency(workflowData, sourceNode)).find(o => o.id === sourceHandleId);
+            const targetPort = resolveInputs(targetBp.inputs, targetNode, getNodeDependency(workflowData, targetNode)).find(i => i.id === targetHandleId);
+
+            if (!arePortsCompatible(sourcePort, targetPort))
                 return false;
 
             if (isTargetPortAlreadyConnected(targetNode.id, targetHandleId, cache))
@@ -312,5 +335,5 @@ function doesEdgeAlreadyExist(
     targetHandleId: Port.Input.Id
 ) {
     const edgeId = Workflow.Edge.createId(sourceNodeId, sourceHandleId, targetNodeId, targetHandleId);
-    return !!workflowData.edges[edgeId]
+    return workflowData.edges.includes(edgeId)
 }

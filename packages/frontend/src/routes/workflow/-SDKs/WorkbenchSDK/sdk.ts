@@ -4,7 +4,7 @@ import { immer } from "zustand/middleware/immer";
 import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance } from "@xyflow/react";
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
 import { workbenchSelectors, type WorkbenchSDKSelectors } from "./selectors";
-import { useState, useRef, useEffect, useCallback, createRef } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, createRef } from "react";
 import { Foundations, Validation, Workflow, Workbench } from "@pretzel-graph/shared/domain"
 import { temporal } from 'zundo';
 import { cloneDeep } from "lodash";
@@ -14,6 +14,10 @@ import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { workbenchReducers } from "./reducers";
 import { createDrivers, reconcileNodeDrivers, reconcileEdgeDrivers } from "./utils/createDrivers";
 import { sameUndoableData } from "./utils/temporal";
+import { ShelfSDK } from "../ShelfSDK/sdk";
+import { resolveInputs, resolveOutputs } from "./utils/resolvePorts";
+import type { NodeUI } from "./selectors/node";
+import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 
 @SDK("Workbench")
 export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
@@ -51,7 +55,8 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 reconcilingFields: {},
                 stronglyConnectedComponents: [],
                 dependencyUpdates: { published: {}, draft: {} },
-                selectors: workbenchSelectors
+                selectors: workbenchSelectors,
+                reducers: workbenchReducers
             })), {
             limit: this.TEMPORAL_STACK_SIZE,
             partialize: (s) => ({
@@ -82,6 +87,105 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         return LibrarySDK.state.workflowMetas[this.state.workflowId]?.locked ?? false;
     }
 
+
+
+    public useNode(nodeId: Workflow.Node.Id | null) {
+        const [node, connectedPorts, dependency] = this.useStore(s => {
+            if(!nodeId)
+                return [null, {}, null] as const;
+
+            return [
+                s.data.nodes[nodeId],
+                s.selectors.node.getConnectedPorts(s, nodeId),
+                s.selectors.node.getDependency(s, nodeId),
+            ]
+        })
+
+        // A slimmed Workflow.Node cannot exist without its blueprint hydrated — load() guarantees
+        // it. If it's missing that's a hard bug, not a case to guard; assert both as present.
+        const blueprint = ShelfSDK.useStore(s => {
+            if(!node)
+                return null;
+            return s.blueprints[node!.reconciledBlueprintId ?? node!.blueprintId]
+        });
+
+        const inputs = useMemo(() => {
+            if(!node || !blueprint)
+                return [];
+            return resolveInputs(blueprint.inputs, node, dependency);
+        }, [blueprint, node?.addedInputs, node?.polymorphicResolutions, dependency]);
+
+        const outputs = useMemo(() => {
+            if(!node || !blueprint)
+                return [];
+            return resolveOutputs(blueprint.outputs, node, dependency);
+        }, [blueprint, node?.addedOutputs, node?.polymorphicResolutions, dependency]);
+
+        const fields = useMemo(() => {
+            if(!node || !blueprint)
+                return [];
+            return node.addedFields?.length ? [...blueprint.fields, ...node.addedFields] : blueprint.fields;
+        }, [blueprint, node?.addedFields]);
+
+        return useMemo(() => {
+            if (!node || !blueprint)
+                return null;
+
+            return {
+                ...node,
+                blueprint,
+                fields,
+                inputs,
+                outputs,
+                ui: {
+                    displayName: node.ui?.displayName ?? dependency?.display_name ?? blueprint.ui.displayName,
+                    description: node.ui?.description ?? blueprint.ui.description,
+                    isMinimized: node.ui?.isMinimized ?? false,
+                    isFlipped:   node.ui?.isFlipped   ?? false,
+                    icon:        node.ui?.icon        ?? dependency?.icon   ?? blueprint.ui.icon,
+                    accent:      node.ui?.accent      ?? dependency?.accent ?? blueprint.ui.accent,
+                    iconColor:   node.ui?.iconColor   ?? blueprint.ui.iconColor,
+                },
+                connectedPorts,
+            } as Workflow.HydratedNode;
+        }, [node, blueprint, fields, inputs, outputs, connectedPorts, dependency]);
+    }
+
+
+    /** A single resolved output port. Subscribes to the stable inputs (node ref, dependency record,
+     *  blueprint) and memoizes the resolve+lookup, so it recomputes on reconcile / port changes /
+     *  dependency updates — not on every render. */
+    public useOutput(nodeId: Workflow.Node.Id | null, portId: Foundations.Port.Output.Id | null) {
+        const [node, dependency] = this.useStore(s => {
+            if (!nodeId)
+                return [null, null] as const;
+            return [s.data.nodes[nodeId] ?? null, s.selectors.node.getDependency(s, nodeId)] as const;
+        });
+
+        const blueprint = ShelfSDK.useStore(s =>
+            node ? s.blueprints[node.reconciledBlueprintId ?? node.blueprintId] : null
+        );
+
+        return useMemo(() => {
+            if (!node || !blueprint || !portId)
+                return null;
+            return resolveOutputs(blueprint.outputs, node, dependency).find(o => o.id === portId) ?? null;
+        }, [blueprint, node?.addedOutputs, node?.polymorphicResolutions, dependency, portId]);
+    }
+
+
+    /** A node's fields — blueprint-owned, no node-level overrides. Subscribes only to the
+     *  effective blueprint id, so it re-renders on reconcile, not on unrelated node edits. */
+    public useFields(nodeId: Workflow.Node.Id): readonly Foundations.Field[] {
+        const blueprintId = this.useStore(s => {
+            const node = s.data.nodes[nodeId];
+            return node.reconciledBlueprintId ?? node.blueprintId;
+        });
+        const blueprint = ShelfSDK.useStore(s => s.blueprints[blueprintId]);
+        return blueprint.fields;
+    }
+
+
     /**
      * Buffered field hook. `value` is a local draft that updates instantly via
      * `onChange`; the store is only written on `flush` (wire to `onBlur`) or on
@@ -92,18 +196,16 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public useField<T>(nodeId: Workflow.Node.Id, field: Foundations.Field) {
         const fieldId = field.id;
 
-        const [storeValue, issue, isReconciling, isExpression] = this.useStore(s => {
-            const staticVals = s.data.staticValues[nodeId]
-            if (!staticVals)
-                return [undefined, null, false, false] as const
+        const initialValue = 'initialValue' in field ? field.initialValue : undefined;
 
+        const [storeValue, issue, isReconciling, isExpression] = this.useStore(s => {
             const isReconciling = s.reconcilingFields[nodeId]?.has(fieldId) ?? false
-            const fieldMeta = s.selectors.field.get(s, nodeId, fieldId)
-            const isExpression = (fieldMeta && 'isExpression' in fieldMeta && fieldMeta.isExpression) ?? false
+            // @ts-expect-error
+            const isExpression = field.isExpression ?? false
 
             return [
-                staticVals[fieldId] as T,
-                s.issues.nodes[nodeId]?.fields[fieldId] ?? null,
+                s.selectors.node.getStaticValue(s, nodeId, fieldId, initialValue) as T,
+                s.selectors.field.getIssue(s, nodeId, fieldId),
                 isReconciling,
                 isExpression
             ] as const
@@ -152,15 +254,12 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public useInput<T>(nodeId: Workflow.Node.Id, input: Foundations.Port.Input) {
         const inputId = input.id;
 
-        const [storeValue, issue] = this.useStore(s => {
-            const staticVals = s.data.staticValues[nodeId]
-            if (!staticVals)
-                return [null, null] as const
-            return [
-                staticVals[inputId] as T,
-                s.issues.nodes[nodeId]?.inputs[inputId] ?? null
-            ] as const
-        });
+        const initialValue = 'initialValue' in input ? input.initialValue : undefined;
+        
+        const [storeValue, issue] = this.useStore(s => [
+            s.selectors.node.getStaticValue(s, nodeId, inputId, initialValue),
+            s.selectors.input.getIssue(s, nodeId, inputId)
+        ] as const);
 
         const [localValue, setLocalValue] = useState<T>(storeValue as T);
         const localRef = useRef<T>(storeValue as T);
@@ -237,6 +336,7 @@ export namespace WorkbenchSDK {
             draft:     Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>
         }
         selectors: WorkbenchSDKSelectors
+        reducers: typeof workbenchReducers
     }
 
     export interface Handle {
@@ -259,4 +359,11 @@ export namespace WorkbenchSDK {
         target: Workflow.Node.Id
         targetHandle: Foundations.Port.Input.Id
     }
+
+    export type NodeBundle = [
+        node: Workflow.Node,
+        blueprint: Foundations.Blueprint,
+        ui: NodeUI,
+        connectedPorts: Record<Port.Input.Id, Workflow.Edge.Id>
+    ]
 }

@@ -1,31 +1,20 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { InferFieldValues } from "@pretzel-graph/node-sdk";
-import { FieldBuilder } from "@pretzel-graph/node-sdk";
-import { cloneDeep } from "lodash";
+import { InferReconcilingFieldValues, FieldBuilder } from "@pretzel-graph/node-sdk";
+import { Blueprint } from "./blueprint";
 
+// Tool role reveals `toolCallId`; other roles are the base blueprint.
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    changedFieldId: keyof InferFieldValues<Foundations.Blueprint>,
-    newValue: Foundations.Field.Value,
+    fieldValues: InferReconcilingFieldValues<typeof Blueprint>,
 ): Foundations.Blueprint => {
-
-    const newBlueprint = cloneDeep(blueprint);
-    const fields = new Map(newBlueprint.fields.map(f => [f.id, f]));
-
-    if (changedFieldId === "role") {
-        if (newValue === "Tool") {
-            fields.set("toolCallId" as any, FieldBuilder.String({
-                id: "toolCallId",
-                displayName: "Tool Call ID",
-                initialValue: "",
-                placeholder: "Required for Tool messages",
-            }) as any);
-        }
-        else if (newValue === "System" || newValue === "Human" || newValue === "Assistant") {
-            fields.delete("toolCallId" as any);
-        }
+    if (fieldValues.role === "Tool") {
+        // @ts-expect-error append the Tool-only field to the readonly tuple
+        blueprint.fields = [...blueprint.fields, FieldBuilder.String({
+            id: "toolCallId",
+            displayName: "Tool Call ID",
+            initialValue: "",
+            placeholder: "Required for Tool messages",
+        })];
     }
-    // @ts-expect-error
-    newBlueprint.fields = [...fields.values()] as typeof newBlueprint.fields;
-    return newBlueprint;
+    return blueprint;
 };
