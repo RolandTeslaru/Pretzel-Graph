@@ -19,7 +19,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
         setMinimized:      withCommit((...props) => setState(s => { reducers.node.setMinimized(s,      ...props) })),
         setFlipped:        withCommit((...props) => setState(s => { reducers.node.setFlipped(s,        ...props) })),
         setDisplayName:    withCommit((...props) => setState(s => { reducers.node.setDisplayName(s,    ...props) })),
-        setDescription:    withCommit((...props) => setState(s => { reducers.node.setDescription(s,    ...props) })),
+    setDescription:    withCommit((...props) => setState(s => { reducers.node.setDescription(s,    ...props) })),
         setSignalStrategy: withCommit((...props) => setState(s => { reducers.node.setSignalStrategy(s, ...props) })),
         
         validate:          (...props) => { setState(s => { reducers.node.validate(s,       ...props) }) },
@@ -50,7 +50,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
 
             // Nodes with a dependency (e.g. an attached subworkflow) derive their shape from
             // that dependency, not a static blueprint, so they can't be blindly recreated — skip them.
-            const recreatable = nodes.filter(n => !n.dependency);
+            const recreatable = nodes.filter(n => !n.dependencyRef);
 
             // Hydrate each distinct blueprint once (parallel), so we recreate from fresh blueprints.
             const blueprintIds = [...new Set(recreatable.map(n => n.blueprintId))];
@@ -77,8 +77,8 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             
             // If the blueprint is pre-wired to a dependency not yet in the store, fetch it lazily.
             // On failure, remove the node — it can't function without its dependency data.
-            if (blueprint.dependency) {
-                const { workflowId, mode } = blueprint.dependency;
+            if (blueprint.dependencyRef) {
+                const { workflowId, mode } = blueprint.dependencyRef;
                 const depStore = mode === "publication"
                     ? sdk.state.data.dependencies.published
                     : sdk.state.data.dependencies.draft;

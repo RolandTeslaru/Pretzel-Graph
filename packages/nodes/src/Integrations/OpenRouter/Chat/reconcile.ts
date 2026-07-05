@@ -1,5 +1,6 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { InferFieldValues } from "@pretzel-graph/node-sdk";
+import { InferReconcilingFieldValues } from "@pretzel-graph/node-sdk";
+import { Blueprint } from "./blueprint";
 
 type ProviderEntry = {
     models: { value: string; displayName: string }[];
@@ -82,21 +83,16 @@ const PROVIDER_MODELS: Record<string, ProviderEntry> = {
     },
 };
 
+// `provider` swaps the `model` field's option list + default.
 export const reconcile = (
     blueprint: Foundations.Blueprint,
-    changedFieldId: keyof InferFieldValues<Foundations.Blueprint>,
-    newValue: Foundations.Field.Value,
+    fieldValues: InferReconcilingFieldValues<typeof Blueprint>,
 ): Foundations.Blueprint => {
-    const fields = new Map(blueprint.fields.map(f => [f.id, f]));
-
-    if (changedFieldId === "provider") {
-        const modelField = fields.get("model" as any) as unknown as Foundations.Field.MultiOption;
-        if (!modelField) return blueprint;
-
-        const providerData = PROVIDER_MODELS[newValue as string] ?? PROVIDER_MODELS["Google"];
+    const modelField = blueprint.fields.find(f => f.id === "model") as unknown as Foundations.Field.MultiOption | undefined;
+    if (modelField) {
+        const providerData = PROVIDER_MODELS[fieldValues.provider as string] ?? PROVIDER_MODELS["Google"];
         modelField.options = providerData.models;
         modelField.initialValue = providerData.defaultModel;
     }
-
     return blueprint;
 };

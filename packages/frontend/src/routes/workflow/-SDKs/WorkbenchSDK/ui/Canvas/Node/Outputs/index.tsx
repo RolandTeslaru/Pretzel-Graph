@@ -1,16 +1,16 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { Port } from '../Port'
 import { cn } from '@/utils/styleUtils'
+import { WorkbenchSDK } from '../../../../sdk'
 
 interface NodeOutputProps {
-  node: Workflow.Node
-  isWorkflowLocked: boolean
+  nodeId: Workflow.Node.Id
   output: Foundations.Port.Output
   isFlipped?: boolean
 }
 
-const Item: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFlipped }) => {
+const Item: React.FC<NodeOutputProps> = ({ nodeId, output, isFlipped }) => {
   return (
     <div className={cn("relative w-full flex items-center py-0.5 px-3", isFlipped ? "justify-start" : "justify-end")}>
       <div className={cn("text-sm font-medium text-foreground")}>
@@ -18,9 +18,8 @@ const Item: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFli
       </div>
       <Port
         type="source"
-        isWorkflowLocked={isWorkflowLocked}
         port={output}
-        nodeId={node.id}
+        nodeId={nodeId}
         isFlipped={isFlipped}
       />
     </div>
@@ -29,17 +28,12 @@ const Item: React.FC<NodeOutputProps> = ({ node, isWorkflowLocked, output, isFli
 
 
 interface Props {
-  node: Workflow.Node
-  isWorkflowLocked: boolean
+  nodeId: Workflow.Node.Id
+  outputs: Foundations.Port.Output[]
   isFlipped?: boolean
 }
 
-const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped }) => {
-  const outputs = useMemo(() => {
-    return Object.values(node.outputs) as Foundations.Port.Output[]
-  }, [node.outputs])
-
-  const selectedOutput = outputs[0]
+const NodeOutputs: React.FC<Props> = ({ nodeId, outputs, isFlipped }) => {
 
   if(outputs.length === 0)
     return null
@@ -49,8 +43,7 @@ const NodeOutputs: React.FC<Props> = ({ node, isWorkflowLocked, isFlipped }) => 
       {outputs.map((output) => (
         <Item
           key={output.id}
-          node={node}
-          isWorkflowLocked={isWorkflowLocked}
+          nodeId={nodeId}
           output={output}
           isFlipped={isFlipped}
         />

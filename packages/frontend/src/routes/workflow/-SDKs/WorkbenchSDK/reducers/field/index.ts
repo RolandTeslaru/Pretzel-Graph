@@ -1,6 +1,5 @@
 import { Validation, Foundations, type Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../../sdk";
-import { workbenchSelectors } from "../../selectors";
 import { fieldVariadicReducers, type FieldVariadicReducers } from "./variadic";
 import { fieldConditionReducers, type FieldConditionReducers } from "./condition";
 import { fieldCaseListReducers, type FieldCaseListReducers } from "./caseList";
@@ -19,21 +18,25 @@ const EXPRESSION_CAPABLE_VARIANTS = new Set<Foundations.Field.Variant>([
 export const fieldReducers = {
     setValue: (s, nodeId, fieldId, value) => {
         s.isDirty = true;
-        const cur  = s.data.staticValues[nodeId][fieldId]
+        const staticValues = s.reducers.node.ensureStaticValues(s, nodeId)
+        const cur  = staticValues[fieldId]
         const next = typeof value === "function" ? value(cur as any) : value
-        s.data.staticValues[nodeId][fieldId] = next
+        staticValues[fieldId] = next
     },
     clearDependentFields: (s, nodeId, changedFieldId) => {
         const node = s.selectors.node.get(s, nodeId)
         if (!node) return
 
-        for (const sibling of node.fields) {
+        const fields = s.selectors.node.getFields(s, nodeId)
+        const staticValues = s.reducers.node.ensureStaticValues(s, nodeId)
+
+        for (const sibling of fields) {
             if (
                 sibling.variant === "ResourceLoader" &&
                 sibling.id !== changedFieldId &&
                 sibling.dependsOn.includes(changedFieldId)
             ) {
-                s.data.staticValues[nodeId][sibling.id] = { mode: "list", value: "" }
+                staticValues[sibling.id] = { mode: "list", value: "" }
                 s.isDirty = true
             }
         }
@@ -68,14 +71,15 @@ export const fieldReducers = {
             return;
         }
 
-        const current = s.data.staticValues[nodeId]?.[fieldId]
+        const staticValues = s.reducers.node.ensureStaticValues(s, nodeId)
+        const current = staticValues[fieldId]
 
         if (value) {
             // entering expression mode: re-encode the raw value as valid JS source
             // (e.g. a Json field's object, or a MultiOption's bare string "GET",
             // aren't valid expression text on their own)
             if (typeof current !== "undefined") {
-                s.data.staticValues[nodeId][fieldId] = field.variant === "Json"
+                staticValues[fieldId] = field.variant === "Json"
                     ? JSON.stringify(current, null, 2)
                     : JSON.stringify(current)
             }
@@ -83,7 +87,7 @@ export const fieldReducers = {
             // leaving expression mode: recover the literal value behind the expression
             // text if it's just a JSON literal; otherwise leave the raw text as-is
             try {
-                s.data.staticValues[nodeId][fieldId] = JSON.parse(current)
+                staticValues[fieldId] = JSON.parse(current)
             } catch {}
         }
 

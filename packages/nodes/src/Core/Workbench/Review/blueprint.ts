@@ -9,10 +9,9 @@ export const Blueprint = defineBlueprint({
     icon: "ShieldQuestionMark",
     accent: "utility",
     fields: [
-        FieldBuilder.MultiOption({
+        FieldBuilder.reconciling(FieldBuilder.MultiOption({
             id: "variant",
             displayName: "Mode",
-            reconcile: true,
             options: [
                 { value: "confirm", displayName: "Approve / Reject" },
                 { value: "choice",  displayName: "Choice" },
@@ -20,7 +19,7 @@ export const Blueprint = defineBlueprint({
             ],
             initialValue: "confirm",
             tooltip: "What the workbench dialog asks the human for.",
-        }),
+        })),
         FieldBuilder.String({
             id: "title",
             displayName: "Title",

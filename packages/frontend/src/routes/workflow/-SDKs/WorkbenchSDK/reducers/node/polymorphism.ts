@@ -15,51 +15,23 @@ export const nodePolymorphismReducers = {
 
         const polymorphicGroupId = triggerPort.polymorphicGroupId;
 
-        const inputs = node.inputs.filter(i => Port.isPolymorphic(i) && i.polymorphicGroupId === polymorphicGroupId)
-        const outputs = node.outputs.filter(o => Port.isPolymorphic(o) && o.polymorphicGroupId === polymorphicGroupId)
-
-        inputs.forEach(i => {
-            if(!Port.isUnresolvedLike(i.variant))
-                return
-            if (i.variant === "UnresolvedList") {
-                (i as any).variant = Port.LIST_PROMOTION_MAP[resolvedVariant] ?? resolvedVariant;
-            } else if (i.variant === "UnresolvedScalar") {
-                (i as any).variant = Port.LIST_DEMOTION_MAP[resolvedVariant] ?? resolvedVariant;
-            } else {
-                (i as any).variant = resolvedVariant; // Normal Unresolved type
-            }
-        })
-
-        outputs.forEach(o => {
-            if(!Port.isUnresolvedLike(o.variant))
-                return
-
-            if (o.variant === "UnresolvedList") {
-                (o as any).variant = Port.LIST_PROMOTION_MAP[resolvedVariant] ?? resolvedVariant;
-            } else if (o.variant === "UnresolvedScalar") {
-                (o as any).variant = Port.LIST_DEMOTION_MAP[resolvedVariant] ?? resolvedVariant;
-            } else {
-                (o as any).variant = resolvedVariant;
-            }
-        })
+        node.polymorphicResolutions = node.polymorphicResolutions ?? {};
+        node.polymorphicResolutions[polymorphicGroupId] = resolvedVariant;
     },
     unresolveGroup: (s, nodeId, polymorphicGroupId) => {
         const node = s.data.nodes[nodeId];
 
-        const inputs = node.inputs.filter(i => Foundations.Port.isPolymorphic(i) && i.polymorphicGroupId === polymorphicGroupId) as Foundations.Port.Variants.UnresolvedLike[];
-        const outputs = node.outputs.filter(o => Foundations.Port.isPolymorphic(o) && o.polymorphicGroupId === polymorphicGroupId) as Foundations.Port.Variants.UnresolvedLike[];
+        if(!node.polymorphicResolutions)
+            return
 
-        inputs.forEach(input => {
-            input.variant = input.originalVariant;
-        })
+        delete node.polymorphicResolutions[polymorphicGroupId]
 
-        outputs.forEach(output => {
-            output.variant = output.originalVariant;
-        })
+        if(Object.values(node.polymorphicResolutions).length === 0)
+            delete node.polymorphicResolutions
     },
 } satisfies NodePolymorphismReducers
 
 export interface NodePolymorphismReducers {
     resolveGroup   : (s: S, nodeId: NodeId, triggerPort: Foundations.Port.Input | Foundations.Port.Output, resolvedVariant: Foundations.Port.Variant) => void
-    unresolveGroup : (s: S, nodeId: NodeId, polymorphicGroupId: string) => void
+    unresolveGroup : (s: S, nodeId: NodeId, polymorphicGroupId: Foundations.Port.PolymorphicGroupId) => void
 }

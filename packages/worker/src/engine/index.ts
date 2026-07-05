@@ -226,7 +226,6 @@ export class AggexEngine {
         }
 
         System.log.debug("node executing", {
-            name:           wfNode.displayName,
             nodeId:         wfNode.id,
             dataDependency: dataDependency ?? "OR",
             signals:        [...signals],
@@ -249,7 +248,7 @@ export class AggexEngine {
             return this.errors.handle(ctx, vertexId, err);
         }
 
-        const projectedResult = this.nodeIO.projectOutputs(result, wfNode);
+        const projectedResult = this.nodeIO.projectOutputs(ctx, result, wfNode);
         this.session.onNodeExecuted(ctx, wfNode.id, result, projectedResult);
 
         switch (nodeInstance.getPropagationStrategy()) {

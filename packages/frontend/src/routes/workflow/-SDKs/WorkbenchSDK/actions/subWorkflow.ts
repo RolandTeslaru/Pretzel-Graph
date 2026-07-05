@@ -80,7 +80,7 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
 
 
             edgeIds.forEach(edgeId => {
-                const edge = state.data.edges[edgeId];
+                const edge = state.cache.edges[edgeId];
                 if (!edge)
                     return;
 
@@ -88,7 +88,7 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
                 const hasTargetNode = selectedNodeIds.has(edge.target.nodeId);
 
                 if (hasSourceNode && hasTargetNode)
-                    subflow.data.edges[edgeId] = edge;
+                    subflow.data.edges.push(edgeId);
             })
 
             let workflowId: Workflow.Id | Foundations.Field.Id;
@@ -115,16 +115,18 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
                 })
 
                 edgeIds.forEach(edgeId => {
-                    if (s.data.edges[edgeId])
+                    if (s.cache.edges[edgeId])
                         reducers.edge.remove(s, edgeId)
                 })
 
                 const executeSubWorkflowBlueprint = {
                     ...blueprint,
                     ...extractExposedPorts(subflow.data),
-                    displayName: displayName,
-                    icon: subflow.icon ?? blueprint.icon,
-                    accent: subflow.accent ?? blueprint.accent,
+                    ui: {
+                        displayName: displayName,
+                        icon: subflow.icon ?? blueprint.ui.icon,
+                        accent: subflow.accent ?? blueprint.ui.accent,
+                    }
                 } satisfies Foundations.Blueprint;
 
                 reducers.node.create(

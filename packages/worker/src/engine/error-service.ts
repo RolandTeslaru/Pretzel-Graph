@@ -174,7 +174,7 @@ export class ErrorService {
         for (const edgeId of wiredEdgeIds) {
             ctx.errorChannel.set(edgeId, nextEnvelope);
             edgeIdMap[edgeId] = edgeId;
-            const edge = ctx.workflowData.edges[edgeId];
+            const edge = ctx.workflowCache.edges[edgeId];
             if (edge)
                 targets.add(edge.target.nodeId as unknown as Vertex.Id);
         }

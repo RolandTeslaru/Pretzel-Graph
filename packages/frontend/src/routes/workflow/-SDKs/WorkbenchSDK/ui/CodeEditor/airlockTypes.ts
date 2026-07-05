@@ -47,7 +47,7 @@ export function getIncomingShape(nodeId: Workflow.Node.Id): Record<string, unkno
     const result: Record<string, unknown> = {}
 
     Object.entries(cache.inputHandlesMap[nodeId] ?? {}).forEach(([targetPortId, edgeId]) => {
-        const edge = data.edges[edgeId as Workflow.Edge.Id]
+        const edge = cache.edges[edgeId as Workflow.Edge.Id]
         if (!edge) return
         const value = execution.session.node_output_projections[edge.source.nodeId]?.[
             edge.source.portId as Foundations.Port.Output.Id
@@ -85,7 +85,7 @@ const VARIANT_TS: Partial<Record<Foundations.Field.Variant, string>> = {
 }
 
 // Object type built from the workflow's config fields → `$config` key autocomplete.
-// Mirrors the runtime bag Expression.resolveWorkflowConfig produces (field id → value).
+// Mirrors the runtime bag Airlock.resolveWorkflowConfig produces (field id → value).
 export function getConfigType(): string {
     const fields = WorkbenchSDK.state.data.fields ?? []
     if (fields.length === 0) return 'Record<string, any>'

@@ -26,34 +26,34 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
           style={{
-            borderColor: blueprint.accent
-              ? `color-mix(in srgb, var(--${blueprint.accent}) 30%, var(--secondary))`
+            borderColor: blueprint.ui.accent
+              ? `color-mix(in srgb, var(--${blueprint.ui.accent}) 30%, var(--secondary))`
               : 'var(--secondary)'
           }}
           {...props}
         >
           <LazyIcon
-            name={blueprint.icon}
+            name={blueprint.ui.icon}
             className='w-4 size-4 h-4 my-auto '
-            style={{ color: blueprint.iconColor ? `var(--${blueprint.iconColor})` : undefined }}
+            style={{ color: blueprint.ui.iconColor ? `var(--${blueprint.ui.iconColor})` : undefined }}
           />
           <p className='text-sm my-auto truncate flex-1 min-w-0 select-none'>
-            {blueprint.displayName}
+            {blueprint.ui.displayName}
           </p>
           <SystemIcons.GripVertical className='w-[18px] h-[18px] text-muted-foreground ml-auto my-auto ' />
         </div>
       </Tooltip.Trigger>
       <Tooltip.Content side="left" className='max-w-[250px] gap-2' >
         <div className='flex flex-row justify-between'>
-          <h4 className='font-semibold text-sm'>{blueprint.displayName}</h4>
+          <h4 className='font-semibold text-sm'>{blueprint.ui.displayName}</h4>
           <LazyIcon
-            name={blueprint.icon}
+            name={blueprint.ui.icon}
             className='w-[18px] h-[18px] size-4 text-muted-foreground'
-            style={{ color: blueprint.iconColor ? `var(--${blueprint.iconColor})` : undefined }}
+            style={{ color: blueprint.ui.iconColor ? `var(--${blueprint.ui.iconColor})` : undefined }}
           />
         </div>
         {/* <DataViewerWrapper src={blueprint}/> */}
-        <p>{blueprint.description}</p>
+        <p>{blueprint.ui.description}</p>
       </Tooltip.Content>
     </Tooltip.Root>
   )

@@ -1,6 +1,6 @@
-import type { Foundations, Validation, Workflow } from "@pretzel-graph/shared/domain"
+import type { Validation } from "@pretzel-graph/shared/domain"
+import { Workflow } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDK } from "../sdk"
-import { MarkerType } from "@xyflow/react";
 
 export function createNodeDriver(node: Workflow.Node, wfData: Workflow.Data): WorkbenchSDK.NodeDriver {
     return {
@@ -12,11 +12,8 @@ export function createNodeDriver(node: Workflow.Node, wfData: Workflow.Data): Wo
 }
 
 export function createEdgeDriver(edge: Workflow.Edge, wfData: Workflow.Data): WorkbenchSDK.EdgeDriver | null {
-    const node = wfData.nodes[edge.source.nodeId]
-    const output = node?.outputs.find((o: Foundations.Port.Output) => o.id === edge.source.portId);
-
-    if (!output)
-        return null
+    // Drop only dangling edges; CanvasEdge owns rendering (incl. its own marker + color via useOutput).
+    if (!wfData.nodes[edge.source.nodeId]) return null
 
     return {
         id: edge.id,
@@ -25,19 +22,13 @@ export function createEdgeDriver(edge: Workflow.Edge, wfData: Workflow.Data): Wo
         sourceHandle: edge.source.portId,
         target: edge.target.nodeId,
         targetHandle: edge.target.portId,
-        markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: `var(--port-${output.variant})`,
-            width: 15,
-            height: 15
-        }
     }
 }
 
 export function createDrivers(wfData: Workflow.Data) {
     const nodeDrivers = Object.values(wfData.nodes).map(node => createNodeDriver(node, wfData))
-    const edgeDrivers = Object.values(wfData.edges)
-        .map(edge => createEdgeDriver(edge, wfData))
+    const edgeDrivers = wfData.edges
+        .map(edgeId => createEdgeDriver(Workflow.Edge.fromId(edgeId), wfData))
         .filter((d): d is WorkbenchSDK.EdgeDriver => d !== null)
 
     return { nodeDrivers, edgeDrivers }
@@ -82,8 +73,9 @@ export function reconcileEdgeDrivers(
     const prevById = new Map(prev.map(e => [e.id, e]))
     let changed = false
 
-    const next = Object.values(wfData.edges)
-        .map(edge => {
+    const next = wfData.edges
+        .map(edgeId => {
+            const edge = Workflow.Edge.fromId(edgeId)
             const existing = prevById.get(edge.id)
             const sameTopology = existing
                 && existing.source === edge.source.nodeId

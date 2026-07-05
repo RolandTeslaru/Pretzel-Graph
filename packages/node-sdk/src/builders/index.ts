@@ -31,11 +31,13 @@ type DefineBlueprintReturn<
     TFlags extends Record<string, unknown> = Record<string, unknown>,
 > = {
     readonly id: TId & Blueprint.Id;
-    readonly displayName: string;
-    readonly description: string;
-    readonly icon: string;
-    readonly accent?: string;
-    readonly iconColor?: string;
+    readonly ui: { 
+        readonly displayName: string;
+        readonly description: string;
+        readonly icon: string; 
+        readonly accent?: string; 
+        readonly iconColor?: string 
+    };
     readonly fields: TToolCompatible extends true
         ? readonly [...TFields, ...typeof executionStrategyFields, typeof hiddenToolField]
         : readonly [...TFields, ...typeof executionStrategyFields];
@@ -49,13 +51,12 @@ type DefineBlueprintReturn<
     readonly itemScope?: string;
 }
 
-const hiddenToolField = FieldBuilder.Boolean({
+const hiddenToolField = FieldBuilder.reconciling(FieldBuilder.Boolean({
     id: "isConvertedToTool",
     displayName: "Tool Mode",
     hidden: true,
-    reconcile: true,
     initialValue: false,
-});
+}));
 
 
 
@@ -143,11 +144,13 @@ export function defineBlueprint<
 
     return {
         id: config.id as TId & Blueprint.Id,
-        displayName: config.displayName,
-        description: config.description,
-        icon: config.icon,
-        accent: config.accent,
-        iconColor: config.iconColor,
+        ui: { 
+            displayName: config.displayName,
+            description: config.description,
+            icon: config.icon, 
+            accent: config.accent, 
+            iconColor: config.iconColor 
+        },
         fields,
         inputs: config.inputs,
         outputs: config.outputs,
@@ -156,5 +159,5 @@ export function defineBlueprint<
         credentials: (config.credentials ?? []) as unknown as TCredentials,
         flags: config.flags,
         itemScope: config.itemScope,
-    };
+    } 
 }

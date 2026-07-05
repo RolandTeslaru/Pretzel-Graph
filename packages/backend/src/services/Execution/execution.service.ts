@@ -5,7 +5,8 @@ import Redis from 'ioredis';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { createAuthenticatedClient, createServiceClient } from '@/utils/supabase';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
-import { Auth, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
+import { Auth, Execution, Foundations, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
+import { CatalogueService, mapFieldValues } from '@pretzel-graph/node-sdk';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
 import { RealtimeService } from '../Realtime/realtime.service';
@@ -90,6 +91,28 @@ export class ExecutionService {
 
 
 
+    // Resolve each node's (possibly reconciled) blueprint so validation can derive fields/ports.
+    private async resolveBlueprints(
+        workflowData: Workflow.Data,
+    ): Promise<Record<Foundations.Blueprint.Id, Foundations.Blueprint>> {
+        const blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint> = {};
+
+        for (const node of Object.values(workflowData.nodes)) {
+            const base = await CatalogueService.loadBlueprint(node.blueprintId);
+            if (!base) continue;
+
+            if (node.reconciledBlueprintId) {
+                const fieldValues = mapFieldValues(base.fields, workflowData.staticValues[node.id] ?? {});
+                const reconciled = await CatalogueService.reconcile(node.blueprintId, fieldValues);
+                if (reconciled) blueprints[node.reconciledBlueprintId] = reconciled;
+            } else {
+                blueprints[node.blueprintId] = base;
+            }
+        }
+
+        return blueprints;
+    }
+
     private async runCore(
         supabase: SupabaseClient,
         userId:   Auth.User.Id,
@@ -104,7 +127,7 @@ export class ExecutionService {
         const arcsMap = Workflow.deriveArcs(wfCache);
         const sccs   = Algorithms.Tarjan.deriveSCCs(workflowData.nodes, arcsMap)[3];
         const cycles = Algorithms.Johnson.getAllCycles(arcsMap, sccs);
-        const issues = Validation.Issue.checkWorkflow(workflowData, cycles, wfCache);
+        const issues = Validation.Issue.checkWorkflow(workflowData, cycles, wfCache, await this.resolveBlueprints(workflowData));
 
         if (Validation.workflowHasIssues(issues))
             throw new SystemError(

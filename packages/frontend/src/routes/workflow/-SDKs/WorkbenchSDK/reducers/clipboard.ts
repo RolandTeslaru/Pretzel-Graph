@@ -1,7 +1,5 @@
 import type { Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
-import { nodeReducers } from "./node";
-import { edgeReducers } from "./edge";
 import type { ClipboardPayload } from "../clipboard/payload";
 
 export const clipboardReducers = {
@@ -45,7 +43,7 @@ export const clipboardReducers = {
                 };
             }
 
-            const newNode = nodeReducers.duplicate(s, node, targetPos, {
+            const newNode = s.reducers.node.duplicate(s, node, targetPos, {
                 staticValues:          payload.staticValues[node.id],
                 credentialInstanceIds: payload.credentialInstanceIds[node.id],
             })
@@ -59,7 +57,7 @@ export const clipboardReducers = {
                 console.error(`Edge ${edge.id} not found`)
                 return
             }
-            edgeReducers.create(s, {
+            s.reducers.edge.create(s, {
                 source: newSourceNodeId,
                 sourceHandle: edge.source.portId,
                 target: newTargetNodeId,

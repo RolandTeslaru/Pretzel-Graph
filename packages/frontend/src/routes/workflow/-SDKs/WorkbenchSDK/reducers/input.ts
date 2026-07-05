@@ -1,12 +1,10 @@
 import { Validation, type Foundations, type Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
-import { edgeReducers } from "./edge";
 
 export const inputReducers = {
     setValue: (s, nodeId, inputId, value) => {
         s.isDirty = true;
-        s.data.staticValues[nodeId] ??= {}
-        s.data.staticValues[nodeId][inputId] = value
+        s.reducers.node.ensureStaticValues(s, nodeId)[inputId] = value
     },
     remove: (s, nodeId, inputId) => {
         s.isDirty = true;
@@ -15,11 +13,11 @@ export const inputReducers = {
 
         const edgeId = s.cache.inputHandlesMap[nodeId][inputId];
         if (edgeId)
-            edgeReducers.remove(s, edgeId);
+            s.reducers.edge.remove(s, edgeId);
 
-        const inputIndex = node.inputs.findIndex(i => i.id === inputId);
-        if (inputIndex !== -1) {
-            node.inputs.splice(inputIndex, 1);
+        const inputIndex = node.addedInputs?.findIndex(i => i.id === inputId);
+        if (inputIndex !== undefined && inputIndex !== -1) {
+            node.addedInputs?.splice(inputIndex, 1);
         }
         delete staticValues[inputId];
     },
@@ -28,7 +26,7 @@ export const inputReducers = {
         const edgeId = s.cache.inputHandlesMap[nodeId][inputId]
 
         if (edgeId) {
-            edgeReducers.remove(s, edgeId)
+            s.reducers.edge.remove(s, edgeId)
             return true;
         }
         return false;
@@ -50,7 +48,9 @@ export const inputReducers = {
         const node = s.data.nodes[nodeId];
         if (!node) return;
 
-        node.inputs.push(input);
+        node.addedInputs = node.addedInputs ?? [];
+
+        node.addedInputs.push(input);
     }
 } satisfies InputReducers
 

@@ -4,6 +4,7 @@ import { withCommit } from "../utils/actions"
 import { Workbench, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
+import { ShelfSDK } from "../../ShelfSDK/sdk";
 
 export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
     const setState = sdk.useStore.setState;
@@ -16,19 +17,30 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
         setFields: withCommit((...props) => setState(s => { reducers.workflow.setFields(s, ...props) })),
         load: async (workflowId, abortSignal) => {
             try {
-                const { workflow } = await Workbench.API.Workflow.get(api, { workflowId }, abortSignal)
+                const { workflow, blueprints } = await Workbench.API.Workflow.get(api, { workflowId }, abortSignal)
+
+                
                 if (!workflow)
                     throw new Error("Workflow not found")
-
+                
                 Workflow.Schema.parse(workflow);
                 const { data: _data, ...meta } = workflow;
                 
                 // Also update the library metadata cache
                 LibrarySDK.actions.workflow.upsertMeta(meta);
+                
+                ShelfSDK.actions.upsertBlueprints(blueprints);
 
                 setState(s => {
                     reducers.workflow.open(s, workflow)
                 });
+
+                // All workflows are migrated (slim nodes, id-array edges, slim deps), so the
+                // one-time normalization passes (reconstructPolymorphism / pruneDefault* /
+                // dependency.pruneDefaults) are no-ops and were removed. `open` may still prune
+                // dangling edges, so persist only when it actually changed something.
+                if (sdk.state.isDirty)
+                    await sdk.actions.commit();
 
                 // Hydration (empty INITIAL -> loaded workflow) would otherwise be recorded
                 // as an undoable step; drop it so undo isn't armed on a fresh load.

@@ -3,7 +3,7 @@ import type { Workflow } from "@pretzel-graph/shared/domain";
 import type { FieldActions } from "./field";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 
-export function createToolActions(sdk: WorkbenchSDKImpl, fieldActions: FieldActions) {
+export function createToolActions(sdk: WorkbenchSDKImpl) {
     const sel = sdk.selectors;
 
     return {
@@ -12,7 +12,8 @@ export function createToolActions(sdk: WorkbenchSDKImpl, fieldActions: FieldActi
                 const field = sel.field.get(sdk.state, nodeId, "isConvertedToTool" as Field.Id);
                 if (!field) 
                     throw new Error(`Node does not have an isConvertedToTool field — is it toolCompatible?`);
-                fieldActions.setValue(nodeId, field, true);
+                
+                sdk.actions.field.setValue(nodeId, field, true);
             } catch (error) {
                 throw new Error(`Could not convert node ${nodeId} to tool. ${error instanceof Error ? error.message : String(error)}`);
             }
@@ -22,7 +23,8 @@ export function createToolActions(sdk: WorkbenchSDKImpl, fieldActions: FieldActi
                 const field = sel.field.get(sdk.state, nodeId, "isConvertedToTool" as Field.Id);
                 if (!field) 
                     throw new Error(`Node does not have an isConvertedToTool field — is it toolCompatible?`);
-                fieldActions.setValue(nodeId, field, false);
+                
+                sdk.actions.field.setValue(nodeId, field, false);
             } catch (error) {
                 throw new Error(`Could not revert node ${nodeId} from tool. ${error instanceof Error ? error.message : String(error)}`);
             }

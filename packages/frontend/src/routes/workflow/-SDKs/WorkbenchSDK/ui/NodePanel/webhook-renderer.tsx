@@ -1,10 +1,11 @@
-import { Expression, type Webhook, type Workflow } from '@pretzel-graph/shared/domain'
+import { type Webhook, type Workflow } from '@pretzel-graph/shared/domain'
 import React, { memo, useMemo, useState } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { Button, Tabs } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { toast } from 'sonner'
 import { ExecutionSDK } from '../../../ExecutionSDK/sdk'
+import type { LegacyExpressionContext } from '../../selectors/node'
 
 interface Props {
     webhook: Webhook
@@ -15,7 +16,7 @@ const WebhookRenderer: React.FC<Props> = memo(({ webhook, nodeId }) => {
 
     const session = ExecutionSDK.useStore(s => s.currentExecution?.session);
 
-    const expressionCtx = WorkbenchSDK.useStore(s => s.selectors.node.getExpressionContext(s, nodeId, session));
+    const expressionCtx = WorkbenchSDK.useStore(s => s.selectors.node.getLegacyExpressionContext(s, nodeId, session));
 
     const parsedWebhook = useMemo(() => {
         if (!expressionCtx)
@@ -23,9 +24,9 @@ const WebhookRenderer: React.FC<Props> = memo(({ webhook, nodeId }) => {
 
         const w = { ...webhook } as Webhook;
 
-        w.method = Expression.evaluate(webhook.method, expressionCtx) as string;
-        w.path = Expression.evaluate(webhook.path, expressionCtx) as string;
-        w.responseMode = Expression.evaluate(webhook.responseMode, expressionCtx) as Webhook.ResponseMode;
+        w.method = evaluateLegacyExpression(webhook.method, expressionCtx) as string;
+        w.path = evaluateLegacyExpression(webhook.path, expressionCtx) as string;
+        w.responseMode = evaluateLegacyExpression(webhook.responseMode, expressionCtx) as Webhook.ResponseMode;
 
         return w;
 
@@ -72,3 +73,25 @@ const WebhookRenderer: React.FC<Props> = memo(({ webhook, nodeId }) => {
 })
 
 export default WebhookRenderer
+
+const LEGACY_EXPRESSION_PATTERN = /\$\{\{\s*([\s\S]*?)\s*\}\}/;
+const LEGACY_CONTEXT_REF_PATTERN = /@([A-Za-z_][A-Za-z0-9_]*)/g;
+
+// Temporary webhook-only bridge until these fields move onto Airlock `$` syntax.
+function evaluateLegacyExpression(
+    expression: string | undefined,
+    context: LegacyExpressionContext,
+): unknown {
+    if (!expression) return undefined;
+
+    const match = expression.match(LEGACY_EXPRESSION_PATTERN);
+    if (!match) return expression;
+
+    const body = match[1];
+    const rewritten = body.replace(LEGACY_CONTEXT_REF_PATTERN, '$1');
+    const keys = Object.keys(context);
+    const values = Object.values(context);
+
+    // eslint-disable-next-line no-new-func
+    return new Function(...keys, `return (${rewritten})`)(...values);
+}

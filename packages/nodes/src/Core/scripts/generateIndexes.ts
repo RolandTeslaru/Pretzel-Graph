@@ -75,7 +75,7 @@ export async function generateIndex(includeDbBlueprints = false) {
 
         const { data, error } = await supabase
             .from("workflows")
-            .select("id, display_name, icon, accent, data")
+            .select("id, display_name, description, icon, accent, data")
             .eq("user_id", DEV_USER_ID)
             .eq("is_public", true)
 
@@ -86,7 +86,17 @@ export async function generateIndex(includeDbBlueprints = false) {
         for (const row of data ?? []) {
             const workflowData = row.data as Workflow.Data;
             const dependencyFields = workflowData.fields ?? [];
-            const { inputs, outputs } = extractExposedPorts(workflowData);
+
+            let inputs: Foundations.Port.Input[] = [];
+            let outputs: Foundations.Port.Output[] = [];
+
+            try {
+                ({ inputs, outputs } = extractExposedPorts(workflowData))
+
+            } catch (err) {
+                console.error(`Error processing public workflow ${row.display_name} ${row.id}:`, err);
+                continue;                
+            }
 
             
             const blueprintId = PUBLIC_WORKFLOW_BLUEPRINTS_REVERSE[row.id];
@@ -94,18 +104,22 @@ export async function generateIndex(includeDbBlueprints = false) {
             const bp: Foundations.Blueprint = {
                 ...baseBlueprint,
                 id: blueprintId,
-                displayName: row.display_name,
-                icon: row.icon ?? baseBlueprint.icon,
-                accent: row.accent ?? baseBlueprint.accent,
+                ui: {
+                    displayName: row.display_name,
+                    description: row.description,
+                    icon: row.icon ?? baseBlueprint.ui.icon,
+                    accent: row.accent ?? baseBlueprint.ui.accent,
+                    iconColor: baseBlueprint.ui.iconColor,
+                },
                 fields: mergeFieldsById(baseBlueprint.fields, dependencyFields),
                 inputs,
                 outputs,
                 flags: {
                     SHOW_DEPENDENCY_SELECTOR: false
                 },
-                dependency: { workflowId: row.id, mode: "publication" as const },
+                dependencyRef: { workflowId: row.id, mode: "publication" as const },
             };
-            console.log(`Processing public workflow: ${bp.id} (${bp.dependency?.workflowId}) with ${inputs.length} inputs, ${outputs.length} outputs, and ${dependencyFields.length} dependency fields`)
+            console.log(`Processing public workflow: ${bp.id} (${bp.dependencyRef?.workflowId}) with ${inputs.length} inputs, ${outputs.length} outputs, and ${dependencyFields.length} dependency fields`)
             
             db_pretzel_blueprints[blueprintId] = bp;
         }
