@@ -16,7 +16,7 @@ export class PropagationService {
         nodeId:   Workflow.Node.Id,
         outputId: Port.Output.Id,
     ) => {
-        const edges = Object.values(ctx.workflowData.edges).filter(edge =>
+        const edges = Object.values(ctx.workflowCache.edges).filter(edge =>
             edge.source.nodeId === nodeId &&
             edge.source.portId === outputId
         );
@@ -56,7 +56,7 @@ export class PropagationService {
         const allEdgeIds: Record<string, Workflow.Edge.Id> = {};
 
         for (const output of this.engine.nodeIO.getOutputPorts(ctx, nodeId))
-            for (const edge of Object.values(ctx.workflowData.edges))
+            for (const edge of Object.values(ctx.workflowCache.edges))
                 if (edge.source.nodeId === nodeId && edge.source.portId === output.id)
                     allEdgeIds[edge.id] = edge.id;
 
@@ -68,7 +68,7 @@ export class PropagationService {
         );
 
         for (const edgeId of Object.values(allEdgeIds)) {
-            const edge = ctx.workflowData.edges[edgeId];
+            const edge = ctx.workflowCache.edges[edgeId];
 
             this.engine.scheduler.signalNode(ctx, edge.target.nodeId, nodeId);
         }

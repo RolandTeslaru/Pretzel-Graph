@@ -38,7 +38,8 @@ export class WorkflowCompiler {
 
         const graph = new S2Graph();
         const nodes = workflowData.nodes;
-        const edges = workflowData.edges;
+        // Fat edges live in the cache (data.edges is id-only). Cache is built just above.
+        const edges = workflowCache.edges;
 
         // START vertex — S2Engine ignites from here
         graph.addVertex(S2Graph.START_VERTEX_ID);
@@ -262,7 +263,7 @@ export class WorkflowCompiler {
 
     private findStartNodes(
         nodes:       Workflow.Data["nodes"],
-        edges:       Workflow.Data["edges"],
+        edges:       Workflow.Cache["edges"],
         getInstance: (id: Workflow.Node.Id) => RuntimeNode<Blueprint> | undefined,
     ): Workflow.Node.Id[] {
         const targetNodeIds = new Set<Workflow.Node.Id>();

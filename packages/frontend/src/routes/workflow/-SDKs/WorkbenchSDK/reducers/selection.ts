@@ -17,7 +17,7 @@ export const selectionReducers = {
         });
 
         selection.edges.forEach(edgeDriver => {
-            const edge = s.data.edges[edgeDriver.id as Workflow.Edge.Id];
+            const edge = s.cache.edges[edgeDriver.id as Workflow.Edge.Id];
             if (!edge) return;
             if (!selectedNodeIds.has(edge.source.nodeId) || !selectedNodeIds.has(edge.target.nodeId)) return;
 
@@ -45,7 +45,7 @@ export const selectionReducers = {
 
         // Remove selected edges whose endpoints weren't deleted via node removal
         selection.edges.forEach(edgeDriver => {
-            const edge = s.data.edges[edgeDriver.id as Workflow.Edge.Id];
+            const edge = s.cache.edges[edgeDriver.id as Workflow.Edge.Id];
             if (!edge) return;
             if (!selectedNodeIds.has(edge.source.nodeId) && !selectedNodeIds.has(edge.target.nodeId)) {
                 s.reducers.edge.remove(s, edgeDriver.id as Workflow.Edge.Id);

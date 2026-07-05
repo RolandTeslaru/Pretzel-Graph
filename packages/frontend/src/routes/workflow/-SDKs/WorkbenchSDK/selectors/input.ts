@@ -25,7 +25,7 @@ export const inputSelectors = {
         const edgeId = s.cache.inputHandlesMap[nodeId]?.[inputPortId];
         if (!edgeId) return undefined;
 
-        const edge = s.data.edges[edgeId];
+        const edge = s.cache.edges[edgeId];
         if (!edge) return undefined;
 
         return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Port.Output.Id];

@@ -14,9 +14,6 @@ type CanvasEdgeLabelProps = {
     outputVariant: Foundations.Port.Variant;
     itemCount?: number;
     statusColor: string;
-    showGlint?: boolean;
-    edgePath: string;
-    glintColor: string;
 };
 
 const CanvasEdgeLabel = ({
@@ -28,34 +25,9 @@ const CanvasEdgeLabel = ({
     outputVariant,
     itemCount,
     statusColor,
-    showGlint,
-    edgePath,
-    glintColor,
 }: CanvasEdgeLabelProps) => {
     return (
         <EdgeLabelRenderer>
-            {/* Cheap direction indicator: a triangle that rides the bezier via offset-path
-                (offset-distance is a transform on the compositor — no per-frame paint) and
-                rotates to point along its direction of travel (output → input). */}
-            {showGlint && (
-                <div
-                    className="animate-edge-glint"
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: 0,
-                        height: 0,
-                        borderTop: '5px solid transparent',
-                        borderBottom: '5px solid transparent',
-                        borderLeft: `8px solid ${glintColor}`,
-                        offsetPath: `path('${edgePath}')`,
-                        offsetRotate: 'auto',
-                        pointerEvents: 'none',
-                        willChange: 'offset-distance',
-                    }}
-                />
-            )}
             {selected && (
                 <div
                     style={{

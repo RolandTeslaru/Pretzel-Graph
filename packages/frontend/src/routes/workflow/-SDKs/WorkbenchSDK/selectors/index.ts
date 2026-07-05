@@ -1,4 +1,5 @@
 import { nodeSelectors, type NodeSelectors } from './node';
+import { edgeSelectors, type EdgeSelectors } from './edge';
 import { fieldSelectors, type FieldSelectors } from './field';
 import { inputSelectors, type InputSelectors } from './input';
 import { outputSelectors, type OutputSelectors } from './output';
@@ -19,6 +20,7 @@ export interface WorkbenchSDKSelectors {
     /** Resolved blueprint per node (keyed by reconciledBlueprintId ?? blueprintId), for validation. */
     getBlueprints  : (state: WorkbenchSDK.State) => Record<Foundations.Blueprint.Id, Foundations.Blueprint>
     node           : NodeSelectors
+    edge           : EdgeSelectors
     field          : FieldSelectors
     input          : InputSelectors
     output         : OutputSelectors
@@ -51,6 +53,7 @@ export const workbenchSelectors = {
         return map
     },
     node           : nodeSelectors,
+    edge           : edgeSelectors,
     field          : fieldSelectors,
     input          : inputSelectors,
     output         : outputSelectors,
