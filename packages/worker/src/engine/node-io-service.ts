@@ -1,5 +1,4 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { resolveInputs, resolveOutputs } from "@pretzel-graph/shared/domain/resolvePorts";
 import { Vertex } from "../S2/graph";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
@@ -137,7 +136,7 @@ export class NodeIOService {
     ): Port.Input[] => {
         const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);
         const node = ctx.workflowData.nodes[nodeId];
-        return resolveInputs(blueprint.inputs, node, this.getNodeDependency(ctx, node));
+        return Workflow.Node.resolveInputs(blueprint.inputs, node, this.getNodeDependency(ctx, node));
     }
 
     public readonly getOutputPorts = (
@@ -146,7 +145,7 @@ export class NodeIOService {
     ): Port.Output[] => {
         const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);
         const node = ctx.workflowData.nodes[nodeId];
-        return resolveOutputs(blueprint.outputs, node, this.getNodeDependency(ctx, node));
+        return Workflow.Node.resolveOutputs(blueprint.outputs, node, this.getNodeDependency(ctx, node));
     }
 
     // Resolve a node's attached subworkflow dependency record from the workflow's dependency state,

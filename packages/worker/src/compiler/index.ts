@@ -210,8 +210,11 @@ export class WorkflowCompiler {
             ? await CatalogueService.reconcile(wfNode.blueprintId, mapFieldValues(base.fields, staticValues))
             : base;
 
-        // Not in the catalogue — resolve it as a subworkflow dependency (or throw).
-        if (!RuntimeNode && !blueprint)
+        // No runtime class → resolve as a subworkflow dependency (or throw). Gate on the class, not
+        // the blueprint: a dependency node never has its own class, and line 225 caches Execute's
+        // blueprint under the cosmetic id — so on later compiles loadBlueprint returns non-null while
+        // getNode is still null. Requiring both null would skip the fallback and misfire the throw below.
+        if (!RuntimeNode)
             ({ RuntimeNode, blueprint } = await this.resolveDependencyNode(wfNode, engineExecutionCtx));
 
         if (!RuntimeNode || !blueprint)

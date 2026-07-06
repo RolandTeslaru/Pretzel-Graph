@@ -1,6 +1,5 @@
-import type { Workflow } from "@pretzel-graph/shared/domain"
+import { Workflow } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDK } from "../sdk"
-import { resolveInputs } from "../utils/resolvePorts"
 import { ShelfSDK } from "../../ShelfSDK/sdk"
 import { isEqual } from "lodash"
 
@@ -50,7 +49,7 @@ function pruneWorkflowData(s: WorkbenchSDK.State, data: Workflow.Data) {
             if (field.variant === "UniqueString") continue
             if ("initialValue" in field) initialById.set(field.id, field.initialValue)
         }
-        for (const input of resolveInputs(blueprint.inputs, node, null))
+        for (const input of Workflow.Node.resolveInputs(blueprint.inputs, node, null))
             if ("initialValue" in input && input.initialValue !== undefined)
                 initialById.set(input.id, input.initialValue)
 

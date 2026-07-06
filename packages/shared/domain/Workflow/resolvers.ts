@@ -1,7 +1,7 @@
-import { Foundations } from "./Foundations";
-import { Port } from "./Foundations/Port";
-import type { Node } from "./Workflow/node";
-import type { Workflow } from "./Workflow";
+import { Foundations } from "../Foundations";
+import { Port } from "../Foundations/Port";
+import type { Node } from "./node";
+import type { Workflow } from "./index";
 
 type PolymorphicResolutions = Record<Port.PolymorphicGroupId, Port.Variant>;
 
@@ -40,7 +40,7 @@ function resolve<P extends Foundations.Port.Input | Foundations.Port.Output>(
 // A subworkflow's exposed input ports, read from its `ExposeInputPort` nodes. An expose-node that
 // hasn't resolved its variant (or hasn't picked a port id) isn't a real port yet, so it's skipped
 // rather than throwing — this runs on the read path, per render.
-function extractExposedInputs(wfData: Workflow.Data): Foundations.Port.Input[] {
+export function extractExposedInputs(wfData: Workflow.Data): Foundations.Port.Input[] {
     const byId: Record<Port.Input.Id, Foundations.Port.Input> = {};
 
     for (const node of Object.values(wfData.nodes)) {
@@ -48,7 +48,8 @@ function extractExposedInputs(wfData: Workflow.Data): Foundations.Port.Input[] {
 
         const variant = Object.values(node.polymorphicResolutions ?? {})[0];
         const portId  = wfData.staticValues[node.id]?.[EXPOSED_PORT_ID_FIELD] as Port.Input.Id | undefined;
-        if (!variant || !portId) continue;
+        if (!variant || !portId) 
+            continue;
 
         byId[portId] = {
             id: portId,
@@ -62,7 +63,7 @@ function extractExposedInputs(wfData: Workflow.Data): Foundations.Port.Input[] {
 }
 
 // A subworkflow's exposed output ports, read from its `ExposeOutputPort` nodes. Same skip-if-unresolved rule.
-function extractExposedOutputs(wfData: Workflow.Data): Foundations.Port.Output[] {
+export function extractExposedOutputs(wfData: Workflow.Data): Foundations.Port.Output[] {
     const outputs: Foundations.Port.Output[] = [];
 
     for (const node of Object.values(wfData.nodes)) {
@@ -83,16 +84,18 @@ function extractExposedOutputs(wfData: Workflow.Data): Foundations.Port.Output[]
 
 /**
  * Derive a slim node's live input ports. When the node is a subworkflow (a `dependency` record is
- * passed), the "added" ports are the subworkflow's exposed inputs; otherwise they're the node's
- * own `addedInputs`.
+ * passed), its ports ARE the subworkflow's exposed inputs — the `base` (blueprint's own inputs) is
+ * only a drawer-preview snapshot and would double the ports if concatenated, so it's dropped.
+ * Otherwise it's the blueprint base plus the node's own `addedInputs`.
  */
 export function resolveInputs(
     base: readonly Foundations.Port.Input[],
     node: Node,
     dependency: Workflow.Dependency | null,
 ): Foundations.Port.Input[] {
-    const added = dependency ? extractExposedInputs(dependency.workflow_data) : node.addedInputs;
-    return resolve(base, added, node.polymorphicResolutions);
+    if (dependency)
+        return resolve([], extractExposedInputs(dependency.workflow_data), node.polymorphicResolutions);
+    return resolve(base, node.addedInputs, node.polymorphicResolutions);
 }
 
 /** Derive a slim node's live output ports. See {@link resolveInputs} for the `dependency` behavior. */
@@ -101,6 +104,7 @@ export function resolveOutputs(
     node: Node,
     dependency: Workflow.Dependency | null,
 ): Foundations.Port.Output[] {
-    const added = dependency ? extractExposedOutputs(dependency.workflow_data) : node.addedOutputs;
-    return resolve(base, added, node.polymorphicResolutions);
+    if (dependency)
+        return resolve([], extractExposedOutputs(dependency.workflow_data), node.polymorphicResolutions);
+    return resolve(base, node.addedOutputs, node.polymorphicResolutions);
 }

@@ -2,6 +2,7 @@ import React from "react"
 import type { Workflow } from "@pretzel-graph/shared/domain"
 import { LazyIcon } from "@pretzel-graph/standard-ui/icons/LazyIcon"
 import type { TimelineLayout } from "../../selectors"
+import { WorkbenchSDK } from "../../../WorkbenchSDK/sdk"
 
 interface TrackColumnProps {
     layout: TimelineLayout
@@ -13,7 +14,8 @@ const TrackColumn = ({ layout, nodes }: TrackColumnProps) => {
         <div style={{ position: "relative", height: layout.totalHeight }}>
             {layout.tracks.map(tl => {
                 const node = nodes[tl.trackId]
-                const label = node?.displayName ?? tl.trackId
+                const ui = node ? WorkbenchSDK.state.selectors.node.getUI(WorkbenchSDK.state, tl.trackId) : undefined
+                const label = ui?.displayName ?? tl.trackId
 
                 return (
                     <div
@@ -21,11 +23,11 @@ const TrackColumn = ({ layout, nodes }: TrackColumnProps) => {
                         style={{ position: "absolute", top: tl.top, height: tl.height, left: 0, right: 0 }}
                         className="flex items-center gap-2 px-1 border-b border-border/50"
                     >
-                        {node?.icon && (
+                        {ui?.icon && (
                             <LazyIcon
                                 className={`w-3 h-3`}
-                                name={node.icon as string}
-                                style={{ color: `var(--${node.accent}-foreground)` }}
+                                name={ui.icon}
+                                style={{ color: `var(--${ui.accent}-foreground)` }}
                             />
                         )}
                         <span className="text-[10px] text-foreground font-medium  ml-auto truncate leading-none">

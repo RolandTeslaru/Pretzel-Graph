@@ -4,6 +4,7 @@ import type { Workflow } from "@pretzel-graph/shared/domain"
 import type { TimeScale } from "../time-scale"
 import type { TimelineLayout } from "../../../selectors"
 import { ExecutionSDK } from "../../../sdk"
+import { WorkbenchSDK } from "../../../../WorkbenchSDK/sdk"
 
 interface RelationLayerProps {
     nodes:        Record<Workflow.Node.Id, Workflow.Node>
@@ -105,7 +106,9 @@ const RelationLayer = React.memo(({
             }
 
             const srcNode   = nodes[srcUnit.trackId]
-            const srcPort   = srcNode?.outputs.find(p => p.id === srcPortId)
+            const srcPort   = srcNode
+                ? WorkbenchSDK.state.selectors.node.getOutputs(WorkbenchSDK.state, srcUnit.trackId).find(p => p.id === srcPortId)
+                : undefined
             const portColor = srcPort ? `var(--port-${srcPort.variant})` : "var(--muted-foreground)"
 
             return [{

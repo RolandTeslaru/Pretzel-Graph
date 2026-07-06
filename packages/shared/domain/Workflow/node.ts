@@ -5,6 +5,7 @@ import { Port } from "../Foundations/Port";
 import { Webhook } from "../Webhook";
 import { NodeId, EdgeId } from "./ids";
 import { Dependency } from "./dependency";
+import { resolveInputs as _resolveInputs, resolveOutputs as _resolveOutputs } from "./resolvers";
 
 export namespace Node {
     export const Id = NodeId;
@@ -45,6 +46,11 @@ export namespace Node {
     export function createId(blueprintId: Blueprint.Id) {
         return `${blueprintId}-${uid.randomUUID(5)}` as Node.Id
     }
+
+    // Live port resolution for a slim node (base blueprint ports + resolutions, or a
+    // subworkflow's exposed ports when a dependency is passed). Impl in ./resolvers.
+    export const resolveInputs  = _resolveInputs
+    export const resolveOutputs = _resolveOutputs
 }
 export interface Node extends z.infer<typeof Node.Schema> { }
 
