@@ -15,7 +15,6 @@ import { workbenchReducers } from "./reducers";
 import { createDrivers, reconcileNodeDrivers, reconcileEdgeDrivers } from "./utils/createDrivers";
 import { sameUndoableData } from "./utils/temporal";
 import { ShelfSDK } from "../ShelfSDK/sdk";
-import { resolveInputs, resolveOutputs } from "./utils/resolvePorts";
 import type { NodeUI } from "./selectors/node";
 import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 
@@ -112,13 +111,13 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         const inputs = useMemo(() => {
             if(!node || !blueprint)
                 return [];
-            return resolveInputs(blueprint.inputs, node, dependency);
+            return Workflow.Node.resolveInputs(blueprint.inputs, node, dependency);
         }, [blueprint, node?.addedInputs, node?.polymorphicResolutions, dependency]);
 
         const outputs = useMemo(() => {
             if(!node || !blueprint)
                 return [];
-            return resolveOutputs(blueprint.outputs, node, dependency);
+            return Workflow.Node.resolveOutputs(blueprint.outputs, node, dependency);
         }, [blueprint, node?.addedOutputs, node?.polymorphicResolutions, dependency]);
 
         const fields = useMemo(() => {
@@ -169,7 +168,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         return useMemo(() => {
             if (!node || !blueprint || !portId)
                 return null;
-            return resolveOutputs(blueprint.outputs, node, dependency).find(o => o.id === portId) ?? null;
+            return Workflow.Node.resolveOutputs(blueprint.outputs, node, dependency).find(o => o.id === portId) ?? null;
         }, [blueprint, node?.addedOutputs, node?.polymorphicResolutions, dependency, portId]);
     }
 

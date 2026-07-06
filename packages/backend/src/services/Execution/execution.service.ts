@@ -99,7 +99,17 @@ export class ExecutionService {
 
         for (const node of Object.values(workflowData.nodes)) {
             const base = await CatalogueService.loadBlueprint(node.blueprintId);
-            if (!base) continue;
+
+            // Subworkflow dependency node: absent from the catalogue by design. Its blueprint is the
+            // Core.SubWorkflow.Execute container's — exposed ports derive from the embedded dependency
+            // at read time (resolveInputs/Outputs). Mirrors the compiler's resolveDependencyNode.
+            if (!base) {
+                if (node.dependencyRef) {
+                    const executeBp = await CatalogueService.loadBlueprint("Core.SubWorkflow.Execute" as Foundations.Blueprint.Id);
+                    if (executeBp) blueprints[node.blueprintId] = executeBp;
+                }
+                continue;
+            }
 
             if (node.reconciledBlueprintId) {
                 const fieldValues = mapFieldValues(base.fields, workflowData.staticValues[node.id] ?? {});
@@ -127,6 +137,7 @@ export class ExecutionService {
         const arcsMap = Workflow.deriveArcs(wfCache);
         const sccs   = Algorithms.Tarjan.deriveSCCs(workflowData.nodes, arcsMap)[3];
         const cycles = Algorithms.Johnson.getAllCycles(arcsMap, sccs);
+        
         const issues = Validation.Issue.checkWorkflow(workflowData, cycles, wfCache, await this.resolveBlueprints(workflowData));
 
         if (Validation.workflowHasIssues(issues))

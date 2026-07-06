@@ -8,6 +8,7 @@ import * as DepMod from "./dependency"
 import * as CacheMod from "./cache"
 import { WorkflowId, FolderId } from "./ids"
 import { WORKFLOW_DATA_VERSION } from "./migrate"
+import { extractExposedInputs as _extractExposedInputs, extractExposedOutputs as _extractExposedOutputs } from "./resolvers"
 
 export namespace Workflow {
     export const Id = WorkflowId
@@ -37,6 +38,10 @@ export namespace Workflow {
     export const createCache        = CacheMod.createCache
     export const deriveArcs         = CacheMod.deriveArcs
     export const deriveReversedArcs = CacheMod.deriveReversedArcs
+
+    // A subworkflow's exposed ports, read from its Expose*Port nodes. Impl in ./resolvers.
+    export const extractExposedInputs  = _extractExposedInputs
+    export const extractExposedOutputs = _extractExposedOutputs
 
     export const Schema = z.object({
         id:           WorkflowId,
