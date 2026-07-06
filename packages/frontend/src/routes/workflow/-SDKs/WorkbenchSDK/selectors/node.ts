@@ -1,10 +1,9 @@
-import { Airlock, type Execution, type Foundations, type Workflow } from '@pretzel-graph/shared/domain';
+import { Airlock, Workflow, type Execution, type Foundations } from '@pretzel-graph/shared/domain';
 import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 import type { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
 import type { WorkbenchSDK } from "../sdk";
 import { executionSelectors } from "./execution";
 import { ShelfSDK } from '../../ShelfSDK/sdk';
-import { resolveInputs, resolveOutputs } from '../utils/resolvePorts';
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 
 const EMPTY_CONNECTED_PORTS: Record<string, Workflow.Edge.Id> = {}
@@ -163,7 +162,7 @@ export const nodeSelectors = {
         const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
         const dependency = s.selectors.node.getDependency(s, nodeId);
 
-        return resolveInputs(blueprint.inputs, node, dependency);
+        return Workflow.Node.resolveInputs(blueprint.inputs, node, dependency);
     },
     getOutputs: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
@@ -172,7 +171,7 @@ export const nodeSelectors = {
         const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
         const dependency = s.selectors.node.getDependency(s, nodeId);
 
-        return resolveOutputs(blueprint.outputs, node, dependency);
+        return Workflow.Node.resolveOutputs(blueprint.outputs, node, dependency);
     },
     getFields: (s, nodeId) => {
         const node = s.data.nodes[nodeId];

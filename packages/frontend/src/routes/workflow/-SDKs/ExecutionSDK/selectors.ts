@@ -1,6 +1,7 @@
 import type { Foundations, Workflow } from "@pretzel-graph/shared/domain"
 import { Execution } from "@pretzel-graph/shared/domain"
 import type { ExecutionSDK } from "./sdk"
+import { WorkbenchSDK } from "../WorkbenchSDK/sdk"
 
 export const executionSDKSelectors = {
     getNodeStatus: (s, nodeId) => {
@@ -131,10 +132,10 @@ export function buildTrackLayout(
     trackId: Workflow.Node.Id,
     top:     number,
     nodes:   Record<Workflow.Node.Id, Workflow.Node>,
-): TimelineTrackLayout {
-    const node        = nodes[trackId]
-    const inputPorts  = node?.inputs.map(p => p.id)  ?? []
-    const outputPorts = node?.outputs.map(p => p.id) ?? []
+): TimelineTrackLayout {    
+    const inputPorts  = WorkbenchSDK.state.selectors.node.getInputs(WorkbenchSDK.state, trackId).map(p => p.id) ?? []
+    const outputPorts = WorkbenchSDK.state.selectors.node.getOutputs(WorkbenchSDK.state, trackId).map(p => p.id) ?? []
+
     const rows        = Math.max(1, inputPorts.length, outputPorts.length)
     const blockHeight = rows * Execution.Recording.Timeline.UOW_PORT_HEIGHT
     const height      = blockHeight + Execution.Recording.Timeline.TRACK_PADDING_Y * 2

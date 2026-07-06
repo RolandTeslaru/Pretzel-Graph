@@ -53,16 +53,17 @@ const SpotlightSearch: React.FC = memo(() => {
         if (!query.trim()) return []
         const q = query.toLowerCase()
         return Object.values(nodes)
-            .filter(node =>
-                node.displayName.toLowerCase().includes(q) ||
+            .map(node => ({ node, ui: WorkbenchSDK.state.selectors.node.getUI(WorkbenchSDK.state, node.id) }))
+            .filter(({ node, ui }) =>
+                ui.displayName.toLowerCase().includes(q) ||
                 node.id.toLowerCase().includes(q)
             )
-            .map(node => ({
+            .map(({ node, ui }) => ({
                 nodeId: node.id,
-                displayName: node.displayName,
+                displayName: ui.displayName,
                 blueprintId: node.blueprintId,
-                icon: node.icon ?? "",
-                accent: node.accent,
+                icon: ui.icon ?? "",
+                accent: ui.accent,
             }))
     }, [nodes, query])
 

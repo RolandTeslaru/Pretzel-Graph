@@ -31,7 +31,7 @@ export function createCaseListActions(
                     id: portId,
                     displayName: label,
                     variant: resolvedVariant,
-                    polymorphicGroupId: "condition",
+                    polymorphicGroupId: "condition" as Port.PolymorphicGroupId,
                 })
             })
 
