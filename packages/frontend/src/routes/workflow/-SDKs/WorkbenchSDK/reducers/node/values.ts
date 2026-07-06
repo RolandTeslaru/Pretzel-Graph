@@ -33,7 +33,7 @@ export const nodeValueReducers = {
             if ("initialValue" in input && input.initialValue !== undefined)
                 initialById.set(input.id, input.initialValue);
 
-        for (const key of Object.keys(bucket))
+        for (const key of Object.keys(bucket) as (Foundations.Field.Id | Foundations.Port.Input.Id)[])
             if (initialById.has(key) && isEqual(bucket[key], initialById.get(key))) {
                 delete bucket[key];
                 s.isDirty = true;

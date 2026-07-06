@@ -22,7 +22,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
     const nodeActions        = createNodeActions(sdk);
     const fieldActions       = createFieldActions(sdk, nodeActions);
-    const toolActions        = createToolActions(sdk, fieldActions);
+    const toolActions        = createToolActions(sdk);
     const workflowActions    = createWorkflowActions(sdk);
     const subWorkflowActions = createSubWorkflowActions(sdk);
     const dependencyActions  = createDependencyActions(sdk);
