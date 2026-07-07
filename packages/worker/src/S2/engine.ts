@@ -17,8 +17,6 @@ export class S2Engine {
 
     constructor() { }
 
-
-
     public async ignite(
         graph: S2Graph, 
         hooks: S2Hooks
