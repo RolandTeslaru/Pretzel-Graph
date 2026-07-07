@@ -4,8 +4,6 @@ import { Blueprint } from "./blueprint";
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    public readonly Blueprint = Blueprint;
-
     // `message` is reconciled in for the `error` mode, so it isn't on the inferred field type.
     protected override async onRun(
         _incoming: InferIncoming<typeof Blueprint>,
