@@ -38,11 +38,8 @@ const fetchCandles = async (coin: string, interval: string, lookbackHours: numbe
     });
 };
 
-
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
-
-    public readonly Blueprint = Blueprint;
 
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);

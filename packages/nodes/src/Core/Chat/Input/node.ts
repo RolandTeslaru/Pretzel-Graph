@@ -13,8 +13,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     public static WEBHOOK_PATH = "chat" as Webhook.Path;
     public static WEBHOOK_TIMEOUT = 120_000; // 2 minutes
 
-    public readonly Blueprint = Blueprint;
-
     private message: HumanMessage | null = null;
 
     protected override onIgniter(igniter: Execution.Igniter): void {
@@ -52,10 +50,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         return { response: this.message };
     }
 
-
     private async waitForMessage(){
         const { workflowId } = this.context;
-
 
         await Webhook.Test.API.register(api, { workflowId, path: Node.WEBHOOK_PATH, method: "POST" });
 

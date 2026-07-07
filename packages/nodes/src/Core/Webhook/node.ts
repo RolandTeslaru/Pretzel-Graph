@@ -20,8 +20,6 @@ function toRecord(value: unknown): AnyRecord {
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    public readonly Blueprint = Blueprint;
-
     private payload: Webhook.Payload | null = null;
 
     

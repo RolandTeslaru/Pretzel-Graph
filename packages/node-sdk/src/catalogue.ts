@@ -1,6 +1,7 @@
 import { container, singleton } from "tsyringe";
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import type { RuntimeNode } from "./node";
+import type { Loader } from "./builders/loaders";
 import { pickReconcilingValues } from "./utils/mapFieldValues";
 
 export type NodeConstructor = {
@@ -137,7 +138,7 @@ class CatalogueServiceImpl {
     public async getLoader(
         blueprintId: Foundations.Blueprint.Id,
         loaderId: Foundations.Field.ResourceLoader.LoaderId,
-    ): Promise<RuntimeNode.LoaderFn | null> {
+    ): Promise<Loader.Fn | null> {
         const NodeClass = await this.getNode(blueprintId);
         if (!NodeClass) return null;
         return (NodeClass as any).loaders?.[loaderId] ?? null;

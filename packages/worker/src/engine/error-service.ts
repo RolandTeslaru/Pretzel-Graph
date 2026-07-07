@@ -87,10 +87,7 @@ export class ErrorService {
 
         this.consumeIncomingEnvelopes(ctx, vertexId);   // delivered — clear from channel
 
-        // Concrete nodes expose `Blueprint` (with `flags`); the abstract base doesn't
-        // declare it, so read it through a narrow cast rather than churning all nodes.
-        const blueprint = (instance as { Blueprint?: Blueprint }).Blueprint;
-        if (blueprint?.flags?.catchesError === true)
+        if (instance.CATCHES_ERROR === true)
             return this.materializeCaught(ctx, vertexId, incomingEnvelope);
 
         return this.propagate(ctx, vertexId, incomingEnvelope);

@@ -4,8 +4,6 @@ import { Blueprint } from "./blueprint";
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<Blueprint> {
 
-    public readonly Blueprint = Blueprint;
-
     protected override async onRun(
         incoming: InferIncoming<Blueprint>,
     ): Promise<InferOutputs<Blueprint>> {

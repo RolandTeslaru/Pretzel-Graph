@@ -5,11 +5,8 @@ import { tool } from "@langchain/core/tools";
 import { Workflow } from "@pretzel-graph/shared/domain";
 import { z } from "zod/v3";
 
-
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
-
-    public readonly Blueprint = Blueprint;
 
     private retriever: TavilySearchAPIRetriever;
 
@@ -26,7 +23,6 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         });
     }
 
-
     protected override async onRun(
         incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
@@ -35,7 +31,6 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
         return { documents };
     }
-
 
     protected override async onBuildTool(
         incoming: InferIncoming<typeof ToolBlueprint>,

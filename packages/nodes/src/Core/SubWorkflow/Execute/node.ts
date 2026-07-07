@@ -11,19 +11,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     /** ExposeOutputPort nodes propagate parent outputs directly via enclosingNodeAPI
      *  as they fire — suppress automatic fan-out so the engine doesn't double-signal. */
-    protected override PROPAGATION_STRATEGY = "none" as const
-
-    public readonly Blueprint = Blueprint;
-
-
+    protected override readonly PROPAGATION_STRATEGY = RuntimeNode.PropagationStrategy.NONE
 
     private subEnvironment!: ReturnType<RuntimeNode.ExecutionContext["subWorkflowAPI"]["createEnv"]>;
     private subEngineCtx!: AggexEngine.Execution.Context;
 
     /** Author-written `$metrics` rollups from the sub-workflow, read back after the sub-run. */
     private aggregatedMetrics?: Record<string, Execution.Recording.Metric>;
-
-
 
     protected override async onCompile(
         compilationCtx: WorkflowCompiler.Compilation.Context,
@@ -93,8 +87,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         ) as AggexEngine.ExecutionContext;
     }
 
-
-
     protected override async onRun(
         incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
@@ -120,19 +112,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         }
     }
 
-
-
     protected override onRecordMetrics(): Record<string, Execution.Recording.Metric> | undefined {
         return this.aggregatedMetrics;
     }
 
-
-
     private injectWorkflowConfigValues(childWorkflowData: Workflow.Data): void {
         childWorkflowData.staticValues[Workflow.WORKFLOW_CONFIG_NODE_ID] = this.fieldValues;
     }
-
-
 
     private injectInputNodeValues(incoming: InferIncoming<typeof Blueprint>): void {
         const exposeInputNodes = this.subEngineCtx.workflowQueryAPI
@@ -153,8 +139,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         }
     }
 }
-
-
 
 const METRIC_TYPES = new Set<Execution.Recording.Metric.Type>([
     "number", "string", "duration_ms", "currency_usd", "tokens",
