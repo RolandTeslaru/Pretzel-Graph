@@ -1,11 +1,12 @@
-import { Airlock, Chat, Execution, Foundations, Realtime, Vault, Workflow } from "@pretzel-graph/shared/domain";
-import { InferCredentials, InferCredentialValues, InferFieldValues, InferIncoming, InferItemFields, InferOutputs } from "./types";
-import type { CompilationContext } from "./compiler-context";
+import { Airlock, Execution, Foundations, Vault, Workflow } from "@pretzel-graph/shared/domain";
+import { InferCredentials, InferFieldValues, InferIncoming, InferItemFields, InferOutputs } from "../types";
+import type { CompilationContext } from "../compiler-context";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
-import { mapFieldValues } from "./utils/mapFieldValues";
-import { Synthesizer } from "./synthesizer";
+import { mapFieldValues } from "../utils/mapFieldValues";
+import { Synthesizer } from "../synthesizer";
+import type { ExecutionContext as ExecutionContextType } from "./context";
 
 export abstract class RuntimeNode<
 
@@ -129,7 +130,7 @@ export abstract class RuntimeNode<
 
                     if (field.variant === "CaseList") {
                         const raw = evaluated[field.id]
-                        if (!Array.isArray(raw)) 
+                        if (!Array.isArray(raw))
                             continue;
 
                         evaluated[field.id] = raw.map(entry =>
@@ -187,9 +188,9 @@ export abstract class RuntimeNode<
         const meta      = new Map<Foundations.Field.Id, { raw: unknown, isExpression: boolean }>();
 
         for (const field of this.blueprint.fields)
-            meta.set(field.id, { 
-                raw: rawValues[field.id], 
-                isExpression: Foundations.Field.isExpression(field) 
+            meta.set(field.id, {
+                raw: rawValues[field.id],
+                isExpression: Foundations.Field.isExpression(field)
             });
 
         return this.context.airlockAPI.executeSync(
@@ -206,7 +207,7 @@ export abstract class RuntimeNode<
                     // Static field → its resolved value as-is; expression → evaluated against $item.
                     if (!m || !m.isExpression || typeof m.raw !== "string")
                         return m?.raw as InferItemFields<T_Blueprint>[K];
-                    
+
                     return evaluate(Airlock.Source.asExpression(m.raw), coerceTo) as InferItemFields<T_Blueprint>[K];
                 });
 
@@ -275,10 +276,10 @@ export abstract class RuntimeNode<
         this.fieldValues = fields;
         return this.onWait(partialInputs);
     }
-    
 
 
-    
+
+
     protected onWait(
         incoming: InferIncoming<T_Blueprint>
     ): Promise<void> | void {}
@@ -405,102 +406,5 @@ export namespace RuntimeNode {
     export type ConstructorProps = ConstructorParameters<typeof RuntimeNode>[0]
     export type CompileProps = Parameters<RuntimeNode<Blueprint>["compile"]>[0]
 
-    export interface ExecutionContext {
-        readonly executionId: Execution.Id,
-        readonly chat_id: Chat.Id | null | undefined,
-        readonly session: Execution.Session,
-        readonly updateSession: (recipe: (draft: Execution.Session) => void) => void,
-        readonly realtimeAPI: {
-            emit: <T_Event extends Realtime.Event>(event: T_Event) => void,
-            awaitSignal: <S>(
-                channel: Realtime.Channel,
-                schema:  { parse: (data: unknown) => S },
-                timeout: number,
-            ) => Promise<S>,
-            emitAndAwaitSignal: <E extends Realtime.Event, S>(
-                event:         E,
-                signalChannel: Realtime.Channel,
-                signalSchema:  { parse: (data: unknown) => S },
-                timeout:       number,
-            ) => Promise<S>,
-        },
-        readonly workflowData: Workflow.Data,
-        readonly workflowId: Workflow.Id,
-        readonly workflowCache: Workflow.Cache,
-        // Resolves each node's post-reconcile blueprint from the catalogue cache (warmed by the
-        // compiler). Read sites join against this instead of the slim workflow node.
-        readonly catalogueAPI: {
-            getBlueprint: (nodeId: Workflow.Node.Id) => Foundations.Blueprint,
-        },
-
-        // APIS
-        readonly airlockAPI: Airlock.API,
-        readonly credentialsAPI: {
-            getInstance(instanceId: Vault.Credential.Instance.Id): Vault.Credential.Instance | undefined
-            getDecryptedValue<T = unknown>(blob: Vault.Credential.Instance.EncryptedBlob<T>): InferCredentialValues<T>
-        },
-        readonly abortAPI: {
-            signal: AbortSignal,
-            abort:  (reason?: any) => void,
-        },
-        readonly portAPI: {
-            write: (
-                nodeId: Workflow.Node.Id,
-                outputId: Port.Output.Id,
-                value: unknown,
-            ) => void,
-        },
-        readonly propagationAPI: {
-            emitPort: (
-                nodeId: Workflow.Node.Id,
-                outputId: Port.Output.Id,
-            ) => void,
-            emitNode: (
-                nodeId: Workflow.Node.Id,
-            ) => void,
-        },
-        readonly instanceRegistryAPI: {
-            get:    (nodeId: Workflow.Node.Id) => RuntimeNode<Blueprint> | undefined,
-            getAll: () => RuntimeNode<Blueprint>[],
-        },
-        readonly workflowQueryAPI: {
-            getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: Foundations.Blueprint.Id) => Array<{
-                node: Workflow.Node,
-                fields: InferFieldValues<T_Blueprint>,
-            }>,
-            getNodeOutput: (nodeId: Workflow.Node.Id, portId: Port.Output.Id) => unknown,
-        },
-        readonly schedulerAPI: {
-            fireNode: (nodeId: Workflow.Node.Id, signals?: Set<Workflow.Node.Id>) => void,
-            signalNode: (nodeId: Workflow.Node.Id, fromNodeId: Workflow.Node.Id) => void,
-            removeSignal: (nodeId: Workflow.Node.Id, fromNodeId: Workflow.Node.Id) => void,
-            clearSignals: (nodeId: Workflow.Node.Id) => void,
-            scheduleCheck: (nodeId: Workflow.Node.Id) => void,
-        },
-        readonly enclosingNodeAPI?: {
-            writePort: (
-                outputId: Port.Output.Id,
-                value: unknown,
-            ) => void,
-            emitPort: (
-                outputId: Port.Output.Id,
-            ) => void,
-        },
-        readonly subWorkflowAPI: {
-            createEnv: () => {
-                compile: (
-                    workflowId: Workflow.Id,
-                    workflowData: Workflow.Data,
-                    execution: Execution,
-                    compilationCtx: CompilationContext,
-                    enclosingNodeAPI?: ExecutionContext["enclosingNodeAPI"],
-                ) => Promise<unknown>,
-                run: (ctx: unknown) => Promise<unknown>,
-            }
-        },
-        readonly dependencyAPI: {
-            getPublished: (workflowId: Workflow.Id) => Workflow.Dependency.Publication,
-            getDraft:     (workflowId: Workflow.Id) => Workflow.Dependency.Draft,
-        },
-    }
+    export type ExecutionContext = ExecutionContextType;
 }
