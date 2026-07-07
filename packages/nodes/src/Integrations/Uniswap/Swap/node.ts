@@ -70,11 +70,8 @@ const buildClients = (fields: {
     };
 };
 
-
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
-
-    public readonly Blueprint = Blueprint;
 
     private clients!: UniswapClients;
 

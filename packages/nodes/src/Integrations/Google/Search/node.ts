@@ -67,8 +67,6 @@ function itemToDocument(item: GoogleCustomSearchItem, index: number, query: stri
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
-    public readonly Blueprint = Blueprint;
-
     private async search(query: string) {
         const { apiKey, searchEngineId } = this.context.credentialsAPI.getDecryptedValue(this.credentials.googleSearchApi.blob);
 

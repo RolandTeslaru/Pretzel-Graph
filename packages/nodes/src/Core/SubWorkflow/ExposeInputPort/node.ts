@@ -6,8 +6,6 @@ import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    public readonly Blueprint = Blueprint;
-
     public injectedData: any = null;
 
     protected override async onRun(

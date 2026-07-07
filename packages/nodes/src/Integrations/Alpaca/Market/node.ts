@@ -22,11 +22,8 @@ import {
     toAlpacaTimeframe,
 } from "./fetch";
 
-
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
-
-    public readonly Blueprint = Blueprint;
 
     private readonly dataClient: ReturnType<typeof createAlpacaDataClient>;
     private readonly tradingClient: ReturnType<typeof createAlpacaTradingClient>;

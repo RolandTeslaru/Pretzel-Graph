@@ -14,7 +14,6 @@ export abstract class RuntimeNode<
 
 > {
 
-    public readonly emit: RuntimeNode.ExecutionContext["realtimeAPI"]["emit"];
     public fieldValues: InferFieldValues<T_Blueprint>
     public readonly credentials: InferCredentials<T_Blueprint>
 
@@ -28,11 +27,15 @@ export abstract class RuntimeNode<
      *  fire when explicitly triggered by another node via schedulerAPI or propagationAPI. */
     public readonly IS_PASSIVE: boolean = false
 
+    /** Read by the engine's error interception hook: if an incoming error envelope
+     *  is found, a catching node materializes it to `onError` instead of re-propagating. */
+    public readonly CATCHES_ERROR: boolean = false
+
     /** Controls how the engine fans out signals after this node completes.
      *  - "all"    — signal every downstream dependent (default)
      *  - "router" — signal only dependents connected to ports present in the result
      *  - "none"   — suppress automatic fan-out entirely (node handled propagation itself) */
-    protected PROPAGATION_STRATEGY: RuntimeNode.PropagationStrategy = "all"
+    protected readonly PROPAGATION_STRATEGY: RuntimeNode.PropagationStrategy = "all"
 
     public getPropagationStrategy(): RuntimeNode.PropagationStrategy {
         return this.PROPAGATION_STRATEGY
@@ -47,7 +50,6 @@ export abstract class RuntimeNode<
     ) {
         this.fieldValues = mapFieldValues<T_Blueprint>(this.blueprint.fields, this.staticValues);
         this.credentials = this.mapCredentials();
-        this.emit = context.realtimeAPI.emit;
     }
 
     /** Resolved (post-reconcile) blueprint for this node, stashed on the context by the compiler. */
@@ -394,28 +396,14 @@ export abstract class RuntimeNode<
 
 export namespace RuntimeNode {
     export type PropagationStrategy = "all" | "router" | "none"
+    export namespace PropagationStrategy {
+        export const ALL:    PropagationStrategy = "all";
+        export const ROUTER: PropagationStrategy = "router";
+        export const NONE:   PropagationStrategy = "none";
+    }
 
     export type ConstructorProps = ConstructorParameters<typeof RuntimeNode>[0]
     export type CompileProps = Parameters<RuntimeNode<Blueprint>["compile"]>[0]
-
-    export type LoaderResult = {
-        options: Foundations.Field.ResourceLoader.OptionItem[];
-        nextPaginationCursor?: string;
-    };
-
-    export type LoaderContext<T_Blueprint extends Blueprint = Blueprint> = {
-        fieldValues: InferFieldValues<T_Blueprint>;
-        credentials: InferCredentials<T_Blueprint>;
-        credentialsAPI: {
-            getInstance(instanceId: Vault.Credential.Instance.Id): Vault.Credential.Instance | undefined;
-            getDecryptedValue<T = unknown>(blob: Vault.Credential.Instance.EncryptedBlob<T>): InferCredentialValues<T>;
-        };
-        searchQuery?: string;
-        paginationCursor?: string;
-    };
-
-    export type LoaderFn<T_Blueprint extends Blueprint = Blueprint> =
-        (context: LoaderContext<T_Blueprint>) => Promise<LoaderResult>;
 
     export interface ExecutionContext {
         readonly executionId: Execution.Id,

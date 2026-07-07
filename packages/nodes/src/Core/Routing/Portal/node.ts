@@ -7,8 +7,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     public override readonly IS_PASSIVE = true
 
-    public readonly Blueprint = Blueprint;
-
     public injectedData: unknown = undefined;
 
     protected override async onRun(
