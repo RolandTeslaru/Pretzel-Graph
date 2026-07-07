@@ -31,8 +31,8 @@ export class WorkflowCompiler {
         engine:              AggexEngine,
         airlock:             AirlockService,
         credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
-        compilationCtx:    WorkflowCompiler.Compilation.Context = createCompilationContext(workflowId),
-        enclosingNodeAPI?: RuntimeNode.ExecutionContext["enclosingNodeAPI"],
+        compilationCtx:      WorkflowCompiler.Compilation.Context = createCompilationContext(workflowId),
+        enclosingNodeAPI?:   RuntimeNode.ExecutionContext["enclosingNodeAPI"],
     ): Promise<AggexEngine.Execution.Context> {
         const workflowCache = Workflow.createCache(workflowData);
 
