@@ -21,11 +21,8 @@ import {
     summarizeAggs,
 } from "./fetch";
 
-
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
-
-    public readonly Blueprint = Blueprint;
 
     private readonly client: ReturnType<typeof createMassiveClient>;
 

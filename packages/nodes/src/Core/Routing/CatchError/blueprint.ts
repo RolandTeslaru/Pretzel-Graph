@@ -27,7 +27,4 @@ export const Blueprint = defineBlueprint({
             tooltip: "The serialized error (code + message) when a propagating error is caught here.",
         }),
     ],
-    // Read by the engine to materialize an incoming error envelope to `onError`
-    // and stop propagation, instead of forwarding the envelope downstream.
-    flags: { catchesError: true },
 });

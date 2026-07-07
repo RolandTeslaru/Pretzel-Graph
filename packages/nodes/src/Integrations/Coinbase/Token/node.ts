@@ -27,11 +27,8 @@ const toLangChainTool = (action: AgentKitAction) =>
         },
     );
 
-
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
-
-    public readonly Blueprint = Blueprint;
 
     private walletProvider!: EvmWalletProvider;
     private agentkit!: AgentKit;

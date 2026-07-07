@@ -11,6 +11,7 @@ export { OutputBuilder } from "./output"
 export { WebhookBuilder } from "./webhook"
 export { defineCredential } from "./credential"
 export { defineLoaders } from "./loaders"
+export type { Loader } from "./loaders"
 export type { CredentialTemplate } from "./credential"
 
 

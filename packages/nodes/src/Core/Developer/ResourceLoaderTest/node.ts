@@ -1,10 +1,8 @@
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs, defineLoaders } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs, defineLoaders, Loader } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
-
-    public readonly Blueprint = Blueprint;
 
     // ── Mock loaders — replace with real DB calls when Postgres node is built ──
 
@@ -24,7 +22,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         },
 
         async tableSearch({ fieldValues, searchQuery }) {
-            const tablesBySchema: Record<string, RuntimeNode.LoaderResult["options"]> = {
+            const tablesBySchema: Record<string, Loader.Result["options"]> = {
                 public: [
                     { label: "users",    value: "users",    description: "User accounts" },
                     { label: "sessions", value: "sessions", description: "Auth sessions" },

@@ -7,10 +7,6 @@ import { InferFieldValues, InferIncoming, InferOutputs } from "@pretzel-graph/no
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    public readonly Blueprint = Blueprint;
-
-
-
     protected override async onRun(
         incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
@@ -45,6 +41,5 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             dataListOutput:        incoming.dataListInput,
         };
     }
-
 
 }

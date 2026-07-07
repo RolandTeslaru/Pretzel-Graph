@@ -6,11 +6,7 @@ import { HumanReview } from "@pretzel-graph/shared/domain";
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     // Only the chosen branch propagates (confirm → approved | rejected).
-    protected override PROPAGATION_STRATEGY = "router" as const;
-
-    public readonly Blueprint = Blueprint;
-
-
+    protected override readonly PROPAGATION_STRATEGY = RuntimeNode.PropagationStrategy.ROUTER;
 
     
     protected override async onRun(

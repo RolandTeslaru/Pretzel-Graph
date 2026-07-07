@@ -36,7 +36,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             Synthesizer.lcToChatMessage(lcMsg, this.chatId!)
         );
 
-        this.emit<Chat.Event.Message.Added>({
+        this.context.realtimeAPI.emit<Chat.Event.Message.Added>({
             type: "message:added",
             channel: Chat.Event.getChannel(this.chatId),
             chatId: this.chatId,

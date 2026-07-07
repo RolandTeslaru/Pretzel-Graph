@@ -21,8 +21,6 @@ type PythPriceFeed = {
     };
 };
 
-
-
 type PythParsedPrice = {
     id: string;
     price: { price: string; conf: string; expo: number; publish_time: number };
@@ -112,13 +110,10 @@ const fetchProtocol = async (slug: string) => {
     };
 };
 
-
 // ─── Node ─────────────────────────────────────────────────────────────────────
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
-
-    public readonly Blueprint = Blueprint;
 
     constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
