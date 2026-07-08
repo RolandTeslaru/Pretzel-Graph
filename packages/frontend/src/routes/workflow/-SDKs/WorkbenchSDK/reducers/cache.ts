@@ -62,5 +62,5 @@ type INTERNAL_CacheReducers = {
     deleteEdge: (state: WorkbenchSDK.State, edge: Workflow.Edge) => void
     addEdge: (state: WorkbenchSDK.State, newEdge: Workflow.Edge) => void
     deleteNode: (state: WorkbenchSDK.State, deletedNodeId: Workflow.Node.Id) => void
-    createNode: (state: WorkbenchSDK.State, newNode: Workflow.Node) => void
+    createNode: (state: WorkbenchSDK.State, newNode: Workflow.Node.Raw) => void
 }

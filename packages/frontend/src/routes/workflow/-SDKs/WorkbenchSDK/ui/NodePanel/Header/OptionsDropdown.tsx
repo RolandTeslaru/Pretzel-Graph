@@ -5,7 +5,7 @@ import { WorkbenchSDK } from '../../../sdk'
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 
 interface Props {
-    hyNode: Workflow.HydratedNode
+    hyNode: Workflow.Node.Hydrated
     onEdit: () => void
 }
 

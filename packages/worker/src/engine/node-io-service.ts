@@ -110,7 +110,7 @@ export class NodeIOService {
     public readonly projectOutputs = (
         ctx: AggexEngine.Execution.Context,
         result: Record<string, any>,
-        wfNode: Workflow.Node
+        wfNode: Workflow.Node.Raw
     ): Record<Port.Output.Id, Projection> => {
         const projected: Record<Port.Output.Id, Projection> = {};
 
@@ -150,7 +150,7 @@ export class NodeIOService {
 
     // Resolve a node's attached subworkflow dependency record from the workflow's dependency state,
     // so its exposed ports derive at runtime just like on the frontend / during validation.
-    private getNodeDependency(ctx: AggexEngine.Execution.Context, node: Workflow.Node): Workflow.Dependency | null {
+    private getNodeDependency(ctx: AggexEngine.Execution.Context, node: Workflow.Node.Raw): Workflow.Dependency | null {
         const ref = node.dependencyRef;
         if (!ref) return null;
         const store = ref.mode === "publication" ? ctx.workflowData.dependencies.published : ctx.workflowData.dependencies.draft;

@@ -33,7 +33,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     private walletProvider!: EvmWalletProvider;
     private agentkit!: AgentKit;
 
-    constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
+    constructor(workflowNode: Workflow.Node.Raw, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
     }
 

@@ -33,7 +33,7 @@ export const nodeLifecycleReducers = {
     create: (s, blueprint, position, staticValues) => {
         s.isDirty = true;
         const nodeId = Workflow.Node.createId(blueprint.id);
-        const newNode: Workflow.Node = {
+        const newNode: Workflow.Node.Raw = {
             id          : nodeId,
             blueprintId : blueprint.id,
             ui: {},
@@ -42,7 +42,7 @@ export const nodeLifecycleReducers = {
 
 
         try {
-            Workflow.Node.Schema.parse(newNode)
+            Workflow.Node.Raw.Schema.parse(newNode)
         } catch (error) {
             console.error(error);
             throw new Error(`Node schema validation failed. Could not create node from blueprint id ${blueprint.id}.`)
@@ -96,7 +96,7 @@ export const nodeLifecycleReducers = {
         const nodeLayout   = cloneDeep(s.selectors.layout.node.get(s, nodeId));
         const hadDependency = !!node.dependencyRef;
 
-        const newNode: Workflow.Node = {
+        const newNode: Workflow.Node.Raw = {
             id          : nodeId,
             blueprintId : blueprint.id,
             isDisabled  : node.isDisabled,
@@ -104,7 +104,7 @@ export const nodeLifecycleReducers = {
             dependencyRef : node.dependencyRef ?? blueprint.dependencyRef,
         }
 
-        const result = Workflow.Node.Schema.safeParse(newNode)
+        const result = Workflow.Node.Raw.Schema.safeParse(newNode)
         if (!result.success)
             throw new Error(`Node schema validation failed. Could not recreate node from blueprint id ${blueprint.id}`)
 
@@ -158,7 +158,7 @@ export const nodeLifecycleReducers = {
             position.y += 40
         }
         const newNodeId = Workflow.Node.createId(originalNode.blueprintId)
-        const newNode: Workflow.Node = { ...cloneDeep(originalNode), id: newNodeId }
+        const newNode: Workflow.Node.Raw = { ...cloneDeep(originalNode), id: newNodeId }
 
         // Values default to the source node's live state, but callers (paste)
         // may pass a snapshot taken at copy time so later edits don't leak in.
@@ -224,7 +224,7 @@ export const nodeLifecycleReducers = {
         s.reducers.node.disconnect(s, nodeId);
         s.reducers.cache.deleteNode(s, nodeId);
 
-        const wiped: Workflow.Node = {
+        const wiped: Workflow.Node.Raw = {
             blueprintId : node.blueprintId,
             ui: {
                 displayName: "Wiped Node"
@@ -272,12 +272,12 @@ export interface NodeLifecycleReducers {
     create      : (s: S, blueprint: Foundations.Blueprint, position: { x: number, y: number }, staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>) => NodeId;
     disconnect  : (s: S, nodeId: NodeId) => void;
     recreate    : (s: S, nodeId: NodeId, blueprint: Foundations.Blueprint) => void;
-    duplicate   : (s: S, originalNode: Workflow.Node, position?: { x: number, y: number }, overrides?: {
+    duplicate   : (s: S, originalNode: Workflow.Node.Raw, position?: { x: number, y: number }, overrides?: {
         staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>;
         credentialInstanceIds?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>;
-    }) => Workflow.Node;
+    }) => Workflow.Node.Raw;
     reconcile   : (s: S, nodeId: NodeId, blueprint: Foundations.Blueprint, reconciledBlueprintId: Foundations.Blueprint.ReconciledId) => void;
-    wipe        : (s: S, nodeId: NodeId, replace?: Partial<Workflow.Node>) => void;
+    wipe        : (s: S, nodeId: NodeId, replace?: Partial<Workflow.Node.Raw>) => void;
     validate    : (s: S, nodeId: NodeId) => void;
     clearIssues : (s: S, nodeId: NodeId) => void;
 }

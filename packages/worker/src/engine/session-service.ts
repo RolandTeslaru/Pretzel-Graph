@@ -9,7 +9,7 @@ import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { System } from "@pretzel-graph/shared/system";
 import type { AggexEngine } from "./index";
 
-type NodeEntry = { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> };
+type NodeEntry = { wfNode: Workflow.Node.Raw; instance: RuntimeNode<Blueprint> };
 
 /**
  * The live-state projection of the execution lifecycle (parallel to FlightRecorderService,

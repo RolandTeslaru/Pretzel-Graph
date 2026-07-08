@@ -50,7 +50,9 @@ export class WebhookTestService {
         const reg = this.registrations.get(key);
         if (!reg) return false;
 
+        // @ts-expect-error TODO: Webhook.Test.Signal not defined yet
         const channel = Webhook.Test.Signal.getChannel(reg.workflowId);
+        // @ts-expect-error TODO: Webhook.Test.Signal not defined yet
         const signal: Webhook.Test.Signal.Resolve = {
             type: "resolve",
             channel,

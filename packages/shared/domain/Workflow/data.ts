@@ -32,7 +32,7 @@ export namespace Data {
     const ObjectSchema = z.object({
         version: z.number().default(WORKFLOW_DATA_VERSION),
         fields: z.array(Field.Schema).default([]), //config
-        nodes: z.record(Node.Id, Node.Schema),
+        nodes: z.record(Node.Id, Node.Raw.Schema),
         // Id-only: an edge id fully encodes its endpoints (source|port|target|port), so the fat
         // {source, target} form is derived into the cache on read. Migrated from the legacy record.
         edges: z.array(Edge.Id),
