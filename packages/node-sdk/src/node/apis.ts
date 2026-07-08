@@ -70,7 +70,7 @@ export interface InstanceRegistryAPI {
 // Finds other nodes in the workflow by blueprint id, and reads a node's already-produced output.
 export interface WorkflowQueryAPI {
     getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: Foundations.Blueprint.Id) => Array<{
-        node: Workflow.Node,
+        node: Workflow.Node.Raw,
         fields: InferFieldValues<T_Blueprint>,
     }>,
     getNodeOutput: (nodeId: Workflow.Node.Id, portId: Port.Output.Id) => unknown,

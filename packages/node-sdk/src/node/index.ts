@@ -46,7 +46,7 @@ export abstract class RuntimeNode<
 
 
     constructor(
-        public readonly workflowNode: Workflow.Node,
+        public readonly workflowNode: Workflow.Node.Raw,
         protected readonly context: RuntimeNode.ExecutionContext
     ) {
         this.fieldValues = mapFieldValues<T_Blueprint>(this.blueprint.fields, this.staticValues);

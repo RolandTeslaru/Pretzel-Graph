@@ -14,7 +14,7 @@ import type { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { ShelfSDK } from '../../ShelfSDK/sdk';
 
 export interface WorkbenchSDKSelectors {
-    getClickedNode : (state: WorkbenchSDK.State) => Workflow.Node | null
+    getClickedNode : (state: WorkbenchSDK.State) => Workflow.Node.Raw | null
     /** Distinct base blueprint ids of the workflow's own (top-level) nodes — excludes nested dependency snapshots. */
     getBlueprintIds: (state: WorkbenchSDK.State, workflow: Workflow) => Foundations.Blueprint.Id[]
     /** Resolved blueprint per node (keyed by reconciledBlueprintId ?? blueprintId), for validation. */

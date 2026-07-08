@@ -4,7 +4,7 @@ import type { AggexEngine } from "./index";
 
 /**
  * The single typed boundary to S2's override surface (`s2Engine.overrides.*`).
- * Translates Workflow.Node ids → Vertex ids and forwards firing/signal mutations.
+ * Translates Workflow.Node.Raw ids → Vertex ids and forwards firing/signal mutations.
  */
 export class SchedulerService {
     constructor(private engine: AggexEngine) {}

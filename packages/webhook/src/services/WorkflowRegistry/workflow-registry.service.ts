@@ -102,12 +102,14 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
 
         for (const [nodeId, node] of Object.entries(workflow_data.nodes) as [
             Workflow.Node.Id,
-            Workflow.Node,
+            Workflow.Node.Raw,
         ][]) {
+            // @ts-expect-error TODO: node.webhooks not defined yet
             if (!node.webhooks?.length)
                 continue;
             const staticValues = workflow_data.staticValues[nodeId] ?? {};
 
+            // @ts-expect-error TODO: node.webhooks not defined yet
             for (const webhook of node.webhooks) {
                 const resolved = resolveWebhook(webhook, node, staticValues);
                 registeredPaths.push(`[${resolved.method}] /${publication.workflow_id}/${resolved.path} (node: ${nodeId})`);

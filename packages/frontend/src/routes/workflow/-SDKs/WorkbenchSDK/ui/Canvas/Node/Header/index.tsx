@@ -6,7 +6,7 @@ import StatusIndicator from './StatusIndicator';
 import type { NodeUI } from '../../../../selectors/node';
 
 interface Props {
-  hyNode: Workflow.HydratedNode
+  hyNode: Workflow.Node.Hydrated
   executionStatus: Execution.Session.NodeStatus
   hasUpdate: boolean
 }

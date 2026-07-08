@@ -7,7 +7,7 @@ import { ExecutionSDK } from "../../../sdk"
 import { WorkbenchSDK } from "../../../../WorkbenchSDK/sdk"
 
 interface RelationLayerProps {
-    nodes:        Record<Workflow.Node.Id, Workflow.Node>
+    nodes:        Record<Workflow.Node.Id, Workflow.Node.Raw>
     scale:        TimeScale
     layout:       TimelineLayout
     totalWidth:   number

@@ -37,7 +37,7 @@ type ClearinghouseState = {
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
-    constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
+    constructor(workflowNode: Workflow.Node.Raw, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
     }
 

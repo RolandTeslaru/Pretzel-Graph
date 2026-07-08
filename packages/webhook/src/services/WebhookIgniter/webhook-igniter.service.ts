@@ -69,8 +69,10 @@ export class WebhookIgniterService {
         method: Webhook.Method,
     ) {
         for (const [nodeId, node] of Object.entries(publication.workflow_data.nodes)) {
+            // @ts-expect-error TODO: node.webhooks not defined yet
             if (!node.webhooks?.length) continue;
             const staticValues = publication.workflow_data.staticValues[node.id] ?? {};
+            // @ts-expect-error TODO: node.webhooks not defined yet
             for (const webhook of node.webhooks) {
                 const resolved = resolveWebhook(webhook, node, staticValues);
                 if (resolved.path === path && resolved.method === method) {

@@ -100,7 +100,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
             ]
         })
 
-        // A slimmed Workflow.Node cannot exist without its blueprint hydrated — load() guarantees
+        // A slimmed Workflow.Node.Raw cannot exist without its blueprint hydrated — load() guarantees
         // it. If it's missing that's a hard bug, not a case to guard; assert both as present.
         const blueprint = ShelfSDK.useStore(s => {
             if(!node)
@@ -146,7 +146,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                     iconColor:   node.ui?.iconColor   ?? blueprint.ui.iconColor,
                 },
                 connectedPorts,
-            } as Workflow.HydratedNode;
+            } as Workflow.Node.Hydrated;
         }, [node, blueprint, fields, inputs, outputs, connectedPorts, dependency]);
     }
 
@@ -360,7 +360,7 @@ export namespace WorkbenchSDK {
     }
 
     export type NodeBundle = [
-        node: Workflow.Node,
+        node: Workflow.Node.Raw,
         blueprint: Foundations.Blueprint,
         ui: NodeUI,
         connectedPorts: Record<Port.Input.Id, Workflow.Edge.Id>
