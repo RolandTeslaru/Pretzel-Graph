@@ -6,7 +6,7 @@ import { Content } from './index'
 import IncomingPanel from './IncomingPanel'
 import OutgoingPanel from './OutgoingPanel'
 
-type FullScreenProps = { hyNode: Workflow.HydratedNode; blockTransparency: boolean; surfaceStyle: CSSProperties }
+type FullScreenProps = { hyNode: Workflow.Node.Hydrated; blockTransparency: boolean; surfaceStyle: CSSProperties }
 
 const FullScreenContent = ({ hyNode, blockTransparency, surfaceStyle }: FullScreenProps) => {
   // In the background (another dialog stacked on top) render solid; on top, frosted glass.

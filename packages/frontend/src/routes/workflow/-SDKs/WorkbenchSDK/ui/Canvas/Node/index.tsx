@@ -37,7 +37,7 @@ export default CanvasNode
 
 
 
-const Content = memo(({ hyNode }: { hyNode: Workflow.HydratedNode }) => {
+const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
 
   const [isNodeClicked, hasUpdate] = WorkbenchSDK.useStore(s => [
     s.clickedNodeId === hyNode.id,

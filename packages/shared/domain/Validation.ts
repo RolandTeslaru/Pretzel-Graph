@@ -6,7 +6,7 @@ type Blueprints = Record<Foundations.Blueprint.Id, Foundations.Blueprint>;
 
 // Resolve a node's attached subworkflow dependency record from the workflow's dependency state,
 // so its exposed ports are derived during validation just like on the read path.
-function getNodeDependency(workflowData: Workflow.Data, node: Workflow.Node): Workflow.Dependency | null {
+function getNodeDependency(workflowData: Workflow.Data, node: Workflow.Node.Raw): Workflow.Dependency | null {
     const ref = node.dependencyRef;
     if (!ref) return null;
     const store = ref.mode === "publication" ? workflowData.dependencies.published : workflowData.dependencies.draft;
@@ -89,7 +89,7 @@ export namespace Validation {
         }
         export namespace Node {
             export function check(
-                node: Workflow.Node, 
+                node: Workflow.Node.Raw, 
                 fields: readonly Foundations.Field[], 
                 inputs: readonly Port.Input[], 
                 workflowData: Workflow.Data, 

@@ -56,12 +56,15 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         await Webhook.Test.API.register(api, { workflowId, path: Node.WEBHOOK_PATH, method: "POST" });
 
         const signal = await this.context.realtimeAPI.awaitSignal(
+            // @ts-expect-error TODO: Chat.Signal not defined yet
             Chat.Signal.MessageSent.getChannel(this.context.executionId),
+            // @ts-expect-error TODO: Chat.Signal not defined yet
             Chat.Signal.MessageSent.Schema,
             Node.WEBHOOK_TIMEOUT
         )
 
         return new HumanMessage({
+            // @ts-expect-error TODO: Chat.Signal not defined yet
             content: signal.message.content,
         })
     }

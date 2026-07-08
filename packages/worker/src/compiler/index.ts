@@ -157,7 +157,7 @@ export class WorkflowCompiler {
     // Resolve a node absent from the catalogue as a subworkflow dependency, falling back to the
     // Core.SubWorkflow.Execute node. Throws if it isn't a dependency or the dependency is missing.
     private async resolveDependencyNode(
-        wfNode:             Workflow.Node,
+        wfNode:             Workflow.Node.Raw,
         engineExecutionCtx: AggexEngine.Execution.Context,
     ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Foundations.Blueprint | null }> {
         if (!wfNode.dependencyRef)
@@ -196,7 +196,7 @@ export class WorkflowCompiler {
     // subworkflow dependency, and register the resolved blueprint under its read-site key so
     // ctx.catalogueAPI.getBlueprint can find it during instantiation. Throws if unresolvable.
     private async resolveNode(
-        wfNode:             Workflow.Node,
+        wfNode:             Workflow.Node.Raw,
         engineExecutionCtx: AggexEngine.Execution.Context,
     ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Foundations.Blueprint }> {
         const staticValues = engineExecutionCtx.workflowData.staticValues[wfNode.id] ?? {};
@@ -234,7 +234,7 @@ export class WorkflowCompiler {
         engine:             AggexEngine,
         engineExecutionCtx: AggexEngine.Execution.Context,
         nodeExecutionCtx:   RuntimeNode.ExecutionContext,
-        wfNode:             Workflow.Node,
+        wfNode:             Workflow.Node.Raw,
         compilationCtx:     WorkflowCompiler.Compilation.Context,
     ): Promise<void> {
 

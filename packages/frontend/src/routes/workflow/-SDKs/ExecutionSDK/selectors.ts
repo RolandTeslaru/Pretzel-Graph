@@ -68,7 +68,7 @@ export interface ExecutionSDKSelectors {
         getUnits:          (state: ExecutionSDK.State) => Record<Execution.Recording.UnitOfWork.Id, Execution.Recording.UnitOfWork> | undefined
         getRelations:      (state: ExecutionSDK.State) => Record<Execution.Recording.Relation.Id, Execution.Recording.Relation> | undefined
         getSelectedUoW:    (state: ExecutionSDK.State) => Execution.Recording.UnitOfWork | undefined
-        getSnapshotedNode: (state: ExecutionSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node | undefined
+        getSnapshotedNode: (state: ExecutionSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node.Raw | undefined
         getDatabank:       (state: ExecutionSDK.State) => Execution.Recording.DataBank | undefined
     }
     currentExecution: {
@@ -131,7 +131,7 @@ export const emptyTimelineLayout = (): TimelineLayout => ({ tracks: [], byTrackI
 export function buildTrackLayout(
     trackId: Workflow.Node.Id,
     top:     number,
-    nodes:   Record<Workflow.Node.Id, Workflow.Node>,
+    nodes:   Record<Workflow.Node.Id, Workflow.Node.Raw>,
 ): TimelineTrackLayout {    
     const inputPorts  = WorkbenchSDK.state.selectors.node.getInputs(WorkbenchSDK.state, trackId).map(p => p.id) ?? []
     const outputPorts = WorkbenchSDK.state.selectors.node.getOutputs(WorkbenchSDK.state, trackId).map(p => p.id) ?? []
@@ -144,7 +144,7 @@ export function buildTrackLayout(
 
 export function getTimelineLayout(
     recording: Execution.Recording | null,
-    nodes:     Record<Workflow.Node.Id, Workflow.Node>,
+    nodes:     Record<Workflow.Node.Id, Workflow.Node.Raw>,
 ): TimelineLayout {
     const layout = emptyTimelineLayout()
     if (!recording) return layout
@@ -162,8 +162,8 @@ export function getTimelineLayout(
 // else the live workbench graph (during a live run the snapshot may be empty).
 export function resolveTimelineNodes(
     recording:     Execution.Recording | null,
-    workbenchNodes: Record<Workflow.Node.Id, Workflow.Node>,
-): Record<Workflow.Node.Id, Workflow.Node> {
+    workbenchNodes: Record<Workflow.Node.Id, Workflow.Node.Raw>,
+): Record<Workflow.Node.Id, Workflow.Node.Raw> {
     const snapshot = recording?.workflowDataSnapshot?.nodes
     return (snapshot && Object.keys(snapshot).length > 0) ? snapshot : workbenchNodes
 }

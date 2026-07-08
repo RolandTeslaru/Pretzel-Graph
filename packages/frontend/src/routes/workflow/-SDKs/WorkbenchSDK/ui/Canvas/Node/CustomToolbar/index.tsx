@@ -9,7 +9,7 @@ import Tipped from '@/components/Tipped'
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 
 interface Props {
-    hyNode: Workflow.HydratedNode
+    hyNode: Workflow.Node.Hydrated
 }
 
 export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {

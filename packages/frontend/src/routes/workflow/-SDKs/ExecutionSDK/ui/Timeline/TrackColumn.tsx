@@ -6,7 +6,7 @@ import { WorkbenchSDK } from "../../../WorkbenchSDK/sdk"
 
 interface TrackColumnProps {
     layout: TimelineLayout
-    nodes:  Record<Workflow.Node.Id, Workflow.Node>
+    nodes:  Record<Workflow.Node.Id, Workflow.Node.Raw>
 }
 
 const TrackColumn = ({ layout, nodes }: TrackColumnProps) => {

@@ -50,9 +50,9 @@ export class AggexEngine {
     private hooks: AggexHooks;
 
     /** @internal — accessed by engine services (RoutingService). */
-    public nodeRuntimeMap = new Map<Vertex.Id, { wfNode: Workflow.Node; instance: RuntimeNode<Blueprint> }>();
+    public nodeRuntimeMap = new Map<Vertex.Id, { wfNode: Workflow.Node.Raw; instance: RuntimeNode<Blueprint> }>();
 
-    public registerNode(vertexId: Vertex.Id | Workflow.Node.Id, wfNode: Workflow.Node, instance: RuntimeNode<Blueprint>): void {
+    public registerNode(vertexId: Vertex.Id | Workflow.Node.Id, wfNode: Workflow.Node.Raw, instance: RuntimeNode<Blueprint>): void {
         this.nodeRuntimeMap.set(vertexId as Vertex.Id, { wfNode, instance });
     }
 

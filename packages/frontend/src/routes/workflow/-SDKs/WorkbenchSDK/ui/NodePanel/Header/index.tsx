@@ -12,7 +12,7 @@ import FloatContainer from '@/components/FloatContainer'
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 
 interface HeaderProps {
-    hyNode: Workflow.HydratedNode
+    hyNode: Workflow.Node.Hydrated
     isEditing: boolean
     onEditStart: () => void
     onEditFinish: () => void

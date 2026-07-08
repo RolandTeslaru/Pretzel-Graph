@@ -60,7 +60,7 @@ export default NodeSidebar
 
 
 interface ContentProps {
-    hyNode: Workflow.HydratedNode
+    hyNode: Workflow.Node.Hydrated
     showFooter?: boolean
 }
 

@@ -7,7 +7,7 @@ import React from 'react'
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 
 interface Props {
-    node: Workflow.Node
+    node: Workflow.Node.Raw
 }
 
 

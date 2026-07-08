@@ -90,7 +90,7 @@ export function extractExposedOutputs(wfData: Workflow.Data): Foundations.Port.O
  */
 export function resolveInputs(
     base: readonly Foundations.Port.Input[],
-    node: Node,
+    node: Node.Raw,
     dependency: Workflow.Dependency | null,
 ): Foundations.Port.Input[] {
     if (dependency)
@@ -101,7 +101,7 @@ export function resolveInputs(
 /** Derive a slim node's live output ports. See {@link resolveInputs} for the `dependency` behavior. */
 export function resolveOutputs(
     base: readonly Foundations.Port.Output[],
-    node: Node,
+    node: Node.Raw,
     dependency: Workflow.Dependency | null,
 ): Foundations.Port.Output[] {
     if (dependency)

@@ -5,7 +5,7 @@ import IncomingPanel from "../IncomingPanel";
 import OutgoingPanel from "../OutgoingPanel";
 import type { Workflow } from "@pretzel-graph/shared/domain";
 
-export const NodeSidebarFooter = ({ hyNode }: { hyNode: Workflow.HydratedNode }) => {
+export const NodeSidebarFooter = ({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
 
     const panelId = "nodeSidebar" as StackSDK.Panel.Id;
 

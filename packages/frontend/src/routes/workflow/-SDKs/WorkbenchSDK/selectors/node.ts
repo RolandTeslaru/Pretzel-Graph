@@ -9,7 +9,7 @@ import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Bluepri
 const EMPTY_CONNECTED_PORTS: Record<string, Workflow.Edge.Id> = {}
 
 export interface NodeSelectors {
-    get:              (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node
+    get:              (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node.Raw
     hasIssues:        (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
     isTool:           (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
     isSourceNode:     (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
@@ -49,7 +49,7 @@ export type NodeUI = {
 }
 
 export interface LegacyExpressionContext {
-    node: Workflow.Node
+    node: Workflow.Node.Raw
     fields: Record<Field.Id, unknown>
     incoming: Record<string, unknown>
     workflowConfig: Record<Field.Id, unknown>
