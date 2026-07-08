@@ -30,7 +30,7 @@ interface ExpressionContextValue {
     // fresh props as the parent re-renders — read onCommit through a ref so the dialog
     // always invokes the latest closure (current draft) instead of the one from click time.
     onCommitRef: React.RefObject<() => void>
-    node: Workflow.Node | null
+    node: Workflow.Node.Raw | null
     displayName: string
     itemScoped?: boolean
 }

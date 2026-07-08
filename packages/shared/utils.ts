@@ -125,7 +125,7 @@ export function evaluateRuleGroup(
 
 export function resolveWebhook(
     webhook: Webhook,
-    node: Workflow.Node,
+    node: Workflow.Node.Raw,
     staticValues: Record<Field.Id, unknown>,
 ): Webhook.Resolved {
     const ctx: LegacyExpressionContext = {
@@ -150,7 +150,7 @@ export function evaluateCondition(
 }
 
 interface LegacyExpressionContext {
-    node: Workflow.Node
+    node: Workflow.Node.Raw
     fields: Record<Field.Id, unknown>
     incoming: Record<string, unknown>
     workflowConfig: Record<Field.Id, unknown>

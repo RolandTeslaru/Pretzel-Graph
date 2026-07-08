@@ -45,7 +45,7 @@ const Content = ({
     dataBank,
 }: {
     uow: Execution.Recording.UnitOfWork
-    node: Workflow.Node
+    node: Workflow.Node.Raw
     dataBank: Execution.Recording.DataBank
 }) => {
     const projections = useMemo(() => {

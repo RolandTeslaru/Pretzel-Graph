@@ -1,4 +1,3 @@
-import { Workflow } from ".";
 import { Port } from "../Foundations/Port";
 import { Data } from "./data";
 import { Edge } from "./edge";
@@ -8,7 +7,6 @@ export interface Cache {
     // Expanded edges, rebuilt from the id-only `data.edges` on every cache build. This is the
     // derived source for the fat `{id, source, target}` shape; `data.edges` stays id-only.
     edges: Record<EdgeId, Edge>,
-    hydratedNodes: Record<NodeId, Workflow.HydratedNode>,
     // nodes coming
     incomingEdgesMap: Record<
         NodeId,     // the node where the edges are coming in

@@ -6,7 +6,7 @@ import { pickReconcilingValues } from "./utils/mapFieldValues";
 
 export type NodeConstructor = {
     new(
-        workflowNode: Workflow.Node,
+        workflowNode: Workflow.Node.Raw,
         context: RuntimeNode.ExecutionContext
     ): RuntimeNode<any, any>;
 }

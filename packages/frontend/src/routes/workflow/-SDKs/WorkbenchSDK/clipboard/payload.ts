@@ -16,7 +16,7 @@ const StaticValuesSchema = z.record(
 export const ClipboardPayloadSchema = z.object({
     kind:    z.literal(CLIPBOARD_KIND),
     version: z.literal(CLIPBOARD_VERSION),
-    nodes:   z.array(Workflow.Node.Schema),
+    nodes:   z.array(Workflow.Node.Raw.Schema),
     edges:   z.array(Workflow.Edge.Schema),
     layout:  Workflow.Layout.Schema,
     // Snapshotted at copy time so later edits to the source node don't leak in.

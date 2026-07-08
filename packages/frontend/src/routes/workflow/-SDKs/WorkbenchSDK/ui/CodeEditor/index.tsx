@@ -12,7 +12,7 @@ import OutgoingPanel from '../NodePanel/OutgoingPanel';
 import { WorkbenchSDK } from '../../sdk';
 
 interface Props {
-    node: Workflow.Node,
+    node: Workflow.Node.Raw,
     displayName: string,
     onChange: (val: string) => void,
     onClose: () => void,

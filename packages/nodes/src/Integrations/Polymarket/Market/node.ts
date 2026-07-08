@@ -25,7 +25,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     private readonly gamma = createGammaClient();
     private readonly clob = createClobClient();
 
-    constructor(workflowNode: Workflow.Node, context: RuntimeNode.ExecutionContext) {
+    constructor(workflowNode: Workflow.Node.Raw, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
     }
 

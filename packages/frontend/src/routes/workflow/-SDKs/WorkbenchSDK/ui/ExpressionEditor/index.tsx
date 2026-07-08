@@ -21,7 +21,7 @@ function formatResult(value: unknown) {
 }
 
 interface Props {
-    node: Workflow.Node,
+    node: Workflow.Node.Raw,
     displayName: string,
     onChange: (val: string) => void,
     onClose: () => void,

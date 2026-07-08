@@ -2,7 +2,7 @@ import type { Validation } from "@pretzel-graph/shared/domain"
 import { Workflow } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDK } from "../sdk"
 
-export function createNodeDriver(node: Workflow.Node, wfData: Workflow.Data): WorkbenchSDK.NodeDriver {
+export function createNodeDriver(node: Workflow.Node.Raw, wfData: Workflow.Data): WorkbenchSDK.NodeDriver {
     return {
         id: node.id,
         type: "workflowNode",
