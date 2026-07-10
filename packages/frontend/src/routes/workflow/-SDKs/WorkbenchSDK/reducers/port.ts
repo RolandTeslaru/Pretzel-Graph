@@ -11,6 +11,7 @@ export const portReducers = {
         node.addedInputs = node.addedInputs ?? [];
 
         node.addedInputs.push(port);
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
     removeInput: (s, nodeId, portId) => {
         s.isDirty = true;
@@ -22,6 +23,7 @@ export const portReducers = {
             s.reducers.edge.remove(s, edgeId);
 
         node.addedInputs = node.addedInputs?.filter(p => p.id !== portId)
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
     removeOutput: (s, nodeId, portId) => {
         s.isDirty = true;
@@ -34,6 +36,7 @@ export const portReducers = {
             s.reducers.edge.remove(s, edgeId);
 
         node.addedOutputs = node.addedOutputs?.filter(p => p.id !== portId) as typeof node.addedOutputs;
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
     addOutput: (s, nodeId, port) => {
         s.isDirty = true;
@@ -43,6 +46,7 @@ export const portReducers = {
 
         node.addedOutputs = node.addedOutputs ?? [];
         node.addedOutputs.push(port as typeof node.addedOutputs[number]);
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
     setOutputDisplayName: (s, nodeId, portId, displayName) => {
         s.isDirty = true;
@@ -52,6 +56,7 @@ export const portReducers = {
         const port = node.addedOutputs?.find(p => p.id === portId);
         if (port) 
             port.displayName = displayName;
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
 } satisfies PortReducers
 

@@ -44,7 +44,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             variant:         "sub_workflow",
             parentNodeId:    this.workflowNode.id,
             subWorkflowPath: [...compilePath, subWorkflowId],
-            record:          parentWorkflowIgniter ? parentWorkflowIgniter.record : false
+            record:          parentWorkflowIgniter ? parentWorkflowIgniter.record : false,
+            chat_id:         this.context.igniter.chat_id ?? undefined,
         } satisfies Execution.Igniter;
 
         const childCompilationCtx = {
@@ -60,7 +61,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             status:      "running",
             duration:    0,
             session:     this.context.session,
-            chat_id:     this.context.chat_id,
             created_at:  new Date().toISOString(),
             updated_at:  new Date().toISOString(),
         };
@@ -97,7 +97,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             await this.subEnvironment.run(this.subEngineCtx);
 
             this.aggregatedMetrics = normalizeMetrics(
-                this.subEngineCtx.airlockAPI.readGlobal<Record<string, unknown>>(Airlock.GLOBALS.metrics),
+                this.subEngineCtx.airlockAPI.readGlobal<Record<string, unknown>>(Airlock.Globals.METRICS),
             );
 
             // getPropagationStrategy() returns "none" — ExposeOutputPort nodes propagate

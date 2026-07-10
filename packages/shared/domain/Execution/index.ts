@@ -55,7 +55,6 @@ export namespace Execution {
         error:       SystemError.Schema.nullish(),
         session:     Session.Schema,     // embedded; no separate id
         recording:   Recording.Schema.nullable().default(null),
-        chat_id:     Chat.Id.nullish(), // if applicable
         created_at:  supabaseTimestamp,
         updated_at:  supabaseTimestamp,
     })
@@ -85,7 +84,6 @@ export namespace Execution {
                 workflowData: Workflow.Data.Schema,
                 executionId:  Execution.Id.optional(),
                 igniter:      Igniter.Schema,
-                chat_id:      Chat.Id.optional(),
             })
             export type Request = z.infer<typeof Request>
 

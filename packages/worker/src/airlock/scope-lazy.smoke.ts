@@ -25,7 +25,7 @@ const incoming = { port1: { data: { value: 42, flag: false }, items: [{ v: 1 }, 
 let pass = 0, fail = 0;
 const check = (label: string, expr: string, expected: unknown, coerce?: Airlock.CoerceTo) => {
     const got = scope.executeSync(
-        { [Airlock.GLOBALS.in]: incoming },
+        { [Airlock.Globals.IN]: incoming },
         (evaluate) => evaluate(Airlock.Source.asExpression(expr), coerce),
     );
     const ok = JSON.stringify(got) === JSON.stringify(expected);
@@ -47,14 +47,14 @@ check("string coerce", "$in.port1.data.value", "42", "string");
 // Re-fire on the same scope (reused context) must rebind cleanly and not leak the prior $in.
 const incoming2 = { port1: { data: { value: 99, flag: true } } } as typeof incoming;
 const refire = scope.executeSync(
-    { [Airlock.GLOBALS.in]: incoming2 },
+    { [Airlock.Globals.IN]: incoming2 },
     (evaluate) => evaluate(Airlock.Source.asExpression("$in.port1.data.value")),
 );
 console.log(`  ${refire === 99 ? "✓" : "✗"} re-fire rebinds $in        ${refire}`);
 refire === 99 ? pass++ : fail++;
 
 // After the block, $in must be gone (binding released).
-const leaked = context.evalSync(`typeof ${Airlock.GLOBALS.in}`);
+const leaked = context.evalSync(`typeof ${Airlock.Globals.IN}`);
 console.log(`  ${leaked === "undefined" ? "✓" : "✗"} $in released after block   ${leaked}`);
 leaked === "undefined" ? pass++ : fail++;
 

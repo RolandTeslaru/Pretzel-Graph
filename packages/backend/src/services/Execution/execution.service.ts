@@ -5,7 +5,7 @@ import Redis from 'ioredis';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { createAuthenticatedClient, createServiceClient } from '@/utils/supabase';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
-import { Auth, Execution, Foundations, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
+import { Auth, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
 import { CatalogueService, mapFieldValues } from '@pretzel-graph/node-sdk';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
@@ -15,6 +15,7 @@ import { Token } from '@/domain/Token';
 import { ExecutionDatabase } from './execution.database';
 import { ChatDatabase } from '../Chat/chat.database';
 import { VaultDatabase } from '../Vault/vault.database';
+import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 
 @Injectable()
 export class ExecutionService {
@@ -94,8 +95,8 @@ export class ExecutionService {
     // Resolve each node's (possibly reconciled) blueprint so validation can derive fields/ports.
     private async resolveBlueprints(
         workflowData: Workflow.Data,
-    ): Promise<Record<Foundations.Blueprint.Id, Foundations.Blueprint>> {
-        const blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint> = {};
+    ): Promise<Record<Blueprint.Id, Blueprint>> {
+        const blueprints: Record<Blueprint.Id, Blueprint> = {};
 
         for (const node of Object.values(workflowData.nodes)) {
             const base = await CatalogueService.loadBlueprint(node.blueprintId);
@@ -105,7 +106,7 @@ export class ExecutionService {
             // at read time (resolveInputs/Outputs). Mirrors the compiler's resolveDependencyNode.
             if (!base) {
                 if (node.dependencyRef) {
-                    const executeBp = await CatalogueService.loadBlueprint("Core.SubWorkflow.Execute" as Foundations.Blueprint.Id);
+                    const executeBp = await CatalogueService.loadBlueprint("Core.SubWorkflow.Execute" as Blueprint.Id);
                     if (executeBp) blueprints[node.blueprintId] = executeBp;
                 }
                 continue;
@@ -129,16 +130,18 @@ export class ExecutionService {
         payload:  Execution.API.Run.Request,
         igniter:  Execution.Igniter,
     ): Promise<Execution.API.Run.Response> {
-        const { workflowId, chat_id } = payload;
+        const { workflowId } = payload;
+        const chatId = igniter.chat_id;
         const workflowData = payload.workflowData;
 
-        const wfCache = Workflow.createCache(workflowData);
+        const blueprints = await this.resolveBlueprints(workflowData);
+        const wfCache = Workflow.createCache(workflowData, blueprints);
         // Validation
         const arcsMap = Workflow.deriveArcs(wfCache);
         const sccs   = Algorithms.Tarjan.deriveSCCs(workflowData.nodes, arcsMap)[3];
         const cycles = Algorithms.Johnson.getAllCycles(arcsMap, sccs);
         
-        const issues = Validation.Issue.checkWorkflow(workflowData, cycles, wfCache, await this.resolveBlueprints(workflowData));
+        const issues = Validation.Issue.checkWorkflow(workflowData, cycles, wfCache);
 
         if (Validation.workflowHasIssues(issues))
             throw new SystemError(
@@ -147,11 +150,11 @@ export class ExecutionService {
                 { data: { issues } }
             );
 
-        if (payload.chat_id)
-            await this.chatDatabase.chat.ensure(supabase, userId, payload.chat_id, workflowId);
+        if (chatId)
+            await this.chatDatabase.chat.ensure(supabase, userId, chatId, workflowId);
 
         const session = Execution.Session.createInitial();
-        const executionId = await this.database.create(supabase, { workflowId, userId, igniter, session, executionId: payload.executionId, chatId: payload.chat_id });
+        const executionId = await this.database.create(supabase, { workflowId, userId, igniter, session, executionId: payload.executionId, chatId: chatId });
 
         const execution = {
             id: executionId,
@@ -159,7 +162,6 @@ export class ExecutionService {
             recording: null,
             igniter,
             workflow_id: workflowId,
-            chat_id,
             status: "running",
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),

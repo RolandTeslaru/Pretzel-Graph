@@ -379,11 +379,29 @@ export class Synthesizer {
     }
 
 
+    private static extractMessageText(content: LC.BaseMessage["content"]): string {
+        if (typeof content === "string")
+            return content;
+
+        return content
+            .map(block => {
+                if (typeof block === "string")
+                    return block;
+
+                if (block.type === "text" && "text" in block && typeof block.text === "string")
+                    return block.text;
+
+                return "";
+            })
+            .join("");
+    }
+
+
     public static lcToChatMessage(msg: LC.BaseMessage, chatId: Chat.Id): Chat.Message {
         const base = {
             id:         Chat.Message.createId(),
             chat_id:    chatId,
-            content:    typeof msg.content === "string" ? msg.content : "",
+            content:    this.extractMessageText(msg.content),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
         };

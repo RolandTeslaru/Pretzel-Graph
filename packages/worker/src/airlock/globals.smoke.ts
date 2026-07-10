@@ -11,8 +11,8 @@ const isolate = new ivm.Isolate({ memoryLimit: 128 });
 const context = isolate.createContextSync();
 installLazyBootstrap(context);
 // mimic AirlockService.createScope
-context.global.setSync(Airlock.GLOBALS.globals, {}, { copy: true });
-context.global.setSync(Airlock.GLOBALS.workflow, {
+context.global.setSync(Airlock.Globals.GLOBALS, {}, { copy: true });
+context.global.setSync(Airlock.Globals.WORKFLOW, {
     nodes: { A: { id: "A" }, B: { id: "B" }, C: { id: "C" }, amt6b: { id: "amt6b" } },
 }, { copy: true });
 
@@ -27,7 +27,7 @@ const scope = new AirlockScope(fakeService as never, context, 5_000);
 // eval an expression as a given node id (sets __node_id__ for $nodeGlobals)
 const evalAs = (nodeId: string, expr: string, incoming: unknown = {}) =>
     scope.executeSync(
-        { [Airlock.GLOBALS.in]: incoming, [Airlock.GLOBALS.nodeId]: nodeId },
+        { [Airlock.Globals.IN]: incoming, [Airlock.Globals.NODE_ID]: nodeId },
         (evaluate) => evaluate(Airlock.Source.asExpression(expr)),
     );
 
