@@ -271,8 +271,8 @@ code {
 
 
   --foreground: theme(--color-white);
-  --card: rgb(50, 50, 53);
-  --card-float: rgb(48, 48, 48);
+  --card: rgb(45, 45, 49);
+  --card-float: rgb(32, 32, 32);
 
 
   --port-Data-foreground: theme(--color-slate-500);

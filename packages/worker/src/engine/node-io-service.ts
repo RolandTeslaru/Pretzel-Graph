@@ -24,7 +24,12 @@ export class NodeIOService {
         outputId: Port.Output.Id,
         value:    unknown,
     ) => {
-        const outputPort = this.getOutputPort(ctx, nodeId, outputId);
+        const outputPort = ctx.workflowQueryAPI.getOutputPort(nodeId, outputId);
+        if(!outputPort)
+            throw new AggexExecutionError(
+                SystemError.Code.EXECUTION_NODE_FAILED,
+                `Cannot write unknown output port "${outputId}" on node "${nodeId}"`,
+            );
 
         const projection = Synthesizer.project(value, outputPort.variant);
 
@@ -63,7 +68,9 @@ export class NodeIOService {
 
         const incomingEdgeByPort = ctx.workflowCache.inputHandlesMap[nodeId]
 
-        for (const input of this.getInputPorts(ctx, nodeId)) {
+        const inputs = ctx.workflowQueryAPI.getInputs(nodeId);
+
+        for (const input of inputs) {
             const edgeId = incomingEdgeByPort[input.id]
             const edge = ctx.workflowCache.edges[edgeId];
 
@@ -107,6 +114,9 @@ export class NodeIOService {
         return resolved;
     }
 
+
+
+
     public readonly projectOutputs = (
         ctx: AggexEngine.Execution.Context,
         result: Record<string, any>,
@@ -114,7 +124,9 @@ export class NodeIOService {
     ): Record<Port.Output.Id, Projection> => {
         const projected: Record<Port.Output.Id, Projection> = {};
 
-        for (const output of this.getOutputPorts(ctx, wfNode.id)) {
+        const outputs = ctx.workflowQueryAPI.getOutputs(wfNode.id);
+
+        for (const output of outputs) {
             const key = output.id;
             if (key in result){
                 if(result[key] === undefined)
@@ -125,52 +137,5 @@ export class NodeIOService {
         }
 
         return projected;
-    }
-
-
-    // A node's live ports, via the shared resolver: reconciled blueprint ports + the node's added
-    // ports (or a subworkflow's dependency-exposed ports), with polymorphic variants replayed.
-    public readonly getInputPorts = (
-        ctx:    AggexEngine.Execution.Context,
-        nodeId: Workflow.Node.Id,
-    ): Port.Input[] => {
-        const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);
-        const node = ctx.workflowData.nodes[nodeId];
-        return Workflow.Node.resolveInputs(blueprint.inputs, node, this.getNodeDependency(ctx, node));
-    }
-
-    public readonly getOutputPorts = (
-        ctx:    AggexEngine.Execution.Context,
-        nodeId: Workflow.Node.Id,
-    ): Port.Output[] => {
-        const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);
-        const node = ctx.workflowData.nodes[nodeId];
-        return Workflow.Node.resolveOutputs(blueprint.outputs, node, this.getNodeDependency(ctx, node));
-    }
-
-    // Resolve a node's attached subworkflow dependency record from the workflow's dependency state,
-    // so its exposed ports derive at runtime just like on the frontend / during validation.
-    private getNodeDependency(ctx: AggexEngine.Execution.Context, node: Workflow.Node.Raw): Workflow.Dependency | null {
-        const ref = node.dependencyRef;
-        if (!ref) return null;
-        const store = ref.mode === "publication" ? ctx.workflowData.dependencies.published : ctx.workflowData.dependencies.draft;
-        return store[ref.workflowId] ?? null;
-    }
-
-    private getOutputPort(ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id, outputId: Port.Output.Id): Port.Output {
-        const node = ctx.workflowData.nodes[nodeId];
-        if (!node)
-            throw new AggexExecutionError(
-                SystemError.Code.EXECUTION_NODE_FAILED,
-                `Cannot write output for unknown node "${nodeId}"`,
-            );
-
-        const output = this.getOutputPorts(ctx, nodeId).find(output => output.id === outputId);
-        if (!output)
-            throw new AggexExecutionError(
-                SystemError.Code.EXECUTION_NODE_FAILED,
-                `Cannot write unknown output port "${outputId}" on node "${nodeId}"`,
-            );
-        return output;
     }
 }

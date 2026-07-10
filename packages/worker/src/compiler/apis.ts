@@ -1,5 +1,5 @@
 import { produce } from "immer";
-import { Execution, Foundations, Realtime, Vault } from "@pretzel-graph/shared/domain";
+import { Chat, Execution, Foundations, Realtime, Vault } from "@pretzel-graph/shared/domain";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
@@ -12,16 +12,38 @@ import { AirlockService } from "../airlock";
 import { RealtimeService } from "../realtime";
 import { WorkflowCompiler } from "./index";
 
+type ExecutionAPIs = Pick<
+    RuntimeNode.ExecutionContext,
+    | "portAPI"
+    | "propagationAPI"
+    | "instanceRegistryAPI"
+    | "workflowQueryAPI"
+    | "schedulerAPI"
+    | "subWorkflowAPI"
+    | "dependencyAPI"
+    | "credentialsAPI"
+    | "catalogueAPI"
+    | "abortAPI"
+    | "realtimeAPI"
+    | "updateSession"
+    | "airlockAPI"
+>;
+
+function getIgniterChatId(igniter: Execution.Igniter): Chat.Id | undefined {
+    return "chat_id" in igniter ? igniter.chat_id as Chat.Id | undefined : undefined;
+}
+
 // Builds the per-execution API facade injected into every node's ExecutionContext.
 export function createExecutionAPIs(
     engine:              AggexEngine,
     airlock:             AirlockService,
     ctxRef:              { current: AggexEngine.Execution.Context },
     execution:           Execution,
+    workflowId:          Workflow.Id,
     workflowData:        Workflow.Data,
     credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
     realtime:            RealtimeService,
-) {
+): ExecutionAPIs {
     const portAPI = {
         write: (nodeId, outputId, value) =>
             engine.nodeIO.writePort(ctxRef.current, nodeId, outputId, value),
@@ -50,8 +72,31 @@ export function createExecutionAPIs(
                         ctxRef.current.workflowData.staticValues[n.id] ?? {},
                     ),
                 })),
+        getNode: (nodeId: Workflow.Node.Id) =>
+            ctxRef.current.workflowData.nodes[nodeId],
         getNodeOutput: (nodeId, portId) =>
             ctxRef.current.session.node_output_instances[nodeId]?.[portId],
+        getInputs: (nodeId) =>
+            ctxRef.current.workflowCache.resolvedShape[nodeId].inputs,
+        getOutputs: (nodeId) =>
+            ctxRef.current.workflowCache.resolvedShape[nodeId].outputs,
+        getOutputPort: (nodeId, portId) =>
+            ctxRef.current.workflowCache.resolvedShape[nodeId].outputs.find(p => p.id === portId),
+        getInputPort: (nodeId, portId) =>
+            ctxRef.current.workflowCache.resolvedShape[nodeId].inputs.find(p => p.id === portId),
+        getFields: (nodeId) =>
+            ctxRef.current.workflowCache.resolvedShape[nodeId].fields,
+        getNodeDependency: (nodeId) => {
+            const depRef = ctxRef.current.workflowData.nodes[nodeId]?.dependencyRef;
+            if (!depRef) return null;
+            const store = depRef.mode === "publication"
+                ? ctxRef.current.workflowData.dependencies.published
+                : ctxRef.current.workflowData.dependencies.draft;
+            return store[depRef.workflowId] ?? null;
+        },
+        getStaticValues: (nodeId) => {
+            return ctxRef.current.workflowData.staticValues[nodeId] ?? {};
+        }
     } satisfies RuntimeNode.ExecutionContext["workflowQueryAPI"];
 
     const schedulerAPI = {
@@ -61,6 +106,11 @@ export function createExecutionAPIs(
         clearSignals:  (nodeId)             => engine.schedulerAPI.clearSignals(ctxRef.current, nodeId),
         scheduleCheck: (nodeId)             => engine.schedulerAPI.scheduleCheck(ctxRef.current, nodeId),
     } satisfies RuntimeNode.ExecutionContext["schedulerAPI"];
+
+    const airlockAPI = airlock.createScope(workflowId, {
+        igniter: execution.igniter,
+        chatId:  getIgniterChatId(execution.igniter),
+    });
 
     const subWorkflowAPI = {
         createEnv: () => {
@@ -132,6 +182,6 @@ export function createExecutionAPIs(
     return {
         portAPI, propagationAPI, instanceRegistryAPI, workflowQueryAPI,
         schedulerAPI, subWorkflowAPI, dependencyAPI, credentialsAPI,
-        catalogueAPI, abortAPI, realtimeAPI, updateSession,
+        catalogueAPI, abortAPI, realtimeAPI, updateSession, airlockAPI
     };
 }

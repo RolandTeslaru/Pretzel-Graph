@@ -161,6 +161,10 @@ export class S2Engine {
                     this.ctx.hooks.onVertexError?.(dep, err);
                     this.ctx.reject(err);
                 }
+            } finally {
+                // A dependency check can end without firing a vertex. In that case there is
+                // no fireVertex.finally to settle the engine after this pending check is removed.
+                this.trySettle();
             }
         })
     }

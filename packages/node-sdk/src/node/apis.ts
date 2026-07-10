@@ -73,7 +73,15 @@ export interface WorkflowQueryAPI {
         node: Workflow.Node.Raw,
         fields: InferFieldValues<T_Blueprint>,
     }>,
+    getNode:       (nodeId: Workflow.Node.Id) => Workflow.Node.Raw | undefined,
     getNodeOutput: (nodeId: Workflow.Node.Id, portId: Port.Output.Id) => unknown,
+    getInputs:     (nodeId: Workflow.Node.Id) => Port.Input[],
+    getOutputs:    (nodeId: Workflow.Node.Id) => Port.Output[],
+    getFields:     (nodeId: Workflow.Node.Id) => readonly Foundations.Field[],
+    getNodeDependency: (nodeId: Workflow.Node.Id) => Workflow.Dependency | null,
+    getOutputPort: (nodeId: Workflow.Node.Id, portId: Port.Output.Id) => Port.Output | undefined,
+    getInputPort:  (nodeId: Workflow.Node.Id, portId: Port.Input.Id) => Port.Input | undefined,
+    getStaticValues: (nodeId: Workflow.Node.Id) => Record<Foundations.Field.Id, Foundations.Field.Value>,
 }
 
 // Low-level signal-graph control the S2Engine scheduler uses to fire nodes and manage the

@@ -61,16 +61,16 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
         const sampleItem = arrays.length === 1 && arrays[0].length > 0 ? arrays[0][0] : undefined
 
         return {
-            [Airlock.GLOBALS.workflow]: Airlock.toWorkflowView(ws.workflowId, ws.data),
-            [Airlock.GLOBALS.in]: incoming,
-            [Airlock.GLOBALS.item]: sampleItem,
-            [Airlock.GLOBALS.itemIndex]: sampleItem !== undefined ? 0 : undefined,
-            [Airlock.GLOBALS.nodeId]: nodeId,
-            [Airlock.GLOBALS.igniter]: undefined,
-            [Airlock.GLOBALS.chatId]: undefined,
+            [Airlock.Globals.WORKFLOW]: Airlock.toWorkflowView(ws.workflowId, ws.data),
+            [Airlock.Globals.IN]: incoming,
+            [Airlock.Globals.ITEM]: sampleItem,
+            [Airlock.Globals.ITEM_INDEX]: sampleItem !== undefined ? 0 : undefined,
+            [Airlock.Globals.NODE_ID]: nodeId,
+            [Airlock.Globals.IGNITER]: undefined,
+            [Airlock.Globals.CHAT_ID]: undefined,
             // Execution-scoped scratch ($globals / $nodeGlobals). Fresh per preview — side effects
             // don't persist across keystrokes, which is the right preview semantic.
-            [Airlock.GLOBALS.globals]: {},
+            [Airlock.Globals.GLOBALS]: {},
         }
     }
 
@@ -125,7 +125,7 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
                 else resolve({ ok: true, value: msg.result })
             })
 
-            worker.postMessage({ id, parsed, globals, args: [globals[Airlock.GLOBALS.in], nodeId] })
+            worker.postMessage({ id, parsed, globals, args: [globals[Airlock.Globals.IN], nodeId] })
         })
     }
 

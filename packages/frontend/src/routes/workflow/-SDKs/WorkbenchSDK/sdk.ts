@@ -89,14 +89,15 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
 
     public useNode(nodeId: Workflow.Node.Id | null) {
-        const [node, connectedPorts, dependency] = this.useStore(s => {
+        const [node, connectedPorts, dependency, resolvedShape] = this.useStore(s => {
             if(!nodeId)
-                return [null, {}, null] as const;
+                return [null, {}, null, null] as const;
 
             return [
                 s.data.nodes[nodeId],
                 s.selectors.node.getConnectedPorts(s, nodeId),
                 s.selectors.node.getDependency(s, nodeId),
+                s.cache.resolvedShape[nodeId] ?? null,
             ]
         })
 
@@ -108,24 +109,6 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
             return s.blueprints[node!.reconciledBlueprintId ?? node!.blueprintId]
         });
 
-        const inputs = useMemo(() => {
-            if(!node || !blueprint)
-                return [];
-            return Workflow.Node.resolveInputs(blueprint.inputs, node, dependency);
-        }, [blueprint, node?.addedInputs, node?.polymorphicResolutions, dependency]);
-
-        const outputs = useMemo(() => {
-            if(!node || !blueprint)
-                return [];
-            return Workflow.Node.resolveOutputs(blueprint.outputs, node, dependency);
-        }, [blueprint, node?.addedOutputs, node?.polymorphicResolutions, dependency]);
-
-        const fields = useMemo(() => {
-            if(!node || !blueprint)
-                return [];
-            return node.addedFields?.length ? [...blueprint.fields, ...node.addedFields] : blueprint.fields;
-        }, [blueprint, node?.addedFields]);
-
         return useMemo(() => {
             if (!node || !blueprint)
                 return null;
@@ -133,9 +116,9 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
             return {
                 ...node,
                 blueprint,
-                fields,
-                inputs,
-                outputs,
+                fields: resolvedShape?.fields ?? [],
+                inputs: resolvedShape?.inputs ?? [],
+                outputs: resolvedShape?.outputs ?? [],
                 ui: {
                     displayName: node.ui?.displayName ?? dependency?.display_name ?? blueprint.ui.displayName,
                     description: node.ui?.description ?? blueprint.ui.description,
@@ -147,41 +130,34 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 },
                 connectedPorts,
             } as Workflow.Node.Hydrated;
-        }, [node, blueprint, fields, inputs, outputs, connectedPorts, dependency]);
+        }, [node, blueprint, resolvedShape, connectedPorts, dependency]);
+    }
+
+    public useSelectedNode() {
+        const selectedNodeId = this.useStore(s => s.clickedNodeId);
+        return this.useNode(selectedNodeId);
     }
 
 
-    /** A single resolved output port. Subscribes to the stable inputs (node ref, dependency record,
-     *  blueprint) and memoizes the resolve+lookup, so it recomputes on reconcile / port changes /
-     *  dependency updates — not on every render. */
+    /** A single resolved output port from the shared node-shape cache. */
     public useOutput(nodeId: Workflow.Node.Id | null, portId: Foundations.Port.Output.Id | null) {
-        const [node, dependency] = this.useStore(s => {
+        const [node, outputs] = this.useStore(s => {
             if (!nodeId)
-                return [null, null] as const;
-            return [s.data.nodes[nodeId] ?? null, s.selectors.node.getDependency(s, nodeId)] as const;
+                return [null, []] as const;
+            return [s.data.nodes[nodeId] ?? null, s.cache.resolvedShape[nodeId]?.outputs ?? []] as const;
         });
-
-        const blueprint = ShelfSDK.useStore(s =>
-            node ? s.blueprints[node.reconciledBlueprintId ?? node.blueprintId] : null
-        );
 
         return useMemo(() => {
-            if (!node || !blueprint || !portId)
+            if (!node || !portId)
                 return null;
-            return Workflow.Node.resolveOutputs(blueprint.outputs, node, dependency).find(o => o.id === portId) ?? null;
-        }, [blueprint, node?.addedOutputs, node?.polymorphicResolutions, dependency, portId]);
+            return outputs.find(o => o.id === portId) ?? null;
+        }, [node, outputs, portId]);
     }
 
 
-    /** A node's fields — blueprint-owned, no node-level overrides. Subscribes only to the
-     *  effective blueprint id, so it re-renders on reconcile, not on unrelated node edits. */
+    /** A node's resolved fields from the shared node-shape cache. */
     public useFields(nodeId: Workflow.Node.Id): readonly Foundations.Field[] {
-        const blueprintId = this.useStore(s => {
-            const node = s.data.nodes[nodeId];
-            return node.reconciledBlueprintId ?? node.blueprintId;
-        });
-        const blueprint = ShelfSDK.useStore(s => s.blueprints[blueprintId]);
-        return blueprint.fields;
+        return this.useStore(s => s.cache.resolvedShape[nodeId]?.fields ?? []);
     }
 
 

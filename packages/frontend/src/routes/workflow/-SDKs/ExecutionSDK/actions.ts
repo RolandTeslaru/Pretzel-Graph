@@ -31,6 +31,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
         igniter.record = sdk.state.igniterAttributes.record;
         igniter.debug = sdk.state.igniterAttributes.debug;
+        igniter.chat_id = sdk.chatSDK.state.currentChatId ?? undefined;
 
         // Seed a stub currentExecution so events arriving before the HTTP
         // response have somewhere to land. The real Execution replaces it
@@ -56,7 +57,6 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             workflowData: WorkbenchSDK.state.data,
             executionId,
             igniter,
-            chat_id: sdk.chatSDK.state.currentChatId ?? undefined,
         });
 
         toast.promise(executionCreationPromise, {
