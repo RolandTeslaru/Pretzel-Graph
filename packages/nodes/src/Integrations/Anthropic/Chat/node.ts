@@ -12,7 +12,14 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     constructor(workflowNode: Workflow.Node.Raw, context: RuntimeNode.ExecutionContext) {
         super(workflowNode, context);
-        this.llm = new ChatAnthropic(this.fieldValues);
+
+        const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.anthropicApi.blob);
+
+        this.llm = new ChatAnthropic({
+            model: this.fieldValues.model,
+            ...(typeof this.fieldValues.maxTokens === "number" ? { maxTokens: this.fieldValues.maxTokens } : {}),
+            apiKey,
+        });
     }
 
     protected override async onRun(

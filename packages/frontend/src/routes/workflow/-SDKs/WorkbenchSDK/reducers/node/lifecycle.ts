@@ -212,6 +212,7 @@ export const nodeLifecycleReducers = {
 
         // Point the node at the reconciled blueprint; fields/ports now derive from it.
         node.reconciledBlueprintId = reconciledBlueprintId;
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
 
         // Seed from existing values, then fill gaps with initialValue
         s.reducers.node.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs);
@@ -251,8 +252,6 @@ export const nodeLifecycleReducers = {
 
         const nodeIssues = Validation.Issue.Node.check(
             node,
-            s.selectors.node.getFields(s, nodeId),
-            s.selectors.node.getInputs(s, nodeId),
             s.data,
             s.cache,
         );

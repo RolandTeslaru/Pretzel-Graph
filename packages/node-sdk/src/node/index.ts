@@ -49,18 +49,13 @@ export abstract class RuntimeNode<
         public readonly workflowNode: Workflow.Node.Raw,
         protected readonly context: RuntimeNode.ExecutionContext
     ) {
-        this.fieldValues = mapFieldValues<T_Blueprint>(this.blueprint.fields, this.staticValues);
+        const fields       = this.context.workflowQueryAPI.getFields(this.workflowNode.id);
+        const staticValues = this.context.workflowQueryAPI.getStaticValues(this.workflowNode.id);
+
+        this.fieldValues = mapFieldValues<T_Blueprint>(fields, staticValues);
         this.credentials = this.mapCredentials();
     }
 
-    /** Resolved (post-reconcile) blueprint for this node, stashed on the context by the compiler. */
-    protected get blueprint(): T_Blueprint {
-        return this.context.catalogueAPI.getBlueprint(this.workflowNode.id) as T_Blueprint;
-    }
-
-    protected get staticValues(): Record<Foundations.Field.Id, Foundations.Field.Value> {
-        return this.context.workflowData.staticValues[this.workflowNode.id] ?? {};
-    }
 
     private mapCredentials(): InferCredentials<T_Blueprint> {
         const nodeCredIds = this.context.workflowData.credentialInstanceIds[this.workflowNode.id] ?? {};
@@ -104,26 +99,33 @@ export abstract class RuntimeNode<
     public evaluateFields(
         incoming: Record<Port.Id, Projection>
     ): InferFieldValues<T_Blueprint> {
-        const fields = mapFieldValues<T_Blueprint>(this.blueprint.fields, this.staticValues);
-        const evaluated: Record<Foundations.Field.Id, unknown> = { ...fields };
+
+        const inputs       = this.context.workflowQueryAPI.getInputs(this.workflowNode.id);
+        const fields       = this.context.workflowQueryAPI.getFields(this.workflowNode.id);
+        const staticValues = this.context.workflowQueryAPI.getStaticValues(this.workflowNode.id);
+
+        const fieldValues = mapFieldValues<T_Blueprint>(fields, staticValues);
+
+        const evaluated: Record<Foundations.Field.Id, unknown> = { ...fieldValues };
 
         // Project each port value to its plain-object form before injecting as @in —
         // raw LC instances (BaseChatModel, BaseRetriever, etc.) contain functions that
         // can't be structured-cloned into the isolate.
         const projectedIncoming: Record<Port.Input.Id, Projection> = {};
-        for (const input of this.blueprint.inputs) {
+        for (const input of inputs) {
             const value = incoming[input.id];
             projectedIncoming[input.id] = Synthesizer.project(value, input.variant);
         }
         this.projectedIn = projectedIncoming;
 
+
         this.context.airlockAPI.executeSync(
             {
-                [Airlock.GLOBALS.in]: projectedIncoming,
-                [Airlock.GLOBALS.nodeId]: this.workflowNode.id,
+                [Airlock.Globals.IN]: projectedIncoming,
+                [Airlock.Globals.NODE_ID]: this.workflowNode.id,
             },
             (evaluate) => {
-                for (const field of this.blueprint.fields) {
+                for (const field of fields) {
                     // Item-scoped fields are resolved per-element via evalItemField, not here —
                     // `$item` isn't bound during this node-level pass.
                     if (field.itemScoped === true) continue;
@@ -133,7 +135,7 @@ export abstract class RuntimeNode<
                         if (!Array.isArray(raw))
                             continue;
 
-                        evaluated[field.id] = raw.map(entry =>
+                        evaluated[field.id] = raw.map(entry => 
                             entry.isExpression && typeof entry.value === "string"
                                 ? { ...entry, value: !!evaluate(Airlock.Source.asExpression(entry.value)) }
                                 : entry
@@ -141,9 +143,12 @@ export abstract class RuntimeNode<
                         continue;
                     }
 
-                    if (!Foundations.Field.isExpression(field)) continue;
+                    if (!Foundations.Field.isExpression(field)) 
+                        continue;
+                    
                     const raw = evaluated[field.id];
-                    if (typeof raw !== "string") continue;
+                    if (typeof raw !== "string") 
+                        continue;
 
                     evaluated[field.id] = evaluate(
                         Airlock.Source.asExpression(raw),
@@ -183,11 +188,14 @@ export abstract class RuntimeNode<
     ): R[] {
         const variant = options?.itemVariant ?? "Unresolved";
 
+        const fields       = this.context.workflowQueryAPI.getFields(this.workflowNode.id);
+        const staticValues = this.context.workflowQueryAPI.getStaticValues(this.workflowNode.id);
+
         // Resolve raw value + isExpression once per field, reused across every iteration.
-        const rawValues = mapFieldValues<T_Blueprint>(this.blueprint.fields, this.staticValues)
+        const rawValues = mapFieldValues<T_Blueprint>(fields, staticValues);
         const meta      = new Map<Foundations.Field.Id, { raw: unknown, isExpression: boolean }>();
 
-        for (const field of this.blueprint.fields)
+        for (const field of fields)
             meta.set(field.id, {
                 raw: rawValues[field.id],
                 isExpression: Foundations.Field.isExpression(field)
@@ -195,8 +203,8 @@ export abstract class RuntimeNode<
 
         return this.context.airlockAPI.executeSync(
             {
-                [Airlock.GLOBALS.in]:     this.projectedIn,
-                [Airlock.GLOBALS.nodeId]: this.workflowNode.id,
+                [Airlock.Globals.IN]:     this.projectedIn,
+                [Airlock.Globals.NODE_ID]: this.workflowNode.id,
             },
             (evaluate, setTransient) => {
                 const evalField = (<K extends keyof InferItemFields<T_Blueprint>>(
@@ -208,13 +216,15 @@ export abstract class RuntimeNode<
                     if (!m || !m.isExpression || typeof m.raw !== "string")
                         return m?.raw as InferItemFields<T_Blueprint>[K];
 
-                    return evaluate(Airlock.Source.asExpression(m.raw), coerceTo) as InferItemFields<T_Blueprint>[K];
+                    const expression = Airlock.Source.asExpression(m.raw);
+
+                    return evaluate(expression, coerceTo) as InferItemFields<T_Blueprint>[K];
                 });
 
                 return items.map((item, index) => {
                     setTransient({
-                        [Airlock.GLOBALS.item]:      Synthesizer.project(item, variant),
-                        [Airlock.GLOBALS.itemIndex]: index,
+                        [Airlock.Globals.ITEM]:       Synthesizer.project(item, variant),
+                        [Airlock.Globals.ITEM_INDEX]: index,
                     });
                     return fn({ item, index, evalField });
                 });

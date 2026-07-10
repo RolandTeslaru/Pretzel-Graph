@@ -1,7 +1,30 @@
 import { Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
+import { ShelfSDK } from "../../ShelfSDK/sdk";
 
 export const cacheReducers = {
+    resolvedShape: {
+        recreate: (s, nodeId) => {
+            const node = s.data.nodes[nodeId];
+            if (!node) {
+                delete s.cache.resolvedShape[nodeId];
+                return;
+            }
+
+            const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
+            if (!blueprint) {
+                delete s.cache.resolvedShape[nodeId];
+                return;
+            }
+
+            s.cache.resolvedShape[nodeId] = Workflow.resolveShape(s.data, node, blueprint);
+        },
+        recreateAll: (s) => {
+            s.cache.resolvedShape = {};
+            for (const nodeId of Object.keys(s.data.nodes) as Workflow.Node.Id[])
+                cacheReducers.resolvedShape.recreate(s, nodeId);
+        },
+    },
     ensureIncomingNodeEdges: (s, nodeId) => {
         if (!s.cache.incomingEdgesMap[nodeId])
             s.cache.incomingEdgesMap[nodeId] = {};
@@ -44,6 +67,7 @@ export const cacheReducers = {
 
         delete s.cache.inputHandlesMap[deletedNodeId];
         delete s.cache.outputHandlesMap[deletedNodeId];
+        delete s.cache.resolvedShape[deletedNodeId];
     },
     createNode: (s, newNode) => {
         const ingoerEdges = {}
@@ -53,10 +77,15 @@ export const cacheReducers = {
 
         s.cache.inputHandlesMap[newNode.id] = {}
         s.cache.outputHandlesMap[newNode.id] = {}
+        cacheReducers.resolvedShape.recreate(s, newNode.id);
     }
 } satisfies INTERNAL_CacheReducers
 
 type INTERNAL_CacheReducers = {
+    resolvedShape: {
+        recreate: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
+        recreateAll: (state: WorkbenchSDK.State) => void
+    }
     ensureIncomingNodeEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Workflow.Node.Id, Workflow.Edge.Id>
     ensureOutgoingNodeEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Workflow.Node.Id, Workflow.Edge.Id>
     deleteEdge: (state: WorkbenchSDK.State, edge: Workflow.Edge) => void

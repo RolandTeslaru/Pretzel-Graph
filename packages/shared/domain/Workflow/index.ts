@@ -35,6 +35,7 @@ export namespace Workflow {
     export import Cache        = CacheMod.Cache
 
     export const createCache        = CacheMod.createCache
+    export const resolveShape       = CacheMod.resolveShape
     export const deriveArcs         = CacheMod.deriveArcs
     export const deriveReversedArcs = CacheMod.deriveReversedArcs
 

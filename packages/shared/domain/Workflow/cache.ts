@@ -1,9 +1,17 @@
+import type { Dependency } from "./dependency";
+import { resolveInputs, resolveOutputs } from "./resolvers";
+import type { Blueprint } from "../Foundations/Blueprint";
 import { Port } from "../Foundations/Port";
+import type { Field } from "../Foundations/Field";
 import { Data } from "./data";
 import { Edge } from "./edge";
 import { NodeId, EdgeId } from "./ids";
+import type { Node } from "./node";
 
 export interface Cache {
+
+    resolvedShape: Record<NodeId, Cache.ResolvedShape>,
+
     // Expanded edges, rebuilt from the id-only `data.edges` on every cache build. This is the
     // derived source for the fat `{id, source, target}` shape; `data.edges` stays id-only.
     edges: Record<EdgeId, Edge>,
@@ -39,8 +47,15 @@ export interface Cache {
 }
 
 export namespace Cache {
+    export interface ResolvedShape {
+        fields:  readonly Field[]
+        inputs:  Port.Input[]
+        outputs: Port.Output[]
+    }
+
     export const INITIAL = {
         edges: {},
+        resolvedShape: {},
         incomingEdgesMap: {},
         outgoingEdgesMap: {},
         inputHandlesMap: {},
@@ -48,9 +63,28 @@ export namespace Cache {
     }
 }
 
-export function createCache(data: Data): Cache {
+function getNodeDependency(data: Data, node: Node.Raw): Dependency | null {
+    const ref = node.dependencyRef;
+    if (!ref) return null;
+    const store = ref.mode === "publication" ? data.dependencies.published : data.dependencies.draft;
+    return store[ref.workflowId] ?? null;
+}
+
+export function resolveShape(data: Data, node: Node.Raw, blueprint: Blueprint): Cache.ResolvedShape {
+    const dependency = getNodeDependency(data, node);
+    const fields = node.addedFields?.length ? [...blueprint.fields, ...node.addedFields] : blueprint.fields;
+
+    return {
+        fields,
+        inputs: resolveInputs(blueprint.inputs, node, dependency),
+        outputs: resolveOutputs(blueprint.outputs, node, dependency),
+    };
+}
+
+export function createCache(data: Data, blueprints: Record<Blueprint.Id, Blueprint>): Cache {
     const cache = {
         edges: {},
+        resolvedShape: {},
         incomingEdgesMap: {},
         outgoingEdgesMap: {},
         inputHandlesMap: {},
@@ -58,10 +92,19 @@ export function createCache(data: Data): Cache {
     } as Cache;
 
     Object.values(data.nodes).forEach(node => {
+        
         cache.outgoingEdgesMap[node.id] = {};
         cache.incomingEdgesMap[node.id] = {};
         cache.inputHandlesMap[node.id] = {};
         cache.outputHandlesMap[node.id] = {};
+
+        if (blueprints) {
+            const blueprint = blueprints[node.reconciledBlueprintId ?? node.blueprintId];
+            if(!blueprint)
+                throw new Error(`Cannot create cache for node ${node.id}: blueprint ${node.reconciledBlueprintId ?? node.blueprintId} not found.`)
+
+            cache.resolvedShape[node.id] = resolveShape(data, node, blueprint);
+        }
     })
 
     // data.edges is id-only; expand each into its fat form here (the single split point).

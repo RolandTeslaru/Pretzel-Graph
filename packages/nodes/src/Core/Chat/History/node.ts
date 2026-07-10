@@ -14,7 +14,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ): Promise<InferOutputs<typeof Blueprint>> {
         const { overwrite, append } = incoming;
 
-        const chatId = this.context.chat_id;
+        const chatId = this.context.igniter.chat_id;
 
         if (!chatId)
             throw new Error("Chat ID is required for Chat History node");

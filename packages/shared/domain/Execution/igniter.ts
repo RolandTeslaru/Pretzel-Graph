@@ -11,6 +11,7 @@ export namespace Igniter {
     export const Base = z.object({
         record: z.boolean().optional(),
         debug: z.boolean().optional(),
+        chat_id: Chat.Id.optional(),
     })
 
     export const WorkbenchManual = Base.extend({

@@ -35,7 +35,6 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.Integer({
             id: "maxTokens",
             displayName: "Max Tokens",
-            initialValue: 2048,
             min: 1,
             step: 1,
             tooltip: "The maximum number of tokens to generate in the chat completion.",

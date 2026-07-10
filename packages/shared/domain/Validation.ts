@@ -2,17 +2,6 @@ import { Workflow } from "./Workflow"
 import { Port } from "./Foundations/Port"
 import { Foundations } from "./Foundations";
 
-type Blueprints = Record<Foundations.Blueprint.Id, Foundations.Blueprint>;
-
-// Resolve a node's attached subworkflow dependency record from the workflow's dependency state,
-// so its exposed ports are derived during validation just like on the read path.
-function getNodeDependency(workflowData: Workflow.Data, node: Workflow.Node.Raw): Workflow.Dependency | null {
-    const ref = node.dependencyRef;
-    if (!ref) return null;
-    const store = ref.mode === "publication" ? workflowData.dependencies.published : workflowData.dependencies.draft;
-    return store[ref.workflowId] ?? null;
-}
-
 type Connection = {
     source: Workflow.Node.Id;
     target: Workflow.Node.Id;
@@ -90,18 +79,20 @@ export namespace Validation {
         export namespace Node {
             export function check(
                 node: Workflow.Node.Raw, 
-                fields: readonly Foundations.Field[], 
-                inputs: readonly Port.Input[], 
                 workflowData: Workflow.Data, 
                 cache: Workflow.Cache
             ) {
+                const shape = cache.resolvedShape[node.id];
+                if (!shape)
+                    throw new Error(`Cannot validate node ${node.id}: resolved shape was not provided.`);
+
                 const nodeIssues: Issue.Node = { fields: {}, inputs: {} }
 
                 let numFieldIssues = 0;
                 let numInputIssues = 0;
 
 
-                for (const field of fields) {
+                for (const field of shape.fields) {
                     const fieldIssue = Issue.Field.check(field, node.id, workflowData)
                     if (fieldIssue) {
                         nodeIssues.fields[field.id] = fieldIssue
@@ -109,7 +100,7 @@ export namespace Validation {
                     }
                 }
 
-                for (const input of inputs) {
+                for (const input of shape.inputs) {
                     const inputIssue = Issue.Input.check(input, node.id, workflowData, cache)
                     if (inputIssue) {
                         nodeIssues.inputs[input.id] = inputIssue
@@ -128,20 +119,14 @@ export namespace Validation {
             nodes: Record<Workflow.Node.Id, Issue.Node>
             cycles: Issue.Cycle[]
         }
-        export function checkWorkflow(workflowData: Workflow.Data, cycles: Workflow.Node.Id[][], cache: Workflow.Cache, blueprints: Blueprints) {
+        export function checkWorkflow(workflowData: Workflow.Data, cycles: Workflow.Node.Id[][], cache: Workflow.Cache) {
             const issues: Issue.Workflow_ = {
                 nodes: {},
                 cycles: []
             }
 
             for (const node of Object.values(workflowData.nodes)) {
-                const blueprint = blueprints[node.reconciledBlueprintId ?? node.blueprintId];
-                if (!blueprint)
-                    throw new Error(`Cannot validate node ${node.id}: blueprint "${node.reconciledBlueprintId ?? node.blueprintId}" was not provided.`);
-
-                const inputs = Workflow.Node.resolveInputs(blueprint.inputs, node, getNodeDependency(workflowData, node));
-
-                const nodeIssues = Node.check(node, blueprint.fields, inputs, workflowData, cache)
+                const nodeIssues = Node.check(node, workflowData, cache)
                 if (nodeIssues)
                     issues.nodes[node.id] = nodeIssues
             }
@@ -286,7 +271,7 @@ export namespace Validation {
 
 
     export namespace Connection {
-        export function isValid(conn: Connection, workflowData: Workflow.Data, cache: Workflow.Cache, blueprints: Blueprints) {
+        export function isValid(conn: Connection, workflowData: Workflow.Data, cache: Workflow.Cache) {
 
             const sourceNode = workflowData.nodes[conn.source];
             const targetNode = workflowData.nodes[conn.target];
@@ -303,13 +288,13 @@ export namespace Validation {
             if (doesEdgeAlreadyExist(workflowData, sourceNode.id, sourceHandleId, targetNode.id, targetHandleId))
                 return false;
 
-            const sourceBp = blueprints[sourceNode.reconciledBlueprintId ?? sourceNode.blueprintId];
-            const targetBp = blueprints[targetNode.reconciledBlueprintId ?? targetNode.blueprintId];
-            if (!sourceBp || !targetBp)
+            const sourceShape = cache.resolvedShape[sourceNode.id];
+            const targetShape = cache.resolvedShape[targetNode.id];
+            if (!sourceShape || !targetShape)
                 return false;
 
-            const sourcePort = Workflow.Node.resolveOutputs(sourceBp.outputs, sourceNode, getNodeDependency(workflowData, sourceNode)).find(o => o.id === sourceHandleId);
-            const targetPort = Workflow.Node.resolveInputs(targetBp.inputs, targetNode, getNodeDependency(workflowData, targetNode)).find(i => i.id === targetHandleId);
+            const sourcePort = sourceShape.outputs.find(o => o.id === sourceHandleId);
+            const targetPort = targetShape.inputs.find(i => i.id === targetHandleId);
 
             if (!arePortsCompatible(sourcePort, targetPort))
                 return false;

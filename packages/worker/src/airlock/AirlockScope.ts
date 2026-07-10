@@ -7,16 +7,16 @@ import { AirlockError, AirlockTerminationError } from "./errors";
 
 // Persistent scope globals — set once at creation, never transiently.
 const RESERVED_GLOBALS: ReadonlySet<string> = new Set([
-    Airlock.GLOBALS.workflow,
-    Airlock.GLOBALS.igniter,
-    Airlock.GLOBALS.chatId,
-    Airlock.GLOBALS.globals,
-    Airlock.GLOBALS.metrics,
+    Airlock.Globals.WORKFLOW,
+    Airlock.Globals.IGNITER,
+    Airlock.Globals.CHAT_ID,
+    Airlock.Globals.GLOBALS,
+    Airlock.Globals.METRICS,
 ]);
 
 // Large, bound-once globals routed through the lazy bridge instead of copy:true. `$item` stays
 // copied — it's per-element in a hot loop where per-iteration bridge-install would regress.
-const LAZY_GLOBALS: ReadonlySet<string> = new Set([Airlock.GLOBALS.in]);
+const LAZY_GLOBALS: ReadonlySet<string> = new Set([Airlock.Globals.IN]);
 
 // One ivm.Context per env, reused across re-fires. Shares the service's isolate + cache via `compiler`.
 export class AirlockScope implements Airlock.API {

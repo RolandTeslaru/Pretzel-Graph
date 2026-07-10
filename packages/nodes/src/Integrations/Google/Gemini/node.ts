@@ -16,11 +16,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.googleGeminiApi.blob);
 
         const thinkingBudget = this.fieldValues.thinkingBudget;
+        const maxOutputTokens = this.fieldValues.maxOutputTokens;
 
         this.llm = new ChatGoogleGenerativeAI({
             model: this.fieldValues.model,
             temperature: this.fieldValues.temperature,
-            maxOutputTokens: this.fieldValues.maxOutputTokens,
+            ...(typeof maxOutputTokens === "number" ? { maxOutputTokens } : {}),
             topP: this.fieldValues.topP,
             topK: this.fieldValues.topK,
             // Omit thinkingConfig for legacy nodes saved before this field existed

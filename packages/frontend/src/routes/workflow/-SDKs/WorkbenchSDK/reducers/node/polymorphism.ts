@@ -17,6 +17,7 @@ export const nodePolymorphismReducers = {
 
         node.polymorphicResolutions = node.polymorphicResolutions ?? {};
         node.polymorphicResolutions[polymorphicGroupId] = resolvedVariant;
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
     unresolveGroup: (s, nodeId, polymorphicGroupId) => {
         const node = s.data.nodes[nodeId];
@@ -28,6 +29,8 @@ export const nodePolymorphismReducers = {
 
         if(Object.values(node.polymorphicResolutions).length === 0)
             delete node.polymorphicResolutions
+
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
 } satisfies NodePolymorphismReducers
 

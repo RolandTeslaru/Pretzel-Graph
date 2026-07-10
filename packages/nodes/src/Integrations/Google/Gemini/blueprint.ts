@@ -38,7 +38,6 @@ export const Blueprint = defineBlueprint({
             id: "maxOutputTokens",
             displayName: "Max Output Tokens",
             required: false,
-            initialValue: 16384,
             min: 1,
             step: 1,
             tooltip: "Maximum tokens to generate. For reasoning models (Gemini 3, 2.5) thinking tokens count against this budget — set it high enough to fit both reasoning and the final answer, or responses get truncated (finishReason: MAX_TOKENS).",

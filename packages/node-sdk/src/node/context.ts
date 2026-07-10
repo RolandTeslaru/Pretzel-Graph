@@ -1,4 +1,4 @@
-import { Airlock, Chat, Execution, Workflow } from "@pretzel-graph/shared/domain";
+import { Airlock, Execution, Workflow } from "@pretzel-graph/shared/domain";
 import {
     RealtimeAPI,
     CatalogueAPI,
@@ -16,7 +16,7 @@ import {
 
 export interface ExecutionContext {
     readonly executionId:             Execution.Id,
-    readonly chat_id:                 Chat.Id | null | undefined,
+    readonly igniter:                 Execution.Igniter,
     readonly session:                 Execution.Session,
     readonly updateSession:           (recipe: (draft: Execution.Session) => void) => void,
 

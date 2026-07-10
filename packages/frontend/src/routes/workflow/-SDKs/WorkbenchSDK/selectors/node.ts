@@ -156,29 +156,13 @@ export const nodeSelectors = {
         return null
     },
     getInputs: (s, nodeId) => {
-        const node = s.data.nodes[nodeId];
-        if(!node)
-            return [];
-        const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
-        const dependency = s.selectors.node.getDependency(s, nodeId);
-
-        return Workflow.Node.resolveInputs(blueprint.inputs, node, dependency);
+        return s.cache.resolvedShape[nodeId]?.inputs ?? [];
     },
     getOutputs: (s, nodeId) => {
-        const node = s.data.nodes[nodeId];
-        if(!node)
-            return [];
-        const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
-        const dependency = s.selectors.node.getDependency(s, nodeId);
-
-        return Workflow.Node.resolveOutputs(blueprint.outputs, node, dependency);
+        return s.cache.resolvedShape[nodeId]?.outputs ?? [];
     },
     getFields: (s, nodeId) => {
-        const node = s.data.nodes[nodeId];
-        const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
-
-        if (!node.addedFields?.length) return blueprint.fields;
-        return [...blueprint.fields, ...node.addedFields];
+        return s.cache.resolvedShape[nodeId]?.fields ?? [];
     },
     getBlueprint: (s, nodeId) => {
         const node = s.data.nodes[nodeId];

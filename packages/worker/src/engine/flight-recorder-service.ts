@@ -47,8 +47,6 @@ export class FlightRecorderService {
         const unitId    = Execution.Recording.UnitOfWork.createId(nodeId)
         const startedAt = performance.now() - this.origin
 
-        const wfNode = this.recording.workflowDataSnapshot.nodes[nodeId]
-
         const unit: Execution.Recording.UnitOfWork = {
             id:             unitId,
             trackId:        nodeId,

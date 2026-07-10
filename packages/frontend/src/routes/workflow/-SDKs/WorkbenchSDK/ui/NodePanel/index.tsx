@@ -1,8 +1,6 @@
 import { Input, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import React, { useMemo, memo, useEffect, useState } from 'react'
 import { WorkbenchSDK } from '../../sdk'
-import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
-import type { NodeUI } from '../../selectors/node'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
@@ -36,13 +34,12 @@ const SidebarAccordionItem = ({ label, value, children }: SidebarAccordionItemPr
 
 const NodeSidebar = () => {
 
-    const clickedNodeId = WorkbenchSDK.useStore(s => s.selectors.getClickedNode(s)?.id ?? "" as Workflow.Node.Id);
     const isFullscreen = DialogSDK.useStore(s => s.selectors.isDialogOpen(s, "fullscreen-node-panel"));
 
-    const hyNode = WorkbenchSDK.useNode(clickedNodeId)
+    const hyNode = WorkbenchSDK.useSelectedNode()
 
     useEffect(() => {
-        if (clickedNodeId && hyNode && !isFullscreen) {
+        if (hyNode && !isFullscreen) {
             StackSDK.actions.push("nodeSidebar" as StackSDK.Panel.Id, (props) => (
                 <StackSDK.Template {...props}>
                     <Content hyNode={hyNode} />
@@ -51,7 +48,7 @@ const NodeSidebar = () => {
         } else
             StackSDK.actions.pop("nodeSidebar" as StackSDK.Panel.Id)
             
-    }, [clickedNodeId, isFullscreen])
+    }, [hyNode?.id, isFullscreen])
 
     return null
 }
@@ -90,7 +87,6 @@ export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
 
             fields.push(field)
         })
-
 
         return [
             fields,
