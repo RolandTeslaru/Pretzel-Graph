@@ -32,7 +32,6 @@ const isValidConnectionCallback = (conn: Connection | Edge) => {
         conn as WorkbenchSDK.DriverConnection,
         state.data,
         state.cache,
-        state.selectors.getBlueprints(state)
     );
 }
 
@@ -70,7 +69,6 @@ export const Port: React.FC<Props> = ({ type, port, nodeId, isFlipped }) => {
             conn as WorkbenchSDK.DriverConnection,
             state.data,
             state.cache,
-            state.selectors.getBlueprints(state)
         )
     }, [draggedHandle])
 
@@ -137,4 +135,3 @@ export const Port: React.FC<Props> = ({ type, port, nodeId, isFlipped }) => {
         </Tooltip.Root>
     )
 }
-

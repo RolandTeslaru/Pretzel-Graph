@@ -81,6 +81,7 @@ export const dependencyReducers = {
         s.reducers.dependency.register(s, mode, dependency)
 
         s.data.nodes[nodeId].dependencyRef = { workflowId, mode };
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
         s.isDirty = true
         s.reducers.node.validate(s, nodeId)
     },
@@ -93,8 +94,10 @@ export const dependencyReducers = {
         // Ports / ui / fields all derive from the registered record on read, so there's no node to
         // recreate — just re-validate the nodes that reference it against their new shape.
         for (const node of Object.values(s.data.nodes))
-            if (node.dependencyRef?.workflowId === workflowId && node.dependencyRef?.mode === mode)
+            if (node.dependencyRef?.workflowId === workflowId && node.dependencyRef?.mode === mode) {
+                s.reducers.cache.resolvedShape.recreate(s, node.id)
                 s.reducers.node.validate(s, node.id)
+            }
 
         if (mode === "publication")
             delete s.dependencyUpdates.published[workflowId]

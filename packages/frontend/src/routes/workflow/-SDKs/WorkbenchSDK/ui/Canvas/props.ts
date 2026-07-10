@@ -152,7 +152,6 @@ export const createCanvasCallbacks = (
                     newConn as WorkbenchSDK.DriverConnection,
                     state.data,
                     state.cache,
-                    state.selectors.getBlueprints(state)
                 ) === false
             )
                 return;

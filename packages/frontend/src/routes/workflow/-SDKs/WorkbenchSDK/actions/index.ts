@@ -12,6 +12,7 @@ import { createDependencyActions, type DependencyActions } from './dependency';
 import { clipboardActions } from './clipboard';
 import { DialogSDK } from '@/SDKs/DialogSDK';
 import React from 'react';
+import { ShelfSDK } from '../../ShelfSDK/sdk';
 
 const FullScreenNodePanel = React.lazy(() => import('../ui/NodePanel/fullscreen'));
 
@@ -59,12 +60,18 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             undo: () => {
                 const sv = sdk.state.data.staticValues;
                 (sdk.useStore as any).temporal.getState().undo();
-                setState(s => { s.data.staticValues = sv });
+                setState(s => {
+                    s.data.staticValues = sv;
+                    s.cache = Workflow.createCache(s.data, ShelfSDK.state.blueprints);
+                });
             },
             redo: () => {
                 const sv = sdk.state.data.staticValues;
                 (sdk.useStore as any).temporal.getState().redo();
-                setState(s => { s.data.staticValues = sv });
+                setState(s => {
+                    s.data.staticValues = sv;
+                    s.cache = Workflow.createCache(s.data, ShelfSDK.state.blueprints);
+                });
             }
         },
         layout: {

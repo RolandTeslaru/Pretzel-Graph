@@ -3,6 +3,7 @@ import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import type { WorkbenchSDK } from "../sdk";
 import { cloneDeep } from 'lodash';
 import { Algorithms } from "@pretzel-graph/shared/domain/Algorithms";
+import { ShelfSDK } from "../../ShelfSDK/sdk";
 
 export const workflowReducers = {
     open: (s, workflow) => {
@@ -24,7 +25,7 @@ export const workflowReducers = {
         s.workflowId = workflow.id;
         s.data = data;
         s.isDirty = prunedCount > 0;
-        s.cache = Workflow.createCache(data);
+        s.cache = Workflow.createCache(data, ShelfSDK.state.blueprints);
         s.cycles = [];
         s.stronglyConnectedComponents = [];
         s.issues = {
@@ -57,11 +58,11 @@ export const workflowReducers = {
     close: (s) => {
         s.workflowId = '' as Workflow.Id;
         s.data = cloneDeep(Workflow.INITIAL.data);
-        s.cache = Workflow.createCache(cloneDeep(Workflow.INITIAL.data));
+        s.cache = Workflow.createCache(cloneDeep(Workflow.INITIAL.data), {});
         s.isDirty = false;
     },
     validate: (s) => {
-        const issues = Validation.Issue.checkWorkflow(s.data, s.cycles, s.cache, s.selectors.getBlueprints(s));
+        const issues = Validation.Issue.checkWorkflow(s.data, s.cycles, s.cache);
         s.issues = issues;
     },
     setFields: (s, fields) => {

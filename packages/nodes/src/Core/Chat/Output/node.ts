@@ -17,7 +17,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     }
 
     protected override async onCompile() {
-        this.chatId = this.context.chat_id ?? null;
+        this.chatId = this.context.igniter.chat_id ?? null;
 
         if (!this.chatId)
             return;

@@ -102,15 +102,15 @@ export class AirlockService {
 
         // Execution-scoped mutable scratch ($globals / $nodeGlobals). Set once, never cleared,
         // survives across re-fires, dies with the isolate at execution end.
-        global.setSync(Airlock.GLOBALS.globals, {}, { copy: true });
+        global.setSync(Airlock.Globals.GLOBALS, {}, { copy: true });
 
         // Per-env metric scratch ($metrics) — author-written rollups, read back at the sub-run boundary.
-        global.setSync(Airlock.GLOBALS.metrics, {}, { copy: true });
+        global.setSync(Airlock.Globals.METRICS, {}, { copy: true });
 
-        global.setSync(Airlock.GLOBALS.workflow, wfCopy.copyInto());
-        global.setSync(Airlock.GLOBALS.igniter, perScope.igniter, { copy: true });
+        global.setSync(Airlock.Globals.WORKFLOW, wfCopy.copyInto());
+        global.setSync(Airlock.Globals.IGNITER, perScope.igniter, { copy: true });
         if (perScope.chatId !== undefined)
-            global.setSync(Airlock.GLOBALS.chatId, perScope.chatId, { copy: true });
+            global.setSync(Airlock.Globals.CHAT_ID, perScope.chatId, { copy: true });
 
         return new AirlockScope(this, context, this.timeoutMs);
     }

@@ -20,6 +20,7 @@ export const inputReducers = {
             node.addedInputs?.splice(inputIndex, 1);
         }
         delete staticValues[inputId];
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
     disconnectIfConnected: (s, nodeId, inputId) => {
         s.isDirty = true;
@@ -51,6 +52,7 @@ export const inputReducers = {
         node.addedInputs = node.addedInputs ?? [];
 
         node.addedInputs.push(input);
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
     }
 } satisfies InputReducers
 

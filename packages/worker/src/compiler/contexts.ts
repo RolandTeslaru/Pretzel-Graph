@@ -17,7 +17,6 @@ export function createContexts(params: {
     workflowId:          Workflow.Id,
     workflowData:        Workflow.Data,
     workflowCache:       Workflow.Cache,
-    airlockScope:        RuntimeNode.ExecutionContext["airlockAPI"],
     graph:               S2Graph,
     credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
     realtime:            RealtimeService,
@@ -25,39 +24,36 @@ export function createContexts(params: {
 }): { nodeExecutionCtx: RuntimeNode.ExecutionContext; engineExecutionCtx: AggexEngine.Execution.Context } {
     const {
         engine, airlock, execution, workflowId, workflowData, workflowCache,
-        airlockScope, graph, credentialInstances, realtime, enclosingNodeAPI,
+        graph, credentialInstances, realtime, enclosingNodeAPI,
     } = params;
 
     const ctxRef = { current: null! as AggexEngine.Execution.Context };
-    const apis = createExecutionAPIs(engine, airlock, ctxRef, execution, workflowData, credentialInstances, realtime);
+    const apis = createExecutionAPIs(engine, airlock, ctxRef, execution, workflowId, workflowData, credentialInstances, realtime);
 
-    const nodeExecutionCtx = {
+    const base = {
         executionId: execution.id,
+        igniter: execution.igniter,
         workflowId,
-        chat_id: execution.chat_id,
         workflowData,
         workflowCache,
-        airlockAPI: airlockScope,
-        get session() { return execution.session; },
         enclosingNodeAPI,
-        ...apis,
+        ...apis
+    }
+
+    const nodeExecutionCtx = {
+        ...base,
+        // Keep this getter on the final object. Object spread evaluates accessors, which
+        // would otherwise freeze `session` to the initial value while updateSession replaces it.
+        get session() { return execution.session; },
     } satisfies RuntimeNode.ExecutionContext
 
     const engineExecutionCtx = {
-        executionId: execution.id,
-        workflowId,
-        chat_id: execution.chat_id,
-        workflowData,
-        workflowCache,
-        airlockAPI: airlockScope,
+        ...base,
         get session() { return execution.session; },
         compiledGraph: graph,
         activeNodes: new Set(),
         errorChannel: new Map(),
-        // "Execute up until this point": abort once this node completes (full graph runs normally).
         stopAtNodeId: execution.igniter.variant === "workbench_step" ? execution.igniter.targetNodeId : undefined,
-        enclosingNodeAPI,
-        ...apis,
     } satisfies AggexEngine.Execution.Context
 
     ctxRef.current = engineExecutionCtx;

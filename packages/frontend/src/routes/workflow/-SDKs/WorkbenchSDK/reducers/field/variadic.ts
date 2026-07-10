@@ -49,6 +49,8 @@ export const fieldVariadicReducers = {
             node.addedOutputs = node.addedOutputs ?? [];
             node.addedOutputs.push(newOutput);
         }
+
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
     // Removes the last slot in the variadic group. Guards against removing below
     // 1 slot so the group always retains at least one input and one output.
@@ -71,6 +73,8 @@ export const fieldVariadicReducers = {
             if (idx !== undefined && idx !== -1)
                 node.addedOutputs?.splice(idx, 1);
         }
+
+        s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
 } satisfies FieldVariadicReducers
 

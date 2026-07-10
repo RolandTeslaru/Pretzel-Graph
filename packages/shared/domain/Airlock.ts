@@ -1,8 +1,6 @@
 import { Field } from "./Foundations/Field"
 import { Workflow } from "./Workflow"
 
-// Pure compile-time layer (no isolated-vm): $key registry + sigil rewrite + brands.
-// Pipeline: Source → parse() → ParsedSource → ivm.Script → value
 export namespace Airlock {
 
     export namespace Source {
@@ -17,36 +15,33 @@ export namespace Airlock {
     // Re-thrown by nodes (never swallowed): OOM disposed the shared isolate.
     export const TERMINATION_ERROR_NAME = "AirlockTerminationError"
 
-    export const GLOBALS = {
-        workflow: "__workflow__",
-        igniter:  "__igniter__",
-        chatId:    "__chatId__",
-        in:        "__in__",
-        item:      "__item__",
-        itemIndex: "__item_index__",
-        nodeId:    "__node_id__",
-        globals:   "__globals__",
-        metrics:   "__metrics__",
+    export const Globals = {
+        WORKFLOW:   "__workflow__",
+        IGNITER:    "__igniter__",
+        CHAT_ID:    "__chatId__",
+        IN:         "__in__",
+        ITEM:       "__item__",
+        ITEM_INDEX: "__item_index__",
+        NODE_ID:    "__node_id__",
+        GLOBALS:    "__globals__",
+        METRICS:    "__metrics__",
     } as const
 
     const CONFIG_NODE_KEY = Workflow.WORKFLOW_CONFIG_NODE_ID
 
     const STATIC_ROOTS: Record<string, string> = {
-        workflow: GLOBALS.workflow,
-        config:   `${GLOBALS.workflow}.staticValues[${JSON.stringify(CONFIG_NODE_KEY)}]`,
-        igniter:  GLOBALS.igniter,
-        chatId:   GLOBALS.chatId,
-        in:        GLOBALS.in,
-        item:      GLOBALS.item,
-        itemIndex: GLOBALS.itemIndex,
-        node:      `${GLOBALS.workflow}.nodes[${GLOBALS.nodeId}]`,
-        // Execution-scoped mutable scratch. `$nodeGlobals` is `$globals[<this node id>]`,
-        // auto-created (`??= {}`) so reads/writes never hit undefined.
-        globals:     GLOBALS.globals,
-        nodeGlobals: `(${GLOBALS.globals}[${GLOBALS.nodeId}] ??= {})`,
-        // Per-env metric scratch. Authors write rollups (`$metrics.cost = ...`); the enclosing
-        // Execute Sub-Workflow node reads it back after the sub-run and surfaces it as UoW metrics.
-        metrics:     GLOBALS.metrics,
+        workflow:  Globals.WORKFLOW,
+        igniter:   Globals.IGNITER,
+        chatId:    Globals.CHAT_ID,
+        in:        Globals.IN,
+        item:      Globals.ITEM,
+        itemIndex: Globals.ITEM_INDEX,
+        globals:   Globals.GLOBALS,
+        metrics:   Globals.METRICS,
+        
+        config:      `${Globals.WORKFLOW}.staticValues[${JSON.stringify(CONFIG_NODE_KEY)}]`,
+        node:        `${Globals.WORKFLOW}.nodes[${Globals.NODE_ID}]`,
+        nodeGlobals: `(${Globals.GLOBALS}[${Globals.NODE_ID}] ??= {})`,
     }
 
     // Matches $root at a word boundary; rewrites only the root, leaving member access intact.
@@ -77,7 +72,7 @@ export namespace Airlock {
 
     // Async fn-expression; $in / $node id bind to params (per-call, can't clobber). Caller applies it.
     export function parseCode(code: Source.Code): ParsedSource {
-        return `(async (${GLOBALS.in}, ${GLOBALS.nodeId}) => { ${rewrite(code)} })` as ParsedSource
+        return `(async (${Globals.IN}, ${Globals.NODE_ID}) => { ${rewrite(code)} })` as ParsedSource
     }
 
     export function coerceTargetForVariant(variant: Field.Variant): CoerceTo | undefined {
