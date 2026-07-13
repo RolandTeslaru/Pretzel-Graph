@@ -77,8 +77,8 @@ export class ChatService {
             payload: Chat.API.Message.Add.Request
         ): Promise<Chat.API.Message.Add.Response> => {
             const supabase = createAuthenticatedClient(token);
-            const { messages } = payload;
-            await this.database.message.add(supabase, messages);
+            const { chatId, messages } = payload;
+            await this.database.message.add(supabase, chatId, messages);
             return {};
         },
 

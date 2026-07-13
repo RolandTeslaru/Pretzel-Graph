@@ -9,18 +9,8 @@ import { InternalChatAPI } from "../internal-api";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
-
-    private chatId: Chat.Id | null = null;
-
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);
-    }
-
-    protected override async onCompile() {
-        this.chatId = this.context.igniter.chat_id ?? null;
-
-        if (!this.chatId)
-            return;
     }
 
     protected override async onRun(
@@ -28,23 +18,21 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ): Promise<InferOutputs<typeof Blueprint>> {
 
         const { messages: lcMessages } = incoming
+        const chatId = Chat.Id.parse(this.fieldValues.chat_id);
 
-        if (!this.chatId)
-            return {};
-
-        const messages: Chat.Message[] = lcMessages.map(lcMsg =>
-            Synthesizer.lcToChatMessage(lcMsg, this.chatId!)
+        const messages = lcMessages.map(lcMsg =>
+            Synthesizer.lcToChatMessage(lcMsg)
         );
 
         this.context.realtimeAPI.emit<Chat.Event.Message.Added>({
             type: "message:added",
-            channel: Chat.Event.getChannel(this.chatId),
-            chatId: this.chatId,
+            channel: Chat.Event.getChannel(chatId),
+            chatId,
             messages
         });
 
         if(this.fieldValues.write_to_session)
-            await InternalChatAPI.messageAdd(this.context.executionId, { messages });
+            await InternalChatAPI.messageAdd(this.context.executionId, chatId, messages);
 
         return {};
     }

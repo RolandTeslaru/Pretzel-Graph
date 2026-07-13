@@ -1,4 +1,4 @@
-import { defineBlueprint, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Chat.History",
@@ -6,7 +6,15 @@ export const Blueprint = defineBlueprint({
     description: "Outputs the message history accumulated in the current chat session.",
     icon: "History",
     accent: "port-Message",
-    fields: [],
+    fields: [
+        FieldBuilder.String({
+            id: "chat_id",
+            displayName: "Chat ID",
+            initialValue: "$igniter.chat_id",
+            isExpression: true,
+            tooltip: "The chat session to read and update.",
+        }),
+    ],
     inputs: [
         InputBuilder.MessageList({
             id: "overwrite",

@@ -2,6 +2,7 @@ import { RegisterNode, Synthesizer } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import { Chat } from "@pretzel-graph/shared/domain";
 import { InternalChatAPI } from "../internal-api";
 
 @RegisterNode(Blueprint.id)
@@ -14,18 +15,15 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ): Promise<InferOutputs<typeof Blueprint>> {
         const { overwrite, append } = incoming;
 
-        const chatId = this.context.igniter.chat_id;
-
-        if (!chatId)
-            throw new Error("Chat ID is required for Chat History node");
+        const chatId = Chat.Id.parse(this.fieldValues.chat_id);
 
         if (overwrite) {
-            const messages = overwrite.map(msg => Synthesizer.lcToChatMessage(msg, chatId));
+            const messages = overwrite.map(msg => Synthesizer.lcToChatMessage(msg));
             await InternalChatAPI.messageOverwrite(this.context.executionId, chatId, messages);
             return { history : overwrite };
         } else if (append) {
-            const messages = append.map(msg => Synthesizer.lcToChatMessage(msg, chatId));
-            await InternalChatAPI.messageAdd(this.context.executionId, { messages });
+            const messages = append.map(msg => Synthesizer.lcToChatMessage(msg));
+            await InternalChatAPI.messageAdd(this.context.executionId, chatId, messages);
         }
 
         const { data } = await InternalChatAPI.messageList(this.context.executionId, chatId);
