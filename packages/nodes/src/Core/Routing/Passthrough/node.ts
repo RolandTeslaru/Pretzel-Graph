@@ -5,8 +5,6 @@ import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    protected override readonly PROPAGATION_STRATEGY = RuntimeNode.PropagationStrategy.ROUTER
-
     protected override async onRun(
         incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
