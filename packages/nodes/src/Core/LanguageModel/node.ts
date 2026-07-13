@@ -23,13 +23,15 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         this.ttftMs = undefined;
         const runStartedAt = performance.now();
 
-        const { systemMessage } = incoming;
-
         const isAnthropic = this.getProviderName(incoming.languageModel) === "anthropic";
 
         const languageModel = incoming.tools?.length && incoming.languageModel.bindTools
             ? incoming.languageModel.bindTools(incoming.tools)
             : incoming.languageModel;
+
+        const systemMessage = new LC.SystemMessage({
+            content: this.fieldValues.systemMessage ?? "",
+        });
 
         const messages = [systemMessage, ...incoming.messages].filter((m): m is LC.BaseMessage => m != null);
 
