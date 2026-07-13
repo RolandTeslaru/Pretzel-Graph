@@ -124,8 +124,8 @@ Both are exposed as auto-appended fields on every node (`signalDependency`, `dat
 ## Propagation strategies (node → downstream)
 
 Set via `RuntimeNode.getPropagationStrategy()`:
-- **`"all"`** (default) — fan out to every dependent.
-- **`"router"`** — fan out only to branches whose output port appears in the result (conditional routing). Edge state for non-taken branches is left untouched.
+- **`"router"`** (default) — fan out only to branches whose output port appears in the result. Edge state for non-taken branches is left untouched.
+- **`"all"`** — fan out to every dependent, regardless of returned output ports.
 - **`"none"`** — suppress automatic fan-out; the node calls `propagationAPI.emitPort` / `emitNode` itself.
 
 ---
