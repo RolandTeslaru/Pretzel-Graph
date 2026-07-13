@@ -15,7 +15,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         try {
             const result = await this.context.airlockAPI.executeAsyncCode(
                 Airlock.Source.asCode(code),
-                this.workflowNode.id,
+                this.nodeId,
                 incoming,
             );
 

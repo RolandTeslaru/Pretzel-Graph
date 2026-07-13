@@ -220,7 +220,7 @@ export class AggexEngine {
         try {
             // Field expressions run in the airlock; a throw/timeout here is the node's
             // failure (→ onErrorStrategy), an OOM force-terminates (handled in handleNodeError).
-            fields = nodeInstance.evaluateFields(inputs);
+            fields = nodeInstance.evaluateFieldValues(inputs);
         } catch (err) {
             return this.errors.handle(ctx, vertexId, err);
         }
@@ -325,7 +325,7 @@ export class AggexEngine {
         const partialInputs = this.nodeIO.getIncomingData(ctx, wfNode.id, arrivedSignals);
         let partialFields;
         try {
-            partialFields = instance.evaluateFields(partialInputs);
+            partialFields = instance.evaluateFieldValues(partialInputs);
         } catch (err) {
             this.errors.handle(ctx, vertexId, err);  // OOM → throws (terminate); else recorded
             return;

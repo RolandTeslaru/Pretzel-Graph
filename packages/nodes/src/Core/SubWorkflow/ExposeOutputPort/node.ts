@@ -11,7 +11,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
 
-        const outputId = this.workflowNode.id as unknown as Port.Output.Id;
+        const outputId = this.nodeId as unknown as Port.Output.Id;
 
         if (!this.context.enclosingNodeAPI)
             throw new Error("No enclosing node API available. This node can only be used within a subworkflow.");

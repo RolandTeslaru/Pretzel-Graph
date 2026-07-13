@@ -23,8 +23,9 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         compilationCtx: WorkflowCompiler.Compilation.Context,
     ): Promise<void> {
         const { compilePath, parentWorkflowIgniter } = compilationCtx;
-        const subWorkflowId  = this.workflowNode.dependencyRef?.workflowId as Workflow.Id;
-        const dependencyMode = this.workflowNode.dependencyRef?.mode ?? "publication";
+        const workflowNode = this.context.workflowQueryAPI.getNode(this.nodeId);
+        const subWorkflowId  = workflowNode?.dependencyRef?.workflowId as Workflow.Id;
+        const dependencyMode = workflowNode?.dependencyRef?.mode ?? "publication";
 
         if (compilePath.includes(subWorkflowId)) {
             const cyclePath = [...compilePath, subWorkflowId];
@@ -32,7 +33,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         }
 
         if (!subWorkflowId)
-            throw new Error(`Missing dependency in Execute Sub-Workflow node ${this.workflowNode.id}`);
+            throw new Error(`Missing dependency in Execute Sub-Workflow node ${this.nodeId}`);
 
         const isDraft = dependencyMode === "draft";
 
@@ -42,7 +43,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const igniter = {
             variant:         "sub_workflow",
-            parentNodeId:    this.workflowNode.id,
+            parentNodeId:    this.nodeId,
             subWorkflowPath: [...compilePath, subWorkflowId],
             record:          parentWorkflowIgniter ? parentWorkflowIgniter.record : false,
             chat_id:         this.context.igniter.chat_id ?? undefined,
@@ -69,10 +70,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const enclosingNodeAPI: RuntimeNode.ExecutionContext["enclosingNodeAPI"] = {
             writePort: (outputId, value) => {
-                this.context.portAPI.write(this.workflowNode.id, outputId, value);
+                this.context.portAPI.write(this.nodeId, outputId, value);
             },
             emitPort: (outputId) => {
-                this.context.propagationAPI.emitPort(this.workflowNode.id, outputId);
+                this.context.propagationAPI.emitPort(this.nodeId, outputId);
             },
         };
 

@@ -20,7 +20,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             // can't clobber it. Code `return`s its result explicitly (code mode).
             const result = await this.context
                 .airlockAPI
-                .executeAsyncCode(Airlock.Source.asCode(code), this.workflowNode.id, incoming);
+                .executeAsyncCode(Airlock.Source.asCode(code), this.nodeId, incoming);
 
             return {
                 output: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
