@@ -44,7 +44,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         });
 
         if(this.fieldValues.write_to_session)
-            await InternalChatAPI.messageAdd({ messages });
+            await InternalChatAPI.messageAdd(this.context.executionId, { messages });
 
         return {};
     }

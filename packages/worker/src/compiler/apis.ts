@@ -1,5 +1,5 @@
 import { produce } from "immer";
-import { Chat, Execution, Foundations, Realtime, Vault } from "@pretzel-graph/shared/domain";
+import { Execution, Realtime, Vault } from "@pretzel-graph/shared/domain";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
@@ -29,10 +29,6 @@ type ExecutionAPIs = Pick<
     | "airlockAPI"
 >;
 
-function getIgniterChatId(igniter: Execution.Igniter): Chat.Id | undefined {
-    return "chat_id" in igniter ? igniter.chat_id as Chat.Id | undefined : undefined;
-}
-
 // Builds the per-execution API facade injected into every node's ExecutionContext.
 export function createExecutionAPIs(
     engine:              AggexEngine,
@@ -45,23 +41,28 @@ export function createExecutionAPIs(
     realtime:            RealtimeService,
 ): ExecutionAPIs {
     const portAPI = {
-        write: (nodeId, outputId, value) =>
-            engine.nodeIO.writePort(ctxRef.current, nodeId, outputId, value),
+        write: (nodeId, outputId, value) => engine.services.nodeIO.writePort(ctxRef.current, nodeId, outputId, value),
     } satisfies RuntimeNode.ExecutionContext["portAPI"];
 
     const propagationAPI = {
-        emitPort: (nodeId, outputId) =>
-            engine.propagationAPI.emitPort(ctxRef.current, nodeId, outputId),
-        emitNode: (nodeId) =>
-            engine.propagationAPI.emitNode(ctxRef.current, nodeId),
+        emitPort: (nodeId, outputId) => engine.propagationAPI.emitPort(ctxRef.current, nodeId, outputId),
+        emitNode: (nodeId)           => engine.propagationAPI.emitNode(ctxRef.current, nodeId),
     } satisfies RuntimeNode.ExecutionContext["propagationAPI"];
 
     const instanceRegistryAPI = {
-        get:    (nodeId: Workflow.Node.Id) => engine.instanceRegistryAPI.get(nodeId),
-        getAll: ()                         => engine.instanceRegistryAPI.getAll(),
+        get:    (nodeId) => engine.instanceRegistryAPI.get(nodeId),
+        getAll: ()       => engine.instanceRegistryAPI.getAll(),
     } satisfies RuntimeNode.ExecutionContext["instanceRegistryAPI"];
 
     const workflowQueryAPI = {
+        getNode:       (nodeId)                    => ctxRef.current.workflowData.nodes[nodeId],
+        getNodeOutput: (nodeId, portId)            => ctxRef.current.session.node_output_instances[nodeId]?.[portId],
+        getInputs:     (nodeId)                    => ctxRef.current.workflowCache.resolvedShape[nodeId].inputs,
+        getOutputs:    (nodeId)                    => ctxRef.current.workflowCache.resolvedShape[nodeId].outputs,
+        getOutputPort: (nodeId, portId)            => ctxRef.current.workflowCache.resolvedShape[nodeId].outputs.find(p => p.id === portId),
+        getInputPort:  (nodeId, portId)            => ctxRef.current.workflowCache.resolvedShape[nodeId].inputs.find(p => p.id === portId),
+        getFields:     (nodeId)                    => ctxRef.current.workflowCache.resolvedShape[nodeId].fields,
+        getStaticValues: (nodeId)                  => ctxRef.current.workflowData.staticValues[nodeId] ?? {},
         getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: T_Blueprint["id"]) =>
             Object.values(ctxRef.current.workflowData.nodes)
                 .filter(n => n.blueprintId === blueprintId)
@@ -72,20 +73,6 @@ export function createExecutionAPIs(
                         ctxRef.current.workflowData.staticValues[n.id] ?? {},
                     ),
                 })),
-        getNode: (nodeId: Workflow.Node.Id) =>
-            ctxRef.current.workflowData.nodes[nodeId],
-        getNodeOutput: (nodeId, portId) =>
-            ctxRef.current.session.node_output_instances[nodeId]?.[portId],
-        getInputs: (nodeId) =>
-            ctxRef.current.workflowCache.resolvedShape[nodeId].inputs,
-        getOutputs: (nodeId) =>
-            ctxRef.current.workflowCache.resolvedShape[nodeId].outputs,
-        getOutputPort: (nodeId, portId) =>
-            ctxRef.current.workflowCache.resolvedShape[nodeId].outputs.find(p => p.id === portId),
-        getInputPort: (nodeId, portId) =>
-            ctxRef.current.workflowCache.resolvedShape[nodeId].inputs.find(p => p.id === portId),
-        getFields: (nodeId) =>
-            ctxRef.current.workflowCache.resolvedShape[nodeId].fields,
         getNodeDependency: (nodeId) => {
             const depRef = ctxRef.current.workflowData.nodes[nodeId]?.dependencyRef;
             if (!depRef) return null;
@@ -94,9 +81,6 @@ export function createExecutionAPIs(
                 : ctxRef.current.workflowData.dependencies.draft;
             return store[depRef.workflowId] ?? null;
         },
-        getStaticValues: (nodeId) => {
-            return ctxRef.current.workflowData.staticValues[nodeId] ?? {};
-        }
     } satisfies RuntimeNode.ExecutionContext["workflowQueryAPI"];
 
     const schedulerAPI = {
@@ -109,7 +93,6 @@ export function createExecutionAPIs(
 
     const airlockAPI = airlock.createScope(workflowId, {
         igniter: execution.igniter,
-        chatId:  getIgniterChatId(execution.igniter),
     });
 
     const subWorkflowAPI = {
@@ -127,12 +110,12 @@ export function createExecutionAPIs(
     } satisfies RuntimeNode.ExecutionContext["subWorkflowAPI"];
 
     const dependencyAPI = {
-        getPublished: (wfId: Workflow.Id) => {
+        getPublished: (wfId) => {
             const dep = workflowData.dependencies?.published?.[wfId];
             if (!dep) throw new Error(`Missing published dependency "${wfId}"`);
             return dep;
         },
-        getDraft: (wfId: Workflow.Id) => {
+        getDraft: (wfId) => {
             const draft = workflowData.dependencies?.draft?.[wfId];
             if (!draft) throw new Error(`Missing draft dependency "${wfId}"`);
             return draft;
@@ -141,7 +124,7 @@ export function createExecutionAPIs(
 
     const catalogueAPI = {
         // Sync read of the resolved (post-reconcile) blueprint, warmed by prepareNode.
-        getBlueprint: (nodeId: Workflow.Node.Id): Foundations.Blueprint => {
+        getBlueprint: (nodeId) => {
             const n = workflowData.nodes[nodeId];
             const bp = CatalogueService.getBlueprint(n.reconciledBlueprintId ?? n.blueprintId);
             if (!bp)

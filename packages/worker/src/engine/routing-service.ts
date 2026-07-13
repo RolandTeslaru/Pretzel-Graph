@@ -58,7 +58,7 @@ export class RoutingService {
             // A router-skipped branch leaves its port undefined and never signals;
             // the node stays waiting and the engine settles once nothing can run.
             const dependencies       = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
-            const incomingInputs     = this.engine.nodeIO.getIncomingData(ctx, wfNode.id, dependencies, true);
+            const incomingInputs     = this.engine.services.nodeIO.getIncomingData(ctx, wfNode.id, dependencies, true);
             const incomingEdgeByPort = ctx.workflowCache.inputHandlesMap[wfNode.id];
 
             for (const portId in incomingInputs) {

@@ -9,7 +9,6 @@ import { AirlockError, AirlockTerminationError } from "./errors";
 const RESERVED_GLOBALS: ReadonlySet<string> = new Set([
     Airlock.Globals.WORKFLOW,
     Airlock.Globals.IGNITER,
-    Airlock.Globals.CHAT_ID,
     Airlock.Globals.GLOBALS,
     Airlock.Globals.METRICS,
 ]);
