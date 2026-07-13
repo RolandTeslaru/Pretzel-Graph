@@ -5,10 +5,6 @@ import { HumanReview } from "@pretzel-graph/shared/domain";
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    // Only the chosen branch propagates (confirm → approved | rejected).
-    protected override readonly PROPAGATION_STRATEGY = RuntimeNode.PropagationStrategy.ROUTER;
-
-    
     protected override async onRun(
         incoming: InferIncoming<typeof Blueprint>,
     ): Promise<Partial<InferOutputs<typeof Blueprint>>> {

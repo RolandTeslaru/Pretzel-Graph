@@ -166,7 +166,7 @@ Subclass `RuntimeNode<typeof Blueprint>` (optionally `<typeof Blueprint, typeof 
 
 Class-level controls:
 - `public readonly IS_PASSIVE = true` — exclude from automatic `__START__` wiring; the node only fires when explicitly triggered.
-- `getPropagationStrategy()` → `"all"` (default) / `"router"` (only ports present in the result) / `"none"` (node handled propagation itself).
+- `getPropagationStrategy()` → `"router"` (default; only ports present in the result) / `"all"` (every downstream dependent) / `"none"` (node handled propagation itself).
 - `static loaders = defineLoaders<typeof Blueprint>()({ ... })` — ResourceLoader data sources (see below).
 
 Inside a node you have:

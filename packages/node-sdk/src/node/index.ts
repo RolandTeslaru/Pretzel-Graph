@@ -33,10 +33,10 @@ export abstract class RuntimeNode<
     public readonly CATCHES_ERROR: boolean = false
 
     /** Controls how the engine fans out signals after this node completes.
-     *  - "all"    — signal every downstream dependent (default)
-     *  - "router" — signal only dependents connected to ports present in the result
+     *  - "router" — signal only dependents connected to ports present in the result (default)
+     *  - "all"    — signal every downstream dependent, regardless of returned ports
      *  - "none"   — suppress automatic fan-out entirely (node handled propagation itself) */
-    protected readonly PROPAGATION_STRATEGY: RuntimeNode.PropagationStrategy = "all"
+    protected readonly PROPAGATION_STRATEGY: RuntimeNode.PropagationStrategy = "router"
 
     public getPropagationStrategy(): RuntimeNode.PropagationStrategy {
         return this.PROPAGATION_STRATEGY
