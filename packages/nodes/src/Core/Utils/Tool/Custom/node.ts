@@ -56,7 +56,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             async (args) => {
                 const result = await this.context.airlockAPI.executeAsyncCode(
                     Airlock.Source.asCode(this.fieldValues.code),
-                    this.workflowNode.id,
+                    this.nodeId,
                     { args, inputs: incoming },
                 );
                 return typeof result === "string" ? result : JSON.stringify(result);
