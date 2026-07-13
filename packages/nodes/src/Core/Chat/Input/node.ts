@@ -1,7 +1,7 @@
-import { InferFieldValues, RegisterNode } from "@pretzel-graph/node-sdk"
+import { RegisterNode } from "@pretzel-graph/node-sdk"
 import { Blueprint } from "./blueprint"
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
-import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferOutputs } from "@pretzel-graph/node-sdk";
 import { HumanMessage } from "@langchain/core/messages";
 import { Chat, Execution, Webhook } from "@pretzel-graph/shared/domain";
 import { api } from "../../../services/AxiosService";
@@ -24,28 +24,21 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         this.message = new HumanMessage({ content: chatMessage.content });
     }
 
-    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
-        if (!this.message) {
-            try {
-                this.message = await this.waitForMessage();
-            } catch (e) {
-                console.error(`[ChatInputNode] Error while waiting for message:`, e);
-                throw new Error(`Failed to receive chat message within ${Node.WEBHOOK_TIMEOUT / 1000} seconds. Please ensure the webhook is being called correctly.`);
-            }
-        }
+    protected override async onRun(): Promise<Partial<InferOutputs<typeof Blueprint>>> {
+        if (!this.message)
+            return {};
 
-        const chatId = this.context.igniter.chat_id;
-        if (chatId && this.fieldValues.write_to_session) {
-            const dbMessage: Chat.Message.Human = {
-                id: Chat.Message.createId(),
-                role: "human",
-                content: this.message.content as string,
-                chat_id: chatId,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            };
-            await InternalChatAPI.messageAdd({ messages: [dbMessage] });
-        }
+        const chatId = Chat.Id.parse(this.fieldValues.chat_id);
+        const dbMessage: Chat.Message.Human = {
+            id: Chat.Message.createId(),
+            role: "human",
+            content: this.message.content as string,
+            chat_id: chatId,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        };
+        if (this.fieldValues.write_to_session)
+            await InternalChatAPI.messageAdd(this.context.executionId, { messages: [dbMessage] });
 
         return { response: this.message };
     }

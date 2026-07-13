@@ -1,6 +1,6 @@
 import ivm from "isolated-vm";
 import ts from "typescript";
-import { Airlock, Chat, Execution, Workflow } from "@pretzel-graph/shared/domain";
+import { Airlock, Execution, Workflow } from "@pretzel-graph/shared/domain";
 
 import { AirlockScope } from "./AirlockScope";
 import { installLazyBootstrap } from "./LazyInput";
@@ -89,7 +89,7 @@ export class AirlockService {
     // One Context per env; injects the shared workflow copy + per-scope globals once.
     public createScope(
         workflowId: Workflow.Id,
-        perScope: { igniter: Execution.Igniter; chatId?: Chat.Id | null },
+        perScope: { igniter: Execution.Igniter },
     ): AirlockScope {
         const wfCopy = this.workflowCopies.get(workflowId);
         if (!wfCopy)
@@ -109,8 +109,6 @@ export class AirlockService {
 
         global.setSync(Airlock.Globals.WORKFLOW, wfCopy.copyInto());
         global.setSync(Airlock.Globals.IGNITER, perScope.igniter, { copy: true });
-        if (perScope.chatId !== undefined)
-            global.setSync(Airlock.Globals.CHAT_ID, perScope.chatId, { copy: true });
 
         return new AirlockScope(this, context, this.timeoutMs);
     }

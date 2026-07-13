@@ -18,7 +18,6 @@ export namespace Airlock {
     export const Globals = {
         WORKFLOW:   "__workflow__",
         IGNITER:    "__igniter__",
-        CHAT_ID:    "__chatId__",
         IN:         "__in__",
         ITEM:       "__item__",
         ITEM_INDEX: "__item_index__",
@@ -32,7 +31,6 @@ export namespace Airlock {
     const STATIC_ROOTS: Record<string, string> = {
         workflow:  Globals.WORKFLOW,
         igniter:   Globals.IGNITER,
-        chatId:    Globals.CHAT_ID,
         in:        Globals.IN,
         item:      Globals.ITEM,
         itemIndex: Globals.ITEM_INDEX,
@@ -46,7 +44,7 @@ export namespace Airlock {
 
     // Matches $root at a word boundary; rewrites only the root, leaving member access intact.
     // `itemIndex` precedes `item`, and `nodeGlobals` precedes `node`, so the longer root wins.
-    const SIGIL = /\$(workflow|config|igniter|chatId|in|itemIndex|item|nodeGlobals|node|globals|metrics)\b/g
+    const SIGIL = /\$(workflow|config|igniter|in|itemIndex|item|nodeGlobals|node|globals|metrics)\b/g
 
     export function rewrite(source: Source): string {
         return source.replace(SIGIL, (_m, root: string) => STATIC_ROOTS[root])

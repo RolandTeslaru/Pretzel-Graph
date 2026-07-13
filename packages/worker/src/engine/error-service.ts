@@ -119,7 +119,7 @@ export class ErrorService {
         error:  SystemError.Serialized,
     ) {
         this.engine.flightRecorder?.onNodeFailed(nodeId, ctx);
-        this.engine.session.onNodeFailed(ctx, nodeId, error);
+        this.engine.services.session.onNodeFailed(ctx, nodeId, error);
     }
 
 
@@ -176,7 +176,7 @@ export class ErrorService {
                 targets.add(edge.target.nodeId as unknown as Vertex.Id);
         }
 
-        const edgeStateUpdate = this.engine.session.createEdgeStateUpdate(
+        const edgeStateUpdate = this.engine.services.session.createEdgeStateUpdate(
             ctx, edgeIdMap, "waiting", s => { s.runCount += 1; },
         );
 
@@ -184,7 +184,7 @@ export class ErrorService {
             executionId:   ctx.executionId,
             workflowId:    ctx.workflowId,
             type:          "update",
-            channel:       this.engine.session.getEventChannel(ctx),
+            channel:       this.engine.services.session.getEventChannel(ctx),
             sessionUpdate: { edge_state: edgeStateUpdate },
         });
 
@@ -206,9 +206,9 @@ export class ErrorService {
         const nodeId = vertexId as unknown as Workflow.Node.Id;
         const onErrorPort = "onError" as Port.Output.Id;
 
-        this.engine.nodeIO.writePort(ctx, nodeId, onErrorPort, envelope.error);
+        this.engine.services.nodeIO.writePort(ctx, nodeId, onErrorPort, envelope.error);
 
-        return this.engine.routing.resolveRouterSignals(ctx, nodeId, { [onErrorPort]: envelope.error });
+        return this.engine.services.routing.resolveRouterSignals(ctx, nodeId, { [onErrorPort]: envelope.error });
     }
 
 

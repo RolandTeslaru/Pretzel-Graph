@@ -54,8 +54,12 @@ export class WorkflowCompiler {
         });
 
         // Add nodes to the graph (populates engineExecutionCtx.blueprints)
-        for (const wfNode of Object.values(nodes))
+        for (const wfNode of Object.values(nodes)) {
+            if (wfNode.isDisabled)
+                continue;
+
             await this.prepareNode(engine, engineExecutionCtx, nodeExecutionCtx, wfNode, compilationCtx);
+        }
 
         // Warm the expression cache now that every node's resolved blueprint is available.
         this.warmExpressionCache(airlock, engineExecutionCtx);
@@ -308,14 +312,16 @@ export class WorkflowCompiler {
         const targetNodeIds = new Set<Workflow.Node.Id>();
         Object.values(edges).forEach(edge => targetNodeIds.add(edge.target.nodeId));
 
-        return Object.keys(nodes).filter(id => {
-            if (targetNodeIds.has(id as Workflow.Node.Id))
+        return Object.values(nodes).filter(node => {
+            if (node.isDisabled)
                 return false;
-            const instance = getInstance(id as Workflow.Node.Id);
+            if (targetNodeIds.has(node.id))
+                return false;
+            const instance = getInstance(node.id);
             if (instance?.IS_PASSIVE)
                 return false;
             return true;
-        }) as Workflow.Node.Id[];
+        }).map(node => node.id);
     }
 }
 

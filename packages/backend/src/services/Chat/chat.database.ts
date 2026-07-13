@@ -130,6 +130,16 @@ class MessageMethods {
         await supabase.from('chat_messages').update({ content }).eq('id', messageId).throwOnError();
     }
 
+    @SupabaseAssert('message.updateInChat')
+    async updateInChat(supabase: SupabaseClient, chatId: Chat.Id, messageId: Chat.Message.Id, content: string): Promise<void> {
+        await supabase
+            .from('chat_messages')
+            .update({ content })
+            .eq('id', messageId)
+            .eq('chat_id', chatId)
+            .throwOnError();
+    }
+
     @SupabaseAssert('message.list')
     @ZodReturn(Chat.Message.Schema.array())
     async list(supabase: SupabaseClient, chatId: Chat.Id): Promise<Chat.Message[]> {
