@@ -18,7 +18,7 @@ export abstract class RuntimeNode<
     public fieldValues: InferFieldValues<T_Blueprint>
     public readonly credentials: InferCredentials<T_Blueprint>
 
-    /** Projected incoming-port bag from the last evaluateFields pass — reused as `$in` when
+    /** Projected incoming-port bag from the last evaluateFieldValues pass — reused as `$in` when
      *  evaluating item-scoped fields, so per-item eval sees the same inputs as node-level eval. */
     private projectedIn: Record<Port.Input.Id, Projection> = {};
 
@@ -46,11 +46,11 @@ export abstract class RuntimeNode<
 
 
     constructor(
-        public readonly workflowNode: Workflow.Node.Raw,
+        public readonly nodeId: Workflow.Node.Id,
         protected readonly context: RuntimeNode.ExecutionContext
     ) {
-        const fields       = this.context.workflowQueryAPI.getFields(this.workflowNode.id);
-        const staticValues = this.context.workflowQueryAPI.getStaticValues(this.workflowNode.id);
+        const fields       = this.context.workflowQueryAPI.getFields(this.nodeId);
+        const staticValues = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
 
         this.fieldValues = mapFieldValues<T_Blueprint>(fields, staticValues);
         this.credentials = this.mapCredentials();
@@ -58,11 +58,16 @@ export abstract class RuntimeNode<
 
 
     private mapCredentials(): InferCredentials<T_Blueprint> {
-        const nodeCredIds = this.context.workflowData.credentialInstanceIds[this.workflowNode.id] ?? {};
+        const nodeCredIds = Object.entries(
+                                this.context.workflowData.credentialInstanceIds[this.nodeId] ?? {}
+                            )as [Vault.Credential.Template.Id, Vault.Credential.Instance.Id][]
+
         const result: Record<string, Vault.Credential.Instance> = {};
-        for (const [templateId, instanceId] of Object.entries(nodeCredIds) as [Vault.Credential.Template.Id, Vault.Credential.Instance.Id][]) {
+
+        for (const [templateId, instanceId] of nodeCredIds) {
             const instance = this.context.credentialsAPI.getInstance(instanceId);
-            if (instance) result[templateId] = instance;
+            if (instance)
+                result[templateId] = instance;
         }
         return result as InferCredentials<T_Blueprint>;
     }
@@ -74,7 +79,7 @@ export abstract class RuntimeNode<
 
     /**
      * Called by the engine. Wraps onRun with shared pre/post logic.
-     * fields must be pre-evaluated by the engine via evaluateFields().
+     * fields must be pre-evaluated by the engine via evaluateFieldValues().
      */
     public async run(
         incoming: InferIncoming<T_Blueprint>,
@@ -96,13 +101,13 @@ export abstract class RuntimeNode<
 
 
 
-    public evaluateFields(
+    public evaluateFieldValues(
         incoming: Record<Port.Id, Projection>
     ): InferFieldValues<T_Blueprint> {
 
-        const inputs       = this.context.workflowQueryAPI.getInputs(this.workflowNode.id);
-        const fields       = this.context.workflowQueryAPI.getFields(this.workflowNode.id);
-        const staticValues = this.context.workflowQueryAPI.getStaticValues(this.workflowNode.id);
+        const inputs       = this.context.workflowQueryAPI.getInputs(this.nodeId);
+        const fields       = this.context.workflowQueryAPI.getFields(this.nodeId);
+        const staticValues = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
 
         const fieldValues = mapFieldValues<T_Blueprint>(fields, staticValues);
 
@@ -121,8 +126,8 @@ export abstract class RuntimeNode<
 
         this.context.airlockAPI.executeSync(
             {
-                [Airlock.Globals.IN]: projectedIncoming,
-                [Airlock.Globals.NODE_ID]: this.workflowNode.id,
+                [Airlock.Globals.IN]:      projectedIncoming,
+                [Airlock.Globals.NODE_ID]: this.nodeId,
             },
             (evaluate) => {
                 for (const field of fields) {
@@ -188,8 +193,8 @@ export abstract class RuntimeNode<
     ): R[] {
         const variant = options?.itemVariant ?? "Unresolved";
 
-        const fields       = this.context.workflowQueryAPI.getFields(this.workflowNode.id);
-        const staticValues = this.context.workflowQueryAPI.getStaticValues(this.workflowNode.id);
+        const fields       = this.context.workflowQueryAPI.getFields(this.nodeId);
+        const staticValues = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
 
         // Resolve raw value + isExpression once per field, reused across every iteration.
         const rawValues = mapFieldValues<T_Blueprint>(fields, staticValues);
@@ -204,7 +209,7 @@ export abstract class RuntimeNode<
         return this.context.airlockAPI.executeSync(
             {
                 [Airlock.Globals.IN]:     this.projectedIn,
-                [Airlock.Globals.NODE_ID]: this.workflowNode.id,
+                [Airlock.Globals.NODE_ID]: this.nodeId,
             },
             (evaluate, setTransient) => {
                 const evalField = (<K extends keyof InferItemFields<T_Blueprint>>(
@@ -364,7 +369,7 @@ export abstract class RuntimeNode<
         try {
             return this.onRecordMetrics(args);
         } catch (err) {
-            console.warn(`[RuntimeNode.recordMetrics] node=${this.workflowNode.id} threw:`, err);
+            console.warn(`[RuntimeNode.recordMetrics] node=${this.nodeId} threw:`, err);
             return undefined;
         }
     }

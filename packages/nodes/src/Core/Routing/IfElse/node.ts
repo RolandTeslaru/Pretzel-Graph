@@ -11,7 +11,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         incoming: InferIncoming<typeof Blueprint>,
     ): Promise<OneOf<InferOutputs<typeof Blueprint>>> {
 
-        // condition is pre-evaluated by evaluateFields() — a plain boolean here.
+        // condition is pre-evaluated by evaluateFieldValues() — a plain boolean here.
         // Legacy nodes that still hold a condition-tree object coerce to the default (true).
         const result = !!this.fieldValues.condition;
 

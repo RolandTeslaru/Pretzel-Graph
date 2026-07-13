@@ -282,7 +282,7 @@ export class WorkflowCompiler {
         // Final field values off the resolved blueprint (includes reconcile-added fields).
         const fieldValues = mapFieldValues(blueprint.fields, staticValues);
 
-        const instance = new RuntimeNode(wfNode, nodeExecutionCtx);
+        const instance = new RuntimeNode(wfNode.id, nodeExecutionCtx);
         await instance.compile(compilationCtx)
 
         graph.addVertex(wfNode.id);

@@ -12,8 +12,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private chatId: Chat.Id | null = null;
 
-    constructor(workflowNode: Workflow.Node.Raw, context: RuntimeNode.ExecutionContext) {
-        super(workflowNode, context);
+    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
+        super(nodeId, context);
     }
 
     protected override async onCompile() {

@@ -43,7 +43,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const f = this.fieldValues as Record<string, any>;
         const base = {
             id:          crypto.randomUUID() as HumanReview.Request.Id,
-            nodeId:      this.workflowNode.id,
+            nodeId:      this.nodeId,
             executionId: this.context.executionId,
             title:       f.title || undefined,
             message:     f.message || undefined,

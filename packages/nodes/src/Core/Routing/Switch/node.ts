@@ -14,7 +14,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const { cases } = this.fieldValues;
         const { input } = incoming;
 
-        // cases are pre-evaluated by evaluateFields() — value is always a plain boolean here.
+        // cases are pre-evaluated by evaluateFieldValues() — value is always a plain boolean here.
         for (const { value, portId } of cases) {
             if (value)
                 return { [portId]: input } as OneOf<InferOutputs<typeof Blueprint>>;

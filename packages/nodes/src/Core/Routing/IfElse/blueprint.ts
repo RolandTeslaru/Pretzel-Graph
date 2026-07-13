@@ -7,7 +7,7 @@ export const Blueprint = defineBlueprint({
     icon: "Split",
     accent: "group-routing",
     fields: [
-        // Single boolean expression — pre-evaluated by evaluateFields() to a real
+        // Single boolean expression — pre-evaluated by evaluateFieldValues() to a real
         // boolean (coerced via the "Boolean" variant). Replaces the old condition tree.
         FieldBuilder.Boolean({
             id: "condition",
