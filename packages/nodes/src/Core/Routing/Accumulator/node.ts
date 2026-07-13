@@ -12,7 +12,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const { append, overwrite } = incoming;
 
         const previousState: unknown[] =
-            this.context.session.node_output_instances[this.workflowNode.id]?.state ?? [];
+            this.context.session.node_output_instances[this.nodeId]?.state ?? [];
 
         const appendItems = Array.isArray(append) ? append.flat() : append != null ? [append] : [];
 

@@ -115,8 +115,8 @@ const fetchProtocol = async (slug: string) => {
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
-    constructor(workflowNode: Workflow.Node.Raw, context: RuntimeNode.ExecutionContext) {
-        super(workflowNode, context);
+    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
+        super(nodeId, context);
     }
 
     protected override async onRun(

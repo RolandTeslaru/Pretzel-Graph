@@ -97,7 +97,7 @@ Each vertex owns an **`accumulatedSignals`** set (which source vertices have sig
 
 ### `onNodeExecuted` — the execution heart
 1. **Resolve inputs** (`node.getIncomingData`): if the node's `dataDependency === "AND"`, read from **all** dependency ports; otherwise only from the **signaling** ones. For each input port: if a wired edge's source has signaled, read `session.node_output_instances[source][port]` and `Synthesizer.ensureReference` it to the input's variant; else fall back to static value / `initialValue`.
-2. **Evaluate fields**: `instance.evaluateFields(inputs)` resolves field expressions against the incoming data.
+2. **Evaluate fields**: `instance.evaluateFieldValues(inputs)` resolves field expressions against the incoming data.
 3. **Run**: `isConvertedToTool` ? `buildTool` : `run(inputs, fields)`.
 4. **Persist outputs**: store raw values in `node_output_instances` and `Synthesizer.project`-ed snapshots in `node_output_projections`.
 5. **Return downstream signals** by propagation strategy:
