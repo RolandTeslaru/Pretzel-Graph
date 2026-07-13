@@ -86,6 +86,18 @@ export class PermissionService {
         return ownerId
     }
 
+    public async assertExecutionChat(
+        executionId: Execution.Id,
+        chatId:      Chat.Id,
+    ) {
+        const requesterId = await this.loadExecutionOwner(executionId);
+
+        if (!requesterId)
+            throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
+
+        return this.assertChat(chatId, requesterId);
+    }
+
 
 
 

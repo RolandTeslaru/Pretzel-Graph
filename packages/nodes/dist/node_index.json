@@ -1,6 +1,6 @@
 {
-  "version": "1783703198061",
-  "generatedAt": "2026-07-10T17:06:38.061Z",
+  "version": "1783964294636",
+  "generatedAt": "2026-07-13T17:38:14.636Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -129,6 +129,19 @@
       },
       "fields": [
         {
+          "id": "chat_id",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Chat ID",
+          "tooltip": "The chat session to receive and store this message in.",
+          "variant": "String",
+          "initialValue": "$igniter.chat_id",
+          "multiline": false,
+          "placeholder": "",
+          "isExpression": true
+        },
+        {
           "id": "write_to_session",
           "advanced": false,
           "required": false,
@@ -217,16 +230,7 @@
           "kind": "select"
         }
       ],
-      "inputs": [
-        {
-          "id": "input",
-          "displayName": "Input",
-          "internal": true,
-          "variant": "Message",
-          "initialValue": "",
-          "required": false
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "response",

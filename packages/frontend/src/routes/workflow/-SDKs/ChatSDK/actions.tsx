@@ -1,4 +1,4 @@
-import { Chat, SystemError } from "@pretzel-graph/shared/domain";
+import { Chat, Execution, SystemError } from "@pretzel-graph/shared/domain";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import type { ChatSDKImpl } from "./sdk";
 import { toast } from "sonner";
@@ -70,10 +70,12 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                 try {
                     sdk.actions.message.upsert(message)
 
-                    await sdk.executionSDK.actions.run({
+                    const igniter = {
                         variant: "chat_message",
                         message,
-                    });
+                    } satisfies Execution.Igniter;
+
+                    await sdk.executionSDK.actions.run(igniter);
                 }
                 catch (err) {
                     toast.error(SystemError.messageFrom(err));
