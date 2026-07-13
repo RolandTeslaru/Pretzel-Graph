@@ -12,7 +12,6 @@ import { AggexExecutionError } from "src/errors";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
-import { Execution } from "@pretzel-graph/shared/domain";
 import { FlightRecorderService } from "./flight-recorder-service";
 import { RoutingService } from "./routing-service";
 import { SchedulerService } from "./scheduler-service";
@@ -36,13 +35,15 @@ export class AggexEngine {
     /** @internal — accessed by engine services (ErrorService). */
     public  flightRecorder:  FlightRecorderService | null = null;
 
-    /** @internal — engine services. */
-    public  readonly scheduler   = new SchedulerService(this);
-    public  readonly propagation = new PropagationService(this);
-    public  readonly routing     = new RoutingService(this);
-    public  readonly nodeIO      = new NodeIOService(this);
-    public  readonly errors      = new ErrorService(this);
-    public  readonly session     = new SessionService();
+    /** @internal — delegated engine subsystems. */
+    public readonly services = {
+        scheduler:   new SchedulerService(this),
+        propagation: new PropagationService(this),
+        routing:     new RoutingService(this),
+        nodeIO:      new NodeIOService(this),
+        errors:      new ErrorService(this),
+        session:     new SessionService(),
+    };
 
     private pausePromise: Promise<void> | null = null;
     private pauseResolve: (() => void) | null = null;
@@ -154,8 +155,8 @@ export class AggexEngine {
 
 
     // Getters preserve the external contract (`engine.propagationAPI.*`, `engine.schedulerAPI.*`).
-    public get propagationAPI() { return this.propagation; }
-    public get schedulerAPI()   { return this.scheduler; }
+    public get propagationAPI() { return this.services.propagation; }
+    public get schedulerAPI()   { return this.services.scheduler; }
 
 
 
@@ -169,7 +170,7 @@ export class AggexEngine {
 
         this.flightRecorder?.onNodeFired(entry.wfNode.id);
         ctx.activeNodes.add(nodeId);
-        this.session.onNodeFired(ctx, entry);
+        this.services.session.onNodeFired(ctx, entry);
     }
 
 
@@ -203,58 +204,57 @@ export class AggexEngine {
 
         // An incoming error envelope means an upstream node failed with `propagate`:
         // this node catches or re-propagates instead of running its own logic.
-        const intercepted = this.errors.interceptIncoming(ctx, vertexId, nodeInstance);
-        if (intercepted) return intercepted;
+        const intercepted = this.services.errors.interceptIncoming(ctx, vertexId, nodeInstance);
+        if (intercepted)
+            return intercepted;
 
         const allDependencies = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
 
         const dataDependency = entry.instance.fieldValues["dataDependency" as Field.Id];
+        let result;
+        let projectedResult;
 
-        const inputs = this.nodeIO.getIncomingData(
-            ctx,
-            wfNode.id,
-            dataDependency === "AND" ? allDependencies : signals
-        );
-
-        let fields;
         try {
+            const inputs = this.services.nodeIO.getIncomingData(
+                                ctx,
+                                wfNode.id,
+                                dataDependency === "AND" ? allDependencies : signals
+                            );
+
             // Field expressions run in the airlock; a throw/timeout here is the node's
             // failure (→ onErrorStrategy), an OOM force-terminates (handled in handleNodeError).
-            fields = nodeInstance.evaluateFieldValues(inputs);
-        } catch (err) {
-            return this.errors.handle(ctx, vertexId, err);
-        }
+            const fields = nodeInstance.evaluateFieldValues(inputs);
 
-        System.log.debug("node executing", {
-            nodeId:         wfNode.id,
-            dataDependency: dataDependency ?? "OR",
-            signals:        [...signals],
-            deps:           [...allDependencies],
-            inputPorts:     Object.keys(inputs),
-        });
+            System.log.debug("node executing", {
+                nodeId:         wfNode.id,
+                dataDependency: dataDependency ?? "OR",
+                signals:        [...signals],
+                deps:           [...allDependencies],
+                inputPorts:     Object.keys(inputs),
+            });
 
-        this.flightRecorder?.onNodeExecuted(wfNode.id, signals, allDependencies, inputs, fields, ctx);
+            this.flightRecorder?.onNodeExecuted(wfNode.id, signals, allDependencies, inputs, fields, ctx);
 
-        const isTool = nodeInstance.fieldValues["isConvertedToTool" as Field.Id] === true;
+            const isTool = nodeInstance.fieldValues["isConvertedToTool" as Field.Id] === true;
 
-        let result;
-        try {
             if(isTool)
                 result = await nodeInstance.buildTool(inputs, fields);
             else
                 result = await nodeInstance.run(inputs, fields);
+
+            projectedResult = this.services.nodeIO.projectOutputs(ctx, result, wfNode);
         } catch (err) {
-            // The node's own execution threw — apply its `onErrorStrategy`.
-            return this.errors.handle(ctx, vertexId, err);
+            // Treat input resolution, expression evaluation, node execution, and output
+            // projection as one node-owned failure boundary.
+            return this.services.errors.handle(ctx, vertexId, err);
         }
 
-        const projectedResult = this.nodeIO.projectOutputs(ctx, result, wfNode);
-        this.session.onNodeExecuted(ctx, wfNode.id, result, projectedResult);
+        this.services.session.onNodeExecuted(ctx, wfNode.id, result, projectedResult);
 
         switch (nodeInstance.getPropagationStrategy()) {
-            case "router": return this.routing.resolveRouterSignals(ctx, wfNode.id, result)
+            case "router": return this.services.routing.resolveRouterSignals(ctx, wfNode.id, result)
             case "none":   return new Set<Vertex.Id>()   // empty set → fireVertexDependents signals nobody
-            case "all":    return                         // void → fireVertexDependents signals all
+            case "all":    return                        // void → fireVertexDependents signals all
         }
     }
 
@@ -280,7 +280,7 @@ export class AggexEngine {
             return;
         }
 
-        this.session.onNodeCompleted(ctx, entry, resolvedOutSignals);
+        this.services.session.onNodeCompleted(ctx, entry, resolvedOutSignals);
         this.flightRecorder?.onNodeCompleted(entry.wfNode.id, ctx);
 
         // "Execute up until this point": the target ran and its output is now persisted +
@@ -320,14 +320,16 @@ export class AggexEngine {
             resolution: nodeDepMap,
         });
 
-        this.session.onNodeWaiting(ctx, wfNode.id);
+        this.services.session.onNodeWaiting(ctx, wfNode.id);
 
-        const partialInputs = this.nodeIO.getIncomingData(ctx, wfNode.id, arrivedSignals);
+        const partialInputs = this.services.nodeIO.getIncomingData(ctx, wfNode.id, arrivedSignals);
+
         let partialFields;
+
         try {
             partialFields = instance.evaluateFieldValues(partialInputs);
         } catch (err) {
-            this.errors.handle(ctx, vertexId, err);  // OOM → throws (terminate); else recorded
+            this.services.errors.handle(ctx, vertexId, err);  // OOM → throws (terminate); else recorded
             return;
         }
         instance.wait(partialInputs, nodeDepMap, partialFields);
@@ -360,7 +362,7 @@ export class AggexEngine {
                 error instanceof Error ? error.message : String(error),
             )
 
-        this.errors.record(ctx, vertexId as unknown as Workflow.Node.Id, aggexError.toJSON());
+        this.services.errors.record(ctx, vertexId as unknown as Workflow.Node.Id, aggexError.toJSON());
     }
 
 
@@ -378,9 +380,9 @@ export class AggexEngine {
         // Fail-fast: an incoming error envelope bypasses every data/signal gate so the
         // node fires immediately and re-propagates (or catches) rather than waiting on
         // sibling inputs that will never arrive.
-        if (this.errors.findIncomingEnvelope(ctx, vertexId)) return true;
+        if (this.services.errors.findIncomingEnvelope(ctx, vertexId)) return true;
 
-        return this.routing.canRunByDependencies(ctx, vertexId);
+        return this.services.routing.canRunByDependencies(ctx, vertexId);
     }
 
 

@@ -25,7 +25,7 @@ export class PropagationService {
         for (const edge of edges)
             edgeIds[edge.id] = edge.id;
 
-        const edgeStateUpdate = this.engine.session.createEdgeStateUpdate(
+        const edgeStateUpdate = this.engine.services.session.createEdgeStateUpdate(
             ctx,
             edgeIds,
             "waiting",
@@ -33,13 +33,13 @@ export class PropagationService {
         );
 
         for (const edge of edges)
-            this.engine.scheduler.signalNode(ctx, edge.target.nodeId, nodeId);
+            this.engine.services.scheduler.signalNode(ctx, edge.target.nodeId, nodeId);
 
         ctx.realtimeAPI.emit<Execution.Event.SessionUpdate>({
             executionId: ctx.executionId,
             workflowId:  ctx.workflowId,
             type:        "update",
-            channel:     this.engine.session.getEventChannel(ctx),
+            channel:     this.engine.services.session.getEventChannel(ctx),
             sessionUpdate: {
                 edge_state: edgeStateUpdate,
             },
@@ -62,7 +62,7 @@ export class PropagationService {
                 if (edge.source.nodeId === nodeId && edge.source.portId === output.id)
                     allEdgeIds[edge.id] = edge.id;
 
-        const edgeStateUpdate = this.engine.session.createEdgeStateUpdate(
+        const edgeStateUpdate = this.engine.services.session.createEdgeStateUpdate(
             ctx,
             allEdgeIds,
             "waiting",
@@ -72,14 +72,14 @@ export class PropagationService {
         for (const edgeId of Object.values(allEdgeIds)) {
             const edge = ctx.workflowCache.edges[edgeId];
 
-            this.engine.scheduler.signalNode(ctx, edge.target.nodeId, nodeId);
+            this.engine.services.scheduler.signalNode(ctx, edge.target.nodeId, nodeId);
         }
 
         ctx.realtimeAPI.emit<Execution.Event.SessionUpdate>({
             executionId: ctx.executionId,
             workflowId:  ctx.workflowId,
             type:        "update",
-            channel:     this.engine.session.getEventChannel(ctx),
+            channel:     this.engine.services.session.getEventChannel(ctx),
             sessionUpdate: {
                 edge_state: edgeStateUpdate,
             },

@@ -47,7 +47,7 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
         return this.transform(source, { transforms: ["typescript"], disableESTransforms: true }).code
     }
 
-    // Globals keyed by the names the Airlock rewrite emits. $igniter / $chatId are
+    // Globals keyed by the names the Airlock rewrite emits. $igniter is
     // runtime-only → present-but-undefined so referencing them previews as undefined, not a ReferenceError.
     private buildGlobals(nodeId: Workflow.Node.Id): Record<string, unknown> {
         const ws = WorkbenchSDK.state
@@ -67,7 +67,6 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
             [Airlock.Globals.ITEM_INDEX]: sampleItem !== undefined ? 0 : undefined,
             [Airlock.Globals.NODE_ID]: nodeId,
             [Airlock.Globals.IGNITER]: undefined,
-            [Airlock.Globals.CHAT_ID]: undefined,
             // Execution-scoped scratch ($globals / $nodeGlobals). Fresh per preview — side effects
             // don't persist across keystrokes, which is the right preview semantic.
             [Airlock.Globals.GLOBALS]: {},

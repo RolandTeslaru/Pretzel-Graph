@@ -134,7 +134,6 @@ export function buildAirlockDts(nodeId: Workflow.Node.Id, options?: { itemScoped
         `};`,
         `declare const $config: ${getConfigType()};`,
         `declare const $igniter: any;`,
-        `declare const $chatId: string | undefined;`,
         // Execution-scoped mutable scratch. Values are set at runtime and can be anything
         // (objects, functions, class instances), so they're untyped — these just need to exist.
         `declare const $globals: Record<string, any>;`,

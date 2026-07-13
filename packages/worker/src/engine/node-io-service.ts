@@ -45,7 +45,7 @@ export class NodeIOService {
             executionId: ctx.executionId,
             workflowId:  ctx.workflowId,
             type:        "update",
-            channel:     this.engine.session.getEventChannel(ctx),
+            channel:     this.engine.services.session.getEventChannel(ctx),
             sessionUpdate: {
                 node_output_projections: {
                     [nodeId]: {
