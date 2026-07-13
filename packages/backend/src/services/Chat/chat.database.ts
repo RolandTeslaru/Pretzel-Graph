@@ -36,7 +36,7 @@ class ChatMethods {
     async get(supabase: SupabaseClient, userId: Auth.User.Id, chatId: Chat.Id): Promise<{ chat: Chat; messages: Chat.Message[] }> {
         const { data } = await supabase
             .from('chats')
-            .select<string, Chat & { chat_messages: Chat.Message[] }>('id, user_id, workflow_id, name, created_at, updated_at, chat_messages(*)')
+            .select<string, Chat & { chat_messages: Chat.Database.Row.Message[] }>('id, user_id, workflow_id, name, created_at, updated_at, chat_messages(*)')
             .eq('id', chatId)
             .eq('user_id', userId)
             .order('created_at', { referencedTable: 'chat_messages', ascending: true })
@@ -47,7 +47,7 @@ class ChatMethods {
             throw new Error('Chat not found');
 
         const { chat_messages, ...chat } = data;
-        return { chat, messages: chat_messages ?? [] };
+        return { chat, messages: (chat_messages ?? []).map(message => Chat.Message.Schema.parse(message)) };
     }
 
     @SupabaseAssert('chat.list')
@@ -105,17 +105,16 @@ class ChatMethods {
 class MessageMethods {
 
     @SupabaseAssert('message.add')
-    async add(supabase: SupabaseClient, messages: Chat.Message[]): Promise<void> {
+    async add(supabase: SupabaseClient, chatId: Chat.Id, messages: Chat.Message[]): Promise<void> {
         await supabase
             .from('chat_messages')
             .insert(messages.map(message => ({
                 id:          message.id,
-                chat_id:     message.chat_id,
+                chat_id:     chatId,
                 role:        message.role,
                 content:     message.content,
                 data:        message.data ?? {},
                 attachments: message.attachments ?? null,
-                created_at:  new Date(),
             })))
             .throwOnError();
     }
@@ -150,7 +149,7 @@ class MessageMethods {
             .order('created_at', { ascending: true })
             .throwOnError();
 
-        return data ?? [];
+        return (data ?? []).map(message => Chat.Message.Schema.parse(message));
     }
 
     @SupabaseAssert('message.overwrite')
@@ -163,12 +162,11 @@ class MessageMethods {
             .from('chat_messages')
             .insert(messages.map(message => ({
                 id:          message.id,
-                chat_id:     message.chat_id,
+                chat_id:     chatId,
                 role:        message.role,
                 content:     message.content,
                 data:        message.data ?? {},
                 attachments: message.attachments ?? null,
-                created_at:  new Date(),
             })))
             .throwOnError();
     }

@@ -397,13 +397,10 @@ export class Synthesizer {
     }
 
 
-    public static lcToChatMessage(msg: LC.BaseMessage, chatId: Chat.Id): Chat.Message {
+    public static lcToChatMessage(msg: LC.BaseMessage): Chat.Message {
         const base = {
             id:         Chat.Message.createId(),
-            chat_id:    chatId,
             content:    this.extractMessageText(msg.content),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
         };
 
         const meta = {

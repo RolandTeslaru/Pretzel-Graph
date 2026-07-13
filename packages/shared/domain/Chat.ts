@@ -75,9 +75,6 @@ export namespace Chat {
         export const Base = z.object({
             id:          Message.Id,
             content:     z.string(),
-            chat_id:     Chat.Id,
-            created_at:  supabaseTimestamp,
-            updated_at:  supabaseTimestamp.nullish(),
             attachments: z.record(Attachment.Id, Attachment.Schema).nullish(),
         })
 
@@ -196,12 +193,22 @@ export namespace Chat {
     }
     export type Event = z.infer<typeof Event.Schema>
 
+    const MessageRowSchema = Message.Schema.and(z.object({
+        chat_id:    Id,
+        created_at: supabaseTimestamp,
+        updated_at: supabaseTimestamp,
+    }))
 
     export namespace Database {
         export namespace Row {
             export const Chat = Schema.extend({
                 user_id: Auth.User.Id,
             })
+
+            export namespace Message {
+                export const Schema = MessageRowSchema
+            }
+            export type Message = z.infer<typeof Message.Schema>
         }
     }
 
@@ -209,6 +216,7 @@ export namespace Chat {
         export namespace Message {
             export namespace Add {
                 export const Request = z.lazy(() => z.object({
+                    chatId:   Chat.Id,
                     messages: z.array(Chat.Message.Schema),
                 }))
                 export type Request = z.infer<typeof Request>

@@ -56,7 +56,7 @@ const ConversationArea: React.FC = () => {
       `} ref={scrollRef} onScroll={handleScroll}>
         
         {/* Chat Output Node message */}
-        {!hasChatOutputNode && (
+        {!hasChatOutputNode && messageIds.length === 0 && (
             <p className='absolute left-1/2 -translate-x-1/2 text-nowrap top-1/2 -translate-y-1/2 text-xs text-foreground flex items-center gap-1 opacity-50'>
                 Add a <NodeBadge icon="MessagesSquare" label="Chat Output" accent="port-Message" /> node to view responses.
             </p>
