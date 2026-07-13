@@ -2,8 +2,8 @@ import { Chat, Execution } from "@pretzel-graph/shared/domain";
 import { AxiosService } from "../../services/AxiosService";
 
 export const InternalChatAPI = {
-    messageAdd: (executionId: Execution.Id, payload: Chat.API.Message.Add.Request) =>
-        AxiosService.api.post('/api/internal/chat/message/add', { executionId, ...payload }),
+    messageAdd: (executionId: Execution.Id, chatId: Chat.Id, messages: Chat.Message[]) =>
+        AxiosService.api.post('/api/internal/chat/message/add', { executionId, chatId, messages }),
     messageUpdate: (executionId: Execution.Id, chatId: Chat.Id, payload: Chat.API.Message.Update.Request) =>
         AxiosService.api.post('/api/internal/chat/message/update', { executionId, chatId, ...payload }),
     messageList: (executionId: Execution.Id, chatId: Chat.Id) =>

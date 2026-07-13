@@ -14,6 +14,12 @@ export const Blueprint = defineBlueprint({
             tooltip: "Whether to stream the response",
             advanced: true
         }),
+        FieldBuilder.String({
+            id: "systemMessage",
+            displayName: "System Message",
+            initialValue: "",
+            tooltip: "A system message that helps set the behavior of the assistant",
+        })
     ],
     inputs: [
         InputBuilder.ToolList({
@@ -24,11 +30,6 @@ export const Blueprint = defineBlueprint({
             id: "languageModel",
             displayName: "Language Model",
             required: true
-        }),
-        InputBuilder.Message({
-            id: "systemMessage",
-            displayName: "System Message",
-            tooltip: "A system message that helps set the behavior of the assistant"
         }),
         InputBuilder.MessageList({
             id: "messages",

@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
 import { Chat, Execution } from '@pretzel-graph/shared/domain';
 import { RuntimeNodeAuthGuard } from '../../auth/runtime-node-auth.guard';
 import { createServiceClient } from '../../utils/supabase';
@@ -12,9 +12,8 @@ const accessRequest = z.object({
     chatId:      Chat.Id,
 });
 
-const addMessageRequest = z.object({
-    executionId: Execution.Id,
-    messages:    z.array(Chat.Message.Schema),
+const addMessageRequest = accessRequest.extend({
+    messages: z.array(Chat.Message.Schema),
 });
 
 const updateMessageRequest = accessRequest.extend({
@@ -39,13 +38,10 @@ export class InternalChatController {
     async addMessage(
         @ZodBody(addMessageRequest) body: z.infer<typeof addMessageRequest>,
     ) {
-        await Promise.all(
-            [...new Set(body.messages.map(message => message.chat_id))]
-                .map(chatId => this.ownership.assertExecutionChat(body.executionId, chatId)),
-        );
+        await this.ownership.assertExecutionChat(body.executionId, body.chatId);
 
         const supabase = createServiceClient();
-        await this.database.message.add(supabase, body.messages);
+        await this.database.message.add(supabase, body.chatId, body.messages);
         return {};
     }
 
@@ -74,9 +70,6 @@ export class InternalChatController {
     @Post('message/overwrite')
     @HttpCode(200)
     async overwriteMessages(@ZodBody(overwriteMessagesRequest) body: z.infer<typeof overwriteMessagesRequest>) {
-        if (body.messages.some(message => message.chat_id !== body.chatId))
-            throw new BadRequestException('Every message must belong to the target chat');
-
         await this.ownership.assertExecutionChat(body.executionId, body.chatId);
 
         const supabase = createServiceClient();
