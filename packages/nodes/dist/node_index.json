@@ -1,6 +1,6 @@
 {
-  "version": "1783973396957",
-  "generatedAt": "2026-07-13T20:09:56.957Z",
+  "version": "1784666547022",
+  "generatedAt": "2026-07-21T20:42:27.022Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -9289,12 +9289,6 @@
         }
       ],
       "inputs": [
-        {
-          "id": "sys_message",
-          "displayName": "System Message",
-          "variant": "Message",
-          "required": false
-        },
         {
           "id": "language_model",
           "displayName": "Language Model",
