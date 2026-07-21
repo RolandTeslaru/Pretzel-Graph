@@ -116,6 +116,14 @@ export const buttonVariants = cva(
           aria-expanded:bg-[color-mix(in_srgb,var(--port-LanguageModel)_32%,transparent)]
           focus-visible:ring-[color-mix(in_srgb,var(--port-LanguageModel)_30%,transparent)]
           focus-visible:border-[color-mix(in_srgb,var(--port-LanguageModel)_40%,transparent)]
+        `,
+        message: `
+          shadow-none border-transparent text-[var(--port-Message-foreground)]
+          bg-[color-mix(in_srgb,var(--port-Message)_20%,transparent)]
+          hover:bg-[color-mix(in_srgb,var(--port-Message)_32%,transparent)]
+          aria-expanded:bg-[color-mix(in_srgb,var(--port-Message)_32%,transparent)]
+          focus-visible:ring-[color-mix(in_srgb,var(--port-Message)_30%,transparent)]
+          focus-visible:border-[color-mix(in_srgb,var(--port-Message)_40%,transparent)]
         `
       },
       size: {

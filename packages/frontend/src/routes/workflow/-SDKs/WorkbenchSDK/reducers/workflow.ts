@@ -9,23 +9,38 @@ export const workflowReducers = {
     open: (s, workflow) => {
         const data = Workflow.Data.Schema.parse(workflow.data);
 
-        // Drop edges whose source/target node no longer exists (orphaned by a node
-        // deletion that didn't clean up its edges). Left in place they'd dangle in the
-        // persisted blob; pruning here removes them on the next commit.
-        const keptEdges = data.edges.filter(edgeId => {
-            const edge = Workflow.Edge.fromId(edgeId);
-            const dangling = !data.nodes[edge.source.nodeId] || !data.nodes[edge.target.nodeId];
-            if (dangling)
-                console.warn(`[workflow.open] Pruning dangling edge ${edgeId}: missing ${!data.nodes[edge.source.nodeId] ? `source "${edge.source.nodeId}"` : `target "${edge.target.nodeId}"`}`);
-            return !dangling;
-        });
-        const prunedCount = data.edges.length - keptEdges.length;
-        data.edges = keptEdges;
-
         s.workflowId = workflow.id;
         s.data = data;
-        s.isDirty = prunedCount > 0;
         s.cache = Workflow.createCache(data, ShelfSDK.state.blueprints);
+
+        // Drop edges whose endpoint no longer exists — either the node itself (orphaned by a
+        // deletion that didn't clean up its edges) or the port (blueprint changed shape).
+        // Left in place they'd dangle in the persisted blob; pruning here removes them on the
+        // next commit. Needs the cache for resolved port shapes, so it runs after it's built.
+        const keptEdges = data.edges.filter(edgeId => {
+            const edge = Workflow.Edge.fromId(edgeId);
+            const { source, target } = edge;
+
+            const missing =
+                !data.nodes[source.nodeId] ? `source node "${source.nodeId}"`
+              : !data.nodes[target.nodeId] ? `target node "${target.nodeId}"`
+              : !s.cache.resolvedShape[source.nodeId]?.outputs.some(o => o.id === source.portId) ? `source port "${source.portId}" on "${source.nodeId}"`
+              : !s.cache.resolvedShape[target.nodeId]?.inputs.some(i => i.id === target.portId) ? `target port "${target.portId}" on "${target.nodeId}"`
+              : null;
+
+            if (missing)
+                console.warn(`[workflow.open] Pruning dangling edge ${edgeId}: missing ${missing}`);
+
+            return !missing;
+        });
+
+        const prunedCount = data.edges.length - keptEdges.length;
+        s.isDirty = prunedCount > 0;
+
+        if (prunedCount > 0) {
+            data.edges = keptEdges;
+            s.cache = Workflow.createCache(data, ShelfSDK.state.blueprints);
+        }
         s.cycles = [];
         s.stronglyConnectedComponents = [];
         s.issues = {
@@ -50,9 +65,15 @@ export const workflowReducers = {
             if (!sourcePort || !targetPort) continue;
 
             if (Port.isPolymorphic(targetPort) && !Port.isUnresolvedLike(sourcePort.variant))
-                s.reducers.node.polymorphism.resolveGroup(s, edge.target.nodeId, targetPort, sourcePort.variant);
+                s.reducers
+                  .node
+                  .polymorphism
+                  .resolveGroup(s, edge.target.nodeId, targetPort, sourcePort.variant);
             else if (Port.isPolymorphic(sourcePort) && !Port.isUnresolvedLike(targetPort.variant))
-                s.reducers.node.polymorphism.resolveGroup(s, edge.source.nodeId, sourcePort, targetPort.variant);
+                s.reducers
+                 .node
+                 .polymorphism
+                 .resolveGroup(s, edge.source.nodeId, sourcePort, targetPort.variant);
         }
     },
     close: (s) => {

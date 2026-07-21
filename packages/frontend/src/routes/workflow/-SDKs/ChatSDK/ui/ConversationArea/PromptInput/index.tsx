@@ -44,7 +44,7 @@ const PromptInput: React.FC<Props> = ({ className }) => {
 
     return (
         <form ref={formRef} onSubmit={handleSubmit(onSubmit)}>
-            <InputGroup className={className}>
+            <InputGroup className={`${className} has-[[data-slot=input-group-control]:focus-visible]:border-[--port-Message] has-[[data-slot=input-group-control]:focus-visible]:ring-blue-500/50`}>
                 {!hasChatInputNode && (
                     <p className='absolute top-1/2 -translate-y-1/2 text-xs text-foreground flex items-center gap-1'>
                         Add a <NodeBadge icon="MessagesSquare" label="Chat Input" accent="port-Message" /> node to send messages.
@@ -86,8 +86,8 @@ const SendButton = ({ disabled }: { disabled: boolean }) => {
     // Note dont add disabled because it disables the whole text area for some dumb reason
     return (
         <InputGroupButton
-            variant="default"
-            className={`ml-auto transition-opacity ${disabled ? 'opacity-50 cursor-not-allowed' : 'opacity-100 hover:opacity-90'}`}
+            variant="message"
+            className={` ml-auto transition-opacity ${disabled ? 'opacity-50 cursor-not-allowed' : 'opacity-100 hover:opacity-90'}`}
             type="submit"
             onClick={(e) => {
                 if (disabled) e.preventDefault();
@@ -106,7 +106,7 @@ const ArtifactAddButton = ({ disabled }: { disabled: boolean }) => {
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
                 <InputGroupButton
-                    variant="default"
+                    variant="message"
                     className="style-lyra:rounded-none rounded-full"
                     size="icon-xs"
                     aria-label="Add"
