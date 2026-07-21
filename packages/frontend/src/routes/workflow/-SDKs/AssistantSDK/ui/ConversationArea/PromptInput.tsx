@@ -29,7 +29,7 @@ const PromptInput: React.FC<Props> = ({ className }) => {
 
     return (
         <form ref={formRef} onSubmit={handleSubmit(onSubmit)}>
-            <InputGroup className={className}>
+            <InputGroup className={`${className} has-[[data-slot=input-group-control]:focus-visible]:border-(--port-LanguageModel)/50 has-[[data-slot=input-group-control]:focus-visible]:ring-(--port-LanguageModel)/50`}>
                 <Controller
                     name="prompt"
                     control={control}

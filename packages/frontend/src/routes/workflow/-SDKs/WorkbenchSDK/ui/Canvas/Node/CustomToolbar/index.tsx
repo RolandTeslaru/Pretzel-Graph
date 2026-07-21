@@ -75,7 +75,7 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
                         </Tipped>
                     )}
                     {dependencyUpdate && 
-                        <Tipped label={`Update ${mode} workflow`}>
+                        <Tipped label={mode === "publication" ? "Update published workflow" : "Update draft workflow"}>
                             <Button variant="ghost-active" size="icon-xs" className='h-6!'
                                 onClick={handleDependencyUpdate}
                             >

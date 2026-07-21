@@ -294,7 +294,7 @@ code {
   --accent-foreground: theme(--color-white);
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: rgb(50, 50, 50);
+  --border: rgb(55, 55, 55);
 
   /* --border: theme(--color-stone-800); */
   --input: rgb(35, 35, 35);
