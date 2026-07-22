@@ -34,6 +34,8 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
 
                 try {
                     const blueprint = sdk.selectors.node.getBlueprint(sdk.state, nodeId);
+                    if (!blueprint)
+                        return;
 
                     // Merge the just-set value in — getValues is read pre-commit, so it's stale.
                     const fieldValues = { ...sel.field.getValues(sdk.state, nodeId), [field.id]: value };

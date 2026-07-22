@@ -71,17 +71,17 @@ export const Content = memo(({ uowId }: Props) => {
                 <div
                     className='flex items-center gap-2 px-3 py-1 rounded-full backdrop-blur-md min-w-0 max-w-xs'
                     style={{
-                        backgroundColor: node.ui.accent ? `color-mix(in srgb, var(--${ui.accent}) 25%, transparent)` : 'var(--muted)',
+                        backgroundColor: ui.accent ? `color-mix(in srgb, var(--${ui.accent}) 25%, transparent)` : 'var(--muted)',
                     }}
                 >
                     <LazyIcon
                         className='my-auto h-4 w-4 shrink-0'
-                        name={node.ui.icon as string}
-                        style={{ color: node.ui.accent ? `var(--${ui.accent}-foreground)` : undefined }}
+                        name={ui.icon}
+                        style={{ color: ui.accent ? `var(--${ui.accent}-foreground)` : undefined }}
                     />
                     <h4
                         className='text-sm font-semibold truncate min-w-0'
-                        style={{ color: node.ui.accent ? `var(--${ui.accent}-foreground)` : undefined }}
+                        style={{ color: ui.accent ? `var(--${ui.accent}-foreground)` : undefined }}
                     >
                         Unit of Work
                     </h4>

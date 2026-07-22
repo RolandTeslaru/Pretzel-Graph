@@ -13,6 +13,8 @@ export const fieldVariadicReducers = {
         s.isDirty = true;
         const node      = s.selectors.node.get(s, nodeId);
         const blueprint = s.selectors.node.getBlueprint(s, nodeId);
+        if (!blueprint)
+            return;
 
         // Live ports only give us the slot count / last index. New slots are cloned from the
         // BASE blueprint port so they carry its pristine unresolved variant — cloning from the
