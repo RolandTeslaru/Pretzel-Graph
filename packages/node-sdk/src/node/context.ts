@@ -13,6 +13,8 @@ import {
     SubWorkflowAPI,
     DependencyAPI,
 } from "./apis";
+import { HTTP } from "../domain/http";
+import { NetworkProxy } from "../domain/networkProxy";
 
 export interface ExecutionContext {
     readonly executionId:             Execution.Id,
@@ -38,4 +40,6 @@ export interface ExecutionContext {
     readonly enclosingNodeAPI?:       EnclosingNodeAPI,
     readonly subWorkflowAPI:          SubWorkflowAPI,
     readonly dependencyAPI:           DependencyAPI,
+    readonly httpAPI:                 HTTP.ClientAPI,
+    readonly proxyAPI:                NetworkProxy.API,
 }

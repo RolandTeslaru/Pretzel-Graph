@@ -11,6 +11,8 @@ import { AggexCompilerError } from "../errors";
 import { AirlockService } from "../airlock";
 import { RealtimeService } from "../realtime";
 import { WorkflowCompiler } from "./index";
+import { createHTTPClientAPI } from "./http";
+import { createProxyAPI } from "./proxy";
 
 type ExecutionAPIs = Pick<
     RuntimeNode.ExecutionContext,
@@ -27,6 +29,8 @@ type ExecutionAPIs = Pick<
     | "realtimeAPI"
     | "updateSession"
     | "airlockAPI"
+    | "httpAPI"
+    | "proxyAPI"
 >;
 
 // Builds the per-execution API facade injected into every node's ExecutionContext.
@@ -148,6 +152,12 @@ export function createExecutionAPIs(
         abort:  (reason?: any) => abortController.abort(reason),
     };
 
+    // Outbound HTTP for integration nodes — clients are pre-bound to this execution's abort
+    // signal, so terminate/suspend cancels vendor requests in flight.
+    const proxyAPI = createProxyAPI(workflowData, credentialInstances);
+
+    const httpAPI  = createHTTPClientAPI(abortAPI.signal);
+
     // Per-execution facade over the shared service: emit out, await signals in. awaitSignal
     // is bound to this execution's abort signal so parks reject + clean up on terminate/suspend.
     const realtimeAPI = {
@@ -165,6 +175,6 @@ export function createExecutionAPIs(
     return {
         portAPI, propagationAPI, instanceRegistryAPI, workflowQueryAPI,
         schedulerAPI, subWorkflowAPI, dependencyAPI, credentialsAPI,
-        catalogueAPI, abortAPI, realtimeAPI, updateSession, airlockAPI
+        catalogueAPI, abortAPI, realtimeAPI, updateSession, airlockAPI, httpAPI, proxyAPI
     };
 }

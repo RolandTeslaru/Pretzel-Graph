@@ -21,17 +21,40 @@ import { ErrorService } from "./error-service";
 import { SessionService } from "./session-service";
 import { System } from "@pretzel-graph/shared/system";
 
+
 export interface AggexHooks {
     onPause?(): void;
     onResume?(): void;
 }
 
+
+// Runs a compiled graph by translating raw S2 vertex events into node semantics. run() races
+// S2Engine.ignite() against an abort-driven promise, and everything else happens in the hooks:
+//
+//   canVertexRun      Gate. An incoming error envelope fires immediately, bypassing every
+//                     data/signal gate; otherwise RoutingService decides.
+//   onVertexFired     Mark the node active and open its session record.
+//   onVertexExecute   The actual work — see below.
+//   onVertexWaiting   Not enough signals yet: hand the node its partial inputs via wait().
+//   onVertexCompleted Close the session record, honour stopAtNodeId, then gate on pause.
+//   onVertexError     Only reached by `terminate` / terminal errors; records the failure.
+//
+// onVertexExecute in order: catch or re-propagate an incoming error envelope; resolve inputs
+// ("AND" reads every dependency, "OR" only the signals that arrived); evaluate field expressions
+// in the airlock; run() or buildTool(); project outputs onto ports. Those four steps share one
+// try/catch — the node's failure boundary. The returned signal set is what fans out, per the
+// node's propagation strategy (router / none / all).
+//
+// This is NOT a DAG walk. Nodes fire on accumulated signals and may re-fire, so cycles are
+// first-class and a node can execute many times in one run.
 export class AggexEngine {
+
     /** Abort reason marking an intentional "execute up until this point" stop (vs a real termination). */
     public static readonly STOP_AT_TARGET_REASON = "stop_at_target";
 
     /** @internal — accessed by engine services (RoutingService). */
     public  s2Engine:        S2Engine = new S2Engine();
+
     /** @internal — accessed by engine services (ErrorService). */
     public  flightRecorder:  FlightRecorderService | null = null;
 
@@ -45,36 +68,53 @@ export class AggexEngine {
         session:     new SessionService(),
     };
 
+    /** @internal — accessed by engine services (RoutingService). */
+    public nodeRuntimeMap = new Map<Vertex.Id, { wfNode: Workflow.Node.Raw; instance: RuntimeNode<Blueprint> }>();
+
     private pausePromise: Promise<void> | null = null;
     private pauseResolve: (() => void) | null = null;
 
     private hooks: AggexHooks;
 
-    /** @internal — accessed by engine services (RoutingService). */
-    public nodeRuntimeMap = new Map<Vertex.Id, { wfNode: Workflow.Node.Raw; instance: RuntimeNode<Blueprint> }>();
+
+
+    constructor(hooks: AggexHooks = {}) {
+        this.hooks = hooks;
+    }
+
+
 
     public registerNode(vertexId: Vertex.Id | Workflow.Node.Id, wfNode: Workflow.Node.Raw, instance: RuntimeNode<Blueprint>): void {
         this.nodeRuntimeMap.set(vertexId as Vertex.Id, { wfNode, instance });
     }
 
+
+
+    public attachFlightRecorder(recorder: FlightRecorderService): void {
+        this.flightRecorder = recorder;
+    }
+
+
+
     public readonly instanceRegistryAPI = {
+
         get:    (nodeId: Workflow.Node.Id): RuntimeNode<Blueprint> | undefined =>
             this.nodeRuntimeMap.get(nodeId as unknown as Vertex.Id)?.instance,
+
         getAll: (): RuntimeNode<Blueprint>[] =>
             Array.from(this.nodeRuntimeMap.values()).map(e => e.instance),
     }
 
 
 
-    // Lifecycle
+    // Getters preserve the external contract (`engine.propagationAPI.*`, `engine.schedulerAPI.*`).
+    public get propagationAPI() { return this.services.propagation; }
+    public get schedulerAPI()   { return this.services.scheduler; }
 
 
 
-    public async run(
+    public async run(ctx: AggexEngine.Execution.Context): Promise<AggexEngine.Execution.Result> {
 
-        ctx: AggexEngine.Execution.Context
-    
-    ): Promise<AggexEngine.Execution.Result> {
         ctx.activeNodes.clear();
 
         const hooks: S2Hooks = {
@@ -88,33 +128,40 @@ export class AggexEngine {
 
         const start = performance.now();
 
-        const result =  await Promise.race<AggexEngine.Execution.Result>([
+        try {
+            return await Promise.race<AggexEngine.Execution.Result>([
 
-            this.s2Engine.ignite(ctx.compiledGraph, hooks).then(
-                () => ({ 
-                    status: "completed" as const, 
-                    duration: (performance.now() - start) / 1000 
-                })
-            ),
+                this.s2Engine.ignite(ctx.compiledGraph, hooks).then(
+                    () => ({
+                        status: "completed" as const,
+                        duration: (performance.now() - start) / 1000
+                    })
+                ),
 
-            this.createRejectionPromise(ctx, start)
-        ])
-
-        return result;
+                this.createRejectionPromise(ctx, start)
+            ])
+        }
+        finally {
+            ctx.proxyAPI.destroyAll();
+        }
     }
 
 
 
     private createRejectionPromise(ctx: AggexEngine.Execution.Context, start: number){
+
         return new Promise<AggexEngine.Execution.Result>((resolve, reject) => {
+
             ctx.abortAPI.signal.addEventListener("abort", () => {
-                // A "stop at target" abort is an intentional, successful stop — not a
-                // user/timeout termination — so surface it as completed.
+
+                // An intentional stop, not a termination.
                 const stoppedAtTarget = ctx.abortAPI.signal.reason === AggexEngine.STOP_AT_TARGET_REASON;
+
                 resolve({
                     status: stoppedAtTarget ? "completed" as const : "terminated" as const,
                     duration: (performance.now() - start) / 1000
                 });
+
             }, { once: true })
         })
     }
@@ -122,6 +169,7 @@ export class AggexEngine {
 
 
     public pause(){
+
         if(this.pausePromise)
             return
 
@@ -131,8 +179,9 @@ export class AggexEngine {
     }
 
 
-    
+
     public resume(){
+
         if(!this.pausePromise || !this.pauseResolve)
             return;
 
@@ -144,39 +193,8 @@ export class AggexEngine {
 
 
 
-
-    constructor(hooks: AggexHooks = {}) {
-        this.hooks = hooks;
-    }
-
-    public attachFlightRecorder(recorder: FlightRecorderService): void {
-        this.flightRecorder = recorder;
-    }
-
-
-    // Getters preserve the external contract (`engine.propagationAPI.*`, `engine.schedulerAPI.*`).
-    public get propagationAPI() { return this.services.propagation; }
-    public get schedulerAPI()   { return this.services.scheduler; }
-
-
-
-    private onNodeFired(
-        ctx:    AggexEngine.Execution.Context,
-        nodeId: Vertex.Id,
-    ): void {
-        const entry = this.nodeRuntimeMap.get(nodeId);
-        if (!entry)
-            return;
-
-        this.flightRecorder?.onNodeFired(entry.wfNode.id);
-        ctx.activeNodes.add(nodeId);
-        this.services.session.onNodeFired(ctx, entry);
-    }
-
-
-
-
     private async awaitPause(ctx: AggexEngine.Execution.Context) {
+
         if(!this.pausePromise)
             return
 
@@ -185,32 +203,51 @@ export class AggexEngine {
 
         await this.pausePromise;
     }
-        
+
+
+
+    private onNodeFired(
+        ctx:    AggexEngine.Execution.Context,
+        nodeId: Vertex.Id,
+    ): void {
+
+        const entry = this.nodeRuntimeMap.get(nodeId);
+
+        if (!entry)
+            return;
+
+        this.flightRecorder?.onNodeFired(entry.wfNode.id);
+
+        ctx.activeNodes.add(nodeId);
+
+        this.services.session.onNodeFired(ctx, entry);
+    }
 
 
 
     private onNodeExecuted = async (
         ctx:      AggexEngine.Execution.Context,
-        vertexId: Vertex.Id, 
+        vertexId: Vertex.Id,
         signals:  Set<Workflow.Node.Id | Vertex.Id>
     ): Promise<Set<Vertex.Id> | void> => {
-        
+
         const entry = this.nodeRuntimeMap.get(vertexId);
+
         if (!entry)
             return;
 
-        const wfNode = entry.wfNode;
+        const wfNode       = entry.wfNode;
         const nodeInstance = entry.instance;
 
-        // An incoming error envelope means an upstream node failed with `propagate`:
-        // this node catches or re-propagates instead of running its own logic.
+        // An upstream node failed with `propagate` — catch or re-propagate instead of running.
         const intercepted = this.services.errors.interceptIncoming(ctx, vertexId, nodeInstance);
+
         if (intercepted)
             return intercepted;
 
         const allDependencies = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
+        const dataDependency  = entry.instance.fieldValues["dataDependency" as Field.Id];
 
-        const dataDependency = entry.instance.fieldValues["dataDependency" as Field.Id];
         let result;
         let projectedResult;
 
@@ -221,8 +258,8 @@ export class AggexEngine {
                                 dataDependency === "AND" ? allDependencies : signals
                             );
 
-            // Field expressions run in the airlock; a throw/timeout here is the node's
-            // failure (→ onErrorStrategy), an OOM force-terminates (handled in handleNodeError).
+            // Expressions run in the airlock; a throw/timeout is the node's failure
+            // (→ onErrorStrategy), an OOM force-terminates (handled in handleNodeError).
             const fields = nodeInstance.evaluateFieldValues(inputs);
 
             System.log.debug("node executing", {
@@ -243,9 +280,9 @@ export class AggexEngine {
                 result = await nodeInstance.run(inputs, fields);
 
             projectedResult = this.services.nodeIO.projectOutputs(ctx, result, wfNode);
-        } catch (err) {
-            // Treat input resolution, expression evaluation, node execution, and output
-            // projection as one node-owned failure boundary.
+        }
+        catch (err) {
+            // Input resolution, expression eval, execution and projection share one failure boundary.
             return this.services.errors.handle(ctx, vertexId, err);
         }
 
@@ -260,7 +297,6 @@ export class AggexEngine {
 
 
 
-
     private async onNodeCompleted(
         ctx:               AggexEngine.Execution.Context,
         vertexId:          Vertex.Id,
@@ -269,28 +305,27 @@ export class AggexEngine {
         ctx.activeNodes.delete(vertexId);
 
         const entry = this.nodeRuntimeMap.get(vertexId);
+
         if (!entry)
             return
 
-        // Errored nodes (do_nothing / propagate) were already recorded "failed" and
-        // handled their own propagation. Don't overwrite that with "completed" or
-        // re-touch edge state — but S2 still drives any returned signal set after this.
+        // Errored nodes already recorded "failed" and handled their own propagation — don't
+        // overwrite that. S2 still drives any returned signal set after this.
         if (ctx.session.node_status[entry.wfNode.id]?.status === "failed") {
             await this.awaitPause(ctx);
             return;
         }
 
         this.services.session.onNodeCompleted(ctx, entry, resolvedOutSignals);
+
         this.flightRecorder?.onNodeCompleted(entry.wfNode.id, ctx);
 
-        // "Execute up until this point": the target ran and its output is now persisted +
-        // emitted — stop the rest of the workflow.
+        // The target ran and its output is persisted + emitted — stop the rest of the workflow.
         if (ctx.stopAtNodeId === entry.wfNode.id)
             ctx.abortAPI.abort(AggexEngine.STOP_AT_TARGET_REASON);
 
         await this.awaitPause(ctx);
     }
-
 
 
 
@@ -302,6 +337,7 @@ export class AggexEngine {
         _totalDeps:              number,
     ) {
         const entry = this.nodeRuntimeMap.get(vertexId);
+
         if (!entry)
             return
 
@@ -328,21 +364,19 @@ export class AggexEngine {
 
         try {
             partialFields = instance.evaluateFieldValues(partialInputs);
-        } catch (err) {
+        }
+        catch (err) {
             this.services.errors.handle(ctx, vertexId, err);  // OOM → throws (terminate); else recorded
             return;
         }
+
         instance.wait(partialInputs, nodeDepMap, partialFields);
     }
 
 
 
-
-    /**
-     * S2 `onVertexError` hook — fires only when a node throw reaches S2 (i.e. the
-     * `terminate` strategy, or a terminal/cyclic `UncaughtRuntimeNodeError`). The
-     * run is already rejecting; we just record the failure via ErrorService.
-     */
+    // Only reached when a throw escapes to S2 (`terminate` strategy, or a terminal/cyclic
+    // UncaughtRuntimeNodeError). The run is already rejecting; just record it.
     private onNodeError(
         ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
@@ -353,8 +387,7 @@ export class AggexEngine {
             error:  error instanceof Error ? error.message : String(error),
         });
 
-        // If the node already threw a SystemError (or subclass), preserve it.
-        // Otherwise wrap the S2/unknown error into an AggexExecutionError.
+        // Preserve an existing SystemError; wrap anything else.
         const aggexError = error instanceof SystemError
             ? error
             : new AggexExecutionError(
@@ -367,43 +400,40 @@ export class AggexEngine {
 
 
 
-
     private canNodeRun(
         ctx:               AggexEngine.Execution.Context,
         vertexId:          Vertex.Id,
         receivedSignals:   Set<Vertex.Id>,
         s2EngineAssesment: boolean
     ): boolean {
-        const entry = this.nodeRuntimeMap.get(vertexId);
-        if (!entry) return true;
 
-        // Fail-fast: an incoming error envelope bypasses every data/signal gate so the
-        // node fires immediately and re-propagates (or catches) rather than waiting on
-        // sibling inputs that will never arrive.
-        if (this.services.errors.findIncomingEnvelope(ctx, vertexId)) return true;
+        const entry = this.nodeRuntimeMap.get(vertexId);
+
+        if (!entry)
+            return true;
+
+        // Fail-fast: an error envelope bypasses every gate so the node fires immediately rather
+        // than waiting on sibling inputs that will never arrive.
+        if (this.services.errors.findIncomingEnvelope(ctx, vertexId))
+            return true;
 
         return this.services.routing.canRunByDependencies(ctx, vertexId);
     }
-
-
-
-
 }
 
 
+
 export namespace AggexEngine {
+
     export namespace Execution {
+
         export type Result = {
             status: "completed" | "terminated";
             duration: number;
         }
 
-        /**
-         * An in-flight error travelling the graph out-of-band (NOT through typed
-         * output ports). Keyed by edge in `ctx.errorChannel`. `path` is the ordered
-         * trace of nodes the error has visited — used for cycle detection (a node
-         * re-appearing → `CyclicalRuntimeNodeError`) and debugging.
-         */
+        /** In-flight error travelling out-of-band (NOT through typed ports), keyed by edge in
+         *  ctx.errorChannel. `path` is the ordered node trace, used for cycle detection. */
         export interface ErrorEnvelope {
             id:    string;
             error: SystemError.Serialized;
@@ -413,16 +443,14 @@ export namespace AggexEngine {
         export interface Context extends RuntimeNode.ExecutionContext {
             compiledGraph: S2Graph,
             activeNodes:   Set<Workflow.Node.Id | Vertex.Id>;
+
             /** Out-of-band error propagation channel, keyed by the edge the error travels. */
             errorChannel:  Map<Workflow.Edge.Id, ErrorEnvelope>;
-            /**
-             * "Execute up until this point": once this node completes, the run aborts. The
-             * full graph compiles/runs normally (portals, cycles, sub-workflows resolve
-             * natively); we just cap execution at the target. Undefined on a normal run.
-             */
+
+            /** "Execute up until this point": once this node completes, the run aborts. The full
+             *  graph still compiles and runs normally. Undefined on a normal run. */
             stopAtNodeId?: Workflow.Node.Id;
         }
-
     }
 
     export type ExecutionContext = Execution.Context;

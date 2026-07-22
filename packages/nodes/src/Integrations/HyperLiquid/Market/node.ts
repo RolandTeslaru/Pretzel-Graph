@@ -1,4 +1,3 @@
-import axios from "axios";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
@@ -6,43 +5,30 @@ import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint, ToolBlueprint } from "./blueprint";
-
-const HYPERLIQUID_INFO_URL = "https://api.hyperliquid.xyz/info";
-
-type Candle = { t: number; T: number; s: string; i: string; o: string; c: string; h: string; l: string; v: string; n: number };
-
-const post = async <T>(payload: Record<string, unknown>): Promise<T> => {
-    const { data } = await axios.post<T>(HYPERLIQUID_INFO_URL, payload, {
-        headers: { "Content-Type": "application/json" },
-    });
-    return data;
-};
+import { Candle, HyperLiquidPublicClient } from "../publicClient";
 
 const summarizeCandles = (coin: string, interval: string, candles: Candle[]) => {
-    if (!candles.length) {
+
+    if (!candles.length)
         return { coin, interval, count: 0, firstClose: null, lastClose: null, change: null, changePct: null };
-    }
+
     const firstClose = parseFloat(candles[0].c);
-    const lastClose = parseFloat(candles[candles.length - 1].c);
-    const change = lastClose - firstClose;
-    const changePct = firstClose === 0 ? null : (change / firstClose) * 100;
+    const lastClose  = parseFloat(candles[candles.length - 1].c);
+    const change     = lastClose - firstClose;
+    const changePct  = firstClose === 0 ? null : (change / firstClose) * 100;
+
     return { coin, interval, count: candles.length, firstClose, lastClose, change, changePct };
 };
 
-const fetchCandles = async (coin: string, interval: string, lookbackHours: number): Promise<Candle[]> => {
-    const endTime = Date.now();
-    const startTime = endTime - lookbackHours * 60 * 60 * 1000;
-    return post<Candle[]>({
-        type: "candleSnapshot",
-        req: { coin, interval, startTime, endTime },
-    });
-};
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
+    private readonly client: HyperLiquidPublicClient;
+
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);
+        this.client = new HyperLiquidPublicClient(this.httpClientFactory);
     }
 
     protected override async onRun(
@@ -54,7 +40,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         if (!coin)
             throw new Error("HyperLiquid Market: 'coin' input is required (e.g. BTC, ETH).");
 
-        const candles = await fetchCandles(coin, interval, lookbackHours);
+        const candles = await this.client.candles(coin, interval, lookbackHours);
         const summary = summarizeCandles(coin, interval, candles);
 
         return { candles, summary };
@@ -67,7 +53,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
         const getCandles = tool(
             async ({ coin, interval, lookbackHours }) => {
-                const candles = await fetchCandles(
+                const candles = await this.client.candles(
                     coin,
                     interval ?? defaultInterval,
                     lookbackHours ?? defaultLookback,
@@ -87,7 +73,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
         const getMids = tool(
             async ({ coin }) => {
-                const mids = await post<Record<string, string>>({ type: "allMids" });
+                const mids = await this.client.mids();
                 if (coin) {
                     const price = mids[coin];
                     return price ? `${coin}: ${price}` : `No mid price found for ${coin}.`;
@@ -105,7 +91,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
         const getOrderBook = tool(
             async ({ coin }) => {
-                const book = await post<unknown>({ type: "l2Book", coin });
+                const book = await this.client.orderBook(coin);
                 return JSON.stringify(book);
             },
             {
@@ -119,7 +105,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
         const getMeta = tool(
             async () => {
-                const meta = await post<unknown>({ type: "metaAndAssetCtxs" });
+                const meta = await this.client.meta();
                 return JSON.stringify(meta);
             },
             {

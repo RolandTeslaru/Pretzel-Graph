@@ -91,10 +91,10 @@ export const ExpressionEditor = ({ node, displayName, onChange, onClose, initial
                     flex-col relative gap-2 h-full flex-1 overflow-hidden
                     
                 `}>
-                    <FloatContainer className="absolute top-2 left-2 w-fit h-12 py-1! px-3 backdrop-blur-md z-10">
+                    <div className="flex flex-row gap-2 pt-3 px-5">
                         <SystemIcons.MathFunction className=" size-4 my-auto" />
                         <Dialog.Title className="font-mono text-sm">Expression Editor</Dialog.Title>
-                    </FloatContainer>
+                    </div>
                     
                     <div className="absolute flex gap-1 flex-row top-2.5 right-1/2 translate-x-1/2 p-1 px-2 text-sm font-medium">
                         <p>

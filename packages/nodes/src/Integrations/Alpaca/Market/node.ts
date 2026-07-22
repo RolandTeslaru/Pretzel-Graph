@@ -33,8 +33,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
         const { apiKeyId, apiSecret } = this.context.credentialsAPI.getDecryptedValue(this.credentials.alpacaApi.blob);
         const credentials = requireAlpacaCredentials(apiKeyId, apiSecret);
-        this.dataClient = createAlpacaDataClient(credentials);
-        this.tradingClient = createAlpacaTradingClient(this.fieldValues.environment as AlpacaEnvironment, credentials);
+        this.dataClient = createAlpacaDataClient(this.httpClientFactory, credentials);
+        this.tradingClient = createAlpacaTradingClient(this.httpClientFactory, this.fieldValues.environment as AlpacaEnvironment, credentials);
     }
 
     protected override async onRun(

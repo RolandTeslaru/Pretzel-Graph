@@ -12,7 +12,7 @@ const intervalOptions = [
 export const Blueprint = defineBlueprint({
     id: "Integrations.HyperLiquid.Market",
     displayName: "HyperLiquid Market",
-    description: "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata. No API key required.",
+    description: "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata.",
     icon: "HyperLiquid",
     accent: "port-DataList",
     iconColor: "color-cyan-500",
@@ -61,7 +61,7 @@ export const Blueprint = defineBlueprint({
 export const ToolBlueprint = defineBlueprint({
     id: "Integrations.HyperLiquid.Market",
     displayName: "HyperLiquid Market",
-    description: "Exposes HyperLiquid market-data tools to an agent. Read-only — no API key required.",
+    description: "Exposes HyperLiquid market-data tools to an agent.",
     icon: "HyperLiquid",
     accent: "port-ToolList",
     iconColor: "color-cyan-500",
