@@ -3,9 +3,21 @@ import { Button } from "@pretzel-graph/standard-ui/foundations";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 import IncomingPanel from "../IncomingPanel";
 import OutgoingPanel from "../OutgoingPanel";
-import type { Workflow } from "@pretzel-graph/shared/domain";
+import { WorkbenchSDK } from "../../../sdk";
 
-export const NodeSidebarFooter = ({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
+// `push` carries companions across a re-push (see StackSDK reducers), so a companion mounted for
+// node A survives being re-pushed for node B. These capture nothing and follow the selection.
+const SelectedIncomingPanel = () => {
+    const nodeId = WorkbenchSDK.useStore(s => s.clickedNodeId)
+    return nodeId ? <IncomingPanel nodeId={nodeId} /> : null
+}
+
+const SelectedOutgoingPanel = () => {
+    const nodeId = WorkbenchSDK.useStore(s => s.clickedNodeId)
+    return nodeId ? <OutgoingPanel nodeId={nodeId} /> : null
+}
+
+export const NodeSidebarFooter = () => {
 
     const panelId = "nodeSidebar" as StackSDK.Panel.Id;
 
@@ -25,7 +37,7 @@ export const NodeSidebarFooter = ({ hyNode }: { hyNode: Workflow.Node.Hydrated }
         } else {
             StackSDK.actions.pushCompanion(panelId, incomingCompanionId, "left", 250, (props) => (
                 <StackSDK.CompanionTemplate enter="right" {...props} className='right-100 top-24 bottom-24 w-62.5'>
-                    <IncomingPanel nodeId={hyNode.id} inputs={hyNode.inputs} />
+                    <SelectedIncomingPanel />
                 </StackSDK.CompanionTemplate>
             ))
         }
@@ -37,7 +49,7 @@ export const NodeSidebarFooter = ({ hyNode }: { hyNode: Workflow.Node.Hydrated }
         } else {
             StackSDK.actions.pushCompanion(panelId, outgoingCompanionId, "right", 250, (props) => (
                 <StackSDK.CompanionTemplate enter="right" {...props} className='right-5 top-24 bottom-24 w-62.5'>
-                    <OutgoingPanel nodeId={hyNode.id} outputs={hyNode.outputs} />
+                    <SelectedOutgoingPanel />
                 </StackSDK.CompanionTemplate>
             ))
         }

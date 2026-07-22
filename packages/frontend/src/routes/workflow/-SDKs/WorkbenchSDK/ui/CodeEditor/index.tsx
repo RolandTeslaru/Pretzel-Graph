@@ -50,7 +50,7 @@ export const CodeEditorContent = ({ node, displayName, onChange, onClose, initia
         <div className="flex flex-row gap-5 h-[85vh] w-[90vw]">
 
             <div style={surfaceStyle} className={`${surface} overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
-                <IncomingPanel nodeId={node.id} inputs={hyNode.inputs} />
+                <IncomingPanel nodeId={node.id} />
             </div>
 
 
@@ -81,7 +81,7 @@ export const CodeEditorContent = ({ node, displayName, onChange, onClose, initia
             </div>
 
             <div style={surfaceStyle} className={`${surface} overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
-                <OutgoingPanel nodeId={node.id} outputs={hyNode.outputs} />
+                <OutgoingPanel nodeId={node.id} />
             </div>
         </div>
     )

@@ -1,6 +1,7 @@
 import { Workflow } from "./Workflow"
 import { Port } from "./Foundations/Port"
 import { Foundations } from "./Foundations";
+import { Vault } from "./Vault";
 
 type Connection = {
     source: Workflow.Node.Id;
@@ -72,9 +73,31 @@ export namespace Validation {
             }
         }
 
+        export interface Credential {
+            templateId: Vault.Credential.Template.Id
+            type: 'missing_credential'
+        }
+        export namespace Credential {
+            export function check(
+                templateId: Vault.Credential.Template.Id,
+                nodeId: Workflow.Node.Id,
+                workflowData: Workflow.Data
+            ): Issue.Credential | null {
+                const instanceId = workflowData.credentialInstanceIds[nodeId]?.[templateId];
+                if (instanceId)
+                    return null;
+
+                return {
+                    templateId,
+                    type: 'missing_credential' as const,
+                }
+            }
+        }
+
         export interface Node {
             fields: Record<Foundations.Field.Id, Issue.Field>;
             inputs: Record<Port.Input.Id, Issue.Input>;
+            credentials: Record<Vault.Credential.Template.Id, Issue.Credential>;
         }
         export namespace Node {
             export function check(
@@ -86,10 +109,11 @@ export namespace Validation {
                 if (!shape)
                     throw new Error(`Cannot validate node ${node.id}: resolved shape was not provided.`);
 
-                const nodeIssues: Issue.Node = { fields: {}, inputs: {} }
+                const nodeIssues: Issue.Node = { fields: {}, inputs: {}, credentials: {} }
 
                 let numFieldIssues = 0;
                 let numInputIssues = 0;
+                let numCredentialIssues = 0;
 
 
                 for (const field of shape.fields) {
@@ -108,7 +132,15 @@ export namespace Validation {
                     }
                 }
 
-                if (numFieldIssues === 0 && numInputIssues === 0)
+                for (const template of shape.credentials) {
+                    const credentialIssue = Issue.Credential.check(template.id, node.id, workflowData)
+                    if (credentialIssue) {
+                        nodeIssues.credentials[template.id] = credentialIssue
+                        numCredentialIssues++;
+                    }
+                }
+
+                if (numFieldIssues === 0 && numInputIssues === 0 && numCredentialIssues === 0)
                     return null;
 
                 return nodeIssues;
@@ -311,7 +343,7 @@ export namespace Validation {
             return true;
 
         return Object.values(issues.nodes).some(nodeIssue => {
-            return Object.values(nodeIssue.fields).length > 0 || Object.values(nodeIssue.inputs).length > 0
+            return Object.values(nodeIssue.fields).length > 0 || Object.values(nodeIssue.inputs).length > 0 || Object.values(nodeIssue.credentials).length > 0
         })
     }
 }
