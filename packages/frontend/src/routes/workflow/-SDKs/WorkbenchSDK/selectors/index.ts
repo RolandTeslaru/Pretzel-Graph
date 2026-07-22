@@ -2,6 +2,7 @@ import { nodeSelectors, type NodeSelectors } from './node';
 import { edgeSelectors, type EdgeSelectors } from './edge';
 import { fieldSelectors, type FieldSelectors } from './field';
 import { inputSelectors, type InputSelectors } from './input';
+import { credentialSelectors, type CredentialSelectors } from './credential';
 import { outputSelectors, type OutputSelectors } from './output';
 import { portSelectors, type PortSelectors } from './port';
 import { cacheSelectors, type CacheSelectors } from './cache';
@@ -23,6 +24,7 @@ export interface WorkbenchSDKSelectors {
     edge           : EdgeSelectors
     field          : FieldSelectors
     input          : InputSelectors
+    credential     : CredentialSelectors
     output         : OutputSelectors
     port           : PortSelectors
     cache          : CacheSelectors
@@ -56,6 +58,7 @@ export const workbenchSelectors = {
     edge           : edgeSelectors,
     field          : fieldSelectors,
     input          : inputSelectors,
+    credential     : credentialSelectors,
     output         : outputSelectors,
     port           : portSelectors,
     cache          : cacheSelectors,

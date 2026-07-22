@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import { Tooltip } from '@pretzel-graph/standard-ui/foundations'
 import type { Execution, Validation, Workflow } from '@pretzel-graph/shared/domain'
@@ -69,21 +70,41 @@ export default StatusIndicator
 
 const IssuesTooltipContent = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
   const issues = WorkbenchSDK.useStore(s => s.issues.nodes[nodeId])
+
+  const { inputIssues, fieldIssues, credentialIssues, total } = useMemo(() => {
+    const inputIssues = Object.values(issues?.inputs ?? {})
+    const fieldIssues = Object.values(issues?.fields ?? {})
+    const credentialIssues = Object.values(issues?.credentials ?? {})
+    return {
+      inputIssues,
+      fieldIssues,
+      credentialIssues,
+      total: inputIssues.length + fieldIssues.length + credentialIssues.length,
+    }
+  }, [issues])
+
   if (!issues)
     return null;
 
   return (
     <div className=''>
-      <p className="text-sm dark:text-black text-white font-semibold">Node has multiple issues:</p>
+      <p className="text-sm dark:text-black text-white font-semibold">
+        Node has {total === 1 ? 'an issue' : `${total} issues`}:
+      </p>
       <div className='flex flex-col pt-1 text-xs'>
-        {Object.entries(issues.inputs).map(([key, issue]) => (
-          <div key={key}>
+        {inputIssues.map((issue, i) => (
+          <div key={i}>
             {renderInputIssueMessage(issue)}
           </div>
         ))}
-        {Object.entries(issues.fields).map(([key, issue]) => (
-          <div key={key}>
+        {fieldIssues.map((issue, i) => (
+          <div key={i}>
             {renderFieldIssueMessage(issue)}
+          </div>
+        ))}
+        {credentialIssues.map((issue, i) => (
+          <div key={i}>
+            {renderCredentialIssueMessage(issue)}
           </div>
         ))}
       </div>
@@ -96,6 +117,13 @@ const renderFieldIssueMessage = (issue: Validation.Issue.Field) => {
   switch (issue.type) {
     case "missing_value":
       return <p>Field <span className='text-destructive font-semibold'>{issue.field.id}</span> is required</p>;
+  }
+}
+
+const renderCredentialIssueMessage = (issue: Validation.Issue.Credential) => {
+  switch (issue.type) {
+    case "missing_credential":
+      return <p>Credential <span className='text-destructive font-semibold'>{issue.templateId}</span> is required</p>;
   }
 }
 

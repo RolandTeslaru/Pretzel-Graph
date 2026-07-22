@@ -11,12 +11,14 @@ import { clipboardReducers } from "./clipboard";
 import { selectionReducers } from "./selection";
 import { dependencyReducers } from "./dependency";
 import { cacheReducers } from "./cache";
+import { credentialReducers } from "./credential";
 
 export const workbenchReducers = {
     cache                   : cacheReducers,
     field                   : fieldReducers,
     edge                    : edgeReducers,
     node                    : nodeReducers,
+    credential              : credentialReducers,
     port                    : portReducers,
     input                   : inputReducers,
     workflow                : workflowReducers,

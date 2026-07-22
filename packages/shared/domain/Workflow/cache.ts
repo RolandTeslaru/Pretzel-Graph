@@ -3,6 +3,7 @@ import { resolveInputs, resolveOutputs } from "./resolvers";
 import type { Blueprint } from "../Foundations/Blueprint";
 import { Port } from "../Foundations/Port";
 import type { Field } from "../Foundations/Field";
+import type { Vault } from "../Vault";
 import { Data } from "./data";
 import { Edge } from "./edge";
 import { NodeId, EdgeId } from "./ids";
@@ -48,9 +49,10 @@ export interface Cache {
 
 export namespace Cache {
     export interface ResolvedShape {
-        fields:  readonly Field[]
-        inputs:  Port.Input[]
-        outputs: Port.Output[]
+        fields:      readonly Field[]
+        inputs:      Port.Input[]
+        outputs:     Port.Output[]
+        credentials: readonly Vault.Credential.Template[]
     }
 
     export const INITIAL = {
@@ -78,6 +80,7 @@ export function resolveShape(data: Data, node: Node.Raw, blueprint: Blueprint): 
         fields,
         inputs: resolveInputs(blueprint.inputs, node, dependency),
         outputs: resolveOutputs(blueprint.outputs, node, dependency),
+        credentials: blueprint.credentials ?? [],
     };
 }
 

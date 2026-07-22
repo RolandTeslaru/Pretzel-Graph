@@ -14,7 +14,7 @@ const ErrorViewer = () => {
     ) as [Workflow.Node.Id, { status: string; error: NonNullable<typeof topLevelError> }][]
 
     return (
-        <div className='flex flex-col gap-3'>
+        <div className='flex flex-col gap-3 w-[300px]'>
             <div className='flex items-center gap-2'>
                 <AlertTriangleFill size={18} className='text-destructive' />
                 <p className='text-sm font-semibold'>Execution failed</p>

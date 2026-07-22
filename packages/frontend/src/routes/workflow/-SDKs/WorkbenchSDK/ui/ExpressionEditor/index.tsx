@@ -83,7 +83,7 @@ export const ExpressionEditor = ({ node, displayName, onChange, onClose, initial
         <div className="flex flex-row gap-5 h-[85vh] w-[90vw]">
 
             <div style={surfaceStyle} className={`${surface} w-[30%] overflow-hidden min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
-                <IncomingPanel nodeId={node.id} inputs={hyNode.inputs}  />
+                <IncomingPanel nodeId={node.id} />
             </div>
 
             <div style={surfaceStyle} className={`${surface} flex flex-col w-[70%] border-border border rounded-2xl shadow-xl shadow-black/10`}>

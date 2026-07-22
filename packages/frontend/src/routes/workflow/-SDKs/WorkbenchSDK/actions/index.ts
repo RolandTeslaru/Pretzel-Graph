@@ -52,6 +52,10 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             }),
             validate:          (...props) => { setState(s => { reducers.input.validate(s,      ...props) }) },
         },
+        credential: {
+            setInstance:       withCommit((...props) => setState(s => { reducers.credential.setInstance(s, ...props) })),
+            validate:          (...props) => { setState(s => { reducers.credential.validate(s, ...props) }) },
+        },
         temporal: {
             // staticValues are excluded from history (see sdk equality), so a restore would
             // otherwise revert field/input values to a stale snapshot. Re-apply the live
@@ -137,6 +141,10 @@ export interface _WorkbenchSDKActions {
     input                   : {
         setValue            : (nodeId: Workflow.Node.Id, input: Port.Input, value: any) => void;
         validate            : DropFirstArg<WorkbenchSDK.Reducers['input']['validate']>;
+    };
+    credential              : {
+        setInstance         : DropFirstArg<WorkbenchSDK.Reducers['credential']['setInstance']>;
+        validate            : DropFirstArg<WorkbenchSDK.Reducers['credential']['validate']>;
     };
     edge                    : {
         create              : DropFirstArg<WorkbenchSDK.Reducers['edge']['create']>;

@@ -1,5 +1,5 @@
 import { Input, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
-import React, { useMemo, memo, useEffect, useState } from 'react'
+import React, { useMemo, memo, useEffect, useState, useRef } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import { DialogSDK } from '@/SDKs/DialogSDK'
@@ -8,7 +8,7 @@ import { Accordion } from '@pretzel-graph/standard-ui/foundations/accordion';
 import { FieldRenderer } from '../FieldRenderer';
 import { INPUT_RENDERER_MAP } from '../InputRenderer';
 import { NodeSidebarHeader } from './Header';
-import { NodeSidebarFooter } from './Footer';
+import { NodeSidebarFooter  as Footer} from './Footer';
 import WebhookRenderer from './webhook-renderer';
 import { InputItem } from './input-renderer';
 import { CredentialPicker } from './CredentialPicker';
@@ -36,19 +36,25 @@ const NodeSidebar = () => {
 
     const isFullscreen = DialogSDK.useStore(s => s.selectors.isDialogOpen(s, "fullscreen-node-panel"));
 
-    const hyNode = WorkbenchSDK.useSelectedNode()
+    // Only the id goes into the pushed closure — a hydrated node would be frozen at push
+    // time, and re-pushing on its (always-new) identity would remount Content on every edit.
+    // Validated against data.nodes: clickedNodeId outlives the node it points at, so a bare
+    // id would keep the panel open after a delete.
+    const nodeId = WorkbenchSDK.useStore(s =>
+        s.clickedNodeId && s.data.nodes[s.clickedNodeId] ? s.clickedNodeId : null
+    )
 
     useEffect(() => {
-        if (hyNode && !isFullscreen) {
+        if (nodeId && !isFullscreen) {
             StackSDK.actions.push("nodeSidebar" as StackSDK.Panel.Id, (props) => (
                 <StackSDK.Template {...props}>
-                    <Content hyNode={hyNode} />
+                    <ConnectedContent nodeId={nodeId} />
                 </StackSDK.Template>
             ))
         } else
             StackSDK.actions.pop("nodeSidebar" as StackSDK.Panel.Id)
-            
-    }, [hyNode?.id, isFullscreen])
+
+    }, [nodeId, isFullscreen])
 
     return null
 }
@@ -56,10 +62,24 @@ const NodeSidebar = () => {
 export default NodeSidebar
 
 
+// The panel outlives the node during the pop animation (and on delete), so hold the last
+// hydrated shape instead of unmounting — otherwise the UI blanks out mid-transition.
+const ConnectedContent = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
+    const hyNode = WorkbenchSDK.useNode(nodeId)
+    const last = useRef(hyNode)
+
+    if (hyNode)
+        last.current = hyNode
+
+    return last.current ? <Content hyNode={last.current} /> : null
+}
+
+
 interface ContentProps {
     hyNode: Workflow.Node.Hydrated
     showFooter?: boolean
 }
+
 
 export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
     const [isEditing, setIsEditing] = useState(false)
@@ -175,7 +195,7 @@ export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
                 </Accordion.Root>
             </ScrollArea.Root>
 
-            {showFooter && <NodeSidebarFooter hyNode={hyNode} />}
+            {showFooter && <Footer />}
         </>
     )
 }

@@ -34,7 +34,7 @@ export interface NodeSelectors {
     getInputs: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Port.Input[]
     getOutputs: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Port.Output[]
     getFields: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => readonly Foundations.Field[]
-    getBlueprint: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Blueprint
+    getBlueprint: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Blueprint | null
     getUI: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => NodeUI
 }
 
@@ -46,6 +46,16 @@ export type NodeUI = {
     iconColor?: string
     isMinimized: boolean
     isFlipped: boolean
+}
+
+// Neutral UI for a node whose data or blueprint is missing (deleted / not yet hydrated).
+const FALLBACK_NODE_UI: NodeUI = {
+    displayName: "Unknown Node",
+    icon: "OctagonX",
+    accent: "node-unknown",
+    iconColor: "destructive",
+    isMinimized: false,
+    isFlipped: false,
 }
 
 export interface LegacyExpressionContext {
@@ -64,7 +74,8 @@ export const nodeSelectors = {
 
         return (
             Object.entries(nodeIssues.fields).length > 0 ||
-            Object.entries(nodeIssues.inputs).length > 0
+            Object.entries(nodeIssues.inputs).length > 0 ||
+            Object.entries(nodeIssues.credentials).length > 0
         );
     },
     isTool: (s, nodeId) => {
@@ -166,13 +177,19 @@ export const nodeSelectors = {
     },
     getBlueprint: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
-        const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
+        if (!node)
+            return null;
 
-        return blueprint;
+        return ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId] ?? null;
     },
     getUI: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
-        const bp = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
+        const bp = node ? ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId] : undefined;
+        // The node may have been deleted (stale id) or its blueprint not yet hydrated. Callers
+        // render unconditionally, so hand back a neutral placeholder rather than null.
+        if (!node || !bp)
+            return FALLBACK_NODE_UI;
+
         // Subworkflow nodes take their identity from the attached dependency record; node-level
         // overrides still win, then the dependency, then the (generic container) blueprint.
         const dep = s.selectors.node.getDependency(s, nodeId);
