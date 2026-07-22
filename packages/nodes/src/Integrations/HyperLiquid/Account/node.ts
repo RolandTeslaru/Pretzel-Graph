@@ -1,4 +1,3 @@
-import axios from "axios";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
@@ -6,15 +5,7 @@ import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint, ToolBlueprint } from "./blueprint";
-
-const HYPERLIQUID_INFO_URL = "https://api.hyperliquid.xyz/info";
-
-const post = async <T>(payload: Record<string, unknown>): Promise<T> => {
-    const { data } = await axios.post<T>(HYPERLIQUID_INFO_URL, payload, {
-        headers: { "Content-Type": "application/json" },
-    });
-    return data;
-};
+import { ClearinghouseState, HyperLiquidPublicClient } from "../publicClient";
 
 const isAddress = (s: string) => /^0x[a-fA-F0-9]{40}$/.test(s);
 
@@ -27,18 +18,14 @@ const requireAddress = (raw: string | undefined, fallback?: string): string => {
     return addr.toLowerCase();
 };
 
-type ClearinghouseState = {
-    marginSummary?: unknown;
-    crossMarginSummary?: unknown;
-    withdrawable?: string;
-    assetPositions?: Array<{ position: unknown; type: string }>;
-};
-
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
+    private readonly client: HyperLiquidPublicClient;
+
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);
+        this.client = new HyperLiquidPublicClient(this.httpClientFactory);
     }
 
     protected override async onRun(
@@ -47,8 +34,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         const address = requireAddress(incoming.address, this.fieldValues.defaultAddress);
 
         const [state, openOrders] = await Promise.all([
-            post<ClearinghouseState>({ type: "clearinghouseState", user: address }),
-            post<unknown[]>({ type: "openOrders", user: address }),
+            this.client.clearinghouseState(address),
+            this.client.openOrders(address),
         ]);
 
         const positions = (state.assetPositions ?? []).map(p => p.position);
@@ -68,7 +55,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         const getAccountState = tool(
             async ({ address }) => {
                 const user = requireAddress(address, defaultAddress);
-                const state = await post<ClearinghouseState>({ type: "clearinghouseState", user });
+                const state = await this.client.clearinghouseState(user);
                 return JSON.stringify(state);
             },
             {
@@ -81,7 +68,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         const getOpenOrders = tool(
             async ({ address }) => {
                 const user = requireAddress(address, defaultAddress);
-                const orders = await post<unknown[]>({ type: "openOrders", user });
+                const orders = await this.client.openOrders(user);
                 return JSON.stringify(orders);
             },
             {
@@ -94,7 +81,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         const getFills = tool(
             async ({ address }) => {
                 const user = requireAddress(address, defaultAddress);
-                const fills = await post<unknown[]>({ type: "userFills", user });
+                const fills = await this.client.userFills(user);
                 return JSON.stringify(fills);
             },
             {
@@ -108,7 +95,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
             async ({ address, lookbackHours }) => {
                 const user = requireAddress(address, defaultAddress);
                 const startTime = Date.now() - lookbackHours * 60 * 60 * 1000;
-                const funding = await post<unknown[]>({ type: "userFunding", user, startTime });
+                const funding = await this.client.userFunding(user, startTime);
                 return JSON.stringify(funding);
             },
             {

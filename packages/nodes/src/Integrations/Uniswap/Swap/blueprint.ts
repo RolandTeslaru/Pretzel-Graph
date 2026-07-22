@@ -4,7 +4,7 @@ import { Uniswap } from "@pretzel-graph/nodes/Credentials/Uniswap";
 export const Blueprint = defineBlueprint({
     id: "Integrations.Uniswap.Swap",
     displayName: "Uniswap",
-    description: "Provides Uniswap tools for token swapping on EVM chains. Exposes check_approval, get_quote and swap_tokens as a tool list for agents. Requires a Uniswap API key and an EVM private key for signing transactions.",
+    description: "Provides Uniswap tools for token swapping on EVM chains. Exposes check_approval, get_quote and swap_tokens as a tool list for agents.",
     icon: "Uniswap",
     accent: "port-ToolList",
     credentials: [Uniswap],

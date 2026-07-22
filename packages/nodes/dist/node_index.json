@@ -1,6 +1,6 @@
 {
-  "version": "1784666547022",
-  "generatedAt": "2026-07-21T20:42:27.022Z",
+  "version": "1784745589493",
+  "generatedAt": "2026-07-22T18:39:49.493Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -4267,22 +4267,6 @@
           "groupId": "tools_group",
           "variant": "ToolList",
           "required": false
-        },
-        {
-          "id": "tool_2",
-          "displayName": "Tool 2",
-          "internal": false,
-          "groupId": "tools_group",
-          "variant": "ToolList",
-          "required": false
-        },
-        {
-          "id": "tool_3",
-          "displayName": "Tool 3",
-          "internal": false,
-          "groupId": "tools_group",
-          "variant": "ToolList",
-          "required": false
         }
       ],
       "outputs": [
@@ -5371,7 +5355,7 @@
       "credentials": [],
       "ui": {
         "displayName": "DeFi Market Data",
-        "description": "Fetches live DeFi market data. Pyth for real-time asset prices, DeFiLlama for protocol TVL and analytics. No API key required.",
+        "description": "Fetches live DeFi market data: Pyth for real-time asset prices, DeFiLlama for protocol TVL and analytics.",
         "icon": "Coinbase",
         "accent": "port-Json"
       },
@@ -5559,7 +5543,7 @@
       ],
       "ui": {
         "displayName": "ERC-20 Token",
-        "description": "Read ERC-20 token balances and allowances, or transfer and approve tokens using a Coinbase-managed CDP wallet. No private key — Coinbase handles signing.",
+        "description": "Read ERC-20 token balances and allowances, or transfer and approve tokens using a Coinbase-managed CDP wallet.",
         "icon": "Coinbase",
         "accent": "port-Json"
       },
@@ -6307,7 +6291,7 @@
       "credentials": [],
       "ui": {
         "displayName": "HyperLiquid Market",
-        "description": "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata. No API key required.",
+        "description": "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata.",
         "icon": "HyperLiquid",
         "accent": "port-DataList",
         "iconColor": "color-cyan-500"
@@ -6482,36 +6466,10 @@
     "Integrations.Kalshi.Market": {
       "id": "Integrations.Kalshi.Market",
       "toolCompatible": true,
-      "credentials": [
-        {
-          "id": "kalshiApi",
-          "displayName": "Kalshi",
-          "fields": [
-            {
-              "id": "apiKeyId",
-              "advanced": false,
-              "required": true,
-              "reconcile": false,
-              "displayName": "API Key ID",
-              "variant": "Password",
-              "initialValue": ""
-            },
-            {
-              "id": "privateKeyPem",
-              "advanced": false,
-              "required": true,
-              "reconcile": false,
-              "displayName": "RSA Private Key (PEM)",
-              "variant": "Password",
-              "initialValue": ""
-            }
-          ],
-          "icon": "Kalshi"
-        }
-      ],
+      "credentials": [],
       "ui": {
         "displayName": "Kalshi Market",
-        "description": "Reads Kalshi prediction-market data: events, markets and order books. Requires a Kalshi API key + RSA private key (requests are RSA-PSS signed).",
+        "description": "Reads Kalshi prediction-market data: events, markets and order books.",
         "icon": "Kalshi",
         "accent": "port-DataList"
       },
@@ -6661,12 +6619,6 @@
           "displayName": "Markets",
           "tooltip": "Array of Kalshi markets: { ticker, event_ticker, title, status, yes_bid_dollars, yes_ask_dollars, last_price_dollars, volume_fp, close_time, ... }.",
           "variant": "DataList"
-        },
-        {
-          "id": "summary",
-          "displayName": "Summary",
-          "tooltip": "Convenience summary: { eventTicker, status, count, tickers }.",
-          "variant": "Json"
         }
       ]
     },
@@ -6694,71 +6646,43 @@
       ],
       "ui": {
         "displayName": "Massive Market",
-        "description": "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search. Requires an API key.",
+        "description": "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search.",
         "icon": "Massive",
         "accent": "port-DataList"
       },
       "fields": [
         {
-          "id": "timespan",
+          "id": "action",
           "advanced": false,
           "required": false,
-          "reconcile": false,
-          "displayName": "Timespan",
-          "tooltip": "Candle granularity. Used in direct mode and as the default for the getCandles tool.",
+          "reconcile": true,
+          "displayName": "Action",
+          "tooltip": "What to fetch for the ticker.",
           "variant": "MultiOption",
-          "initialValue": "minute",
+          "initialValue": "candles",
           "options": [
             {
-              "value": "minute",
-              "displayName": "Minute"
+              "value": "candles",
+              "displayName": "Candles — OHLCV history"
             },
             {
-              "value": "hour",
-              "displayName": "Hour"
+              "value": "snapshot",
+              "displayName": "Snapshot — live price & day metrics"
             },
             {
-              "value": "day",
-              "displayName": "Day"
+              "value": "details",
+              "displayName": "Details — company reference data"
+            },
+            {
+              "value": "financials",
+              "displayName": "Financials — revenue, earnings, balance sheet"
+            },
+            {
+              "value": "marketStatus",
+              "displayName": "Market Status — open / closed"
             }
           ],
           "kind": "select"
-        },
-        {
-          "id": "multiplier",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Multiplier",
-          "tooltip": "Candle multiplier (e.g. 5 + minute = 5-minute candles).",
-          "variant": "Integer",
-          "initialValue": 1,
-          "min": 1,
-          "max": 60,
-          "step": 1
-        },
-        {
-          "id": "lookbackHours",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Lookback (hours)",
-          "tooltip": "How far back to fetch candles, in hours. The end time is always 'now'.",
-          "variant": "Integer",
-          "initialValue": 24,
-          "min": 1,
-          "max": 8760,
-          "step": 1
-        },
-        {
-          "id": "adjusted",
-          "advanced": true,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Adjusted",
-          "tooltip": "Whether to request adjusted data for aggregates when supported by the API.",
-          "variant": "Boolean",
-          "initialValue": true
         },
         {
           "id": "signalDependency",
@@ -6854,7 +6778,7 @@
         {
           "id": "ticker",
           "displayName": "Ticker",
-          "tooltip": "US stock ticker symbol (e.g. AAPL, MSFT, TSLA).",
+          "tooltip": "US stock ticker symbol (e.g. AAPL, MSFT, TSLA). Unused by the Market Status action.",
           "internal": false,
           "variant": "Text",
           "initialValue": "",
@@ -6872,13 +6796,7 @@
           "id": "summary",
           "displayName": "Summary",
           "tooltip": "Convenience summary: { ticker, timespan, multiplier, count, firstClose, lastClose, change, changePct }.",
-          "variant": "Json"
-        },
-        {
-          "id": "snapshot",
-          "displayName": "Snapshot",
-          "tooltip": "Snapshot for a ticker (last trade/quote + day metrics) when available.",
-          "variant": "Json"
+          "variant": "Data"
         }
       ]
     },
@@ -7776,7 +7694,7 @@
       "credentials": [],
       "ui": {
         "displayName": "Polymarket Market",
-        "description": "Reads Polymarket prediction-market data: events, markets, prices and order books (Gamma + CLOB). No API key required.",
+        "description": "Reads Polymarket prediction-market data: events, markets, prices and order books.",
         "icon": "Polymarket",
         "accent": "port-DataList"
       },
@@ -7926,12 +7844,6 @@
           "displayName": "Markets",
           "tooltip": "Array of markets: { id, question, slug, conditionId, outcomes, outcomePrices, clobTokenIds, volume, liquidity, endDate }.",
           "variant": "DataList"
-        },
-        {
-          "id": "summary",
-          "displayName": "Summary",
-          "tooltip": "Convenience summary: { query, status, count, top }.",
-          "variant": "Json"
         }
       ]
     },
@@ -8689,7 +8601,7 @@
       ],
       "ui": {
         "displayName": "Uniswap",
-        "description": "Provides Uniswap tools for token swapping on EVM chains. Exposes check_approval, get_quote and swap_tokens as a tool list for agents. Requires a Uniswap API key and an EVM private key for signing transactions.",
+        "description": "Provides Uniswap tools for token swapping on EVM chains. Exposes check_approval, get_quote and swap_tokens as a tool list for agents.",
         "icon": "Uniswap",
         "accent": "port-ToolList"
       },
@@ -9029,6 +8941,141 @@
         }
       ]
     },
+    "Core.Agent": {
+      "id": "Core.Agent",
+      "flags": {
+        "SHOW_DEPENDENCY_SELECTOR": false
+      },
+      "credentials": [],
+      "ui": {
+        "displayName": "Agent",
+        "description": "Runs a ReAct agent loop over a language model and its tools.",
+        "icon": "Bot",
+        "accent": "port-LanguageModel"
+      },
+      "fields": [
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "output_all_messages",
+          "variant": "Boolean",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "description": "",
+          "displayName": "Output All Messages",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "language_model",
+          "displayName": "Language Model",
+          "variant": "LanguageModel",
+          "required": true
+        },
+        {
+          "id": "tools",
+          "displayName": "Tools",
+          "variant": "ToolList",
+          "required": false
+        },
+        {
+          "id": "input_message",
+          "displayName": "Messages",
+          "variant": "MessageList",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "Core.SubWorkflow.ExposeOutputPort-cfa4s",
+          "displayName": "Output",
+          "variant": "MessageList"
+        }
+      ],
+      "dependencyRef": {
+        "workflowId": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0",
+        "mode": "publication"
+      }
+    },
     "Core.Utils.Compactor": {
       "id": "Core.Utils.Compactor",
       "flags": {
@@ -9182,141 +9229,6 @@
       ],
       "dependencyRef": {
         "workflowId": "ac147960-ed28-44ed-8808-1e4348a6dda8",
-        "mode": "publication"
-      }
-    },
-    "Core.Agent": {
-      "id": "Core.Agent",
-      "flags": {
-        "SHOW_DEPENDENCY_SELECTOR": false
-      },
-      "credentials": [],
-      "ui": {
-        "displayName": "Agent",
-        "description": "Runs a ReAct agent loop over a language model and its tools.",
-        "icon": "Bot",
-        "accent": "port-LanguageModel"
-      },
-      "fields": [
-        {
-          "id": "signalDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Signal Dependency",
-          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All signals required",
-              "description": "Fire only once every upstream signal has arrived."
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one signal required",
-              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
-            },
-            {
-              "value": "XOR",
-              "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "Wait & Join",
-              "description": "Wait until every wired input port has resolved, then read all of them."
-            },
-            {
-              "value": "OR",
-              "displayName": "Follow Trigger",
-              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "onErrorStrategy",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "On Error",
-          "tooltip": "What happens when this node's execution throws.",
-          "variant": "MultiOption",
-          "initialValue": "propagate",
-          "options": [
-            {
-              "value": "terminate",
-              "displayName": "Terminate workflow",
-              "description": "Fail the whole run."
-            },
-            {
-              "value": "propagate",
-              "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges."
-            },
-            {
-              "value": "do_nothing",
-              "displayName": "Do nothing",
-              "description": "Swallow the error — no signal, no termination. Downstream stalls."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "output_all_messages",
-          "variant": "Boolean",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "description": "",
-          "displayName": "Output All Messages",
-          "initialValue": false
-        }
-      ],
-      "inputs": [
-        {
-          "id": "language_model",
-          "displayName": "Language Model",
-          "variant": "LanguageModel",
-          "required": true
-        },
-        {
-          "id": "tools",
-          "displayName": "Tools",
-          "variant": "ToolList",
-          "required": false
-        },
-        {
-          "id": "input_message",
-          "displayName": "Messages",
-          "variant": "MessageList",
-          "required": true
-        }
-      ],
-      "outputs": [
-        {
-          "id": "Core.SubWorkflow.ExposeOutputPort-cfa4s",
-          "displayName": "Output",
-          "variant": "MessageList"
-        }
-      ],
-      "dependencyRef": {
-        "workflowId": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0",
         "mode": "publication"
       }
     }

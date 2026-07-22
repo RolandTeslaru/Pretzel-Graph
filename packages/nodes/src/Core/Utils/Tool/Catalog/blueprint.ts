@@ -19,16 +19,6 @@ export const Blueprint = defineBlueprint({
             displayName: "Tool 1",
             groupId: "tools_group",
         }),
-        InputBuilder.ToolList({
-            id: "tool_2",
-            displayName: "Tool 2",
-            groupId: "tools_group",
-        }),
-        InputBuilder.ToolList({
-            id: "tool_3",
-            displayName: "Tool 3",
-            groupId: "tools_group",
-        })
     ],
     outputs: [
         OutputBuilder.ToolList({

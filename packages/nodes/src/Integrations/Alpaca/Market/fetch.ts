@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from "axios";
+import { HTTP } from "@pretzel-graph/node-sdk";
 
 export const ALPACA_DATA_BASE_URL = "https://data.alpaca.markets";
 export const ALPACA_TRADING_LIVE_BASE_URL = "https://api.alpaca.markets";
@@ -18,8 +18,9 @@ export const requireAlpacaCredentials = (keyIdRaw: string | undefined, secretRaw
     return { keyId, secret };
 };
 
-export const createAlpacaDataClient = (credentials: { keyId: string; secret: string }): AxiosInstance =>
-    axios.create({
+export const createAlpacaDataClient = (http: HTTP.ClientAPI, credentials: { keyId: string; secret: string }): HTTP.Client =>
+    http.create({
+        vendor: "Alpaca",
         baseURL: ALPACA_DATA_BASE_URL,
         headers: {
             "APCA-API-KEY-ID": credentials.keyId,
@@ -29,11 +30,13 @@ export const createAlpacaDataClient = (credentials: { keyId: string; secret: str
     });
 
 export const createAlpacaTradingClient = (
+    http: HTTP.ClientAPI,
     env: AlpacaEnvironment,
     credentials: { keyId: string; secret: string },
-): AxiosInstance => {
+): HTTP.Client => {
     const baseURL = env === "paper" ? ALPACA_TRADING_PAPER_BASE_URL : ALPACA_TRADING_LIVE_BASE_URL;
-    return axios.create({
+    return http.create({
+        vendor: "Alpaca",
         baseURL,
         headers: {
             "APCA-API-KEY-ID": credentials.keyId,
@@ -41,36 +44,6 @@ export const createAlpacaTradingClient = (
             "User-Agent": "PretzelGraph/1.0",
         },
     });
-};
-
-const formatAxiosFailure = (method: string, url: string, err: unknown): Error => {
-    if (!axios.isAxiosError(err))
-        return err instanceof Error ? err : new Error(String(err));
-
-    const status = err.response?.status;
-    const statusText = err.response?.statusText;
-
-    const body = err.response?.data;
-    const bodyText =
-        body === undefined
-            ? ""
-            : typeof body === "string"
-                ? body
-                : JSON.stringify(body);
-
-    const suffix = status ? ` -> ${status}${statusText ? ` ${statusText}` : ""}` : "";
-    const message = `Alpaca request failed: ${method.toUpperCase()} ${url}${suffix}.${bodyText ? ` Response: ${bodyText}` : ""}`;
-    return new Error(message);
-};
-
-const alpacaGet = async <T>(client: AxiosInstance, url: string, config?: Parameters<AxiosInstance["get"]>[1]): Promise<T> => {
-    try {
-        const { data } = await client.get<T>(url, config);
-        return data;
-    }
-    catch (err) {
-        throw formatAxiosFailure("GET", url, err);
-    }
 };
 
 export const toAlpacaTimeframe = (timespan: "minute" | "hour" | "day", multiplier: number): string => {
@@ -111,7 +84,7 @@ type AlpacaBarsResponse = {
     next_page_token?: string;
 };
 
-export const fetchBars = async (client: AxiosInstance, args: {
+export const fetchBars = async (client: HTTP.Client, args: {
     symbol: string;
     timeframe: string;
     lookbackHours: number;
@@ -120,7 +93,7 @@ export const fetchBars = async (client: AxiosInstance, args: {
     const end = new Date();
     const start = new Date(end.getTime() - args.lookbackHours * 60 * 60 * 1000);
 
-    const data = await alpacaGet<AlpacaBarsResponse>(client, `/v2/stocks/bars`, {
+    const data = await client.get<AlpacaBarsResponse>(`/v2/stocks/bars`, {
         params: {
             symbols: args.symbol,
             timeframe: args.timeframe,
@@ -146,14 +119,14 @@ export const summarizeBars = (symbol: string, timeframe: string, bars: AlpacaBar
     return { symbol, timeframe, count: bars.length, firstClose, lastClose, change, changePct };
 };
 
-export const fetchLatestTrade = async (client: AxiosInstance, symbol: string): Promise<unknown> => {
-    return alpacaGet<unknown>(client, `/v2/stocks/trades/latest`, {
+export const fetchLatestTrade = async (client: HTTP.Client, symbol: string): Promise<unknown> => {
+    return client.get<unknown>(`/v2/stocks/trades/latest`, {
         params: { symbols: symbol },
     });
 };
 
-export const fetchLatestQuote = async (client: AxiosInstance, symbol: string): Promise<unknown> => {
-    return alpacaGet<unknown>(client, `/v2/stocks/quotes/latest`, {
+export const fetchLatestQuote = async (client: HTTP.Client, symbol: string): Promise<unknown> => {
+    return client.get<unknown>(`/v2/stocks/quotes/latest`, {
         params: { symbols: symbol },
     });
 };
@@ -173,13 +146,13 @@ type AlpacaNewsResponse = {
     next_page_token?: string;
 };
 
-export const fetchNews = async (client: AxiosInstance, args: {
+export const fetchNews = async (client: HTTP.Client, args: {
     symbol: string;
     limit: number;
     start?: string;
     end?: string;
 }): Promise<AlpacaNewsResponse> => {
-    return alpacaGet<AlpacaNewsResponse>(client, `/v1beta1/news`, {
+    return client.get<AlpacaNewsResponse>(`/v1beta1/news`, {
         params: {
             symbols: args.symbol,
             limit: args.limit,
@@ -217,8 +190,8 @@ type AlpacaAsset = {
     fractionable?: boolean;
 };
 
-export const listAssets = async (client: AxiosInstance, status: "active" | "inactive" | "all"): Promise<AlpacaAsset[]> => {
-    const data = await alpacaGet<unknown>(client, `/v2/assets`, {
+export const listAssets = async (client: HTTP.Client, status: "active" | "inactive" | "all"): Promise<AlpacaAsset[]> => {
+    const data = await client.get<unknown>(`/v2/assets`, {
         params: { status },
     });
 

@@ -30,7 +30,7 @@ export const Blueprint = defineBlueprint({
     id: "Integrations.Coinbase.Token",
     credentials: [Coinbase],
     displayName: "ERC-20 Token",
-    description: "Read ERC-20 token balances and allowances, or transfer and approve tokens using a Coinbase-managed CDP wallet. No private key — Coinbase handles signing.",
+    description: "Read ERC-20 token balances and allowances, or transfer and approve tokens using a Coinbase-managed CDP wallet.",
     icon: "Coinbase",
     accent: "port-Json",
     toolCompatible: true,

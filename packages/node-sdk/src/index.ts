@@ -5,6 +5,8 @@ export type { CompilationContext } from "./compiler-context";
 export * from "./types";
 export * from "./builders/index";
 export { LC } from "./langchain";
+export { HTTP } from "./domain/http";
+export { NetworkProxy } from "./domain/networkProxy";
 export { Synthesizer } from "./synthesizer";
 export { mapFieldValues, pickReconcilingValues } from "./utils/mapFieldValues";
 export { ConnectionManager } from "./db/connection-manager";
