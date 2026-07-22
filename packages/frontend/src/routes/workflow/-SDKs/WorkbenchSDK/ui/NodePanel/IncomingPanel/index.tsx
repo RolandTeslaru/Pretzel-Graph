@@ -5,14 +5,16 @@ import { Button } from '@pretzel-graph/standard-ui/foundations'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { AddInputPortDialog } from './AddInputPortDialog'
 import { Content } from './content'
-import type { Foundations, Workflow } from '@pretzel-graph/shared/domain'
+import type { Workflow } from '@pretzel-graph/shared/domain'
 
 interface Props {
   nodeId: Workflow.Node.Id
-  inputs: Foundations.Port.Input[]
 }
 
-const IncomingPanel = ({ nodeId, inputs }: Props) => {
+const IncomingPanel = ({ nodeId }: Props) => {
+  // Resolved here rather than passed in — this panel is mounted from a pushed closure,
+  // which would freeze the ports it captured until the panel is torn down.
+  const inputs = WorkbenchSDK.useInputs(nodeId)
 
   const nodeOutputProjections = ExecutionSDK.useStore(s => s.currentExecution?.session.node_output_projections)
 

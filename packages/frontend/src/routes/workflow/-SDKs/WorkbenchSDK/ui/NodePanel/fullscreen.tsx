@@ -17,13 +17,13 @@ const FullScreenContent = ({ hyNode, blockTransparency, surfaceStyle }: FullScre
   return (
     <>
       <div style={surfaceStyle} className={`${surface} overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
-        <IncomingPanel nodeId={hyNode.id} inputs={hyNode.inputs} />
+        <IncomingPanel nodeId={hyNode.id} />
       </div>
       <div style={surfaceStyle} className={`${surface} lg:min-w-[450px] h-full flex flex-col overflow-hidden relative border border-border/50 rounded-2xl shadow-xl shadow-black/10`}>
         <Content hyNode={hyNode} showFooter={false} />
       </div>
       <div style={surfaceStyle} className={`${surface} overflow-hidden h-full w-full min-w-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
-        <OutgoingPanel nodeId={hyNode.id} outputs={hyNode.outputs} />
+        <OutgoingPanel nodeId={hyNode.id} />
       </div>
     </>
   )

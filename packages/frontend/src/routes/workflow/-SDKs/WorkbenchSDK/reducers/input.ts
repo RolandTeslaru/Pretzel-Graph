@@ -36,7 +36,7 @@ export const inputReducers = {
         const issue = Validation.Issue.Input.check(input, nodeId, s.data, s.cache);
 
         if (issue){
-            s.issues.nodes[nodeId] ??= { fields: {}, inputs: {} };
+            s.issues.nodes[nodeId] ??= { fields: {}, inputs: {}, credentials: {} };
             s.issues.nodes[nodeId].inputs[input.id] = issue;
             return true;
         }

@@ -10,20 +10,52 @@ const IssuesViewer = () => {
 
     const nodeIssueEntries = Object.entries(issues.nodes) as [Workflow.Node.Id, Validation.Issue.Node][]
 
+    const totalIssues = nodeIssueEntries.reduce((sum, [, nodeIssue]) =>
+        sum
+        + Object.keys(nodeIssue.inputs).length
+        + Object.keys(nodeIssue.fields).length
+        + Object.keys(nodeIssue.credentials).length,
+        issues.cycles.length,
+    )
+
     return (
-        <div className='flex flex-col gap-3'>
+        <div className='flex flex-col gap-3 w-[300px]'>
             <div className='flex items-center gap-2'>
                 <AlertTriangleFill size={18} />
-                <p className='text-sm font-semibold'>Workflow has issues</p>
+                <p className='text-sm font-semibold'>Workflow has {totalIssues === 1 ? 'an issue' : 'multiple issues'}</p>
             </div>
             <Separator />
             {nodeIssueEntries.map(([nodeId, nodeIssue]) => {
                 const node = nodes[nodeId]
-                const fieldIssues = Object.values(nodeIssue.fields)
-                const inputIssues = Object.values(nodeIssue.inputs)
 
                 const state = WorkbenchSDK.state;
                 const ui = state.selectors.node.getUI(state, nodeId);
+
+                const messages = [
+                    ...Object.values(nodeIssue.inputs).map(issue => (
+                        <>
+                            Input{' '}
+                            <span className='text-destructive font-medium'>{issue.input.id}</span>
+                            {issue.type === 'missing_connection'
+                                ? ' requires a connection'
+                                : ' requires a value or connection'}
+                        </>
+                    )),
+                    ...Object.values(nodeIssue.fields).map(issue => (
+                        <>
+                            Field{' '}
+                            <span className='text-destructive font-medium'>{issue.field.id}</span>
+                            {' '}is required
+                        </>
+                    )),
+                    ...Object.values(nodeIssue.credentials).map(issue => (
+                        <>
+                            Credential{' '}
+                            <span className='text-destructive font-medium'>{issue.templateId}</span>
+                            {' '}is required
+                        </>
+                    )),
+                ]
 
                 return (
                     <div key={nodeId} className='flex flex-col gap-1'>
@@ -33,21 +65,8 @@ const IssuesViewer = () => {
                                 : <p className='text-xs font-semibold text-foreground'>{nodeId}</p>
                             }
                         </div>
-                        {inputIssues.map((issue, i) => (
-                            <p key={i} className='text-xs text-muted-foreground'>
-                                Input{' '}
-                                <span className='text-destructive font-medium'>{issue.input.id}</span>
-                                {issue.type === 'missing_connection'
-                                    ? ' requires a connection'
-                                    : ' requires a value or connection'}
-                            </p>
-                        ))}
-                        {fieldIssues.map((issue, i) => (
-                            <p key={i} className='text-xs text-muted-foreground'>
-                                Field{' '}
-                                <span className='text-destructive font-medium'>{issue.field.id}</span>
-                                {' '}is required
-                            </p>
+                        {messages.map((message, i) => (
+                            <p key={i} className='text-xs text-muted-foreground'>{message}</p>
                         ))}
                     </div>
                 )

@@ -13,9 +13,10 @@ const TrackColumn = ({ layout, nodes }: TrackColumnProps) => {
     return (
         <div style={{ position: "relative", height: layout.totalHeight }}>
             {layout.tracks.map(tl => {
-                const node = nodes[tl.trackId]
-                const ui = node ? WorkbenchSDK.state.selectors.node.getUI(WorkbenchSDK.state, tl.trackId) : undefined
-                const label = ui?.displayName ?? tl.trackId
+                // Unguarded: a deleted track node falls back to the red "node-unknown" UI
+                // (shield icon + "Unknown Node") instead of a bare, unlabeled row.
+                const ui = WorkbenchSDK.state.selectors.node.getUI(WorkbenchSDK.state, tl.trackId)
+                const label = ui.displayName
 
                 return (
                     <div

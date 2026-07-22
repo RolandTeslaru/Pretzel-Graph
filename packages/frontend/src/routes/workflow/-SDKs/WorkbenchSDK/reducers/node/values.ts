@@ -50,6 +50,7 @@ export const nodeValueReducers = {
         if (!node?.ui) return;
 
         const bp = s.selectors.node.getBlueprint(s, nodeId);
+        if (!bp) return;
         for (const key of ["displayName", "description", "icon", "accent", "iconColor"] as const)
             if (node.ui[key] !== undefined && node.ui[key] === bp.ui[key]) {
                 delete node.ui[key];
@@ -91,6 +92,7 @@ export const nodeValueReducers = {
         };
 
         const blueprint = s.selectors.node.getBlueprint(s, nodeId);
+        if (!blueprint) return;
 
         // Auto-fill any still-unassigned credential the node declares, but only when
         // exactly one matching vault instance exists (unambiguous default).
@@ -110,16 +112,6 @@ export const nodeValueReducers = {
         else
             s.data.credentialInstanceIds[nodeId] = next;
     },
-    setCredential: (s, nodeId, templateId, instanceId) => {
-        s.isDirty = true;
-        if (!s.data.credentialInstanceIds[nodeId])
-            s.data.credentialInstanceIds[nodeId] = {};
-        if (instanceId === null) {
-            delete s.data.credentialInstanceIds[nodeId][templateId];
-        } else {
-            s.data.credentialInstanceIds[nodeId][templateId] = instanceId;
-        }
-    },
 } satisfies NodeValueReducers
 
 export interface NodeValueReducers {
@@ -128,5 +120,4 @@ export interface NodeValueReducers {
     pruneDefaultUI              : (s: S, nodeId: NodeId) => void;
     populateInitialValues       : (s: S, nodeId: NodeId, fields: readonly Foundations.Field[], inputs: readonly Foundations.Port.Input[], overrides?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>) => void;
     populateCredentialInstances : (s: S, nodeId: NodeId, overrides?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>) => void;
-    setCredential               : (s: S, nodeId: NodeId, templateId: Vault.Credential.Template.Id, instanceId: Vault.Credential.Instance.Id | null) => void;
 }

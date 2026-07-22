@@ -2,14 +2,17 @@ import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk'
 import { WorkbenchSDK } from '../../../sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Content } from './content'
-import type { Foundations, Workflow } from '@pretzel-graph/shared/domain'
+import type { Workflow } from '@pretzel-graph/shared/domain'
 
 interface Props {
   nodeId: Workflow.Node.Id
-  outputs: Foundations.Port.Output[]
 }
 
-const OutgoingPanel = ({ nodeId, outputs }: Props) => {  
+const OutgoingPanel = ({ nodeId }: Props) => {
+  // Resolved here rather than passed in — this panel is mounted from a pushed closure,
+  // which would freeze the ports it captured until the panel is torn down.
+  const outputs = WorkbenchSDK.useOutputs(nodeId)
+
   const outputProjections = ExecutionSDK.useStore(s => {
     const execution = s.currentExecution
     if (!execution || !nodeId) 

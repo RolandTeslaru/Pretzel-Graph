@@ -16,9 +16,7 @@ export const CredentialPicker = memo(({ credentialTemplate, nodeId }: Props) => 
     const instances = VaultSDK.useStore(s =>
         s.selectors.byTemplateId(s, credentialTemplate.id)
     )
-    const selectedId = WorkbenchSDK.useStore(s =>
-        s.data.credentialInstanceIds[nodeId]?.[credentialTemplate.id] ?? ''
-    )
+    const [instanceId, setInstance, issue] = WorkbenchSDK.useCredential(nodeId, credentialTemplate.id)
 
     useEffect(() => {
         if (instances.length === 0) {
@@ -33,9 +31,7 @@ export const CredentialPicker = memo(({ credentialTemplate, nodeId }: Props) => 
                 <AddCredentialDialog
                     credentialTemplate={credentialTemplate}
                     dialogId={dialogId}
-                    onCreated={instanceId => {
-                        WorkbenchSDK.actions.node.setCredential(nodeId, credentialTemplate.id, instanceId)
-                    }}
+                    onCreated={instanceId => setInstance(instanceId)}
                 />
             </DialogSDK.Template>
         ))
@@ -46,16 +42,10 @@ export const CredentialPicker = memo(({ credentialTemplate, nodeId }: Props) => 
             <span className='text-xs font-medium text-muted-foreground'>{credentialTemplate.displayName}</span>
             <div className='flex gap-1.5'>
                 <Select.Root
-                    value={selectedId}
-                    onValueChange={val => {
-                        WorkbenchSDK.actions.node.setCredential(
-                            nodeId,
-                            credentialTemplate.id,
-                            val as Vault.Credential.Instance.Id
-                        )
-                    }}
+                    value={instanceId ?? ''}
+                    onValueChange={val => setInstance(val as Vault.Credential.Instance.Id)}
                 >
-                    <Select.Trigger className='flex-1 text-xs h-8'>
+                    <Select.Trigger className={`flex-1 text-xs h-8${issue ? ' border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50' : ''}`}>
                         <Select.Value placeholder='Select credential…' />
                     </Select.Trigger>
                     <Select.Content>

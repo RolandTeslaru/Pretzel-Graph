@@ -142,6 +142,11 @@ code {
   --error-foreground: var(--color-red-700);
 
 
+  /* Accent for orphaned / unhydrated nodes (missing node or blueprint) — reads as destructive.
+     Needs a red -foreground since accent consumers resolve icon color via var(--{accent}-foreground). */
+  --node-unknown: theme(--color-red-500);
+  --node-unknown-foreground: theme(--color-red-500);
+
   --port-Message: theme(--color-blue-400);
   --port-Message-foreground: theme(--color-blue-400);
   --port-Message-accent: theme(--color-blue-200);

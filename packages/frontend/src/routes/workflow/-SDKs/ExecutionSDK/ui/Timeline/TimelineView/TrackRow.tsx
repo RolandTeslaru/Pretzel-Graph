@@ -18,8 +18,10 @@ const TrackRow = React.memo(({ trackLayout }: TrackRowProps) => {
     ])
     // accent: snapshot node if present, else the live workbench (draft) node —
     // subscribed so a draft recolor reflects even when the execution is quiet.
+    // getUI is unguarded on purpose: a deleted track node falls back to the red
+    // "node-unknown" accent instead of an undefined (→ transparent) block.
     const accent = WorkbenchSDK.useStore(s =>
-        snapNode?.ui?.accent ?? (s.selectors.node.get(s, trackId) ? s.selectors.node.getUI(s, trackId).accent : undefined)
+        snapNode?.ui?.accent ?? s.selectors.node.getUI(s, trackId).accent
     )
     if (!track) return null
 

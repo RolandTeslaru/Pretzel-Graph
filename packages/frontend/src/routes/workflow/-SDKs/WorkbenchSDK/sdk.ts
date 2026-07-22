@@ -5,7 +5,7 @@ import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFl
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
 import { workbenchSelectors, type WorkbenchSDKSelectors } from "./selectors";
 import { useState, useRef, useEffect, useCallback, useMemo, createRef } from "react";
-import { Foundations, Validation, Workflow, Workbench } from "@pretzel-graph/shared/domain"
+import { Foundations, Validation, Vault, Workflow, Workbench } from "@pretzel-graph/shared/domain"
 import { temporal } from 'zundo';
 import { cloneDeep } from "lodash";
 import { BaseSDK } from "@/SDKs/Base";
@@ -17,6 +17,10 @@ import { sameUndoableData } from "./utils/temporal";
 import { ShelfSDK } from "../ShelfSDK/sdk";
 import type { NodeUI } from "./selectors/node";
 import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
+
+// Stable identities so the port hooks below never return a fresh array to the store subscription.
+const EMPTY_INPUTS: Foundations.Port.Input[] = []
+const EMPTY_OUTPUTS: Foundations.Port.Output[] = []
 
 @SDK("Workbench")
 export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
@@ -161,6 +165,18 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     }
 
 
+    /** A node's resolved input ports from the shared node-shape cache. */
+    public useInputs(nodeId: Workflow.Node.Id): Foundations.Port.Input[] {
+        return this.useStore(s => s.cache.resolvedShape[nodeId]?.inputs) ?? EMPTY_INPUTS;
+    }
+
+
+    /** A node's resolved output ports from the shared node-shape cache. */
+    public useOutputs(nodeId: Workflow.Node.Id): Foundations.Port.Output[] {
+        return this.useStore(s => s.cache.resolvedShape[nodeId]?.outputs) ?? EMPTY_OUTPUTS;
+    }
+
+
     /**
      * Buffered field hook. `value` is a local draft that updates instantly via
      * `onChange`; the store is only written on `flush` (wire to `onBlur`) or on
@@ -265,6 +281,25 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         useEffect(() => () => { commitRef.current() }, []);
 
         return [localValue, onChange, flush, issue] as const;
+    }
+
+    /**
+     * Simple credential hook — no local draft. Reads the assigned instance id and
+     * validation issue from the store; the returned setter writes immediately.
+     */
+    public useCredential(nodeId: Workflow.Node.Id, templateId: Vault.Credential.Template.Id) {
+        const [instanceId, issue] = this.useStore(s => [
+            s.data.credentialInstanceIds[nodeId]?.[templateId] ?? null,
+            s.selectors.credential.getIssue(s, nodeId, templateId),
+        ] as const);
+
+        const setInstance = useCallback(
+            (id: Vault.Credential.Instance.Id | null) =>
+                this.actions.credential.setInstance(nodeId, templateId, id),
+            [nodeId, templateId]
+        );
+
+        return [instanceId, setInstance, issue] as const;
     }
 
 
