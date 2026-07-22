@@ -1,5 +1,4 @@
 import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
-import { Kalshi } from "@pretzel-graph/nodes/Credentials/Kalshi";
 
 const statusOptions = [
     { value: "active", displayName: "Active (open)" },
@@ -10,11 +9,10 @@ const statusOptions = [
 export const Blueprint = defineBlueprint({
     id: "Integrations.Kalshi.Market",
     displayName: "Kalshi Market",
-    description: "Reads Kalshi prediction-market data: events, markets and order books. Requires a Kalshi API key + RSA private key (requests are RSA-PSS signed).",
+    description: "Reads Kalshi prediction-market data: events, markets and order books.",
     icon: "Kalshi",
     accent: "port-DataList",
     toolCompatible: true,
-    credentials: [Kalshi],
     fields: [
         FieldBuilder.MultiOption({
             id: "status",
@@ -46,11 +44,6 @@ export const Blueprint = defineBlueprint({
             displayName: "Markets",
             tooltip: "Array of Kalshi markets: { ticker, event_ticker, title, status, yes_bid_dollars, yes_ask_dollars, last_price_dollars, volume_fp, close_time, ... }.",
         }),
-        OutputBuilder.Json({
-            id: "summary",
-            displayName: "Summary",
-            tooltip: "Convenience summary: { eventTicker, status, count, tickers }.",
-        }),
     ],
 });
 
@@ -58,11 +51,10 @@ export const Blueprint = defineBlueprint({
 export const ToolBlueprint = defineBlueprint({
     id: "Integrations.Kalshi.Market",
     displayName: "Kalshi Market",
-    description: "Exposes Kalshi market-data tools to an agent as a toolkit. Read-only — requires a Kalshi API key + RSA private key.",
+    description: "Exposes Kalshi market-data tools to an agent as a toolkit.",
     icon: "Kalshi",
     accent: "port-ToolList",
     toolCompatible: true,
-    credentials: [Kalshi],
     fields: [
         FieldBuilder.MultiOption({
             id: "status",

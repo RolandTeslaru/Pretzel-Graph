@@ -109,3 +109,67 @@ Port on the **blueprint** (`itemScope: "list"`, compile-time-checked against inp
 - [ ] **frontend:** FieldRenderers (Boolean/String/Integer/Float/Json/MultiOption) pass `itemSourcePort: field.itemScoped ? blueprint.itemScope : undefined`; `withExpression.tsx` + `ExpressionEditor` prop `itemScoped?: boolean` → `itemSourcePort?: string`; thread into `AirlockSDK.previewExpression`.
 - [ ] **frontend:** `AirlockSDK.buildGlobals`/`previewExpression` — sample `$item` from `incoming[port][0]` when a port is given; present-but-`undefined` otherwise. Typecheck frontend; verify on `Filter.condition`.
 - [ ] **follow-up (deferred):** runtime auto-resolve of the iterated list from `inputs[Blueprint.itemScope]`; optional `CaseList.tsx` `itemSourcePort` forwarding. (Per-field ports / multi-loop binding explicitly out of scope.)
+
+## Outbound HTTP client + node proxies — spec not written
+
+`HTTP.ClientAPI` / `NetworkProxy` types in `node-sdk/src/domain/`; implementations in `worker/src/compiler/{http,proxy}.ts`. Nodes build clients via `this.httpClientFactory` (`RuntimeNode`), which binds the node's attached `networkProxy` credential. Agents are execution-scoped and destroyed in `AggexEngine.run()`'s `finally`.
+
+- [x] **node-sdk:** `domain/http.ts` (`HTTP.Error` / `Client` / `Client.Config` / `ClientAPI`) + `domain/networkProxy.ts` (`Config`, branded `URL`, `toUrl`, `Agent`, `API`, `TEMPLATE_ID`). `Client.Config` omits axios's `proxy`/`httpAgent`/`httpsAgent` so a caller can't bypass the node's proxy.
+- [x] **worker:** `compiler/http.ts` — axios factory with execution-abort binding, retry on 408/425/429/5xx (`Retry-After` aware, jittered backoff), `HTTP.Error` normalization; agents spread last with `proxy: false`.
+- [x] **worker:** `compiler/proxy.ts` — `buildAgent` (socks5 → one `SocksProxyAgent`; http/https → `Http`/`HttpsProxyAgent` pair, since Node selects by *target* scheme), lazy per-instance cache, `getAgent`/`getAgentForNode`/`destroyAll`. Fail-open on a broken credential; never logs the cause (can carry credential material).
+- [x] **nodes:** `Credentials/NetworkProxy.ts` template (protocol / host / port / username / password).
+- [x] **node-sdk:** `RuntimeNode.httpClientFactory` — injects `getAgentForNode(this.nodeId)`; arrow body so the agent resolves lazily on `create()`.
+- [x] **migrated:** Polymarket (own client), Kalshi (SDK spliced via `client.raw`), Massive, Alpaca.
+- [x] **migrated:** Uniswap/Swap — `uniswapPost(apiKey, …)` replaced by a `tradeApi` client built once in the constructor (API key is a constant header). Only the Trading API is covered; see the viem gap below.
+- [ ] **migrate remaining direct-axios nodes:** HyperLiquid/Market, HyperLiquid/Account, Coinbase/Market, Google/Search, Uniswap/Swap. Module-level helpers take no client — each needs `HTTP.Client` threaded in from the node constructor. **Until done these silently ignore an attached proxy**, which is the worst failure mode for a geo-unblocking feature. (`services/AxiosService.ts` stays — internal backend calls, not third-party egress.)
+- [ ] **editor UI — attach a proxy to any node.** The "universal credential" problem: the inspector only offers credentials from `blueprint.credentials`, and `networkProxy` is declared on no blueprint. `Validation.ts:86` iterates blueprint-declared credentials and must skip the universal one. Biggest remaining chunk, not mechanical.
+- [ ] **proxy-layer error rewriting:** emit `proxy <host>:<port> unreachable` instead of passing through the underlying message — agent libs can include the proxy URI (with password) in errors. Also: on a non-200 CONNECT reply `HttpsProxyAgent` returns a fake unwritable socket, so proxy rejections surface as confusing vendor errors.
+- [ ] **transports with no injection seam (proxy blind spots).** Three libraries do their own HTTP and silently ignore an attached proxy: `viem` (Uniswap RPC — fetch-based; fixable via a custom `fetchFn` + undici `ProxyAgent`, a different mechanism from the axios agents), `@coinbase/agentkit`, and `@polymarket/clob-client`. Uniswap is the worst case: its Trading API calls are proxied but `sendTransaction` is not, so the node is *partially* routed. Decide whether the UI marks these nodes as proxy-unsupported rather than letting users discover it.
+- [ ] **decide fail-open vs fail-closed** on an unusable proxy credential. Currently fail-open (connects directly); fail-closed is arguably right for geo-unblocking.
+- [ ] **deferred — DB proxying:** `ConnectionManager` keys pools by `sha1(creds)` and is a process-wide singleton with a 5-min TTL, incompatible with execution-scoped agents.
+- [ ] **regenerate catalog:** `npm run generate-indexes` in `packages/nodes` — Kalshi/Polymarket blueprints changed (credential + `summary` port removed). Held back: unrelated uncommitted diff in both `node_index.json` files.
+
+## Integration node tiers — Market / Account / Trading — spec not written
+
+Split provider integrations by **blast radius, not API host**: `Market` (public data, harmless) / `Account` (own private state, read-only) / `Trading` (moves money). A paper/live `environment` field belongs on Account + Trading, never Market. Reference data served from a trading host (Alpaca `/v2/assets`) still belongs in Market.
+
+- [x] **Kalshi/Market:** credential dropped — all market-data endpoints verified public (portfolio 401s). SDK now built with no `Configuration`, so its RSA-PSS interceptor stays a no-op; `basePath` pinned rather than inherited.
+- [ ] **Alpaca/Market:** keep `listAssets` (harmless); drop the `environment` field. **Blocked on:** confirming paper and live return identical asset lists — if not, the field stays.
+- [ ] **Alpaca/Account:** new node — `environment` field + `/v2/account`, `/v2/positions`, `/v2/account/portfolio/history`, `/v2/account/activities`. Endpoints are from the docs; can't be probed (401 without a key).
+- [ ] **Alpaca/Trading:** deferred — order placement is its own feature.
+- [ ] **Kalshi/Account + Kalshi/Trading:** not started; credential + RSA-PSS signing live here, via `client.raw`.
+- [ ] **Polymarket:** same split pending. Note `@polymarket/clob-client` gives no seam to inject an axios instance, so it would bypass the proxy — the hand-written client stays.
+- [ ] **document the convention** in `packages/node-sdk/README.md` so new integrations follow it without rediscussion.
+- [x] **HyperLiquid/Market + Account:** share `Integrations/HyperLiquid/publicClient.ts` (`HyperLiquidPublicClient`) — the whole `/info` API is unauthenticated, and Account reads are keyed by an arbitrary wallet address, so neither node is privileged. Account is Market-tier in blast radius despite the name.
+- [ ] **HyperLiquid/Trading:** `POST /exchange`. Auth is **in the payload, not a header** — EIP-712 signed actions (`{ action, nonce, signature, vaultAddress? }`); the exchange recovers the address from the signature. Needs a separate *signing* client, not `HyperLiquidPublicClient`.
+- [ ] **HyperLiquid credential = API/agent wallet** (decided). An agent wallet can trade but **cannot withdraw**, so a leak costs unwanted trades rather than the whole wallet. Master keys still work if a user enters one; agent wallet is the default and documented path (field label + tooltip + credential description). Look at how Uniswap's existing EVM private-key credential is defined before adding a second one.
+
+## Coinbase teardown — misfiled nodes — spec not written
+
+Both Coinbase nodes were filed by *which SDK they use* rather than *what they do*. No workflows reference either, so blueprint-id changes are free.
+
+- [ ] **`Coinbase/Market` → `DeFiLlama/Protocol`:** the node never calls Coinbase — it calls Pyth (`hermes.pyth.network`) and DeFiLlama (`api.llama.fi`) behind a `dataSource` switch, with one `price` output port meaning "asset price" in one mode and "total TVL" in the other. **Retire the Pyth half** (HyperLiquid `mids()` already covers crypto prices — 938 coins; Pyth's edge is equities/FX/metals but the node hardcodes `asset_type: "crypto"`). Keep DeFiLlama as its own provider. Needs a `drawers.ts` entry + `generate-indexes`.
+- [ ] **bug, dies with the Pyth half:** `Coinbase/Market/node.ts:62` reports `decodePrice(parsed.ema_price)` as `confidence`. That's the EMA *price*, not the confidence interval — the real one is `price.conf`. Verified live on BTC: price $66,059.36, `conf` $19.29, ema_price $65,794.35. Off by ~3400x. Fix if the Pyth path is kept for any reason.
+- [ ] **also in the Pyth path:** `node.ts:55` falls back to `feeds[0]` when no exact base+USD match — Pyth returns deprecated feeds first (querying "BTC" returns `DEPRECATED FEED - MERLIN SEAL BITCOIN`).
+- [ ] **split `Coinbase/Token` into two nodes.** `erc20ActionProvider` exposes 5 actions: `get_balance`, `get_allowance`, `get_erc20_token_address` (reads) vs `transfer`, `approve` (writes). `approve` grants a spender *standing* access — the classic drain vector — so it must not sit in the same agent toolkit as a balance check.
+  - [ ] **`EVM/Token`** (new, read): drop AgentKit **and the credential entirely** — ERC-20 reads are public chain data. Use a `viem` public client (already a dep via Uniswap). Reads *any* address; today `get_allowance` is hardcoded to the connected wallet (`erc20ActionProvider.js:170`) for no reason. Name stays `Token` (decided).
+  - [ ] **`Coinbase/Transfer`** (existing node gutted, write): keeps AgentKit + the CDP credential (`cdpKeyId`/`cdpKeySecret`/`walletSecret`) + `transfer`/`approve`. Renamed from `Token` — the write node's name is the one that can mislead someone into wiring it up casually.
+  - [ ] **open question:** RPC endpoint for the read node. Public per-chain endpoints are rate-limited/flaky; keyed ones (Alchemy/Infura) embed the key in the URL, which makes it a credential. Suggested: public default per network + optional override field.
+- [ ] **proxy blind spot:** AgentKit does its own HTTP with no axios-instance seam, so an attached `networkProxy` silently does not apply (same as `@polymarket/clob-client`). "Attach a proxy to any node" is not universally true — surface this in the UI rather than letting users discover it.
+- [ ] **orphaned:** `Credentials/Kalshi.ts` is now referenced by nothing (Kalshi/Market dropped it). Keep as the placeholder for Kalshi/Trading, or delete.
+
+## Uniswap — calldata trust — spec not written
+
+`Uniswap/Swap` forwards the routing service's response straight into `wallet.sendTransaction` (`node.ts:188`): the gateway chooses `to`, `data` and `value`, and the node's private key authorizes whatever came back. A compromised gateway, MITM or DNS hijack could return calldata pointing at a hostile contract and the signature would be perfectly valid.
+
+- [ ] **validate before signing:** check `to` against the known Uniswap router addresses for the chain; enforce a slippage bound rather than trusting the quote's `minAmountOut`; cap `value` so a swap can't spend more native token than intended.
+- [ ] **relevant to the proxy work:** routing quote requests through an untrusted proxy puts the operator between the node and the calldata it signs. Fine for public price reads, meaningfully worse here — an argument for splitting `Uniswap/Quote` (API key only) from `Uniswap/Swap` (private key).
+- [ ] **credential is over-scoped:** `Credentials/Uniswap.ts` bundles `apiKey` (revocable, worth a rate limit) with `privateKey` (the wallet, irreversible if leaked). A quote needs only the first.
+
+## Credential field validation — spec not written
+
+`Field.Schema` has `required` and numeric `min`/`max` only — credential validation today is "is it non-empty". Failures surface mid-run, from inside a library (`privateKeyToAccount` throwing on a malformed key, Kalshi's signer on a bad PEM).
+
+- [ ] **add optional `pattern` + `patternMessage` to `Field.Schema`**, honoured in the credential form. Apply to **standard-defined** formats only: EVM private key (`0x` + 64 hex), RSA PEM (`-----BEGIN`), host/port, connection strings.
+- [ ] **do NOT regex vendor API keys** (Anthropic/OpenAI/Tavily/Alpaca). Vendors change key formats without notice; a stale regex rejects a *valid* key and the user cannot self-diagnose it. Worse failure than accepting a typo.
+- [ ] **higher value, bigger job — "Test" button per credential template:** one real call (`/v2/account` for Alpaca, `SELECT 1` for Postgres, a CONNECT for NetworkProxy). Catches what a regex cannot: revoked keys, wrong environment, missing entitlement, unreachable host.

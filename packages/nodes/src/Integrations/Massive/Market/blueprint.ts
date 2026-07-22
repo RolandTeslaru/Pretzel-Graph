@@ -7,45 +7,32 @@ const timespanOptions = [
     { value: "day", displayName: "Day" },
 ] as const;
 
+const actionOptions = [
+    { value: "candles", displayName: "Candles — OHLCV history" },
+    { value: "snapshot", displayName: "Snapshot — live price & day metrics" },
+    { value: "details", displayName: "Details — company reference data" },
+    { value: "financials", displayName: "Financials — revenue, earnings, balance sheet" },
+    { value: "marketStatus", displayName: "Market Status — open / closed" },
+] as const;
+
 export const Blueprint = defineBlueprint({
     id: "Integrations.Massive.Market",
     credentials: [Massive],
     displayName: "Massive Market",
-    description: "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search. Requires an API key.",
+    description: "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search.",
     icon: "Massive",
     accent: "port-DataList",
     toolCompatible: true,
     fields: [
-        FieldBuilder.MultiOption({
-            id: "timespan",
-            displayName: "Timespan",
-            options: timespanOptions,
-            initialValue: "minute",
-            tooltip: "Candle granularity. Used in direct mode and as the default for the getCandles tool.",
-        }),
-        FieldBuilder.Integer({
-            id: "multiplier",
-            displayName: "Multiplier",
-            initialValue: 1,
-            min: 1,
-            max: 60,
-            tooltip: "Candle multiplier (e.g. 5 + minute = 5-minute candles).",
-        }),
-        FieldBuilder.Integer({
-            id: "lookbackHours",
-            displayName: "Lookback (hours)",
-            initialValue: 24,
-            min: 1,
-            max: 24 * 365,
-            tooltip: "How far back to fetch candles, in hours. The end time is always 'now'.",
-        }),
-        FieldBuilder.Boolean({
-            id: "adjusted",
-            displayName: "Adjusted",
-            initialValue: true,
-            tooltip: "Whether to request adjusted data for aggregates when supported by the API.",
-            advanced: true,
-        }),
+        // action drives the field schema + output ports via reconcile. Base is the `candles`
+        // case; snapshot / details / marketStatus need no extra fields.
+        FieldBuilder.reconciling(FieldBuilder.MultiOption({
+            id: "action",
+            displayName: "Action",
+            options: actionOptions,
+            initialValue: "candles",
+            tooltip: "What to fetch for the ticker.",
+        })),
     ],
     inputs: [
         InputBuilder.Text({
@@ -53,7 +40,7 @@ export const Blueprint = defineBlueprint({
             displayName: "Ticker",
             required: true,
             placeholder: "AAPL",
-            tooltip: "US stock ticker symbol (e.g. AAPL, MSFT, TSLA).",
+            tooltip: "US stock ticker symbol (e.g. AAPL, MSFT, TSLA). Unused by the Market Status action.",
         }),
     ],
     outputs: [
@@ -62,15 +49,10 @@ export const Blueprint = defineBlueprint({
             displayName: "Candles",
             tooltip: "Array of OHLCV aggregates (bars) returned by Massive.",
         }),
-        OutputBuilder.Json({
+        OutputBuilder.Data({
             id: "summary",
             displayName: "Summary",
             tooltip: "Convenience summary: { ticker, timespan, multiplier, count, firstClose, lastClose, change, changePct }.",
-        }),
-        OutputBuilder.Json({
-            id: "snapshot",
-            displayName: "Snapshot",
-            tooltip: "Snapshot for a ticker (last trade/quote + day metrics) when available.",
         }),
     ],
 });
@@ -121,7 +103,7 @@ export const ToolBlueprint = defineBlueprint({
         OutputBuilder.ToolList({
             id: "tools",
             displayName: "Massive Tools",
-            tooltip: "Toolkit: massive_get_candles, massive_get_news, massive_get_snapshot, massive_get_last_trade, massive_get_last_quote, massive_get_ticker_details, massive_search_tickers.",
+            tooltip: "Toolkit: massive_get_candles, massive_get_news, massive_get_snapshot, massive_get_last_trade, massive_get_last_quote, massive_get_ticker_details, massive_search_tickers, massive_get_financials, massive_get_market_status.",
         }),
     ],
 });

@@ -1,4 +1,5 @@
-import axios, { AxiosInstance } from "axios";
+import type { AxiosRequestConfig } from "axios";
+import { HTTP } from "@pretzel-graph/node-sdk";
 
 export const MASSIVE_API_BASE_URL = "https://api.massive.com";
 
@@ -48,8 +49,9 @@ export const summarizeAggs = (ticker: string, timespan: string, multiplier: numb
     return { ticker, timespan, multiplier, count: aggs.length, firstClose, lastClose, change, changePct };
 };
 
-export const createMassiveClient = (apiKey: string): AxiosInstance =>
-    axios.create({
+export const createMassiveClient = (http: HTTP.ClientAPI, apiKey: string): HTTP.Client =>
+    http.create({
+        vendor: "Massive",
         baseURL: MASSIVE_API_BASE_URL,
         headers: {
             Authorization: `Bearer ${apiKey}`,
@@ -64,43 +66,27 @@ export const createMassiveClient = (apiKey: string): AxiosInstance =>
         },
     });
 
-const formatAxiosFailure = (method: string, url: string, err: unknown): Error => {
-    if (!axios.isAxiosError(err))
-        return err instanceof Error ? err : new Error(String(err));
+// The client already normalizes failures. The one Massive-specific detail worth adding:
+// a 403 here is usually a plan/entitlement limit rather than a bad key.
+const massiveGet = async <T>(client: HTTP.Client, url: string, config?: AxiosRequestConfig): Promise<T> => {
 
-    const status = err.response?.status;
-    const statusText = err.response?.statusText;
-
-    const body = err.response?.data;
-    const bodyText =
-        body === undefined
-            ? ""
-            : typeof body === "string"
-                ? body
-                : JSON.stringify(body);
-
-    const suffix = status ? ` -> ${status}${statusText ? ` ${statusText}` : ""}` : "";
-    const hint =
-        status === 403
-            ? " This often means your API key/plan does not have access to this endpoint."
-            : "";
-
-    const message = `Massive request failed: ${method.toUpperCase()} ${url}${suffix}.${hint}${bodyText ? ` Response: ${bodyText}` : ""}`;
-    return new Error(message);
-};
-
-const massiveGet = async <T>(client: AxiosInstance, url: string, config?: Parameters<AxiosInstance["get"]>[1]): Promise<T> => {
     try {
-        const { data } = await client.get<T>(url, config);
-        return data;
+        return await client.get<T>(url, config);
     }
     catch (err) {
-        throw formatAxiosFailure("GET", url, err);
+
+        if (err instanceof HTTP.Error && err.status === 403)
+            throw new HTTP.Error(
+                `${err.message} Your API key/plan may not have access to this endpoint.`,
+                err.vendor, err.method, err.url, err.status, err.body,
+            );
+
+        throw err;
     }
 };
 
 export const fetchAggs = async (
-    client: AxiosInstance,
+    client: HTTP.Client,
     args: {
         ticker: string;
         multiplier: number;
@@ -124,28 +110,28 @@ export const fetchAggs = async (
     return data.results ?? [];
 };
 
-export const fetchSnapshot = async (client: AxiosInstance, ticker: string): Promise<unknown> => {
+export const fetchSnapshot = async (client: HTTP.Client, ticker: string): Promise<unknown> => {
     const url = `/v2/snapshot/locale/us/markets/stocks/tickers/${encodeURIComponent(ticker)}`;
     return massiveGet<unknown>(client, url);
 };
 
-export const fetchLastTrade = async (client: AxiosInstance, ticker: string): Promise<unknown> => {
+export const fetchLastTrade = async (client: HTTP.Client, ticker: string): Promise<unknown> => {
     const url = `/v2/last/trade/${encodeURIComponent(ticker)}`;
     return massiveGet<unknown>(client, url);
 };
 
-export const fetchLastQuote = async (client: AxiosInstance, ticker: string): Promise<unknown> => {
+export const fetchLastQuote = async (client: HTTP.Client, ticker: string): Promise<unknown> => {
     // Historic Polygon endpoint name; Massive keeps compatibility.
     const url = `/v2/last/nbbo/${encodeURIComponent(ticker)}`;
     return massiveGet<unknown>(client, url);
 };
 
-export const fetchTickerDetails = async (client: AxiosInstance, ticker: string): Promise<unknown> => {
+export const fetchTickerDetails = async (client: HTTP.Client, ticker: string): Promise<unknown> => {
     const url = `/v3/reference/tickers/${encodeURIComponent(ticker)}`;
     return massiveGet<unknown>(client, url);
 };
 
-export const searchTickers = async (client: AxiosInstance, query: string, limit: number): Promise<unknown> => {
+export const searchTickers = async (client: HTTP.Client, query: string, limit: number): Promise<unknown> => {
     return massiveGet<unknown>(client, `/v3/reference/tickers`, {
         params: {
             search: query,
@@ -173,7 +159,7 @@ type MassiveNewsResponse = {
     next_url?: string;
 };
 
-export const fetchNews = async (client: AxiosInstance, args: {
+export const fetchNews = async (client: HTTP.Client, args: {
     ticker?: string;
     limit: number;
     publishedAfter?: string;
@@ -209,3 +195,28 @@ export const compactNews = (data: MassiveNewsResponse) => {
         results,
     };
 };
+
+type FinancialsResponse = {
+    results?: unknown[],
+};
+
+export const fetchFinancials = async (
+    client: HTTP.Client,
+    args: { ticker: string, timeframe: "annual" | "quarterly", limit: number },
+): Promise<unknown[]> => {
+
+    const data = await massiveGet<FinancialsResponse>(client, `/vX/reference/financials`, {
+        params: {
+            ticker: args.ticker,
+            timeframe: args.timeframe,
+            limit: args.limit,
+            order: "desc",
+            sort: "period_of_report_date",
+        },
+    });
+
+    return data.results ?? [];
+};
+
+export const fetchMarketStatus = async (client: HTTP.Client): Promise<unknown> =>
+    massiveGet<unknown>(client, `/v1/marketstatus/now`);

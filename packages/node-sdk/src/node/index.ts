@@ -7,6 +7,7 @@ import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { mapFieldValues } from "../utils/mapFieldValues";
 import { Synthesizer } from "../synthesizer";
 import type { ExecutionContext as ExecutionContextType } from "./context";
+import type { HTTP } from "../domain/http";
 
 export abstract class RuntimeNode<
 
@@ -40,6 +41,17 @@ export abstract class RuntimeNode<
 
     public getPropagationStrategy(): RuntimeNode.PropagationStrategy {
         return this.PROPAGATION_STRATEGY
+    }
+
+
+    /** Build every outbound HTTP client from here, NOT from `context.httpAPI` — this binds the
+     *  node's attached proxy credential, so a client made any other way egresses directly.
+     *  Arrow body, so the agent is resolved lazily on create() rather than at construction. */
+    protected readonly httpClientFactory: HTTP.ClientAPI = {
+        create: (config) => this.context.httpAPI.create({
+            proxy: this.context.proxyAPI.getAgentForNode(this.nodeId),
+            ...config,
+        }),
     }
 
 

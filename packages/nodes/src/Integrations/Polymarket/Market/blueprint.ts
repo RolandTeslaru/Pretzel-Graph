@@ -9,7 +9,7 @@ const statusOptions = [
 export const Blueprint = defineBlueprint({
     id: "Integrations.Polymarket.Market",
     displayName: "Polymarket Market",
-    description: "Reads Polymarket prediction-market data: events, markets, prices and order books (Gamma + CLOB). No API key required.",
+    description: "Reads Polymarket prediction-market data: events, markets, prices and order books.",
     icon: "Polymarket",
     accent: "port-DataList",
     toolCompatible: true,
@@ -44,11 +44,6 @@ export const Blueprint = defineBlueprint({
             displayName: "Markets",
             tooltip: "Array of markets: { id, question, slug, conditionId, outcomes, outcomePrices, clobTokenIds, volume, liquidity, endDate }.",
         }),
-        OutputBuilder.Json({
-            id: "summary",
-            displayName: "Summary",
-            tooltip: "Convenience summary: { query, status, count, top }.",
-        }),
     ],
 });
 
@@ -56,7 +51,7 @@ export const Blueprint = defineBlueprint({
 export const ToolBlueprint = defineBlueprint({
     id: "Integrations.Polymarket.Market",
     displayName: "Polymarket Market",
-    description: "Exposes Polymarket market-data tools to an agent as a toolkit. Read-only — no API key required.",
+    description: "Exposes Polymarket market-data tools to an agent as a toolkit.",
     icon: "Polymarket",
     accent: "port-ToolList",
     toolCompatible: true,

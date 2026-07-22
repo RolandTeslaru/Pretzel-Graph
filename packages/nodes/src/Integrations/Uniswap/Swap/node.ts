@@ -11,11 +11,10 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { mainnet, polygon, arbitrum, base, optimism, avalanche, celo } from "viem/chains";
 
-import axios from "axios";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import { HTTP, RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "./blueprint";
@@ -38,15 +37,16 @@ type UniswapClients = {
     chainId: number;
 };
 
-const uniswapPost = async <T>(apiKey: string, endpoint: string, body: unknown): Promise<T> => {
-    const { data } = await axios.post<T>(`${UNISWAP_API_BASE}/${endpoint}`, body, {
+// The API key is a constant header, so it's bound once here rather than threaded per call.
+const createTradeApiClient = (http: HTTP.ClientAPI, apiKey: string): HTTP.Client =>
+    http.create({
+        vendor:  "Uniswap",
+        baseURL: UNISWAP_API_BASE,
         headers: {
             "Content-Type": "application/json",
             "x-api-key": apiKey,
         },
     });
-    return data;
-};
 
 const buildClients = (fields: {
     privateKey: string;
@@ -74,23 +74,26 @@ const buildClients = (fields: {
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     private clients!: UniswapClients;
+    private readonly tradeApi: HTTP.Client;
 
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);
-        const { privateKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.uniswapApi.blob);
-        this.clients = buildClients({ ...this.fieldValues, privateKey });
+
+        const { privateKey, apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.uniswapApi.blob);
+
+        this.clients  = buildClients({ ...this.fieldValues, privateKey });
+        this.tradeApi = createTradeApiClient(this.httpClientFactory, apiKey);
     }
 
     protected override async onRun(
         incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         const { wallet, public: publicClient, chainId } = this.clients;
-        const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.uniswapApi.blob);
         const address = wallet.account!.address;
 
         const checkApproval = tool(
             async ({ token, amount }) => {
-                const data = await uniswapPost<any>(apiKey, "check_approval", {
+                const data = await this.tradeApi.post<any>("/check_approval", {
                     token,
                     amount,
                     walletAddress: address,
@@ -126,7 +129,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const getQuote = tool(
             async ({ tokenIn, tokenOut, amount, type }) => {
-                const quote = await uniswapPost<any>(apiKey, "quote", {
+                const quote = await this.tradeApi.post<any>("/quote", {
                     tokenInChainId: chainId,
                     tokenOutChainId: chainId,
                     tokenIn,
@@ -152,7 +155,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const swapTokens = tool(
             async ({ tokenIn, tokenOut, amount, type }) => {
                 // Step 1: get quote + permit data
-                const quoteResponse = await uniswapPost<any>(apiKey, "quote", {
+                const quoteResponse = await this.tradeApi.post<any>("/quote", {
                     tokenInChainId: chainId,
                     tokenOutChainId: chainId,
                     tokenIn,
@@ -177,7 +180,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 }
 
                 // Step 3: submit swap
-                const swapResponse = await uniswapPost<any>(apiKey, "swap", {
+                const swapResponse = await this.tradeApi.post<any>("/swap", {
                     signature,
                     quote,
                     permitData: permitData ?? undefined,
