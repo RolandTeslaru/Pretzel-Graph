@@ -5,28 +5,18 @@ import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint, ToolBlueprint } from "./blueprint";
-import {
-    MarketStatus,
-    clampLimit,
-    createClobClient,
-    createGammaClient,
-    fetchEvents,
-    fetchMarketById,
-    fetchMarkets,
-    fetchMidpoint,
-    fetchOrderBook,
-    searchMarketsLocal,
-    summarizeMarkets,
-} from "./fetch";
+import { PolymarketClient } from "./client";
+import { MarketStatus } from "./shapes";
+import { clampLimit, searchMarketsLocal } from "./query";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
-    private readonly gamma = createGammaClient();
-    private readonly clob = createClobClient();
+    private readonly client: PolymarketClient;
 
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);
+        this.client = new PolymarketClient(this.httpClientFactory);
     }
 
     protected override async onRun(
@@ -37,11 +27,9 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         const query = (incoming.query ?? "").trim();
 
         // Over-fetch so the local substring filter has something to narrow.
-        const markets = await fetchMarkets(this.gamma, { status, limit: query ? Math.max(limit, 100) : limit });
-        const filtered = searchMarketsLocal(markets, query, limit);
-        const summary = summarizeMarkets(query, status, filtered);
+        const markets = await this.client.getMarkets({ status, limit: query ? Math.max(limit, 100) : limit });
 
-        return { markets: filtered, summary };
+        return { markets: searchMarketsLocal(markets, query, limit) };
     }
 
     protected override async onBuildTool(
@@ -56,13 +44,13 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
                 const cap = clampLimit(limit, defaultLimit);
                 const q = (query ?? "").trim();
 
-                const markets = await fetchMarkets(this.gamma, { status: effectiveStatus, limit: q ? Math.max(cap, 100) : cap });
+                const markets = await this.client.getMarkets({ status: effectiveStatus, limit: q ? Math.max(cap, 100) : cap });
                 const filtered = searchMarketsLocal(markets, q, cap);
-                return JSON.stringify(summarizeMarkets(q, effectiveStatus, filtered));
+                return JSON.stringify({ status: effectiveStatus, count: filtered.length, markets: filtered });
             },
             {
                 name: "polymarket_search_markets",
-                description: "Search Polymarket markets by a substring of the question/slug. Returns a compact summary with the top matches and their outcome prices. Use polymarket_get_market for full detail on one.",
+                description: "Search Polymarket markets by a substring of the question/slug. Returns matching markets with their outcomes and outcome prices, ordered by volume.",
                 schema: z.object({
                     query: z.string().optional().describe("Substring to match against the market question/slug. Omit to list top markets by volume."),
                     status: z.enum(["active", "closed", "all"]).optional().describe("Status filter. Defaults to the node's configured status."),
@@ -79,11 +67,11 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
                 // Numeric -> market id endpoint; otherwise resolve by slug.
                 if (/^\d+$/.test(key)) {
-                    const market = await fetchMarketById(this.gamma, key);
+                    const market = await this.client.marketById(key);
                     return JSON.stringify(market ?? { error: `No market found for id '${key}'.` });
                 }
 
-                const bySlug = await fetchMarkets(this.gamma, { status: "all", limit: 1, slug: key });
+                const bySlug = await this.client.getMarkets({ status: "all", limit: 1, slug: key });
                 return JSON.stringify(bySlug[0] ?? { error: `No market found for slug '${key}'.` });
             },
             {
@@ -99,7 +87,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
             async ({ status, limit }) => {
                 const effectiveStatus = (status ?? defaultStatus) as MarketStatus;
                 const cap = clampLimit(limit, defaultLimit);
-                const events = await fetchEvents(this.gamma, { status: effectiveStatus, limit: cap });
+                const events = await this.client.events({ status: effectiveStatus, limit: cap });
                 return JSON.stringify({ status: effectiveStatus, count: events.length, events });
             },
             {
@@ -117,7 +105,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
                 const id = (tokenId ?? "").trim();
                 if (!id)
                     throw new Error("polymarket_get_midpoint: 'tokenId' is required (a CLOB token id from a market's clobTokenIds).");
-                return JSON.stringify(await fetchMidpoint(this.clob, id));
+                return JSON.stringify(await this.client.midpoint(id));
             },
             {
                 name: "polymarket_get_midpoint",
@@ -133,7 +121,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
                 const id = (tokenId ?? "").trim();
                 if (!id)
                     throw new Error("polymarket_get_order_book: 'tokenId' is required (a CLOB token id from a market's clobTokenIds).");
-                return JSON.stringify(await fetchOrderBook(this.clob, id));
+                return JSON.stringify(await this.client.orderBook(id));
             },
             {
                 name: "polymarket_get_order_book",

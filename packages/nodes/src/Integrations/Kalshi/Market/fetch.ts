@@ -1,5 +1,8 @@
-import axios from "axios";
-import { Configuration, MarketApi, EventsApi } from "kalshi-typescript";
+import { MarketApi, EventsApi } from "kalshi-typescript";
+import { HTTP } from "@pretzel-graph/node-sdk";
+
+// Pinned rather than inherited from the SDK, whose BASE_PATH can move between releases.
+const BASE_PATH = "https://external-api.kalshi.com/trade-api/v2";
 
 export type KalshiStatusField = "active" | "closed" | "all";
 
@@ -15,43 +18,18 @@ export type KalshiApis = {
     eventsApi: EventsApi;
 };
 
-export const createKalshiApis = (apiKeyId: string, privateKeyPem: string): KalshiApis => {
-    if (!apiKeyId || !privateKeyPem)
-        throw new Error("Kalshi: API Key ID and RSA Private Key (PEM) are required.");
+// Market data is public. Passing no Configuration leaves `auth` unset, so the SDK's
+// RSA-PSS signing interceptor stays a no-op — the node sends unsigned requests.
+// The client carries the node's proxy agents and the execution abort signal.
+export const createKalshiApis = (client: HTTP.Client): KalshiApis => ({
+    marketApi: new MarketApi(undefined, BASE_PATH, client.raw),
+    eventsApi: new EventsApi(undefined, BASE_PATH, client.raw),
+});
 
-    const config = new Configuration({ apiKey: apiKeyId, privateKeyPem });
-
-    // IMPORTANT: each API gets its own axios instance. The SDK's RSA-PSS signing
-    // interceptor is registered on the axios instance passed to the constructor;
-    // if we let it default to the global axios singleton it would sign EVERY
-    // request made by other nodes in this process.
-    const marketApi = new MarketApi(config, undefined, axios.create());
-    const eventsApi = new EventsApi(config, undefined, axios.create());
-
-    return { marketApi, eventsApi };
-};
-
-const formatKalshiError = (err: unknown): Error => {
-    if (!axios.isAxiosError(err))
-        return err instanceof Error ? err : new Error(String(err));
-
-    const status = err.response?.status;
-    const statusText = err.response?.statusText;
-    const body = err.response?.data;
-    const bodyText = body === undefined ? "" : typeof body === "string" ? body : JSON.stringify(body);
-    const suffix = status ? ` -> ${status}${statusText ? ` ${statusText}` : ""}` : "";
-    return new Error(`Kalshi request failed${suffix}.${bodyText ? ` Response: ${bodyText}` : ""}`);
-};
-
-// Unwrap an SDK call (returns AxiosResponse) into its data, with a clean error.
-export const unwrap = async <T>(call: Promise<{ data: T }>): Promise<T> => {
-    try {
-        return (await call).data;
-    }
-    catch (err) {
-        throw formatKalshiError(err);
-    }
-};
+// SDK calls resolve to an AxiosResponse. Failures are already normalized to HTTP.Error
+// by the client's interceptor, so there is nothing to catch here.
+export const unwrap = async <T>(call: Promise<{ data: T }>): Promise<T> =>
+    (await call).data;
 
 export const compactMarket = (m: any) => ({
     ticker: m?.ticker ?? null,

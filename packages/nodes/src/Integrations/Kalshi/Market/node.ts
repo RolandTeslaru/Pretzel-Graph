@@ -23,8 +23,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);
-        const { apiKeyId, privateKeyPem } = this.context.credentialsAPI.getDecryptedValue(this.credentials.kalshiApi.blob);
-        this.apis = createKalshiApis(apiKeyId, privateKeyPem);
+        this.apis = createKalshiApis(this.httpClientFactory.create({ vendor: "Kalshi" }));
     }
 
     private async listMarkets(args: { status: KalshiStatusField; limit: number; eventTicker?: string }) {
@@ -48,10 +47,12 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         const eventTicker = (incoming.eventTicker ?? "").trim();
 
         const markets = await this.listMarkets({ status, limit, eventTicker });
-        const summary = summarizeMarkets(eventTicker, status, markets);
 
-        return { markets, summary };
+        return { markets };
     }
+
+
+
 
     protected override async onBuildTool(
         _incoming: InferIncoming<typeof ToolBlueprint>,

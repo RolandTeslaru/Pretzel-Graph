@@ -3,7 +3,7 @@ import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pre
 export const Blueprint = defineBlueprint({
     id: "Integrations.Coinbase.Market",
     displayName: "DeFi Market Data",
-    description: "Fetches live DeFi market data. Pyth for real-time asset prices, DeFiLlama for protocol TVL and analytics. No API key required.",
+    description: "Fetches live DeFi market data: Pyth for real-time asset prices, DeFiLlama for protocol TVL and analytics.",
     icon: "Coinbase",
     accent: "port-Json",
     toolCompatible: true,
@@ -46,7 +46,7 @@ export const Blueprint = defineBlueprint({
 export const ToolBlueprint = defineBlueprint({
     id: "Integrations.Coinbase.Market",
     displayName: "DeFi Market Data",
-    description: "Exposes DeFi market data tools to an agent. No API key required.",
+    description: "Exposes DeFi market data tools to an agent.",
     icon: "Coinbase",
     accent: "port-Tool",
     toolCompatible: true,
