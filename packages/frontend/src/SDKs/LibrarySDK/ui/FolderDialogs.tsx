@@ -122,7 +122,7 @@ function EditFolderContent({ dialogId, folder }: { dialogId: string; folder: Lib
         <div className="p-3 flex flex-col gap-4">
             <Dialog.Header className="my-1">
                 <Dialog.Title className="flex items-center gap-2">
-                    <SystemIcons.Folder />
+                    <FolderIcon color="var(--primary)" className="size-8 shrink-0" />
                     Edit folder
                 </Dialog.Title>
                 <Dialog.Description className="text-muted-foreground">

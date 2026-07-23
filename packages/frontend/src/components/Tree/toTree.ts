@@ -6,8 +6,9 @@ export function jsonToTree(value: unknown): Tree.Dummy.Branch {
     }
 
     if (Array.isArray(value)) {
-        if (value.length === 0) return { data: value }
+        if (value.length === 0) return { containerType: "array" }
         return {
+            containerType: "array",
             childBranches: Object.fromEntries(
                 value.map((item, i) => [`${i}` as Tree.Branch.Key, jsonToTree(item)])
             ) as Record<Tree.Branch.Key, Tree.Dummy.Branch>,
@@ -15,9 +16,10 @@ export function jsonToTree(value: unknown): Tree.Dummy.Branch {
     }
 
     const entries = Object.entries(value as Record<string, unknown>)
-    if (entries.length === 0) return {}
+    if (entries.length === 0) return { containerType: "object" }
 
     return {
+        containerType: "object",
         childBranches: Object.fromEntries(
             entries.map(([k, v]) => [k as Tree.Branch.Key, jsonToTree(v)])
         ) as Record<Tree.Branch.Key, Tree.Dummy.Branch>,
@@ -47,7 +49,12 @@ export function projectionsToDummyTree<T_Data = undefined>(
 
                 return [
                     key as Tree.Branch.Key,
-                    { childBranches: sub.childBranches, isExpandedByDefault: true, data },
+                    {
+                        childBranches: sub.childBranches,
+                        containerType: sub.containerType,
+                        isExpandedByDefault: true,
+                        data,
+                    },
                 ]
             })
         ) as Record<Tree.Branch.Key, Tree.Dummy.Branch<T_Data>>,

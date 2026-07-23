@@ -8,11 +8,18 @@ import { Workbench } from '@pretzel-graph/shared/domain'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { openEditWorkflowDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { WorkflowGlyph } from '@pretzel-graph/standard-ui/brands/workflowGlyph'
 import { api } from '@/SDKs/ApiInterceptorSDK'
 import { toast } from 'sonner'
 
 interface WorkflowCardProps {
     workflow: Library.WorkflowMeta
+}
+
+function iconColor(workflow: Library.WorkflowMeta) {
+    const token = workflow.icon_color ?? workflow.accent
+
+    return token ? `var(--${token})` : "var(--primary)"
 }
 
 export function WorkflowCard({ workflow }: WorkflowCardProps) {
@@ -23,12 +30,21 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
                 params={{ workflowid: workflow.id }}
                 className="p-4 flex flex-col gap-1 hover:bg-accent/30 rounded-md relative m-auto"
             >
-                <LazyIcon
-                    name={workflow.icon ?? "Graph"}
-                    size={40}
-                    className="shrink-0 w-fit h-fit m-auto"
-                    style={{ color: (workflow.icon_color ?? workflow.accent) ? `var(--${workflow.icon_color ?? workflow.accent})` : "var(--primary)" }}
-                />
+                {workflow.icon ? (
+                    <LazyIcon
+                        name={workflow.icon}
+                        size={40}
+                        className="shrink-0 w-fit h-fit m-auto"
+                        style={{ color: iconColor(workflow) }}
+                    />
+                ) : (
+                    <WorkflowGlyph
+                        width={52}
+                        height={52}
+                        className="shrink-0 m-auto"
+                        style={{ color: "var(--primary)" }}
+                    />
+                )}
                 <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm text-center truncate">{workflow.display_name || 'Untitled'}</p>
                     {/* {workflow.description && (

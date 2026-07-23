@@ -1,8 +1,9 @@
+import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { DialogSDK } from '@/SDKs/DialogSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { AlertDialog, Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, ContextMenu } from '@pretzel-graph/standard-ui/foundations'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { openEditFolderDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
 import { FolderIcon } from './FolderIcon'
@@ -18,7 +19,7 @@ export function FolderCard({ folder }: FolderCardProps) {
     )
 
     return (
-
+        <FolderCardContextMenu folder={folder}>
             <Link
                 to="/home/projects/$folderId"
                 params={{ folderId: folder.id }}
@@ -32,6 +33,44 @@ export function FolderCard({ folder }: FolderCardProps) {
                     </div>
                 </div>
             </Link>
+        </FolderCardContextMenu>
+    )
+}
+
+interface FolderCardContextMenuProps {
+    folder: Library.Folder
+    children: ReactNode
+}
+
+function FolderCardContextMenu({ folder, children }: FolderCardContextMenuProps) {
+    return (
+        <ContextMenu.Root>
+            <ContextMenu.Trigger asChild>
+                {children}
+            </ContextMenu.Trigger>
+            <ContextMenu.Content>
+                <ContextMenu.Item
+                    icon={<SystemIcons.SquarePen className="size-4" />}
+                    onClick={() => openEditFolderDialog({ folder })}
+                >
+                    Edit
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                    icon={<SystemIcons.Copy className="size-4" />}
+                    onClick={() => navigator.clipboard.writeText(folder.id)}
+                >
+                    Copy ID
+                </ContextMenu.Item>
+                <ContextMenu.Separator />
+                <ContextMenu.Item
+                    variant="destructive"
+                    icon={<SystemIcons.Trash2 className="size-4" />}
+                    onClick={() => openDeleteFolderDialog(folder)}
+                >
+                    Delete
+                </ContextMenu.Item>
+            </ContextMenu.Content>
+        </ContextMenu.Root>
     )
 }
 
@@ -57,31 +96,3 @@ export function openDeleteFolderDialog(folder: Library.Folder) {
         </DialogSDK.AlertTemplate>
     ))
 }
-
-
-        // <div className="absolute top-2 right-2 z-10">
-        //         <DropdownMenu.Root>
-        //             <DropdownMenu.Trigger asChild>
-        //                 <Button variant="ghost" size="icon-xs" className="p-0!">
-        //                     <SystemIcons.Ellipsis />
-        //                 </Button>
-        //             </DropdownMenu.Trigger>
-        //             <DropdownMenu.Content align="end">
-        //                 <DropdownMenu.Item onClick={() => openEditFolderDialog({ folder })}>
-        //                     <SystemIcons.SquarePen />
-        //                     Edit folder
-        //                 </DropdownMenu.Item>
-        //                 <DropdownMenu.Item onClick={() => navigator.clipboard.writeText(folder.id)}>
-        //                     <SystemIcons.Copy />
-        //                     Copy ID
-        //                 </DropdownMenu.Item>
-        //                 <DropdownMenu.Item
-        //                     variant="destructive"
-        //                     onClick={() => openDeleteFolderDialog(folder)}
-        //                 >
-        //                     <SystemIcons.Trash2 />
-        //                     Delete folder
-        //                 </DropdownMenu.Item>
-        //             </DropdownMenu.Content>
-        //         </DropdownMenu.Root>
-        //     </div>

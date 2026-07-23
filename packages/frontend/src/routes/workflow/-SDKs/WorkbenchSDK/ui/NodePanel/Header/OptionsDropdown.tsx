@@ -1,12 +1,10 @@
 import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { Vault, Workflow } from '@pretzel-graph/shared/domain'
+import { Workflow } from '@pretzel-graph/shared/domain'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { WorkbenchSDK } from '../../../sdk'
 import { AddCredentialDialog } from '../AddCredentialDialog'
-
-// Mirrors NetworkProxy.TEMPLATE_ID in node-sdk — the frontend doesn't depend on that package.
-const PROXY_TEMPLATE_ID = "networkProxy" as Vault.Credential.Template.Id
+import { PROXY_TEMPLATE_ID } from '../proxy'
 
 interface Props {
     hyNode: Workflow.Node.Hydrated
