@@ -13,6 +13,7 @@ import WebhookRenderer from './webhook-renderer';
 import { InputItem } from './input-renderer';
 import { CredentialPicker } from './CredentialPicker';
 import { DependencySelector } from './DependencySelector'
+import { PROXY_TEMPLATE_ID } from './proxy'
 
 
 interface SidebarAccordionItemProps {
@@ -116,7 +117,9 @@ export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
         ];
     }, [hyNode.connectedPorts, hyNode.blueprint, hyNode.inputs, hyNode.fields]);
 
-    const credentials = hyNode.blueprint.credentials ?? []
+    // The proxy credential is attached from the options dropdown, not listed here.
+    const credentials = (hyNode.blueprint.credentials ?? [])
+        .filter(cred => cred.id !== PROXY_TEMPLATE_ID)
     const webhooks = hyNode.blueprint.webhooks ?? []
     const flags = hyNode.blueprint.flags ?? {}
 

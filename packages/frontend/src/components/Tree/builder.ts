@@ -27,6 +27,7 @@ export const buildTree = (dummyTree: Tree.Dummy.Branch): Tree => {
             path,
             pathString,
             data: dummyBranch.data,
+            containerType: dummyBranch.containerType,
             isExpandedByDefault: dummyBranch.isExpandedByDefault,
             isExpanded: dummyBranch.isExpanded ?? dummyBranch.isExpandedByDefault ?? false,
             isLastSibling,

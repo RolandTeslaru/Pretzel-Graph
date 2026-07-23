@@ -62,7 +62,7 @@ function Content({ className, ...rest }: ContextMenuComponents.Content) {
       <ContextMenuPrimitive.Content
         data-slot="context-menu-content"
         className={cn(
-          `bg-popover/60 text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out
+          `bg-popover/80 text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out
           data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95
           data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2
           data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2
@@ -101,7 +101,7 @@ function SubTrigger({ className, inset, children, icon, ...rest }: ContextMenuCo
         data-[inset]:pl-8
         [&_svg]:pointer-events-none
         [&_svg]:shrink-0
-        [&_svg]:text-accent-foreground/50`,
+        [&_svg]:text-accent-foreground`,
         className
       )}
       {...rest}
@@ -172,7 +172,7 @@ function Item({
         data-[inset]:pl-8
         [&_svg]:pointer-events-none
         [&_svg]:shrink-0
-        [&_svg]:text-accent-foreground/50`,
+        [&_svg]:text-accent-foreground`,
         preventClose && "pointer-events-none!",
         className
       )}
@@ -198,7 +198,7 @@ function CheckboxItem({ className, children, checked, ...rest }: ContextMenuComp
         data-[disabled]:pointer-events-none data-[disabled]:opacity-50
         [&_svg]:pointer-events-none [&_svg]:shrink-0
         [&_svg:not([class*='size-'])]:size-4
-        [&_svg]:text-accent-foreground/50`,
+        [&_svg]:text-accent-foreground`,
         className
       )}
       checked={checked}
@@ -229,7 +229,7 @@ function RadioItem({ className, children, ...rest }: ContextMenuComponents.Radio
         [&_svg]:pointer-events-none
         [&_svg]:shrink-0
         [&_svg:not([class*='size-'])]:size-4
-        [&_svg]:text-accent-foreground/50`,
+        [&_svg]:text-accent-foreground`,
         className
       )}
       {...rest}
@@ -259,7 +259,7 @@ function Separator({ className, ...rest }: ContextMenuComponents.Separator) {
   return (
     <ContextMenuPrimitive.Separator
       data-slot="context-menu-separator"
-      className={cn("bg-border -mx-1 my-1 h-px", className)}
+      className={cn("bg-border  my-1 h-px", className)}
       {...rest}
     />
   )

@@ -1,6 +1,6 @@
 import { memo, useEffect } from 'react'
 import { Select } from '@pretzel-graph/standard-ui/foundations/select'
-import { Button } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Dialog } from '@pretzel-graph/standard-ui/foundations'
 import { VaultSDK } from '@/SDKs/VaultSDK/sdk'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { WorkbenchSDK } from '../../sdk'
@@ -10,9 +10,10 @@ import type { Vault, Workflow } from '@pretzel-graph/shared/domain'
 interface Props {
     credentialTemplate: Vault.Credential.Template
     nodeId: Workflow.Node.Id
+    showTitle?: boolean
 }
 
-export const CredentialPicker = memo(({ credentialTemplate, nodeId }: Props) => {
+export const CredentialPicker = memo(({ credentialTemplate, nodeId, showTitle = true }: Props) => {
     const instances = VaultSDK.useStore(s =>
         s.selectors.byTemplateId(s, credentialTemplate.id)
     )
@@ -28,6 +29,8 @@ export const CredentialPicker = memo(({ credentialTemplate, nodeId }: Props) => 
         const dialogId = `add-credentialTemplate-${credentialTemplate.id}`
         DialogSDK.actions.push(dialogId, props => (
             <DialogSDK.Template {...props}>
+                <Dialog.Title className='text-sm font-semibold hidden'>Add Credential</Dialog.Title>
+                <Dialog.Description className='text-xs text-muted-foreground hidden'>Add a new credential for this node</Dialog.Description>
                 <AddCredentialDialog
                     credentialTemplate={credentialTemplate}
                     dialogId={dialogId}
@@ -39,7 +42,9 @@ export const CredentialPicker = memo(({ credentialTemplate, nodeId }: Props) => 
 
     return (
         <div className='flex flex-col gap-1 w-full'>
-            <span className='text-xs font-medium text-muted-foreground'>{credentialTemplate.displayName}</span>
+            {showTitle && (
+                <span className='text-xs font-medium text-muted-foreground'>{credentialTemplate.displayName}</span>
+            )}
             <div className='flex gap-1.5'>
                 <Select.Root
                     value={instanceId ?? ''}
