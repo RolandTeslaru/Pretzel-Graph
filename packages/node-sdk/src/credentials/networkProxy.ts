@@ -8,7 +8,7 @@ import { NetworkProxy } from "../domain/networkProxy";
 export const NetworkProxyCredential = defineCredential({
     id: NetworkProxy.TEMPLATE_ID,
     displayName: "Proxy",
-    icon: "Globe",
+    icon: "NetworkProxy",
     optional: true,
     fields: [
         FieldBuilder.MultiOption({
