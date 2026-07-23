@@ -79,16 +79,19 @@ export namespace Validation {
         }
         export namespace Credential {
             export function check(
-                templateId: Vault.Credential.Template.Id,
+                template: Vault.Credential.Template,
                 nodeId: Workflow.Node.Id,
                 workflowData: Workflow.Data
             ): Issue.Credential | null {
-                const instanceId = workflowData.credentialInstanceIds[nodeId]?.[templateId];
+                if (template.optional)
+                    return null;
+
+                const instanceId = workflowData.credentialInstanceIds[nodeId]?.[template.id];
                 if (instanceId)
                     return null;
 
                 return {
-                    templateId,
+                    templateId: template.id,
                     type: 'missing_credential' as const,
                 }
             }
@@ -133,7 +136,7 @@ export namespace Validation {
                 }
 
                 for (const template of shape.credentials) {
-                    const credentialIssue = Issue.Credential.check(template.id, node.id, workflowData)
+                    const credentialIssue = Issue.Credential.check(template, node.id, workflowData)
                     if (credentialIssue) {
                         nodeIssues.credentials[template.id] = credentialIssue
                         numCredentialIssues++;

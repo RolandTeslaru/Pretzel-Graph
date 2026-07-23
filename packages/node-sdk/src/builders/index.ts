@@ -4,6 +4,7 @@ import type { Port }  from "@pretzel-graph/shared/domain/Foundations/Port";
 import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import type { CredentialTemplate } from "./credential";
+import { NetworkProxyCredential } from "../credentials/networkProxy";
 import { FieldBuilder } from "./field";
 export { FieldBuilder } from "./field"
 export { InputBuilder } from "./input"
@@ -46,6 +47,7 @@ type DefineBlueprintReturn<
     readonly outputs: TOutputs;
     readonly webhooks?: TWebhooks;
     readonly toolCompatible: TToolCompatible;
+    readonly proxyCompatible?: boolean;
     readonly credentials: TCredentials;
     readonly flags?: TFlags;
     // Input port id whose array is iterated for this node's item-scoped fields (FieldBuilder.itemScoped).
@@ -123,6 +125,7 @@ export function defineBlueprint<
     outputs: TOutputs;
     webhooks?: TWebhooks;
     toolCompatible?: TToolCompatible;
+    proxyCompatible?: boolean;
     credentials?: TCredentials;
     flags?: TFlags;
     itemScope?: string;
@@ -157,7 +160,12 @@ export function defineBlueprint<
         outputs: config.outputs,
         webhooks: config.webhooks,
         toolCompatible: config.toolCompatible as TToolCompatible,
-        credentials: (config.credentials ?? []) as unknown as TCredentials,
+        proxyCompatible: config.proxyCompatible,
+        credentials: (
+            config.proxyCompatible
+                ? [...(config.credentials ?? []), NetworkProxyCredential]
+                : (config.credentials ?? [])
+        ) as unknown as TCredentials,
         flags: config.flags,
         itemScope: config.itemScope,
     } 

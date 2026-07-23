@@ -299,10 +299,10 @@ code {
   --accent-foreground: theme(--color-white);
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: rgb(55, 55, 55);
+  --border: rgb(45, 45, 45);
 
   /* --border: theme(--color-stone-800); */
-  --input: rgb(35, 35, 35);
+  --input: rgb(35, 35, 40);
   --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
 
 

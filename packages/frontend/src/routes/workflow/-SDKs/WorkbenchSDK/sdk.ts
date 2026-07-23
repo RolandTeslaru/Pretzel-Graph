@@ -289,7 +289,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
      */
     public useCredential(nodeId: Workflow.Node.Id, templateId: Vault.Credential.Template.Id) {
         const [instanceId, issue] = this.useStore(s => [
-            s.data.credentialInstanceIds[nodeId]?.[templateId] ?? null,
+            s.selectors.credential.getInstance(s, nodeId, templateId),
             s.selectors.credential.getIssue(s, nodeId, templateId),
         ] as const);
 
