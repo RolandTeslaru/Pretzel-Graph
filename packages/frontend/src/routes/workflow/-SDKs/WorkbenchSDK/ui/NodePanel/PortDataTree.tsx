@@ -5,6 +5,8 @@ import type { Tree as TreeType } from '@/components/Tree/domain'
 import type { Execution, Foundations } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@/SDKs/DialogSDK'
+import { Button } from '@pretzel-graph/standard-ui/foundations'
+import { toast } from 'sonner'
 
 export type PortBranchMeta = {
     displayName?: string
@@ -21,6 +23,23 @@ function formatLeafValue(value: unknown): string {
     if (Array.isArray(value)) return `${value.length} item${value.length === 1 ? '' : 's'}`
     if (value !== null && typeof value === 'object') return Object.keys(value).length === 0 ? '{}' : '{…}'
     return String(value)
+}
+
+function branchToJsonValue(branch: TreeType.Branch): unknown {
+    const children = Object.entries(branch.childBranches ?? {})
+
+    if (children.length === 0) {
+        if (branch.containerType === 'array') return []
+        if (branch.containerType === 'object') return {}
+        return branch.data
+    }
+
+    const entries = children.map(([key, child]) => [key, branchToJsonValue(child)] as const)
+
+    if (branch.containerType === 'array')
+        return entries.map(([, value]) => value)
+
+    return Object.fromEntries(entries)
 }
 
 // One column of vertical tree lines per ancestor level. The innermost column draws the
@@ -88,8 +107,10 @@ export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSi
 
     // Port roots show a one-line summary of their stashed value; nested leaves show the raw value.
     let value: string | null = null
-    if (isPortRoot && branch.data?.isLeafValue) value = formatLeafValue(branch.data.leafValue)
-    else if (!isPortRoot && isLeaf && branch.data !== undefined) value = String(branch.data)
+    if (isPortRoot && branch.data?.isLeafValue)
+        value = formatLeafValue(branch.data.leafValue)
+    else if (!isPortRoot && isLeaf && branch.data !== undefined)
+        value = String(branch.data)
 
     return (
         <div
@@ -100,15 +121,41 @@ export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSi
             <IndentGuides level={level} ancestorIsLast={branch.ancestorIsLast} isLastSibling={isLastSibling} />
 
             {!isLeaf && (
-                <SystemIcons.ChevronRight
-                    className="shrink-0 h-4 w-4 text-muted-foreground transition-transform duration-150"
-                    style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
-                />
+                <>
+                    <SystemIcons.ChevronRight
+                        className="shrink-0 h-4 w-4 text-muted-foreground transition-transform duration-150"
+                        style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
+                    />
+                </>
             )}
 
             <span className="whitespace-nowrap text-[11px] font-medium text-foreground">{label}</span>
 
             {value !== null && <ValuePreview label={label} value={value} breadcrumbs={[label]} />}
+
+            {!isLeaf &&
+                <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    className="ml-auto"
+                    aria-label={`Copy ${label} as JSON`}
+                    title="Copy as JSON"
+                    onClick={async (e) => {
+                        e.stopPropagation()
+                        const json = JSON.stringify(branchToJsonValue(branch), null, 2)
+
+                        try {
+                            await navigator.clipboard.writeText(json)
+                            toast.success(`Copied branch "${label}" to clipboard`)
+                        } catch {
+                            toast.error('Failed to copy JSON')
+                        }
+                    }}
+                >
+                    <SystemIcons.Copy className="size-3 hidden group-hover:flex" />
+                </Button>
+            }
         </div>
     )
 }

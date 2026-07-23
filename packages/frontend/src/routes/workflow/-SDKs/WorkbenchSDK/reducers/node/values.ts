@@ -97,9 +97,13 @@ export const nodeValueReducers = {
         // Auto-fill any still-unassigned credential the node declares, but only when
         // exactly one matching vault instance exists (unambiguous default).
         for (const template of blueprint.credentials ?? []) {
-            if (next[template.id] !== undefined) 
+            // Optional templates (the network proxy) are opt-in — never auto-attached.
+            if (template.optional)
                 continue;
-            
+
+            if (next[template.id] !== undefined)
+                continue;
+
             const instances = VaultSDK.selectors.byTemplateId(VaultSDK.state, template.id);
             
             if (instances.length === 1)

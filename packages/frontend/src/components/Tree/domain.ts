@@ -3,6 +3,7 @@ export namespace Tree {
     export namespace Dummy {
         export interface Branch<T_Data = any> {
             childBranches?: Record<Branch.Key, Branch>
+            containerType?: "array" | "object"
             isExpanded?: boolean
             data?: T_Data
             isExpandedByDefault?: boolean
