@@ -7,8 +7,8 @@ import { Button, Form, Input, Spinner, Switch } from '@pretzel-graph/standard-ui
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { VaultSDK } from '@/SDKs/VaultSDK/sdk'
 import type { Vault } from '@pretzel-graph/shared/domain'
-import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { VaultGlyph } from '@pretzel-graph/standard-ui/brands/vaultGlyph'
 
 interface Props {
     credentialTemplate: Vault.Credential.Template
@@ -64,7 +64,7 @@ export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }:
             {/* Left sidebar */}
             <div className='w-[180px] flex flex-col gap-2 shrink-0 py-4 pl-4'>
                 <div className='flex flex-row items-center gap-2'>
-                    <SystemIcons.Vault className='size-10 text-muted-foreground' />
+                    <VaultGlyph className='size-10 shrink-0' />
                     <p className='text-lg font-semibold text-foreground'>Vault</p>
                 </div>
                 <p className='text-xs text-muted-foreground'>Stores and manages credentials securely.</p>

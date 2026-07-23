@@ -43,6 +43,8 @@ export namespace Vault {
                 displayName: z.string(),
                 fields:      z.array(Field.Schema).readonly(),
                 icon:        z.string().optional(),
+                // Nothing attached is a valid state — validation won't flag it as missing.
+                optional:    z.boolean().optional(),
             })
         }
         export type Template = z.infer<typeof Template.Schema>

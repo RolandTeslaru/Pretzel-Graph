@@ -11,6 +11,7 @@ export const Blueprint = defineBlueprint({
     displayName: "Polymarket Market",
     description: "Reads Polymarket prediction-market data: events, markets, prices and order books.",
     icon: "Polymarket",
+    proxyCompatible: true,
     accent: "port-DataList",
     toolCompatible: true,
     fields: [
@@ -53,6 +54,7 @@ export const ToolBlueprint = defineBlueprint({
     displayName: "Polymarket Market",
     description: "Exposes Polymarket market-data tools to an agent as a toolkit.",
     icon: "Polymarket",
+    proxyCompatible: true,
     accent: "port-ToolList",
     toolCompatible: true,
     fields: [

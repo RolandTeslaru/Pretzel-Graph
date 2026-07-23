@@ -1,10 +1,11 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Developer.HttpRequest",
     displayName: "HTTP Request",
     description: "Makes an HTTP request.",
     icon: "Globe",
+    proxyCompatible: true,
     accent: "utility",
     iconColor: "color-blue-400",
     fields: [
@@ -38,21 +39,12 @@ export const Blueprint = defineBlueprint({
             initialValue: {},
         }),
     ],
-    inputs: [
-        InputBuilder.Message({
-            id: "trigger",
-            displayName: "Trigger",
-            required: false,
-        })
-    ],
+    inputs: [],
     outputs: [
-        OutputBuilder.Json({
-            id: "response",
-            displayName: "Response",
+        OutputBuilder.Data({
+            id: "result",
+            displayName: "Result",
+            tooltip: "{ status, data } — the response status code and parsed body.",
         }),
-        OutputBuilder.Integer({
-            id: "status",
-            displayName: "Status",
-        })
     ],
 });

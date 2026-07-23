@@ -21,6 +21,7 @@ export const Blueprint = defineBlueprint({
     displayName: "Massive Market",
     description: "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search.",
     icon: "Massive",
+    proxyCompatible: true,
     accent: "port-DataList",
     toolCompatible: true,
     fields: [
@@ -64,6 +65,7 @@ export const ToolBlueprint = defineBlueprint({
     displayName: "Massive Market",
     description: "Exposes Massive (Polygon.io) stock-market data tools to an agent.",
     icon: "Massive",
+    proxyCompatible: true,
     accent: "port-ToolList",
     toolCompatible: true,
     fields: [

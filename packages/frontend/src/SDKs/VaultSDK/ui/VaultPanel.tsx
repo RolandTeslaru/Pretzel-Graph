@@ -8,6 +8,7 @@ import {
 import { Vault } from '@pretzel-graph/shared/domain'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
+import { VaultGlyph } from '@pretzel-graph/standard-ui/brands/vaultGlyph'
 
 const VaultPanel = () => {
     const instances = VaultSDK.useStore(s => Object.values(s.credentialInstances))
@@ -19,7 +20,7 @@ const VaultPanel = () => {
     return (
         <div className='flex flex-col h-full w-full p-4 gap-4 min-w-[600px]'>
             <div className='flex flex-row w-full gap-3 items-center'>
-                <SystemIcons.Vault className='size-10' />
+                <VaultGlyph className='size-10 shrink-0' />
                 <h1 className='text-lg font-bold'>VAULT</h1>
             </div>
 

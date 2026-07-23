@@ -18,6 +18,7 @@ export const Blueprint = defineBlueprint({
     displayName: "Alpaca Market",
     description: "Reads US stock market data and news from Alpaca Market Data APIs.",
     icon: "Alpaca",
+    proxyCompatible: true,
     accent: "port-DataList",
     toolCompatible: true,
     fields: [
@@ -96,6 +97,7 @@ export const ToolBlueprint = defineBlueprint({
     displayName: "Alpaca Market",
     description: "Exposes Alpaca market data and news tools to an agent.",
     icon: "Alpaca",
+    proxyCompatible: true,
     accent: "port-ToolList",
     toolCompatible: true,
     fields: [
