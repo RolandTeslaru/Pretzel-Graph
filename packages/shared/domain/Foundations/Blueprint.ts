@@ -66,6 +66,9 @@ export namespace Blueprint {
         export const Schema = z.object({
             id:                   Blueprint.Id,
             toolCompatible:       z.boolean().optional(),
+            // Node routes its outbound HTTP through RuntimeNode.httpClientFactory, so an
+            // attached networkProxy credential actually applies. Absent/false => no proxy slot.
+            proxyCompatible:      z.boolean().optional(),
             dependencyRef:        DependencyRef.Schema.optional(),
             flags:                z.record(z.string(), z.unknown()).optional(),
             credentials:          z.array(Vault.Credential.Template.Schema).readonly().optional(),

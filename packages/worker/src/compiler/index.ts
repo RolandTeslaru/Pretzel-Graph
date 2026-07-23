@@ -6,7 +6,7 @@
 import { Airlock, Execution, Foundations, Realtime, Vault } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { CatalogueService, RuntimeNode, mapFieldValues, type NodeConstructor } from "@pretzel-graph/node-sdk";
+import { CatalogueService, NetworkProxy, RuntimeNode, mapFieldValues, type NodeConstructor } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 
 import { AggexCompilerError } from "../errors";
@@ -312,6 +312,29 @@ export class WorkflowCompiler {
 
 
 
+    // Fail loudly rather than egressing from the wrong country: a node that doesn't route
+    // through httpClientFactory would silently ignore an attached proxy.
+    private assertProxySupported(
+        wfNode:             Workflow.Node.Raw,
+        blueprint:          Foundations.Blueprint,
+        engineExecutionCtx: AggexEngine.Execution.Context,
+    ): void {
+
+        const attached = engineExecutionCtx.workflowData
+            .credentialInstanceIds[wfNode.id]?.[NetworkProxy.TEMPLATE_ID];
+
+        if (!attached || blueprint.proxyCompatible)
+            return;
+
+        throw new AggexCompilerError(
+            SystemError.Code.COMPILATION_PROXY_UNSUPPORTED,
+            `Node "${blueprint.ui.displayName}" has a proxy attached but does not support proxying — its traffic would bypass the proxy. Detach the proxy from this node.`,
+            { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } },
+        );
+    }
+
+
+
     private async prepareNode(
         engine:             AggexEngine,
         engineExecutionCtx: AggexEngine.Execution.Context,
@@ -325,6 +348,8 @@ export class WorkflowCompiler {
         const staticValues = engineExecutionCtx.workflowData.staticValues[wfNode.id] ?? {};
 
         const { RuntimeNode, blueprint } = await this.resolveNode(wfNode, engineExecutionCtx);
+
+        this.assertProxySupported(wfNode, blueprint, engineExecutionCtx);
 
         // Resolved blueprint, so this includes reconcile-added fields.
         const fieldValues = mapFieldValues(blueprint.fields, staticValues);

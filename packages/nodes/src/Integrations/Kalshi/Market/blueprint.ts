@@ -11,6 +11,7 @@ export const Blueprint = defineBlueprint({
     displayName: "Kalshi Market",
     description: "Reads Kalshi prediction-market data: events, markets and order books.",
     icon: "Kalshi",
+    proxyCompatible: true,
     accent: "port-DataList",
     toolCompatible: true,
     fields: [
@@ -53,6 +54,7 @@ export const ToolBlueprint = defineBlueprint({
     displayName: "Kalshi Market",
     description: "Exposes Kalshi market-data tools to an agent as a toolkit.",
     icon: "Kalshi",
+    proxyCompatible: true,
     accent: "port-ToolList",
     toolCompatible: true,
     fields: [

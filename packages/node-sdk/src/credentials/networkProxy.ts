@@ -1,11 +1,15 @@
-import { defineCredential, FieldBuilder, NetworkProxy as NetworkProxyDomain } from "@pretzel-graph/node-sdk"
+import { defineCredential } from "../builders/credential";
+import { FieldBuilder } from "../builders/field";
+import { NetworkProxy } from "../domain/networkProxy";
 
-// Universal credential — not declared on any blueprint. Attached to a node directly so all of
-// that node's outbound HTTP is tunnelled through the proxy.
-export const NetworkProxy = defineCredential({
-    id: NetworkProxyDomain.TEMPLATE_ID,
+// Auto-attached to every blueprint declaring `proxyCompatible`, the same way
+// executionStrategyFields are appended to every blueprint's fields.
+// `optional: true` — a node with no proxy is a valid node, not an incomplete one.
+export const NetworkProxyCredential = defineCredential({
+    id: NetworkProxy.TEMPLATE_ID,
     displayName: "Proxy",
     icon: "Globe",
+    optional: true,
     fields: [
         FieldBuilder.MultiOption({
             id: "protocol",

@@ -18,7 +18,7 @@ export const credentialReducers = {
         const template = s.selectors.credential.getTemplate(s, nodeId, templateId);
         if (!template) return false;
 
-        const issue = Validation.Issue.Credential.check(template.id, nodeId, s.data);
+        const issue = Validation.Issue.Credential.check(template, nodeId, s.data);
         if (issue) {
             s.issues.nodes[nodeId] ??= { fields: {}, inputs: {}, credentials: {} };
             s.issues.nodes[nodeId].credentials[templateId] = issue;
