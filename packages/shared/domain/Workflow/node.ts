@@ -48,9 +48,11 @@ export namespace Node {
     export interface Raw extends z.infer<typeof Raw.Schema> { }
 
     // The read-time rich view — raw node + blueprint + resolved ports/fields. Never persisted.
+    // Blueprint-level properties are NOT flattened in: read them off `.blueprint`, which is the
+    // whole thing. (`dependencyRef`, `id` and `ui` live on Raw, so they stay on the node.)
     export namespace Hydrated {
-        export const Schema = Blueprint.Meta.Schema
-            .extend(Raw.Schema.omit({ addedInputs: true, addedOutputs: true, addedFields: true }).shape)
+        export const Schema = Raw.Schema
+            .omit({ addedInputs: true, addedOutputs: true, addedFields: true })
             .extend({
                 blueprint: Blueprint.Schema,
                 fields: z.array(Field.Schema),

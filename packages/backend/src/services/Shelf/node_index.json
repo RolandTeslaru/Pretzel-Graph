@@ -1,6 +1,6 @@
 {
-  "version": "1784745589493",
-  "generatedAt": "2026-07-22T18:39:49.493Z",
+  "version": "1784764315165",
+  "generatedAt": "2026-07-22T23:51:55.165Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -1216,7 +1216,87 @@
     },
     "Core.Developer.HttpRequest": {
       "id": "Core.Developer.HttpRequest",
-      "credentials": [],
+      "proxyCompatible": true,
+      "credentials": [
+        {
+          "id": "networkProxy",
+          "displayName": "Proxy",
+          "fields": [
+            {
+              "id": "protocol",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Protocol",
+              "variant": "MultiOption",
+              "initialValue": "http",
+              "options": [
+                {
+                  "value": "http",
+                  "displayName": "HTTP",
+                  "description": "CONNECT tunnel. Works for https targets."
+                },
+                {
+                  "value": "https",
+                  "displayName": "HTTPS",
+                  "description": "As HTTP, but the hop to the proxy is itself TLS."
+                },
+                {
+                  "value": "socks5",
+                  "displayName": "SOCKS5",
+                  "description": "What most residential/geo providers issue."
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "proxy.provider.com"
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 8080,
+              "min": 1,
+              "max": 65535,
+              "step": 1
+            },
+            {
+              "id": "username",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Username",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Globe",
+          "optional": true
+        }
+      ],
       "ui": {
         "displayName": "HTTP Request",
         "description": "Makes an HTTP request.",
@@ -1361,26 +1441,13 @@
           "kind": "select"
         }
       ],
-      "inputs": [
-        {
-          "id": "trigger",
-          "displayName": "Trigger",
-          "internal": false,
-          "variant": "Message",
-          "initialValue": "",
-          "required": false
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "id": "response",
-          "displayName": "Response",
-          "variant": "Json"
-        },
-        {
-          "id": "status",
-          "displayName": "Status",
-          "variant": "Integer"
+          "id": "result",
+          "displayName": "Result",
+          "tooltip": "{ status, data } — the response status code and parsed body.",
+          "variant": "Data"
         }
       ]
     },
@@ -4940,6 +5007,7 @@
     "Integrations.Alpaca.Market": {
       "id": "Integrations.Alpaca.Market",
       "toolCompatible": true,
+      "proxyCompatible": true,
       "credentials": [
         {
           "id": "alpacaApi",
@@ -4965,6 +5033,84 @@
             }
           ],
           "icon": "Alpaca"
+        },
+        {
+          "id": "networkProxy",
+          "displayName": "Proxy",
+          "fields": [
+            {
+              "id": "protocol",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Protocol",
+              "variant": "MultiOption",
+              "initialValue": "http",
+              "options": [
+                {
+                  "value": "http",
+                  "displayName": "HTTP",
+                  "description": "CONNECT tunnel. Works for https targets."
+                },
+                {
+                  "value": "https",
+                  "displayName": "HTTPS",
+                  "description": "As HTTP, but the hop to the proxy is itself TLS."
+                },
+                {
+                  "value": "socks5",
+                  "displayName": "SOCKS5",
+                  "description": "What most residential/geo providers issue."
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "proxy.provider.com"
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 8080,
+              "min": 1,
+              "max": 65535,
+              "step": 1
+            },
+            {
+              "id": "username",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Username",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Globe",
+          "optional": true
         }
       ],
       "ui": {
@@ -6142,7 +6288,87 @@
     "Integrations.HyperLiquid.Account": {
       "id": "Integrations.HyperLiquid.Account",
       "toolCompatible": true,
-      "credentials": [],
+      "proxyCompatible": true,
+      "credentials": [
+        {
+          "id": "networkProxy",
+          "displayName": "Proxy",
+          "fields": [
+            {
+              "id": "protocol",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Protocol",
+              "variant": "MultiOption",
+              "initialValue": "http",
+              "options": [
+                {
+                  "value": "http",
+                  "displayName": "HTTP",
+                  "description": "CONNECT tunnel. Works for https targets."
+                },
+                {
+                  "value": "https",
+                  "displayName": "HTTPS",
+                  "description": "As HTTP, but the hop to the proxy is itself TLS."
+                },
+                {
+                  "value": "socks5",
+                  "displayName": "SOCKS5",
+                  "description": "What most residential/geo providers issue."
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "proxy.provider.com"
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 8080,
+              "min": 1,
+              "max": 65535,
+              "step": 1
+            },
+            {
+              "id": "username",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Username",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Globe",
+          "optional": true
+        }
+      ],
       "ui": {
         "displayName": "HyperLiquid Account",
         "description": "Reads HyperLiquid account state for a wallet address: positions, balance, open orders, fills. Public read-only — only a wallet address is required, never a private key.",
@@ -6288,7 +6514,87 @@
     "Integrations.HyperLiquid.Market": {
       "id": "Integrations.HyperLiquid.Market",
       "toolCompatible": true,
-      "credentials": [],
+      "proxyCompatible": true,
+      "credentials": [
+        {
+          "id": "networkProxy",
+          "displayName": "Proxy",
+          "fields": [
+            {
+              "id": "protocol",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Protocol",
+              "variant": "MultiOption",
+              "initialValue": "http",
+              "options": [
+                {
+                  "value": "http",
+                  "displayName": "HTTP",
+                  "description": "CONNECT tunnel. Works for https targets."
+                },
+                {
+                  "value": "https",
+                  "displayName": "HTTPS",
+                  "description": "As HTTP, but the hop to the proxy is itself TLS."
+                },
+                {
+                  "value": "socks5",
+                  "displayName": "SOCKS5",
+                  "description": "What most residential/geo providers issue."
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "proxy.provider.com"
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 8080,
+              "min": 1,
+              "max": 65535,
+              "step": 1
+            },
+            {
+              "id": "username",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Username",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Globe",
+          "optional": true
+        }
+      ],
       "ui": {
         "displayName": "HyperLiquid Market",
         "description": "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata.",
@@ -6466,7 +6772,87 @@
     "Integrations.Kalshi.Market": {
       "id": "Integrations.Kalshi.Market",
       "toolCompatible": true,
-      "credentials": [],
+      "proxyCompatible": true,
+      "credentials": [
+        {
+          "id": "networkProxy",
+          "displayName": "Proxy",
+          "fields": [
+            {
+              "id": "protocol",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Protocol",
+              "variant": "MultiOption",
+              "initialValue": "http",
+              "options": [
+                {
+                  "value": "http",
+                  "displayName": "HTTP",
+                  "description": "CONNECT tunnel. Works for https targets."
+                },
+                {
+                  "value": "https",
+                  "displayName": "HTTPS",
+                  "description": "As HTTP, but the hop to the proxy is itself TLS."
+                },
+                {
+                  "value": "socks5",
+                  "displayName": "SOCKS5",
+                  "description": "What most residential/geo providers issue."
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "proxy.provider.com"
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 8080,
+              "min": 1,
+              "max": 65535,
+              "step": 1
+            },
+            {
+              "id": "username",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Username",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Globe",
+          "optional": true
+        }
+      ],
       "ui": {
         "displayName": "Kalshi Market",
         "description": "Reads Kalshi prediction-market data: events, markets and order books.",
@@ -6625,6 +7011,7 @@
     "Integrations.Massive.Market": {
       "id": "Integrations.Massive.Market",
       "toolCompatible": true,
+      "proxyCompatible": true,
       "credentials": [
         {
           "id": "massiveApi",
@@ -6642,6 +7029,84 @@
             }
           ],
           "icon": "Massive"
+        },
+        {
+          "id": "networkProxy",
+          "displayName": "Proxy",
+          "fields": [
+            {
+              "id": "protocol",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Protocol",
+              "variant": "MultiOption",
+              "initialValue": "http",
+              "options": [
+                {
+                  "value": "http",
+                  "displayName": "HTTP",
+                  "description": "CONNECT tunnel. Works for https targets."
+                },
+                {
+                  "value": "https",
+                  "displayName": "HTTPS",
+                  "description": "As HTTP, but the hop to the proxy is itself TLS."
+                },
+                {
+                  "value": "socks5",
+                  "displayName": "SOCKS5",
+                  "description": "What most residential/geo providers issue."
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "proxy.provider.com"
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 8080,
+              "min": 1,
+              "max": 65535,
+              "step": 1
+            },
+            {
+              "id": "username",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Username",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Globe",
+          "optional": true
         }
       ],
       "ui": {
@@ -7691,7 +8156,87 @@
     "Integrations.Polymarket.Market": {
       "id": "Integrations.Polymarket.Market",
       "toolCompatible": true,
-      "credentials": [],
+      "proxyCompatible": true,
+      "credentials": [
+        {
+          "id": "networkProxy",
+          "displayName": "Proxy",
+          "fields": [
+            {
+              "id": "protocol",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Protocol",
+              "variant": "MultiOption",
+              "initialValue": "http",
+              "options": [
+                {
+                  "value": "http",
+                  "displayName": "HTTP",
+                  "description": "CONNECT tunnel. Works for https targets."
+                },
+                {
+                  "value": "https",
+                  "displayName": "HTTPS",
+                  "description": "As HTTP, but the hop to the proxy is itself TLS."
+                },
+                {
+                  "value": "socks5",
+                  "displayName": "SOCKS5",
+                  "description": "What most residential/geo providers issue."
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "proxy.provider.com"
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 8080,
+              "min": 1,
+              "max": 65535,
+              "step": 1
+            },
+            {
+              "id": "username",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Username",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Globe",
+          "optional": true
+        }
+      ],
       "ui": {
         "displayName": "Polymarket Market",
         "description": "Reads Polymarket prediction-market data: events, markets, prices and order books.",
@@ -8570,6 +9115,7 @@
     },
     "Integrations.Uniswap.Swap": {
       "id": "Integrations.Uniswap.Swap",
+      "proxyCompatible": true,
       "credentials": [
         {
           "id": "uniswapApi",
@@ -8597,6 +9143,84 @@
             }
           ],
           "icon": "Uniswap"
+        },
+        {
+          "id": "networkProxy",
+          "displayName": "Proxy",
+          "fields": [
+            {
+              "id": "protocol",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Protocol",
+              "variant": "MultiOption",
+              "initialValue": "http",
+              "options": [
+                {
+                  "value": "http",
+                  "displayName": "HTTP",
+                  "description": "CONNECT tunnel. Works for https targets."
+                },
+                {
+                  "value": "https",
+                  "displayName": "HTTPS",
+                  "description": "As HTTP, but the hop to the proxy is itself TLS."
+                },
+                {
+                  "value": "socks5",
+                  "displayName": "SOCKS5",
+                  "description": "What most residential/geo providers issue."
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "proxy.provider.com"
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 8080,
+              "min": 1,
+              "max": 65535,
+              "step": 1
+            },
+            {
+              "id": "username",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Username",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "Globe",
+          "optional": true
         }
       ],
       "ui": {

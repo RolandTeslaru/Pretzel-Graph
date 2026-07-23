@@ -10,6 +10,7 @@ export type CredentialTemplate<
     readonly displayName: string
     readonly fields: TFields
     readonly icon?: string
+    readonly optional?: boolean
 }
 
 export function defineCredential<
@@ -20,11 +21,13 @@ export function defineCredential<
     displayName: string
     fields: TFields
     icon?: string
+    optional?: boolean
 }): CredentialTemplate<TId, TFields> {
     return {
         id: config.id as TId & Vault.Credential.Template.Id,
         displayName: config.displayName,
         fields: config.fields,
         icon: config.icon,
+        optional: config.optional,
     }
 }

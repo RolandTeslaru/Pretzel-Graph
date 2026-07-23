@@ -1,8 +1,12 @@
 import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { Workflow } from '@pretzel-graph/shared/domain'
+import { Vault, Workflow } from '@pretzel-graph/shared/domain'
+import { DialogSDK } from '@/SDKs/DialogSDK'
 import { WorkbenchSDK } from '../../../sdk'
-import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
+import { AddCredentialDialog } from '../AddCredentialDialog'
+
+// Mirrors NetworkProxy.TEMPLATE_ID in node-sdk — the frontend doesn't depend on that package.
+const PROXY_TEMPLATE_ID = "networkProxy" as Vault.Credential.Template.Id
 
 interface Props {
     hyNode: Workflow.Node.Hydrated
@@ -10,7 +14,31 @@ interface Props {
 }
 
 export const OptionsDropdown = ({ hyNode, onEdit }: Props) => {
-    const isTool = WorkbenchSDK.useStore(s => s.selectors.node.isTool(s, hyNode.id));
+    const isTool = WorkbenchSDK.useStore(s => s.selectors.node.isTool(s, hyNode.id))
+
+    // Auto-appended to every proxyCompatible blueprint by defineBlueprint.
+    const proxyTemplate = WorkbenchSDK.useStore(s =>
+        s.selectors.credential.getTemplate(s, hyNode.id, PROXY_TEMPLATE_ID)
+    )
+
+    const [proxyInstanceId, setProxyInstance] = WorkbenchSDK.useCredential(hyNode.id, PROXY_TEMPLATE_ID)
+
+    const openProxyDialog = () => {
+        if (!proxyTemplate)
+            return
+
+        const dialogId = `add-credentialTemplate-${proxyTemplate.id}`
+
+        DialogSDK.actions.push(dialogId, props => (
+            <DialogSDK.Template {...props}>
+                <AddCredentialDialog
+                    credentialTemplate={proxyTemplate}
+                    dialogId={dialogId}
+                    onCreated={instanceId => setProxyInstance(instanceId)}
+                />
+            </DialogSDK.Template>
+        ))
+    }
 
     return (
         <DropdownMenu.Root>
@@ -38,6 +66,12 @@ export const OptionsDropdown = ({ hyNode, onEdit }: Props) => {
                     <DropdownMenu.Item onClick={() => isTool ? WorkbenchSDK.actions.tool.revert(hyNode.id) : WorkbenchSDK.actions.tool.convert(hyNode.id)}>
                         <SystemIcons.Hammer />
                         {isTool ? "Revert to node" : "Convert to tool"}
+                    </DropdownMenu.Item>
+                )}
+                {hyNode.blueprint.proxyCompatible && (
+                    <DropdownMenu.Item onClick={() => proxyInstanceId ? setProxyInstance(null) : openProxyDialog()}>
+                        <SystemIcons.Globe />
+                        {proxyInstanceId ? "Remove Proxy" : "Attach Proxy"}
                     </DropdownMenu.Item>
                 )}
                 <DropdownMenu.Separator />
