@@ -17,9 +17,7 @@ import { withAPIParsing } from "../../../../utils"
 import { Polymarket } from "../../domain"
 import {
     createAuthenticatedClobSDK,
-    createWalletClobSDK,
     type PolymarketCLOBCredentials,
-    type PolymarketCLOBWalletCredentials,
 } from "./common"
 
 /**
@@ -42,59 +40,11 @@ export class PolymarketCLOBClient {
         ),
     }
 
-    public readonly authentication = {
-        createApiKey: withAPIParsing(
-            Polymarket.CLOB.API.Authentication.CreateApiKey.Request,
-            Polymarket.CLOB.API.Authentication.CreateApiKey.Response,
-            ({ nonce }) => this.#client.createApiKey(nonce),
-        ),
-
-        deriveApiKey: withAPIParsing(
-            Polymarket.CLOB.API.Authentication.DeriveApiKey.Request,
-            Polymarket.CLOB.API.Authentication.DeriveApiKey.Response,
-            ({ nonce }) => this.#client.deriveApiKey(nonce),
-        ),
-
-        createOrDeriveApiKey: withAPIParsing(
-            Polymarket.CLOB.API.Authentication.CreateOrDeriveApiKey.Request,
-            Polymarket.CLOB.API.Authentication.CreateOrDeriveApiKey.Response,
-            ({ nonce }) => this.#client.createOrDeriveApiKey(nonce),
-        ),
-
-        listApiKeys: withAPIParsing(
-            Polymarket.CLOB.API.Authentication.ListApiKeys.Request,
-            Polymarket.CLOB.API.Authentication.ListApiKeys.Response,
-            () => this.#client.getApiKeys(),
-        ),
-
+    public readonly account = {
         getClosedOnlyMode: withAPIParsing(
-            Polymarket.CLOB.API.Authentication.GetClosedOnlyMode.Request,
-            Polymarket.CLOB.API.Authentication.GetClosedOnlyMode.Response,
+            Polymarket.CLOB.API.Account.GetClosedOnlyMode.Request,
+            Polymarket.CLOB.API.Account.GetClosedOnlyMode.Response,
             () => this.#client.getClosedOnlyMode(),
-        ),
-
-        deleteApiKey: withAPIParsing(
-            Polymarket.CLOB.API.Authentication.DeleteApiKey.Request,
-            Polymarket.CLOB.API.Authentication.DeleteApiKey.Response,
-            () => this.#client.deleteApiKey(),
-        ),
-
-        createReadonlyApiKey: withAPIParsing(
-            Polymarket.CLOB.API.Authentication.CreateReadonlyApiKey.Request,
-            Polymarket.CLOB.API.Authentication.CreateReadonlyApiKey.Response,
-            () => this.#client.createReadonlyApiKey(),
-        ),
-
-        listReadonlyApiKeys: withAPIParsing(
-            Polymarket.CLOB.API.Authentication.ListReadonlyApiKeys.Request,
-            Polymarket.CLOB.API.Authentication.ListReadonlyApiKeys.Response,
-            () => this.#client.getReadonlyApiKeys(),
-        ),
-
-        deleteReadonlyApiKey: withAPIParsing(
-            Polymarket.CLOB.API.Authentication.DeleteReadonlyApiKey.Request,
-            Polymarket.CLOB.API.Authentication.DeleteReadonlyApiKey.Response,
-            ({ key }) => this.#client.deleteReadonlyApiKey(key),
         ),
     }
 
@@ -336,53 +286,6 @@ export class PolymarketCLOBClient {
             Polymarket.CLOB.API.Rewards.GetPercentages.Response,
             () => this.#client.getRewardPercentages(),
         ),
-    }
-
-    public readonly builders = {
-        createApiKey: withAPIParsing(
-            Polymarket.CLOB.API.Builders.CreateApiKey.Request,
-            Polymarket.CLOB.API.Builders.CreateApiKey.Response,
-            () => this.#client.createBuilderApiKey(),
-        ),
-
-        listApiKeys: withAPIParsing(
-            Polymarket.CLOB.API.Builders.ListApiKeys.Request,
-            Polymarket.CLOB.API.Builders.ListApiKeys.Response,
-            () => this.#client.getBuilderApiKeys(),
-        ),
-
-        revokeApiKey: withAPIParsing(
-            Polymarket.CLOB.API.Builders.RevokeApiKey.Request,
-            Polymarket.CLOB.API.Builders.RevokeApiKey.Response,
-            () => this.#client.revokeBuilderApiKey(),
-        ),
-    }
-
-    public static async createApiCredentials(
-        credentials: PolymarketCLOBWalletCredentials,
-    ): Promise<Polymarket.CLOB.ApiCredentials> {
-        const sdk = createWalletClobSDK(credentials)
-        return Polymarket.CLOB.ApiCredentials.Schema.parse(
-            await sdk.createApiKey(credentials.credentialNonce),
-        )
-    }
-
-    public static async deriveApiCredentials(
-        credentials: PolymarketCLOBWalletCredentials,
-    ): Promise<Polymarket.CLOB.ApiCredentials> {
-        const sdk = createWalletClobSDK(credentials)
-        return Polymarket.CLOB.ApiCredentials.Schema.parse(
-            await sdk.deriveApiKey(credentials.credentialNonce),
-        )
-    }
-
-    public static async createOrDeriveApiCredentials(
-        credentials: PolymarketCLOBWalletCredentials,
-    ): Promise<Polymarket.CLOB.ApiCredentials> {
-        const sdk = createWalletClobSDK(credentials)
-        return Polymarket.CLOB.ApiCredentials.Schema.parse(
-            await sdk.createOrDeriveApiKey(credentials.credentialNonce),
-        )
     }
 }
 

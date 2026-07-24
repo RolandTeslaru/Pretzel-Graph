@@ -51,11 +51,11 @@ describe("Polymarket CLOB API requests", () => {
         )
     })
 
-    it("validates authentication nonces and balance asset types", () => {
+    it("validates account status and balance asset types", () => {
         assert.equal(
-            Polymarket.CLOB.API.Authentication.CreateApiKey.Request
-                .safeParse({ nonce: -1 }).success,
-            false,
+            Polymarket.CLOB.API.Account.GetClosedOnlyMode.Response
+                .safeParse({ closed_only: true }).success,
+            true,
         )
         assert.equal(
             Polymarket.CLOB.API.Balances.GetAllowance.Request.safeParse({
@@ -119,8 +119,7 @@ describe("Polymarket CLOB API responses", () => {
     })
 
     it("requires complete API credentials", () => {
-        const Response =
-            Polymarket.CLOB.API.Authentication.CreateApiKey.Response
+        const Response = Polymarket.CLOB.ApiCredentials.Schema
 
         assert.equal(
             Response.safeParse({
