@@ -4,19 +4,53 @@ import { z } from "zod/v3";
 import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
+import {
+    PolymarketGammaClient,
+    PolymarketUnauthenticatedCLOBClient,
+} from "../client";
+import { Polymarket } from "../domain";
 import { Blueprint, ToolBlueprint } from "./blueprint";
-import { PolymarketClient } from "./client";
-import { MarketStatus } from "./shapes";
+import { MarketStatus, compactEvent, compactMarket } from "./shapes";
 import { clampLimit, searchMarketsLocal } from "./query";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
-    private readonly client: PolymarketClient;
+    private readonly gammaClient: PolymarketGammaClient;
+    private readonly clobClient:  PolymarketUnauthenticatedCLOBClient;
 
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);
-        this.client = new PolymarketClient(this.httpClientFactory);
+        this.gammaClient = new PolymarketGammaClient(this.httpClientFactory);
+        this.clobClient  = new PolymarketUnauthenticatedCLOBClient();
+    }
+
+    private statusQuery(status: MarketStatus): { active?: boolean, closed?: boolean } {
+        if (status === "active")
+            return { active: true, closed: false };
+        if (status === "closed")
+            return { closed: true };
+        return {};
+    }
+
+    private async listMarkets(status: MarketStatus, limit: number) {
+        const markets = await this.gammaClient.markets.list({
+            ...this.statusQuery(status),
+            limit,
+            order: "volume",
+            ascending: false,
+        });
+        return markets.map(compactMarket);
+    }
+
+    private async listEvents(status: MarketStatus, limit: number) {
+        const events = await this.gammaClient.events.list({
+            ...this.statusQuery(status),
+            limit,
+            order: "volume",
+            ascending: false,
+        });
+        return events.map(compactEvent);
     }
 
     protected override async onRun(
@@ -27,7 +61,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         const query = (incoming.query ?? "").trim();
 
         // Over-fetch so the local substring filter has something to narrow.
-        const markets = await this.client.getMarkets({ status, limit: query ? Math.max(limit, 100) : limit });
+        const markets = await this.listMarkets(status, query ? Math.max(limit, 100) : limit);
 
         return { markets: searchMarketsLocal(markets, query, limit) };
     }
@@ -44,7 +78,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
                 const cap = clampLimit(limit, defaultLimit);
                 const q = (query ?? "").trim();
 
-                const markets = await this.client.getMarkets({ status: effectiveStatus, limit: q ? Math.max(cap, 100) : cap });
+                const markets = await this.listMarkets(effectiveStatus, q ? Math.max(cap, 100) : cap);
                 const filtered = searchMarketsLocal(markets, q, cap);
                 return JSON.stringify({ status: effectiveStatus, count: filtered.length, markets: filtered });
             },
@@ -67,12 +101,14 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
                 // Numeric -> market id endpoint; otherwise resolve by slug.
                 if (/^\d+$/.test(key)) {
-                    const market = await this.client.marketById(key);
-                    return JSON.stringify(market ?? { error: `No market found for id '${key}'.` });
+                    const market = await this.gammaClient.markets.getById({
+                        id: Polymarket.Gamma.Market.Id.parse(key),
+                    });
+                    return JSON.stringify(market);
                 }
 
-                const bySlug = await this.client.getMarkets({ status: "all", limit: 1, slug: key });
-                return JSON.stringify(bySlug[0] ?? { error: `No market found for slug '${key}'.` });
+                const market = await this.gammaClient.markets.getBySlug({ slug: key });
+                return JSON.stringify(market);
             },
             {
                 name: "polymarket_get_market",
@@ -87,7 +123,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
             async ({ status, limit }) => {
                 const effectiveStatus = (status ?? defaultStatus) as MarketStatus;
                 const cap = clampLimit(limit, defaultLimit);
-                const events = await this.client.events({ status: effectiveStatus, limit: cap });
+                const events = await this.listEvents(effectiveStatus, cap);
                 return JSON.stringify({ status: effectiveStatus, count: events.length, events });
             },
             {
@@ -105,7 +141,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
                 const id = (tokenId ?? "").trim();
                 if (!id)
                     throw new Error("polymarket_get_midpoint: 'tokenId' is required (a CLOB token id from a market's clobTokenIds).");
-                return JSON.stringify(await this.client.midpoint(id));
+                return JSON.stringify(await this.clobClient.marketData.getMidpoint({ token_id: id }));
             },
             {
                 name: "polymarket_get_midpoint",
@@ -121,7 +157,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
                 const id = (tokenId ?? "").trim();
                 if (!id)
                     throw new Error("polymarket_get_order_book: 'tokenId' is required (a CLOB token id from a market's clobTokenIds).");
-                return JSON.stringify(await this.client.orderBook(id));
+                return JSON.stringify(await this.clobClient.marketData.getOrderBook({ token_id: id }));
             },
             {
                 name: "polymarket_get_order_book",

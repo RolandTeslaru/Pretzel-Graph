@@ -7,6 +7,8 @@
     "scripts": {
         "build": "tsc --build tsconfig.build.json",
         "typecheck": "tsc --noEmit",
+        "test": "tsx --test",
+        "test:polymarket:live": "POLYMARKET_LIVE_TESTS=1 tsx --test src/Integrations/Polymarket/tests/live.test.ts",
         "generate-indexes": "tsx src/Core/scripts/generateIndexes.ts",
         "watch:indexes": "tsx src/Core/scripts/watchIndexes.ts"
     },
@@ -20,6 +22,7 @@
         "@langchain/openai": "*",
         "@langchain/openrouter": "*",
         "@langchain/xai": "*",
+        "@polymarket/clob-client-v2": "1.1.0",
         "@pretzel-graph/node-sdk": "*",
         "@pretzel-graph/shared": "*",
         "@pretzel-graph/worker": "*",
