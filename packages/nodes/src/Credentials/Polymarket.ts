@@ -32,14 +32,6 @@ export const Polymarket = defineCredential({
             initialValue: "3",
             tooltip:      "How Polymarket verifies order signatures. New Polymarket deposit wallets normally use EIP-1271.",
         }),
-        FieldBuilder.Integer({
-            id:           "credentialNonce",
-            displayName:  "API Credential Nonce",
-            initialValue: 0,
-            min:          0,
-            advanced:     true,
-            tooltip:      "Nonce used to create or derive CLOB API credentials.",
-        }),
         FieldBuilder.Password({
             id:          "apiKey",
             displayName: "CLOB API Key",
