@@ -244,77 +244,13 @@ export namespace CLOBAPI {
         }
     }
 
-    /** L1 wallet authentication and L2 API-key lifecycle. */
-    export namespace Authentication {
-        export namespace CreateApiKey {
-            export const Request = z.object({
-                nonce: z.number().int().nonnegative().optional(),
-            }).prefault({})
-            export const Response = CLOB.ApiCredentials.Schema
-            export type Request   = z.input<typeof Request>
-            export type Response  = z.infer<typeof Response>
-        }
-
-        export namespace DeriveApiKey {
-            export const Request  = CreateApiKey.Request
-            export const Response = CLOB.ApiCredentials.Schema
-            export type Request   = z.input<typeof Request>
-            export type Response  = z.infer<typeof Response>
-        }
-
-        export namespace CreateOrDeriveApiKey {
-            export const Request  = CreateApiKey.Request
-            export const Response = CLOB.ApiCredentials.Schema
-            export type Request   = z.input<typeof Request>
-            export type Response  = z.infer<typeof Response>
-        }
-
-        export namespace ListApiKeys {
-            export const Request = CLOB.Common.Empty
-            export const Response = z.object({
-                apiKeys: z.array(CLOB.ApiCredentials.Schema),
-            }).loose()
-            export type Request   = z.input<typeof Request>
-            export type Response  = z.infer<typeof Response>
-        }
-
+    /** Authenticated account state. */
+    export namespace Account {
         export namespace GetClosedOnlyMode {
-            export const Request = CLOB.Common.Empty
+            export const Request  = CLOB.Common.Empty
             export const Response = z.object({
                 closed_only: z.boolean(),
             }).loose()
-            export type Request   = z.input<typeof Request>
-            export type Response  = z.infer<typeof Response>
-        }
-
-        export namespace DeleteApiKey {
-            export const Request  = CLOB.Common.Empty
-            export const Response = z.unknown()
-            export type Request   = z.input<typeof Request>
-            export type Response  = z.infer<typeof Response>
-        }
-
-        export namespace CreateReadonlyApiKey {
-            export const Request = CLOB.Common.Empty
-            export const Response = z.object({
-                apiKey: z.string(),
-            }).loose()
-            export type Request   = z.input<typeof Request>
-            export type Response  = z.infer<typeof Response>
-        }
-
-        export namespace ListReadonlyApiKeys {
-            export const Request  = CLOB.Common.Empty
-            export const Response = z.array(z.string())
-            export type Request   = z.input<typeof Request>
-            export type Response  = z.infer<typeof Response>
-        }
-
-        export namespace DeleteReadonlyApiKey {
-            export const Request = z.object({
-                key: z.string(),
-            })
-            export const Response = z.boolean()
             export type Request   = z.input<typeof Request>
             export type Response  = z.infer<typeof Response>
         }
@@ -603,31 +539,10 @@ export namespace CLOBAPI {
         }
     }
 
-    /** Builder trades are public; builder API-key management is authenticated. */
+    /** Public builder-attributed trades. */
     export namespace Builders {
-        export namespace CreateApiKey {
-            export const Request  = CLOB.Common.Empty
-            export const Response = CLOB.ApiCredentials.Schema
-            export type Request   = z.input<typeof Request>
-            export type Response  = z.infer<typeof Response>
-        }
-
-        export namespace ListApiKeys {
-            export const Request  = CLOB.Common.Empty
-            export const Response = z.array(CLOB.Builder.ApiKey)
-            export type Request   = z.input<typeof Request>
-            export type Response  = z.infer<typeof Response>
-        }
-
-        export namespace RevokeApiKey {
-            export const Request  = CLOB.Common.Empty
-            export const Response = z.unknown()
-            export type Request   = z.input<typeof Request>
-            export type Response  = z.infer<typeof Response>
-        }
-
         export namespace ListTrades {
-            export const Request = CLOBAPI.Trades.Query.omit({
+            export const Request  = CLOBAPI.Trades.Query.omit({
                 only_first_page: true,
             }).extend({
                 builder_code: z.string(),
