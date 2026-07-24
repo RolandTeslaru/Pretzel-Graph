@@ -1,3 +1,5 @@
+import { Polymarket } from "../domain";
+
 export type MarketStatus = "active" | "closed" | "all";
 
 // Gamma serializes these array fields as JSON strings — parse them back to arrays.
@@ -12,20 +14,7 @@ const parseJsonArray = (value: unknown): unknown => {
     }
 };
 
-export type PolymarketMarket = {
-    id?: string;
-    question?: string;
-    slug?: string;
-    conditionId?: string;
-    active?: boolean;
-    closed?: boolean;
-    outcomes?: unknown;
-    outcomePrices?: unknown;
-    clobTokenIds?: unknown;
-    volume?: string | number;
-    liquidity?: string | number;
-    endDate?: string;
-};
+export type PolymarketMarket = Polymarket.Gamma.Market;
 
 export type CompactMarket = ReturnType<typeof compactMarket>;
 
@@ -44,17 +33,7 @@ export const compactMarket = (m: PolymarketMarket) => ({
     endDate: m.endDate ?? null,
 });
 
-export type PolymarketEvent = {
-    id?: string;
-    title?: string;
-    slug?: string;
-    active?: boolean;
-    closed?: boolean;
-    volume?: string | number;
-    liquidity?: string | number;
-    endDate?: string;
-    markets?: PolymarketMarket[];
-};
+export type PolymarketEvent = Polymarket.Gamma.Event;
 
 export type CompactEvent = ReturnType<typeof compactEvent>;
 
