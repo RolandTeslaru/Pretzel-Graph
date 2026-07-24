@@ -453,12 +453,6 @@ export namespace Builder {
         limit:       z.number(),
         count:       z.number(),
     }).loose()
-
-    export const ApiKey = z.object({
-        key:       z.string(),
-        createdAt: z.string().optional(),
-        revokedAt: z.string().optional(),
-    }).loose()
 }
 
 export namespace MarketTradeEvent {

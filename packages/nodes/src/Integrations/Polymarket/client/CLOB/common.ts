@@ -16,10 +16,9 @@ import { Polymarket } from "../../domain"
 export const POLYMARKET_CLOB_BASE_URL = "https://clob.polymarket.com"
 
 export type PolymarketCLOBWalletCredentials = {
-    privateKey:       string
-    funderAddress:    string
-    signatureType:    Polymarket.CLOB.Common.SignatureType | `${Polymarket.CLOB.Common.SignatureType}`
-    credentialNonce?: number
+    privateKey:    string
+    funderAddress: string
+    signatureType: Polymarket.CLOB.Common.SignatureType | `${Polymarket.CLOB.Common.SignatureType}`
 }
 
 export type PolymarketCLOBCredentials =
@@ -68,12 +67,6 @@ export function createUnauthenticatedClobSDK() {
         throwOnError: true,
         retryOnError: true,
     })
-}
-
-export function createWalletClobSDK(
-    credentials: PolymarketCLOBWalletCredentials,
-) {
-    return new ClobClient(createWalletOptions(credentials))
 }
 
 export function createAuthenticatedClobSDK(
