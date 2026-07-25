@@ -7,37 +7,27 @@ export const Blueprint = defineBlueprint({
     icon: "Merge",
     accent: "group-routing",
     fields: [
-        FieldBuilder.Variadic({
-            id: "inputPorts",
-            displayName: "Input Ports",
-            groupId: "variadic_inputs_1",
+        FieldBuilder.Variadic("inputPorts", "Input Ports", {
+            groupId: "variadic_inputs_1"
         }),
-        FieldBuilder.Integer({
-            id: "flattenDepth",
-            displayName: "Flatten Depth",
+        FieldBuilder.Integer("flattenDepth", "Flatten Depth", {
             initialValue: 1,
             min: 0,
             max: 10
         }),
     ],
     inputs: [
-        InputBuilder.UnresolvedList({
-            id: "input_1",
-            displayName: "Input 1",
+        InputBuilder.UnresolvedList("input_1", "Input 1", {
             polymorphicGroupId: "data",
-            groupId: "variadic_inputs_1",
+            groupId: "variadic_inputs_1"
         }),
-        InputBuilder.UnresolvedList({
-            id: "input_2",
-            displayName: "Input 2",
+        InputBuilder.UnresolvedList("input_2", "Input 2", {
             polymorphicGroupId: "data",
-            groupId: "variadic_inputs_1",
+            groupId: "variadic_inputs_1"
         }),
     ],
     outputs: [
-        OutputBuilder.UnresolvedList({
-            id: "output",
-            displayName: "Output",
+        OutputBuilder.UnresolvedList("output", "Output", {
             polymorphicGroupId: "data"
         }),
     ],

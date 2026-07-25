@@ -8,38 +8,29 @@ export const Blueprint = defineBlueprint({
     icon: "ListTree",
     accent: "group-routing",
     fields: [
-        FieldBuilder.CaseList({
-            id: "cases",
-            displayName: "Cases",
+        FieldBuilder.CaseList("cases", "Cases", {
             tooltip: "List of cases to evaluate. All cases that evaluate to true will receive the input.",
+
             initialValue: [
                 Foundations.Field.CaseList.createEntry("case-1", "Case 1"),
                 Foundations.Field.CaseList.createEntry("case-2", "Case 2"),
                 Foundations.Field.CaseList.createEntry("case-3", "Case 3"),
-            ],
+            ]
         }),
     ],
     inputs: [
-        InputBuilder.Unresolved({
-            id: "input",
-            displayName: "Input",
+        InputBuilder.Unresolved("input", "Input", {
             polymorphicGroupId: "condition"
         }),
     ],
     outputs: [
-        OutputBuilder.Unresolved({
-            id: "case-1",
-            displayName: "Case 1",
+        OutputBuilder.Unresolved("case-1", "Case 1", {
             polymorphicGroupId: "condition"
         }),
-        OutputBuilder.Unresolved({
-            id: "case-2",
-            displayName: "Case 2",
+        OutputBuilder.Unresolved("case-2", "Case 2", {
             polymorphicGroupId: "condition"
         }),
-        OutputBuilder.Unresolved({
-            id: "case-3",
-            displayName: "Case 3",
+        OutputBuilder.Unresolved("case-3", "Case 3", {
             polymorphicGroupId: "condition"
         }),
     ],

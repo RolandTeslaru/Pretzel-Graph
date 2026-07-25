@@ -5,7 +5,11 @@ export const Kalshi = defineCredential({
     displayName: "Kalshi",
     icon: "Kalshi",
     fields: [
-        FieldBuilder.Password({ id: "apiKeyId", displayName: "API Key ID", required: true }),
-        FieldBuilder.Password({ id: "privateKeyPem", displayName: "RSA Private Key (PEM)", required: true }),
+        FieldBuilder.Password("apiKeyId", "API Key ID", {
+            required: true
+        }),
+        FieldBuilder.Password("privateKeyPem", "RSA Private Key (PEM)", {
+            required: true
+        }),
     ],
 })

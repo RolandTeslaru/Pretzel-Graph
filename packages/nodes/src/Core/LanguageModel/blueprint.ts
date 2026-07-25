@@ -7,40 +7,27 @@ export const Blueprint = defineBlueprint({
     icon: "BrainCircuit",
     accent: "port-LanguageModel",
     fields: [
-        FieldBuilder.Boolean({
-            id: "stream",
-            displayName: "Stream",
+        FieldBuilder.Boolean("stream", "Stream", {
             initialValue: false,
             tooltip: "Whether to stream the response",
             advanced: true
         }),
-        FieldBuilder.String({
-            id: "systemMessage",
-            displayName: "System Message",
+        FieldBuilder.String("systemMessage", "System Message", {
             initialValue: "",
-            tooltip: "A system message that helps set the behavior of the assistant",
+            tooltip: "A system message that helps set the behavior of the assistant"
         })
     ],
     inputs: [
-        InputBuilder.ToolList({
-            id: "tools",
-            displayName: "Tools",
-        }),
-        InputBuilder.LanguageModel({
-            id: "languageModel",
-            displayName: "Language Model",
+        InputBuilder.ToolList("tools", "Tools", {}),
+        InputBuilder.LanguageModel("languageModel", "Language Model", {
             required: true
         }),
-        InputBuilder.MessageList({
-            id: "messages",
-            displayName: "Messages",
-            required: true,
+        InputBuilder.MessageList("messages", "Messages", {
+            required: true
         }),
     ],
     outputs: [
-        OutputBuilder.Message({
-            id: "response",
-            displayName: "Response",
+        OutputBuilder.Message("response", "Response", {
             tooltip: "The response from the model"
         })
     ]

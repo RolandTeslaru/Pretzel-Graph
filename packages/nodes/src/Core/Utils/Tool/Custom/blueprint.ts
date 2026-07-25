@@ -21,39 +21,29 @@ export const Blueprint = defineBlueprint({
     icon: "Hammer",
     accent: "port-Tool",
     fields: [
-        FieldBuilder.String({
-            id: "toolName",
-            displayName: "Tool Name",
+        FieldBuilder.String("toolName", "Tool Name", {
             initialValue: "custom_tool",
             placeholder: "snake_case name the model calls",
-            tooltip: "The function name exposed to the model. Use snake_case, no spaces.",
+            tooltip: "The function name exposed to the model. Use snake_case, no spaces."
         }),
-        FieldBuilder.String({
-            id: "toolDescription",
-            displayName: "Description",
+        FieldBuilder.String("toolDescription", "Description", {
             initialValue: "",
             multiline: true,
             placeholder: "Describe to the model what this tool does and when to use it.",
-            tooltip: "Shown to the model — the clearer this is, the better the model calls the tool.",
+            tooltip: "Shown to the model — the clearer this is, the better the model calls the tool."
         }),
-        FieldBuilder.Json({
-            id: "argsSchema",
-            displayName: "Argument Schema",
+        FieldBuilder.Json("argsSchema", "Argument Schema", {
             initialValue: DEFAULT_SCHEMA,
-            tooltip: "JSON Schema describing the arguments the model must supply. Converted to a Zod schema for validation.",
+            tooltip: "JSON Schema describing the arguments the model must supply. Converted to a Zod schema for validation."
         }),
-        FieldBuilder.Script({
-            id: "code",
-            displayName: "Code",
-            initialValue: DEFAULT_CODE,
+        FieldBuilder.Script("code", "Code", {
+            initialValue: DEFAULT_CODE
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Tool({
-            id: "tool",
-            displayName: "Tool",
-            tooltip: "A tool the agent can call; each call runs your code with the model's arguments.",
+        OutputBuilder.Tool("tool", "Tool", {
+            tooltip: "A tool the agent can call; each call runs your code with the model's arguments."
         }),
     ],
 });

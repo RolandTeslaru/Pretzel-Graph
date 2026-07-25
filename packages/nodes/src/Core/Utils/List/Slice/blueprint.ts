@@ -7,32 +7,24 @@ export const Blueprint = defineBlueprint({
     icon: "Scissors",
     accent: "utility",
     fields: [
-        FieldBuilder.Integer({
-            id: "start",
-            displayName: "Start",
+        FieldBuilder.Integer("start", "Start", {
             initialValue: 0,
-            tooltip: "Start index (inclusive). Negative values count from the end.",
+            tooltip: "Start index (inclusive). Negative values count from the end."
         }),
-        FieldBuilder.Integer({
-            id: "end",
-            displayName: "End",
+        FieldBuilder.Integer("end", "End", {
             required: false,
-            tooltip: "End index (exclusive). Leave empty to slice to the end of the list. Negative values count from the end.",
+            tooltip: "End index (exclusive). Leave empty to slice to the end of the list. Negative values count from the end."
         }),
     ],
     inputs: [
-        InputBuilder.UnresolvedList({
-            id: "list",
-            displayName: "List",
+        InputBuilder.UnresolvedList("list", "List", {
             required: true,
-            polymorphicGroupId: "data",
+            polymorphicGroupId: "data"
         }),
     ],
     outputs: [
-        OutputBuilder.UnresolvedList({
-            id: "slice",
-            displayName: "Slice",
-            polymorphicGroupId: "data",
+        OutputBuilder.UnresolvedList("slice", "Slice", {
+            polymorphicGroupId: "data"
         }),
     ],
 });

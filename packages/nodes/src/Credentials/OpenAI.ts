@@ -5,7 +5,12 @@ export const OpenAI = defineCredential({
     displayName: "OpenAI",
     icon: "OpenAI",
     fields: [
-        FieldBuilder.Password({ id: "apiKey", displayName: "API Key", required: true }),
-        FieldBuilder.String({ id: "organizationId", displayName: "Organization ID", initialValue: "", tooltip: "Optional. Found in your OpenAI account settings." }),
+        FieldBuilder.Password("apiKey", "API Key", {
+            required: true
+        }),
+        FieldBuilder.String("organizationId", "Organization ID", {
+            initialValue: "",
+            tooltip: "Optional. Found in your OpenAI account settings."
+        }),
     ],
 })

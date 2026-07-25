@@ -7,31 +7,23 @@ export const Blueprint = defineBlueprint({
     icon: "History",
     accent: "port-Message",
     fields: [
-        FieldBuilder.String({
-            id: "chat_id",
-            displayName: "Chat ID",
+        FieldBuilder.String("chat_id", "Chat ID", {
             initialValue: "$igniter.chat_id",
             isExpression: true,
-            tooltip: "The chat session to read and update.",
+            tooltip: "The chat session to read and update."
         }),
     ],
     inputs: [
-        InputBuilder.MessageList({
-            id: "overwrite",
-            displayName: "Overwrite",
-            required: false,
+        InputBuilder.MessageList("overwrite", "Overwrite", {
+            required: false
         }),
-        InputBuilder.MessageList({
-            id: "append",
-            displayName: "Append",
-            required: false,
+        InputBuilder.MessageList("append", "Append", {
+            required: false
         }),
     ],
     outputs: [
-        OutputBuilder.MessageList({
-            id: "history",
-            displayName: "History",
-            tooltip: "The message history from the current chat session",
+        OutputBuilder.MessageList("history", "History", {
+            tooltip: "The message history from the current chat session"
         }),
     ],
 });

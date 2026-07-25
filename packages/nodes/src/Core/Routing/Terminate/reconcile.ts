@@ -10,12 +10,10 @@ export const reconcile = (
 ): Foundations.Blueprint => {
     if (fieldValues.mode === "error") {
         // @ts-expect-error append the error-only field to the readonly tuple
-        blueprint.fields = [...blueprint.fields, FieldBuilder.String({
-            id: "message",
-            displayName: "Error Message",
+        blueprint.fields = [...blueprint.fields, FieldBuilder.String("message", "Error Message", {
             multiline: true,
             initialValue: "",
-            placeholder: "Workflow terminated.",
+            placeholder: "Workflow terminated."
         })];
     }
     return blueprint;

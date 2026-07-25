@@ -5,6 +5,8 @@ export const Anthropic = defineCredential({
     displayName: "Anthropic",
     icon: "Anthropic",
     fields: [
-        FieldBuilder.Password({ id: "apiKey", displayName: "API Key", required: true }),
+        FieldBuilder.Password("apiKey", "API Key", {
+            required: true
+        }),
     ],
 })

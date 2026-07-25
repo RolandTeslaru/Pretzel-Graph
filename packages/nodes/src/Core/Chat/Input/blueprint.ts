@@ -7,25 +7,19 @@ export const Blueprint = defineBlueprint({
     icon: "MessagesSquare",
     accent: "port-Message",
     fields: [
-        FieldBuilder.String({
-            id: "chat_id",
-            displayName: "Chat ID",
+        FieldBuilder.String("chat_id", "Chat ID", {
             initialValue: "$igniter.chat_id",
             isExpression: true,
-            tooltip: "The chat session to receive and store this message in.",
+            tooltip: "The chat session to receive and store this message in."
         }),
-        FieldBuilder.Boolean({
-            id: "write_to_session",
-            displayName: "Write to Session",
-            initialValue: true,
+        FieldBuilder.Boolean("write_to_session", "Write to Session", {
+            initialValue: true
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Message({
-            id: "response",
-            displayName: "Response",
-            tooltip: "The response from the model",
+        OutputBuilder.Message("response", "Response", {
+            tooltip: "The response from the model"
         })
     ]
 })

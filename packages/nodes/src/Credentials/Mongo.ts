@@ -5,11 +5,25 @@ export const Mongo = defineCredential({
     displayName: "MongoDB",
     icon: "MongoDB",
     fields: [
-        FieldBuilder.String  ({ id: "host",     displayName: "Host",     required: true, initialValue: "localhost" }),
-        FieldBuilder.Integer ({ id: "port",     displayName: "Port",     initialValue: 27017, tooltip: "Leave blank for a mongodb+srv (Atlas) connection." }),
-        FieldBuilder.String  ({ id: "database", displayName: "Database", required: true }),
-        FieldBuilder.String  ({ id: "user",     displayName: "User",     required: true }),
-        FieldBuilder.Password({ id: "password", displayName: "Password", required: true }),
-        FieldBuilder.Boolean ({ id: "tls",      displayName: "Use TLS",  initialValue: false }),
+        FieldBuilder.String("host", "Host", {
+            required: true,
+            initialValue: "localhost"
+        }),
+        FieldBuilder.Integer("port", "Port", {
+            initialValue: 27017,
+            tooltip: "Leave blank for a mongodb+srv (Atlas) connection."
+        }),
+        FieldBuilder.String("database", "Database", {
+            required: true
+        }),
+        FieldBuilder.String("user", "User", {
+            required: true
+        }),
+        FieldBuilder.Password("password", "Password", {
+            required: true
+        }),
+        FieldBuilder.Boolean("tls", "Use TLS", {
+            initialValue: false
+        }),
     ],
 })

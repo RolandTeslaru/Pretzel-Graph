@@ -9,10 +9,8 @@ export const Blueprint = defineBlueprint({
     iconColor: "primary",
     fields: [],
     inputs: [
-        InputBuilder.Unresolved({
-            id: "input",
-            displayName: "Input",
-            polymorphicGroupId: "expose_output_port",
+        InputBuilder.Unresolved("input", "Input", {
+            polymorphicGroupId: "expose_output_port"
         }),
     ],
     outputs: [],

@@ -9,22 +9,16 @@ export const Blueprint = defineBlueprint({
     iconColor: "destructive",
     fields: [],
     inputs: [
-        InputBuilder.Unresolved({
-            id: "input",
-            displayName: "Input",
-            polymorphicGroupId: "catch_passthrough",
+        InputBuilder.Unresolved("input", "Input", {
+            polymorphicGroupId: "catch_passthrough"
         }),
     ],
     outputs: [
-        OutputBuilder.Unresolved({
-            id: "passthrough",
-            displayName: "Passthrough",
-        polymorphicGroupId: "catch_passthrough",
+        OutputBuilder.Unresolved("passthrough", "Passthrough", {
+            polymorphicGroupId: "catch_passthrough"
         }),
-        OutputBuilder.Data({
-            id: "onError",
-            displayName: "On Error",
-            tooltip: "The serialized error (code + message) when a propagating error is caught here.",
+        OutputBuilder.Data("onError", "On Error", {
+            tooltip: "The serialized error (code + message) when a propagating error is caught here."
         }),
     ],
 });
