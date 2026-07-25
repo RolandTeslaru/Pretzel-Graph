@@ -7,37 +7,30 @@ export const Blueprint = defineBlueprint({
     icon: "SquareTerminal",
     accent: "utility",
     fields: [
-        FieldBuilder.MultiOption({
-            id: "level",
-            displayName: "Level",
+        FieldBuilder.MultiOption("level", "Level", {
             options: [
                 { value: "log", displayName: "Log" },
                 { value: "info", displayName: "Info" },
                 { value: "warn", displayName: "Warn" },
                 { value: "error", displayName: "Error" },
             ],
+
             initialValue: "log",
             variant: "select"
         }),
-        FieldBuilder.String({
-            id: "prefix",
-            displayName: "Prefix",
+        FieldBuilder.String("prefix", "Prefix", {
             initialValue: "",
             placeholder: "Optional prefix for the log message",
-            required: false,
+            required: false
         })
     ],
     inputs: [
-        InputBuilder.Message({
-            id: "message",
-            displayName: "Message",
-            required: true,
+        InputBuilder.Message("message", "Message", {
+            required: true
         }),
     ],
     outputs: [
-        OutputBuilder.Message({
-            id: "output",
-            displayName: "Output",
+        OutputBuilder.Message("output", "Output", {
             tooltip: "Passes the input message through unchanged."
         }),
     ],

@@ -8,29 +8,24 @@ export const Blueprint = defineBlueprint({
     accent: "group-routing",
     iconColor: "color-sky-400",
     fields: [
-        FieldBuilder.reconciling(FieldBuilder.MultiOption({
-            id: "direction",
+        FieldBuilder.reconciling(FieldBuilder.MultiOption("direction", "Direction", {
             variant: "tab",
             initialValue: "in",
-            displayName: "Direction",
+
             options: [
                 { value: "in", displayName: "In" },
                 { value: "out", displayName: "Out" },
             ]
         })),
-        FieldBuilder.UniqueString({
-            id: "portalId",
-            displayName: "Portal ID",
-            required: true,
+        FieldBuilder.UniqueString("portalId", "Portal ID", {
+            required: true
         }),
 
         
     ],
     inputs: [
-        InputBuilder.Unresolved({
-            id: "input",
-            displayName: "Input",
-            polymorphicGroupId: "portal",
+        InputBuilder.Unresolved("input", "Input", {
+            polymorphicGroupId: "portal"
         }),
     ],
     outputs: [],

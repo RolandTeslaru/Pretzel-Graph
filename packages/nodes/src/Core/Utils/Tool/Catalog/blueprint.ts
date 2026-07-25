@@ -7,23 +7,16 @@ export const Blueprint = defineBlueprint({
     icon: "SwatchBook",
     accent: "port-Tool",
     fields: [
-        FieldBuilder.Variadic({
-            id: "tools_num",
-            displayName: "Tools",
-            groupId: "tools_group",
+        FieldBuilder.Variadic("tools_num", "Tools", {
+            groupId: "tools_group"
         })
     ],
     inputs: [
-        InputBuilder.ToolList({
-            id: "tool_1",
-            displayName: "Tool 1",
-            groupId: "tools_group",
+        InputBuilder.ToolList("tool_1", "Tool 1", {
+            groupId: "tools_group"
         }),
     ],
     outputs: [
-        OutputBuilder.ToolList({
-            id: "tool_list",
-            displayName: "Tool List",
-        })
+        OutputBuilder.ToolList("tool_list", "Tool List", {})
     ],
 });

@@ -5,6 +5,9 @@ export const Massive = defineCredential({
     displayName: "Massive",
     icon: "Massive",
     fields: [
-        FieldBuilder.Password({ id: "apiKey", displayName: "API Key", required: true, tooltip: "Massive (Polygon.io) API key." }),
+        FieldBuilder.Password("apiKey", "API Key", {
+            required: true,
+            tooltip: "Massive (Polygon.io) API key."
+        }),
     ],
 })

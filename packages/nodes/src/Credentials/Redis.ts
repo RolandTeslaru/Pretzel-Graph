@@ -5,9 +5,17 @@ export const Redis = defineCredential({
     displayName: "Redis",
     icon: "Redis",
     fields: [
-        FieldBuilder.String  ({ id: "host",     displayName: "Host",           required: true, initialValue: "localhost" }),
-        FieldBuilder.Integer ({ id: "port",     displayName: "Port",           required: true, initialValue: 6379 }),
-        FieldBuilder.Password({ id: "password", displayName: "Password" }),
-        FieldBuilder.Integer ({ id: "db",       displayName: "Database Index", initialValue: 0 }),
+        FieldBuilder.String("host", "Host", {
+            required: true,
+            initialValue: "localhost"
+        }),
+        FieldBuilder.Integer("port", "Port", {
+            required: true,
+            initialValue: 6379
+        }),
+        FieldBuilder.Password("password", "Password", {}),
+        FieldBuilder.Integer("db", "Database Index", {
+            initialValue: 0
+        }),
     ],
 })

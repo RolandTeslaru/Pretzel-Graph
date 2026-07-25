@@ -9,35 +9,27 @@ export const Blueprint = defineBlueprint({
     accent: "port-Retriever",
     credentials: [Tavily],
     fields: [
-        FieldBuilder.Integer({
-            id: "maxResults",
-            displayName: "Max Results",
+        FieldBuilder.Integer("maxResults", "Max Results", {
             initialValue: 5,
             min: 1,
-            max: 20,
+            max: 20
         }),
-        FieldBuilder.MultiOption({
-            id: "searchDepth",
-            displayName: "Search Depth",
+        FieldBuilder.MultiOption("searchDepth", "Search Depth", {
             options: [
                 { value: "basic", displayName: "Basic" },
                 { value: "advanced", displayName: "Advanced" },
             ],
+
             initialValue: "basic",
-            tooltip: "Advanced costs more Tavily credits but returns richer results.",
+            tooltip: "Advanced costs more Tavily credits but returns richer results."
         }),
-        FieldBuilder.Boolean({
-            id: "includeAnswer",
-            displayName: "Include Answer",
+        FieldBuilder.Boolean("includeAnswer", "Include Answer", {
             initialValue: false,
-            tooltip: "Tavily pre-summarizes an answer from the search results.",
+            tooltip: "Tavily pre-summarizes an answer from the search results."
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Retriever({
-            id: "retriever",
-            displayName: "Retriever",
-        }),
+        OutputBuilder.Retriever("retriever", "Retriever", {}),
     ],
 });

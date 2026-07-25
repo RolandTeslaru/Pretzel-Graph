@@ -10,25 +10,23 @@ export const Blueprint = defineBlueprint({
     fields: [
         // mode drives the field schema via reconcile. Base (stop) needs no extra field;
         // error reconciles in `message`.
-        FieldBuilder.reconciling(FieldBuilder.MultiOption({
-            id: "mode",
-            displayName: "Mode",
+        FieldBuilder.reconciling(FieldBuilder.MultiOption("mode", "Mode", {
             variant: "tab",
+
             options: [
                 { value: "stop", displayName: "Stop" },
                 { value: "error", displayName: "Error" },
             ],
+
             initialValue: "stop",
-            tooltip: "Stop → end the run cleanly. Error → fail the run with a message.",
+            tooltip: "Stop → end the run cleanly. Error → fail the run with a message."
         })),
     ],
     inputs: [
-        InputBuilder.Unresolved({
-            id: "trigger",
-            displayName: "Trigger",
+        InputBuilder.Unresolved("trigger", "Trigger", {
             required: false,
             tooltip: "Reaching this input ends the execution.",
-            polymorphicGroupId: "signal",
+            polymorphicGroupId: "signal"
         }),
     ],
     outputs: [],

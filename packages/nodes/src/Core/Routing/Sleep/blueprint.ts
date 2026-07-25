@@ -8,27 +8,21 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     iconColor: "color-indigo-400",
     fields: [
-        FieldBuilder.Integer({
-            id: "duration",
-            displayName: "Duration (ms)",
+        FieldBuilder.Integer("duration", "Duration (ms)", {
             initialValue: 1000,
             min: 0,
             tooltip: "Time to sleep in milliseconds."
         }),
     ],
     inputs: [
-        InputBuilder.Unresolved({
-            id: "trigger",
-            displayName: "Trigger",
+        InputBuilder.Unresolved("trigger", "Trigger", {
             required: false,
             tooltip: "Optional trigger to start the sleep.",
             polymorphicGroupId: "signal"
         }),
     ],
     outputs: [
-        OutputBuilder.Unresolved({
-            id: "done",
-            displayName: "Done",
+        OutputBuilder.Unresolved("done", "Done", {
             tooltip: "Outputs the trigger message after the sleep duration.",
             polymorphicGroupId: "signal"
         }),

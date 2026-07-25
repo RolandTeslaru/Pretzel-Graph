@@ -11,45 +11,36 @@ export const Blueprint = defineBlueprint({
     fields: [
         // operation drives the field schema via reconcile. Base (find default) is
         // operation + collection + query + limit; other operations swap in their fields.
-        FieldBuilder.reconciling(FieldBuilder.MultiOption({
-            id: "operation",
-            displayName: "Operation",
+        FieldBuilder.reconciling(FieldBuilder.MultiOption("operation", "Operation", {
             options: [
                 { value: "find",   displayName: "Find" },
                 { value: "insert", displayName: "Insert" },
                 { value: "update", displayName: "Update" },
                 { value: "delete", displayName: "Delete" },
             ],
+
             initialValue: "find",
-            tooltip: "The MongoDB operation to run.",
+            tooltip: "The MongoDB operation to run."
         })),
-        FieldBuilder.String({
-            id: "collection",
-            displayName: "Collection",
+        FieldBuilder.String("collection", "Collection", {
             required: true,
-            placeholder: "users",
+            placeholder: "users"
         }),
-        FieldBuilder.Json({
-            id: "query",
-            displayName: "Query",
+        FieldBuilder.Json("query", "Query", {
             initialValue: {},
-            tooltip: "Filter document, e.g. { \"status\": \"active\" }.",
+            tooltip: "Filter document, e.g. { \"status\": \"active\" }."
         }),
-        FieldBuilder.Integer({
-            id: "limit",
-            displayName: "Limit",
+        FieldBuilder.Integer("limit", "Limit", {
             initialValue: 50,
-            min: 1,
+            min: 1
         }),
     ],
     inputs: [],
     outputs: [
         // find (default) emits a DataList of documents. reconcile swaps this to a single
         // Data port for insert/update/delete (which return a summary object).
-        OutputBuilder.DataList({
-            id: "result",
-            displayName: "Documents",
-            tooltip: "Documents matched by the query — one item per document.",
+        OutputBuilder.DataList("result", "Documents", {
+            tooltip: "Documents matched by the query — one item per document."
         }),
     ],
 });

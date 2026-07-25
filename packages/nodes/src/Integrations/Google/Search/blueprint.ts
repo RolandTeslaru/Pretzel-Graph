@@ -2,31 +2,27 @@ import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pre
 import { GoogleSearch } from "@pretzel-graph/nodes/Credentials/GoogleSearch";
 
 const fields = [
-    FieldBuilder.Integer({
-        id: "maxResults",
-        displayName: "Max Results",
+    FieldBuilder.Integer("maxResults", "Max Results", {
         initialValue: 5,
         min: 1,
         max: 10,
-        tooltip: "Google Custom Search returns up to 10 results per request.",
+        tooltip: "Google Custom Search returns up to 10 results per request."
     }),
-    FieldBuilder.MultiOption({
-        id: "searchType",
-        displayName: "Search Type",
+    FieldBuilder.MultiOption("searchType", "Search Type", {
         options: [
             { value: "web", displayName: "Web" },
             { value: "image", displayName: "Image" },
         ],
-        initialValue: "web",
+
+        initialValue: "web"
     }),
-    FieldBuilder.MultiOption({
-        id: "safeSearch",
-        displayName: "Safe Search",
+    FieldBuilder.MultiOption("safeSearch", "Safe Search", {
         options: [
             { value: "off", displayName: "Off" },
             { value: "active", displayName: "Active" },
         ],
-        initialValue: "off",
+
+        initialValue: "off"
     }),
 ];
 
@@ -40,18 +36,14 @@ export const Blueprint = defineBlueprint({
     toolCompatible: true,
     fields,
     inputs: [
-        InputBuilder.Text({
-            id: "query",
-            displayName: "Query",
+        InputBuilder.Text("query", "Query", {
             required: true,
-            placeholder: "What do you want to search for?",
+            placeholder: "What do you want to search for?"
         }),
     ],
     outputs: [
-        OutputBuilder.DataList({
-            id: "documents",
-            displayName: "Documents",
-            tooltip: "Search results as Document objects (pageContent + metadata).",
+        OutputBuilder.DataList("documents", "Documents", {
+            tooltip: "Search results as Document objects (pageContent + metadata)."
         }),
     ],
 });
@@ -67,10 +59,8 @@ export const ToolBlueprint = defineBlueprint({
     fields,
     inputs: [],
     outputs: [
-        OutputBuilder.Tool({
-            id: "tool",
-            displayName: "Search Tool",
-            tooltip: "A tool that can be called to perform a Google search with the specified query.",
+        OutputBuilder.Tool("tool", "Search Tool", {
+            tooltip: "A tool that can be called to perform a Google search with the specified query."
         }),
     ],
 });

@@ -7,29 +7,23 @@ export const Blueprint = defineBlueprint({
     icon: "Bug",
     accent: "utility",
     fields: [
-        FieldBuilder.String({
-            id: "error",
-            displayName: "Error",
+        FieldBuilder.String("error", "Error", {
             initialValue: "Intentional error",
             multiline: true,
-            placeholder: "Enter the error message to throw",
+            placeholder: "Enter the error message to throw"
         }),
     ],
     inputs: [
-        InputBuilder.Unresolved({
-            id: "trigger",
-            displayName: "Trigger",
+        InputBuilder.Unresolved("trigger", "Trigger", {
             required: false,
             tooltip: "Optional trigger to execute this node and throw an error.",
             polymorphicGroupId: "signal"
         }),
     ],
     outputs: [
-        OutputBuilder.Unresolved({
-            id: "result",
-            displayName: "Result",
+        OutputBuilder.Unresolved("result", "Result", {
             polymorphicGroupId: "signal",
-            tooltip: "Never produced — the node always throws. Wire it to a Catch node to test error propagation.",
+            tooltip: "Never produced — the node always throws. Wire it to a Catch node to test error propagation."
         }),
     ],
 });

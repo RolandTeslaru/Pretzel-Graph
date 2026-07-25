@@ -9,9 +9,7 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     iconColor: "color-blue-400",
     fields: [
-        FieldBuilder.MultiOption({
-            id: "method",
-            displayName: "Method",
+        FieldBuilder.MultiOption("method", "Method", {
             options: [
                 { value: "GET" },
                 { value: "POST" },
@@ -19,32 +17,25 @@ export const Blueprint = defineBlueprint({
                 { value: "DELETE" },
                 { value: "PATCH" },
             ],
+
             initialValue: "GET",
             variant: "select"
         }),
-        FieldBuilder.String({
-            id: "url",
-            displayName: "URL",
+        FieldBuilder.String("url", "URL", {
             initialValue: "https://api.example.com",
-            placeholder: "https://api.example.com",
+            placeholder: "https://api.example.com"
         }),
-        FieldBuilder.Json({
-            id: "headers",
-            displayName: "Headers",
-            initialValue: {},
+        FieldBuilder.Json("headers", "Headers", {
+            initialValue: {}
         }),
-        FieldBuilder.Json({
-            id: "body",
-            displayName: "Body",
-            initialValue: {},
+        FieldBuilder.Json("body", "Body", {
+            initialValue: {}
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Data({
-            id: "result",
-            displayName: "Result",
-            tooltip: "{ status, data } — the response status code and parsed body.",
+        OutputBuilder.Data("result", "Result", {
+            tooltip: "{ status, data } — the response status code and parsed body."
         }),
     ],
 });

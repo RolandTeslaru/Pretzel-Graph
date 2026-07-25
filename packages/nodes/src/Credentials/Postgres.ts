@@ -5,11 +5,25 @@ export const Postgres = defineCredential({
     displayName: "Postgres",
     icon: "Postgres",
     fields: [
-        FieldBuilder.String  ({ id: "host",     displayName: "Host",     required: true, initialValue: "localhost" }),
-        FieldBuilder.Integer ({ id: "port",     displayName: "Port",     required: true, initialValue: 5432 }),
-        FieldBuilder.String  ({ id: "database", displayName: "Database", required: true }),
-        FieldBuilder.String  ({ id: "user",     displayName: "User",     required: true }),
-        FieldBuilder.Password({ id: "password", displayName: "Password", required: true }),
-        FieldBuilder.Boolean ({ id: "ssl",      displayName: "Use SSL",  initialValue: false }),
+        FieldBuilder.String("host", "Host", {
+            required: true,
+            initialValue: "localhost"
+        }),
+        FieldBuilder.Integer("port", "Port", {
+            required: true,
+            initialValue: 5432
+        }),
+        FieldBuilder.String("database", "Database", {
+            required: true
+        }),
+        FieldBuilder.String("user", "User", {
+            required: true
+        }),
+        FieldBuilder.Password("password", "Password", {
+            required: true
+        }),
+        FieldBuilder.Boolean("ssl", "Use SSL", {
+            initialValue: false
+        }),
     ],
 })

@@ -5,6 +5,8 @@ export const Tavily = defineCredential({
     displayName: "Tavily",
     icon: "Tavily",
     fields: [
-        FieldBuilder.Password({ id: "apiKey", displayName: "API Key", required: true }),
+        FieldBuilder.Password("apiKey", "API Key", {
+            required: true
+        }),
     ],
 })

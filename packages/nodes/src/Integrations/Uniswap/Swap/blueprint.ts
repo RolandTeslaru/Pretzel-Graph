@@ -12,9 +12,7 @@ export const Blueprint = defineBlueprint({
     fields: [
 
         
-        FieldBuilder.MultiOption({
-            id: "chain",
-            displayName: "Chain",
+        FieldBuilder.MultiOption("chain", "Chain", {
             options: [
                 { value: "1", displayName: "Ethereum" },
                 { value: "137", displayName: "Polygon" },
@@ -24,22 +22,19 @@ export const Blueprint = defineBlueprint({
                 { value: "43114", displayName: "Avalanche" },
                 { value: "42220", displayName: "Celo" },
             ],
+
             initialValue: "1",
-            tooltip: "The EVM chain to operate on.",
+            tooltip: "The EVM chain to operate on."
         }),
-        FieldBuilder.String({
-            id: "rpcUrl",
-            displayName: "RPC URL",
+        FieldBuilder.String("rpcUrl", "RPC URL", {
             placeholder: "https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY",
-            tooltip: "Custom RPC endpoint. If empty, uses the default public transport for the selected chain.",
+            tooltip: "Custom RPC endpoint. If empty, uses the default public transport for the selected chain."
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.ToolList({
-            id: "tools",
-            displayName: "Uniswap Tools",
-            tooltip: "3 tools: uniswap_check_approval, uniswap_get_quote, uniswap_swap_tokens.",
+        OutputBuilder.ToolList("tools", "Uniswap Tools", {
+            tooltip: "3 tools: uniswap_check_approval, uniswap_get_quote, uniswap_swap_tokens."
         }),
     ],
 });
