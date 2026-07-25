@@ -4,49 +4,52 @@ import { Blueprint, ToolBlueprint } from "./blueprint";
 
 const asField = (b: unknown) => b as unknown as Foundations.Field;
 
-const timespanField = () => asField(FieldBuilder.MultiOption({
-    id: "timespan", displayName: "Timespan",
+const timespanField = () => asField(FieldBuilder.MultiOption("timespan", "Timespan", {
     options: [
         { value: "minute", displayName: "Minute" },
         { value: "hour", displayName: "Hour" },
         { value: "day", displayName: "Day" },
     ],
+
     initialValue: "minute",
-    tooltip: "Candle granularity.",
+    tooltip: "Candle granularity."
 }));
 
-const multiplierField = () => asField(FieldBuilder.Integer({
-    id: "multiplier", displayName: "Multiplier",
-    initialValue: 1, min: 1, max: 60,
-    tooltip: "Candle multiplier (e.g. 5 + minute = 5-minute candles).",
+const multiplierField = () => asField(FieldBuilder.Integer("multiplier", "Multiplier", {
+    initialValue: 1,
+    min: 1,
+    max: 60,
+    tooltip: "Candle multiplier (e.g. 5 + minute = 5-minute candles)."
 }));
 
-const lookbackField = () => asField(FieldBuilder.Integer({
-    id: "lookbackHours", displayName: "Lookback (hours)",
-    initialValue: 24, min: 1, max: 24 * 365,
-    tooltip: "How far back to fetch candles, in hours. The end time is always 'now'.",
+const lookbackField = () => asField(FieldBuilder.Integer("lookbackHours", "Lookback (hours)", {
+    initialValue: 24,
+    min: 1,
+    max: 24 * 365,
+    tooltip: "How far back to fetch candles, in hours. The end time is always 'now'."
 }));
 
-const adjustedField = () => asField(FieldBuilder.Boolean({
-    id: "adjusted", displayName: "Adjusted",
-    initialValue: true, advanced: true,
-    tooltip: "Whether to request adjusted data for aggregates when supported by the API.",
+const adjustedField = () => asField(FieldBuilder.Boolean("adjusted", "Adjusted", {
+    initialValue: true,
+    advanced: true,
+    tooltip: "Whether to request adjusted data for aggregates when supported by the API."
 }));
 
-const timeframeField = () => asField(FieldBuilder.MultiOption({
-    id: "timeframe", displayName: "Timeframe",
+const timeframeField = () => asField(FieldBuilder.MultiOption("timeframe", "Timeframe", {
     options: [
         { value: "annual", displayName: "Annual" },
         { value: "quarterly", displayName: "Quarterly" },
     ],
+
     initialValue: "quarterly",
-    tooltip: "Reporting period for the financial statements.",
+    tooltip: "Reporting period for the financial statements."
 }));
 
-const limitField = () => asField(FieldBuilder.Integer({
-    id: "limit", displayName: "Limit",
-    initialValue: 4, min: 1, max: 100,
-    tooltip: "How many reporting periods to return.",
+const limitField = () => asField(FieldBuilder.Integer("limit", "Limit", {
+    initialValue: 4,
+    min: 1,
+    max: 100,
+    tooltip: "How many reporting periods to return."
 }));
 
 
@@ -76,33 +79,29 @@ export const reconcile = (
 
         case "snapshot":
             actionFields = [];
-            outputs = [OutputBuilder.Data({
-                id: "data", displayName: "Snapshot",
-                tooltip: "Live state: today's OHLC and volume, change, the previous day's bar, last trade and last quote.",
+            outputs = [OutputBuilder.Data("data", "Snapshot", {
+                tooltip: "Live state: today's OHLC and volume, change, the previous day's bar, last trade and last quote."
             })];
             break;
 
         case "details":
             actionFields = [];
-            outputs = [OutputBuilder.Data({
-                id: "data", displayName: "Details",
-                tooltip: "Company reference data: name, description, market cap, shares outstanding, exchange, branding.",
+            outputs = [OutputBuilder.Data("data", "Details", {
+                tooltip: "Company reference data: name, description, market cap, shares outstanding, exchange, branding."
             })];
             break;
 
         case "financials":
             actionFields = [timeframeField(), limitField()];
-            outputs = [OutputBuilder.DataList({
-                id: "data", displayName: "Financials",
-                tooltip: "One item per reporting period: income statement, balance sheet and cash flow.",
+            outputs = [OutputBuilder.DataList("data", "Financials", {
+                tooltip: "One item per reporting period: income statement, balance sheet and cash flow."
             })];
             break;
 
         case "marketStatus":
             actionFields = [];
-            outputs = [OutputBuilder.Data({
-                id: "data", displayName: "Market Status",
-                tooltip: "Whether US markets are currently open, plus after-hours and per-exchange status.",
+            outputs = [OutputBuilder.Data("data", "Market Status", {
+                tooltip: "Whether US markets are currently open, plus after-hours and per-exchange status."
             })];
             break;
 
@@ -110,13 +109,11 @@ export const reconcile = (
         default:
             actionFields = [timespanField(), multiplierField(), lookbackField(), adjustedField()];
             outputs = [
-                OutputBuilder.DataList({
-                    id: "candles", displayName: "Candles",
-                    tooltip: "Array of OHLCV aggregates (bars) returned by Massive.",
+                OutputBuilder.DataList("candles", "Candles", {
+                    tooltip: "Array of OHLCV aggregates (bars) returned by Massive."
                 }),
-                OutputBuilder.Data({
-                    id: "summary", displayName: "Summary",
-                    tooltip: "Convenience summary: { ticker, timespan, multiplier, count, firstClose, lastClose, change, changePct }.",
+                OutputBuilder.Data("summary", "Summary", {
+                    tooltip: "Convenience summary: { ticker, timespan, multiplier, count, firstClose, lastClose, change, changePct }."
                 }),
             ];
             break;

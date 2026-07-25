@@ -8,36 +8,29 @@ export const Blueprint = defineBlueprint({
     accent: "port-Json",
     toolCompatible: true,
     fields: [
-        FieldBuilder.MultiOption({
-            id: "dataSource",
-            displayName: "Data Source",
+        FieldBuilder.MultiOption("dataSource", "Data Source", {
             options: [
                 { value: "pyth", displayName: "Pyth — Asset Price" },
                 { value: "defillama", displayName: "DeFiLlama — Protocol TVL" },
             ],
+
             initialValue: "pyth",
-            tooltip: "Pyth returns live price data for crypto assets. DeFiLlama returns TVL and chain breakdown for DeFi protocols.",
+            tooltip: "Pyth returns live price data for crypto assets. DeFiLlama returns TVL and chain breakdown for DeFi protocols."
         }),
     ],
     inputs: [
-        InputBuilder.Text({
-            id: "query",
-            displayName: "Query",
+        InputBuilder.Text("query", "Query", {
             required: true,
             placeholder: "BTC  or  uniswap",
-            tooltip: "For Pyth: a coin symbol (e.g. BTC, ETH, SOL). For DeFiLlama: a protocol slug (e.g. uniswap, aave, curve).",
+            tooltip: "For Pyth: a coin symbol (e.g. BTC, ETH, SOL). For DeFiLlama: a protocol slug (e.g. uniswap, aave, curve)."
         }),
     ],
     outputs: [
-        OutputBuilder.Data({
-            id: "price",
-            displayName: "Price (USD)",
-            tooltip: "Numeric USD price. Only populated when Data Source is Pyth.",
+        OutputBuilder.Data("price", "Price (USD)", {
+            tooltip: "Numeric USD price. Only populated when Data Source is Pyth."
         }),
-        OutputBuilder.Json({
-            id: "data",
-            displayName: "Full Data",
-            tooltip: "Complete parsed response from the selected data source.",
+        OutputBuilder.Json("data", "Full Data", {
+            tooltip: "Complete parsed response from the selected data source."
         }),
     ],
 });
@@ -51,32 +44,25 @@ export const ToolBlueprint = defineBlueprint({
     accent: "port-Tool",
     toolCompatible: true,
     fields: [
-        FieldBuilder.MultiOption({
-            id: "dataSource",
-            displayName: "Data Source",
+        FieldBuilder.MultiOption("dataSource", "Data Source", {
             options: [
                 { value: "pyth", displayName: "Pyth — Asset Price" },
                 { value: "defillama", displayName: "DeFiLlama — Protocol TVL" },
             ],
-            initialValue: "pyth",
+
+            initialValue: "pyth"
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Tool({
-            id: "getPrice",
-            displayName: "Get Price",
-            tooltip: "Tool: fetch the live USD price for a crypto asset from Pyth.",
+        OutputBuilder.Tool("getPrice", "Get Price", {
+            tooltip: "Tool: fetch the live USD price for a crypto asset from Pyth."
         }),
-        OutputBuilder.Tool({
-            id: "getProtocolData",
-            displayName: "Get Protocol Data",
-            tooltip: "Tool: fetch TVL, chain breakdown, and metadata for a DeFi protocol from DeFiLlama.",
+        OutputBuilder.Tool("getProtocolData", "Get Protocol Data", {
+            tooltip: "Tool: fetch TVL, chain breakdown, and metadata for a DeFi protocol from DeFiLlama."
         }),
-        OutputBuilder.Tool({
-            id: "searchAsset",
-            displayName: "Search Asset",
-            tooltip: "Tool: search Pyth price feeds by keyword and return matching assets with their IDs.",
+        OutputBuilder.Tool("searchAsset", "Search Asset", {
+            tooltip: "Tool: search Pyth price feeds by keyword and return matching assets with their IDs."
         }),
     ],
 });

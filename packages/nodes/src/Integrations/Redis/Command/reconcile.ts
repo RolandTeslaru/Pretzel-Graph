@@ -11,8 +11,14 @@ export const reconcile = (
     if (fieldValues.operation === "SET") {
         // @ts-expect-error append SET-only fields to the readonly tuple
         blueprint.fields = [...blueprint.fields,
-            FieldBuilder.String({ id: "value", displayName: "Value", multiline: true, initialValue: "" }),
-            FieldBuilder.Integer({ id: "ttl", displayName: "TTL (seconds)", initialValue: 0, tooltip: "0 = no expiry." }),
+            FieldBuilder.String("value", "Value", {
+                multiline: true,
+                initialValue: ""
+            }),
+            FieldBuilder.Integer("ttl", "TTL (seconds)", {
+                initialValue: 0,
+                tooltip: "0 = no expiry."
+            }),
         ];
     }
     return blueprint;

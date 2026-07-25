@@ -26,25 +26,47 @@ export const reconcile = (
     switch (fieldValues.variant) {
         case "choice":
             variantFields = [
-                asField(FieldBuilder.Json({ id: "options", displayName: "Options", initialValue: [{ label: "Option 1", value: "1" }], tooltip: "Array of { label, value }." })),
-                asField(FieldBuilder.Boolean({ id: "multiple", displayName: "Allow multiple", initialValue: false })),
-                asField(FieldBuilder.Boolean({ id: "allowCustom", displayName: "Allow custom answer", initialValue: false })),
+                asField(FieldBuilder.Json("options", "Options", {
+                    initialValue: [{ label: "Option 1", value: "1" }],
+                    tooltip: "Array of { label, value }."
+                })),
+                asField(FieldBuilder.Boolean("multiple", "Allow multiple", {
+                    initialValue: false
+                })),
+                asField(FieldBuilder.Boolean("allowCustom", "Allow custom answer", {
+                    initialValue: false
+                })),
             ];
-            outputs = [OutputBuilder.Data({ id: "value", displayName: "Value", tooltip: "The chosen value(s)." })];
+            outputs = [OutputBuilder.Data("value", "Value", {
+                tooltip: "The chosen value(s)."
+            })];
             break;
         case "form":
-            variantFields = [asField(FieldBuilder.Json({ id: "formFields", displayName: "Form fields", initialValue: [], tooltip: "Field definitions to render in the dialog." }))];
-            outputs = [OutputBuilder.Data({ id: "values", displayName: "Values", tooltip: "The collected form values." })];
+            variantFields = [asField(FieldBuilder.Json("formFields", "Form fields", {
+                initialValue: [],
+                tooltip: "Field definitions to render in the dialog."
+            }))];
+            outputs = [OutputBuilder.Data("values", "Values", {
+                tooltip: "The collected form values."
+            })];
             break;
         case "confirm":
         default:
             variantFields = [
-                asField(FieldBuilder.String({ id: "approveLabel", displayName: "Approve label", initialValue: "Approve" })),
-                asField(FieldBuilder.String({ id: "rejectLabel", displayName: "Reject label", initialValue: "Reject" })),
+                asField(FieldBuilder.String("approveLabel", "Approve label", {
+                    initialValue: "Approve"
+                })),
+                asField(FieldBuilder.String("rejectLabel", "Reject label", {
+                    initialValue: "Reject"
+                })),
             ];
             outputs = [
-                OutputBuilder.Unresolved({ id: "approved", displayName: "Approved", polymorphicGroupId: "data" }),
-                OutputBuilder.Unresolved({ id: "rejected", displayName: "Rejected", polymorphicGroupId: "data" }),
+                OutputBuilder.Unresolved("approved", "Approved", {
+                    polymorphicGroupId: "data"
+                }),
+                OutputBuilder.Unresolved("rejected", "Rejected", {
+                    polymorphicGroupId: "data"
+                }),
             ];
             break;
     }

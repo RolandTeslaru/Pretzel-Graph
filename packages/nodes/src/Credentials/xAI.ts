@@ -5,6 +5,8 @@ export const xAI = defineCredential({
     displayName: "xAI",
     icon: "xAI",
     fields: [
-        FieldBuilder.Password({ id: "apiKey", displayName: "API Key", required: true }),
+        FieldBuilder.Password("apiKey", "API Key", {
+            required: true
+        }),
     ],
 })

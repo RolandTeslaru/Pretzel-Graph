@@ -27,33 +27,25 @@ export const Blueprint = defineBlueprint({
     fields: [
         // action drives the field schema + output ports via reconcile. Base is the `candles`
         // case; snapshot / details / marketStatus need no extra fields.
-        FieldBuilder.reconciling(FieldBuilder.MultiOption({
-            id: "action",
-            displayName: "Action",
+        FieldBuilder.reconciling(FieldBuilder.MultiOption("action", "Action", {
             options: actionOptions,
             initialValue: "candles",
-            tooltip: "What to fetch for the ticker.",
+            tooltip: "What to fetch for the ticker."
         })),
     ],
     inputs: [
-        InputBuilder.Text({
-            id: "ticker",
-            displayName: "Ticker",
+        InputBuilder.Text("ticker", "Ticker", {
             required: true,
             placeholder: "AAPL",
-            tooltip: "US stock ticker symbol (e.g. AAPL, MSFT, TSLA). Unused by the Market Status action.",
+            tooltip: "US stock ticker symbol (e.g. AAPL, MSFT, TSLA). Unused by the Market Status action."
         }),
     ],
     outputs: [
-        OutputBuilder.DataList({
-            id: "candles",
-            displayName: "Candles",
-            tooltip: "Array of OHLCV aggregates (bars) returned by Massive.",
+        OutputBuilder.DataList("candles", "Candles", {
+            tooltip: "Array of OHLCV aggregates (bars) returned by Massive."
         }),
-        OutputBuilder.Data({
-            id: "summary",
-            displayName: "Summary",
-            tooltip: "Convenience summary: { ticker, timespan, multiplier, count, firstClose, lastClose, change, changePct }.",
+        OutputBuilder.Data("summary", "Summary", {
+            tooltip: "Convenience summary: { ticker, timespan, multiplier, count, firstClose, lastClose, change, changePct }."
         }),
     ],
 });
@@ -69,43 +61,33 @@ export const ToolBlueprint = defineBlueprint({
     accent: "port-ToolList",
     toolCompatible: true,
     fields: [
-        FieldBuilder.MultiOption({
-            id: "timespan",
-            displayName: "Default Timespan",
+        FieldBuilder.MultiOption("timespan", "Default Timespan", {
             options: timespanOptions,
             initialValue: "minute",
-            tooltip: "Default timespan used by getCandles when the agent doesn't specify one.",
+            tooltip: "Default timespan used by getCandles when the agent doesn't specify one."
         }),
-        FieldBuilder.Integer({
-            id: "multiplier",
-            displayName: "Default Multiplier",
+        FieldBuilder.Integer("multiplier", "Default Multiplier", {
             initialValue: 1,
             min: 1,
             max: 60,
-            tooltip: "Default multiplier used by getCandles when the agent doesn't specify one.",
+            tooltip: "Default multiplier used by getCandles when the agent doesn't specify one."
         }),
-        FieldBuilder.Integer({
-            id: "lookbackHours",
-            displayName: "Default Lookback (hours)",
+        FieldBuilder.Integer("lookbackHours", "Default Lookback (hours)", {
             initialValue: 24,
             min: 1,
             max: 24 * 365,
-            tooltip: "Default lookback used by getCandles when the agent doesn't specify one.",
+            tooltip: "Default lookback used by getCandles when the agent doesn't specify one."
         }),
-        FieldBuilder.Boolean({
-            id: "adjusted",
-            displayName: "Adjusted",
+        FieldBuilder.Boolean("adjusted", "Adjusted", {
             initialValue: true,
             tooltip: "Whether to request adjusted data for aggregates when supported by the API.",
-            advanced: true,
+            advanced: true
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.ToolList({
-            id: "tools",
-            displayName: "Massive Tools",
-            tooltip: "Toolkit: massive_get_candles, massive_get_news, massive_get_snapshot, massive_get_last_trade, massive_get_last_quote, massive_get_ticker_details, massive_search_tickers, massive_get_financials, massive_get_market_status.",
+        OutputBuilder.ToolList("tools", "Massive Tools", {
+            tooltip: "Toolkit: massive_get_candles, massive_get_news, massive_get_snapshot, massive_get_last_trade, massive_get_last_quote, massive_get_ticker_details, massive_search_tickers, massive_get_financials, massive_get_market_status."
         }),
     ],
 });

@@ -9,11 +9,9 @@ export const reconcile = (
 ): Foundations.Blueprint => {
     if (fieldValues.role === "Tool") {
         // @ts-expect-error append the Tool-only field to the readonly tuple
-        blueprint.fields = [...blueprint.fields, FieldBuilder.String({
-            id: "toolCallId",
-            displayName: "Tool Call ID",
+        blueprint.fields = [...blueprint.fields, FieldBuilder.String("toolCallId", "Tool Call ID", {
             initialValue: "",
-            placeholder: "Required for Tool messages",
+            placeholder: "Required for Tool messages"
         })];
     }
     return blueprint;

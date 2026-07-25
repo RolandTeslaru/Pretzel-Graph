@@ -8,22 +8,16 @@ export const Blueprint = defineBlueprint({
     accent: "port-Tool",
     fields: [],
     inputs: [
-        InputBuilder.ToolList({
-            id: "tools",
-            displayName: "Tools",
+        InputBuilder.ToolList("tools", "Tools", {
             required: true
         }),
-        InputBuilder.Message({
-            id: "input",
-            displayName: "AIMessage Input",
-            required: true,
+        InputBuilder.Message("input", "AIMessage Input", {
+            required: true
         }),
     ],
     outputs: [
-        OutputBuilder.MessageList({
-            id: "toolOutputs",
-            displayName: "Messages",
-            tooltip: "The received AIMessage followed by each tool result, ready to append to the conversation history.",
+        OutputBuilder.MessageList("toolOutputs", "Messages", {
+            tooltip: "The received AIMessage followed by each tool result, ready to append to the conversation history."
         }),
     ],
 });

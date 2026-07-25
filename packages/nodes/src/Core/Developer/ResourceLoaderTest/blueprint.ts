@@ -8,34 +8,26 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     fields: [
         // Placeholder for credential — will be replaced by FieldBuilder.Credential once that exists
-        FieldBuilder.ResourceLoader({
-            id: "schema",
-            displayName: "Schema",
+        FieldBuilder.ResourceLoader("schema", "Schema", {
             loaderId:"schemaSearch",
             placeholder: "Select a schema",
-            required: true,
+            required: true
         }),
-        FieldBuilder.ResourceLoader({
-            id: "table",
-            displayName: "Table",
+        FieldBuilder.ResourceLoader("table", "Table", {
             loaderId:"tableSearch",
             dependsOn: ["schema"],
             placeholder: "Select a table",
-            required: true,
+            required: true
         }),
     ],
     inputs: [
-        InputBuilder.Message({
-            id: "input",
-            displayName: "Input",
-            required: true,
+        InputBuilder.Message("input", "Input", {
+            required: true
         }),
     ],
     outputs: [
-        OutputBuilder.Message({
-            id: "output",
-            displayName: "Output",
-            tooltip: "Passes input through with selected schema/table logged.",
+        OutputBuilder.Message("output", "Output", {
+            tooltip: "Passes input through with selected schema/table logged."
         }),
     ],
 });

@@ -8,33 +8,25 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     itemScope: "list",
     fields: [
-        FieldBuilder.Boolean({
-            id: "condition",
-            displayName: "Condition",
+        FieldBuilder.Boolean("condition", "Condition", {
             initialValue: true,
             isExpression: true,
             itemScoped: true,
-            tooltip: "Evaluated once per item — use $item for the current element, $in for the node's inputs.",
+            tooltip: "Evaluated once per item — use $item for the current element, $in for the node's inputs."
         }),
     ],
     inputs: [
-        InputBuilder.UnresolvedList({
-            id: "list",
-            displayName: "List",
+        InputBuilder.UnresolvedList("list", "List", {
             required: true,
-            polymorphicGroupId: "data",
+            polymorphicGroupId: "data"
         }),
     ],
     outputs: [
-        OutputBuilder.UnresolvedList({
-            id: "filtered",
-            displayName: "Kept",
-            polymorphicGroupId: "data",
+        OutputBuilder.UnresolvedList("filtered", "Kept", {
+            polymorphicGroupId: "data"
         }),
-        OutputBuilder.UnresolvedList({
-            id: "discarded",
-            displayName: "Discarded",
-            polymorphicGroupId: "data",
+        OutputBuilder.UnresolvedList("discarded", "Discarded", {
+            polymorphicGroupId: "data"
         }),
     ],
 });

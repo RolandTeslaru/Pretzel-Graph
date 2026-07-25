@@ -7,237 +7,137 @@ export const Blueprint = defineBlueprint({
     icon: "Rocket",
     accent: "utility",
     fields: [
-        FieldBuilder.String({
-            id: "stringField",
-            displayName: "String Field",
+        FieldBuilder.String("stringField", "String Field", {
             initialValue: "Hello World",
-            placeholder: "Enter text...",
+            placeholder: "Enter text..."
         }),
-        FieldBuilder.String({
-            id: "multilineStringField",
-            displayName: "Multiline String Field",
+        FieldBuilder.String("multilineStringField", "Multiline String Field", {
             initialValue: "Line 1\nLine 2",
-            multiline: true,
+            multiline: true
         }),
-        FieldBuilder.Integer({
-            id: "integerField",
-            displayName: "Integer Field",
-            initialValue: 42,
+        FieldBuilder.Integer("integerField", "Integer Field", {
+            initialValue: 42
         }),
-        FieldBuilder.Integer({
-            id: "integerSliderField",
-            displayName: "Integer Slider Field",
+        FieldBuilder.Integer("integerSliderField", "Integer Slider Field", {
             initialValue: 50,
             min: 0,
             max: 100,
-            slider: true,
+            slider: true
         }),
-        FieldBuilder.Float({
-            id: "floatField",
-            displayName: "Float Field",
-            initialValue: 3.14,
+        FieldBuilder.Float("floatField", "Float Field", {
+            initialValue: 3.14
         }),
-        FieldBuilder.Float({
-            id: "floatSliderField",
-            displayName: "Float Slider Field",
+        FieldBuilder.Float("floatSliderField", "Float Slider Field", {
             initialValue: 0.5,
             min: 0,
             max: 1,
             step: 0.01,
-            slider: true,
+            slider: true
         }),
-        FieldBuilder.Boolean({
-            id: "booleanField",
-            displayName: "Boolean Field",
-            initialValue: true,
+        FieldBuilder.Boolean("booleanField", "Boolean Field", {
+            initialValue: true
         }),
-        FieldBuilder.MultiOption({
-            id: "multiOptionSelectField",
-            displayName: "MultiOption Select",
+        FieldBuilder.MultiOption("multiOptionSelectField", "MultiOption Select", {
             options: [
                 { value: "Option A" },
                 { value: "Option B" },
                 { value: "Option C" },
             ],
-            initialValue: "Option A",
+
+            initialValue: "Option A"
         }),
-        FieldBuilder.MultiOption({
-            id: "multiOptionTabField",
-            displayName: "MultiOption Tab",
+        FieldBuilder.MultiOption("multiOptionTabField", "MultiOption Tab", {
             options: [
                 { value: "Tab 1" },
                 { value: "Tab 2" },
             ],
+
             initialValue: "Tab 1",
-            variant: "tab",
+            variant: "tab"
         }),
-        FieldBuilder.File({
-            id: "fileField",
-            displayName: "File Field",
-            fileTypes: [".txt", ".json", ".md"],
+        FieldBuilder.File("fileField", "File Field", {
+            fileTypes: [".txt", ".json", ".md"]
         }),
-        FieldBuilder.List({
-            id: "listField",
-            displayName: "List Field",
-            initialValue: ["Item 1", "Item 2"],
+        FieldBuilder.List("listField", "List Field", {
+            initialValue: ["Item 1", "Item 2"]
         }),
-        FieldBuilder.Json({
-            id: "jsonField",
-            displayName: "JSON Field",
-            initialValue: { key: "value" },
+        FieldBuilder.Json("jsonField", "JSON Field", {
+            initialValue: { key: "value" }
         }),
-        FieldBuilder.Password({
-            id: "passwordField",
-            displayName: "Password Field",
-        }),
-        FieldBuilder.Script({
-            id: "scriptField",
-            displayName: "Script Field",
-            initialValue: "console.log('Hello');",
+        FieldBuilder.Password("passwordField", "Password Field", {}),
+        FieldBuilder.Script("scriptField", "Script Field", {
+            initialValue: "console.log('Hello');"
         }),
     ],
     inputs: [
-        InputBuilder.Message({
-            id: "messageInput",
-            displayName: "Message Input",
-            required: true,
+        InputBuilder.Message("messageInput", "Message Input", {
+            required: true
         }),
-        InputBuilder.LanguageModel({
-            id: "languageModelInput",
-            displayName: "Language Model Input",
-            required: true,
+        InputBuilder.LanguageModel("languageModelInput", "Language Model Input", {
+            required: true
         }),
-        InputBuilder.Document({
-            id: "documentInput",
-            displayName: "Document Input",
-            required: true,
+        InputBuilder.Document("documentInput", "Document Input", {
+            required: true
         }),
-        InputBuilder.Retriever({
-            id: "retrieverInput",
-            displayName: "Retriever Input",
-            required: true,
+        InputBuilder.Retriever("retrieverInput", "Retriever Input", {
+            required: true
         }),
-        InputBuilder.Embeddings({
-            id: "embeddingsInput",
-            displayName: "Embeddings Input",
-            required: true,
+        InputBuilder.Embeddings("embeddingsInput", "Embeddings Input", {
+            required: true
         }),
-        InputBuilder.VectorStore({
-            id: "vectorStoreInput",
-            displayName: "Vector Store Input",
-            required: true,
+        InputBuilder.VectorStore("vectorStoreInput", "Vector Store Input", {
+            required: true
         }),
-        InputBuilder.Tool({
-            id: "toolInput",
-            displayName: "Tool Input",
-            required: true,
+        InputBuilder.Tool("toolInput", "Tool Input", {
+            required: true
         }),
-        InputBuilder.Unresolved({
-            id: "unresolvedInput",
-            displayName: "Unresolved Input",
+        InputBuilder.Unresolved("unresolvedInput", "Unresolved Input", {
             polymorphicGroupId: "unresolvedGroup",
-            required: true,
+            required: true
         }),
-        InputBuilder.UnresolvedScalar({
-            id: "unresolvedScalarInput",
-            displayName: "Unresolved Scalar Input",
+        InputBuilder.UnresolvedScalar("unresolvedScalarInput", "Unresolved Scalar Input", {
             polymorphicGroupId: "unresolvedScalarGroup",
-            required: true,
+            required: true
         }),
-        InputBuilder.UnresolvedList({
-            id: "unresolvedListInput",
-            displayName: "Unresolved List Input",
+        InputBuilder.UnresolvedList("unresolvedListInput", "Unresolved List Input", {
             polymorphicGroupId: "unresolvedListGroup",
-            required: true,
+            required: true
         }),
-        InputBuilder.ToolList({
-            id: "toolListInput",
-            displayName: "Tool List Input",
-            required: true,
+        InputBuilder.ToolList("toolListInput", "Tool List Input", {
+            required: true
         }),
-        InputBuilder.MessageList({
-            id: "messageListInput",
-            displayName: "Message List Input",
-            required: true,
+        InputBuilder.MessageList("messageListInput", "Message List Input", {
+            required: true
         }),
-        InputBuilder.Data({
-            id: "dataInput",
-            displayName: "Data Input",
-            required: true,
+        InputBuilder.Data("dataInput", "Data Input", {
+            required: true
         }),
-        InputBuilder.DataList({
-            id: "dataListInput",
-            displayName: "Data List Input",
-            required: true,
+        InputBuilder.DataList("dataListInput", "Data List Input", {
+            required: true
         }),
     ],
     outputs: [
-        OutputBuilder.Message({
-            id: "messageOutput",
-            displayName: "Message Output",
+        OutputBuilder.Message("messageOutput", "Message Output", {}),
+        OutputBuilder.Text("textOutput", "Text Output", {}),
+        OutputBuilder.LanguageModel("languageModelOutput", "Language Model Output", {}),
+        OutputBuilder.Document("documentOutput", "Document Output", {}),
+        OutputBuilder.Retriever("retrieverOutput", "Retriever Output", {}),
+        OutputBuilder.Embeddings("embeddingsOutput", "Embeddings Output", {}),
+        OutputBuilder.VectorStore("vectorStoreOutput", "Vector Store Output", {}),
+        OutputBuilder.Tool("toolOutput", "Tool Output", {}),
+        OutputBuilder.DataFrame("dataFrameOutput", "DataFrame Output", {}),
+        OutputBuilder.Unresolved("unresolvedOutput", "Unresolved Output", {
+            polymorphicGroupId: "unresolvedGroup"
         }),
-        OutputBuilder.Text({
-            id: "textOutput",
-            displayName: "Text Output",
+        OutputBuilder.UnresolvedScalar("unresolvedScalarOutput", "Unresolved Scalar Output", {
+            polymorphicGroupId: "unresolvedScalarGroup"
         }),
-        OutputBuilder.LanguageModel({
-            id: "languageModelOutput",
-            displayName: "Language Model Output",
+        OutputBuilder.UnresolvedList("unresolvedListOutput", "Unresolved List Output", {
+            polymorphicGroupId: "unresolvedListGroup"
         }),
-        OutputBuilder.Document({
-            id: "documentOutput",
-            displayName: "Document Output",
-        }),
-        OutputBuilder.Retriever({
-            id: "retrieverOutput",
-            displayName: "Retriever Output",
-        }),
-        OutputBuilder.Embeddings({
-            id: "embeddingsOutput",
-            displayName: "Embeddings Output",
-        }),
-        OutputBuilder.VectorStore({
-            id: "vectorStoreOutput",
-            displayName: "Vector Store Output",
-        }),
-        OutputBuilder.Tool({
-            id: "toolOutput",
-            displayName: "Tool Output",
-        }),
-        OutputBuilder.DataFrame({
-            id: "dataFrameOutput",
-            displayName: "DataFrame Output",
-        }),
-        OutputBuilder.Unresolved({
-            id: "unresolvedOutput",
-            displayName: "Unresolved Output",
-            polymorphicGroupId: "unresolvedGroup",
-        }),
-        OutputBuilder.UnresolvedScalar({
-            id: "unresolvedScalarOutput",
-            displayName: "Unresolved Scalar Output",
-            polymorphicGroupId: "unresolvedScalarGroup",
-        }),
-        OutputBuilder.UnresolvedList({
-            id: "unresolvedListOutput",
-            displayName: "Unresolved List Output",
-            polymorphicGroupId: "unresolvedListGroup",
-        }),
-        OutputBuilder.ToolList({
-            id: "toolListOutput",
-            displayName: "Tool List Output",
-        }),
-        OutputBuilder.MessageList({
-            id: "messageListOutput",
-            displayName: "Message List Output",
-        }),
-        OutputBuilder.Data({
-            id: "dataOutput",
-            displayName: "Data Output",
-        }),
-        OutputBuilder.DataList({
-            id: "dataListOutput",
-            displayName: "Data List Output",
-        }),
+        OutputBuilder.ToolList("toolListOutput", "Tool List Output", {}),
+        OutputBuilder.MessageList("messageListOutput", "Message List Output", {}),
+        OutputBuilder.Data("dataOutput", "Data Output", {}),
+        OutputBuilder.DataList("dataListOutput", "Data List Output", {}),
     ],
 });

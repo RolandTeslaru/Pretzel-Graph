@@ -19,41 +19,31 @@ export const Blueprint = defineBlueprint({
     iconColor: "color-cyan-500",
     toolCompatible: true,
     fields: [
-        FieldBuilder.MultiOption({
-            id: "interval",
-            displayName: "Interval",
+        FieldBuilder.MultiOption("interval", "Interval", {
             options: intervalOptions,
             initialValue: "1h",
-            tooltip: "Candle interval. Used in direct mode and as the default for the getCandles tool.",
+            tooltip: "Candle interval. Used in direct mode and as the default for the getCandles tool."
         }),
-        FieldBuilder.Integer({
-            id: "lookbackHours",
-            displayName: "Lookback (hours)",
+        FieldBuilder.Integer("lookbackHours", "Lookback (hours)", {
             initialValue: 24,
             min: 1,
             max: 24 * 365,
-            tooltip: "How far back to fetch candles, in hours. The end time is always 'now'.",
+            tooltip: "How far back to fetch candles, in hours. The end time is always 'now'."
         }),
     ],
     inputs: [
-        InputBuilder.Text({
-            id: "coin",
-            displayName: "Coin",
+        InputBuilder.Text("coin", "Coin", {
             required: true,
             placeholder: "BTC",
-            tooltip: "HyperLiquid coin symbol (e.g. BTC, ETH, SOL).",
+            tooltip: "HyperLiquid coin symbol (e.g. BTC, ETH, SOL)."
         }),
     ],
     outputs: [
-        OutputBuilder.DataList({
-            id: "candles",
-            displayName: "Candles",
-            tooltip: "Array of OHLCV candles: { t, T, s, i, o, c, h, l, v, n }.",
+        OutputBuilder.DataList("candles", "Candles", {
+            tooltip: "Array of OHLCV candles: { t, T, s, i, o, c, h, l, v, n }."
         }),
-        OutputBuilder.Json({
-            id: "summary",
-            displayName: "Summary",
-            tooltip: "Convenience summary: { coin, interval, count, firstClose, lastClose, change, changePct }.",
+        OutputBuilder.Json("summary", "Summary", {
+            tooltip: "Convenience summary: { coin, interval, count, firstClose, lastClose, change, changePct }."
         }),
     ],
 });
@@ -69,28 +59,22 @@ export const ToolBlueprint = defineBlueprint({
     iconColor: "color-cyan-500",
     toolCompatible: true,
     fields: [
-        FieldBuilder.MultiOption({
-            id: "interval",
-            displayName: "Default Interval",
+        FieldBuilder.MultiOption("interval", "Default Interval", {
             options: intervalOptions,
             initialValue: "1h",
-            tooltip: "Default candle interval used by the getCandles tool when the agent doesn't specify one.",
+            tooltip: "Default candle interval used by the getCandles tool when the agent doesn't specify one."
         }),
-        FieldBuilder.Integer({
-            id: "lookbackHours",
-            displayName: "Default Lookback (hours)",
+        FieldBuilder.Integer("lookbackHours", "Default Lookback (hours)", {
             initialValue: 24,
             min: 1,
             max: 24 * 365,
-            tooltip: "Default lookback used by the getCandles tool when the agent doesn't specify one.",
+            tooltip: "Default lookback used by the getCandles tool when the agent doesn't specify one."
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.ToolList({
-            id: "tools",
-            displayName: "HyperLiquid Tools",
-            tooltip: "Toolkit: hyperliquid_get_candles, hyperliquid_get_mids, hyperliquid_get_order_book, hyperliquid_get_meta.",
+        OutputBuilder.ToolList("tools", "HyperLiquid Tools", {
+            tooltip: "Toolkit: hyperliquid_get_candles, hyperliquid_get_mids, hyperliquid_get_order_book, hyperliquid_get_meta."
         }),
     ],
 });

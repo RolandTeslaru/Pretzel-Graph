@@ -5,7 +5,11 @@ export const Alpaca = defineCredential({
     displayName: "Alpaca",
     icon: "Alpaca",
     fields: [
-        FieldBuilder.Password({ id: "apiKeyId", displayName: "API Key ID", required: true }),
-        FieldBuilder.Password({ id: "apiSecret", displayName: "API Secret", required: true }),
+        FieldBuilder.Password("apiKeyId", "API Key ID", {
+            required: true
+        }),
+        FieldBuilder.Password("apiSecret", "API Secret", {
+            required: true
+        }),
     ],
 })

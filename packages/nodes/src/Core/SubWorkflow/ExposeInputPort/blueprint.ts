@@ -9,14 +9,10 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     iconColor: "primary",
     fields: [
-        FieldBuilder.Boolean({
-            id: "required",
-            displayName: "Required",
+        FieldBuilder.Boolean("required", "Required", {
             initialValue: false
         }),
-        FieldBuilder.UniqueString({
-            id: "exposed_port_id",
-            displayName: "Exposed Port ID",
+        FieldBuilder.UniqueString("exposed_port_id", "Exposed Port ID", {
             prefix: "ExposedInputPort-",
             length: 5,
             required: false
@@ -24,10 +20,8 @@ export const Blueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Unresolved({
-            id: "output",
-            displayName: "Output",
-            polymorphicGroupId: "expose_input_port",
+        OutputBuilder.Unresolved("output", "Output", {
+            polymorphicGroupId: "expose_input_port"
         }),
     ],
 });

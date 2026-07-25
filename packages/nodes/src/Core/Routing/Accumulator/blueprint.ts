@@ -1,4 +1,4 @@
-import { dataDependencyStrategyField, defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.Accumulator",
@@ -8,32 +8,24 @@ export const Blueprint = defineBlueprint({
     accent: "group-routing",
     fields: [
         {
-            ...dataDependencyStrategyField,
+            ...FieldBuilder.DEFAULTS.dataDependencyStrategyField,
             initialValue: "OR"
         }
     ],
     inputs: [
-        InputBuilder.UnresolvedList({
-            id: "overwrite",
-            displayName: "Overwrite",
+        InputBuilder.UnresolvedList("overwrite", "Overwrite", {
             polymorphicGroupId: "data"
         }),
-        InputBuilder.UnresolvedList({
-            id: "append",
-            displayName: "Append",
+        InputBuilder.UnresolvedList("append", "Append", {
             polymorphicGroupId: "data"
         }),
     ],
     outputs: [
-        OutputBuilder.UnresolvedList({
-            id: "state",
-            displayName: "State",
+        OutputBuilder.UnresolvedList("state", "State", {
             tooltip: "The accumulated state.",
             polymorphicGroupId: "data"
         }),
-        OutputBuilder.UnresolvedList({
-            id: "prevState",
-            displayName: "Previous State",
+        OutputBuilder.UnresolvedList("prevState", "Previous State", {
             tooltip: "The previous accumulated state.",
             polymorphicGroupId: "data"
         }),

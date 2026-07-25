@@ -8,17 +8,13 @@ export const Blueprint = defineBlueprint({
     accent: "port-Text",
     fields: [],
     inputs: [
-        InputBuilder.Text({
-            id: "text",
-            displayName: "Text",
+        InputBuilder.Text("text", "Text", {
             required: true
         })
     ],
     outputs: [
-        OutputBuilder.Message({
-            id: "output",
-            displayName: "Output",
-            tooltip: "The output from the model",
+        OutputBuilder.Message("output", "Output", {
+            tooltip: "The output from the model"
         })
     ]
 })

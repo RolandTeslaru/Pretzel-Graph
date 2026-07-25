@@ -13,11 +13,15 @@ export const reconcile = (
         // @ts-expect-error swap ports: out node has no inputs, one unresolved output
         blueprint.inputs = [];
         // @ts-expect-error
-        blueprint.outputs = [OutputBuilder.Unresolved({ id: "output", displayName: "Output", polymorphicGroupId: "portal" })];
+        blueprint.outputs = [OutputBuilder.Unresolved("output", "Output", {
+            polymorphicGroupId: "portal"
+        })];
     } else {
         ui.icon = "PortalIn";
         // @ts-expect-error swap ports: in node has one unresolved input, no outputs
-        blueprint.inputs = [InputBuilder.Unresolved({ id: "input", displayName: "Input", polymorphicGroupId: "portal" })];
+        blueprint.inputs = [InputBuilder.Unresolved("input", "Input", {
+            polymorphicGroupId: "portal"
+        })];
         // @ts-expect-error
         blueprint.outputs = [];
     }

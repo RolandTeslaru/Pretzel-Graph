@@ -9,19 +9,16 @@ export const Blueprint = defineBlueprint({
     icon: "Webhook",
     accent: "utility",
     fields: [
-        FieldBuilder.UniqueString({
-            id: "path",
-            displayName: "Path",
+        FieldBuilder.UniqueString("path", "Path", {
             required: true,
             length: 32,
             placeholder: "webhook-abc123",
-            tooltip: "Unique suffix appended to your webhook server base path.",
+            tooltip: "Unique suffix appended to your webhook server base path."
         }),
-        FieldBuilder.MultiOption({
-            id: "method",
-            displayName: "HTTP Method",
+        FieldBuilder.MultiOption("method", "HTTP Method", {
             initialValue: "POST",
             variant: "select",
+
             options: [
                 { value: "GET" },
                 { value: "POST" },
@@ -29,19 +26,20 @@ export const Blueprint = defineBlueprint({
                 { value: "PATCH" },
                 { value: "DELETE" },
             ],
-            tooltip: "Method accepted by this webhook route.",
+
+            tooltip: "Method accepted by this webhook route."
         }),
-        FieldBuilder.MultiOption({
-            id: "responseMode",
-            displayName: "Response Mode",
+        FieldBuilder.MultiOption("responseMode", "Response Mode", {
             initialValue: "onReceived",
             variant: "select",
+
             options: [
                 { value: "onReceived", displayName: "On Received" },
                 { value: "workflowCompletion", displayName: "When Workflow Completes" },
                 { value: "manual", displayName: "Manual" },
             ],
-            tooltip: "Whether the webhook response should be sent immediately with an empty body, or delayed until the workflow finishes executing and includes a response payload.",
+
+            tooltip: "Whether the webhook response should be sent immediately with an empty body, or delayed until the workflow finishes executing and includes a response payload."
         }),
     ],
     inputs: [],
@@ -54,25 +52,17 @@ export const Blueprint = defineBlueprint({
         }
     ],
     outputs: [
-        OutputBuilder.Data({
-            id: "body",
-            displayName: "Body",
-            tooltip: "Webhook request body.",
+        OutputBuilder.Data("body", "Body", {
+            tooltip: "Webhook request body."
         }),
-        OutputBuilder.Data({
-            id: "headers",
-            displayName: "Headers",
-            tooltip: "Webhook request headers.",
+        OutputBuilder.Data("headers", "Headers", {
+            tooltip: "Webhook request headers."
         }),
-        OutputBuilder.Data({
-            id: "query",
-            displayName: "Query",
-            tooltip: "Webhook query parameters.",
+        OutputBuilder.Data("query", "Query", {
+            tooltip: "Webhook query parameters."
         }),
-        OutputBuilder.Data({
-            id: "params",
-            displayName: "Params",
-            tooltip: "Webhook path parameters.",
+        OutputBuilder.Data("params", "Params", {
+            tooltip: "Webhook path parameters."
         }),
     ],
 });
