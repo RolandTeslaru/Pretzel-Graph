@@ -4,20 +4,21 @@ import { Blueprint } from "./blueprint";
 
 const asField = (b: unknown) => b as unknown as Foundations.Field;
 
-const queryField = () => asField(FieldBuilder.Json({
-    id: "query", displayName: "Query", initialValue: {},
-    tooltip: "Filter document, e.g. { \"status\": \"active\" }.",
+const queryField = () => asField(FieldBuilder.Json("query", "Query", {
+    initialValue: {},
+    tooltip: "Filter document, e.g. { \"status\": \"active\" }."
 }));
-const limitField = () => asField(FieldBuilder.Integer({
-    id: "limit", displayName: "Limit", initialValue: 50, min: 1,
+const limitField = () => asField(FieldBuilder.Integer("limit", "Limit", {
+    initialValue: 50,
+    min: 1
 }));
-const updateField = () => asField(FieldBuilder.Json({
-    id: "update", displayName: "Update", initialValue: {},
-    tooltip: "Fields to $set, e.g. { \"status\": \"archived\" }.",
+const updateField = () => asField(FieldBuilder.Json("update", "Update", {
+    initialValue: {},
+    tooltip: "Fields to $set, e.g. { \"status\": \"archived\" }."
 }));
-const documentsField = () => asField(FieldBuilder.Json({
-    id: "documents", displayName: "Documents", initialValue: [],
-    tooltip: "Array of documents to insert.",
+const documentsField = () => asField(FieldBuilder.Json("documents", "Documents", {
+    initialValue: [],
+    tooltip: "Array of documents to insert."
 }));
 
 // Derives per-operation fields + result port from `operation`:
@@ -42,8 +43,12 @@ export const reconcile = (
 
     // find emits a DataList of documents; the write ops emit a single Data summary object.
     const resultOutput = fieldValues.operation === "find"
-        ? OutputBuilder.DataList({ id: "result", displayName: "Documents", tooltip: "Documents matched by the query — one item per document." })
-        : OutputBuilder.Data({ id: "result", displayName: "Result", tooltip: "Operation result summary." });
+        ? OutputBuilder.DataList("result", "Documents", {
+        tooltip: "Documents matched by the query — one item per document."
+    })
+        : OutputBuilder.Data("result", "Result", {
+        tooltip: "Operation result summary."
+    });
 
     // @ts-expect-error rebuild the readonly fields tuple
     blueprint.fields = [...kept, ...opFields];

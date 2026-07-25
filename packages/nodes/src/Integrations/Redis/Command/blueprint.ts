@@ -11,30 +11,25 @@ export const Blueprint = defineBlueprint({
     fields: [
         // operation drives the field schema via reconcile. Base (GET default) is operation + key;
         // SET reconciles in `value` (+ optional `ttl`). GET / DELETE need only the key.
-        FieldBuilder.reconciling(FieldBuilder.MultiOption({
-            id: "operation",
-            displayName: "Operation",
+        FieldBuilder.reconciling(FieldBuilder.MultiOption("operation", "Operation", {
             options: [
                 { value: "GET", displayName: "Get" },
                 { value: "SET", displayName: "Set" },
                 { value: "DELETE", displayName: "Delete" },
             ],
+
             initialValue: "GET",
-            tooltip: "The Redis command to run.",
+            tooltip: "The Redis command to run."
         })),
-        FieldBuilder.String({
-            id: "key",
-            displayName: "Key",
+        FieldBuilder.String("key", "Key", {
             required: true,
-            placeholder: "my:key",
+            placeholder: "my:key"
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Data({
-            id: "result",
-            displayName: "Result",
-            tooltip: "GET → value (or null); SET → \"OK\"; DELETE → number of keys removed.",
+        OutputBuilder.Data("result", "Result", {
+            tooltip: "GET → value (or null); SET → \"OK\"; DELETE → number of keys removed."
         }),
     ],
 });

@@ -5,6 +5,9 @@ export const GoogleGemini = defineCredential({
     displayName: "Google Gemini",
     icon: "GoogleGemini",
     fields: [
-        FieldBuilder.Password({ id: "apiKey", displayName: "API Key", required: true, tooltip: "Google AI Studio API key." }),
+        FieldBuilder.Password("apiKey", "API Key", {
+            required: true,
+            tooltip: "Google AI Studio API key."
+        }),
     ],
 })

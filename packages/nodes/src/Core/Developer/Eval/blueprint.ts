@@ -7,22 +7,14 @@ export const Blueprint = defineBlueprint({
     icon: "SquareTerminal",
     accent: "utility",
     fields: [
-        FieldBuilder.Script({
-            id: "code",
-            displayName: "Script",
-            initialValue: "return 'Hello ' + $in.input;",
+        FieldBuilder.Script("code", "Script", {
+            initialValue: "return 'Hello ' + $in.input;"
         }),
     ],
     inputs: [
-        InputBuilder.Message({
-            id: "input",
-            displayName: "Input",
-        }),
+        InputBuilder.Message("input", "Input", {}),
     ],
     outputs: [
-        OutputBuilder.Text({
-            id: "output",
-            displayName: "Output",
-        }),
+        OutputBuilder.Text("output", "Output", {}),
     ],
 });

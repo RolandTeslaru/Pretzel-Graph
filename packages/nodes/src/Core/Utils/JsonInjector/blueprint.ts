@@ -7,17 +7,12 @@ export const Blueprint = defineBlueprint({
     icon: "Braces",
     accent: "utility",
     fields: [
-        FieldBuilder.Json({
-            id: "data",
-            displayName: "JSON Data",
-            initialValue: {},
+        FieldBuilder.Json("data", "JSON Data", {
+            initialValue: {}
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Data({
-            id: "output",
-            displayName: "Output",
-        }),
+        OutputBuilder.Data("output", "Output", {}),
     ],
 });

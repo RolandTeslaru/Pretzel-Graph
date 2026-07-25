@@ -7,31 +7,25 @@ export const Blueprint = defineBlueprint({
     icon: "Mail",
     accent: "port-Message",
     fields: [
-        FieldBuilder.reconciling(FieldBuilder.MultiOption({
-            id: "role",
-            displayName: "Role",
+        FieldBuilder.reconciling(FieldBuilder.MultiOption("role", "Role", {
             options: [
                 { value: "Human" },
                 { value: "System" },
                 { value: "Tool" },
             ],
+
             initialValue: "Human",
-            variant: "tab",
+            variant: "tab"
         })),
-        FieldBuilder.String({
-            id: "content",
-            displayName: "Content",
+        FieldBuilder.String("content", "Content", {
             initialValue: "",
             multiline: true,
             placeholder: "Message content",
-            isExpression: true,
+            isExpression: true
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Message({
-            id: "message",
-            displayName: "Message",
-        }),
+        OutputBuilder.Message("message", "Message", {}),
     ],
 });

@@ -9,66 +9,49 @@ export const Blueprint = defineBlueprint({
     icon: "ShieldQuestionMark",
     accent: "utility",
     fields: [
-        FieldBuilder.reconciling(FieldBuilder.MultiOption({
-            id: "variant",
-            displayName: "Mode",
+        FieldBuilder.reconciling(FieldBuilder.MultiOption("variant", "Mode", {
             options: [
                 { value: "confirm", displayName: "Approve / Reject" },
                 { value: "choice",  displayName: "Choice" },
                 { value: "form",    displayName: "Form" },
             ],
+
             initialValue: "confirm",
-            tooltip: "What the workbench dialog asks the human for.",
+            tooltip: "What the workbench dialog asks the human for."
         })),
-        FieldBuilder.String({
-            id: "title",
-            displayName: "Title",
-            placeholder: "Review required",
+        FieldBuilder.String("title", "Title", {
+            placeholder: "Review required"
         }),
-        FieldBuilder.String({
-            id: "message",
-            displayName: "Message",
-            placeholder: "Approve this action?",
+        FieldBuilder.String("message", "Message", {
+            placeholder: "Approve this action?"
         }),
-        FieldBuilder.Integer({
-            id: "timeoutMs",
-            displayName: "Timeout (ms)",
+        FieldBuilder.Integer("timeoutMs", "Timeout (ms)", {
             initialValue: 24 * 60 * 60_000,
             min: 0,
-            tooltip: "How long to wait for a response before the node times out.",
+            tooltip: "How long to wait for a response before the node times out."
         }),
-        FieldBuilder.String({
-            id: "approveLabel",
-            displayName: "Approve label",
-            initialValue: "Approve",
+        FieldBuilder.String("approveLabel", "Approve label", {
+            initialValue: "Approve"
         }),
-        FieldBuilder.String({
-            id: "rejectLabel",
-            displayName: "Reject label",
-            initialValue: "Reject",
+        FieldBuilder.String("rejectLabel", "Reject label", {
+            initialValue: "Reject"
         }),
     ],
     inputs: [
-        InputBuilder.Unresolved({
-            id: "input",
-            displayName: "Input",
+        InputBuilder.Unresolved("input", "Input", {
             required: false,
             tooltip: "Optional data passed through on the chosen branch.",
-            polymorphicGroupId: "data",
+            polymorphicGroupId: "data"
         }),
     ],
     outputs: [
-        OutputBuilder.Unresolved({
-            id: "approved",
-            displayName: "Approved",
+        OutputBuilder.Unresolved("approved", "Approved", {
             tooltip: "Fires when the human approves.",
-            polymorphicGroupId: "data",
+            polymorphicGroupId: "data"
         }),
-        OutputBuilder.Unresolved({
-            id: "rejected",
-            displayName: "Rejected",
+        OutputBuilder.Unresolved("rejected", "Rejected", {
             tooltip: "Fires when the human rejects.",
-            polymorphicGroupId: "data",
+            polymorphicGroupId: "data"
         }),
     ],
 });

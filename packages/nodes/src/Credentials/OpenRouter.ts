@@ -5,6 +5,8 @@ export const OpenRouter = defineCredential({
     displayName: "OpenRouter",
     icon: "OpenRouter",
     fields: [
-        FieldBuilder.Password({ id: "apiKey", displayName: "API Key", required: true }),
+        FieldBuilder.Password("apiKey", "API Key", {
+            required: true
+        }),
     ],
 })

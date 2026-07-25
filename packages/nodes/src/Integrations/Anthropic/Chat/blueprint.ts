@@ -9,9 +9,7 @@ export const Blueprint = defineBlueprint({
     accent: "port-LanguageModel",
     credentials: [Anthropic],
     fields: [
-        FieldBuilder.MultiOption({
-            id: "model",
-            displayName: "Model",
+        FieldBuilder.MultiOption("model", "Model", {
             options: [
                 { value: "claude-sonnet-5", displayName: "Claude Sonnet 5" },
                 { value: "claude-fable-5", displayName: "Claude Fable 5" },
@@ -21,23 +19,20 @@ export const Blueprint = defineBlueprint({
                 { value: "claude-opus-4-6", displayName: "Claude Opus 4.6" },
                 { value: "claude-haiku-4-5", displayName: "Claude Haiku 4.5" },
             ],
-            initialValue: "claude-sonnet-5",
+
+            initialValue: "claude-sonnet-5"
         }),
-        FieldBuilder.Integer({
-            id: "maxTokens",
-            displayName: "Max Tokens",
+        FieldBuilder.Integer("maxTokens", "Max Tokens", {
             required: false,
             min: 1,
             step: 1,
-            tooltip: "Maximum number of tokens to generate.",
+            tooltip: "Maximum number of tokens to generate."
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.LanguageModel({
-            id: "languageModel",
-            displayName: "Language Model",
-            tooltip: "The language model instance used for this response, useful for chaining calls with the same model and settings.",
+        OutputBuilder.LanguageModel("languageModel", "Language Model", {
+            tooltip: "The language model instance used for this response, useful for chaining calls with the same model and settings."
         })
     ]
 })

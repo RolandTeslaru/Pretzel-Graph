@@ -9,30 +9,22 @@ export const Blueprint = defineBlueprint({
     fields: [
         // Single boolean expression — pre-evaluated by evaluateFieldValues() to a real
         // boolean (coerced via the "Boolean" variant). Replaces the old condition tree.
-        FieldBuilder.Boolean({
-            id: "condition",
-            displayName: "Condition",
+        FieldBuilder.Boolean("condition", "Condition", {
             initialValue: true,
-            isExpression: true,
+            isExpression: true
         }),
     ],
     inputs: [
-        InputBuilder.Unresolved({
-            id: "input",
-            displayName: "Input",
+        InputBuilder.Unresolved("input", "Input", {
             polymorphicGroupId: "data"
         }),
     ],
     outputs: [
-        OutputBuilder.Unresolved({
-            id: "true",
-            displayName: "True",
+        OutputBuilder.Unresolved("true", "True", {
             tooltip: "Output when condition is true.",
             polymorphicGroupId: "data"
         }),
-        OutputBuilder.Unresolved({
-            id: "false",
-            displayName: "False",
+        OutputBuilder.Unresolved("false", "False", {
             tooltip: "Output when condition is false.",
             polymorphicGroupId: "data"
         }),

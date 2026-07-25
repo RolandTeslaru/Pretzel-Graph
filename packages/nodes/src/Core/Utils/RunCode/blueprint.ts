@@ -8,17 +8,12 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     iconColor: "color-emerald-400",
     fields: [
-        FieldBuilder.Script({
-            id: "code",
-            displayName: "Code",
-            initialValue: "return { hello: \"world\" };",
+        FieldBuilder.Script("code", "Code", {
+            initialValue: "return { hello: \"world\" };"
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Data({
-            id: "output",
-            displayName: "Output",
-        }),
+        OutputBuilder.Data("output", "Output", {}),
     ],
 });
