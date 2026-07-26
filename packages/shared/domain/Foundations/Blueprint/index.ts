@@ -3,6 +3,7 @@ import { Port } from "../Port"
 import { Field } from "../Field"
 import { Webhook } from "../../Webhook"
 import { Vault } from "../../Vault"
+import * as DerivativeMod from "./derivative"
 
 // ============================================
 // BLUEPRINT
@@ -28,6 +29,32 @@ export namespace Blueprint {
             .join(",");
 
         return `${blueprintId}:${parts}` as Blueprint.ReconciledId;
+    }
+
+    export import Derivative = DerivativeMod.Derivative
+
+    // Folds `_derivatives` against a node's field values. Shared so the editor and the
+    // execution path produce byte-identical results — the editor no longer round-trips.
+    export const derive       = DerivativeMod.derive
+    export const deriveByPath = DerivativeMod.deriveByPath
+
+    /**
+     * Identity for a node's resolved blueprint, whichever mechanism produced it.
+     *
+     * Derivative blueprints key on the matched path (`Blueprint.Id:shape==number/rounding!=none`)
+     * rather than createReconciledId's flat pair list — that only folds reconcile fields declared
+     * on the *base*, so a discriminant introduced by a branch would never change the key.
+     */
+    export const deriveId = (
+        blueprint   : Blueprint,
+        fieldValues : Record<Field.Id, Field.Value>,
+    ): Blueprint.ReconciledId => {
+        if (!blueprint._derivatives?.length)
+            return createReconciledId(blueprint.id, blueprint.fields, fieldValues);
+
+        const { derivativeId } = derive(blueprint, fieldValues);
+
+        return (derivativeId ? `${blueprint.id}:${derivativeId}` : blueprint.id) as Blueprint.ReconciledId;
     }
 
     // Reconciled ids are `${blueprintId}:${field=value,...}`. Base ids never contain a colon.
@@ -92,6 +119,9 @@ export namespace Blueprint {
         webhooks:  z.array(Webhook.Schema).readonly().optional(),
         // Input port id whose array is iterated for this node's item-scoped fields.
         itemScope: z.string().optional(),
+        // Conditional structure, folded by Blueprint.derive. Present on base blueprints only —
+        // derive() strips it, so a derived blueprint can never be derived twice.
+        _derivatives: z.array(DerivativeMod.Derivative.Schema).readonly().optional(),
     }).readonly()
 }
 export type Blueprint = z.infer<typeof Blueprint.Schema>

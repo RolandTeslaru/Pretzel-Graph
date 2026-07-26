@@ -41,15 +41,15 @@ function ProjectsLayout() {
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6">
-            <ScrollArea.Root className="h-screen sticky top-0 left-0 pr-2">
+            <ScrollArea.Root className="h-screen sticky top-0 left-0 pr-2 ">
                 <FileSystemTree
                     className=" overflow-auto"
                 />
             </ScrollArea.Root>
 
-            <div>
+            <ScrollArea.Root className="h-screen">
                 <Outlet />
-            </div>
+            </ScrollArea.Root>
         </div>
     )
 }

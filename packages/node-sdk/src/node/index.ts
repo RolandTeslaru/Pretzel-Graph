@@ -250,6 +250,26 @@ export abstract class RuntimeNode<
     }
 
     /**
+     * Retypes `incoming` against narrowed field values so a derivative's branch-only ports are
+     * readable. `satisfies` can't do this — it checks an expression without rebinding its type,
+     * and TypeScript won't correlate two independent parameters.
+     *
+     *     if (fields.shape === "text") {
+     *         const input = this.incomingFor(fields, incoming);
+     *         input.suffix   // declared by the shape==text branch
+     *     }
+     *
+     * Sound by construction: derive() only wires a branch's ports when its condition matched,
+     * which is the same condition the narrowed `fields` type encodes.
+     */
+    protected incomingFor<T_Values>(
+        _fields:  T_Values,
+        incoming: InferIncoming<T_Blueprint>,
+    ): InferIncoming<T_Blueprint, T_Values> {
+        return incoming as InferIncoming<T_Blueprint, T_Values>;
+    }
+
+    /**
      * Convenience over `mapItems` for the single-field case: evaluates one item-scoped field per
      * element. For multiple item fields per element, use `mapItems` directly to share one loop.
      */
