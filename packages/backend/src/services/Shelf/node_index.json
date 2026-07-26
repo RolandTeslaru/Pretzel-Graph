@@ -1,6 +1,6 @@
 {
-  "version": "1785078061787",
-  "generatedAt": "2026-07-26T15:01:01.787Z",
+  "version": "1785093547033",
+  "generatedAt": "2026-07-26T19:19:07.033Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -975,6 +975,269 @@
         }
       ]
     },
+    "Core.Developer.DerivativeTest": {
+      "id": "Core.Developer.DerivativeTest",
+      "credentials": [],
+      "ui": {
+        "displayName": "Derivative Test",
+        "description": "Sandbox node for exercising conditional blueprint structure.",
+        "icon": "GitBranch",
+        "accent": "utility"
+      },
+      "fields": [
+        {
+          "id": "shape",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Shape",
+          "tooltip": "Selects which structure this node takes.",
+          "variant": "MultiOption",
+          "initialValue": "text",
+          "options": [
+            {
+              "value": "text",
+              "displayName": "Text",
+              "description": "One string field, one data output."
+            },
+            {
+              "value": "number",
+              "displayName": "Number",
+              "description": "Numeric field with a nested rounding branch."
+            },
+            {
+              "value": "none",
+              "displayName": "None",
+              "description": "No branch — the bare base."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "in",
+          "displayName": "In",
+          "internal": false,
+          "variant": "Data",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "passthrough",
+          "displayName": "Passthrough",
+          "variant": "Data"
+        }
+      ],
+      "_derivatives": [
+        {
+          "condition": {
+            "fieldId": "shape",
+            "operator": "==",
+            "value": "text"
+          },
+          "fields": [
+            {
+              "id": "text",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Text",
+              "variant": "String",
+              "initialValue": "hello",
+              "multiline": false,
+              "placeholder": "Echoed to the output"
+            }
+          ],
+          "inputs": [
+            {
+              "id": "suffix",
+              "displayName": "Suffix",
+              "internal": false,
+              "variant": "Data",
+              "required": false
+            }
+          ],
+          "outputs": [
+            {
+              "id": "value",
+              "displayName": "Value",
+              "variant": "Data"
+            },
+            {
+              "id": "length",
+              "displayName": "Length",
+              "variant": "Integer"
+            }
+          ],
+          "ui": {
+            "icon": "Type"
+          },
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "shape",
+            "operator": "==",
+            "value": "number"
+          },
+          "fields": [
+            {
+              "id": "amount",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Amount",
+              "variant": "Integer",
+              "initialValue": 1,
+              "step": 1
+            },
+            {
+              "id": "rounding",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Rounding",
+              "variant": "MultiOption",
+              "initialValue": "none",
+              "options": [
+                {
+                  "value": "none",
+                  "displayName": "None"
+                },
+                {
+                  "value": "fixed",
+                  "displayName": "Fixed decimals"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "value",
+              "displayName": "Value",
+              "variant": "Data"
+            }
+          ],
+          "ui": {
+            "icon": "Hash",
+            "displayName": "Derivative Test (numeric)"
+          },
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "rounding",
+                "operator": "!=",
+                "value": "none"
+              },
+              "fields": [
+                {
+                  "id": "decimals",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Decimals",
+                  "variant": "Integer",
+                  "initialValue": 2,
+                  "min": 0,
+                  "max": 10,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "precision",
+                  "displayName": "Precision",
+                  "variant": "Integer"
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
+        }
+      ]
+    },
     "Core.Developer.ErrorThrower": {
       "id": "Core.Developer.ErrorThrower",
       "credentials": [],
@@ -1793,6 +2056,29 @@
               "value": "XOR",
               "displayName": "(XOR) Exactly one signal required",
               "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
             }
           ],
           "kind": "select"

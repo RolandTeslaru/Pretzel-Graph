@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { Button } from '@pretzel-graph/standard-ui/foundations'
+import { Button, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import { openCreateFolderDialog, openCreateWorkflowDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
 import { FolderCard } from './-components/FolderCard'
 import { WorkflowCard } from './-components/WorkflowCard'
@@ -71,7 +71,8 @@ function FolderView({ folderId }: { folderId: Library.Folder.Id }) {
 
     return (
         <>
-            <div className="flex items-center justify-between mb-4">
+            {/* Top Bar */}
+            <div className="absolute top-0 w-full flex items-center justify-between mb-4 z-10">
                 <Breadcrumbs cwd={breadCrumbs} />
                 <div className="flex items-center gap-2">
                     <Button
@@ -92,29 +93,31 @@ function FolderView({ folderId }: { folderId: Library.Folder.Id }) {
                 </div>
             </div>
 
-            {isEmpty ? (
-                <EmptyFolder />
-            ) : (
-                <>
-                    {childFolders.length > 0 && (
-                        <>
-                            <h4>{childFolders.length} Folder{childFolders.length === 1 ? '' : 's'}</h4>
-                            <div className="grid grid-cols-2 mt-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-3">
-                                {childFolders.map((f) => <FolderCard key={f.id} folder={f} />)}
-                            </div>
-                        </>
-                    )}
-                    {workflows.length > 0 && (
-                        <>
-                            <h4>{workflows.length} Workflow{workflows.length === 1 ? '' : 's'}</h4>
-                            <div className="grid grid-cols-2 mt-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-3">
-                            {workflows.map((w) => <WorkflowCard key={w.id} workflow={w} />)}
-                            </div>
-                        </>
-                    )}
-                </>
-                
-            )}
+            <div className='pt-12 pb-20'>
+                {isEmpty ? (
+                    <EmptyFolder />
+                ) : (
+                    <>
+                        {childFolders.length > 0 && (
+                            <>
+                                <h4>{childFolders.length} Folder{childFolders.length === 1 ? '' : 's'}</h4>
+                                <div className="grid grid-cols-2 mt-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-3">
+                                    {childFolders.map((f) => <FolderCard key={f.id} folder={f} />)}
+                                </div>
+                            </>
+                        )}
+                        {workflows.length > 0 && (
+                            <>
+                                <h4>{workflows.length} Workflow{workflows.length === 1 ? '' : 's'}</h4>
+                                <div className="grid grid-cols-2 mt-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-3">
+                                {workflows.map((w) => <WorkflowCard key={w.id} workflow={w} />)}
+                                </div>
+                            </>
+                        )}
+                    </>
+                    
+                )}
+            </div>
         </>
     )
 }

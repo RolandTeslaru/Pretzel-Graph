@@ -434,7 +434,7 @@ export namespace FieldBuilder {
         );
 
 
-        export const FIELDS = [
+        export const StandardNode = [
             signalDependencyStrategyField,
             dataDependencyStrategyField,
             onErrorStrategyField,
@@ -445,7 +445,7 @@ export namespace FieldBuilder {
         // `field.id as string`, not String(...) — inside this namespace `String` is
         // FieldBuilder.String, the builder, not the global.
         export const IDS: ReadonlySet<string> = new Set(
-            [...FIELDS, ...TOOL_FIELDS].map(field => field.id as string),
+            [...StandardNode, ...TOOL_FIELDS].map(field => field.id as string),
         );
 
         // Return type stays precise — the shape compiler infers ambient field value types from it.
@@ -454,10 +454,12 @@ export namespace FieldBuilder {
         export function forBlueprint<const T_ToolCompatible extends boolean | undefined>(
             toolCompatible: T_ToolCompatible,
         ): [T_ToolCompatible] extends [true]
-            ? readonly [...typeof FIELDS, ...typeof TOOL_FIELDS]
-            : typeof FIELDS {
+            ? readonly [...typeof StandardNode, ...typeof TOOL_FIELDS]
+            : typeof StandardNode {
 
-            return (toolCompatible ? [...FIELDS, ...TOOL_FIELDS] : FIELDS) as any;
+            return (toolCompatible ? [...StandardNode, ...TOOL_FIELDS] : StandardNode) as any;
         }
     }
+
+
 }
