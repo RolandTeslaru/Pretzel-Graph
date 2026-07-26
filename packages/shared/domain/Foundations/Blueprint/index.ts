@@ -1,8 +1,8 @@
 import { z } from "zod"
-import { Port } from "./Port"
-import { Field } from "./Field"
-import { Webhook } from "../Webhook"
-import { Vault } from "../Vault"
+import { Port } from "../Port"
+import { Field } from "../Field"
+import { Webhook } from "../../Webhook"
+import { Vault } from "../../Vault"
 
 // ============================================
 // BLUEPRINT

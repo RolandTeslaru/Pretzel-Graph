@@ -1,6 +1,6 @@
 {
-  "version": "1784812159585",
-  "generatedAt": "2026-07-23T13:09:19.585Z",
+  "version": "1785078061787",
+  "generatedAt": "2026-07-26T15:01:01.787Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -3380,6 +3380,17 @@
       },
       "fields": [
         {
+          "id": "text",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Text",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": true,
+          "placeholder": ""
+        },
+        {
           "id": "signalDependency",
           "advanced": false,
           "required": false,
@@ -3459,16 +3470,7 @@
           "kind": "select"
         }
       ],
-      "inputs": [
-        {
-          "id": "text",
-          "displayName": "Text",
-          "internal": false,
-          "variant": "Text",
-          "initialValue": "",
-          "required": true
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "output",
@@ -5121,6 +5123,18 @@
       },
       "fields": [
         {
+          "id": "symbol",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Symbol",
+          "tooltip": "US stock symbol (e.g. AAPL, MSFT).",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "AAPL"
+        },
+        {
           "id": "environment",
           "advanced": true,
           "required": false,
@@ -5295,17 +5309,7 @@
           "initialValue": false
         }
       ],
-      "inputs": [
-        {
-          "id": "symbol",
-          "displayName": "Symbol",
-          "tooltip": "US stock symbol (e.g. AAPL, MSFT).",
-          "internal": false,
-          "variant": "Text",
-          "initialValue": "",
-          "required": true
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "bars",
@@ -5507,6 +5511,18 @@
       },
       "fields": [
         {
+          "id": "query",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Query",
+          "tooltip": "For Pyth: a coin symbol (e.g. BTC, ETH, SOL). For DeFiLlama: a protocol slug (e.g. uniswap, aave, curve).",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "BTC  or  uniswap"
+        },
+        {
           "id": "dataSource",
           "advanced": false,
           "required": false,
@@ -5617,17 +5633,7 @@
           "initialValue": false
         }
       ],
-      "inputs": [
-        {
-          "id": "query",
-          "displayName": "Query",
-          "tooltip": "For Pyth: a coin symbol (e.g. BTC, ETH, SOL). For DeFiLlama: a protocol slug (e.g. uniswap, aave, curve).",
-          "internal": false,
-          "variant": "Text",
-          "initialValue": "",
-          "required": true
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "price",
@@ -5740,6 +5746,30 @@
           "placeholder": "0x... (leave empty to create a new wallet)"
         },
         {
+          "id": "tokenAddress",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Token Address",
+          "tooltip": "ERC-20 contract address. Leave empty to query native ETH/MATIC balance.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "0x... (leave empty for native ETH)"
+        },
+        {
+          "id": "targetAddress",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Target Address",
+          "tooltip": "Address to check the balance for. Defaults to the node's own wallet address.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "0x... (defaults to wallet address)"
+        },
+        {
           "id": "signalDependency",
           "advanced": false,
           "required": false,
@@ -5829,26 +5859,7 @@
           "initialValue": false
         }
       ],
-      "inputs": [
-        {
-          "id": "tokenAddress",
-          "displayName": "Token Address",
-          "tooltip": "ERC-20 contract address. Leave empty to query native ETH/MATIC balance.",
-          "internal": false,
-          "variant": "Text",
-          "initialValue": "",
-          "required": false
-        },
-        {
-          "id": "targetAddress",
-          "displayName": "Target Address",
-          "tooltip": "Address to check the balance for. Defaults to the node's own wallet address.",
-          "internal": false,
-          "variant": "Text",
-          "initialValue": "",
-          "required": false
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "balance",
@@ -6124,6 +6135,17 @@
       },
       "fields": [
         {
+          "id": "query",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Query",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "What do you want to search for?"
+        },
+        {
           "id": "maxResults",
           "advanced": false,
           "required": false,
@@ -6266,16 +6288,7 @@
           "initialValue": false
         }
       ],
-      "inputs": [
-        {
-          "id": "query",
-          "displayName": "Query",
-          "internal": false,
-          "variant": "Text",
-          "initialValue": "",
-          "required": true
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "documents",
@@ -6378,12 +6391,12 @@
       },
       "fields": [
         {
-          "id": "defaultAddress",
+          "id": "address",
           "advanced": false,
-          "required": false,
+          "required": true,
           "reconcile": false,
-          "displayName": "Default Wallet Address",
-          "tooltip": "Optional fallback wallet address. Used when the 'address' input port is empty.",
+          "displayName": "Wallet Address",
+          "tooltip": "Public EVM wallet address. Read-only — no signing or private key involved.",
           "variant": "String",
           "initialValue": "",
           "multiline": false,
@@ -6479,17 +6492,7 @@
           "initialValue": false
         }
       ],
-      "inputs": [
-        {
-          "id": "address",
-          "displayName": "Wallet Address",
-          "tooltip": "Public EVM wallet address. Read-only — no signing or private key involved. Falls back to the Default Wallet Address field if empty.",
-          "internal": false,
-          "variant": "Text",
-          "initialValue": "",
-          "required": false
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "state",
@@ -6603,6 +6606,18 @@
         "iconColor": "color-cyan-500"
       },
       "fields": [
+        {
+          "id": "coin",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Coin",
+          "tooltip": "HyperLiquid coin symbol (e.g. BTC, ETH, SOL).",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "BTC"
+        },
         {
           "id": "interval",
           "advanced": false,
@@ -6743,17 +6758,7 @@
           "initialValue": false
         }
       ],
-      "inputs": [
-        {
-          "id": "coin",
-          "displayName": "Coin",
-          "tooltip": "HyperLiquid coin symbol (e.g. BTC, ETH, SOL).",
-          "internal": false,
-          "variant": "Text",
-          "initialValue": "",
-          "required": true
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "candles",
@@ -6860,6 +6865,18 @@
         "accent": "port-DataList"
       },
       "fields": [
+        {
+          "id": "eventTicker",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Event Ticker",
+          "tooltip": "Optional Kalshi event ticker to scope markets to one event. Leave empty to list markets by status.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "KXPRES-24"
+        },
         {
           "id": "status",
           "advanced": false,
@@ -6988,17 +7005,7 @@
           "initialValue": false
         }
       ],
-      "inputs": [
-        {
-          "id": "eventTicker",
-          "displayName": "Event Ticker",
-          "tooltip": "Optional Kalshi event ticker to scope markets to one event. Leave empty to list markets by status.",
-          "internal": false,
-          "variant": "Text",
-          "initialValue": "",
-          "required": false
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "markets",
@@ -7116,6 +7123,18 @@
         "accent": "port-DataList"
       },
       "fields": [
+        {
+          "id": "ticker",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Ticker",
+          "tooltip": "US stock ticker symbol (e.g. AAPL, MSFT, TSLA). Unused by the Market Status action.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "AAPL"
+        },
         {
           "id": "action",
           "advanced": false,
@@ -7239,17 +7258,7 @@
           "initialValue": false
         }
       ],
-      "inputs": [
-        {
-          "id": "ticker",
-          "displayName": "Ticker",
-          "tooltip": "US stock ticker symbol (e.g. AAPL, MSFT, TSLA). Unused by the Market Status action.",
-          "internal": false,
-          "variant": "Text",
-          "initialValue": "",
-          "required": true
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "candles",
@@ -8239,18 +8248,355 @@
       ],
       "ui": {
         "displayName": "Polymarket Market",
-        "description": "Reads Polymarket prediction-market data: events, markets, prices and order books.",
+        "description": "Reads Polymarket prediction-market data: markets, events, tags, series, order books, prices and trade analytics.",
         "icon": "Polymarket",
         "accent": "port-DataList"
       },
       "fields": [
         {
-          "id": "status",
+          "id": "action",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": false,
+          "displayName": "Action",
+          "tooltip": "What kind of request to make.",
+          "variant": "MultiOption",
+          "initialValue": "search",
+          "options": [
+            {
+              "value": "search",
+              "displayName": "Search",
+              "description": "Search Polymarket markets or the public discovery index."
+            },
+            {
+              "value": "list",
+              "displayName": "List",
+              "description": "List metadata, exchange records, or market analytics."
+            },
+            {
+              "value": "get",
+              "displayName": "Get",
+              "description": "Fetch one resource, market-data view, or analytic."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "searchKind",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": false,
+          "displayName": "Search",
+          "tooltip": "Which index to search.",
+          "variant": "MultiOption",
+          "initialValue": "markets",
+          "options": [
+            {
+              "value": "markets",
+              "displayName": "Markets",
+              "description": "Search market questions and slugs, ordered by trading volume."
+            },
+            {
+              "value": "public",
+              "displayName": "Public Discovery",
+              "description": "Search across Polymarket events, markets, tags, and public profiles."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "listAPI",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Source",
+          "tooltip": "Which Polymarket API to list from.",
+          "variant": "MultiOption",
+          "initialValue": "gamma",
+          "options": [
+            {
+              "value": "gamma",
+              "displayName": "Metadata",
+              "description": "Gamma metadata, discovery, discussion, and sports."
+            },
+            {
+              "value": "clob",
+              "displayName": "Exchange",
+              "description": "CLOB-native markets and public market activity."
+            },
+            {
+              "value": "data",
+              "displayName": "Analytics",
+              "description": "Public trades and market holders from the Data API."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "listGammaKind",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Records",
+          "tooltip": "Which metadata records to list.",
+          "variant": "MultiOption",
+          "initialValue": "markets",
+          "options": [
+            {
+              "value": "markets",
+              "displayName": "Markets",
+              "description": "List active, closed, or all markets ordered by trading volume."
+            },
+            {
+              "value": "events",
+              "displayName": "Events",
+              "description": "List events and their grouped markets, ordered by trading volume."
+            },
+            {
+              "value": "tags",
+              "displayName": "Tags",
+              "description": "List the tags Polymarket uses to categorize markets and events."
+            },
+            {
+              "value": "series",
+              "displayName": "Series",
+              "description": "List recurring or grouped Polymarket series, optionally by slug."
+            },
+            {
+              "value": "comments",
+              "displayName": "Comments",
+              "description": "Read public comments for an event, market, or series."
+            },
+            {
+              "value": "sports",
+              "displayName": "Sports",
+              "description": "List the sports and leagues currently supported by Polymarket."
+            },
+            {
+              "value": "teams",
+              "displayName": "Teams",
+              "description": "List sports teams, optionally filtered by team name."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "listClobKind",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Records",
+          "tooltip": "Which exchange records to list.",
+          "variant": "MultiOption",
+          "initialValue": "markets",
+          "options": [
+            {
+              "value": "markets",
+              "displayName": "Markets",
+              "description": "List cursor-paginated CLOB-native market configurations."
+            },
+            {
+              "value": "activity",
+              "displayName": "Market Activity",
+              "description": "List recent public trade events for a condition ID."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "listDataKind",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Records",
+          "tooltip": "Which analytics records to list.",
+          "variant": "MultiOption",
+          "initialValue": "trades",
+          "options": [
+            {
+              "value": "trades",
+              "displayName": "Trades",
+              "description": "List public Data API trades for a condition ID."
+            },
+            {
+              "value": "holders",
+              "displayName": "Holders",
+              "description": "List the largest outcome-token holders for a condition ID."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "getAPI",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Source",
+          "tooltip": "Which Polymarket API to fetch from.",
+          "variant": "MultiOption",
+          "initialValue": "gamma",
+          "options": [
+            {
+              "value": "gamma",
+              "displayName": "Metadata",
+              "description": "Gamma markets, events, tags, and series."
+            },
+            {
+              "value": "clob",
+              "displayName": "Exchange",
+              "description": "CLOB configuration, prices, books, mechanics, and rewards."
+            },
+            {
+              "value": "data",
+              "displayName": "Analytics",
+              "description": "Open interest and live volume from the Data API."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "getGammaKind",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Resource",
+          "tooltip": "Which metadata resource to fetch.",
+          "variant": "MultiOption",
+          "initialValue": "market",
+          "options": [
+            {
+              "value": "market",
+              "displayName": "Market",
+              "description": "Fetch complete Gamma metadata for one market."
+            },
+            {
+              "value": "event",
+              "displayName": "Event",
+              "description": "Fetch complete Gamma metadata for one event."
+            },
+            {
+              "value": "tag",
+              "displayName": "Tag",
+              "description": "Fetch one tag by its internal ID or human-readable slug."
+            },
+            {
+              "value": "series",
+              "displayName": "Series",
+              "description": "Fetch complete metadata for one series by ID."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "getClobKind",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Resource",
+          "tooltip": "Which exchange view to fetch.",
+          "variant": "MultiOption",
+          "initialValue": "marketConfiguration",
+          "options": [
+            {
+              "value": "marketConfiguration",
+              "displayName": "Market Configuration",
+              "description": "Fetch matching-engine configuration for a condition ID."
+            },
+            {
+              "value": "orderBook",
+              "displayName": "Order Book",
+              "description": "Fetch the current bids and asks for one outcome token."
+            },
+            {
+              "value": "midpoint",
+              "displayName": "Midpoint",
+              "description": "Fetch the current midpoint price for one outcome token."
+            },
+            {
+              "value": "price",
+              "displayName": "Price",
+              "description": "Fetch the current buy-side or sell-side price for one outcome token."
+            },
+            {
+              "value": "spread",
+              "displayName": "Spread",
+              "description": "Fetch the current bid-ask spread for one outcome token."
+            },
+            {
+              "value": "lastTradePrice",
+              "displayName": "Last Trade Price",
+              "description": "Fetch the most recent trade price and side for one outcome token."
+            },
+            {
+              "value": "priceHistory",
+              "displayName": "Price History",
+              "description": "Fetch historical price points for one outcome token."
+            },
+            {
+              "value": "mechanics",
+              "displayName": "Market Mechanics",
+              "description": "Fetch tick size, negative-risk status, and fee configuration."
+            },
+            {
+              "value": "rewards",
+              "displayName": "Market Rewards",
+              "description": "Fetch liquidity-reward configuration for a condition ID."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "getDataKind",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Resource",
+          "tooltip": "Which analytic to fetch.",
+          "variant": "MultiOption",
+          "initialValue": "openInterest",
+          "options": [
+            {
+              "value": "openInterest",
+              "displayName": "Open Interest",
+              "description": "Fetch open interest for a condition ID."
+            },
+            {
+              "value": "liveVolume",
+              "displayName": "Live Volume",
+              "description": "Fetch live trading volume for an event ID."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "searchMarketsQuery",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Query",
+          "tooltip": "Substring matched against market question and slug. Leave empty to list top markets by volume.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "election"
+        },
+        {
+          "id": "searchMarketsStatus",
           "advanced": false,
           "required": false,
           "reconcile": false,
           "displayName": "Status",
-          "tooltip": "Filter markets by status. Used in direct mode and as the default for the search tool.",
+          "tooltip": "Filter by market status.",
           "variant": "MultiOption",
           "initialValue": "active",
           "options": [
@@ -8267,15 +8613,15 @@
               "displayName": "All"
             }
           ],
-          "kind": "select"
+          "kind": "tab"
         },
         {
-          "id": "maxResults",
+          "id": "searchMarketsMaxResults",
           "advanced": false,
           "required": false,
           "reconcile": false,
           "displayName": "Max Results",
-          "tooltip": "Maximum number of markets to return.",
+          "tooltip": "Maximum number of records to return.",
           "variant": "Integer",
           "initialValue": 20,
           "min": 1,
@@ -8372,22 +8718,12 @@
           "initialValue": false
         }
       ],
-      "inputs": [
-        {
-          "id": "query",
-          "displayName": "Query",
-          "tooltip": "Substring to match against market question / slug. Leave empty to list top markets by volume.",
-          "internal": false,
-          "variant": "Text",
-          "initialValue": "",
-          "required": false
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "markets",
           "displayName": "Markets",
-          "tooltip": "Array of markets: { id, question, slug, conditionId, outcomes, outcomePrices, clobTokenIds, volume, liquidity, endDate }.",
+          "tooltip": "Matching markets with outcomes, outcome prices and CLOB token ids.",
           "variant": "DataList"
         }
       ]
@@ -8962,6 +9298,17 @@
       },
       "fields": [
         {
+          "id": "query",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Query",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "What do you want to search for?"
+        },
+        {
           "id": "maxResults",
           "advanced": false,
           "required": false,
@@ -9094,16 +9441,7 @@
           "initialValue": false
         }
       ],
-      "inputs": [
-        {
-          "id": "query",
-          "displayName": "Query",
-          "internal": false,
-          "variant": "Text",
-          "initialValue": "",
-          "required": true
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
           "id": "documents",

@@ -17,14 +17,29 @@ const SDK_OPTIONS = ['WorkbenchSDK', 'ExecutionSDK', 'ChatSDK', 'LibrarySDK', 'S
 type SDKOption = typeof SDK_OPTIONS[number]
 
 function setsToArrays(value: unknown): unknown {
-    if (value instanceof Set) return [...value];
-    if (value instanceof Map) return Object.fromEntries([...value.entries()].map(([k, v]) => [k, setsToArrays(v)]));
-    if (Array.isArray(value)) return value.map(setsToArrays);
+    if (value instanceof Set) return [...value].filter(v => typeof v !== 'function').map(setsToArrays);
+
+    if (value instanceof Map) {
+        return Object.fromEntries(
+            [...value.entries()]
+                .filter(([, v]) => typeof v !== 'function')
+                .map(([k, v]) => [k, setsToArrays(v)])
+        );
+    }
+
+    if (Array.isArray(value)) return value.filter(v => typeof v !== 'function').map(setsToArrays);
+
     if (value !== null && typeof value === 'object') {
         const out: Record<string, unknown> = {};
-        for (const [k, v] of Object.entries(value)) out[k] = setsToArrays(v);
+
+        for (const [k, v] of Object.entries(value)) {
+            if (typeof v === 'function') continue;
+            out[k] = setsToArrays(v);
+        }
+
         return out;
     }
+
     return value;
 }
 

@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 const intervalOptions = [
     { value: "1m", displayName: "1 minute" },
@@ -19,6 +19,11 @@ export const Blueprint = defineBlueprint({
     iconColor: "color-cyan-500",
     toolCompatible: true,
     fields: [
+        FieldBuilder.String("coin", "Coin", {
+            required: true,
+            placeholder: "BTC",
+            tooltip: "HyperLiquid coin symbol (e.g. BTC, ETH, SOL)."
+        }),
         FieldBuilder.MultiOption("interval", "Interval", {
             options: intervalOptions,
             initialValue: "1h",
@@ -31,13 +36,7 @@ export const Blueprint = defineBlueprint({
             tooltip: "How far back to fetch candles, in hours. The end time is always 'now'."
         }),
     ],
-    inputs: [
-        InputBuilder.Text("coin", "Coin", {
-            required: true,
-            placeholder: "BTC",
-            tooltip: "HyperLiquid coin symbol (e.g. BTC, ETH, SOL)."
-        }),
-    ],
+    inputs: [],
     outputs: [
         OutputBuilder.DataList("candles", "Candles", {
             tooltip: "Array of OHLCV candles: { t, T, s, i, o, c, h, l, v, n }."
