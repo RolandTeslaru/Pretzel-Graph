@@ -1,5 +1,5 @@
 import { cloneDeep } from "lodash";
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder, InferOutputs } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Tavily } from "@pretzel-graph/nodes/Credentials/Tavily";
 
 export const Blueprint = defineBlueprint({
@@ -11,6 +11,10 @@ export const Blueprint = defineBlueprint({
     accent: "port-Retriever",
     toolCompatible: true,
     fields: [
+        FieldBuilder.String("query", "Query", {
+            required: true,
+            placeholder: "What do you want to search for?"
+        }),
         FieldBuilder.Integer("maxResults", "Max Results", {
             initialValue: 5,
             min: 1,
@@ -30,12 +34,7 @@ export const Blueprint = defineBlueprint({
             tooltip: "Tavily pre-summarizes an answer from the search results."
         }),
     ],
-    inputs: [
-        InputBuilder.Text("query", "Query", {
-            required: true,
-            placeholder: "What do you want to search for?"
-        }),
-    ],
+    inputs: [],
     outputs: [
         OutputBuilder.DataList("documents", "Documents", {
             tooltip: "Search results as Document objects (pageContent + metadata)."

@@ -1,5 +1,10 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 import { GoogleSearch } from "@pretzel-graph/nodes/Credentials/GoogleSearch";
+
+const queryField = FieldBuilder.String("query", "Query", {
+    required: true,
+    placeholder: "What do you want to search for?"
+});
 
 const fields = [
     FieldBuilder.Integer("maxResults", "Max Results", {
@@ -34,13 +39,8 @@ export const Blueprint = defineBlueprint({
     icon: "GoogleSearch",
     accent: "port-DataList",
     toolCompatible: true,
-    fields,
-    inputs: [
-        InputBuilder.Text("query", "Query", {
-            required: true,
-            placeholder: "What do you want to search for?"
-        }),
-    ],
+    fields: [queryField, ...fields],
+    inputs: [],
     outputs: [
         OutputBuilder.DataList("documents", "Documents", {
             tooltip: "Search results as Document objects (pageContent + metadata)."

@@ -23,11 +23,9 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         });
     }
 
-    protected override async onRun(
-        incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
+    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
 
-        const documents = await this.retriever._getRelevantDocuments(incoming.query);
+        const documents = await this.retriever._getRelevantDocuments(this.fieldValues.query);
 
         return { documents };
     }

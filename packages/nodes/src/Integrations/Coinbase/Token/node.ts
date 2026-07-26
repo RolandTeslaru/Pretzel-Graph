@@ -58,17 +58,15 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         });
     }
 
-    protected override async onRun(
-        incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
+    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
         const actions = this.agentkit.getActions();
         const getBalanceAction = actions.find(a => a.name === "get_balance");
 
         if (!getBalanceAction)
             throw new Error("ERC-20 Token: get_balance action not available on this network.");
 
-        const address = incoming.targetAddress?.trim() || this.walletProvider.getAddress();
-        const tokenAddress = incoming.tokenAddress?.trim() || undefined;
+        const address = this.fieldValues.targetAddress?.trim() || this.walletProvider.getAddress();
+        const tokenAddress = this.fieldValues.tokenAddress?.trim() || undefined;
 
         const result = await getBalanceAction.invoke({
             ...(tokenAddress ? { tokenAddress } : {}),

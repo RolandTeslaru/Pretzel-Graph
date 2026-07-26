@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 const statusOptions = [
     { value: "active", displayName: "Active (open)" },
@@ -15,6 +15,10 @@ export const Blueprint = defineBlueprint({
     accent: "port-DataList",
     toolCompatible: true,
     fields: [
+        FieldBuilder.String("eventTicker", "Event Ticker", {
+            placeholder: "KXPRES-24",
+            tooltip: "Optional Kalshi event ticker to scope markets to one event. Leave empty to list markets by status."
+        }),
         FieldBuilder.MultiOption("status", "Status", {
             options: statusOptions,
             initialValue: "active",
@@ -27,12 +31,7 @@ export const Blueprint = defineBlueprint({
             tooltip: "Maximum number of markets/events to return."
         }),
     ],
-    inputs: [
-        InputBuilder.Text("eventTicker", "Event Ticker", {
-            placeholder: "KXPRES-24",
-            tooltip: "Optional Kalshi event ticker to scope markets to one event. Leave empty to list markets by status."
-        }),
-    ],
+    inputs: [],
     outputs: [
         OutputBuilder.DataList("markets", "Markets", {
             tooltip: "Array of Kalshi markets: { ticker, event_ticker, title, status, yes_bid_dollars, yes_ask_dollars, last_price_dollars, volume_fp, close_time, ... }."

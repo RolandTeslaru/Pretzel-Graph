@@ -12,6 +12,7 @@ import {
     type UserMarketOrderV2,
     type UserOrderV2,
 } from "@polymarket/clob-client-v2"
+import type { HTTP } from "@pretzel-graph/node-sdk"
 
 import { withAPIParsing } from "../../../../utils"
 import { Polymarket } from "../../domain"
@@ -27,8 +28,8 @@ import {
 export class PolymarketCLOBClient {
     readonly #client: ClobClient
 
-    constructor(credentials: PolymarketCLOBCredentials) {
-        this.#client = createAuthenticatedClobSDK(credentials)
+    constructor(credentials: PolymarketCLOBCredentials, http: HTTP.ClientAPI) {
+        this.#client = createAuthenticatedClobSDK(credentials, http)
     }
 
     public readonly system = {

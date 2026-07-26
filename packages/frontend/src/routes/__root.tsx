@@ -42,7 +42,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
             <QuerySDK.Provider>
                 <NotificationSDK.UIOverlay />
                 <DialogSDK.UIOverlay />
-                {/* <StateViewer /> */}
+                <StateViewer />
                 {/* <WebhookTester /> */}
                 <Outlet />
             </QuerySDK.Provider>

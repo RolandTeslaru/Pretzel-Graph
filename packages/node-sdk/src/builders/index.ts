@@ -54,18 +54,14 @@ type DefineBlueprintReturn<
     readonly itemScope?: string;
 }
 
-const hiddenToolField = FieldBuilder.reconciling(FieldBuilder.Boolean({
-    id: "isConvertedToTool",
-    displayName: "Tool Mode",
+const hiddenToolField = FieldBuilder.reconciling(FieldBuilder.Boolean("isConvertedToTool", "Tool Mode", {
     hidden: true,
     initialValue: false,
 }));
 
 
 
-export const signalDependencyStrategyField = FieldBuilder.MultiOption({
-    id: "signalDependency",
-    displayName: "Signal Dependency",
+export const signalDependencyStrategyField = FieldBuilder.MultiOption("signalDependency", "Signal Dependency", {
     options: [
         { value: "AND", displayName: "(AND) All signals required", description: "Fire only once every upstream signal has arrived." },
         { value: "OR", displayName: "(OR) At least one signal required", description: "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)." },
@@ -78,9 +74,7 @@ export const signalDependencyStrategyField = FieldBuilder.MultiOption({
 
 
 
-export const dataDependencyStrategyField = FieldBuilder.MultiOption({
-    id: "dataDependency",
-    displayName: "Data Dependency",
+export const dataDependencyStrategyField = FieldBuilder.MultiOption("dataDependency", "Data Dependency", {
     options: [
         { value: "AND", displayName: "Wait & Join", description: "Wait until every wired input port has resolved, then read all of them." },
         { value: "OR", displayName: "Follow Trigger", description: "Don't wait — read only the input port(s) that propagated the triggering signal." },
@@ -89,9 +83,7 @@ export const dataDependencyStrategyField = FieldBuilder.MultiOption({
     tooltip: "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
 })
 
-export const onErrorStrategyField = FieldBuilder.MultiOption({
-    id: "onErrorStrategy",
-    displayName: "On Error",
+export const onErrorStrategyField = FieldBuilder.MultiOption("onErrorStrategy", "On Error", {
     options: [
         { value: "terminate", displayName: "Terminate workflow", description: "Fail the whole run." },
         { value: "propagate", displayName: "Propagate error", description: "Forward the error along outgoing edges." },

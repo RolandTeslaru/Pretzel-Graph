@@ -39,12 +39,10 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         return markets.map(compactMarket);
     }
 
-    protected override async onRun(
-        incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
+    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
         const status = this.fieldValues.status as KalshiStatusField;
         const limit = clampLimit(this.fieldValues.maxResults, 20);
-        const eventTicker = (incoming.eventTicker ?? "").trim();
+        const eventTicker = (this.fieldValues.eventTicker ?? "").trim();
 
         const markets = await this.listMarkets({ status, limit, eventTicker });
 

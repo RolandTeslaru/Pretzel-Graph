@@ -28,10 +28,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         this.client = new HyperLiquidPublicClient(this.httpClientFactory);
     }
 
-    protected override async onRun(
-        incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
-        const address = requireAddress(incoming.address, this.fieldValues.defaultAddress);
+    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
+        const address = requireAddress(this.fieldValues.address);
 
         const [state, openOrders] = await Promise.all([
             this.client.clearinghouseState(address),
@@ -46,7 +44,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
     protected override async onBuildTool(
         incoming: InferIncoming<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
-        const { defaultAddress } = this.fieldValues;
+        const defaultAddress = this.fieldValues.address;
 
         const addressSchema = z.object({
             address: z.string().optional().describe("EVM 0x wallet address. Optional if a default is configured on the node."),
