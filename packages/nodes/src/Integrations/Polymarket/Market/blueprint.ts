@@ -92,4 +92,6 @@ export const ToolBlueprint = defineBlueprint({
             tooltip: "Toolkit: polymarket_search_markets, polymarket_get_market, polymarket_get_events, polymarket_get_midpoint, polymarket_get_order_book.",
         }),
     ],
+
+    
 });

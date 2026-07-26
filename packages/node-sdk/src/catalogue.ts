@@ -91,9 +91,17 @@ class CatalogueServiceImpl {
         const base = await this.loadBlueprint(blueprintId);
         if (!base) return null;
 
-        const reconciledId = Foundations.Blueprint.createReconciledId(blueprintId, base.fields, fieldValues);
+        const reconciledId = Foundations.Blueprint.deriveId(base, fieldValues);
         const cached = this.blueprintCache.get(reconciledId);
         if (cached) return cached;
+
+        // Derivative blueprints fold their own tree — no reconcile.ts, and the full field values,
+        // since a discriminant may be introduced by a branch rather than declared on the base.
+        if (base._derivatives?.length) {
+            const { blueprint } = Foundations.Blueprint.derive(base, fieldValues);
+            this.blueprintCache.set(reconciledId, blueprint);
+            return blueprint;
+        }
 
         const reconciler = await this.getReconciler(blueprintId);
         if (!reconciler) return base;
