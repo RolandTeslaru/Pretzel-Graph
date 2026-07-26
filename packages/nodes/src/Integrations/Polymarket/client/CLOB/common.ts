@@ -4,6 +4,8 @@ import {
     SignatureTypeV2,
     type ApiKeyCreds,
 } from "@polymarket/clob-client-v2"
+import type { AxiosInstance } from "axios"
+import type { HTTP } from "@pretzel-graph/node-sdk"
 import {
     createWalletClient,
     http as createViemHTTPTransport,
@@ -60,17 +62,48 @@ function createWalletOptions(
     } as const
 }
 
-export function createUnauthenticatedClobSDK() {
-    return new ClobClient({
-        host:         POLYMARKET_CLOB_BASE_URL,
-        chain:        Chain.POLYGON,
-        throwOnError: true,
-        retryOnError: true,
+// The CLOB SDK has no transport hook of its own — it calls the bare axios default export.
+// patches/@polymarket+clob-client-v2+1.1.0.patch adds `axiosInstance`, which is how the
+// node's proxy agent reaches CLOB traffic. Always build it from `RuntimeNode.httpClientFactory`.
+function createTransport(http: HTTP.ClientAPI) {
+    return http.create({
+        vendor:  "Polymarket",
+        baseURL: POLYMARKET_CLOB_BASE_URL,
+    }).raw
+}
+
+// An unpatched ClobClient silently drops `axiosInstance` — no error, just direct egress.
+// patch-package runs from `postinstall`, so `npm ci --ignore-scripts` skips it. Fail at
+// construction rather than leaking the worker's real IP to a geo-fenced venue.
+export function assertPatched(client: ClobClient, transport: AxiosInstance) {
+    if (client.axiosInstance === transport)
+        return
+
+    throw new Error(
+        "Polymarket CLOB: the clob-client-v2 patch is not applied, so requests would bypass "
+        + "this node's proxy. Run `npx patch-package` (it is skipped by `npm ci --ignore-scripts`).",
+    )
+}
+
+export function createUnauthenticatedClobSDK(http: HTTP.ClientAPI) {
+    const transport = createTransport(http)
+
+    const client = new ClobClient({
+        host:          POLYMARKET_CLOB_BASE_URL,
+        chain:         Chain.POLYGON,
+        throwOnError:  true,
+        retryOnError:  true,
+        axiosInstance: transport,
     })
+
+    assertPatched(client, transport)
+
+    return client
 }
 
 export function createAuthenticatedClobSDK(
     credentials: PolymarketCLOBCredentials,
+    http: HTTP.ClientAPI,
 ) {
     const apiCredentials: ApiKeyCreds = {
         key:        credentials.apiKey,
@@ -78,8 +111,15 @@ export function createAuthenticatedClobSDK(
         passphrase: credentials.passphrase,
     }
 
-    return new ClobClient({
+    const transport = createTransport(http)
+
+    const client = new ClobClient({
         ...createWalletOptions(credentials),
-        creds: apiCredentials,
+        creds:         apiCredentials,
+        axiosInstance: transport,
     })
+
+    assertPatched(client, transport)
+
+    return client
 }

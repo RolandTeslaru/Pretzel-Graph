@@ -293,7 +293,7 @@ export class WorkflowCompiler {
     ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Foundations.Blueprint }> {
 
         let RuntimeNode = await CatalogueService.getNode(wfNode.blueprintId);
-        let blueprint   = await this.resolveBlueprint(wfNode, engineExecutionCtx.workflowData);
+        let blueprint: Foundations.Blueprint | null = await this.resolveBlueprint(wfNode, engineExecutionCtx.workflowData);
 
         // Gate on the class, not the blueprint: a dependency node has no class of its own, but its
         // blueprint is cached under the cosmetic id, so on later compiles only getNode stays null.

@@ -12,46 +12,34 @@ export const Polymarket = defineCredential({
     displayName: "Polymarket",
     icon:        "Polymarket",
     fields: [
-        FieldBuilder.Password({
-            id:          "privateKey",
-            displayName: "Wallet Private Key",
+        FieldBuilder.Password("privateKey", "Wallet Private Key", {
             required:    true,
-            tooltip:     "Private key used locally to sign Polymarket authentication messages and orders.",
+            tooltip:     "Private key used locally to sign Polymarket authentication messages and orders."
         }),
-        FieldBuilder.String({
-            id:          "funderAddress",
-            displayName: "Funder Address",
+        FieldBuilder.String("funderAddress", "Funder Address", {
             required:    true,
             placeholder: "0x…",
-            tooltip:     "The Polymarket proxy, Safe, or smart-contract wallet that holds the funds.",
+            tooltip:     "The Polymarket proxy, Safe, or smart-contract wallet that holds the funds."
         }),
-        FieldBuilder.MultiOption({
-            id:           "signatureType",
-            displayName:  "Wallet Type",
+        FieldBuilder.MultiOption("signatureType", "Wallet Type", {
             options:      signatureTypes,
             initialValue: "3",
-            tooltip:      "How Polymarket verifies order signatures. New Polymarket deposit wallets normally use EIP-1271.",
+            tooltip:      "How Polymarket verifies order signatures. New Polymarket deposit wallets normally use EIP-1271."
         }),
-        FieldBuilder.Password({
-            id:          "apiKey",
-            displayName: "CLOB API Key",
+        FieldBuilder.Password("apiKey", "CLOB API Key", {
             required:    true,
             advanced:    true,
-            tooltip:     "L2 API key used to authenticate CLOB requests.",
+            tooltip:     "L2 API key used to authenticate CLOB requests."
         }),
-        FieldBuilder.Password({
-            id:          "apiSecret",
-            displayName: "CLOB API Secret",
+        FieldBuilder.Password("apiSecret", "CLOB API Secret", {
             required:    true,
             advanced:    true,
-            tooltip:     "L2 secret used locally to create HMAC request signatures.",
+            tooltip:     "L2 secret used locally to create HMAC request signatures."
         }),
-        FieldBuilder.Password({
-            id:          "passphrase",
-            displayName: "CLOB Passphrase",
+        FieldBuilder.Password("passphrase", "CLOB Passphrase", {
             required:    true,
             advanced:    true,
-            tooltip:     "L2 API passphrase.",
+            tooltip:     "L2 API passphrase."
         }),
     ],
 })

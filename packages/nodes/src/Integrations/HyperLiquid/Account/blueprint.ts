@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.HyperLiquid.Account",
@@ -10,17 +10,13 @@ export const Blueprint = defineBlueprint({
     iconColor: "color-cyan-500",
     toolCompatible: true,
     fields: [
-        FieldBuilder.String("defaultAddress", "Default Wallet Address", {
+        FieldBuilder.String("address", "Wallet Address", {
+            required: true,
             placeholder: "0x...",
-            tooltip: "Optional fallback wallet address. Used when the 'address' input port is empty."
+            tooltip: "Public EVM wallet address. Read-only — no signing or private key involved."
         }),
     ],
-    inputs: [
-        InputBuilder.Text("address", "Wallet Address", {
-            placeholder: "0x...",
-            tooltip: "Public EVM wallet address. Read-only — no signing or private key involved. Falls back to the Default Wallet Address field if empty."
-        }),
-    ],
+    inputs: [],
     outputs: [
         OutputBuilder.Json("state", "Clearinghouse State", {
             tooltip: "Full clearinghouseState response: margin summary, asset positions, withdrawable, etc."
@@ -45,7 +41,7 @@ export const ToolBlueprint = defineBlueprint({
     iconColor: "color-cyan-500",
     toolCompatible: true,
     fields: [
-        FieldBuilder.String("defaultAddress", "Default Wallet Address", {
+        FieldBuilder.String("address", "Default Wallet Address", {
             placeholder: "0x...",
             tooltip: "Optional default wallet address. The agent can override per call. If empty, the agent must always provide an address."
         }),

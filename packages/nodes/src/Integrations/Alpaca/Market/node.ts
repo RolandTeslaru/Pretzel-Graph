@@ -37,12 +37,10 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         this.tradingClient = createAlpacaTradingClient(this.httpClientFactory, this.fieldValues.environment as AlpacaEnvironment, credentials);
     }
 
-    protected override async onRun(
-        incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
-        const symbol = normalizeSymbol(incoming.symbol);
+    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
+        const symbol = normalizeSymbol(this.fieldValues.symbol);
         if (!symbol)
-            throw new Error("Alpaca Market: 'symbol' input is required (e.g. AAPL, MSFT).");
+            throw new Error("Alpaca Market: 'symbol' is required (e.g. AAPL, MSFT).");
 
         const timeframe = toAlpacaTimeframe(this.fieldValues.timespan as any, this.fieldValues.multiplier);
         const limit = Math.min(Math.max(this.fieldValues.maxBars, 1), 5000);

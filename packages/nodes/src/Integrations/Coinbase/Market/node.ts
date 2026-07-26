@@ -119,14 +119,12 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         super(nodeId, context);
     }
 
-    protected override async onRun(
-        incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
+    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
         const { dataSource } = this.fieldValues;
-        const query = (incoming.query ?? "").trim();
+        const query = (this.fieldValues.query ?? "").trim();
 
         if (!query)
-            throw new Error("DeFi Market Data: query input is required.");
+            throw new Error("DeFi Market Data: query is required.");
 
         if (dataSource === "pyth") {
             const result = await getPriceForSymbol(query);

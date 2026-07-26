@@ -93,10 +93,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         return (response.data.items ?? []).map((item, index) => itemToDocument(item, index, query, searchType));
     }
 
-    protected override async onRun(
-        incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
-        const documents = await this.search(incoming.query);
+    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
+        const documents = await this.search(this.fieldValues.query);
 
         return { documents };
     }

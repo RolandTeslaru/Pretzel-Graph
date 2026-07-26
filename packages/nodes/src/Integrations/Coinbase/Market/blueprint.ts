@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Coinbase.Market",
@@ -8,6 +8,11 @@ export const Blueprint = defineBlueprint({
     accent: "port-Json",
     toolCompatible: true,
     fields: [
+        FieldBuilder.String("query", "Query", {
+            required: true,
+            placeholder: "BTC  or  uniswap",
+            tooltip: "For Pyth: a coin symbol (e.g. BTC, ETH, SOL). For DeFiLlama: a protocol slug (e.g. uniswap, aave, curve)."
+        }),
         FieldBuilder.MultiOption("dataSource", "Data Source", {
             options: [
                 { value: "pyth", displayName: "Pyth — Asset Price" },
@@ -18,13 +23,7 @@ export const Blueprint = defineBlueprint({
             tooltip: "Pyth returns live price data for crypto assets. DeFiLlama returns TVL and chain breakdown for DeFi protocols."
         }),
     ],
-    inputs: [
-        InputBuilder.Text("query", "Query", {
-            required: true,
-            placeholder: "BTC  or  uniswap",
-            tooltip: "For Pyth: a coin symbol (e.g. BTC, ETH, SOL). For DeFiLlama: a protocol slug (e.g. uniswap, aave, curve)."
-        }),
-    ],
+    inputs: [],
     outputs: [
         OutputBuilder.Data("price", "Price (USD)", {
             tooltip: "Numeric USD price. Only populated when Data Source is Pyth."

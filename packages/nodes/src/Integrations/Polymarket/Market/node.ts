@@ -1,76 +1,59 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RegisterNode, RuntimeNode, InferFieldValues, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import {
+    PolymarketDataClient,
     PolymarketGammaClient,
     PolymarketUnauthenticatedCLOBClient,
 } from "../client";
 import { Polymarket } from "../domain";
+import { MarketAction } from "./actions";
 import { Blueprint, ToolBlueprint } from "./blueprint";
-import { MarketStatus, compactEvent, compactMarket } from "./shapes";
 import { clampLimit, searchMarketsLocal } from "./query";
+import { listEvents, listMarkets, runMarketAction } from "./run";
+import { MarketStatus } from "./shapes";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
 
     private readonly gammaClient: PolymarketGammaClient;
     private readonly clobClient:  PolymarketUnauthenticatedCLOBClient;
+    private readonly dataClient:  PolymarketDataClient;
 
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);
         this.gammaClient = new PolymarketGammaClient(this.httpClientFactory);
-        this.clobClient  = new PolymarketUnauthenticatedCLOBClient();
+        this.clobClient  = new PolymarketUnauthenticatedCLOBClient(this.httpClientFactory);
+        this.dataClient  = new PolymarketDataClient(this.httpClientFactory);
     }
 
-    private statusQuery(status: MarketStatus): { active?: boolean, closed?: boolean } {
-        if (status === "active")
-            return { active: true, closed: false };
-        if (status === "closed")
-            return { closed: true };
-        return {};
-    }
+    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
+        // reconcile-added fields aren't in the inferred field values, so they're read via a cast.
+        const fields = this.fieldValues as unknown as Record<string, unknown>;
 
-    private async listMarkets(status: MarketStatus, limit: number) {
-        const markets = await this.gammaClient.markets.list({
-            ...this.statusQuery(status),
-            limit,
-            order: "volume",
-            ascending: false,
+        const result = await runMarketAction({
+            action:  MarketAction.resolve(fields),
+            fields,
+            clients: {
+                gamma: this.gammaClient,
+                clob:  this.clobClient,
+                data:  this.dataClient,
+            },
         });
-        return markets.map(compactMarket);
-    }
 
-    private async listEvents(status: MarketStatus, limit: number) {
-        const events = await this.gammaClient.events.list({
-            ...this.statusQuery(status),
-            limit,
-            order: "volume",
-            ascending: false,
-        });
-        return events.map(compactEvent);
-    }
-
-    protected override async onRun(
-        incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
-        const status = this.fieldValues.status as MarketStatus;
-        const limit = clampLimit(this.fieldValues.maxResults, 20);
-        const query = (incoming.query ?? "").trim();
-
-        // Over-fetch so the local substring filter has something to narrow.
-        const markets = await this.listMarkets(status, query ? Math.max(limit, 100) : limit);
-
-        return { markets: searchMarketsLocal(markets, query, limit) };
+        return result as InferOutputs<typeof Blueprint>;
     }
 
     protected override async onBuildTool(
         _incoming: InferIncoming<typeof ToolBlueprint>,
     ): Promise<InferOutputs<typeof ToolBlueprint>> {
-        const defaultStatus = this.fieldValues.status as MarketStatus;
-        const defaultLimit = clampLimit(this.fieldValues.maxResults, 20);
+        // In tool mode the node carries the tool blueprint's fields, not the base cascade's.
+        const fields = this.fieldValues as unknown as InferFieldValues<typeof ToolBlueprint>;
+        const defaultStatus = fields.status as MarketStatus;
+        const defaultLimit  = clampLimit(fields.maxResults, 20);
 
         const searchMarkets = tool(
             async ({ query, status, limit }) => {
@@ -78,7 +61,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
                 const cap = clampLimit(limit, defaultLimit);
                 const q = (query ?? "").trim();
 
-                const markets = await this.listMarkets(effectiveStatus, q ? Math.max(cap, 100) : cap);
+                const markets = await listMarkets(this.gammaClient, effectiveStatus, q ? Math.max(cap, 100) : cap);
                 const filtered = searchMarketsLocal(markets, q, cap);
                 return JSON.stringify({ status: effectiveStatus, count: filtered.length, markets: filtered });
             },
@@ -123,7 +106,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
             async ({ status, limit }) => {
                 const effectiveStatus = (status ?? defaultStatus) as MarketStatus;
                 const cap = clampLimit(limit, defaultLimit);
-                const events = await this.listEvents(effectiveStatus, cap);
+                const events = await listEvents(this.gammaClient, effectiveStatus, cap);
                 return JSON.stringify({ status: effectiveStatus, count: events.length, events });
             },
             {

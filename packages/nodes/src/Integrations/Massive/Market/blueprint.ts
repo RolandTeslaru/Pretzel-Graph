@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 import { Massive } from "@pretzel-graph/nodes/Credentials/Massive";
 
 const timespanOptions = [
@@ -25,6 +25,11 @@ export const Blueprint = defineBlueprint({
     accent: "port-DataList",
     toolCompatible: true,
     fields: [
+        FieldBuilder.String("ticker", "Ticker", {
+            required: true,
+            placeholder: "AAPL",
+            tooltip: "US stock ticker symbol (e.g. AAPL, MSFT, TSLA). Unused by the Market Status action."
+        }),
         // action drives the field schema + output ports via reconcile. Base is the `candles`
         // case; snapshot / details / marketStatus need no extra fields.
         FieldBuilder.reconciling(FieldBuilder.MultiOption("action", "Action", {
@@ -33,13 +38,7 @@ export const Blueprint = defineBlueprint({
             tooltip: "What to fetch for the ticker."
         })),
     ],
-    inputs: [
-        InputBuilder.Text("ticker", "Ticker", {
-            required: true,
-            placeholder: "AAPL",
-            tooltip: "US stock ticker symbol (e.g. AAPL, MSFT, TSLA). Unused by the Market Status action."
-        }),
-    ],
+    inputs: [],
     outputs: [
         OutputBuilder.DataList("candles", "Candles", {
             tooltip: "Array of OHLCV aggregates (bars) returned by Massive."
