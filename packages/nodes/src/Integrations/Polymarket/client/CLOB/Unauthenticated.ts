@@ -3,9 +3,11 @@ import {
     Side,
     type BookParams,
     type BuilderTradeParams,
+    type ClobClient,
     type OrderBookSummary,
     type PriceHistoryFilterParams,
 } from "@polymarket/clob-client-v2"
+import type { HTTP } from "@pretzel-graph/node-sdk"
 
 import { withAPIParsing } from "../../../../utils"
 import { Polymarket } from "../../domain"
@@ -15,7 +17,11 @@ import { createUnauthenticatedClobSDK } from "./common"
  * Public CLOB surface. Authenticated operations are intentionally absent.
  */
 export class PolymarketUnauthenticatedCLOBClient {
-    readonly #client = createUnauthenticatedClobSDK()
+    readonly #client: ClobClient
+
+    constructor(http: HTTP.ClientAPI) {
+        this.#client = createUnauthenticatedClobSDK(http)
+    }
 
     public readonly system = {
         status: withAPIParsing(

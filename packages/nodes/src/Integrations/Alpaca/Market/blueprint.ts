@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 import { Alpaca } from "@pretzel-graph/nodes/Credentials/Alpaca";
 
 const envOptions = [
@@ -22,6 +22,11 @@ export const Blueprint = defineBlueprint({
     accent: "port-DataList",
     toolCompatible: true,
     fields: [
+        FieldBuilder.String("symbol", "Symbol", {
+            required: true,
+            placeholder: "AAPL",
+            tooltip: "US stock symbol (e.g. AAPL, MSFT)."
+        }),
         FieldBuilder.MultiOption("environment", "Environment", {
             options: envOptions,
             initialValue: "live",
@@ -53,13 +58,7 @@ export const Blueprint = defineBlueprint({
             advanced: true
         }),
     ],
-    inputs: [
-        InputBuilder.Text("symbol", "Symbol", {
-            required: true,
-            placeholder: "AAPL",
-            tooltip: "US stock symbol (e.g. AAPL, MSFT)."
-        }),
-    ],
+    inputs: [],
     outputs: [
         OutputBuilder.DataList("bars", "Bars", {
             tooltip: "Array of OHLCV bars (limited by Max Bars)."

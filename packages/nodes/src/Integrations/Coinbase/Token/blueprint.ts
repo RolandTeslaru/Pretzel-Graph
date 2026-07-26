@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 import { Coinbase } from "@pretzel-graph/nodes/Credentials/Coinbase";
 
 const networkOptions = [
@@ -30,17 +30,18 @@ export const Blueprint = defineBlueprint({
     icon: "Coinbase",
     accent: "port-Json",
     toolCompatible: true,
-    fields: [...walletFields],
-    inputs: [
-        InputBuilder.Text("tokenAddress", "Token Address", {
+    fields: [
+        ...walletFields,
+        FieldBuilder.String("tokenAddress", "Token Address", {
             placeholder: "0x... (leave empty for native ETH)",
             tooltip: "ERC-20 contract address. Leave empty to query native ETH/MATIC balance."
         }),
-        InputBuilder.Text("targetAddress", "Target Address", {
+        FieldBuilder.String("targetAddress", "Target Address", {
             placeholder: "0x... (defaults to wallet address)",
             tooltip: "Address to check the balance for. Defaults to the node's own wallet address."
         }),
     ],
+    inputs: [],
     outputs: [
         OutputBuilder.Data("balance", "Balance", {
             tooltip: "Token balance as a number."

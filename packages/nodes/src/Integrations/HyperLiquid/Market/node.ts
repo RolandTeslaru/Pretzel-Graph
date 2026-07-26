@@ -31,14 +31,12 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         this.client = new HyperLiquidPublicClient(this.httpClientFactory);
     }
 
-    protected override async onRun(
-        incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
+    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
         const { interval, lookbackHours } = this.fieldValues;
-        const coin = (incoming.coin ?? "").trim();
+        const coin = (this.fieldValues.coin ?? "").trim();
 
         if (!coin)
-            throw new Error("HyperLiquid Market: 'coin' input is required (e.g. BTC, ETH).");
+            throw new Error("HyperLiquid Market: 'coin' is required (e.g. BTC, ETH).");
 
         const candles = await this.client.candles(coin, interval, lookbackHours);
         const summary = summarizeCandles(coin, interval, candles);

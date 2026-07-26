@@ -78,7 +78,7 @@ export class ShelfService {
 
     async reconcileBlueprint(
         payload: Shelf.API.Blueprint.Reconcile.Request
-    ): Promise<Shelf.API.Blueprint.Reconcile.Response> {
+): Promise<Shelf.API.Blueprint.Reconcile.Response> {
         const { blueprintId, fieldValues } = payload;
         const { blueprint } = this.getBlueprint({ blueprintId });
 

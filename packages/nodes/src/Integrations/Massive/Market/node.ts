@@ -34,9 +34,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         this.client = createMassiveClient(this.httpClientFactory, requireMassiveApiKey(apiKey));
     }
 
-    protected override async onRun(
-        incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
+    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
 
         // reconcile-added fields aren't in the inferred field values, so they're read via a cast.
         const fields = this.fieldValues as Record<string, any>;
@@ -46,7 +44,7 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         if (action === "marketStatus")
             return { data: await fetchMarketStatus(this.client) } as any;
 
-        const ticker = normalizeTicker(incoming.ticker);
+        const ticker = normalizeTicker(this.fieldValues.ticker);
 
         if (!ticker)
             throw new Error("Massive Market: 'ticker' input is required (e.g. AAPL, MSFT).");

@@ -27,7 +27,7 @@ function cacheOf(spec: Record<string, string[]>): Workflow.Cache {
         for (const src of froms)
             if (!nodes[src]) nodes[src] = { id: src, fields: [] };
 
-    return Workflow.createCache({ nodes, edges, staticValues: {} } as unknown as Workflow.Data);
+    return Workflow.createCache({ nodes, edges, staticValues: {} } as unknown as Workflow.Data, {});
 }
 
 const sorted = (set: Set<NodeId>) => [...set].sort();

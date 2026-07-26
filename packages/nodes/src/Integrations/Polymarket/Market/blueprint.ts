@@ -1,49 +1,65 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
-const statusOptions = [
-    { value: "active", displayName: "Active" },
-    { value: "closed", displayName: "Closed" },
-    { value: "all", displayName: "All" },
-] as const;
+import { MarketAction } from "./actions";
+import { OPERATIONS, statusOptions } from "./fields";
+
+// Reconcilers only ever see reconcile-field values off the BASE blueprint, so every
+// selector in the cascade has to live here even when it isn't on the active branch.
+// Off-branch ones are hidden so the un-reconciled base renders as its own defaults
+// (action=search, searchKind=markets) rather than as all ten selectors at once.
+const selector = (
+    id: string,
+    displayName: string,
+    options: readonly { value: string, displayName?: string, description?: string }[],
+    initialValue: string,
+    tooltip: string,
+    hidden = false,
+) => FieldBuilder.reconciling(FieldBuilder.MultiOption(id, displayName, {
+    options,
+    initialValue,
+    tooltip,
+    hidden,
+}));
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Polymarket.Market",
     displayName: "Polymarket Market",
-    description: "Reads Polymarket prediction-market data: events, markets, prices and order books.",
+    description: "Reads Polymarket prediction-market data: markets, events, tags, series, order books, prices and trade analytics.",
     icon: "Polymarket",
     proxyCompatible: true,
     accent: "port-DataList",
     toolCompatible: true,
     fields: [
-        FieldBuilder.MultiOption({
-            id: "status",
-            displayName: "Status",
-            options: statusOptions,
-            initialValue: "active",
-            tooltip: "Filter markets by status. Used in direct mode and as the default for the search tool.",
-        }),
-        FieldBuilder.Integer({
-            id: "maxResults",
-            displayName: "Max Results",
-            initialValue: 20,
-            min: 1,
-            max: 500,
-            tooltip: "Maximum number of markets to return.",
-        }),
+        selector("action", "Action", MarketAction.Options, MarketAction.Default,
+            "What kind of request to make."),
+
+        selector("searchKind", "Search", MarketAction.SearchKind.Options, MarketAction.SearchKind.Default,
+            "Which index to search."),
+
+        selector("listAPI", "Source", MarketAction.ListAPI.Options, MarketAction.ListAPI.Default,
+            "Which Polymarket API to list from.", true),
+        selector("listGammaKind", "Records", MarketAction.ListGammaKind.Options, MarketAction.ListGammaKind.Default,
+            "Which metadata records to list.", true),
+        selector("listClobKind", "Records", MarketAction.ListClobKind.Options, MarketAction.ListClobKind.Default,
+            "Which exchange records to list.", true),
+        selector("listDataKind", "Records", MarketAction.ListDataKind.Options, MarketAction.ListDataKind.Default,
+            "Which analytics records to list.", true),
+
+        selector("getAPI", "Source", MarketAction.GetAPI.Options, MarketAction.GetAPI.Default,
+            "Which Polymarket API to fetch from.", true),
+        selector("getGammaKind", "Resource", MarketAction.GetGammaKind.Options, MarketAction.GetGammaKind.Default,
+            "Which metadata resource to fetch.", true),
+        selector("getClobKind", "Resource", MarketAction.GetClobKind.Options, MarketAction.GetClobKind.Default,
+            "Which exchange view to fetch.", true),
+        selector("getDataKind", "Resource", MarketAction.GetDataKind.Options, MarketAction.GetDataKind.Default,
+            "Which analytic to fetch.", true),
+
+        ...OPERATIONS.searchMarkets.fields(),
     ],
-    inputs: [
-        InputBuilder.Text({
-            id: "query",
-            displayName: "Query",
-            placeholder: "election",
-            tooltip: "Substring to match against market question / slug. Leave empty to list top markets by volume.",
-        }),
-    ],
+    inputs: [],
     outputs: [
-        OutputBuilder.DataList({
-            id: "markets",
-            displayName: "Markets",
-            tooltip: "Array of markets: { id, question, slug, conditionId, outcomes, outcomePrices, clobTokenIds, volume, liquidity, endDate }.",
+        OutputBuilder.DataList("markets", "Markets", {
+            tooltip: "Matching markets with outcomes, outcome prices and CLOB token ids.",
         }),
     ],
 });
@@ -58,16 +74,12 @@ export const ToolBlueprint = defineBlueprint({
     accent: "port-ToolList",
     toolCompatible: true,
     fields: [
-        FieldBuilder.MultiOption({
-            id: "status",
-            displayName: "Default Status",
+        FieldBuilder.MultiOption("status", "Default Status", {
             options: statusOptions,
             initialValue: "active",
             tooltip: "Default status filter used by the search tool when the agent doesn't specify one.",
         }),
-        FieldBuilder.Integer({
-            id: "maxResults",
-            displayName: "Default Max Results",
+        FieldBuilder.Integer("maxResults", "Default Max Results", {
             initialValue: 20,
             min: 1,
             max: 500,
@@ -76,9 +88,7 @@ export const ToolBlueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.ToolList({
-            id: "tools",
-            displayName: "Polymarket Tools",
+        OutputBuilder.ToolList("tools", "Polymarket Tools", {
             tooltip: "Toolkit: polymarket_search_markets, polymarket_get_market, polymarket_get_events, polymarket_get_midpoint, polymarket_get_order_book.",
         }),
     ],
