@@ -6,6 +6,26 @@ import { ShelfSDK } from "../../../ShelfSDK/sdk";
 type S      = WorkbenchSDK.State
 type NodeId = Workflow.Node.Id
 
+/**
+ * Folds a derivative blueprint against its own initial values, registering the result so the
+ * node can resolve it by id. Returns null when there's no tree, or when nothing matched — in
+ * both cases the base already is the answer.
+ */
+function resolveOnCreate(blueprint: Foundations.Blueprint) {
+    if (!blueprint._derivatives?.length)
+        return null;
+
+    const { blueprint: derived, derivativeId } = Foundations.Blueprint.derive(blueprint, {});
+    if (!derivativeId)
+        return null;
+
+    const id = Foundations.Blueprint.deriveId(blueprint, {});
+
+    ShelfSDK.useStore.setState(shelf => { shelf.blueprints[id] = derived });
+
+    return { id, blueprint: derived };
+}
+
 export const nodeLifecycleReducers = {
     remove: (s, deletedNodeId) => {
         s.isDirty = true;
@@ -33,11 +53,17 @@ export const nodeLifecycleReducers = {
     create: (s, blueprint, position, staticValues) => {
         s.isDirty = true;
         const nodeId = Workflow.Node.createId(blueprint.id);
+
+        // A derivative blueprint's initial values may already match a branch, so a freshly
+        // created node has to start derived — the raw base is never a displayable state.
+        const derived = resolveOnCreate(blueprint);
+
         const newNode: Workflow.Node.Raw = {
             id          : nodeId,
             blueprintId : blueprint.id,
             ui: {},
             dependencyRef : blueprint.dependencyRef,
+            ...(derived && { reconciledBlueprintId: derived.id }),
         }
 
 
@@ -50,7 +76,9 @@ export const nodeLifecycleReducers = {
 
         s.data.nodes[nodeId] = newNode;
 
-        s.reducers.node.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs, staticValues);
+        const resolved = derived?.blueprint ?? blueprint;
+
+        s.reducers.node.populateInitialValues(s, nodeId, resolved.fields, resolved.inputs, staticValues);
         s.reducers.node.populateCredentialInstances(s, nodeId);
 
         s.reducers.layout.node.add(s, nodeId, position);

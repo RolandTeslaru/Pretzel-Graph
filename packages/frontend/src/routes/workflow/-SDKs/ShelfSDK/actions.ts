@@ -110,9 +110,7 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
         },
 
         getReconciledBlueprint: async (blueprint, fieldValues, { onApiFetch } = {}) => {
-            const reconciledId = Foundations.Blueprint.createReconciledId(
-                blueprint.id, blueprint.fields, fieldValues
-            );
+            const reconciledId = Foundations.Blueprint.deriveId(blueprint, fieldValues);
 
             const cached = getState().reconciledBlueprintsCache[reconciledId];
             if (cached) return cached;

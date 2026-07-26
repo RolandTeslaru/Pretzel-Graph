@@ -43,7 +43,18 @@ export class ShelfService {
             }
             // Not a base blueprint — it's a reconciled id. Reconstruct it from its encoded values.
             if (Blueprint.isReconciledId(id)) {
-                const { blueprintId, fieldValues } = Blueprint.parseReconciledId(id);
+                const blueprintId = Blueprint.extractBlueprintId(id);
+                const base = index.blueprints[blueprintId];
+
+                // A derivative id encodes the matched path, not field=value pairs — replay it
+                // directly rather than putting it through parseReconciledId.
+                if (base?._derivatives?.length) {
+                    const path = id.slice(blueprintId.length + 1);
+                    blueprints[id as Blueprint.Id] = Blueprint.deriveByPath(base, path);
+                    continue;
+                }
+
+                const { fieldValues } = Blueprint.parseReconciledId(id);
                 const { reconciledBlueprint } = await this.reconcileBlueprint({ blueprintId, fieldValues });
                 blueprints[id as Blueprint.Id] = reconciledBlueprint;
             }
@@ -81,6 +92,12 @@ export class ShelfService {
 ): Promise<Shelf.API.Blueprint.Reconcile.Response> {
         const { blueprintId, fieldValues } = payload;
         const { blueprint } = this.getBlueprint({ blueprintId });
+
+        // Derivative blueprints fold their own tree — no reconcile.ts involved.
+        if (blueprint._derivatives?.length) {
+            const { blueprint: reconciledBlueprint } = Blueprint.derive(blueprint, fieldValues);
+            return { reconciledBlueprint };
+        }
 
         const reconcileFn = await CatalogueService.getReconciler(blueprintId);
         if (!reconcileFn)

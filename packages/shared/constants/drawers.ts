@@ -30,18 +30,19 @@ export const CORE_DRAWERS = {
       "Core.Routing.Sleep",
     ],
   },
-  // developer: {
-  //   displayName: "DEVELOPER",
-  //   id: "developer",
-  //   icon: "Terminal",
-  //   blueprintIds: [
-  //     "Core.Developer.AllBuilders",
-  //     "Core.Developer.Eval",
-  //     "Core.Developer.ConsoleLog",
-  //     "Core.Developer.ErrorThrower",
-  //     "Core.Developer.ResourceLoaderTest"
-  //   ],
-  // },
+  developer: {
+    displayName: "DEVELOPER",
+    id: "developer",
+    icon: "Terminal",
+    blueprintIds: [
+      "Core.Developer.AllBuilders",
+      "Core.Developer.Eval",
+      "Core.Developer.ConsoleLog",
+      "Core.Developer.ErrorThrower",
+      "Core.Developer.ResourceLoaderTest",
+      "Core.Developer.DerivativeTest"
+    ],
+  },
   data_source: {
     displayName: "Data Sources",
     id: "data_source",

@@ -33,7 +33,11 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
                 console.log(`Field ${field.id} requires reconciliation`)
 
                 try {
-                    const blueprint = sdk.selectors.node.getBlueprint(sdk.state, nodeId);
+                    // The BASE, not the node's current blueprint — derive() strips _derivatives
+                    // from its output, so re-deriving off an already-derived blueprint finds no tree.
+                    const node      = sdk.state.data.nodes[nodeId];
+                    const blueprint = ShelfSDK.state.blueprints[node?.blueprintId]
+                        ?? sdk.selectors.node.getBlueprint(sdk.state, nodeId);
                     if (!blueprint)
                         return;
 
@@ -56,7 +60,7 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
                         }
                     );
 
-                    const reconciledBlueprintId = Blueprint.createReconciledId(blueprint.id, blueprint.fields, fieldValues);
+                    const reconciledBlueprintId = Blueprint.deriveId(blueprint, fieldValues);
 
                     setState(withCyclesRecompute(s => {
                         reducers.node.reconcile(s, nodeId, reconciledBlueprint, reconciledBlueprintId)

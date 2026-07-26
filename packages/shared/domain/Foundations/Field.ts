@@ -409,5 +409,17 @@ export namespace Field {
     export function isExpression(field: Field.Schema): boolean {
         return "isExpression" in field && field.isExpression === true;
     }
+
+
+
+
+
+    // Extracts a field's literal ID without widening it to string.
+    export type IdOf<TField> =
+        TField extends { readonly __literalId?: infer TId extends string }
+            ? TId
+        : TField extends { readonly id: infer TId extends string }
+            ? TId
+            : never
 }
 export type Field = z.infer<typeof Field.Schema>;
