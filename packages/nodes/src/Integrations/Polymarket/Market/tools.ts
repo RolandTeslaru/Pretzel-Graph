@@ -7,8 +7,6 @@ import type {
     PolymarketUnauthenticatedCLOBClient,
 } from "../client";
 import { Polymarket } from "../domain";
-import { clampLimit, listEvents, listMarkets, searchMarketsLocal } from "./query";
-import type { MarketStatus } from "./shapes";
 
 
 export interface ToolClients {
@@ -44,15 +42,6 @@ const required = (value: string | undefined, name: string, toolName: string) => 
     return text;
 };
 
-const wholeNumber = (value: string, name: string, toolName: string) => {
-    const parsed = Number(value);
-
-    if (!Number.isInteger(parsed) || parsed < 1)
-        throw new Error(`${toolName}: '${name}' must be a positive integer.`);
-
-    return parsed;
-};
-
 // Gamma ids are numeric and slugs are kebab-case, so the node routes to the right endpoint itself
 // rather than making the agent declare which kind it holds.
 const looksNumeric = (value: string) => /^\d+$/.test(value);
@@ -62,13 +51,9 @@ export function buildTools(clients: ToolClients) {
 
     const searchMarkets = tool(
         async ({ query, status, limit }) => {
-            const cap        = clampLimit(limit, 20);
-            const text       = (query ?? "").trim();
-            const fetchLimit = text ? Math.max(cap, 100) : cap;
-            const markets    = await listMarkets(clients.gamma, status as MarketStatus, fetchLimit);
-            const matched    = searchMarketsLocal(markets, text, cap);
+            const markets = await Polymarket.Market.search(clients.gamma, { query, status, limit });
 
-            return JSON.stringify({ count: matched.length, markets: matched });
+            return JSON.stringify({ count: markets.length, markets });
         },
         {
             name:        "polymarket_search_markets",
@@ -85,7 +70,7 @@ export function buildTools(clients: ToolClients) {
         async ({ query, includeTags, includeProfiles, limit }) => {
             const results = await clients.gamma.search.public({
                 q:               required(query, "query", "polymarket_search_all"),
-                limit_per_type:  clampLimit(limit, 20),
+                limit_per_type:  limit,
                 search_tags:     includeTags,
                 search_profiles: includeProfiles,
             });
@@ -107,7 +92,7 @@ export function buildTools(clients: ToolClients) {
 
     const listMarketsTool = tool(
         async ({ status, limit }) => {
-            const markets = await listMarkets(clients.gamma, status as MarketStatus, clampLimit(limit, 20));
+            const markets = await Polymarket.Market.list(clients.gamma, status, limit);
 
             return JSON.stringify({ count: markets.length, markets });
         },
@@ -141,7 +126,7 @@ export function buildTools(clients: ToolClients) {
 
     const listEventsTool = tool(
         async ({ status, limit }) => {
-            const events = await listEvents(clients.gamma, status as MarketStatus, clampLimit(limit, 20));
+            const events = await Polymarket.Event.list(clients.gamma, status, limit);
 
             return JSON.stringify({ count: events.length, events });
         },
@@ -176,7 +161,7 @@ export function buildTools(clients: ToolClients) {
 
     const listTags = tool(
         async ({ limit }) => {
-            const tags = await clients.gamma.tags.list({ limit: clampLimit(limit, 20) });
+            const tags = await clients.gamma.tags.list({ limit: limit });
 
             return JSON.stringify({ count: tags.length, tags });
         },
@@ -211,7 +196,7 @@ export function buildTools(clients: ToolClients) {
         async ({ slug, limit }) => {
             const key    = (slug ?? "").trim();
             const series = await clients.gamma.series.list({
-                limit: clampLimit(limit, 20),
+                limit: limit,
                 slug:  key ? [key] : undefined,
             });
 
@@ -230,9 +215,7 @@ export function buildTools(clients: ToolClients) {
     const getSeries = tool(
         async ({ seriesId }) => {
             const series = await clients.gamma.series.getById({
-                id: Polymarket.Gamma.Series.Id.parse(
-                    required(seriesId, "seriesId", "polymarket_get_series"),
-                ),
+                id: Polymarket.Gamma.Series.Id.parse(required(seriesId, "seriesId", "polymarket_get_series")),
             });
 
             return JSON.stringify(series);
@@ -263,7 +246,7 @@ export function buildTools(clients: ToolClients) {
         async ({ name, limit }) => {
             const key   = (name ?? "").trim();
             const teams = await clients.gamma.sports.listTeams({
-                limit: clampLimit(limit, 20),
+                limit: limit,
                 name:  key ? [key] : undefined,
             });
 
@@ -284,14 +267,10 @@ export function buildTools(clients: ToolClients) {
         async ({ parentType, parentId, includePositions, holdersOnly, limit }) => {
             const comments = await clients.gamma.comments.list({
                 parent_entity_type: Polymarket.Gamma.Comment.ParentEntityType.parse(parentType),
-                parent_entity_id:   wholeNumber(
-                    required(parentId, "parentId", "polymarket_list_comments"),
-                    "parentId",
-                    "polymarket_list_comments",
-                ),
+                parent_entity_id:   required(parentId, "parentId", "polymarket_list_comments"),
                 get_positions: includePositions,
                 holders_only:  holdersOnly,
-                limit:         clampLimit(limit, 20),
+                limit:         limit,
             });
 
             return JSON.stringify({ count: comments.length, comments });
@@ -311,13 +290,11 @@ export function buildTools(clients: ToolClients) {
 
     const listTrades = tool(
         async ({ conditionId, side, limit }) => {
-            const market = Polymarket.Data.Common.ConditionId.parse(
-                required(conditionId, "conditionId", "polymarket_list_trades"),
-            );
+            const market = Polymarket.Data.Common.ConditionId.parse(required(conditionId, "conditionId", "polymarket_list_trades"));
 
             const trades = await clients.data.trades.list({
                 market: [market],
-                limit:  clampLimit(limit, 100, 10_000),
+                limit:  limit,
                 side:   side === "all" ? undefined : Polymarket.Data.Common.Side.parse(side),
             });
 
@@ -336,13 +313,11 @@ export function buildTools(clients: ToolClients) {
 
     const listHolders = tool(
         async ({ conditionId, limit }) => {
-            const market = Polymarket.Data.Common.ConditionId.parse(
-                required(conditionId, "conditionId", "polymarket_list_holders"),
-            );
+            const market = Polymarket.Data.Common.ConditionId.parse(required(conditionId, "conditionId", "polymarket_list_holders"));
 
             const holders = await clients.data.markets.listHolders({
                 market: [market],
-                limit:  clampLimit(limit, 20, 20),
+                limit:  limit,
             });
 
             return JSON.stringify(holders);
@@ -487,9 +462,7 @@ export function buildTools(clients: ToolClients) {
 
     const getOpenInterest = tool(
         async ({ conditionId }) => {
-            const market = Polymarket.Data.Common.ConditionId.parse(
-                required(conditionId, "conditionId", "polymarket_get_open_interest"),
-            );
+            const market = Polymarket.Data.Common.ConditionId.parse(required(conditionId, "conditionId", "polymarket_get_open_interest"));
 
             return JSON.stringify(await clients.data.markets.getOpenInterest({ market: [market] }));
         },
@@ -504,11 +477,7 @@ export function buildTools(clients: ToolClients) {
 
     const getLiveVolume = tool(
         async ({ eventId }) => {
-            const id = wholeNumber(
-                required(eventId, "eventId", "polymarket_get_live_volume"),
-                "eventId",
-                "polymarket_get_live_volume",
-            );
+            const id = required(eventId, "eventId", "polymarket_get_live_volume");
 
             return JSON.stringify(await clients.data.markets.getLiveVolume({ id }));
         },

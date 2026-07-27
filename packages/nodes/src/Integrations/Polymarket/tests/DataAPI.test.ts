@@ -33,6 +33,18 @@ void validUnfilteredRequest
 void invalidCombinedRequest
 
 describe("Polymarket Data API requests", () => {
+    it("coerces numeric ids so callers pass raw field values", () => {
+        // Node fields and tool arguments are both strings; Number() ignores surrounding
+        // whitespace, so coercing here removes the per-caller parse-and-check.
+        assert.deepEqual(
+            Polymarket.Data.API.Markets.GetLiveVolume.Request.parse({ id: " 42 " }),
+            { id: 42 },
+        )
+
+        for (const id of ["abc", "0", ""])
+            assert.throws(() => Polymarket.Data.API.Markets.GetLiveVolume.Request.parse({ id }))
+    })
+
     const filteredRequests = [
         {
             name:   "current positions",

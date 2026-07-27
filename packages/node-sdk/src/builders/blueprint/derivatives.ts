@@ -89,7 +89,7 @@ export function compileDerivatives(
 
         const keys = Object.keys(body).filter(key => !STRUCTURAL_KEYS.has(key));
 
-        return keys.map(key => {
+        const derivatives = keys.map(key => {
             const where  = `defineBlueprint(${blueprintId}) at "${path}${key}"`;
             const parsed = Blueprint.Derivative.parseKey(key);
 
@@ -129,6 +129,10 @@ export function compileDerivatives(
                     // account or proxy a node authenticates through. They survive tool mode, so
                     // any declared here append rather than replace.
                     replaces:     ["fields", "inputs", "outputs"],
+                    // Run-mode siblings don't apply in tool mode, so they're never walked — which
+                    // is also what keeps their tokens out of the derivative id. `replaces` still
+                    // handles the base, which exclusivity doesn't touch.
+                    exclusive:    true,
                     _derivatives: [],
                 } satisfies Derivative;
 
@@ -161,6 +165,20 @@ export function compileDerivatives(
                 _derivatives: compile(child as Record<string, unknown>, childScope, `${path}${key}/`),
             } satisfies Derivative;
         });
+
+        // Two exclusive branches in one scope have no defined winner if both match — and unlike
+        // ordinary siblings, they can't be resolved by overlaying.
+        const exclusive = derivatives.filter(derivative => derivative.exclusive);
+
+        if (exclusive.length > 1)
+            throw new Error(
+                `defineBlueprint(${blueprintId}) at "${path || "<root>"}": `
+                + `${exclusive.length} exclusive branches in one scope `
+                + `(${exclusive.map(d => `"${Blueprint.Derivative.formatToken(d.condition)}"`).join(", ")}). `
+                + `At most one branch per scope may suppress its siblings.`,
+            );
+
+        return derivatives;
     };
 
     const derivatives = compile(definition, new Set(declaredFieldIds), "");
