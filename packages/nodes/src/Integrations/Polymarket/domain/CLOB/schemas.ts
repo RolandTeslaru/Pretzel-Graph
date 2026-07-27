@@ -19,6 +19,14 @@ export namespace Common {
     export type OrderVersion         = z.infer<typeof OrderVersion>
     export type SignatureType        = z.infer<typeof SignatureType>
 
+    // The address CLOB sends as POLY_ADDRESS. On a proxy or Safe setup this is the signing EOA,
+    // not the funding wallet.
+    export const WalletAddress = z.string().trim().regex(
+        /^0x[a-fA-F0-9]{40}$/,
+        "must be a 0x-prefixed, 40-character hex wallet address",
+    )
+    export type WalletAddress = z.infer<typeof WalletAddress>
+
     export const Cursor = z.object({
         next_cursor: z.string().optional(),
     }).prefault({})

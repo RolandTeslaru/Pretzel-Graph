@@ -17,6 +17,11 @@ export const PolymarketApiKey = defineCredential({
     displayName: "Polymarket API Key",
     icon:        "Polymarket",
     fields: [
+        FieldBuilder.String("signerAddress", "Signer Address", {
+            required:    true,
+            placeholder: "0x…",
+            tooltip:     "The wallet this key was issued to. On a proxy or Safe account this is the signing address, not the funding address."
+        }),
         FieldBuilder.Password("apiKey", "CLOB API Key", {
             required: true,
             tooltip:  "L2 API key used to authenticate CLOB requests."

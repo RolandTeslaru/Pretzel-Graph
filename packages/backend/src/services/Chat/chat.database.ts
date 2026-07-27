@@ -39,7 +39,7 @@ class ChatMethods {
             .select<string, Chat & { chat_messages: Chat.Database.Row.Message[] }>('id, user_id, workflow_id, name, created_at, updated_at, chat_messages(*)')
             .eq('id', chatId)
             .eq('user_id', userId)
-            .order('created_at', { referencedTable: 'chat_messages', ascending: true })
+            .order('id', { referencedTable: 'chat_messages', ascending: true })
             .single()
             .throwOnError();
 
@@ -146,7 +146,7 @@ class MessageMethods {
             .from('chat_messages')
             .select('*')
             .eq('chat_id', chatId)
-            .order('created_at', { ascending: true })
+            .order('id', { ascending: true })
             .throwOnError();
 
         return (data ?? []).map(message => Chat.Message.Schema.parse(message));

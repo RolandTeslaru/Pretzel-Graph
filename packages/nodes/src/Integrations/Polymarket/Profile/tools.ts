@@ -1,4 +1,5 @@
 import { tool } from "@langchain/core/tools";
+import { ToolBudget } from "@pretzel-graph/node-sdk";
 import { z } from "zod/v3";
 
 import type { PolymarketDataClient, PolymarketGammaClient } from "../client";
@@ -36,7 +37,7 @@ export function buildTools(clients: ToolClients) {
                 redeemable:    redeemableOnly,
             });
 
-            return JSON.stringify({ count: positions.length, positions });
+            return ToolBudget.list("positions", positions, { hint: "Lower the limit or raise the minimum size." });
         },
         {
             name:        "polymarket_profile_positions",
@@ -61,7 +62,7 @@ export function buildTools(clients: ToolClients) {
                 sortDirection: direction,
             });
 
-            return JSON.stringify({ count: positions.length, positions });
+            return ToolBudget.list("positions", positions, { hint: "Lower the limit." });
         },
         {
             name:        "polymarket_profile_closed_positions",
@@ -85,7 +86,7 @@ export function buildTools(clients: ToolClients) {
                 sortDirection: direction,
             });
 
-            return JSON.stringify({ count: activity.length, activity });
+            return ToolBudget.list("activity", activity, { hint: "Lower the limit or filter by type." });
         },
         {
             name:        "polymarket_profile_activity",
@@ -106,7 +107,7 @@ export function buildTools(clients: ToolClients) {
                 user: Polymarket.Data.Common.WalletAddress.parse(wallet),
             });
 
-            return JSON.stringify(value);
+            return ToolBudget.value(value);
         },
         {
             name:        "polymarket_profile_value",
@@ -123,7 +124,7 @@ export function buildTools(clients: ToolClients) {
                 user: Polymarket.Data.Common.WalletAddress.parse(wallet),
             });
 
-            return JSON.stringify(traded);
+            return ToolBudget.value(traded);
         },
         {
             name:        "polymarket_profile_markets_traded",
@@ -143,7 +144,7 @@ export function buildTools(clients: ToolClients) {
                 limit,
             });
 
-            return JSON.stringify({ count: leaderboard.length, leaderboard });
+            return ToolBudget.list("leaderboard", leaderboard, { hint: "Lower the limit." });
         },
         {
             name:        "polymarket_profile_rank",
@@ -164,7 +165,7 @@ export function buildTools(clients: ToolClients) {
                 address: Polymarket.Gamma.Common.WalletAddress.parse(wallet),
             });
 
-            return JSON.stringify(profile);
+            return ToolBudget.value(profile);
         },
         {
             name:        "polymarket_profile_identity",

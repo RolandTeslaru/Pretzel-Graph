@@ -23,6 +23,17 @@ export namespace Event {
     export type Compact = ReturnType<typeof compact>
 
 
+    // For the calls where the markets inside an event are the answer rather than a count. Gamma
+    // nests whole Market objects here, each carrying its own back-reference to this event and its
+    // tags — a single election event is megabytes raw, so the nested markets get compacted too.
+    export const withMarkets = (event: Gamma.Event) => ({
+        ...compact(event),
+        markets: (event.markets ?? []).map(Market.compact),
+    })
+
+    export type WithMarkets = ReturnType<typeof withMarkets>
+
+
     // Events take Market.Status directly — Gamma filters both by the same two booleans.
     export async function list(
         gamma:  PolymarketGammaClient,
