@@ -10,6 +10,7 @@ import { AggexExecutionError, UncaughtRuntimeNodeError, CyclicalRuntimeNodeError
 import { AirlockTerminationError } from "src/airlock";
 import { System } from "@pretzel-graph/shared/system";
 import type { AggexEngine } from "./index";
+import { frameworkFields } from "./framework-fields";
 
 /**
  * Error handling across the graph: records failures, applies each node's
@@ -46,7 +47,9 @@ export class ErrorService {
         if (error instanceof AirlockTerminationError)
             throw aggexError;
 
-        const strategy = entry?.instance.fieldValues["onErrorStrategy" as Field.Id] ?? "terminate";
+        // Framework fields live on every arm of InferFieldValues, but a union can't be indexed by a
+        // dynamic key — read them through a plain record.
+        const strategy = frameworkFields(entry?.instance)["onErrorStrategy" as Field.Id] ?? "terminate";
 
         switch (strategy) {
             case "terminate": {

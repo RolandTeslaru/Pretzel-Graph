@@ -212,9 +212,13 @@ export abstract class RuntimeNode<
         const rawValues = mapFieldValues<T_Blueprint>(fields, staticValues);
         const meta      = new Map<Foundations.Field.Id, { raw: unknown, isExpression: boolean }>();
 
+        // Indexed dynamically by field id: InferFieldValues is a union once a blueprint has
+        // derivatives, and only the resolved arm has any given key.
+        const rawByFieldId = rawValues as Record<Foundations.Field.Id, unknown>;
+
         for (const field of fields)
             meta.set(field.id, {
-                raw: rawValues[field.id],
+                raw: rawByFieldId[field.id],
                 isExpression: Foundations.Field.isExpression(field)
             });
 
@@ -304,10 +308,18 @@ export abstract class RuntimeNode<
 
 
 
+    /**
+     * Tool-mode entry point for nodes carrying a separate ToolBlueprint.
+     *
+     * A node using `defineTool` doesn't need one. That branch is terminal and total-replacing, so
+     * tool mode is a disjoint arm of InferFieldValues rather than an orthogonal flag — `onRun`
+     * narrows on the discriminant and returns whatever the resolved blueprint declares. Those
+     * nodes leave this alone and fall through.
+     */
     protected onBuildTool(
         incoming: InferIncoming<T_ToolBlueprint>
     ): Promise<InferOutputs<T_ToolBlueprint>> {
-        throw new Error("This node cannot be converted to a tool");
+        return this.onRun(incoming as never) as never;
     }
 
 

@@ -65,6 +65,8 @@ export type DerivativeBody = {
     outputs?:     readonly Port.Output[];
     credentials?: readonly CredentialTemplate[];
     ui?:          Partial<Blueprint["ui"]>;
+    // Members this branch replaces rather than appends to — see Derivative.replaces.
+    replaces?:    readonly Derivative.Member[];
 } & {
     [K in ConditionKey]?: DerivativeBody;
 }
@@ -72,3 +74,25 @@ export type DerivativeBody = {
 // Authoring syntax for a condition key. Catches a malformed key ("action = list") at the call
 // site; that the field exists and the value is one of its options stays a load-time check.
 export type ConditionKey = `${string}==${string}` | `${string}!=${string}`
+
+
+/**
+ * A terminal contribution — a contribution, not a scope.
+ *
+ * Tool mode inverts the node's philosophy: instead of selecting one action and reconciling to it,
+ * the node exposes its whole surface and the agent picks. So it declares its own fields and ports
+ * outright rather than layering onto the run-mode ones, and nothing nests inside it. Condition
+ * keys are typed `never` here to enforce that at the call site.
+ */
+export type ToolBody = {
+    fields?:      readonly Field[];
+    inputs?:      readonly Port.Input[];
+    outputs?:     readonly Port.Output[];
+    credentials?: readonly CredentialTemplate[];
+    ui?:          Partial<Blueprint["ui"]>;
+} & {
+    [K in ConditionKey]?: never;
+}
+
+// What defineTool returns — the marker is what compileDerivatives keys off.
+export type ToolContribution = ToolBody & { readonly __tool: true }
