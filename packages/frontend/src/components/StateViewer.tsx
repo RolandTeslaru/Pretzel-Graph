@@ -93,10 +93,23 @@ function ExecutionSDKControls() {
     );
 }
 
+function StateTree({ selected }: { selected: SDKOption }) {
+    const state = useSDKState(selected);
+
+    return (
+        <ScrollArea.Root className="flex-1 px-4 pb-8 text-[11px] leading-relaxed [mask-image:linear-gradient(to_bottom,transparent,black_48px,black_calc(100%-48px),transparent)]">
+            <JsonView
+                src={state}
+                collapsed={3}
+                theme="default"
+            />
+        </ScrollArea.Root>
+    );
+}
+
 export function StateViewer() {
     const [selected, setSelected] = useState<SDKOption>('WorkbenchSDK');
     const [minimized, setMinimized] = useState(true);
-    const state = useSDKState(selected);
 
 
     return (
@@ -126,13 +139,7 @@ export function StateViewer() {
             </div>
             {!minimized && (
                 <>
-                    <ScrollArea.Root className="flex-1 px-4 pb-8 text-[11px] leading-relaxed [mask-image:linear-gradient(to_bottom,transparent,black_48px,black_calc(100%-48px),transparent)]">
-                        <JsonView
-                            src={state}
-                            collapsed={3}
-                            theme="default"
-                        />
-                    </ScrollArea.Root>
+                    <StateTree selected={selected} />
                     {selected === 'ExecutionSDK' && <ExecutionSDKControls />}
                 </>
             )}

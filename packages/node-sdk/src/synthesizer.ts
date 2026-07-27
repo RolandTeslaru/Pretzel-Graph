@@ -62,8 +62,6 @@ export class Synthesizer {
             case "Data":
             case "DataList":
             case "DataFrame":
-            case "Integer":
-            case "Json":
             case "Unresolved":
             case "UnresolvedList":
                 return value;

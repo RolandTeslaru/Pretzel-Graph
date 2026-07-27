@@ -41,7 +41,7 @@ export const Blueprint = defineBlueprint({
         OutputBuilder.DataList("candles", "Candles", {
             tooltip: "Array of OHLCV candles: { t, T, s, i, o, c, h, l, v, n }."
         }),
-        OutputBuilder.Json("summary", "Summary", {
+        OutputBuilder.Data("summary", "Summary", {
             tooltip: "Convenience summary: { coin, interval, count, firstClose, lastClose, change, changePct }."
         }),
     ],

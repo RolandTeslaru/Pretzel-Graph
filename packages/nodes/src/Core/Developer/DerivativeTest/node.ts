@@ -36,7 +36,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             return {
                 passthrough,
                 value:  text,
-                length: text.length,
             } satisfies InferOutputs<typeof Blueprint, typeof fields>;
         }
 
@@ -46,7 +45,6 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 return {
                     passthrough,
                     value:     Number(fields.amount.toFixed(fields.decimals)),
-                    precision: fields.decimals,
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
             return {
