@@ -1,12 +1,13 @@
 import { Foundations } from "../Foundations";
+import { Field } from "../Foundations/Field";
 import { Port } from "../Foundations/Port";
 import type { Node } from "./node";
 import type { Workflow } from "./index";
 
 type PolymorphicResolutions = Record<Port.PolymorphicGroupId, Port.Variant>;
 
-const EXPOSED_PORT_ID_FIELD = "exposed_port_id" as Foundations.Field.Id;
-const REQUIRED_FIELD        = "required" as Foundations.Field.Id;
+const EXPOSED_PORT_ID_FIELD = "exposed_port_id" as Field.Id;
+const REQUIRED_FIELD        = "required" as Field.Id;
 
 function resolveVariant(unresolved: Port.Variant, resolved: Port.Variant): Port.Variant {
     if (unresolved === "UnresolvedList")   return Port.LIST_PROMOTION_MAP[resolved] ?? resolved;
@@ -16,7 +17,7 @@ function resolveVariant(unresolved: Port.Variant, resolved: Port.Variant): Port.
 
 // Base blueprint ports + the node's added ports, with each polymorphic group's variant replayed
 // from `resolutions`. Variadic slots are already materialized in `added`, so no count expansion.
-function resolve<P extends Foundations.Port.Input | Foundations.Port.Output>(
+function resolve<P extends Port.Input | Port.Output>(
     base: readonly P[],
     added: readonly P[] | undefined,
     resolutions: PolymorphicResolutions | undefined,
@@ -40,8 +41,8 @@ function resolve<P extends Foundations.Port.Input | Foundations.Port.Output>(
 // A subworkflow's exposed input ports, read from its `ExposeInputPort` nodes. An expose-node that
 // hasn't resolved its variant (or hasn't picked a port id) isn't a real port yet, so it's skipped
 // rather than throwing — this runs on the read path, per render.
-export function extractExposedInputs(wfData: Workflow.Data): Foundations.Port.Input[] {
-    const byId: Record<Port.Input.Id, Foundations.Port.Input> = {};
+export function extractExposedInputs(wfData: Workflow.Data): Port.Input[] {
+    const byId: Record<Port.Input.Id, Port.Input> = {};
 
     for (const node of Object.values(wfData.nodes)) {
         if (node.blueprintId !== "Core.SubWorkflow.ExposeInputPort") continue;
@@ -56,15 +57,15 @@ export function extractExposedInputs(wfData: Workflow.Data): Foundations.Port.In
             displayName: node.ui.displayName,
             variant,
             required: Boolean(wfData.staticValues[node.id]?.[REQUIRED_FIELD]),
-        } as Foundations.Port.Input;
+        } as Port.Input;
     }
 
     return Object.values(byId);
 }
 
 // A subworkflow's exposed output ports, read from its `ExposeOutputPort` nodes. Same skip-if-unresolved rule.
-export function extractExposedOutputs(wfData: Workflow.Data): Foundations.Port.Output[] {
-    const outputs: Foundations.Port.Output[] = [];
+export function extractExposedOutputs(wfData: Workflow.Data): Port.Output[] {
+    const outputs: Port.Output[] = [];
 
     for (const node of Object.values(wfData.nodes)) {
         if (node.blueprintId !== "Core.SubWorkflow.ExposeOutputPort") continue;
@@ -76,11 +77,13 @@ export function extractExposedOutputs(wfData: Workflow.Data): Foundations.Port.O
             id: Port.Output.Id.parse(node.id),
             displayName: node.ui.displayName,
             variant,
-        } as Foundations.Port.Output);
+        } as Port.Output);
     }
 
     return outputs;
 }
+
+
 
 /**
  * Derive a slim node's live input ports. When the node is a subworkflow (a `dependency` record is
@@ -89,10 +92,10 @@ export function extractExposedOutputs(wfData: Workflow.Data): Foundations.Port.O
  * Otherwise it's the blueprint base plus the node's own `addedInputs`.
  */
 export function resolveInputs(
-    base: readonly Foundations.Port.Input[],
+    base: readonly Port.Input[],
     node: Node.Raw,
     dependency: Workflow.Dependency | null,
-): Foundations.Port.Input[] {
+): Port.Input[] {
     if (dependency)
         return resolve([], extractExposedInputs(dependency.workflow_data), node.polymorphicResolutions);
     return resolve(base, node.addedInputs, node.polymorphicResolutions);
@@ -100,10 +103,10 @@ export function resolveInputs(
 
 /** Derive a slim node's live output ports. See {@link resolveInputs} for the `dependency` behavior. */
 export function resolveOutputs(
-    base: readonly Foundations.Port.Output[],
+    base: readonly Port.Output[],
     node: Node.Raw,
     dependency: Workflow.Dependency | null,
-): Foundations.Port.Output[] {
+): Port.Output[] {
     if (dependency)
         return resolve([], extractExposedOutputs(dependency.workflow_data), node.polymorphicResolutions);
     return resolve(base, node.addedOutputs, node.polymorphicResolutions);

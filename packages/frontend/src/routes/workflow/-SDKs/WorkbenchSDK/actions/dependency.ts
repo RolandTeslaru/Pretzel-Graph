@@ -76,6 +76,18 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
         },
 
         attachToNode: withAsyncCommit(async (nodeId, workflowId, mode) => {
+            // Chheck if the workflow already uses the dependency
+            let dependency = sdk.selectors.dependency.get(sdk.state, workflowId, mode)
+
+            if(dependency){
+                setState(withCyclesRecompute(s => {
+                    reducers.dependency.attachToNode(s, nodeId, mode, dependency)
+                }))
+                return true
+            }
+
+            // Make the API call
+
             const promise = createToastPromise<{ dependency: Workflow.Dependency }>(
                 mode === "publication"
                     ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
@@ -91,7 +103,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
                 const { dependency } = await promise
 
                 setState(withCyclesRecompute(s => {
-                    reducers.dependency.attachToNode(s, nodeId, workflowId, mode, dependency)
+                    reducers.dependency.attachToNode(s, nodeId, mode, dependency)
                 }))
             } catch (err) {
                 console.error("Failed to attach dependency", err)
