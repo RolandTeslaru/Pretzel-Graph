@@ -188,7 +188,12 @@ export namespace Market {
         o: z.string(),
     }).loose()
 
-    export const ClobInfo = z.object({
+    // The SDK's market endpoint answers in single-letter keys. Names were confirmed by comparing
+    // values against the REST /markets/{condition_id} response for the same market — mts/mos/mbf/
+    // tbf/ao/aot and the rewards pair all matched exactly. The handful whose meaning isn't
+    // established (rfqe, itode, ibce, and the rewards extras) pass through under their own keys
+    // rather than being given invented names.
+    const ClobInfoWire = z.object({
         c:     z.string(),
         t:     z.tuple([ClobToken, ClobToken]),
         mts:   z.number(),
@@ -207,6 +212,28 @@ export namespace Market {
         itode: z.boolean().optional(),
         ibce:  z.boolean().optional(),
     }).loose()
+
+    export const ClobInfo = ClobInfoWire.transform(wire => {
+        const { c, t, mts, nr, fd, mbf, tbf, r, ao, mos, sd, gst, cbos, aot, ...rest } = wire
+
+        return {
+            conditionId:          c,
+            tokens:               t.map(token => ({ tokenId: token.t, outcome: token.o })),
+            minimumTickSize:      mts,
+            minimumOrderSize:     mos,
+            negRisk:              nr,
+            acceptingOrders:      ao,
+            acceptingOrdersSince: aot,
+            clearBookOnStart:     cbos,
+            secondsDelay:         sd,
+            gameStartTime:        gst,
+            makerBaseFee:         mbf,
+            takerBaseFee:         tbf,
+            fees:    fd && { rate: fd.r, exponent: fd.e, takerOnly: fd.to },
+            rewards: r  && { minSize: r.mi, maxSpread: r.ma, enabled: r.e },
+            ...rest,
+        }
+    })
 }
 export type Market = z.infer<typeof Market.Schema>
 

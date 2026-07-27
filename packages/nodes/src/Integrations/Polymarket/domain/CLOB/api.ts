@@ -227,7 +227,11 @@ export namespace CLOBAPI {
                 fidelity: z.number().optional(),
                 interval: CLOB.Common.PriceHistoryInterval.optional(),
             }).prefault({})
-            export const Response = z.array(CLOB.MarketData.PricePoint)
+            // The endpoint wraps the series in { history: [...] }; unwrapped here so callers get
+            // the series itself, the way every other list-shaped response arrives.
+            export const Response = z
+                .object({ history: z.array(CLOB.MarketData.PricePoint) })
+                .transform(body => body.history)
             export type Request   = z.input<typeof Request>
             export type Response  = z.infer<typeof Response>
         }
