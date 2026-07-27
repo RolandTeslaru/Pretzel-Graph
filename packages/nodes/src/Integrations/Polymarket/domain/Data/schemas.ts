@@ -6,6 +6,7 @@ export namespace Common {
 
     export const ConditionId = z
         .string()
+        .trim()
         .regex(/^0x[a-fA-F0-9]{64}$/)
         .brand("PolymarketConditionId")
     export type ConditionId = z.infer<typeof ConditionId>
@@ -16,7 +17,10 @@ export namespace Common {
     ])
     export type ConditionIdOrEmpty = z.infer<typeof ConditionIdOrEmpty>
 
-    export const EventId = z.number().int().min(1)
+    // Coerced: node fields and tool arguments both arrive as strings, and Number() ignores
+    // surrounding whitespace — so "  12  " lands as 12 and "abc" fails the int check here
+    // rather than in each caller.
+    export const EventId = z.coerce.number().int().min(1)
     export type EventId = z.infer<typeof EventId>
 
     export const Side          = z.enum(["BUY", "SELL"])
@@ -57,6 +61,7 @@ export type Status = z.infer<typeof Status.Schema>
 export namespace Combo {
     export const ConditionId = z
         .string()
+        .trim()
         .regex(/^0x[a-fA-F0-9]{62}$/)
         .brand("PolymarketComboConditionId")
     export type ConditionId = z.infer<typeof ConditionId>

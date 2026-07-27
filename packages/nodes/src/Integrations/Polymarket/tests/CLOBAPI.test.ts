@@ -19,6 +19,30 @@ describe("Polymarket CLOB API requests", () => {
         )
     })
 
+    it("trims and validates ids at the request boundary", () => {
+        const HEX = `0x${"a".repeat(64)}`
+
+        // Ids reach the API inside a URL, where encodeURIComponent turns a stray space into %20
+        // and the request 404s. Trimming here covers node fields and tool arguments alike.
+        assert.deepEqual(
+            Polymarket.CLOB.API.MarketData.GetOrderBook.Request.parse({ token_id: "  token  " }),
+            { token_id: "token" },
+        )
+        assert.deepEqual(
+            Polymarket.CLOB.API.Markets.GetClobInfo.Request.parse({ condition_id: ` ${HEX} ` }),
+            { condition_id: HEX },
+        )
+
+        assert.throws(
+            () => Polymarket.CLOB.API.MarketData.GetOrderBook.Request.parse({ token_id: "   " }),
+            /must not be empty/,
+        )
+        assert.throws(
+            () => Polymarket.CLOB.API.Markets.GetClobInfo.Request.parse({ condition_id: "not-an-id" }),
+            /64-character hex condition id/,
+        )
+    })
+
     it("validates order-book sides and positive calculated amounts", () => {
         const PriceRequest =
             Polymarket.CLOB.API.MarketData.GetPrice.Request

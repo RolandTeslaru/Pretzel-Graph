@@ -8,7 +8,9 @@ export namespace Common {
     export type WalletAddress = z.infer<typeof WalletAddress>
 
     export const LegacyPagination = z.object({
-        limit:     z.number().int().min(0).optional(),
+        // Gamma caps these list endpoints at 500, and a limit of 0 returns nothing — bounding
+        // here means callers hand over a raw field value instead of pre-clamping it.
+        limit:     z.number().int().min(1).max(500).optional(),
         offset:    z.number().int().min(0).optional(),
         order:     z.string().optional(),
         ascending: z.boolean().optional(),
@@ -53,7 +55,7 @@ export namespace Image {
 export type Image = z.infer<typeof Image.Schema>
 
 export namespace Tag {
-    export const Id = z.coerce.string().brand("PolymarketGammaTagId")
+    export const Id = z.coerce.string().trim().brand("PolymarketGammaTagId")
     export type Id = z.infer<typeof Id>
 
     export const Schema = z
@@ -116,10 +118,10 @@ export namespace FeeSchedule {
 export type FeeSchedule = z.infer<typeof FeeSchedule.Schema>
 
 export namespace Market {
-    export const Id = z.coerce.string().brand("PolymarketGammaMarketId")
+    export const Id = z.coerce.string().trim().brand("PolymarketGammaMarketId")
     export type Id = z.infer<typeof Id>
 
-    export const ConditionId = z.string().brand("PolymarketConditionId")
+    export const ConditionId = z.string().trim().brand("PolymarketConditionId")
     export type ConditionId = z.infer<typeof ConditionId>
 
     export const QuestionId = z.string().brand("PolymarketQuestionId")
@@ -128,10 +130,24 @@ export namespace Market {
     export const TokenId = z.string().brand("PolymarketClobTokenId")
     export type TokenId = z.infer<typeof TokenId>
 
-    export const SerializedStringArray = z.union([
-        z.string(),
-        z.array(z.string()),
-    ])
+    // Gamma returns outcomes, prices and token ids as JSON-encoded strings rather than arrays.
+    // Decoding here means every consumer sees an array; a value that isn't valid JSON is passed
+    // through untouched rather than throwing, since Gamma evolves independently.
+    export const SerializedStringArray = z
+        .union([z.string(), z.array(z.string())])
+        .transform(value => {
+            if (typeof value !== "string")
+                return value
+
+            try {
+                const parsed: unknown = JSON.parse(value)
+
+                return Array.isArray(parsed) ? parsed as string[] : value
+            }
+            catch {
+                return value
+            }
+        })
 
     export const Schema = z
         .object({
@@ -275,7 +291,7 @@ export namespace Market {
 export type Market = z.infer<typeof Market.Schema>
 
 export namespace Series {
-    export const Id = z.coerce.string().brand("PolymarketGammaSeriesId")
+    export const Id = z.coerce.string().trim().brand("PolymarketGammaSeriesId")
     export type Id = z.infer<typeof Id>
 
     export const Schema = z
@@ -326,7 +342,7 @@ export namespace Series {
 export type Series = z.infer<typeof Series.Schema>
 
 export namespace Event {
-    export const Id = z.coerce.string().brand("PolymarketGammaEventId")
+    export const Id = z.coerce.string().trim().brand("PolymarketGammaEventId")
     export type Id = z.infer<typeof Id>
 
     export const Schema = z
@@ -481,7 +497,7 @@ export namespace Reaction {
 export type Reaction = z.infer<typeof Reaction.Schema>
 
 export namespace Comment {
-    export const Id = z.coerce.string().brand("PolymarketGammaCommentId")
+    export const Id = z.coerce.string().trim().brand("PolymarketGammaCommentId")
     export type Id = z.infer<typeof Id>
 
     export const ParentEntityType = z.enum(["Event", "Series", "market"])
