@@ -12,32 +12,8 @@ import {
 } from "../client";
 import { Polymarket } from "../domain";
 import { Blueprint } from "./blueprint";
-import {
-    clampLimit,
-    listEvents,
-    listMarkets,
-    searchMarketsLocal,
-} from "./query";
 import { buildTools } from "./tools";
 
-
-const requiredText = (value: string, displayName: string) => {
-    const text = value.trim();
-
-    if (!text)
-        throw new Error(`Polymarket Market: '${displayName}' is required.`);
-
-    return text;
-};
-
-const positiveInteger = (value: string, displayName: string) => {
-    const number = Number(value);
-
-    if (!Number.isInteger(number) || number < 1)
-        throw new Error(`Polymarket Market: '${displayName}' must be a positive integer.`);
-
-    return number;
-};
 
 
 @RegisterNode(Blueprint.id)
@@ -61,21 +37,19 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         if (fields.action === "search") {
 
-            if (fields.searchKind === "markets") {
-                const limit      = clampLimit(fields.searchMarketsMaxResults, 20);
-                const query      = fields.searchMarketsQuery.trim();
-                const fetchLimit = query ? Math.max(limit, 100) : limit;
-                const markets    = await listMarkets(clients.gamma, fields.searchMarketsStatus, fetchLimit);
-
+            if (fields.searchKind === "markets")
                 return {
-                    markets: searchMarketsLocal(markets, query, limit),
+                    markets: await Polymarket.Market.search(clients.gamma, {
+                        query:  fields.searchMarketsQuery,
+                        status: fields.searchMarketsStatus,
+                        limit:  fields.searchMarketsMaxResults,
+                    }),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
-            }
 
             return {
                 results: await clients.gamma.search.public({
-                    q:               requiredText(fields.publicSearchQuery, "Query"),
-                    limit_per_type:  clampLimit(fields.publicSearchMaxResults, 20),
+                    q:               fields.publicSearchQuery,
+                    limit_per_type:  fields.publicSearchMaxResults,
                     search_tags:     fields.publicSearchSearchTags,
                     search_profiles: fields.publicSearchSearchProfiles,
                 }),
@@ -90,26 +64,26 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
                     case "markets":
                         return {
-                            markets: await listMarkets(
+                            markets: await Polymarket.Market.list(
                                 clients.gamma,
                                 fields.listMarketsStatus,
-                                clampLimit(fields.listMarketsMaxResults, 20),
+                                fields.listMarketsMaxResults,
                             ),
                         } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
                     case "events":
                         return {
-                            events: await listEvents(
+                            events: await Polymarket.Event.list(
                                 clients.gamma,
                                 fields.listEventsStatus,
-                                clampLimit(fields.listEventsMaxResults, 20),
+                                fields.listEventsMaxResults,
                             ),
                         } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
                     case "tags":
                         return {
                             tags: await clients.gamma.tags.list({
-                                limit: clampLimit(fields.listTagsMaxResults, 20),
+                                limit: fields.listTagsMaxResults,
                             }),
                         } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
@@ -118,7 +92,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
                         return {
                             series: await clients.gamma.series.list({
-                                limit: clampLimit(fields.listSeriesMaxResults, 20),
+                                limit: fields.listSeriesMaxResults,
                                 slug:  slug ? [slug] : undefined,
                             }),
                         } satisfies InferOutputs<typeof Blueprint, typeof fields>;
@@ -127,16 +101,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     case "comments":
                         return {
                             comments: await clients.gamma.comments.list({
-                                parent_entity_type: Polymarket.Gamma.Comment.ParentEntityType.parse(
-                                    fields.listCommentsParentEntityType,
-                                ),
-                                parent_entity_id: positiveInteger(
-                                    requiredText(fields.listCommentsParentId, "Parent ID"),
-                                    "Parent ID",
-                                ),
+                                parent_entity_type: Polymarket.Gamma.Comment.ParentEntityType.parse(fields.listCommentsParentEntityType),
+                                parent_entity_id: fields.listCommentsParentId,
                                 get_positions: fields.listCommentsGetPositions,
                                 holders_only:  fields.listCommentsHoldersOnly,
-                                limit:         clampLimit(fields.listCommentsMaxResults, 20),
+                                limit:         fields.listCommentsMaxResults,
                             }),
                         } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
@@ -150,7 +119,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
                         return {
                             teams: await clients.gamma.sports.listTeams({
-                                limit: clampLimit(fields.listTeamsMaxResults, 20),
+                                limit: fields.listTeamsMaxResults,
                                 name:  name ? [name] : undefined,
                             }),
                         } satisfies InferOutputs<typeof Blueprint, typeof fields>;
@@ -159,14 +128,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             }
 
             if (fields.listDataResource === "trades") {
-                const conditionId = Polymarket.Data.Common.ConditionId.parse(
-                    requiredText(fields.listTradesConditionId, "Condition ID"),
-                );
+                const conditionId = Polymarket.Data.Common.ConditionId.parse(fields.listTradesConditionId);
 
                 return {
                     trades: await clients.data.trades.list({
                         market: [conditionId],
-                        limit:  clampLimit(fields.listTradesMaxResults, 100, 10_000),
+                        limit:  fields.listTradesMaxResults,
                         side:   fields.listTradesSide === "all"
                             ? undefined
                             : Polymarket.Data.Common.Side.parse(fields.listTradesSide),
@@ -174,14 +141,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
             }
 
-            const conditionId = Polymarket.Data.Common.ConditionId.parse(
-                requiredText(fields.listHoldersConditionId, "Condition ID"),
-            );
+            const conditionId = Polymarket.Data.Common.ConditionId.parse(fields.listHoldersConditionId);
 
             return {
                 holders: await clients.data.markets.listHolders({
                     market: [conditionId],
-                    limit:  clampLimit(fields.listHoldersMaxResults, 20, 20),
+                    limit:  fields.listHoldersMaxResults,
                 }),
             } satisfies InferOutputs<typeof Blueprint, typeof fields>;
         }
@@ -191,7 +156,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             switch (fields.getGammaResource) {
 
                 case "market": {
-                    const identifier = requiredText(fields.getMarketIdentifier, "Market Identifier");
+                    const identifier = fields.getMarketIdentifier;
                     const market     = fields.getMarketLookupBy === "slug"
                         ? await clients.gamma.markets.getBySlug({ slug: identifier })
                         : await clients.gamma.markets.getById({
@@ -202,7 +167,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 }
 
                 case "event": {
-                    const identifier = requiredText(fields.getEventIdentifier, "Event Identifier");
+                    const identifier = fields.getEventIdentifier;
                     const event      = fields.getEventLookupBy === "slug"
                         ? await clients.gamma.events.getBySlug({ slug: identifier })
                         : await clients.gamma.events.getById({
@@ -213,7 +178,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 }
 
                 case "tag": {
-                    const identifier = requiredText(fields.getTagIdentifier, "Tag Identifier");
+                    const identifier = fields.getTagIdentifier;
                     const tag        = fields.getTagLookupBy === "slug"
                         ? await clients.gamma.tags.getBySlug({ slug: identifier })
                         : await clients.gamma.tags.getById({
@@ -226,9 +191,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 case "series":
                     return {
                         series: await clients.gamma.series.getById({
-                            id: Polymarket.Gamma.Series.Id.parse(
-                                requiredText(fields.getSeriesIdentifier, "Series ID"),
-                            ),
+                            id: Polymarket.Gamma.Series.Id.parse(fields.getSeriesIdentifier),
                         }),
                     } satisfies InferOutputs<typeof Blueprint, typeof fields>;
             }
@@ -241,28 +204,28 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 case "marketConfiguration":
                     return {
                         market: await clients.clob.markets.getClobInfo({
-                            condition_id: requiredText(fields.getClobMarketConditionId, "Condition ID"),
+                            condition_id: fields.getClobMarketConditionId,
                         }),
                     } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
                 case "orderBook":
                     return {
                         orderBook: await clients.clob.marketData.getOrderBook({
-                            token_id: requiredText(fields.getOrderBookTokenId, "Token ID"),
+                            token_id: fields.getOrderBookTokenId,
                         }),
                     } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
                 case "midpoint":
                     return {
                         midpoint: await clients.clob.marketData.getMidpoint({
-                            token_id: requiredText(fields.getMidpointTokenId, "Token ID"),
+                            token_id: fields.getMidpointTokenId,
                         }),
                     } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
                 case "price":
                     return {
                         price: await clients.clob.marketData.getPrice({
-                            token_id: requiredText(fields.getPriceTokenId, "Token ID"),
+                            token_id: fields.getPriceTokenId,
                             side:     Polymarket.CLOB.Common.Side.parse(fields.getPriceSide),
                         }),
                     } satisfies InferOutputs<typeof Blueprint, typeof fields>;
@@ -270,30 +233,28 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 case "spread":
                     return {
                         spread: await clients.clob.marketData.getSpread({
-                            token_id: requiredText(fields.getSpreadTokenId, "Token ID"),
+                            token_id: fields.getSpreadTokenId,
                         }),
                     } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
                 case "lastTradePrice":
                     return {
                         lastTrade: await clients.clob.marketData.getLastTradePrice({
-                            token_id: requiredText(fields.getLastTradePriceTokenId, "Token ID"),
+                            token_id: fields.getLastTradePriceTokenId,
                         }),
                     } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
                 case "priceHistory":
                     return {
                         history: await clients.clob.marketData.getPriceHistory({
-                            market:   requiredText(fields.getPriceHistoryTokenId, "Token ID"),
-                            interval: Polymarket.CLOB.Common.PriceHistoryInterval.parse(
-                                fields.getPriceHistoryInterval,
-                            ),
+                            market:   fields.getPriceHistoryTokenId,
+                            interval: Polymarket.CLOB.Common.PriceHistoryInterval.parse(fields.getPriceHistoryInterval),
                             fidelity: fields.getPriceHistoryFidelity,
                         }),
                     } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
                 case "mechanics": {
-                    const tokenId = requiredText(fields.getMarketMechanicsTokenId, "Token ID");
+                    const tokenId = fields.getMarketMechanicsTokenId;
                     const [tickSize, negRisk, feeRate, feeExponent] = await Promise.all([
                         clients.clob.marketData.getTickSize({ token_id: tokenId }),
                         clients.clob.marketData.getNegRisk({ token_id: tokenId }),
@@ -315,7 +276,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 case "rewards":
                     return {
                         rewards: await clients.clob.rewards.getMarket({
-                            condition_id: requiredText(fields.getMarketRewardsConditionId, "Condition ID"),
+                            condition_id: fields.getMarketRewardsConditionId,
                         }),
                     } satisfies InferOutputs<typeof Blueprint, typeof fields>;
             }
@@ -323,9 +284,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
 
         if (fields.getDataResource === "openInterest") {
-            const conditionId = Polymarket.Data.Common.ConditionId.parse(
-                requiredText(fields.getOpenInterestConditionId, "Condition ID"),
-            );
+            const conditionId = Polymarket.Data.Common.ConditionId.parse(fields.getOpenInterestConditionId);
 
             return {
                 openInterest: await clients.data.markets.getOpenInterest({
@@ -336,10 +295,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         return {
             volume: await clients.data.markets.getLiveVolume({
-                id: positiveInteger(
-                    requiredText(fields.getLiveVolumeEventId, "Event ID"),
-                    "Event ID",
-                ),
+                id: fields.getLiveVolumeEventId,
             }),
         } satisfies InferOutputs<typeof Blueprint, typeof fields>;
     }

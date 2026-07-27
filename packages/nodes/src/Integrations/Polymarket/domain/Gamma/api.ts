@@ -16,7 +16,7 @@ export namespace GammaAPI {
     export namespace Events {
         const BaseQuery = Gamma.Common.DateRange.extend({
             id:            z.array(Gamma.Event.Id).optional(),
-            slug:          z.array(z.string()).optional(),
+            slug:          z.array(z.string().trim()).optional(),
             closed:        z.boolean().optional(),
             featured:      z.boolean().optional(),
             cyom:          z.boolean().optional(),
@@ -31,7 +31,7 @@ export namespace GammaAPI {
                 ...BaseQuery.shape,
                 tag_id:           z.number().int().optional(),
                 exclude_tag_id:   z.array(z.number().int()).optional(),
-                tag_slug:         z.string().optional(),
+                tag_slug:         z.string().trim().optional(),
                 related_tags:     z.boolean().optional(),
                 active:           z.boolean().optional(),
                 archived:         z.boolean().optional(),
@@ -55,7 +55,7 @@ export namespace GammaAPI {
                 start_time_min:     Gamma.Common.DateTime.optional(),
                 start_time_max:     Gamma.Common.DateTime.optional(),
                 tag_id:             z.array(z.number().int()).optional(),
-                tag_slug:           z.string().optional(),
+                tag_slug:           z.string().trim().optional(),
                 exclude_tag_id:     z.array(z.number().int()).optional(),
                 related_tags:       z.boolean().optional(),
                 tag_match:          z.string().optional(),
@@ -68,7 +68,7 @@ export namespace GammaAPI {
                 created_by:         z.array(z.string()).optional(),
                 parent_event_id:    z.number().int().optional(),
                 include_children:   z.boolean().optional(),
-                partner_slug:       z.string().optional(),
+                partner_slug:       z.string().trim().optional(),
                 include_chat:       z.boolean().optional(),
                 include_template:   z.boolean().optional(),
                 include_best_lines: z.boolean().optional(),
@@ -99,7 +99,7 @@ export namespace GammaAPI {
 
         export namespace GetBySlug {
             export const Request = z.object({
-                slug:             z.string(),
+                slug:             z.string().trim().min(1),
                 include_chat:     z.boolean().optional(),
                 include_template: z.boolean().optional(),
             })
@@ -121,7 +121,7 @@ export namespace GammaAPI {
     export namespace Markets {
         const BaseQuery = Gamma.Common.DateRange.extend({
             id:                    z.array(Gamma.Market.Id).optional(),
-            slug:                  z.array(z.string()).optional(),
+            slug:                  z.array(z.string().trim()).optional(),
             clob_token_ids:        z.array(Gamma.Market.TokenId).optional(),
             condition_ids:         z.array(Gamma.Market.ConditionId).optional(),
             question_ids:          z.array(Gamma.Market.QuestionId).optional(),
@@ -190,7 +190,7 @@ export namespace GammaAPI {
 
         export namespace GetBySlug {
             export const Request = z.object({
-                slug:        z.string(),
+                slug:        z.string().trim().min(1),
                 include_tag: z.boolean().optional(),
             })
             export type Request = z.input<typeof Request>
@@ -238,7 +238,7 @@ export namespace GammaAPI {
 
         export namespace GetBySlug {
             export const Request = z.object({
-                slug:             z.string(),
+                slug:             z.string().trim().min(1),
                 include_template: z.boolean().optional(),
             })
             export type Request = z.input<typeof Request>
@@ -257,7 +257,7 @@ export namespace GammaAPI {
 
         export namespace GetRelationshipsBySlug {
             export const Request = BaseQuery.extend({
-                slug: z.string(),
+                slug: z.string().trim().min(1),
             })
             export type Request = z.input<typeof Request>
 
@@ -275,7 +275,7 @@ export namespace GammaAPI {
 
         export namespace GetRelatedBySlug {
             export const Request = BaseQuery.extend({
-                slug: z.string(),
+                slug: z.string().trim().min(1),
             })
             export type Request = z.input<typeof Request>
 
@@ -287,7 +287,7 @@ export namespace GammaAPI {
     export namespace Series {
         export namespace List {
             export const Request = Gamma.Common.LegacyPagination.extend({
-                slug:              z.array(z.string()).optional(),
+                slug:              z.array(z.string().trim()).optional(),
                 categories_ids:    z.array(z.number().int()).optional(),
                 categories_labels: z.array(z.string()).optional(),
                 closed:            z.boolean().optional(),
@@ -319,7 +319,7 @@ export namespace GammaAPI {
                 // Gamma rejects the request unless both parent fields are set,
                 // although its published OpenAPI marks them optional.
                 parent_entity_type: Gamma.Comment.ParentEntityType,
-                parent_entity_id:   z.number().int(),
+                parent_entity_id:   z.coerce.number().int().positive(),
                 get_positions:      z.boolean().optional(),
                 holders_only:       z.boolean().optional(),
             })
@@ -367,10 +367,10 @@ export namespace GammaAPI {
     export namespace Search {
         export namespace Public {
             export const Request = z.object({
-                q:                   z.string().min(1),
+                q:                   z.string().trim().min(1),
                 cache:               z.boolean().optional(),
                 events_status:       z.string().optional(),
-                limit_per_type:      z.number().int().optional(),
+                limit_per_type:      z.number().int().min(1).max(500).optional(),
                 page:                z.number().int().optional(),
                 events_tag:          z.array(z.string()).optional(),
                 keep_closed_markets: z.number().int().optional(),

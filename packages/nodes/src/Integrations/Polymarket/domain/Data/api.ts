@@ -144,7 +144,7 @@ export namespace DataAPI {
     export namespace Trades {
         export namespace List {
             export const Request = withMarketOrEventFilter({
-                limit:        z.number().int().min(0).max(10_000).default(100),
+                limit:        z.number().int().min(1).max(10_000).default(100),
                 offset:       z.number().int().min(0).max(10_000).default(0),
                 takerOnly:    z.boolean().default(true),
                 filterType:   z.enum(["CASH", "TOKENS"]).optional(),
@@ -234,7 +234,7 @@ export namespace DataAPI {
         export namespace ListHolders {
             export const Request = z.object({
                 market:     z.array(Data.Common.ConditionId),
-                limit:      z.number().int().min(0).max(20).default(20),
+                limit:      z.number().int().min(1).max(20).default(20),
                 minBalance: z
                     .number()
                     .int()

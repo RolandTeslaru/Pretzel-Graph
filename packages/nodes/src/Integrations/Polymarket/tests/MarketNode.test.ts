@@ -10,8 +10,8 @@ import {
 } from "@pretzel-graph/node-sdk";
 import { Foundations } from "@pretzel-graph/shared/domain";
 
+import { Polymarket } from "../domain";
 import { Blueprint } from "../Market/blueprint";
-import { listMarkets } from "../Market/query";
 import { buildTools } from "../Market/tools";
 
 
@@ -245,7 +245,7 @@ describe("Polymarket Market queries", () => {
             },
         };
 
-        await listMarkets(gamma as never, "all", 20);
+        await Polymarket.Market.list(gamma as never, "all", 20);
 
         assert.equal(calls.length, 2);
     });
