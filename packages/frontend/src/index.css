@@ -302,7 +302,7 @@ code {
   --border: rgb(45, 45, 45);
 
   /* --border: theme(--color-stone-800); */
-  --input: rgb(35, 35, 40);
+  --input: rgb(25, 25, 30);
   --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
 
 

@@ -4,6 +4,13 @@ export namespace Common {
     export const DateTime = z.string()
     export type DateTime = z.infer<typeof DateTime>
 
+    // Gamma is inconsistent about whether its scoreboard and identifier fields are quoted — the
+    // same `gameId` comes back as a string on one event and a number on the next. These are
+    // display-only, so a type mismatch on one row of a hundred used to fail the whole list and
+    // take the tool down with it. Accept either and normalise.
+    export const LooseString = z.union([z.string(), z.number()]).transform(String)
+    export type LooseString = z.infer<typeof LooseString>
+
     export const WalletAddress = z.string().regex(/^0x[a-fA-F0-9]{40}$/)
     export type WalletAddress = z.infer<typeof WalletAddress>
 
@@ -238,7 +245,7 @@ export namespace Market {
             groupItemThreshold: z.string().nullish(),
             groupItemRange:     z.string().nullish(),
             sportsMarketType:   z.string().nullish(),
-            gameId:             z.string().nullish(),
+            gameId:             Common.LooseString.nullish(),
             line:               z.number().nullish(),
             seriesColor:        z.string().nullish(),
 
@@ -328,7 +335,7 @@ export namespace Series {
             startDate:           z.string().nullish(),
             pythTokenID:         z.string().nullish(),
             cgAssetName:         z.string().nullish(),
-            score:               z.number().nullish(),
+            score:               Common.LooseString.nullish(),
             commentCount:        z.number().nullish(),
             requiresTranslation: z.boolean().nullish(),
             events:              z.array(z.unknown()).nullish(),
@@ -401,11 +408,11 @@ export namespace Event {
             recurrence:  z.string().nullish(),
             sortBy:      z.string().nullish(),
             competitive: z.union([z.number(), z.string()]).nullish(),
-            score:       z.string().nullish(),
-            elapsed:     z.string().nullish(),
-            period:      z.string().nullish(),
+            score:       Common.LooseString.nullish(),
+            elapsed:     Common.LooseString.nullish(),
+            period:      Common.LooseString.nullish(),
             gameStatus:  z.string().nullish(),
-            gameId:      z.string().nullish(),
+            gameId:      Common.LooseString.nullish(),
 
             enableOrderBook:  z.boolean().nullish(),
             enableNegRisk:    z.boolean().nullish(),

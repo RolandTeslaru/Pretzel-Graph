@@ -52,7 +52,7 @@ const StatusIndicator = ({
             <GlowingFailedX />
           </div>
         </Tooltip.Trigger>
-        <Tooltip.Content align="center" side="right" sideOffset={10}>
+        <Tooltip.Content align="center" side="right" sideOffset={10} className='max-w-100 overflow-auto'>
           <FailedTooltipContent error={executionStatus.error} />
         </Tooltip.Content>
       </Tooltip.Root>
@@ -141,13 +141,14 @@ const renderInputIssueMessage = (issue: Validation.Issue.Input) => {
 export const FailedTooltipContent = ({ error }: { error: Execution.Session.NodeStatus["error"] }) => {
   if(!error)
     return null;
+
   return (
-    <div className=''>
-      <p className="text-sm dark:text-black text-white font-semibold">Node execution failed with error code: {error.code}</p>
+    <>
+      <p className="sticky left-0 top-0 text-sm dark:text-black text-white font-semibold">Node execution failed with error code: {error.code}</p>
       <div className='flex flex-col pt-1 text-xs'>
         <p>{error.message}</p>
       
       </div>
-    </div>
+    </>
   )
 }

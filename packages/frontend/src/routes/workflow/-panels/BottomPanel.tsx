@@ -58,7 +58,7 @@ export const BottomPanel = () => {
                                 </div>
                             </motion.div>
                         </Popover.Trigger>
-                        <Popover.Content side="top" align="center" sideOffset={12} className='rounded-xl p-3 max-w-100'>
+                        <Popover.Content side="top" align="center" sideOffset={12} className='rounded-xl'>
                             <ErrorViewer />
                         </Popover.Content>
                     </Popover.Root>

@@ -23,12 +23,20 @@ export type PolymarketCLOBWalletCredentials = {
     signatureType: Polymarket.CLOB.Common.SignatureType | `${Polymarket.CLOB.Common.SignatureType}`
 }
 
-export type PolymarketCLOBCredentials =
-    PolymarketCLOBWalletCredentials & {
-        apiKey:    string
-        apiSecret: string
-        passphrase: string
+export type PolymarketCLOBApiCredentials = {
+    apiKey:     string
+    apiSecret:  string
+    passphrase: string
+}
+
+/** L2 alone. The address stands in for the key it can't hold — see createReadOnlySigner. */
+export type PolymarketCLOBReadOnlyCredentials =
+    PolymarketCLOBApiCredentials & {
+        signerAddress: string
     }
+
+export type PolymarketCLOBCredentials =
+    PolymarketCLOBWalletCredentials & PolymarketCLOBApiCredentials
 
 function createSigner(privateKey: string) {
     const normalizedPrivateKey = privateKey.startsWith("0x")
@@ -91,6 +99,49 @@ export function createUnauthenticatedClobSDK(http: HTTP.ClientAPI) {
     const client = new ClobClient({
         host:          POLYMARKET_CLOB_BASE_URL,
         chain:         Chain.POLYGON,
+        throwOnError:  true,
+        retryOnError:  true,
+        axiosInstance: transport,
+    })
+
+    assertPatched(client, transport)
+
+    return client
+}
+
+// L2 requests carry an HMAC built from the API secret; the SDK consults the signer for exactly one
+// thing, POLY_ADDRESS (see createL2Headers). So reading an account needs the address, not the key.
+// Signing throws rather than being unimplemented — a read-only client that somehow reached an order
+// path fails loudly instead of quietly egressing an unsigned request.
+function createReadOnlySigner(address: string) {
+    return {
+        account: {
+            address: Polymarket.CLOB.Common.WalletAddress.parse(address),
+        },
+        signTypedData: () => {
+            throw new Error(
+                "Polymarket: this client holds an API key but no wallet key — it can read, not sign.",
+            )
+        },
+    } as unknown as ClobClient["signer"]
+}
+
+export function createReadOnlyClobSDK(
+    credentials: PolymarketCLOBReadOnlyCredentials,
+    http: HTTP.ClientAPI,
+) {
+    const transport = createTransport(http)
+
+    const client = new ClobClient({
+        host:          POLYMARKET_CLOB_BASE_URL,
+        chain:         Chain.POLYGON,
+        signer:        createReadOnlySigner(credentials.signerAddress),
+        creds: {
+            key:        credentials.apiKey,
+            secret:     credentials.apiSecret,
+            passphrase: credentials.passphrase,
+        },
+        useServerTime: true,
         throwOnError:  true,
         retryOnError:  true,
         axiosInstance: transport,
