@@ -1,6 +1,6 @@
 {
-  "version": "1785173422433",
-  "generatedAt": "2026-07-27T17:30:22.433Z",
+  "version": "1785176217496",
+  "generatedAt": "2026-07-27T18:16:57.496Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -10105,6 +10105,679 @@
             {
               "id": "tools",
               "displayName": "Polymarket Tools",
+              "variant": "ToolList"
+            }
+          ],
+          "ui": {
+            "accent": "port-Tool"
+          },
+          "replaces": [
+            "fields",
+            "inputs",
+            "outputs"
+          ],
+          "exclusive": true,
+          "_derivatives": []
+        }
+      ]
+    },
+    "Integrations.Polymarket.Profile": {
+      "id": "Integrations.Polymarket.Profile",
+      "toolCompatible": true,
+      "proxyCompatible": true,
+      "credentials": [
+        {
+          "id": "networkProxy",
+          "displayName": "Proxy",
+          "fields": [
+            {
+              "id": "protocol",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Protocol",
+              "variant": "MultiOption",
+              "initialValue": "http",
+              "options": [
+                {
+                  "value": "http",
+                  "displayName": "HTTP",
+                  "description": "CONNECT tunnel. Works for https targets."
+                },
+                {
+                  "value": "https",
+                  "displayName": "HTTPS",
+                  "description": "As HTTP, but the hop to the proxy is itself TLS."
+                },
+                {
+                  "value": "socks5",
+                  "displayName": "SOCKS5",
+                  "description": "What most residential/geo providers issue."
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "proxy.provider.com"
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 8080,
+              "min": 1,
+              "max": 65535,
+              "step": 1
+            },
+            {
+              "id": "username",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Username",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "NetworkProxy",
+          "optional": true
+        }
+      ],
+      "ui": {
+        "displayName": "Polymarket Profile",
+        "description": "Reads any Polymarket trader's positions, activity, and standing.",
+        "icon": "Polymarket",
+        "accent": "port-DataList"
+      },
+      "fields": [
+        {
+          "id": "walletAddress",
+          "advanced": false,
+          "required": true,
+          "reconcile": false,
+          "displayName": "Wallet Address",
+          "tooltip": "The wallet to read. Any address works — it need not be yours.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "0x…"
+        },
+        {
+          "id": "resource",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Resource",
+          "variant": "MultiOption",
+          "initialValue": "positions",
+          "options": [
+            {
+              "value": "positions",
+              "displayName": "Open Positions",
+              "description": "Currently held positions and their unrealised P&L."
+            },
+            {
+              "value": "closedPositions",
+              "displayName": "Closed Positions",
+              "description": "Settled positions and their realised P&L."
+            },
+            {
+              "value": "activity",
+              "displayName": "Activity",
+              "description": "Trades, splits, merges, redemptions and transfers."
+            },
+            {
+              "value": "value",
+              "displayName": "Portfolio Value",
+              "description": "Total value currently held."
+            },
+            {
+              "value": "tradedMarkets",
+              "displayName": "Markets Traded",
+              "description": "How many distinct markets this wallet has traded."
+            },
+            {
+              "value": "rank",
+              "displayName": "Leaderboard Rank",
+              "description": "Where this wallet places on the trader leaderboard."
+            },
+            {
+              "value": "identity",
+              "displayName": "Identity",
+              "description": "The public profile behind the address — name, bio, badges."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [],
+      "outputs": [],
+      "_derivatives": [
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "positions"
+          },
+          "fields": [
+            {
+              "id": "positionsMaxResults",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Results",
+              "variant": "Integer",
+              "initialValue": 100,
+              "min": 1,
+              "max": 500,
+              "step": 1
+            },
+            {
+              "id": "positionsSizeThreshold",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Minimum Size",
+              "tooltip": "Ignores dust positions below this token count.",
+              "variant": "Float",
+              "initialValue": 1,
+              "min": 0,
+              "step": 0.1
+            },
+            {
+              "id": "positionsSortBy",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Sort By",
+              "variant": "MultiOption",
+              "initialValue": "TOKENS",
+              "options": [
+                {
+                  "value": "TOKENS",
+                  "displayName": "Size"
+                },
+                {
+                  "value": "CURRENT",
+                  "displayName": "Current Value"
+                },
+                {
+                  "value": "INITIAL",
+                  "displayName": "Initial Value"
+                },
+                {
+                  "value": "CASHPNL",
+                  "displayName": "P&L (cash)"
+                },
+                {
+                  "value": "PERCENTPNL",
+                  "displayName": "P&L (%)"
+                },
+                {
+                  "value": "PRICE",
+                  "displayName": "Price"
+                },
+                {
+                  "value": "AVGPRICE",
+                  "displayName": "Average Price"
+                },
+                {
+                  "value": "RESOLVING",
+                  "displayName": "Resolving"
+                },
+                {
+                  "value": "TITLE",
+                  "displayName": "Title"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "positionsSortDirection",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Direction",
+              "variant": "MultiOption",
+              "initialValue": "DESC",
+              "options": [
+                {
+                  "value": "DESC",
+                  "displayName": "Descending"
+                },
+                {
+                  "value": "ASC",
+                  "displayName": "Ascending"
+                }
+              ],
+              "kind": "tab"
+            },
+            {
+              "id": "positionsRedeemableOnly",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Redeemable Only",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "outputs": [
+            {
+              "id": "positions",
+              "displayName": "Positions",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "closedPositions"
+          },
+          "fields": [
+            {
+              "id": "closedMaxResults",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Results",
+              "variant": "Integer",
+              "initialValue": 10,
+              "min": 1,
+              "max": 50,
+              "step": 1
+            },
+            {
+              "id": "closedSortBy",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Sort By",
+              "variant": "MultiOption",
+              "initialValue": "REALIZEDPNL",
+              "options": [
+                {
+                  "value": "REALIZEDPNL",
+                  "displayName": "Realised P&L"
+                },
+                {
+                  "value": "TIMESTAMP",
+                  "displayName": "Time"
+                },
+                {
+                  "value": "PRICE",
+                  "displayName": "Price"
+                },
+                {
+                  "value": "AVGPRICE",
+                  "displayName": "Average Price"
+                },
+                {
+                  "value": "TITLE",
+                  "displayName": "Title"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "closedSortDirection",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Direction",
+              "variant": "MultiOption",
+              "initialValue": "DESC",
+              "options": [
+                {
+                  "value": "DESC",
+                  "displayName": "Descending"
+                },
+                {
+                  "value": "ASC",
+                  "displayName": "Ascending"
+                }
+              ],
+              "kind": "tab"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "positions",
+              "displayName": "Closed Positions",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "activity"
+          },
+          "fields": [
+            {
+              "id": "activityMaxResults",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Results",
+              "variant": "Integer",
+              "initialValue": 100,
+              "min": 1,
+              "max": 500,
+              "step": 1
+            },
+            {
+              "id": "activityType",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Type",
+              "variant": "MultiOption",
+              "initialValue": "ALL",
+              "options": [
+                {
+                  "value": "ALL",
+                  "displayName": "All"
+                },
+                {
+                  "value": "TRADE",
+                  "displayName": "Trades"
+                },
+                {
+                  "value": "SPLIT",
+                  "displayName": "Splits"
+                },
+                {
+                  "value": "MERGE",
+                  "displayName": "Merges"
+                },
+                {
+                  "value": "REDEEM",
+                  "displayName": "Redemptions"
+                },
+                {
+                  "value": "REWARD",
+                  "displayName": "Rewards"
+                },
+                {
+                  "value": "DEPOSIT",
+                  "displayName": "Deposits"
+                },
+                {
+                  "value": "WITHDRAWAL",
+                  "displayName": "Withdrawals"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "activitySortDirection",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Direction",
+              "variant": "MultiOption",
+              "initialValue": "DESC",
+              "options": [
+                {
+                  "value": "DESC",
+                  "displayName": "Descending"
+                },
+                {
+                  "value": "ASC",
+                  "displayName": "Ascending"
+                }
+              ],
+              "kind": "tab"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "activity",
+              "displayName": "Activity",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "value"
+          },
+          "outputs": [
+            {
+              "id": "value",
+              "displayName": "Value",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "tradedMarkets"
+          },
+          "outputs": [
+            {
+              "id": "traded",
+              "displayName": "Markets Traded",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "identity"
+          },
+          "outputs": [
+            {
+              "id": "profile",
+              "displayName": "Profile",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "rank"
+          },
+          "fields": [
+            {
+              "id": "rankTimePeriod",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Period",
+              "variant": "MultiOption",
+              "initialValue": "DAY",
+              "options": [
+                {
+                  "value": "DAY",
+                  "displayName": "Day"
+                },
+                {
+                  "value": "WEEK",
+                  "displayName": "Week"
+                },
+                {
+                  "value": "MONTH",
+                  "displayName": "Month"
+                },
+                {
+                  "value": "ALL",
+                  "displayName": "All Time"
+                }
+              ],
+              "kind": "tab"
+            },
+            {
+              "id": "rankOrderBy",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Ranked By",
+              "variant": "MultiOption",
+              "initialValue": "PNL",
+              "options": [
+                {
+                  "value": "PNL",
+                  "displayName": "Profit"
+                },
+                {
+                  "value": "VOL",
+                  "displayName": "Volume"
+                }
+              ],
+              "kind": "tab"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "leaderboard",
+              "displayName": "Leaderboard",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "isConvertedToTool",
+            "operator": "==",
+            "value": true
+          },
+          "fields": [],
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "tools",
+              "displayName": "Polymarket Profile Tools",
               "variant": "ToolList"
             }
           ],
