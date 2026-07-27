@@ -14,6 +14,15 @@ export interface Derivative {
     readonly outputs?:      readonly Port.Output[]
     readonly credentials?:  readonly Vault.Credential.Template[]
     readonly ui?:           Partial<Blueprint["ui"]>
+    /**
+     * Members this branch replaces instead of appending to — e.g. tool mode, which swaps every
+     * data port for a single Tool port rather than adding one.
+     *
+     * Applied in a second pass, so the result doesn't depend on where the branch sits among its
+     * siblings. When any matched branch replaces a member, only replacing branches contribute
+     * to it; the base and every appending branch are discarded for that member.
+     */
+    readonly replaces?:     readonly Derivative.Member[]
     readonly _derivatives?: readonly Derivative[]
 }
 
@@ -30,6 +39,10 @@ export namespace Derivative {
 
     // Segments of a derivativeId: "action==list/listAPI==data"
     export const SEPARATOR = "/"
+
+    // Accumulating members. `ui` is excluded — it always overrides, key by key.
+    export const MEMBERS = ["fields", "inputs", "outputs", "credentials"] as const
+    export type  Member  = typeof MEMBERS[number]
 
     export type Condition = {
         readonly fieldId:  Field.Id
@@ -52,6 +65,7 @@ export namespace Derivative {
         outputs:      z.array(Port.Output.Schema).readonly().optional(),
         credentials:  z.array(Vault.Credential.Template.Schema).readonly().optional(),
         ui:           z.record(z.string(), z.string()).optional(),
+        replaces:     z.array(z.enum(MEMBERS)).readonly().optional(),
         _derivatives: z.array(Schema).readonly().optional(),
     }) as unknown as z.ZodType<Derivative>)
 
@@ -81,32 +95,71 @@ export namespace Derivative {
 }
 
 
+type Bucket = Record<Derivative.Member, unknown[]>
+
 type Accumulator = {
-    fields:      Field[]
-    inputs:      Port.Input[]
-    outputs:     Port.Output[]
-    credentials: Vault.Credential.Template[]
-    ui:          Record<string, unknown>
+    // Base + every appending branch.
+    appended:  Bucket
+    // Contributions from branches that declared `replaces` for that member.
+    replacing: Bucket
+    replaced:  Set<Derivative.Member>
+    ui:        Record<string, unknown>
 }
 
+const emptyBucket = (): Bucket => ({ fields: [], inputs: [], outputs: [], credentials: [] })
+
 const seed = (blueprint: Blueprint): Accumulator => ({
-    fields:      [...blueprint.fields],
-    inputs:      [...blueprint.inputs],
-    outputs:     [...blueprint.outputs],
-    credentials: [...(blueprint.credentials ?? [])],
-    ui:          { ...blueprint.ui },
+    appended: {
+        fields:      [...blueprint.fields],
+        inputs:      [...blueprint.inputs],
+        outputs:     [...blueprint.outputs],
+        credentials: [...(blueprint.credentials ?? [])],
+    },
+    replacing: emptyBucket(),
+    replaced:  new Set(),
+    ui:        { ...blueprint.ui },
 })
 
 // fields/ports/credentials accumulate; ui overrides key by key, deepest match winning.
 const contribute = (accumulator: Accumulator, derivative: Derivative) => {
-    accumulator.fields     .push(...(derivative.fields      ?? []))
-    accumulator.inputs     .push(...(derivative.inputs      ?? []))
-    accumulator.outputs    .push(...(derivative.outputs     ?? []))
-    accumulator.credentials.push(...(derivative.credentials ?? []))
+    for (const member of Derivative.MEMBERS) {
+        const items = derivative[member] ?? []
+
+        if (derivative.replaces?.includes(member)) {
+            // Recorded even when empty — "replace with nothing" is a legitimate instruction.
+            accumulator.replaced.add(member)
+            accumulator.replacing[member].push(...items)
+            continue
+        }
+
+        accumulator.appended[member].push(...items)
+    }
 
     for (const [key, value] of Object.entries(derivative.ui ?? {}))
         if (value !== undefined)
             accumulator.ui[key] = value
+}
+
+// Second pass: a replaced member takes only the replacing contributions, so the outcome doesn't
+// depend on where the replacing branch sits among its siblings.
+const resolveMember = (accumulator: Accumulator, member: Derivative.Member) =>
+    accumulator.replaced.has(member)
+        ? accumulator.replacing[member]
+        : accumulator.appended[member]
+
+// Framework-owned fields outlive a `fields` replacement. Without this, a defineTool branch would
+// delete `isConvertedToTool` along with everything else and the editor could never toggle back.
+const FRAMEWORK_FIELD_IDS: ReadonlySet<string> = new Set([
+    "isConvertedToTool", "signalDependency", "dataDependency", "onErrorStrategy",
+])
+
+const resolveFields = (blueprint: Blueprint, accumulator: Accumulator) => {
+    if (!accumulator.replaced.has("fields"))
+        return accumulator.appended.fields
+
+    const framework = blueprint.fields.filter(field => FRAMEWORK_FIELD_IDS.has(String(field.id)))
+
+    return [...accumulator.replacing.fields, ...framework]
 }
 
 const assemble = (blueprint: Blueprint, accumulator: Accumulator): Blueprint => {
@@ -114,10 +167,10 @@ const assemble = (blueprint: Blueprint, accumulator: Accumulator): Blueprint => 
 
     return {
         ...rest,
-        fields:      accumulator.fields,
-        inputs:      accumulator.inputs,
-        outputs:     accumulator.outputs,
-        credentials: accumulator.credentials,
+        fields:      resolveFields(blueprint, accumulator),
+        inputs:      resolveMember(accumulator, "inputs"),
+        outputs:     resolveMember(accumulator, "outputs"),
+        credentials: resolveMember(accumulator, "credentials"),
         ui:          accumulator.ui,
     } as unknown as Blueprint
 }
@@ -144,8 +197,10 @@ export function derive(
             const { fieldId } = derivative.condition
 
             // defineBlueprint guarantees the discriminant is declared at or above this level,
-            // and parents contribute before we recurse — so this lookup cannot miss.
-            const declared = accumulator.fields.find(field => field.id === fieldId)
+            // and parents contribute before we recurse — so this lookup cannot miss. Both buckets
+            // are searched: replacement is settled in a second pass, after the walk.
+            const declared = [...accumulator.appended.fields, ...accumulator.replacing.fields]
+                .find(field => (field as Field).id === fieldId) as Field | undefined
             const current  = fieldValues[fieldId] ?? declared?.initialValue
 
             if (!Derivative.matches(derivative.condition, current))
@@ -170,21 +225,36 @@ export function derive(
 /**
  * Replays a known derivativeId without needing the field values that produced it — for
  * reconstructing the exact variant an execution ran against.
+ *
+ * The id is a *set* of matched condition tokens, not a linear descent: several sibling branches
+ * can match at the same level (a shape branch and tool mode, say), and derive() flattens them
+ * into the same `/`-joined string as nested ones. So this re-walks the tree and takes any
+ * derivative whose token is in the set, recursing only into the ones it took.
  */
 export function deriveByPath(blueprint: Blueprint, derivativeId: Derivative.Id | string): Blueprint {
     const accumulator = seed(blueprint)
-    const tokens      = String(derivativeId).split(Derivative.SEPARATOR).filter(Boolean)
+    const wanted      = new Set(String(derivativeId).split(Derivative.SEPARATOR).filter(Boolean))
+    const seen        = new Set<string>()
 
-    let derivatives = (blueprint as Blueprint & { _derivatives?: readonly Derivative[] })._derivatives
+    const walk = (derivatives: readonly Derivative[] | undefined) => {
+        for (const derivative of derivatives ?? []) {
+            const token = Derivative.formatToken(derivative.condition)
+            if (!wanted.has(token))
+                continue
 
-    for (const token of tokens) {
-        const derivative = (derivatives ?? []).find(d => Derivative.formatToken(d.condition) === token)
-        if (!derivative)
-            throw new Error(`Blueprint.deriveByPath(${blueprint.id}): no derivative matching "${token}"`)
-
-        contribute(accumulator, derivative)
-        derivatives = derivative._derivatives
+            seen.add(token)
+            contribute(accumulator, derivative)
+            walk(derivative._derivatives)
+        }
     }
+
+    walk((blueprint as Blueprint & { _derivatives?: readonly Derivative[] })._derivatives)
+
+    const missing = [...wanted].filter(token => !seen.has(token))
+    if (missing.length)
+        throw new Error(
+            `Blueprint.deriveByPath(${blueprint.id}): no derivative matching ${missing.map(t => `"${t}"`).join(", ")}`,
+        )
 
     return assemble(blueprint, accumulator)
 }

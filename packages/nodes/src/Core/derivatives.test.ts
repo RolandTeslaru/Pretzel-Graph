@@ -123,6 +123,40 @@ describe("blueprint derivatives", () => {
         assert.deepEqual(Cascade.outputs, [])
     })
 
+    // Regression: derive() joins sibling matches with the same "/" it uses for nesting, so a
+    // path is a set of matched conditions, not a descent. Replaying it as a descent broke any
+    // node that matched two branches at the same level.
+    it("replays a path whose tokens are siblings, not a descent", () => {
+        const Siblings = defineBlueprint({
+            id: "Test.Derivatives.Siblings", displayName: "S", description: "S", icon: "S",
+            fields: [
+                FieldBuilder.MultiOption("mode", "Mode", {
+                    options: [{ value: "a" }, { value: "b" }], initialValue: "a",
+                }),
+                FieldBuilder.Boolean("extra", "Extra", { initialValue: true }),
+            ],
+            inputs: [], outputs: [],
+
+            "mode==a":      { outputs: [OutputBuilder.Data("fromMode", "From Mode")] },
+            "extra==true":  { outputs: [OutputBuilder.Data("fromExtra", "From Extra")] },
+        })
+
+        const { blueprint, derivativeId } = Blueprint.derive(Siblings as never, {})
+
+        assert.equal(derivativeId, "mode==a/extra==true")
+        assert.deepEqual(ids(blueprint.outputs), ["fromMode", "fromExtra"])
+
+        const replayed = Blueprint.deriveByPath(Siblings as never, derivativeId!)
+        assert.deepEqual(ids(replayed.outputs), ["fromMode", "fromExtra"])
+    })
+
+    it("rejects a path token no derivative matches", () => {
+        assert.throws(
+            () => Blueprint.deriveByPath(Cascade as never, "action==list/nope==1"),
+            /no derivative matching "nope==1"/,
+        )
+    })
+
     it("replays a path without field values", () => {
         const replayed = Blueprint.deriveByPath(Cascade as never, "action==list/listAPI==data")
 
