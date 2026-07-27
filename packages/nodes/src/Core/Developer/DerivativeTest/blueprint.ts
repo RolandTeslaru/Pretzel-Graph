@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineTool, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 // Exercises the derivative system end to end: nesting, per-branch fields, per-branch outputs,
 // a ui override, and a != condition. `shape` is the only field on the base — everything else
@@ -12,6 +12,7 @@ export const Blueprint = defineBlueprint({
     description: "Sandbox node for exercising conditional blueprint structure.",
     icon: "GitBranch",
     accent: "utility",
+    toolCompatible: true,
     fields: [
         FieldBuilder.MultiOption("shape", "Shape", {
             options: [
@@ -66,4 +67,19 @@ export const Blueprint = defineBlueprint({
             outputs: [OutputBuilder.Integer("precision", "Precision")],
         },
     },
+
+    // Tool mode inverts the philosophy: nothing to select and nothing to reconcile — the node
+    // exposes its surface and the agent picks. defineTool is terminal, so it replaces the run-mode
+    // structure outright rather than layering onto it. No separate ToolBlueprint export.
+    "isConvertedToTool==true": defineTool({
+        fields: [
+            FieldBuilder.Integer("defaultLength", "Default Length", {
+                initialValue: 10,
+                tooltip:      "Fallback used when the agent doesn't supply one.",
+            }),
+        ],
+        inputs:  [],
+        outputs: [OutputBuilder.Tool("tool", "Tool")],
+        ui:      { icon: "Wrench" },
+    }),
 });

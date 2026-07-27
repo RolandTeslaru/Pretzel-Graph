@@ -3,6 +3,7 @@ import { Vertex } from "../S2/graph";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { AggexEngine } from "./index";
+import { frameworkFields } from "./framework-fields";
 
 /**
  * Routing decisions: which downstream branches a router node took
@@ -44,8 +45,8 @@ export class RoutingService {
 
         const { instance, wfNode } = entry;
 
-        const signalDep = instance.fieldValues["signalDependency" as Field.Id];
-        const dataDep   = instance.fieldValues["dataDependency" as Field.Id];
+        const signalDep = frameworkFields(instance)["signalDependency" as Field.Id];
+        const dataDep   = frameworkFields(instance)["dataDependency" as Field.Id];
 
         if(signalDep === "AND")
             return true;

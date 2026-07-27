@@ -33,8 +33,28 @@ type StructuralKey =
     | "id" | "displayName" | "description" | "icon" | "accent" | "iconColor"
     | "fields" | "inputs" | "outputs" | "credentials" | "webhooks"
     | "toolCompatible" | "proxyCompatible" | "flags" | "itemScope" | "ui"
+    | "replaces" | "__tool"
 
 type ConditionKeys<T> = Exclude<Extract<keyof T, string>, StructuralKey>
+
+// Framework-owned fields. A condition on one is a real derivative at runtime — tool mode swaps
+// ports that way — but it's an axis orthogonal to the node's own discriminants, so it stays out
+// of the narrowing union. Folding both axes in would need a cross-product, which blows the
+// checker's instantiation limit. Ports contributed by these branches still resolve through
+// InferOutputs/InferIncoming, which test each condition independently.
+type FrameworkDiscriminant =
+    "isConvertedToTool" | "signalDependency" | "dataDependency" | "onErrorStrategy"
+
+type NarrowingKeys<T> = {
+    [K in ConditionKeys<T>]:
+        T[K] extends { __tool: true } ? never                                    // its own arm, below
+        : ParseKey<K & string> extends { f: FrameworkDiscriminant } ? never
+        : K
+}[ConditionKeys<T>]
+
+type ToolKeys<T> = {
+    [K in ConditionKeys<T>]: T[K] extends { __tool: true } ? K : never
+}[ConditionKeys<T>]
 
 type ParseKey<K extends string> =
     K extends `${infer F}==${infer V}` ? { f: F; v: V; eq: true }
@@ -78,18 +98,16 @@ type CoveredBy<K extends string, TPool> =
             : Exclude<ValueById<TPool, F>, Coerce<ValueById<TPool, F>, V>>
         : never
 
-// Every value some sibling branch covers, so the leftovers get their own arm.
-type MatchedLiterals<T, TPool> = {
-    [K in ConditionKeys<T>]: CoveredBy<K & string, TPool>
-}[ConditionKeys<T>]
+// Every value some sibling branch on the SAME discriminant covers, so the leftovers get an arm.
+type MatchedLiterals<T, F extends string, TPool> = {
+    [K in KeysForField<T, F>]: CoveredBy<K & string, TPool>
+}[KeysForField<T, F>]
 
-type DiscriminantOf<T> = ParseKey<ConditionKeys<T>> extends { f: infer F extends string } ? F : never
+type DiscriminantOf<T> = ParseKey<NarrowingKeys<T>> extends { f: infer F extends string } ? F : never
 
-type UnmatchedArm<T, TPool> =
-    DiscriminantOf<T> extends infer F extends string
-        ? Exclude<ValueById<TPool, F>, MatchedLiterals<T, TPool>> extends infer R
-            ? [R] extends [never] ? never : { [P in F]: R }
-            : never
+type UnmatchedArm<T, F extends string, TPool> =
+    Exclude<ValueById<TPool, F>, MatchedLiterals<T, F, TPool>> extends infer R
+        ? [R] extends [never] ? never : { [P in F]: R }
         : never
 
 type BranchArm<T, K extends ConditionKeys<T>, TPool> =
@@ -101,21 +119,66 @@ type BranchArm<T, K extends ConditionKeys<T>, TPool> =
         } & InferBody<T[K], TPool | FieldsAt<T[K]>>
         : never
 
+type KeysForField<T, F extends string> = {
+    [K in ConditionKeys<T>]: ParseKey<K & string> extends { f: F } ? K : never
+}[ConditionKeys<T>]
+
+// One axis: the node's own discriminant. Intersecting a second axis for the framework fields
+// (so `isConvertedToTool === true` would narrow) produces a cross-product TypeScript can't
+// represent — measured, it fails with "union type too complex". Tool mode therefore stays on
+// onBuildTool rather than collapsing into onRun.
 type Branches<T, TPool> =
-    [ConditionKeys<T>] extends [never] ? {}
-    : { [K in ConditionKeys<T>]: BranchArm<T, K, TPool> }[ConditionKeys<T>] | UnmatchedArm<T, TPool>
+    [NarrowingKeys<T>] extends [never] ? {}
+    : { [K in NarrowingKeys<T>]: BranchArm<T, K & ConditionKeys<T>, TPool> }[NarrowingKeys<T>]
+        | UnmatchedArm<T, DiscriminantOf<T>, TPool>
 
 type InferBody<T, TPool> = ValuesAt<T> & Branches<T, TPool>
 
 type Definitionof<D> = D extends { __definition?: infer TDef } ? Exclude<TDef, undefined> : never
 
 
+// Framework fields outlive a defineTool replacement, so they appear on both arms.
+type FrameworkFields<D> =
+    Pick<FlatFieldValues<D>, Extract<keyof FlatFieldValues<D>, FrameworkDiscriminant>>;
+
+/**
+ * Tool mode's arm. Because defineTool is *terminal and total-replacing*, this is disjoint from
+ * the run-mode arms rather than orthogonal to them — a sum, not a product. That's what makes it
+ * affordable, and what lets `onRun` narrow on the discriminant.
+ */
+// The tool discriminant is a framework field: it's appended to the blueprint, not declared in
+// the definition's own `fields`, so its value type has to come from FlatFieldValues.
+type ValueOfField<D, F extends string> =
+    F extends keyof FlatFieldValues<D> ? FlatFieldValues<D>[F] : never;
+
+type ToolArm<D, TDef> =
+    [ToolKeys<TDef>] extends [never] ? never
+    : {
+        [K in ToolKeys<TDef>]:
+            ParseKey<K & string> extends { f: infer F extends string; v: infer V extends string }
+                ? { [P in F]: Coerce<ValueOfField<D, F>, V> }
+                    & ValuesAt<TDef[K]>
+                    & FrameworkFields<D>
+                : never
+    }[ToolKeys<TDef>];
+
+// Run mode carries the complement of whatever the tool arm covers, so testing the discriminant
+// eliminates one side cleanly.
+type RunComplement<D, TDef> =
+    [ToolKeys<TDef>] extends [never] ? {}
+    : ParseKey<ToolKeys<TDef> & string> extends { f: infer F extends string; v: infer V extends string }
+        ? { [P in F]: Exclude<ValueOfField<D, F>, Coerce<ValueOfField<D, F>, V>> }
+        : {};
+
+type RunArm<D, TDef> =
+    FlatFieldValues<D> & Branches<TDef, FieldsAt<TDef>> & RunComplement<D, TDef>;
+
 export type InferFieldValues<D> = 0 extends (1 & D) ? any
     : [ConditionKeys<Definitionof<D>>] extends [never]
         // No condition keys — identical to the pre-derivatives behaviour.
         ? FlatFieldValues<D>
-        // Base fields (incl. framework defaults) intersected with the branch union.
-        : FlatFieldValues<D> & Branches<Definitionof<D>, FieldsAt<Definitionof<D>>>;
+        // ToolArm collapses to `never` when there's no defineTool branch, leaving RunArm alone.
+        : ToolArm<D, Definitionof<D>> | RunArm<D, Definitionof<D>>;
 
 /**
  * Subset of InferFieldValues restricted to reconcile fields (marked via FieldBuilder.reconciling).
@@ -203,12 +266,15 @@ type IncomingObject<T> = T extends readonly { id: string }[]
     ? { [K in keyof _InferInputsRaw<T>]: _InferInputsRaw<T>[K] }
     : never;
 
-type DerivedIncoming<TDef, TValues> =
-    [ConditionKeys<TDef>] extends [never] ? {}
+type CollectIncoming<TDef, TValues, TWant extends boolean, D extends number = 5> =
+    D extends 0 ? {}
+    : [ConditionKeys<TDef>] extends [never] ? {}
     : UnionToIntersection<{
         [K in ConditionKeys<TDef>]: ConditionHolds<TValues, K & string> extends true
-            ? IncomingObject<TDef[K] extends { inputs: infer I } ? I : readonly []>
-                & DerivedIncoming<TDef[K], TValues>
+            ? (DeclaresReplace<TDef[K], "inputs"> extends TWant
+                ? IncomingObject<TDef[K] extends { inputs: infer I } ? I : readonly []>
+                : {})
+                & CollectIncoming<TDef[K], TValues, TWant, Prev[D]>
             : {}
     }[ConditionKeys<TDef>]>;
 
@@ -227,8 +293,38 @@ export type InferIncoming<D, TValues = never> = 0 extends (1 & D) ? any
     : D extends { inputs: infer T }
     ? [TValues] extends [never]
         ? IncomingObject<T>
-        : IncomingObject<T> & DerivedIncoming<Definitionof<D>, TValues>
+        : ReplacesMember<Definitionof<D>, TValues, "inputs"> extends true
+            ? CollectIncoming<Definitionof<D>, TValues, true>
+            : IncomingObject<T> & CollectIncoming<Definitionof<D>, TValues, false>
     : never;
+
+
+/**
+ * Ports of a node's `isConvertedToTool==true` derivative.
+ *
+ * The framework discriminants are excluded from InferFieldValues' narrowing union — folding them
+ * in needs a cross-product TypeScript can't represent. But nothing forces us to *narrow* to reach
+ * that branch: ConditionHolds tests each condition against whatever type it's handed, so asserting
+ * the condition directly resolves the branch with no union involved.
+ *
+ *     protected override async onBuildTool(): Promise<InferToolOutputs<typeof Blueprint>> {
+ *         return { tool: … }        // typed to the branch, `replaces` honoured
+ *     }
+ */
+type ToolMode = { isConvertedToTool: true };
+
+export type InferToolOutputs<D>  = InferOutputs<D, ToolMode>;
+export type InferToolIncoming<D> = InferIncoming<D, ToolMode>;
+
+/**
+ * Field values in tool mode — the defineTool body's own fields, since it replaces the run-mode
+ * ones outright. `this.fieldValues` is typed for run mode, so onBuildTool casts through this.
+ */
+export type InferToolFieldValues<D> =
+    [ToolKeys<Definitionof<D>>] extends [never] ? Record<string, never>
+    : UnionToIntersection<{
+        [K in ToolKeys<Definitionof<D>>]: ValuesAt<Definitionof<D>[K]>
+    }[ToolKeys<Definitionof<D>>]>;
 
 /**
  * Infer runtime output values from a Blueprint.
@@ -270,12 +366,41 @@ type ConditionHolds<TValues, K extends string> =
             : false
         : false;
 
-type DerivedOutputs<TDef, TValues> =
-    [ConditionKeys<TDef>] extends [never] ? {}
+// Recursion budget. The authored tree is only a few levels deep, but these types are also
+// instantiated against unresolved generics (RuntimeNode's T_Blueprint), where TypeScript can't
+// prove termination and bails with "excessively deep".
+type Prev = [never, 0, 1, 2, 3, 4, 5];
+
+// defineTool is terminal and total — it replaces every member. The `replaces` array is added by
+// the compiler, so the authored type carries only the marker.
+type DeclaresReplace<TBody, M extends string> =
+    TBody extends { __tool: true } ? true
+    : TBody extends { replaces: readonly (infer R)[] } ? (M extends R ? true : false)
+    : false;
+
+// Does any branch that holds — at any depth — replace this member? Mirrors derive()'s second
+// pass: when one does, the base and every appending branch are discarded for that member.
+type ReplacesMember<TDef, TValues, M extends string, D extends number = 5> =
+    D extends 0 ? false
+    : [ConditionKeys<TDef>] extends [never] ? false
+    : true extends {
+        [K in ConditionKeys<TDef>]: ConditionHolds<TValues, K & string> extends true
+            ? DeclaresReplace<TDef[K], M> extends true
+                ? true
+                : ReplacesMember<TDef[K], TValues, M, Prev[D]>
+            : false
+    }[ConditionKeys<TDef>] ? true : false;
+
+// Contributions from holding branches, keeping only those whose replace-ness matches TWant.
+type CollectOutputs<TDef, TValues, TWant extends boolean, D extends number = 5> =
+    D extends 0 ? {}
+    : [ConditionKeys<TDef>] extends [never] ? {}
     : UnionToIntersection<{
         [K in ConditionKeys<TDef>]: ConditionHolds<TValues, K & string> extends true
-            ? OutputsObject<TDef[K] extends { outputs: infer O } ? O : readonly []>
-                & DerivedOutputs<TDef[K], TValues>
+            ? (DeclaresReplace<TDef[K], "outputs"> extends TWant
+                ? OutputsObject<TDef[K] extends { outputs: infer O } ? O : readonly []>
+                : {})
+                & CollectOutputs<TDef[K], TValues, TWant, Prev[D]>
             : {}
     }[ConditionKeys<TDef>]>;
 
@@ -294,7 +419,9 @@ export type InferOutputs<D, TValues = never> = 0 extends (1 & D) ? any
     : D extends { outputs: infer T }
     ? [TValues] extends [never]
         ? OutputsObject<T>
-        : OutputsObject<T> & DerivedOutputs<Definitionof<D>, TValues>
+        : ReplacesMember<Definitionof<D>, TValues, "outputs"> extends true
+            ? CollectOutputs<Definitionof<D>, TValues, true>
+            : OutputsObject<T> & CollectOutputs<Definitionof<D>, TValues, false>
     : never;
 
 /**
