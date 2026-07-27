@@ -15,8 +15,6 @@ export namespace Port {
         "Tool",
         "ToolList",
         "DataFrame",
-        "Integer",
-        "Json",
         "Unresolved",
         "UnresolvedScalar",
         "UnresolvedList",
@@ -123,16 +121,6 @@ export namespace Port {
         })
         export type DataFrame = z.infer<typeof DataFrame>
 
-        export const Integer = Base.extend({
-            variant: portLiteral("Integer"),
-        })
-        export type Integer = z.infer<typeof Integer>
-
-        export const Json = Base.extend({
-            variant: portLiteral("Json"),
-        })
-        export type Json = z.infer<typeof Json>
-
         export const Unresolved = Base.extend({
             variant: portLiteral("Unresolved"),
         })
@@ -163,8 +151,6 @@ export namespace Port {
             Tool,
             ToolList,
             DataFrame,
-            Integer,
-            Json,
             Unresolved,
             UnresolvedScalar,
             UnresolvedList,
@@ -197,8 +183,6 @@ export namespace Port {
             Port.Variants.Tool.extend(inputFields),
             Port.Variants.ToolList.extend(inputFields),
             Port.Variants.DataFrame.extend(inputFields),
-            Port.Variants.Integer.extend(inputFields),
-            Port.Variants.Json.extend(inputFields),
             Port.Variants.Unresolved.extend(inputFields),
             Port.Variants.UnresolvedScalar.extend(inputFields),
             Port.Variants.UnresolvedList.extend(inputFields),
@@ -231,8 +215,6 @@ export namespace Port {
             Port.Variants.Tool.extend(outputFields),
             Port.Variants.ToolList.extend(outputFields),
             Port.Variants.DataFrame.extend(outputFields),
-            Port.Variants.Integer.extend(outputFields),
-            Port.Variants.Json.extend(outputFields),
             Port.Variants.Unresolved.extend(outputFields),
             Port.Variants.UnresolvedScalar.extend(outputFields),
             Port.Variants.UnresolvedList.extend(outputFields),

@@ -125,7 +125,10 @@ export function compileDerivatives(
                     outputs:      child.outputs     as Derivative["outputs"],
                     credentials:  child.credentials as unknown as Derivative["credentials"],
                     ui:           child.ui,
-                    replaces:     [...Blueprint.Derivative.MEMBERS],
+                    // Credentials are never per-call intent — an agent doesn't choose which
+                    // account or proxy a node authenticates through. They survive tool mode, so
+                    // any declared here append rather than replace.
+                    replaces:     ["fields", "inputs", "outputs"],
                     _derivatives: [],
                 } satisfies Derivative;
 

@@ -149,27 +149,7 @@ export namespace OutputBuilder {
     };
   }
 
-  export function Integer<TId extends string>(
-    id: TId,
-    displayName: string,
-    options: Options = {},
-  ): LiteralOutput<TId, "Integer", Port.Variants.Integer, number> {
-    return {
-      ...buildBase(id, displayName, options),
-      variant: "Integer",
-    };
-  }
 
-  export function Json<TId extends string>(
-    id: TId,
-    displayName: string,
-    options: Options = {},
-  ): LiteralOutput<TId, "Json", Port.Variants.Json, any> {
-    return {
-      ...buildBase(id, displayName, options),
-      variant: "Json",
-    };
-  }
 
   export function DataFrame<TId extends string>(
     id: TId,

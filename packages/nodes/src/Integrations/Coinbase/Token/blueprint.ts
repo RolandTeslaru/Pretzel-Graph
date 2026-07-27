@@ -46,7 +46,7 @@ export const Blueprint = defineBlueprint({
         OutputBuilder.Data("balance", "Balance", {
             tooltip: "Token balance as a number."
         }),
-        OutputBuilder.Json("data", "Full Response", {
+        OutputBuilder.Data("data", "Full Response", {
             tooltip: "Complete balance response including token metadata."
         }),
     ],

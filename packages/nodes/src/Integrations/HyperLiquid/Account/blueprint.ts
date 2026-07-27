@@ -18,7 +18,7 @@ export const Blueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Json("state", "Clearinghouse State", {
+        OutputBuilder.Data("state", "Clearinghouse State", {
             tooltip: "Full clearinghouseState response: margin summary, asset positions, withdrawable, etc."
         }),
         OutputBuilder.DataList("positions", "Positions", {

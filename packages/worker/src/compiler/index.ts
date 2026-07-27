@@ -266,8 +266,8 @@ export class WorkflowCompiler {
         const staticValues = workflowData.staticValues[wfNode.id] ?? {};
         const base         = await CatalogueService.loadBlueprint(wfNode.blueprintId);
 
-        let blueprint = wfNode.reconciledBlueprintId && base
-            ? await CatalogueService.reconcile(wfNode.blueprintId, mapFieldValues(base.fields, staticValues))
+        let blueprint = base
+            ? await this.deriveNodeBlueprint(wfNode, base, staticValues)
             : base;
 
         if (!blueprint)
@@ -283,6 +283,41 @@ export class WorkflowCompiler {
         CatalogueService.registerBlueprint(wfNode.reconciledBlueprintId ?? wfNode.blueprintId, blueprint);
 
         return blueprint;
+    }
+
+
+
+    // Derivative blueprints replay the path the editor already settled on rather than re-deriving
+    // from field values: only base fields are known here, and a nested discriminant is declared by
+    // the branch that introduces it — so derive() would fall back to its initialValue and silently
+    // resolve a different branch. Legacy reconcile.ts nodes keep the value-encoded id.
+    private async deriveNodeBlueprint(
+        wfNode:       Workflow.Node.Raw,
+        base:         Foundations.Blueprint,
+        staticValues: Record<Foundations.Field.Id, Foundations.Field.Value>,
+    ): Promise<Foundations.Blueprint | null> {
+
+        if (base._derivatives?.length) {
+
+            // No path to replay when the node was never reconciled, or when a null derivativeId
+            // serialised as the bare blueprint id — fall back to deriving from what we have.
+            const path = wfNode.reconciledBlueprintId && Blueprint.isReconciledId(wfNode.reconciledBlueprintId)
+                ? wfNode.reconciledBlueprintId.slice(base.id.length + 1)
+                : null;
+
+            if (!path)
+                return Blueprint.derive(base, staticValues).blueprint;
+
+            return Blueprint.deriveByPath(base, path);
+        }
+
+        if (!wfNode.reconciledBlueprintId)
+            return base;
+
+        return await CatalogueService.reconcile(
+            wfNode.blueprintId,
+            mapFieldValues(base.fields, staticValues),
+        );
     }
 
 
