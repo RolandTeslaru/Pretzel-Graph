@@ -20,6 +20,7 @@ import { NodeIOService } from "./node-io-service";
 import { ErrorService } from "./error-service";
 import { SessionService } from "./session-service";
 import { System } from "@pretzel-graph/shared/system";
+import { frameworkFields } from "./framework-fields";
 
 
 export interface AggexHooks {
@@ -246,7 +247,7 @@ export class AggexEngine {
             return intercepted;
 
         const allDependencies = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
-        const dataDependency  = entry.instance.fieldValues["dataDependency" as Field.Id];
+        const dataDependency  = frameworkFields(entry.instance)["dataDependency" as Field.Id];
 
         let result;
         let projectedResult;
@@ -272,7 +273,7 @@ export class AggexEngine {
 
             this.flightRecorder?.onNodeExecuted(wfNode.id, signals, allDependencies, inputs, fields, ctx);
 
-            const isTool = nodeInstance.fieldValues["isConvertedToTool" as Field.Id] === true;
+            const isTool = frameworkFields(nodeInstance)["isConvertedToTool" as Field.Id] === true;
 
             if(isTool)
                 result = await nodeInstance.buildTool(inputs, fields);

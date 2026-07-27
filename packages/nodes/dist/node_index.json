@@ -1,6 +1,6 @@
 {
-  "version": "1785093547033",
-  "generatedAt": "2026-07-26T19:19:07.033Z",
+  "version": "1785125566378",
+  "generatedAt": "2026-07-27T04:12:46.378Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -977,6 +977,7 @@
     },
     "Core.Developer.DerivativeTest": {
       "id": "Core.Developer.DerivativeTest",
+      "toolCompatible": true,
       "credentials": [],
       "ui": {
         "displayName": "Derivative Test",
@@ -1091,6 +1092,16 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
         }
       ],
       "inputs": [
@@ -1235,6 +1246,45 @@
               "_derivatives": []
             }
           ]
+        },
+        {
+          "condition": {
+            "fieldId": "isConvertedToTool",
+            "operator": "==",
+            "value": true
+          },
+          "fields": [
+            {
+              "id": "defaultLength",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Default Length",
+              "tooltip": "Fallback used when the agent doesn't supply one.",
+              "variant": "Integer",
+              "initialValue": 10,
+              "step": 1
+            }
+          ],
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "tool",
+              "displayName": "Tool",
+              "variant": "Tool"
+            }
+          ],
+          "ui": {
+            "accent": "port-Tool",
+            "icon": "Wrench"
+          },
+          "replaces": [
+            "fields",
+            "inputs",
+            "outputs",
+            "credentials"
+          ],
+          "_derivatives": []
         }
       ]
     },

@@ -1,12 +1,12 @@
 import type { Field }      from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Blueprint }       from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import type { Derivative } from "@pretzel-graph/shared/domain/Foundations/Blueprint/derivative";
-import { RESERVED_DEFINITION_KEYS, type DerivativeBody } from "./types";
+import { RESERVED_DEFINITION_KEYS, type DerivativeBody, type ToolContribution } from "./types";
 
 
 // Anything not structural is a condition key. A derivative body adds `ui` (a per-branch override)
 // on top of the root's reserved keys; the union covers both, since neither set can collide.
-const STRUCTURAL_KEYS: ReadonlySet<string> = new Set([...RESERVED_DEFINITION_KEYS, "ui"]);
+const STRUCTURAL_KEYS: ReadonlySet<string> = new Set([...RESERVED_DEFINITION_KEYS, "ui", "replaces", "__tool"]);
 
 
 export type CompiledDerivatives = {
@@ -110,6 +110,33 @@ export function compileDerivatives(
             if (typeof child !== "object" || child === null)
                 throw new Error(`${where}: must contain a derivative body object.`);
 
+            // defineTool: a contribution, not a scope. It replaces the run-mode structure
+            // wholesale and opens nothing, so no descent, no field registration (tool-mode ids
+            // may legitimately reuse run-mode ones), and no nested conditions to validate.
+            if ((child as ToolContribution).__tool === true)
+                return {
+                    condition: {
+                        fieldId:  parsed.fieldId as Field.Id,
+                        operator: parsed.operator,
+                        value:    coerce(field, parsed.value, where),
+                    },
+                    fields:       child.fields      as readonly Field[] | undefined,
+                    inputs:       child.inputs      as Derivative["inputs"],
+                    outputs:      child.outputs     as Derivative["outputs"],
+                    credentials:  child.credentials as unknown as Derivative["credentials"],
+                    ui:           child.ui,
+                    replaces:     [...Blueprint.Derivative.MEMBERS],
+                    _derivatives: [],
+                } satisfies Derivative;
+
+            // Replacing `fields` would delete the very discriminant this branch tests, leaving a
+            // node that renders one variant and can never be switched back.
+            if (child.replaces?.includes("fields"))
+                throw new Error(
+                    `${where}: cannot replace "fields" — the discriminant lives there, so replacing it `
+                    + `would make the node unswitchable. Replace "inputs"/"outputs" instead.`,
+                );
+
             const childFields = (child.fields ?? []) as readonly Field[];
             declare(childFields, `${path}${key}`);
 
@@ -127,6 +154,7 @@ export function compileDerivatives(
                 outputs:      child.outputs     as Derivative["outputs"],
                 credentials:  child.credentials as unknown as Derivative["credentials"],
                 ui:           child.ui,
+                replaces:     child.replaces,
                 _derivatives: compile(child as Record<string, unknown>, childScope, `${path}${key}/`),
             } satisfies Derivative;
         });

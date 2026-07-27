@@ -5,10 +5,11 @@ import { Blueprint }          from "@pretzel-graph/shared/domain/Foundations/Blu
 import type { CredentialTemplate } from "../credential";
 import { NetworkProxyCredential }  from "../../credentials/networkProxy";
 import { FieldBuilder }            from "../field";
-import type { DefineBlueprintReturn, ConditionKey, DerivativeBody } from "./types";
+import type { DefineBlueprintReturn, ConditionKey, DerivativeBody, ToolContribution } from "./types";
 import { compileDerivatives, stampDiscriminants } from "./derivatives";
 
-export type { DefineBlueprintReturn, DerivativeBody } from "./types"
+export type { DefineBlueprintReturn, DerivativeBody, ToolBody } from "./types"
+export { defineTool } from "./tool"
 
 
 
@@ -41,7 +42,7 @@ export function defineBlueprint<
     flags?:           TFlags;
     itemScope?:       string;
 } & {
-    [K in ConditionKey]?: DerivativeBody;
+    [K in ConditionKey]?: DerivativeBody | ToolContribution;
 }): DefineBlueprintReturn<TId, TFields, TInputs, TOutputs, TWebhooks, TToolCompatible, TCredentials, TFlags>
    & { readonly __definition?: TDefinition } {
 
