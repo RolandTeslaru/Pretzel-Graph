@@ -72,12 +72,32 @@ function getNodeDependency(data: Data, node: Node.Raw): Dependency | null {
     return store[ref.workflowId] ?? null;
 }
 
+function resolveFields(
+    base: readonly Field[],
+    node: Node.Raw,
+    dependency: Dependency | null,
+): readonly Field[] {
+    const fields = node.addedFields?.length ? [...base, ...node.addedFields] : [...base];
+
+    // A dependency-backed Execute node is the child workflow's configuration surface. Keep the
+    // Execute blueprint fields (scheduler/error controls) and append its global config fields;
+    // matching ids belong to the container so they cannot override engine behaviour.
+    if (!dependency)
+        return fields;
+
+    const byId = new Map(fields.map(field => [field.id, field]));
+    for (const field of dependency.workflow_data.fields)
+        if (!byId.has(field.id))
+            byId.set(field.id, field);
+
+    return [...byId.values()];
+}
+
 export function resolveShape(data: Data, node: Node.Raw, blueprint: Blueprint): Cache.ResolvedShape {
     const dependency = getNodeDependency(data, node);
-    const fields = node.addedFields?.length ? [...blueprint.fields, ...node.addedFields] : blueprint.fields;
 
     return {
-        fields,
+        fields: resolveFields(blueprint.fields, node, dependency),
         inputs: resolveInputs(blueprint.inputs, node, dependency),
         outputs: resolveOutputs(blueprint.outputs, node, dependency),
         credentials: blueprint.credentials ?? [],

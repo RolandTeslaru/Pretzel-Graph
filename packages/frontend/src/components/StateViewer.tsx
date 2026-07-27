@@ -97,7 +97,7 @@ function StateTree({ selected }: { selected: SDKOption }) {
     const state = useSDKState(selected);
 
     return (
-        <ScrollArea.Root className="flex-1 px-4 pb-8 text-[11px] leading-relaxed [mask-image:linear-gradient(to_bottom,transparent,black_48px,black_calc(100%-48px),transparent)]">
+        <ScrollArea.Root className="w-fit flex-1 px-4 pb-8 text-[11px] leading-relaxed [mask-image:linear-gradient(to_bottom,transparent,black_48px,black_calc(100%-48px),transparent)]">
             <JsonView
                 src={state}
                 collapsed={3}
@@ -113,7 +113,7 @@ export function StateViewer() {
 
 
     return (
-        <div className={`fixed transition-all top-[20px] left-1/2 -translate-x-1/2 z-50 w-[400px] bg-card/80 backdrop-blur-sm border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto ${minimized ? 'h-[34px] border-0' : ' h-[400px]'}`}>
+        <div className={`fixed transition-all top-[20px] left-1/2 -translate-x-1/2 z-50 w-[400px] bg-card/80 backdrop-blur-sm overflow-x-scroll border border-border rounded-2xl shadow-2xl flex flex-col pointer-events-auto ${minimized ? 'h-[34px] border-0' : ' h-[400px]'}`}>
             <div className={`absolute z-10 transition-all ${minimized ? 'left-0 bottom-0 right-0' : 'left-1 bottom-1 right-1'}  flex px-1 py-1 gap-2 border rounded-xl border-border bg-card shadow-md shadow-black/10`}>
                 <h3 className="text-sm font-semibold pl-1 text-foreground">
                     State Viewer
@@ -125,7 +125,7 @@ export function StateViewer() {
                     <Select.Content>
                         {SDK_OPTIONS.map(sdk => (
                             <Select.Item key={sdk} value={sdk}>{sdk}</Select.Item>
-                        ))}
+                        ))}π
                     </Select.Content>
                 </Select.Root>
                 <Button
