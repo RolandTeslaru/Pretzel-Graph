@@ -63,10 +63,10 @@ export const Blueprint = defineBlueprint({
         OutputBuilder.DataList("bars", "Bars", {
             tooltip: "Array of OHLCV bars (limited by Max Bars)."
         }),
-        OutputBuilder.Json("summary", "Summary", {
+        OutputBuilder.Data("summary", "Summary", {
             tooltip: "Convenience summary about the returned bars."
         }),
-        OutputBuilder.Json("news", "News", {
+        OutputBuilder.Data("news", "News", {
             tooltip: "Recent news for the symbol (compact)."
         }),
     ],

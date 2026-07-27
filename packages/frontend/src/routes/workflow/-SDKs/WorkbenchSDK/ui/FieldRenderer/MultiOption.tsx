@@ -23,7 +23,7 @@ export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nod
     }
 
     return (
-        <WithExpression {...expressionProps}>
+        <WithExpression {...expressionProps} tabClassName='-top-5'>
             {isExpression ?
                 <>
                     <FieldLabel field={field} isReconciling={isReconciling} />

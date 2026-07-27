@@ -39,7 +39,6 @@ export const Blueprint = defineBlueprint({
         inputs: [InputBuilder.Data("suffix", "Suffix")],
         outputs: [
             OutputBuilder.Data("value", "Value"),
-            OutputBuilder.Integer("length", "Length"),
         ],
         ui: { icon: "Type" },
     },
@@ -64,7 +63,6 @@ export const Blueprint = defineBlueprint({
             fields: [
                 FieldBuilder.Integer("decimals", "Decimals", { initialValue: 2, min: 0, max: 10 }),
             ],
-            outputs: [OutputBuilder.Integer("precision", "Precision")],
         },
     },
 
