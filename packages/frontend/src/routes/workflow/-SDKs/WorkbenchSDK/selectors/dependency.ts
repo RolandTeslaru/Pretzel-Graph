@@ -11,6 +11,8 @@ export interface DependencySelectors {
         get:           (state: WorkbenchSDK.State, workflowId: Workflow.Id) => Workflow.Dependency.Draft | null
         getUpdateInfo: (state: WorkbenchSDK.State, workflowId: Workflow.Id) => Workflow.Dependency.Draft.UpdateInfo | null
     }
+    get: (state: WorkbenchSDK.State, workflowId: Workflow.Id, mode: Workflow.Node.DependencyRef["mode"]) => Workflow.Dependency | null
+    hasUpdate: (state: WorkbenchSDK.State, workflowId: Workflow.Id, mode: Workflow.Node.DependencyRef["mode"]) => boolean
 }
 
 export const dependencySelectors = {
@@ -26,6 +28,12 @@ export const dependencySelectors = {
             return workflowId in s.dependencyUpdates.published;
         return workflowId in s.dependencyUpdates.draft;
     },
+    hasUpdate: (s, workflowId, mode) => {
+        if(mode === "publication")
+            return workflowId in s.dependencyUpdates.published
+        else 
+            return workflowId in s.dependencyUpdates.draft;
+    },
     published: {
         get:           (s, workflowId) => s.data.dependencies.published[workflowId] ?? null,
         getUpdateInfo: (s, workflowId) => s.dependencyUpdates.published[workflowId] ?? null,
@@ -34,4 +42,10 @@ export const dependencySelectors = {
         get:           (s, workflowId) => s.data.dependencies.draft[workflowId] ?? null,
         getUpdateInfo: (s, workflowId) => s.dependencyUpdates.draft[workflowId] ?? null,
     },
+    get: (s, workflowId, mode) => {
+        if(mode === "draft")
+            return s.selectors.dependency.draft.get(s, workflowId)
+        else
+            return s.selectors.dependency.published.get(s, workflowId)
+    }
 } satisfies DependencySelectors
