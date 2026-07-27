@@ -41,13 +41,51 @@ export namespace Market {
     export type Compact = ReturnType<typeof compact>
 
 
+    /**
+     * A market plus the event that groups it — for results where the market stands on its own.
+     *
+     * Only useful at the top level. Inside `Event.withMarkets` the parent is the event you just
+     * asked for, so repeating its slug on all 128 nested markets is pure weight.
+     */
+    export const compactWithEvent = (market: Gamma.Market) => ({
+        ...compact(market),
+        ...parentEvent(market),
+    })
+
+    export type CompactWithEvent = ReturnType<typeof compactWithEvent>
+
+    // Gamma types this back-reference as unknown to keep the schema non-recursive, so it's read
+    // defensively rather than parsed.
+    const parentEvent = (market: Gamma.Market) => {
+        const [event] = (market.events ?? []) as Array<{ id?: unknown; slug?: unknown } | undefined>
+
+        return {
+            eventId:   typeof event?.id === "string" || typeof event?.id === "number"
+                ? String(event.id)
+                : null,
+            eventSlug: typeof event?.slug === "string" ? event.slug : null,
+        }
+    }
+
+
+    export const matchesStatus = (market: Compact, status: Status): boolean => {
+        if (status === "active")
+            return market.active === true && market.closed !== true
+
+        if (status === "closed")
+            return market.closed === true
+
+        return true
+    }
+
+
     // "all" isn't a filter Gamma can express, so it takes two requests and a merge. Ordering by
     // volume across the union means re-sorting after the fact rather than trusting either page.
     export async function list(
         gamma:  PolymarketGammaClient,
         status: Status,
         limit:  number,
-    ): Promise<Compact[]> {
+    ): Promise<CompactWithEvent[]> {
         const request = {
             limit,
             order:     "volume",
@@ -62,7 +100,10 @@ export namespace Market {
             : await gamma.markets.list({ ...request, ...statusQuery(status) })
 
         const unique = new Map(
-            markets.map(market => [market.id ?? market.slug ?? JSON.stringify(market), compact(market)]),
+            markets.map(market => [
+                market.id ?? market.slug ?? JSON.stringify(market),
+                compactWithEvent(market),
+            ]),
         )
 
         return [...unique.values()]
@@ -70,23 +111,61 @@ export namespace Market {
             .slice(0, limit)
     }
 
-    // Gamma has no full-text parameter, so the match happens here over a deliberately wider page —
-    // otherwise a query would only ever search the top `limit` markets by volume.
+
+    /**
+     * Searches markets through Gamma's own search index.
+     *
+     * Gamma's list endpoints have no full-text parameter, so this used to substring-match a page of
+     * markets sorted by volume — which meant a query only ever searched the top N markets, and
+     * matched nothing unless the whole phrase appeared verbatim. "2028 presidential election
+     * winner" returned nothing while "2028" returned three.
+     *
+     * /public-search matches properly, but answers with events; the markets hang off them. Results
+     * are ranked by how many query terms a market's own question matches, then by volume, so
+     * "marco rubio 2028" surfaces the Rubio market rather than the biggest market beside it.
+     */
     export async function search(
-        gamma:  PolymarketGammaClient,
-        args:   { query?: string; status: Status; limit: number },
-    ): Promise<Compact[]> {
-        const query = (args.query ?? "").trim().toLowerCase()
+        gamma: PolymarketGammaClient,
+        args:  { query?: string; status: Status; limit: number },
+    ): Promise<CompactWithEvent[]> {
+        const query = (args.query ?? "").trim()
 
         if (!query)
             return list(gamma, args.status, args.limit)
 
-        const markets = await list(gamma, args.status, Math.max(args.limit, 100))
+        const results = await gamma.search.public({
+            q:              query,
+            limit_per_type: Math.min(Math.max(args.limit, 20), 500),
+        })
 
-        return markets
-            .filter(market =>
-                (market.question ?? "").toLowerCase().includes(query)
-                || (market.slug ?? "").toLowerCase().includes(query))
+        const markets = (results.events ?? []).flatMap(event =>
+            (event.markets ?? []).map(market => ({
+                ...compact(market),
+                eventId:   event.id   ?? null,
+                eventSlug: event.slug ?? null,
+            })),
+        )
+
+        const unique = new Map(
+            markets.map(market => [
+                market.conditionId ?? market.id ?? JSON.stringify(market),
+                market,
+            ]),
+        )
+
+        const terms = query.toLowerCase().split(/\s+/).filter(Boolean)
+
+        const relevance = (market: CompactWithEvent) => {
+            const text = `${market.question ?? ""} ${market.slug ?? ""}`.toLowerCase()
+
+            return terms.filter(term => text.includes(term)).length
+        }
+
+        return [...unique.values()]
+            .filter(market => matchesStatus(market, args.status))
+            .sort((left, right) =>
+                relevance(right) - relevance(left)
+                || Number(right.volume ?? 0) - Number(left.volume ?? 0))
             .slice(0, args.limit)
     }
 }

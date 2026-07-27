@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { v7 as uuidv7 } from "uuid"
 import { Workflow } from "./Workflow"
 import { type AxiosInstance } from "axios"
 import { type SupabaseClient } from "@supabase/supabase-js";
@@ -65,8 +66,10 @@ export namespace Chat {
         export const Id = z.uuid().brand("MessageId")
         export type Id = z.infer<typeof Message.Id>
 
+        // v7, not v4: ids are the sort key for message order. A batch is written in one
+        // insert where every row shares `created_at`, so only the id can recover sequence.
         export function createId() {
-            return crypto.randomUUID() as Id
+            return uuidv7() as Id
         }
 
         export const Role = z.enum(["human", "ai", "tool", "system"])
