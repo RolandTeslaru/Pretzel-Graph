@@ -21,6 +21,7 @@ interface Props {
     itemScoped?: boolean
     className?: string
     children: React.ReactNode
+    tabClassName?: string
 }
 
 interface ExpressionContextValue {
@@ -88,7 +89,7 @@ function ExpressionInput({ placeholder, className }: {
     )
 }
 
-export function WithExpression({ value, isExpression, onToggleExpression, onChange, onCommit, nodeId, displayName, reconcile, itemScoped, className, children }: Props) {
+export function WithExpression({ value, isExpression, onToggleExpression, onChange, onCommit, nodeId, displayName, reconcile, itemScoped, className, children, tabClassName }: Props) {
     const [isHovered, setIsHovered] = useState(false)
     const node = WorkbenchSDK.state.selectors.node.get(WorkbenchSDK.state, nodeId);
 
@@ -103,7 +104,7 @@ export function WithExpression({ value, isExpression, onToggleExpression, onChan
                 className={className + " w-full nodrag cursor-auto flex flex-col gap-1 relative"}
             >
                 {(isHovered && !reconcile) && (
-                    <div className='absolute -top-1 right-0 flex flex-row items-center gap-1 z-10'>
+                    <div className={ 'absolute -top-1 right-0 flex flex-row items-center gap-1 z-10 ' +  (!isExpression && tabClassName)}>
                         <Tabs.Root
                             value={isExpression ? 'expression' : 'static'}
                             onValueChange={(value) => onToggleExpression(value === 'expression')}

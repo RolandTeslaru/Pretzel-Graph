@@ -32,7 +32,7 @@ export const BooleanField = memo<RendererProps<'Boolean'>>(({ field, nodeId, cla
         innerClassName = "border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50"
 
     return (
-        <WithExpression {...expressionProps}>
+        <WithExpression {...expressionProps} tabClassName='-top-3.5'>
             {!isExpression ? (
                 <div className="flex items-center justify-between py-2 nodrag cursor-auto">
                     <FieldLabel field={field} isReconciling={isReconciling} />

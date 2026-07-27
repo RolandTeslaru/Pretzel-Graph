@@ -28,7 +28,7 @@ export const Blueprint = defineBlueprint({
         OutputBuilder.Data("price", "Price (USD)", {
             tooltip: "Numeric USD price. Only populated when Data Source is Pyth."
         }),
-        OutputBuilder.Json("data", "Full Data", {
+        OutputBuilder.Data("data", "Full Data", {
             tooltip: "Complete parsed response from the selected data source."
         }),
     ],
