@@ -6,7 +6,7 @@ import { describe, it } from "node:test"
 // Via the barrel, not the deep path — importing Foundations/Blueprint as the entry module
 // trips a pre-existing init cycle (Field -> utils -> domain -> Workflow/node -> Blueprint).
 import { Foundations } from "@pretzel-graph/shared/domain"
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk"
+import { defineBlueprint, defineTool, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk"
 
 const Blueprint = Foundations.Blueprint
 
@@ -165,6 +165,92 @@ describe("blueprint derivatives", () => {
     })
 
 
+    describe("exclusivity", () => {
+
+        // Two root-level discriminants that both match — the shape that produced the bloated
+        // tool-mode ids, since `action` contributed tokens whose members were then replaced.
+        const Exclusive = defineBlueprint({
+            id:             "Test.Derivatives.Exclusive",
+            displayName:    "Exclusive",
+            description:    "Fixture.",
+            icon:           "Test",
+            toolCompatible: true,
+            fields: [
+                FieldBuilder.MultiOption("action", "Action", {
+                    options:      [option("search"), option("list")],
+                    initialValue: "search",
+                }),
+            ],
+            inputs:  [],
+            outputs: [],
+
+            "action==search": {
+                fields:  [FieldBuilder.String("query", "Query", {})],
+                outputs: [OutputBuilder.DataList("markets", "Markets")],
+                ui:      { icon: "Search" },
+            },
+
+            "isConvertedToTool==true": defineTool({
+                fields:  [],
+                inputs:  [],
+                outputs: [OutputBuilder.ToolList("tools", "Tools")],
+            }),
+        })
+
+        it("suppresses siblings, so their tokens stay out of the id", () => {
+            const { blueprint, derivativeId } = Blueprint.derive(
+                Exclusive as never,
+                { action: "search", isConvertedToTool: true } as never,
+            )
+
+            assert.equal(derivativeId, "isConvertedToTool==true")
+            assert.deepEqual(own(blueprint.fields), [])
+            assert.deepEqual(ids(blueprint.outputs), ["tools"])
+        })
+
+        it("gives one id to one blueprint whatever the suppressed siblings say", () => {
+            const forAction = (action: string) => Blueprint.derive(
+                Exclusive as never,
+                { action, isConvertedToTool: true } as never,
+            ).derivativeId
+
+            assert.equal(forAction("search"), forAction("list"))
+        })
+
+        it("does not leak a suppressed sibling's ui", () => {
+            const { blueprint } = Blueprint.derive(
+                Exclusive as never,
+                { action: "search", isConvertedToTool: true } as never,
+            )
+
+            // action==search sets icon "Search", but it never runs — so the base icon stands.
+            assert.equal((blueprint.ui as Record<string, unknown>).icon, "Test")
+        })
+
+        it("leaves non-exclusive derivations untouched", () => {
+            const { derivativeId } = Blueprint.derive(Exclusive as never, { action: "search" } as never)
+
+            assert.equal(derivativeId, "action==search")
+        })
+
+        it("still replays a pre-exclusivity id to the same blueprint", () => {
+            // Ids persisted before exclusivity carry the suppressed tokens; deriveByPath replays
+            // the set as given, and `replaces` still lands on the same result.
+            const replayed = Blueprint.deriveByPath(
+                Exclusive as never,
+                "action==search/isConvertedToTool==true",
+            )
+            const { blueprint } = Blueprint.derive(
+                Exclusive as never,
+                { isConvertedToTool: true } as never,
+            )
+
+            assert.deepEqual(own(replayed.fields), own(blueprint.fields))
+            assert.deepEqual(ids(replayed.outputs), ids(blueprint.outputs))
+        })
+    })
+
+
     describe("rejects at module load", () => {
 
         const base = {
@@ -208,6 +294,19 @@ describe("blueprint derivatives", () => {
                     "mode==b": { "onlyInA==x": { fields: [] } },
                 } as never),
                 /not declared at or above this level/,
+            )
+        })
+
+        it("two exclusive branches in one scope", () => {
+            // Both could match at once, and unlike ordinary siblings they can't be overlaid.
+            assert.throws(
+                () => defineBlueprint({
+                    ...base,
+                    toolCompatible: true,
+                    "mode==a":                 defineTool({ fields: [], inputs: [], outputs: [] }),
+                    "isConvertedToTool==true": defineTool({ fields: [], inputs: [], outputs: [] }),
+                } as never),
+                /exclusive branches in one scope/,
             )
         })
     })

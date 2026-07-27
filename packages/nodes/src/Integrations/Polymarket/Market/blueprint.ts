@@ -434,10 +434,6 @@ export const Blueprint = defineBlueprint({
     },
 
 
-    // No fields: in tool mode every input is per-call intent, so it belongs in a tool's schema
-    // rather than on the node. The action/api/resource axes go too — the agent asks for a market,
-    // it doesn't pick which Polymarket service owns markets. A node field here would only be
-    // right for policy the agent must not override, and a read-only node has none.
     "isConvertedToTool==true": defineTool({
         fields:  [],
         inputs:  [],

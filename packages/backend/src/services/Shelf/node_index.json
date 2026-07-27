@@ -1,6 +1,6 @@
 {
-  "version": "1785154041916",
-  "generatedAt": "2026-07-27T12:07:21.916Z",
+  "version": "1785173422433",
+  "generatedAt": "2026-07-27T17:30:22.433Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -1271,6 +1271,7 @@
             "inputs",
             "outputs"
           ],
+          "exclusive": true,
           "_derivatives": []
         }
       ]
@@ -10115,6 +10116,7 @@
             "inputs",
             "outputs"
           ],
+          "exclusive": true,
           "_derivatives": []
         }
       ]

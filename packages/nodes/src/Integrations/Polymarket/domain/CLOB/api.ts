@@ -2,8 +2,17 @@ import { z } from "zod"
 
 import * as CLOB from "./schemas"
 
-const ConditionId = z.object({ condition_id: z.string() })
-const TokenId     = z.object({ token_id: z.string() })
+// Ids end up in a URL path or query string, where encodeURIComponent preserves stray whitespace
+// as %20 rather than dropping it — so an untrimmed id 404s instead of failing loudly. Trimming at
+// the request boundary covers every caller: node fields and agent-supplied tool arguments alike.
+const ConditionIdValue = z.string().trim().regex(
+    /^0x[a-fA-F0-9]{64}$/,
+    "must be a 0x-prefixed, 64-character hex condition id",
+)
+const TokenIdValue = z.string().trim().min(1, "must not be empty")
+
+const ConditionId = z.object({ condition_id: ConditionIdValue })
+const TokenId     = z.object({ token_id: TokenIdValue })
 const OrderId     = z.object({ order_id: z.string() })
 const DateQuery   = z.object({ date: z.string() })
 

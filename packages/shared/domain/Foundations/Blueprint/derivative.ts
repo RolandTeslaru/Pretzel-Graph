@@ -23,6 +23,18 @@ export interface Derivative {
      * to it; the base and every appending branch are discarded for that member.
      */
     readonly replaces?:     readonly Derivative.Member[]
+    /**
+     * Suppresses every sibling at this level when it matches — the branch isn't overlaid on the
+     * others, they simply don't apply. Tool mode is the motivating case: a node is either
+     * configured for one operation or exposing all of them, never both.
+     *
+     * Distinct from terminal-ness, which is about descendants. Two sibling branches on orthogonal
+     * discriminants can both legitimately apply; exclusivity is what says they can't.
+     *
+     * Only siblings are suppressed — the base still seeds every member, so a branch that also
+     * needs to discard the base declares `replaces` alongside this.
+     */
+    readonly exclusive?:    boolean
     readonly _derivatives?: readonly Derivative[]
 }
 
@@ -66,6 +78,7 @@ export namespace Derivative {
         credentials:  z.array(Vault.Credential.Template.Schema).readonly().optional(),
         ui:           z.record(z.string(), z.string()).optional(),
         replaces:     z.array(z.enum(MEMBERS)).readonly().optional(),
+        exclusive:    z.boolean().optional(),
         _derivatives: z.array(Schema).readonly().optional(),
     }) as unknown as z.ZodType<Derivative>)
 
@@ -193,7 +206,11 @@ export function derive(
     const path: string[] = []
 
     const walk = (derivatives: readonly Derivative[] | undefined) => {
-        for (const derivative of derivatives ?? []) {
+
+        // The whole level is matched before anything contributes, so an exclusive branch wins
+        // wherever it sits among its siblings — the same order-independence `replaces` gets from
+        // being settled in a second pass.
+        const matched = (derivatives ?? []).filter(derivative => {
             const { fieldId } = derivative.condition
 
             // defineBlueprint guarantees the discriminant is declared at or above this level,
@@ -201,11 +218,13 @@ export function derive(
             // are searched: replacement is settled in a second pass, after the walk.
             const declared = [...accumulator.appended.fields, ...accumulator.replacing.fields]
                 .find(field => (field as Field).id === fieldId) as Field | undefined
-            const current  = fieldValues[fieldId] ?? declared?.initialValue
 
-            if (!Derivative.matches(derivative.condition, current))
-                continue
+            return Derivative.matches(derivative.condition, fieldValues[fieldId] ?? declared?.initialValue)
+        })
 
+        const exclusive = matched.find(derivative => derivative.exclusive)
+
+        for (const derivative of exclusive ? [exclusive] : matched) {
             contribute(accumulator, derivative)
             path.push(Derivative.formatToken(derivative.condition))
 
