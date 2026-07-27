@@ -14,43 +14,46 @@ const ErrorViewer = () => {
     ) as [Workflow.Node.Id, { status: string; error: NonNullable<typeof topLevelError> }][]
 
     return (
-        <div className='flex flex-col gap-3 w-[300px]'>
-            <div className='flex items-center gap-2'>
+        <div className='flex flex-col'>
+            <div className='flex items-center gap-2 px-2 py-2'>
                 <AlertTriangleFill size={18} className='text-destructive' />
                 <p className='text-sm font-semibold'>Execution failed</p>
             </div>
-            <Separator />
 
-            {topLevelError && (
-                <div className='flex flex-col gap-1'>
-                    <p className='text-xs font-semibold text-foreground'>
-                        {topLevelError.message}
-                    </p>
+            <Separator  className=' '/>
 
-                    <p className='text-xs text-muted-foreground'>
-                        Code <span className='text-destructive font-medium'>{topLevelError.code}</span>
-                    </p>
-                </div>
-            )}
+            <div className='w-[300px] max-h-[500px] pt-2 overflow-auto px-2 pb-2 flex flex-col gap-2'>
+                {topLevelError && (
+                    <div className='flex flex-col gap-1'>
+                        <p className='text-xs font-semibold text-foreground'>
+                            {topLevelError.message}
+                        </p>
 
-            {nodeErrors.length > 0 && topLevelError && <Separator />}
-
-            {nodeErrors.map(([nodeId, ns]) => {
-                const err = ns.error!
-                return (
-                    <div key={nodeId} className='flex flex-col gap-1'>
-                        <div className='flex items-center gap-0.5'>
-                            <p className='text-xs font-semibold text-foreground'>{nodeId}</p>
-                        </div>
-                        <p className='text-xs text-muted-foreground'>{err.message}</p>
-                        {err.detail && (
-                            <p className='text-xs text-muted-foreground font-mono break-all whitespace-pre-wrap'>
-                                {err.detail}
-                            </p>
-                        )}
+                        <p className='text-xs text-muted-foreground'>
+                            Code <span className='text-destructive font-medium'>{topLevelError.code}</span>
+                        </p>
                     </div>
-                )
-            })}
+                )}
+
+                {nodeErrors.length > 0 && topLevelError && <Separator />}
+
+                {nodeErrors.map(([nodeId, ns]) => {
+                    const err = ns.error!
+                    return (
+                        <div key={nodeId} className='flex flex-col gap-1'>
+                            <div className='flex items-center gap-0.5'>
+                                <p className='text-xs font-semibold text-foreground'>{nodeId}</p>
+                            </div>
+                            <p className='text-xs text-muted-foreground'>{err.message}</p>
+                            {err.detail && (
+                                <p className='text-xs text-muted-foreground font-mono break-all whitespace-pre-wrap'>
+                                    {err.detail}
+                                </p>
+                            )}
+                        </div>
+                    )
+                })}
+            </div>
         </div>
     )
 }

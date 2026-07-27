@@ -555,7 +555,7 @@ export const BUNDLE_DRAWERS = {
     displayName: "Polymarket",
     id: "polymarket",
     icon: "Polymarket",
-    blueprintIds: ["Integrations.Polymarket.Market", "Integrations.Polymarket.Profile"]
+    blueprintIds: ["Integrations.Polymarket.Market", "Integrations.Polymarket.Profile", "Integrations.Polymarket.Account"]
   },
   postgres: {
     displayName: "Postgres",

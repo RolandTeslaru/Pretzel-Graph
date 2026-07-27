@@ -13,8 +13,10 @@ const TokenIdValue = z.string().trim().min(1, "must not be empty")
 
 const ConditionId = z.object({ condition_id: ConditionIdValue })
 const TokenId     = z.object({ token_id: TokenIdValue })
-const OrderId     = z.object({ order_id: z.string() })
-const DateQuery   = z.object({ date: z.string() })
+const OrderId     = z.object({ order_id: z.string().trim().min(1, "must not be empty") })
+const DateQuery   = z.object({
+    date: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "must be a YYYY-MM-DD date"),
+})
 
 const MarketsPage           = CLOB.Common.Paginated(CLOB.Market.Schema)
 const SimplifiedMarketsPage = CLOB.Common.Paginated(CLOB.Market.Simplified)
