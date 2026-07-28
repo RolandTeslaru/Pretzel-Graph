@@ -7,6 +7,7 @@ import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { PolymarketDataClient, PolymarketGammaClient } from "../client";
 import { Polymarket } from "../domain";
+import { PolymarketPublicSDK } from "../sdk";
 import { Blueprint } from "./blueprint";
 import { buildTools } from "./tools";
 
@@ -20,7 +21,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         if (fields.isConvertedToTool === true)
             return {
-                tools: buildTools(clients),
+                tools: buildTools(this.polymarket),
             } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
         const user = Polymarket.Data.Common.WalletAddress.parse(fields.walletAddress);
@@ -88,11 +89,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         } satisfies InferOutputs<typeof Blueprint, typeof fields>;
     }
 
+    private readonly polymarket:  PolymarketPublicSDK;
     private readonly dataClient:  PolymarketDataClient;
     private readonly gammaClient: PolymarketGammaClient;
 
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);
+        this.polymarket  = new PolymarketPublicSDK(this.httpClientFactory);
         this.dataClient  = new PolymarketDataClient(this.httpClientFactory);
         this.gammaClient = new PolymarketGammaClient(this.httpClientFactory);
     }

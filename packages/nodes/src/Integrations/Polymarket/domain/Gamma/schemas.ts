@@ -11,6 +11,23 @@ export namespace Common {
     export const LooseString = z.union([z.string(), z.number()]).transform(String)
     export type LooseString = z.infer<typeof LooseString>
 
+    // Gamma reports the same quantity as a string on one key and a number on its `…Num` twin —
+    // `volume` vs `volumeNum`. Normalising at the wire boundary means nothing downstream has to
+    // remember which is which. Deliberately not z.coerce: that turns "" into 0, which reads as a
+    // real zero rather than "unknown", and junk into NaN, which z.number() then rejects — failing
+    // a whole market over one bad field, exactly how a numeric `gameId` took list_events down.
+    export const LooseNumber = z
+        .union([z.number(), z.string(), z.null()])
+        .transform(value => {
+            if (value === null || value === "")
+                return null
+
+            const parsed = Number(value)
+
+            return Number.isFinite(parsed) ? parsed : null
+        })
+    export type LooseNumber = z.infer<typeof LooseNumber>
+
     export const WalletAddress = z.string().regex(/^0x[a-fA-F0-9]{40}$/)
     export type WalletAddress = z.infer<typeof WalletAddress>
 
@@ -156,142 +173,215 @@ export namespace Market {
             }
         })
 
+    /**
+     * The same decode, then to numbers — for `outcomePrices`, which arrives as `"[\"0.19\",…]"`.
+     *
+     * Only prices. `clobTokenIds` are 77-digit integers, far past Number.MAX_SAFE_INTEGER, so
+     * coercing them would silently corrupt every token id; `outcomes` are genuinely text.
+     */
+    export const SerializedNumberArray = SerializedStringArray.transform(value =>
+        Array.isArray(value)
+            ? value.map(entry => {
+                const parsed = Number(entry)
+
+                return Number.isFinite(parsed) ? parsed : null
+            })
+            : value,
+    )
+
+    // Gamma sends one flat object. These groups exist to make ~100 keys readable and to say what
+    // each block is for; `Schema` merges them straight back, so the mirror still matches the wire
+    // exactly. Nesting them would make the schema describe a payload Gamma never sends.
+
+    /** What the market asks, and the four ids the rest of Polymarket addresses it by. */
+    const Identity = z.object({
+        id:               Id,
+        question:         z.string().nullish(),
+        conditionId:      ConditionId.nullish(),
+        questionID:       QuestionId.nullish(),
+        slug:             z.string().nullish(),
+        description:      z.string().nullish(),
+        resolutionSource: z.string().nullish(),
+    })
+
+    const Timing = z.object({
+        startDate:      z.string().nullish(),
+        endDate:        z.string().nullish(),
+        startDateIso:   z.string().nullish(),
+        endDateIso:     z.string().nullish(),
+        closedTime:     z.string().nullish(),
+        gameStartTime:  z.string().nullish(),
+        eventStartTime: z.string().nullish(),
+    })
+
+    /** Artwork for the website. `image` and `icon` are usually the same file. */
+    const Media = z.object({
+        image:            z.string().nullish(),
+        icon:             z.string().nullish(),
+        twitterCardImage: z.string().nullish(),
+        imageOptimized:   Image.Schema.nullish(),
+        iconOptimized:    Image.Schema.nullish(),
+    })
+
+    /** The tradeable substance: two outcomes, their tokens, and their last known prices. */
+    const Outcomes = z.object({
+        outcomes:      SerializedStringArray.nullish(),
+        outcomePrices: SerializedNumberArray.nullish(),
+        clobTokenIds:  SerializedStringArray.nullish(),
+        shortOutcomes: SerializedStringArray.nullish(),
+    })
+
+    /** `active` and `closed` are the two anyone outside Polymarket needs; the rest are deployment. */
+    const Lifecycle = z.object({
+        active:                       z.boolean().nullish(),
+        closed:                       z.boolean().nullish(),
+        archived:                     z.boolean().nullish(),
+        new:                          z.boolean().nullish(),
+        featured:                     z.boolean().nullish(),
+        restricted:                   z.boolean().nullish(),
+        approved:                     z.boolean().nullish(),
+        ready:                        z.boolean().nullish(),
+        funded:                       z.boolean().nullish(),
+        enableOrderBook:              z.boolean().nullish(),
+        acceptingOrders:              z.boolean().nullish(),
+        acceptingOrdersTimestamp:     z.string().nullish(),
+        automaticallyActive:          z.boolean().nullish(),
+        clearBookOnStart:             z.boolean().nullish(),
+        manualActivation:             z.boolean().nullish(),
+        pendingDeployment:            z.boolean().nullish(),
+        deploying:                    z.boolean().nullish(),
+        deployingTimestamp:           z.string().nullish(),
+        scheduledDeploymentTimestamp: z.string().nullish(),
+        requiresTranslation:          z.boolean().nullish(),
+    })
+
+    /** Same figures sliced by window and by venue (Amm vs Clob). `volume` and `volumeClob` are
+     *  routinely identical — Gamma reports totals many ways rather than one. */
+    const Metrics = z.object({
+        volume:         Common.LooseNumber.nullish(),
+        volumeNum:      z.number().nullish(),
+        volume24hr:     z.number().nullish(),
+        volume1wk:      z.number().nullish(),
+        volume1mo:      z.number().nullish(),
+        volume1yr:      z.number().nullish(),
+        volumeAmm:      z.number().nullish(),
+        volumeClob:     z.number().nullish(),
+        volume24hrAmm:  z.number().nullish(),
+        volume1wkAmm:   z.number().nullish(),
+        volume1moAmm:   z.number().nullish(),
+        volume1yrAmm:   z.number().nullish(),
+        volume24hrClob: z.number().nullish(),
+        volume1wkClob:  z.number().nullish(),
+        volume1moClob:  z.number().nullish(),
+        volume1yrClob:  z.number().nullish(),
+
+        liquidity:     Common.LooseNumber.nullish(),
+        liquidityNum:  z.number().nullish(),
+        liquidityAmm:  z.number().nullish(),
+        liquidityClob: z.number().nullish(),
+    })
+
+    /** A snapshot of the book. The live version is the CLOB's, not Gamma's. */
+    const Book = z.object({
+        bestBid:             z.number().nullish(),
+        bestAsk:             z.number().nullish(),
+        spread:              z.number().nullish(),
+        lastTradePrice:      z.number().nullish(),
+        oneHourPriceChange:  z.number().nullish(),
+        oneDayPriceChange:   z.number().nullish(),
+        oneWeekPriceChange:  z.number().nullish(),
+        oneMonthPriceChange: z.number().nullish(),
+        oneYearPriceChange:  z.number().nullish(),
+    })
+
+    /** How the website files and renders this market, including the sports-specific fields. */
+    const Classification = z.object({
+        marketType:         z.string().nullish(),
+        formatType:         z.string().nullish(),
+        category:           z.string().nullish(),
+        groupItemTitle:     z.string().nullish(),
+        groupItemThreshold: z.string().nullish(),
+        groupItemRange:     z.string().nullish(),
+        sportsMarketType:   z.string().nullish(),
+        gameId:             Common.LooseString.nullish(),
+        line:               z.number().nullish(),
+        seriesColor:        z.string().nullish(),
+    })
+
+    /** Trading constraints and economics. `Markets.GetClobInfo` returns the authoritative version. */
+    const Fees = z.object({
+        marketMakerAddress:    z.string().nullish(),
+        makerBaseFee:          z.number().nullish(),
+        takerBaseFee:          z.number().nullish(),
+        fee:                   z.string().nullish(),
+        feeType:               z.string().nullish(),
+        feeSchedule:           FeeSchedule.Schema.nullish(),
+        feesEnabled:           z.boolean().nullish(),
+        orderPriceMinTickSize: z.number().nullish(),
+        orderMinSize:          z.number().nullish(),
+        rewardsMinSize:        z.number().nullish(),
+        rewardsMaxSpread:      z.number().nullish(),
+        rfqEnabled:            z.boolean().nullish(),
+        holdingRewardsEnabled: z.boolean().nullish(),
+    })
+
+    /** Negative-risk grouping: how "only one of these 128 can win" is enforced on-chain. */
+    const NegRisk = z.object({
+        negRisk:          z.boolean().nullish(),
+        negRiskOther:     z.boolean().nullish(),
+        negRiskMarketID:  z.string().nullish(),
+        negRiskRequestID: z.string().nullish(),
+        negRiskFeeBips:   z.number().nullish(),
+    })
+
+    /** UMA optimistic-oracle plumbing — who settles this market, and under what bond. */
+    const Resolution = z.object({
+        umaResolutionStatus:   z.string().nullish(),
+        umaResolutionStatuses: z.string().nullish(),
+        umaEndDate:            z.string().nullish(),
+        umaEndDateIso:         z.string().nullish(),
+        umaBond:               z.string().nullish(),
+        umaReward:             z.string().nullish(),
+        resolvedBy:            z.string().nullish(),
+        customLiveness:        z.number().nullish(),
+    })
+
+    const Authorship = z.object({
+        createdBy:    z.union([z.string(), z.number()]).nullish(),
+        updatedBy:    z.union([z.string(), z.number()]).nullish(),
+        createdAt:    z.string().nullish(),
+        updatedAt:    z.string().nullish(),
+        submitted_by: z.string().nullish(),
+        creator:      z.string().nullish(),
+        commentCount: z.number().nullish(),
+        cyom:         z.boolean().nullish(),
+        competitive:  Common.LooseNumber.nullish(),
+    })
+
+    /** `events` is the parent, echoed back in full — the single heaviest key on a market, and the
+     *  reason a raw market is ~7 KB. Kept non-recursive: the event -> markets direction is the
+     *  useful traversal, and Event responses type it properly. */
+    const Relations = z.object({
+        events:     z.array(z.unknown()).nullish(),
+        tags:       z.array(Tag.Schema).nullish(),
+        categories: z.array(Category.Schema).nullish(),
+    })
+
     export const Schema = z
         .object({
-            id:               Id,
-            question:         z.string().nullish(),
-            conditionId:      ConditionId.nullish(),
-            questionID:       QuestionId.nullish(),
-            slug:             z.string().nullish(),
-            description:      z.string().nullish(),
-            resolutionSource: z.string().nullish(),
-
-            startDate:      z.string().nullish(),
-            endDate:        z.string().nullish(),
-            startDateIso:   z.string().nullish(),
-            endDateIso:     z.string().nullish(),
-            closedTime:     z.string().nullish(),
-            gameStartTime:  z.string().nullish(),
-            eventStartTime: z.string().nullish(),
-
-            image:            z.string().nullish(),
-            icon:             z.string().nullish(),
-            twitterCardImage: z.string().nullish(),
-            imageOptimized:   Image.Schema.nullish(),
-            iconOptimized:    Image.Schema.nullish(),
-
-            outcomes:      SerializedStringArray.nullish(),
-            outcomePrices: SerializedStringArray.nullish(),
-            clobTokenIds:  SerializedStringArray.nullish(),
-            shortOutcomes: SerializedStringArray.nullish(),
-
-            active:                       z.boolean().nullish(),
-            closed:                       z.boolean().nullish(),
-            archived:                     z.boolean().nullish(),
-            new:                          z.boolean().nullish(),
-            featured:                     z.boolean().nullish(),
-            restricted:                   z.boolean().nullish(),
-            approved:                     z.boolean().nullish(),
-            ready:                        z.boolean().nullish(),
-            funded:                       z.boolean().nullish(),
-            enableOrderBook:              z.boolean().nullish(),
-            acceptingOrders:              z.boolean().nullish(),
-            acceptingOrdersTimestamp:     z.string().nullish(),
-            automaticallyActive:          z.boolean().nullish(),
-            clearBookOnStart:             z.boolean().nullish(),
-            manualActivation:             z.boolean().nullish(),
-            pendingDeployment:            z.boolean().nullish(),
-            deploying:                    z.boolean().nullish(),
-            deployingTimestamp:           z.string().nullish(),
-            scheduledDeploymentTimestamp: z.string().nullish(),
-            requiresTranslation:          z.boolean().nullish(),
-
-            volume:         z.union([z.number(), z.string()]).nullish(),
-            volumeNum:      z.number().nullish(),
-            volume24hr:     z.number().nullish(),
-            volume1wk:      z.number().nullish(),
-            volume1mo:      z.number().nullish(),
-            volume1yr:      z.number().nullish(),
-            volumeAmm:      z.number().nullish(),
-            volumeClob:     z.number().nullish(),
-            volume24hrAmm:  z.number().nullish(),
-            volume1wkAmm:   z.number().nullish(),
-            volume1moAmm:   z.number().nullish(),
-            volume1yrAmm:   z.number().nullish(),
-            volume24hrClob: z.number().nullish(),
-            volume1wkClob:  z.number().nullish(),
-            volume1moClob:  z.number().nullish(),
-            volume1yrClob:  z.number().nullish(),
-
-            liquidity:     z.union([z.number(), z.string()]).nullish(),
-            liquidityNum:  z.number().nullish(),
-            liquidityAmm:  z.number().nullish(),
-            liquidityClob: z.number().nullish(),
-
-            bestBid:             z.number().nullish(),
-            bestAsk:             z.number().nullish(),
-            spread:              z.number().nullish(),
-            lastTradePrice:      z.number().nullish(),
-            oneHourPriceChange:  z.number().nullish(),
-            oneDayPriceChange:   z.number().nullish(),
-            oneWeekPriceChange:  z.number().nullish(),
-            oneMonthPriceChange: z.number().nullish(),
-            oneYearPriceChange:  z.number().nullish(),
-
-            marketType:         z.string().nullish(),
-            formatType:         z.string().nullish(),
-            category:           z.string().nullish(),
-            groupItemTitle:     z.string().nullish(),
-            groupItemThreshold: z.string().nullish(),
-            groupItemRange:     z.string().nullish(),
-            sportsMarketType:   z.string().nullish(),
-            gameId:             Common.LooseString.nullish(),
-            line:               z.number().nullish(),
-            seriesColor:        z.string().nullish(),
-
-            marketMakerAddress:    z.string().nullish(),
-            makerBaseFee:          z.number().nullish(),
-            takerBaseFee:          z.number().nullish(),
-            fee:                   z.string().nullish(),
-            feeType:               z.string().nullish(),
-            feeSchedule:           FeeSchedule.Schema.nullish(),
-            feesEnabled:           z.boolean().nullish(),
-            orderPriceMinTickSize: z.number().nullish(),
-            orderMinSize:          z.number().nullish(),
-            rewardsMinSize:        z.number().nullish(),
-            rewardsMaxSpread:      z.number().nullish(),
-            rfqEnabled:            z.boolean().nullish(),
-            holdingRewardsEnabled: z.boolean().nullish(),
-
-            negRisk:               z.boolean().nullish(),
-            negRiskOther:          z.boolean().nullish(),
-            negRiskMarketID:       z.string().nullish(),
-            negRiskRequestID:      z.string().nullish(),
-            negRiskFeeBips:        z.number().nullish(),
-            umaResolutionStatus:   z.string().nullish(),
-            umaResolutionStatuses: z.string().nullish(),
-            umaEndDate:            z.string().nullish(),
-            umaEndDateIso:         z.string().nullish(),
-            umaBond:               z.string().nullish(),
-            umaReward:             z.string().nullish(),
-            resolvedBy:            z.string().nullish(),
-            customLiveness:        z.number().nullish(),
-
-            createdBy:    z.union([z.string(), z.number()]).nullish(),
-            updatedBy:    z.union([z.string(), z.number()]).nullish(),
-            createdAt:    z.string().nullish(),
-            updatedAt:    z.string().nullish(),
-            submitted_by: z.string().nullish(),
-            creator:      z.string().nullish(),
-            commentCount: z.number().nullish(),
-            cyom:         z.boolean().nullish(),
-            competitive:  z.union([z.number(), z.string()]).nullish(),
-
-            // Kept non-recursive here. Event responses provide the strongly typed
-            // event -> markets direction, which is the useful discovery traversal.
-            events:     z.array(z.unknown()).nullish(),
-            tags:       z.array(Tag.Schema).nullish(),
-            categories: z.array(Category.Schema).nullish(),
+            ...Identity.shape,
+            ...Timing.shape,
+            ...Media.shape,
+            ...Outcomes.shape,
+            ...Lifecycle.shape,
+            ...Metrics.shape,
+            ...Book.shape,
+            ...Classification.shape,
+            ...Fees.shape,
+            ...NegRisk.shape,
+            ...Resolution.shape,
+            ...Authorship.shape,
+            ...Relations.shape,
         })
         .loose()
 }
