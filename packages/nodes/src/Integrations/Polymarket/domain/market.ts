@@ -1,10 +1,15 @@
-// Type-only: the client imports these schemas, so a value import would make domain <-> client
-// circular at runtime. Erased at compile time, so it can't.
-import type { PolymarketGammaClient } from "../client"
+import { z } from "zod"
+
 import { Gamma } from "./Gamma"
 
-// Ours rather than Polymarket's. The Gamma/CLOB/Data namespaces describe each API's stable, useful
-// surface; this is how we talk about a market across them.
+
+/**
+ * Our market, not Polymarket's.
+ *
+ * `Gamma.Market` is the wire mirror — ~100 keys, theirs, free to change. This is the stable shape
+ * the rest of PretzelGraph speaks, and `fromGamma` is the only thing that knows how to get from one
+ * to the other. Gamma renaming a field costs one function, not every call site.
+ */
 export namespace Market {
 
     // Gamma has no status parameter, only independent `active` and `closed` booleans. "all" is our
@@ -21,54 +26,213 @@ export namespace Market {
         return {}
     }
 
-    // `conditionId` and `clobTokenIds` are kept deliberately: they're the ids every other operation
-    // takes, so whoever holds a market already holds what the next call needs.
-    export const compact = (market: Gamma.Market) => ({
-        id:            market.id            ?? null,
-        question:      market.question      ?? null,
-        slug:          market.slug          ?? null,
-        conditionId:   market.conditionId   ?? null,
-        active:        market.active        ?? null,
-        closed:        market.closed        ?? null,
-        outcomes:      market.outcomes      ?? null,
-        outcomePrices: market.outcomePrices ?? null,
-        clobTokenIds:  market.clobTokenIds  ?? null,
-        volume:        market.volume        ?? null,
-        liquidity:     market.liquidity     ?? null,
-        endDate:       market.endDate       ?? null,
-    })
 
-    export type Compact = ReturnType<typeof compact>
+    /**
+     * One side of a market — the thing that is actually traded.
+     *
+     * Three APIs, three names for it: Gamma's `clobTokenIds[n]`, CLOB's `token_id`, Data's `asset`.
+     * Holding one name here is most of the reason this namespace exists.
+     */
+    export namespace Token {
+
+        /**
+         * The readable half — what a side is called and what it costs.
+         *
+         * Carried by `Market.Ref`, where the ids are the expensive part: they're 77-digit integers,
+         * and two of them outweigh the rest of a market reference combined.
+         */
+        export namespace Ref {
+            export const Schema = z.object({
+                outcome: z.string(),
+                price:   z.number().nullable(),
+            })
+        }
+
+        export type Ref = z.infer<typeof Ref.Schema>
+
+        export const Schema = z.object({
+            id:      z.string().nullable(),
+            outcome: z.string(),
+            /** Which side, 0 or 1. What Data's `outcomeIndex` refers to. */
+            index:   z.number().int(),
+            price:   z.number().nullable(),
+            /** Only known after resolution, and never from Gamma. */
+            winner:  z.boolean().nullable(),
+        })
+    }
+
+    export type Token = z.infer<typeof Token.Schema>
 
 
     /**
-     * A market plus the event that groups it — for results where the market stands on its own.
+     * A market as a pointer with a price on it — what an Event carries.
      *
-     * Only useful at the top level. Inside `Event.withMarkets` the parent is the event you just
-     * asked for, so repeating its slug on all 128 nested markets is pure weight.
+     * Full markets don't fit: a 128-candidate event is 118 KB of them. This keeps the label, the
+     * id every other tool takes, and what each side costs, so "who's leading" is answerable without
+     * a second call, at 226 bytes instead of 945.
      */
-    export const compactWithEvent = (market: Gamma.Market) => ({
-        ...compact(market),
-        ...parentEvent(market),
+    export namespace Ref {
+
+        export const Schema = z.object({
+            id:             z.string().nullable(),
+            conditionId:    z.string().nullable(),
+            /** The row label — "Gavin Newsom" rather than the whole question. */
+            groupItemTitle: z.string().nullable(),
+            outcomes:       z.array(Token.Ref.Schema),
+        })
+
+        export const fromGamma = (market: Gamma.Market): Ref => ({
+            id:             toText(market.id),
+            conditionId:    market.conditionId    ?? null,
+            groupItemTitle: market.groupItemTitle ?? null,
+            outcomes:       tokens(market).map(({ outcome, price }) => ({ outcome, price })),
+        })
+    }
+
+    export type Ref = z.infer<typeof Ref.Schema>
+
+
+    /**
+     * What the market is, and whether it can be traded — enough to choose one from a list.
+     *
+     * Carries `Token.Ref`, so outcomes have prices but not ids: the two token ids are 254 bytes,
+     * a third of the object, and only `get_price` and `get_order_book` need them. Fetch the full
+     * Market when you're about to use one.
+     */
+    export namespace Meta {
+
+        export const Schema = z.object({
+            id:             z.string().nullable(),
+            question:       z.string().nullable(),
+            slug:           z.string().nullable(),
+            conditionId:    z.string().nullable(),
+            /** The row label inside its event — "Gavin Newsom" rather than the whole question. */
+            groupItemTitle: z.string().nullable(),
+
+            outcomes:       z.array(Token.Ref.Schema),
+
+            active:          z.boolean().nullable(),
+            closed:          z.boolean().nullable(),
+            /** Distinct from `active`: a live market can have its book closed. */
+            acceptingOrders: z.boolean().nullable(),
+            endDate:         z.string().nullable(),
+            /** "proposed" once an outcome has been submitted to UMA's oracle and the challenge
+             *  window is open — the market is mid-settlement and the price may not reflect it.
+             *  Null on 199 of 200 markets sampled. */
+            resolutionStatus: z.string().nullable(),
+
+            /** Headline size. Kept here because every listing is ordered by volume, and a result
+             *  sorted by a number it doesn't show reads as arbitrary. Windows live on MarketStats. */
+            volume:    z.number().nullable(),
+            liquidity: z.number().nullable(),
+
+            /** Part of a mutually-exclusive group — only one of them can resolve Yes. The group's
+             *  id lives on the Event, which is the only place it means anything. */
+            negRisk: z.boolean().nullable(),
+
+            eventId:   z.string().nullable(),
+            eventSlug: z.string().nullable(),
+        })
+
+        export const fromGamma = (market: Gamma.Market): Meta => ({
+            id:             toText(market.id),
+            question:       market.question       ?? null,
+            slug:           market.slug           ?? null,
+            conditionId:    market.conditionId    ?? null,
+            groupItemTitle: market.groupItemTitle ?? null,
+
+            outcomes:       tokens(market).map(({ outcome, price }) => ({ outcome, price })),
+
+            active:           market.active          ?? null,
+            closed:           market.closed          ?? null,
+            acceptingOrders:  market.acceptingOrders ?? null,
+            endDate:          market.endDate         ?? null,
+            resolutionStatus: market.umaResolutionStatus ?? null,
+
+            volume:    market.volumeNum    ?? market.volume    ?? null,
+            liquidity: market.liquidityNum ?? market.liquidity ?? null,
+
+            negRisk: market.negRisk ?? null,
+
+            ...parentEvent(market),
+        })
+    }
+
+    export type Meta = z.infer<typeof Meta.Schema>
+
+
+    /** Everything about one market — for when it has already been chosen. */
+    export const Schema = Meta.Schema.extend({
+        /** The resolution contract: what has to happen for Yes to pay. ~400-1300 characters. */
+        description: z.string().nullable(),
+
+        /** With ids, unlike Meta's — this is the tier you trade from. */
+        outcomes: z.array(Token.Schema),
+
+        /** The UMA question this settles against. Not the same as `conditionId`. */
+        questionId:      z.string().nullable(),
+        startDate:       z.string().nullable(),
+        /** False means it never had a CLOB book — no prices, no order book. */
+        enableOrderBook: z.boolean().nullable(),
+
+        tickSize:     z.number().nullable(),
+        minOrderSize: z.number().nullable(),
     })
 
-    export type CompactWithEvent = ReturnType<typeof compactWithEvent>
 
-    // Gamma types this back-reference as unknown to keep the schema non-recursive, so it's read
-    // defensively rather than parsed.
+    const toText = (value: unknown): string | null =>
+        typeof value === "string" || typeof value === "number" ? String(value) : null
+
+    // Gamma types the parent back-reference as unknown to keep the schema non-recursive, so it's
+    // read defensively rather than parsed. In practice a market has exactly one parent event; a
+    // sample of 200 live markets found none with more and one with none.
     const parentEvent = (market: Gamma.Market) => {
         const [event] = (market.events ?? []) as Array<{ id?: unknown; slug?: unknown } | undefined>
 
         return {
-            eventId:   typeof event?.id === "string" || typeof event?.id === "number"
-                ? String(event.id)
-                : null,
+            eventId:   toText(event?.id),
             eventSlug: typeof event?.slug === "string" ? event.slug : null,
         }
     }
 
+    /**
+     * Gamma reports outcomes, prices and token ids as three parallel arrays that the caller is
+     * expected to zip by index — and they are not always the same length. Of 108 sampled markets,
+     * 32 had an empty `outcomePrices` while still carrying two outcomes and two tokens (unlaunched
+     * candidate slots). Driving off `outcomes` and looking the rest up tolerantly means a missing
+     * price arrives as null instead of silently reading as position 0.
+     */
+    // The serialized-array schemas pass a value through untouched when it isn't valid JSON, so
+    // these stay `string | T[]` in the mirror. Anything that didn't decode is treated as absent.
+    const asArray = <T>(value: T[] | string | null | undefined): T[] =>
+        Array.isArray(value) ? value : []
 
-    export const matchesStatus = (market: Compact, status: Status): boolean => {
+    const tokens = (market: Gamma.Market): Token[] =>
+        asArray(market.outcomes).map((outcome, index) => ({
+            id:      asArray(market.clobTokenIds)[index] ?? null,
+            outcome: String(outcome),
+            index,
+            price:   asArray(market.outcomePrices)[index] ?? null,
+            winner:  null,
+        }))
+
+
+    export const fromGamma = (market: Gamma.Market): Market => ({
+        ...Meta.fromGamma(market),
+
+        description: market.description ?? null,
+        outcomes:    tokens(market),
+
+        questionId:      market.questionID ?? null,
+        startDate:       market.startDate  ?? null,
+        enableOrderBook: market.enableOrderBook ?? null,
+
+        tickSize:     market.orderPriceMinTickSize ?? null,
+        minOrderSize: market.orderMinSize          ?? null,
+    })
+
+
+    export const matchesStatus = (market: Meta, status: Status): boolean => {
         if (status === "active")
             return market.active === true && market.closed !== true
 
@@ -77,95 +241,6 @@ export namespace Market {
 
         return true
     }
-
-
-    // "all" isn't a filter Gamma can express, so it takes two requests and a merge. Ordering by
-    // volume across the union means re-sorting after the fact rather than trusting either page.
-    export async function list(
-        gamma:  PolymarketGammaClient,
-        status: Status,
-        limit:  number,
-    ): Promise<CompactWithEvent[]> {
-        const request = {
-            limit,
-            order:     "volume",
-            ascending: false,
-        } as const
-
-        const markets = status === "all"
-            ? (await Promise.all([
-                gamma.markets.list({ ...request, active: true, closed: false }),
-                gamma.markets.list({ ...request, closed: true }),
-            ])).flat()
-            : await gamma.markets.list({ ...request, ...statusQuery(status) })
-
-        const unique = new Map(
-            markets.map(market => [
-                market.id ?? market.slug ?? JSON.stringify(market),
-                compactWithEvent(market),
-            ]),
-        )
-
-        return [...unique.values()]
-            .sort((left, right) => Number(right.volume ?? 0) - Number(left.volume ?? 0))
-            .slice(0, limit)
-    }
-
-
-    /**
-     * Searches markets through Gamma's own search index.
-     *
-     * Gamma's list endpoints have no full-text parameter, so this used to substring-match a page of
-     * markets sorted by volume — which meant a query only ever searched the top N markets, and
-     * matched nothing unless the whole phrase appeared verbatim. "2028 presidential election
-     * winner" returned nothing while "2028" returned three.
-     *
-     * /public-search matches properly, but answers with events; the markets hang off them. Results
-     * are ranked by how many query terms a market's own question matches, then by volume, so
-     * "marco rubio 2028" surfaces the Rubio market rather than the biggest market beside it.
-     */
-    export async function search(
-        gamma: PolymarketGammaClient,
-        args:  { query?: string; status: Status; limit: number },
-    ): Promise<CompactWithEvent[]> {
-        const query = (args.query ?? "").trim()
-
-        if (!query)
-            return list(gamma, args.status, args.limit)
-
-        const results = await gamma.search.public({
-            q:              query,
-            limit_per_type: Math.min(Math.max(args.limit, 20), 500),
-        })
-
-        const markets = (results.events ?? []).flatMap(event =>
-            (event.markets ?? []).map(market => ({
-                ...compact(market),
-                eventId:   event.id   ?? null,
-                eventSlug: event.slug ?? null,
-            })),
-        )
-
-        const unique = new Map(
-            markets.map(market => [
-                market.conditionId ?? market.id ?? JSON.stringify(market),
-                market,
-            ]),
-        )
-
-        const terms = query.toLowerCase().split(/\s+/).filter(Boolean)
-
-        const relevance = (market: CompactWithEvent) => {
-            const text = `${market.question ?? ""} ${market.slug ?? ""}`.toLowerCase()
-
-            return terms.filter(term => text.includes(term)).length
-        }
-
-        return [...unique.values()]
-            .filter(market => matchesStatus(market, args.status))
-            .sort((left, right) =>
-                relevance(right) - relevance(left)
-                || Number(right.volume ?? 0) - Number(left.volume ?? 0))
-            .slice(0, args.limit)
-    }
 }
+
+export type Market = z.infer<typeof Market.Schema>

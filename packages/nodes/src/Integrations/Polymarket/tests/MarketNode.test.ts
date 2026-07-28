@@ -11,39 +11,46 @@ import {
 import { Foundations } from "@pretzel-graph/shared/domain";
 
 import { Polymarket } from "../domain";
+import { PolymarketPublicSDK } from "../sdk";
 import { Blueprint } from "../Market/blueprint";
 import { buildTools } from "../Market/tools";
 
 
 const routes = [
-    { operation: "searchMarkets",      values: { action: "search", searchKind: "markets" },                                      output: "markets"      },
-    { operation: "publicSearch",       values: { action: "search", searchKind: "public" },                                       output: "results"      },
+    { operation: "searchMarkets",   output: "markets"      },
+    { operation: "search",          output: "results"      },
 
-    { operation: "listMarkets",        values: { action: "list", listAPI: "gamma", listGammaResource: "markets" },                output: "markets"      },
-    { operation: "listEvents",         values: { action: "list", listAPI: "gamma", listGammaResource: "events" },                 output: "events"       },
-    { operation: "listTags",           values: { action: "list", listAPI: "gamma", listGammaResource: "tags" },                   output: "tags"         },
-    { operation: "listSeries",         values: { action: "list", listAPI: "gamma", listGammaResource: "series" },                 output: "series"       },
-    { operation: "listComments",       values: { action: "list", listAPI: "gamma", listGammaResource: "comments" },               output: "comments"     },
-    { operation: "listSports",         values: { action: "list", listAPI: "gamma", listGammaResource: "sports" },                 output: "sports"       },
-    { operation: "listTeams",          values: { action: "list", listAPI: "gamma", listGammaResource: "teams" },                  output: "teams"        },
-    { operation: "listTrades",         values: { action: "list", listAPI: "data",  listDataResource: "trades" },                  output: "trades"       },
-    { operation: "listHolders",        values: { action: "list", listAPI: "data",  listDataResource: "holders" },                 output: "holders"      },
+    { operation: "listMarkets",     output: "markets"      },
+    { operation: "getMarket",       output: "market"       },
+    { operation: "getMarketStats",  output: "stats"        },
 
-    { operation: "getMarket",          values: { action: "get", getAPI: "gamma", getGammaResource: "market" },                    output: "market"       },
-    { operation: "getEvent",           values: { action: "get", getAPI: "gamma", getGammaResource: "event" },                     output: "event"        },
-    { operation: "getTag",             values: { action: "get", getAPI: "gamma", getGammaResource: "tag" },                       output: "tag"          },
-    { operation: "getSeries",          values: { action: "get", getAPI: "gamma", getGammaResource: "series" },                    output: "series"       },
-    { operation: "getClobMarket",      values: { action: "get", getAPI: "clob",  getClobResource: "marketConfiguration" },        output: "market"       },
-    { operation: "getOrderBook",       values: { action: "get", getAPI: "clob",  getClobResource: "orderBook" },                  output: "orderBook"    },
-    { operation: "getMidpoint",        values: { action: "get", getAPI: "clob",  getClobResource: "midpoint" },                   output: "midpoint"     },
-    { operation: "getPrice",           values: { action: "get", getAPI: "clob",  getClobResource: "price" },                      output: "price"        },
-    { operation: "getSpread",          values: { action: "get", getAPI: "clob",  getClobResource: "spread" },                     output: "spread"       },
-    { operation: "getLastTradePrice",  values: { action: "get", getAPI: "clob",  getClobResource: "lastTradePrice" },             output: "lastTrade"    },
-    { operation: "getPriceHistory",    values: { action: "get", getAPI: "clob",  getClobResource: "priceHistory" },               output: "history"      },
-    { operation: "getMarketMechanics", values: { action: "get", getAPI: "clob",  getClobResource: "mechanics" },                  output: "mechanics"    },
-    { operation: "getMarketRewards",   values: { action: "get", getAPI: "clob",  getClobResource: "rewards" },                    output: "rewards"      },
-    { operation: "getOpenInterest",    values: { action: "get", getAPI: "data",  getDataResource: "openInterest" },               output: "openInterest" },
-    { operation: "getLiveVolume",      values: { action: "get", getAPI: "data",  getDataResource: "liveVolume" },                 output: "volume"       },
+    { operation: "listEvents",      output: "events"       },
+    { operation: "getEvent",        output: "event"        },
+    { operation: "getEventStats",   output: "stats"        },
+
+    { operation: "listSeries",      output: "series"       },
+    { operation: "getSeries",       output: "series"       },
+
+    { operation: "listTags",        output: "tags"         },
+    { operation: "getTag",          output: "tag"          },
+
+    { operation: "listSports",      output: "sports"       },
+    { operation: "listTeams",       output: "teams"        },
+    { operation: "listComments",    output: "comments"     },
+
+    { operation: "listTrades",      output: "trades"       },
+    { operation: "listHolders",     output: "holders"      },
+
+    { operation: "getPrice",        output: "price"        },
+    { operation: "getOrderBook",    output: "orderBook"    },
+    { operation: "getPriceHistory", output: "history"      },
+    { operation: "getMechanics",    output: "mechanics"    },
+
+    { operation: "getMarketConfig", output: "market"       },
+    { operation: "getRewards",      output: "rewards"      },
+
+    { operation: "getOpenInterest", output: "openInterest" },
+    { operation: "getLiveVolume",   output: "volume"       },
 ] as const;
 
 type Route = typeof routes[number];
@@ -53,13 +60,13 @@ const nodesRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const deriveFor = (route: Route) =>
     Foundations.Blueprint.derive(
         Blueprint,
-        { ...route.values, isConvertedToTool: false } as never,
+        { resource: route.operation, isConvertedToTool: false } as never,
     ).blueprint;
 
 
 describe("Polymarket Market derivatives", () => {
     it("derives one focused and valid blueprint for every regular operation", () => {
-        assert.equal(routes.length, 26);
+        assert.equal(routes.length, 25);
         assert.equal(new Set(routes.map(route => route.operation)).size, routes.length);
 
         for (const route of routes) {
@@ -71,7 +78,7 @@ describe("Polymarket Market derivatives", () => {
 
             const fieldIds = derived.fields.map(field => String(field.id));
             assert.equal(new Set(fieldIds).size, fieldIds.length, route.operation);
-            assert.equal(fieldIds.includes("action"), true, route.operation);
+            assert.equal(fieldIds.includes("resource"), true, route.operation);
             assert.equal(fieldIds.includes("isConvertedToTool"), true, route.operation);
             assert.equal("_derivatives" in derived, false, route.operation);
         }
@@ -80,14 +87,13 @@ describe("Polymarket Market derivatives", () => {
     it("resolves the default selection through derivative initial values", () => {
         const { blueprint, derivativeId } = Foundations.Blueprint.derive(Blueprint, {});
 
-        assert.equal(derivativeId, "action==search/searchKind==markets");
+        assert.equal(derivativeId, "resource==searchMarkets");
         assert.deepEqual(
             blueprint.fields
                 .filter(field => !FieldBuilder.DEFAULTS.IDS.has(String(field.id)))
                 .map(field => String(field.id)),
             [
-                "action",
-                "searchKind",
+                "resource",
                 "searchMarketsQuery",
                 "searchMarketsStatus",
                 "searchMarketsMaxResults",
@@ -97,16 +103,9 @@ describe("Polymarket Market derivatives", () => {
     });
 
     it("marks every condition field as reconciling", () => {
+        // One axis now: the API level is gone, answered by PolymarketPublicSDK instead.
         const conditionIds = new Set([
-            "action",
-            "searchKind",
-            "listAPI",
-            "listGammaResource",
-            "listDataResource",
-            "getAPI",
-            "getGammaResource",
-            "getClobResource",
-            "getDataResource",
+            "resource",
             "isConvertedToTool",
         ]);
 
@@ -169,7 +168,7 @@ describe("Polymarket Market derivatives", () => {
         const tools = buildTools({} as never);
         const names = tools.map(builtTool => builtTool.name);
 
-        assert.equal(tools.length, 23);
+        assert.equal(tools.length, 22);
         assert.equal(new Set(names).size, names.length);
 
         // The API axis is run-mode structure — an agent asks for a market, it doesn't pick which
@@ -182,11 +181,7 @@ describe("Polymarket Market derivatives", () => {
     });
 
     it("reconstructs the exact derivative from its identity", () => {
-        const values = {
-            action:          "get",
-            getAPI:          "clob",
-            getClobResource: "orderBook",
-        } as const;
+        const values = { resource: "getOrderBook" } as const;
         const { blueprint, derivativeId } = Foundations.Blueprint.derive(Blueprint, values as never);
 
         assert.ok(derivativeId);
@@ -202,11 +197,7 @@ describe("Polymarket Market derivatives", () => {
 
         const result = await CatalogueService.reconcile(
             Blueprint.id,
-            {
-                action:          "get",
-                getAPI:          "clob",
-                getClobResource: "orderBook",
-            } as never,
+            { resource: "getOrderBook" } as never,
         );
 
         assert.deepEqual(result?.outputs.map(output => output.id), ["orderBook"]);
@@ -216,18 +207,16 @@ describe("Polymarket Market derivatives", () => {
         );
     });
 
-    it("presents compact selectors as tabs", () => {
-        for (const route of routes.filter(route =>
-            route.operation === "getMarket"
-            || route.operation === "getEvent"
-            || route.operation === "getTag"
-        )) {
-            const field = deriveFor(route).fields.find(candidate =>
-                String(candidate.id).endsWith("LookupBy")
-            );
+    it("routes id or slug without asking which", () => {
+        // The look-up-by selectors are gone: numeric ids and kebab-case slugs are distinguishable,
+        // so the SDK picks the endpoint rather than the author declaring it.
+        for (const operation of ["getMarket", "getEvent", "getTag"] as const) {
+            const fieldIds = Foundations.Blueprint
+                .derive(Blueprint, { resource: operation } as never)
+                .blueprint.fields.map(field => String(field.id));
 
-            assert.equal(field?.variant, "MultiOption", route.operation);
-            assert.equal((field as { kind?: string }).kind, "tab", route.operation);
+            assert.equal(fieldIds.some(id => id.endsWith("LookupBy")), false, operation);
+            assert.equal(fieldIds.some(id => id.endsWith("Identifier")), true, operation);
         }
     });
 });
@@ -235,17 +224,19 @@ describe("Polymarket Market derivatives", () => {
 
 describe("Polymarket Market queries", () => {
     it("combines open and closed Gamma pages for the all-markets status", async () => {
+        // "all" isn't a filter Gamma can express — it has independent `active` and `closed`
+        // booleans — so the SDK has to fire two requests and merge them.
         const calls: unknown[] = [];
-        const gamma = {
-            markets: {
-                list: async (request: unknown) => {
-                    calls.push(request);
+        const http = {
+            create: () => ({
+                get: async (_url: string, config?: { params?: unknown }) => {
+                    calls.push(config?.params);
                     return [];
                 },
-            },
+            }),
         };
 
-        await Polymarket.Market.list(gamma as never, "all", 20);
+        await new PolymarketPublicSDK(http as never).markets.list({ status: "all", limit: 20 });
 
         assert.equal(calls.length, 2);
     });

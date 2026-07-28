@@ -2,14 +2,7 @@ import { tool } from "@langchain/core/tools";
 import { ToolBudget } from "@pretzel-graph/node-sdk";
 import { z } from "zod/v3";
 
-import type { PolymarketDataClient, PolymarketGammaClient } from "../client";
-import { Polymarket } from "../domain";
-
-
-export interface ToolClients {
-    data:  PolymarketDataClient;
-    gamma: PolymarketGammaClient;
-}
+import type { PolymarketPublicSDK } from "../sdk";
 
 
 // The wallet address is a per-call argument, not node configuration — an agent asking about a
@@ -25,16 +18,12 @@ const directionParam = z.enum(["DESC", "ASC"]).default("DESC")
     .describe("Sort direction.");
 
 
-export function buildTools(clients: ToolClients) {
+export function buildTools(polymarket: PolymarketPublicSDK) {
 
     const getPositions = tool(
         async ({ wallet, limit, sortBy, direction, redeemableOnly }) => {
-            const positions = await clients.data.positions.listCurrent({
-                user:          Polymarket.Data.Common.WalletAddress.parse(wallet),
-                limit,
-                sortBy,
-                sortDirection: direction,
-                redeemable:    redeemableOnly,
+            const positions = await polymarket.wallets.positions({
+                wallet, limit, sortBy, direction, redeemableOnly,
             });
 
             return ToolBudget.list("positions", positions, { hint: "Lower the limit or raise the minimum size." });
@@ -55,12 +44,7 @@ export function buildTools(clients: ToolClients) {
 
     const getClosedPositions = tool(
         async ({ wallet, limit, sortBy, direction }) => {
-            const positions = await clients.data.positions.listClosed({
-                user:          Polymarket.Data.Common.WalletAddress.parse(wallet),
-                limit,
-                sortBy,
-                sortDirection: direction,
-            });
+            const positions = await polymarket.wallets.closedPositions({ wallet, limit, sortBy, direction });
 
             return ToolBudget.list("positions", positions, { hint: "Lower the limit." });
         },
@@ -79,12 +63,7 @@ export function buildTools(clients: ToolClients) {
 
     const getActivity = tool(
         async ({ wallet, limit, type, direction }) => {
-            const activity = await clients.data.activity.list({
-                user:          Polymarket.Data.Common.WalletAddress.parse(wallet),
-                limit,
-                type:          type === "ALL" ? undefined : [Polymarket.Data.Activity.Type.parse(type)],
-                sortDirection: direction,
-            });
+            const activity = await polymarket.wallets.activity({ wallet, limit, type, direction });
 
             return ToolBudget.list("activity", activity, { hint: "Lower the limit or filter by type." });
         },
@@ -103,11 +82,7 @@ export function buildTools(clients: ToolClients) {
 
     const getValue = tool(
         async ({ wallet }) => {
-            const value = await clients.data.users.getValue({
-                user: Polymarket.Data.Common.WalletAddress.parse(wallet),
-            });
-
-            return ToolBudget.value(value);
+            return ToolBudget.value(await polymarket.wallets.value(wallet));
         },
         {
             name:        "polymarket_profile_value",
@@ -120,11 +95,7 @@ export function buildTools(clients: ToolClients) {
 
     const getMarketsTraded = tool(
         async ({ wallet }) => {
-            const traded = await clients.data.users.getTradedMarketCount({
-                user: Polymarket.Data.Common.WalletAddress.parse(wallet),
-            });
-
-            return ToolBudget.value(traded);
+            return ToolBudget.value(await polymarket.wallets.tradedMarkets(wallet));
         },
         {
             name:        "polymarket_profile_markets_traded",
@@ -137,12 +108,7 @@ export function buildTools(clients: ToolClients) {
 
     const getRank = tool(
         async ({ wallet, period, rankedBy, limit }) => {
-            const leaderboard = await clients.data.leaderboard.list({
-                user:       Polymarket.Data.Common.WalletAddress.parse(wallet),
-                timePeriod: period,
-                orderBy:    rankedBy,
-                limit,
-            });
+            const leaderboard = await polymarket.wallets.rank({ wallet, period, rankedBy, limit });
 
             return ToolBudget.list("leaderboard", leaderboard, { hint: "Lower the limit." });
         },
@@ -161,11 +127,7 @@ export function buildTools(clients: ToolClients) {
 
     const getIdentity = tool(
         async ({ wallet }) => {
-            const profile = await clients.gamma.profiles.getPublic({
-                address: Polymarket.Gamma.Common.WalletAddress.parse(wallet),
-            });
-
-            return ToolBudget.value(profile);
+            return ToolBudget.value(await polymarket.wallets.identity(wallet));
         },
         {
             name:        "polymarket_profile_identity",
