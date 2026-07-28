@@ -2,19 +2,7 @@ import { tool } from "@langchain/core/tools";
 import { ToolBudget } from "@pretzel-graph/node-sdk";
 import { z } from "zod/v3";
 
-import type {
-    PolymarketDataClient,
-    PolymarketGammaClient,
-    PolymarketUnauthenticatedCLOBClient,
-} from "../client";
-import { Polymarket } from "../domain";
-
-
-export interface ToolClients {
-    gamma: PolymarketGammaClient;
-    clob:  PolymarketUnauthenticatedCLOBClient;
-    data:  PolymarketDataClient;
-}
+import type { PolymarketPublicSDK } from "../sdk";
 
 
 // Tool mode declares no node fields — every input is per-call intent, so defaults live in the
@@ -34,25 +22,11 @@ const conditionIdParam = z.string()
     .describe("Market condition id (0x…), taken from a market's conditionId field.");
 
 
-const required = (value: string | undefined, name: string, toolName: string) => {
-    const text = (value ?? "").trim();
-
-    if (!text)
-        throw new Error(`${toolName}: '${name}' is required.`);
-
-    return text;
-};
-
-// Gamma ids are numeric and slugs are kebab-case, so the node routes to the right endpoint itself
-// rather than making the agent declare which kind it holds.
-const looksNumeric = (value: string) => /^\d+$/.test(value);
-
-
-export function buildTools(clients: ToolClients) {
+export function buildTools(polymarket: PolymarketPublicSDK) {
 
     const searchMarkets = tool(
         async ({ query, status, limit }) => {
-            const markets = await Polymarket.Market.search(clients.gamma, { query, status, limit });
+            const markets = await polymarket.markets.search({ query, status, limit });
 
             return ToolBudget.list("markets", markets, {
                 hint: "Narrow the query or lower the limit.",
@@ -71,29 +45,11 @@ export function buildTools(clients: ToolClients) {
 
     const searchAll = tool(
         async ({ query, includeTags, includeProfiles, limit }) => {
-            const results = await clients.gamma.search.public({
-                q:               required(query, "query", "polymarket_search_all"),
-                limit_per_type:  limit,
-                search_tags:     includeTags,
-                search_profiles: includeProfiles,
-            });
+            const results = await polymarket.search.all({ query, includeTags, includeProfiles, limit });
 
-            // Events come back with their markets nested — 128 of them on a big election event, so
-            // eight hits is hundreds of KB even compacted, and the budget would drop every one.
-            // Search answers "which event"; polymarket_get_event answers "what's in it".
-            return ToolBudget.value(
-                {
-                    events:   (results.events ?? []).map(Polymarket.Event.compact),
-                    tags:     results.tags ?? [],
-                    profiles: (results.profiles ?? []).map(profile => ({
-                        name:        profile.name ?? profile.pseudonym ?? null,
-                        proxyWallet: profile.proxyWallet ?? null,
-                        bio:         profile.bio ?? null,
-                    })),
-                    pagination: results.pagination,
-                },
-                { hint: "Narrow the query or lower the limit." },
-            );
+            // Events come back as Meta — with a marketCount rather than their markets, which on a
+            // big election event would be 128 nested markets per hit.
+            return ToolBudget.value(results, { hint: "Narrow the query or lower the limit." });
         },
         {
             name:        "polymarket_search_all",
@@ -110,7 +66,7 @@ export function buildTools(clients: ToolClients) {
 
     const listMarketsTool = tool(
         async ({ status, limit }) => {
-            const markets = await Polymarket.Market.list(clients.gamma, status, limit);
+            const markets = await polymarket.markets.list({ status, limit });
 
             return ToolBudget.list("markets", markets, { hint: "Lower the limit." });
         },
@@ -126,12 +82,7 @@ export function buildTools(clients: ToolClients) {
 
     const getMarket = tool(
         async ({ identifier }) => {
-            const key    = required(identifier, "identifier", "polymarket_get_market");
-            const market = looksNumeric(key)
-                ? await clients.gamma.markets.getById({ id: Polymarket.Gamma.Market.Id.parse(key) })
-                : await clients.gamma.markets.getBySlug({ slug: key });
-
-            return ToolBudget.value(market);
+            return ToolBudget.value(await polymarket.markets.get(identifier));
         },
         {
             name:        "polymarket_get_market",
@@ -144,7 +95,7 @@ export function buildTools(clients: ToolClients) {
 
     const listEventsTool = tool(
         async ({ status, limit }) => {
-            const events = await Polymarket.Event.list(clients.gamma, status, limit);
+            const events = await polymarket.events.list({ status, limit });
 
             return ToolBudget.list("events", events, { hint: "Lower the limit." });
         },
@@ -160,12 +111,7 @@ export function buildTools(clients: ToolClients) {
 
     const getEvent = tool(
         async ({ identifier }) => {
-            const key   = required(identifier, "identifier", "polymarket_get_event");
-            const event = looksNumeric(key)
-                ? await clients.gamma.events.getById({ id: Polymarket.Gamma.Event.Id.parse(key) })
-                : await clients.gamma.events.getBySlug({ slug: key });
-
-            return ToolBudget.value(Polymarket.Event.withMarkets(event), {
+            return ToolBudget.value(await polymarket.events.get(identifier), {
                 hint: "Use polymarket_get_market on a single conditionId for the full detail of one market.",
             });
         },
@@ -181,7 +127,7 @@ export function buildTools(clients: ToolClients) {
 
     const listTags = tool(
         async ({ limit }) => {
-            const tags = await clients.gamma.tags.list({ limit: limit });
+            const tags = await polymarket.tags.list(limit);
 
             return ToolBudget.list("tags", tags, { hint: "Lower the limit." });
         },
@@ -196,12 +142,7 @@ export function buildTools(clients: ToolClients) {
 
     const getTag = tool(
         async ({ identifier }) => {
-            const key = required(identifier, "identifier", "polymarket_get_tag");
-            const tag = looksNumeric(key)
-                ? await clients.gamma.tags.getById({ id: Polymarket.Gamma.Tag.Id.parse(key) })
-                : await clients.gamma.tags.getBySlug({ slug: key });
-
-            return ToolBudget.value(tag);
+            return ToolBudget.value(await polymarket.tags.get(identifier));
         },
         {
             name:        "polymarket_get_tag",
@@ -214,11 +155,7 @@ export function buildTools(clients: ToolClients) {
 
     const listSeries = tool(
         async ({ slug, limit }) => {
-            const key    = (slug ?? "").trim();
-            const series = await clients.gamma.series.list({
-                limit: limit,
-                slug:  key ? [key] : undefined,
-            });
+            const series = await polymarket.series.list({ slug, limit });
 
             return ToolBudget.list("series", series, { hint: "Filter by slug or lower the limit." });
         },
@@ -234,11 +171,7 @@ export function buildTools(clients: ToolClients) {
 
     const getSeries = tool(
         async ({ seriesId }) => {
-            const series = await clients.gamma.series.getById({
-                id: Polymarket.Gamma.Series.Id.parse(required(seriesId, "seriesId", "polymarket_get_series")),
-            });
-
-            return ToolBudget.value(series);
+            return ToolBudget.value(await polymarket.series.get(seriesId));
         },
         {
             name:        "polymarket_get_series",
@@ -251,9 +184,7 @@ export function buildTools(clients: ToolClients) {
 
     const listSports = tool(
         async () => {
-            const sports = await clients.gamma.sports.list({});
-
-            return ToolBudget.list("sports", sports);
+            return ToolBudget.list("sports", await polymarket.sports.list());
         },
         {
             name:        "polymarket_list_sports",
@@ -264,11 +195,7 @@ export function buildTools(clients: ToolClients) {
 
     const listTeams = tool(
         async ({ name, limit }) => {
-            const key   = (name ?? "").trim();
-            const teams = await clients.gamma.sports.listTeams({
-                limit: limit,
-                name:  key ? [key] : undefined,
-            });
+            const teams = await polymarket.sports.teams({ name, limit });
 
             return ToolBudget.list("teams", teams, { hint: "Filter by name or lower the limit." });
         },
@@ -283,39 +210,12 @@ export function buildTools(clients: ToolClients) {
     );
 
 
-    const listComments = tool(
-        async ({ parentType, parentId, includePositions, holdersOnly, limit }) => {
-            const comments = await clients.gamma.comments.list({
-                parent_entity_type: Polymarket.Gamma.Comment.ParentEntityType.parse(parentType),
-                parent_entity_id:   required(parentId, "parentId", "polymarket_list_comments"),
-                get_positions: includePositions,
-                holders_only:  holdersOnly,
-                limit:         limit,
-            });
-
-            return ToolBudget.list("comments", comments, { hint: "Lower the limit, or set includePositions to false." });
-        },
-        {
-            name:        "polymarket_list_comments",
-            description: "List user comments on an event, series or market. Useful for gauging sentiment around a question.",
-            schema: z.object({
-                parentType:       z.enum(["Event", "Series", "market"]).describe("What the comments are attached to. Note the casing — 'Event', 'Series', lowercase 'market'."),
-                parentId:         z.string().describe("Numeric id of the event, series or market."),
-                includePositions: z.boolean().default(false).describe("Include each commenter's position in the market."),
-                holdersOnly:      z.boolean().default(false).describe("Only comments from users who hold a position."),
-                limit:            limitParam(100, 20),
-            }),
-        },
-    );
-
     const listTrades = tool(
         async ({ conditionId, side, limit }) => {
-            const market = Polymarket.Data.Common.ConditionId.parse(required(conditionId, "conditionId", "polymarket_list_trades"));
-
-            const trades = await clients.data.trades.list({
-                market: [market],
-                limit:  limit,
-                side:   side === "all" ? undefined : Polymarket.Data.Common.Side.parse(side),
+            const trades = await polymarket.trades.forMarket({
+                conditionId,
+                side: side === "all" ? undefined : side,
+                limit,
             });
 
             return ToolBudget.list("trades", trades, { hint: "Lower the limit or filter by side." });
@@ -333,14 +233,7 @@ export function buildTools(clients: ToolClients) {
 
     const listHolders = tool(
         async ({ conditionId, limit }) => {
-            const market = Polymarket.Data.Common.ConditionId.parse(required(conditionId, "conditionId", "polymarket_list_holders"));
-
-            const holders = await clients.data.markets.listHolders({
-                market: [market],
-                limit:  limit,
-            });
-
-            return ToolBudget.value(holders);
+            return ToolBudget.value(await polymarket.holders.forMarket({ conditionId, limit }));
         },
         {
             name:        "polymarket_list_holders",
@@ -355,24 +248,7 @@ export function buildTools(clients: ToolClients) {
 
     const getPrice = tool(
         async ({ tokenId, kind }) => {
-            const token = required(tokenId, "tokenId", "polymarket_get_price");
-
-            switch (kind) {
-                case "midpoint":
-                    return ToolBudget.value(await clients.clob.marketData.getMidpoint({ token_id: token }));
-
-                case "spread":
-                    return ToolBudget.value(await clients.clob.marketData.getSpread({ token_id: token }));
-
-                case "last":
-                    return ToolBudget.value(await clients.clob.marketData.getLastTradePrice({ token_id: token }));
-
-                default:
-                    return ToolBudget.value(await clients.clob.marketData.getPrice({
-                        token_id: token,
-                        side:     Polymarket.CLOB.Common.Side.parse(kind === "buy" ? "BUY" : "SELL"),
-                    }));
-            }
+            return ToolBudget.value(await polymarket.prices.get({ tokenId, kind }));
         },
         {
             name:        "polymarket_get_price",
@@ -386,29 +262,23 @@ export function buildTools(clients: ToolClients) {
     );
 
     const getOrderBook = tool(
-        async ({ tokenId }) => {
-            const book = await clients.clob.marketData.getOrderBook({
-                token_id: required(tokenId, "tokenId", "polymarket_get_order_book"),
-            });
-
-            return ToolBudget.value(book);
+        async ({ tokenId, depth }) => {
+            return ToolBudget.value(await polymarket.prices.book({ tokenId, depth }));
         },
         {
             name:        "polymarket_get_order_book",
-            description: "Snapshot the full order book — every resting bid and ask with its size — for one outcome token. Use polymarket_get_price if you only need a single number.",
+            description: "Snapshot the order book for one outcome token: the best bids and asks with their sizes, best first, plus the total size resting across every level. Use polymarket_get_price if you only need a single number.",
             schema: z.object({
                 tokenId: tokenIdParam,
+                depth:   z.number().int().min(1).max(50).default(15)
+                    .describe("How many price levels to return per side, best first."),
             }),
         },
     );
 
     const getPriceHistory = tool(
         async ({ tokenId, interval, fidelity }) => {
-            const history = await clients.clob.marketData.getPriceHistory({
-                market:   required(tokenId, "tokenId", "polymarket_get_price_history"),
-                interval: Polymarket.CLOB.Common.PriceHistoryInterval.parse(interval),
-                fidelity,
-            });
+            const history = await polymarket.prices.history({ tokenId, interval, fidelity });
 
             return ToolBudget.list("history", history, { hint: "Raise fidelity or use a shorter interval." });
         },
@@ -425,16 +295,7 @@ export function buildTools(clients: ToolClients) {
 
     const getMarketMechanics = tool(
         async ({ tokenId }) => {
-            const token = required(tokenId, "tokenId", "polymarket_get_market_mechanics");
-
-            const [tickSize, negRisk, feeRate, feeExponent] = await Promise.all([
-                clients.clob.marketData.getTickSize({ token_id: token }),
-                clients.clob.marketData.getNegRisk({ token_id: token }),
-                clients.clob.marketData.getFeeRate({ token_id: token }),
-                clients.clob.marketData.getFeeExponent({ token_id: token }),
-            ]);
-
-            return ToolBudget.value({ tokenId: token, tickSize, negRisk, feeRate, feeExponent });
+            return ToolBudget.value(await polymarket.prices.mechanics(tokenId));
         },
         {
             name:        "polymarket_get_market_mechanics",
@@ -448,11 +309,7 @@ export function buildTools(clients: ToolClients) {
 
     const getMarketConfig = tool(
         async ({ conditionId }) => {
-            const config = await clients.clob.markets.getClobInfo({
-                condition_id: required(conditionId, "conditionId", "polymarket_get_market_config"),
-            });
-
-            return ToolBudget.value(config);
+            return ToolBudget.value(await polymarket.markets.config(conditionId));
         },
         {
             name:        "polymarket_get_market_config",
@@ -465,11 +322,7 @@ export function buildTools(clients: ToolClients) {
 
     const getMarketRewards = tool(
         async ({ conditionId }) => {
-            const rewards = await clients.clob.rewards.getMarket({
-                condition_id: required(conditionId, "conditionId", "polymarket_get_market_rewards"),
-            });
-
-            return ToolBudget.value(rewards);
+            return ToolBudget.value(await polymarket.markets.rewards(conditionId));
         },
         {
             name:        "polymarket_get_market_rewards",
@@ -482,9 +335,7 @@ export function buildTools(clients: ToolClients) {
 
     const getOpenInterest = tool(
         async ({ conditionId }) => {
-            const market = Polymarket.Data.Common.ConditionId.parse(required(conditionId, "conditionId", "polymarket_get_open_interest"));
-
-            return ToolBudget.value(await clients.data.markets.getOpenInterest({ market: [market] }));
+            return ToolBudget.value(await polymarket.stats.openInterest(conditionId));
         },
         {
             name:        "polymarket_get_open_interest",
@@ -497,9 +348,7 @@ export function buildTools(clients: ToolClients) {
 
     const getLiveVolume = tool(
         async ({ eventId }) => {
-            const id = required(eventId, "eventId", "polymarket_get_live_volume");
-
-            return ToolBudget.value(await clients.data.markets.getLiveVolume({ id }));
+            return ToolBudget.value(await polymarket.stats.liveVolume(eventId));
         },
         {
             name:        "polymarket_get_live_volume",
@@ -527,7 +376,6 @@ export function buildTools(clients: ToolClients) {
         listSports,
         listTeams,
 
-        listComments,
         listTrades,
         listHolders,
 
