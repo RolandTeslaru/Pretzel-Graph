@@ -36,13 +36,17 @@ export namespace Market {
     export namespace Token {
 
         /**
-         * The readable half — what a side is called and what it costs.
+         * What a side is called, what it costs, and the id every pricing call takes.
          *
-         * Carried by `Market.Ref`, where the ids are the expensive part: they're 77-digit integers,
-         * and two of them outweigh the rest of a market reference combined.
+         * The id is 85 of the ~120 bytes here and it is the only route from a market to its price.
+         * Listings carried outcomes without one for a while, on the reasoning that ids are large
+         * and rarely needed; what that produced was a caller holding "Gavin Newsom, 12%" and no
+         * way to chart him, which it resolved by borrowing an id from elsewhere and silently
+         * charting the wrong market.
          */
         export namespace Ref {
             export const Schema = z.object({
+                id:      z.string().nullable(),
                 outcome: z.string(),
                 price:   z.number().nullable(),
             })
@@ -68,8 +72,8 @@ export namespace Market {
      * A market as a pointer with a price on it — what an Event carries.
      *
      * Full markets don't fit: a 128-candidate event is 118 KB of them. This keeps the label, the
-     * id every other tool takes, and what each side costs, so "who's leading" is answerable without
-     * a second call, at 226 bytes instead of 945.
+     * ids every other tool takes, and what each side costs, so both "who's leading" and "chart me
+     * that one" are answerable from the event alone, at ~410 bytes instead of 945.
      */
     export namespace Ref {
 
@@ -85,7 +89,7 @@ export namespace Market {
             id:             toText(market.id),
             conditionId:    market.conditionId    ?? null,
             groupItemTitle: market.groupItemTitle ?? null,
-            outcomes:       tokens(market).map(({ outcome, price }) => ({ outcome, price })),
+            outcomes:       tokens(market).map(({ id, outcome, price }) => ({ id, outcome, price })),
         })
     }
 
@@ -95,9 +99,9 @@ export namespace Market {
     /**
      * What the market is, and whether it can be traded — enough to choose one from a list.
      *
-     * Carries `Token.Ref`, so outcomes have prices but not ids: the two token ids are 254 bytes,
-     * a third of the object, and only `get_price` and `get_order_book` need them. Fetch the full
-     * Market when you're about to use one.
+     * Carries `Token.Ref`, so a result can be acted on without being fetched again. The ids are
+     * 170 bytes of the ~620 here, which is the price of a listing that answers "and now chart me
+     * that one" instead of handing back a row you have to look up before you can use it.
      */
     export namespace Meta {
 
@@ -141,7 +145,7 @@ export namespace Market {
             conditionId:    market.conditionId    ?? null,
             groupItemTitle: market.groupItemTitle ?? null,
 
-            outcomes:       tokens(market).map(({ outcome, price }) => ({ outcome, price })),
+            outcomes:       tokens(market).map(({ id, outcome, price }) => ({ id, outcome, price })),
 
             active:           market.active          ?? null,
             closed:           market.closed          ?? null,
@@ -166,7 +170,7 @@ export namespace Market {
         /** The resolution contract: what has to happen for Yes to pay. ~400-1300 characters. */
         description: z.string().nullable(),
 
-        /** With ids, unlike Meta's — this is the tier you trade from. */
+        /** With the side index and the winner, which only matter once a market is chosen. */
         outcomes: z.array(Token.Schema),
 
         /** The UMA question this settles against. Not the same as `conditionId`. */
@@ -207,7 +211,7 @@ export namespace Market {
     const asArray = <T>(value: T[] | string | null | undefined): T[] =>
         Array.isArray(value) ? value : []
 
-    const tokens = (market: Gamma.Market): Token[] =>
+    export const tokens = (market: Gamma.Market): Token[] =>
         asArray(market.outcomes).map((outcome, index) => ({
             id:      asArray(market.clobTokenIds)[index] ?? null,
             outcome: String(outcome),

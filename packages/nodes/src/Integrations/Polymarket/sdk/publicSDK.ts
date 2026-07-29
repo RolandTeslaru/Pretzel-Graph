@@ -36,6 +36,18 @@ export class PolymarketPublicSDK {
     // Deciding which from the shape of the value belongs here, not in every caller.
     static #looksNumeric = (value: string) => /^\d+$/.test(value)
 
+    /**
+     * A 404 that means "there is no such thing", as opposed to a failure.
+     *
+     * Matches both shapes: HTTP.Error carries `.status`, and a bare axios error carries
+     * `.response.status` — the sample script builds clients without the worker's wrapper.
+     */
+    static #isNotFound = (error: unknown): boolean => {
+        const candidate = error as { status?: unknown; response?: { status?: unknown } }
+
+        return candidate?.status === 404 || candidate?.response?.status === 404
+    }
+
     static #required = (value: string | undefined, name: string) => {
         const text = (value ?? "").trim()
 
@@ -43,6 +55,49 @@ export class PolymarketPublicSDK {
             throw new Error(`Polymarket: '${name}' is required.`)
 
         return text
+    }
+
+
+    /**
+     * One market, by id or slug, with its parent event attached.
+     *
+     * `/markets/{id}` is the obvious endpoint and the wrong one: it omits `events[]`, so every
+     * market fetched that way came back claiming no parent. The list form carries it, at the cost
+     * of a `closed` filter that defaults to false server-side and silently answers `[]` for
+     * anything resolved — hence the second attempt.
+     */
+    async #market(identifier: string): Promise<Polymarket.Gamma.Market> {
+        const key = PolymarketPublicSDK.#required(identifier, "identifier")
+
+        const query = PolymarketPublicSDK.#looksNumeric(key)
+            ? { id:   [Polymarket.Gamma.Market.Id.parse(key)] }
+            : { slug: [key] }
+
+        const [open] = await this.#gamma.markets.list({ ...query, closed: false })
+
+        if (open)
+            return open
+
+        const [resolved] = await this.#gamma.markets.list({ ...query, closed: true })
+
+        if (resolved)
+            return resolved
+
+        throw new Error(`Polymarket: no market matching '${key}'.`)
+    }
+
+    /** The market an outcome token belongs to, or null. What makes a price series identifiable. */
+    async #marketByToken(tokenId: string): Promise<Polymarket.Gamma.Market | null> {
+        const query = { clob_token_ids: [Polymarket.Gamma.Market.TokenId.parse(tokenId)] }
+
+        const [open] = await this.#gamma.markets.list({ ...query, closed: false })
+
+        if (open)
+            return open
+
+        const [resolved] = await this.#gamma.markets.list({ ...query, closed: true })
+
+        return resolved ?? null
     }
 
 
@@ -131,25 +186,11 @@ export class PolymarketPublicSDK {
         },
 
         /** One market in full, by numeric id or slug. */
-        get: async (identifier: string): Promise<Polymarket.Market> => {
-            const key = PolymarketPublicSDK.#required(identifier, "identifier")
+        get: async (identifier: string): Promise<Polymarket.Market> =>
+            Polymarket.Market.fromGamma(await this.#market(identifier)),
 
-            const market = PolymarketPublicSDK.#looksNumeric(key)
-                ? await this.#gamma.markets.getById({ id: Polymarket.Gamma.Market.Id.parse(key) })
-                : await this.#gamma.markets.getBySlug({ slug: key })
-
-            return Polymarket.Market.fromGamma(market)
-        },
-
-        stats: async (identifier: string): Promise<Polymarket.MarketStats> => {
-            const key = PolymarketPublicSDK.#required(identifier, "identifier")
-
-            const market = PolymarketPublicSDK.#looksNumeric(key)
-                ? await this.#gamma.markets.getById({ id: Polymarket.Gamma.Market.Id.parse(key) })
-                : await this.#gamma.markets.getBySlug({ slug: key })
-
-            return Polymarket.MarketStats.fromGamma(market)
-        },
+        stats: async (identifier: string): Promise<Polymarket.MarketStats> =>
+            Polymarket.MarketStats.fromGamma(await this.#market(identifier)),
 
         /** Exchange configuration — tick size, fees, rewards. CLOB's copy, which is authoritative. */
         config: (conditionId: string) =>
@@ -180,15 +221,18 @@ export class PolymarketPublicSDK {
             return events.map(Polymarket.Event.Meta.fromGamma)
         },
 
-        /** One event with its live markets as references. */
-        get: async (identifier: string): Promise<Polymarket.Event> => {
+        /** One event with its live markets as references, longest odds first. */
+        get: async (
+            identifier: string,
+            options:    Polymarket.Event.Options = {},
+        ): Promise<Polymarket.Event> => {
             const key = PolymarketPublicSDK.#required(identifier, "identifier")
 
             const event = PolymarketPublicSDK.#looksNumeric(key)
                 ? await this.#gamma.events.getById({ id: Polymarket.Gamma.Event.Id.parse(key) })
                 : await this.#gamma.events.getBySlug({ slug: key })
 
-            return Polymarket.Event.fromGamma(event)
+            return Polymarket.Event.fromGamma(event, options)
         },
 
         stats: async (identifier: string): Promise<Polymarket.EventStats> => {
@@ -286,16 +330,42 @@ export class PolymarketPublicSDK {
             return Polymarket.OrderBook.fromCLOB(book, args.depth)
         },
 
-        history: (args: {
+        /**
+         * One token's price over time, with the market it belongs to resolved rather than assumed.
+         *
+         * The lookup is a second request, and it is the point: the CLOB's series carries nothing
+         * that identifies it, so a caller holding a stale or borrowed token id gets a perfectly
+         * plausible chart of something else. A failed lookup leaves the labels null and the series
+         * intact — not knowing the name is no reason to withhold the prices.
+         */
+        history: async (args: {
             tokenId:   string
             interval?: "1h" | "6h" | "1d" | "1w" | "max"
             fidelity?: number
-        }) =>
-            this.#clob.marketData.getPriceHistory({
-                market:   PolymarketPublicSDK.#required(args.tokenId, "tokenId"),
-                interval: Polymarket.CLOB.Common.PriceHistoryInterval.parse(args.interval ?? "1d"),
-                fidelity: args.fidelity ?? 60,
-            }),
+            /** How many readings to return. The true total is always reported as `readings`. */
+            points?:   number
+        }): Promise<Polymarket.PriceHistory> => {
+
+            const tokenId  = PolymarketPublicSDK.#required(args.tokenId, "tokenId")
+            const interval = args.interval ?? "1d"
+
+            const [series, market] = await Promise.all([
+                this.#clob.marketData.getPriceHistory({
+                    market:   tokenId,
+                    interval: Polymarket.CLOB.Common.PriceHistoryInterval.parse(interval),
+                    fidelity: args.fidelity ?? 60,
+                }),
+                this.#marketByToken(tokenId).catch(() => null),
+            ])
+
+            return Polymarket.PriceHistory.fromCLOB({
+                tokenId,
+                series,
+                interval,
+                market,
+                points: args.points,
+            })
+        },
 
         /** Tick size, fee rate and neg-risk for one token, in one call. */
         mechanics: async (tokenId: string) => {
@@ -351,9 +421,12 @@ export class PolymarketPublicSDK {
         positions: async (args: {
             wallet:          string
             limit?:          number
-            sortBy?:         Parameters<PolymarketDataClient["positions"]["listCurrent"]>[0] extends { sortBy?: infer S } ? S : never
+            sortBy?:         "TOKENS" | "CURRENT" | "INITIAL" | "CASHPNL" | "PERCENTPNL"
+                           | "PRICE" | "AVGPRICE" | "RESOLVING" | "TITLE"
             direction?:      "ASC" | "DESC"
             redeemableOnly?: boolean
+            /** Ignores dust below this token count. */
+            minSize?:        number
         }): Promise<Polymarket.Position[]> => {
 
             const positions = await this.#data.positions.listCurrent({
@@ -362,6 +435,7 @@ export class PolymarketPublicSDK {
                 sortBy:        args.sortBy,
                 sortDirection: args.direction,
                 redeemable:    args.redeemableOnly,
+                sizeThreshold: args.minSize,
             })
 
             return positions.map(Polymarket.Position.fromData)
@@ -387,6 +461,7 @@ export class PolymarketPublicSDK {
         activity: async (args: {
             wallet:     string
             limit?:     number
+            /** "ALL", or one of TRADE, SPLIT, MERGE, REDEEM, REWARD, DEPOSIT, WITHDRAWAL. */
             type?:      string
             direction?: "ASC" | "DESC"
         }): Promise<Polymarket.Activity[]> => {
@@ -411,24 +486,60 @@ export class PolymarketPublicSDK {
                 user: Polymarket.Data.Common.WalletAddress.parse(wallet),
             }),
 
+        /**
+         * One wallet's standing, if it has one.
+         *
+         * "ALL" by default rather than Data's "DAY": a wallet outside today's top 25 answers with
+         * nothing, and an empty leaderboard reads as "this address does not exist" instead of
+         * "it did not place today".
+         */
         rank: (args: {
             wallet:    string
             period?:   "DAY" | "WEEK" | "MONTH" | "ALL"
             rankedBy?: "PNL" | "VOL"
-            limit?:    number
         }) =>
             this.#data.leaderboard.list({
                 user:       Polymarket.Data.Common.WalletAddress.parse(args.wallet),
-                timePeriod: args.period,
+                timePeriod: args.period ?? "ALL",
+                orderBy:    args.rankedBy,
+                limit:      1,
+            }),
+
+        /** The top traders overall — the same endpoint with nobody in particular asked about. */
+        leaderboard: (args: {
+            period?:   "DAY" | "WEEK" | "MONTH" | "ALL"
+            rankedBy?: "PNL" | "VOL"
+            limit?:    number
+        } = {}) =>
+            this.#data.leaderboard.list({
+                timePeriod: args.period ?? "ALL",
                 orderBy:    args.rankedBy,
                 limit:      args.limit ?? 25,
             }),
 
-        /** The public profile behind an address — name, pseudonym, bio, badges. */
-        identity: (wallet: string) =>
-            this.#gamma.profiles.getPublic({
-                address: Polymarket.Gamma.Common.WalletAddress.parse(wallet),
-            }),
+        /**
+         * The public profile behind an address — name, pseudonym, bio, badges.
+         *
+         * `null` when the wallet has no profile, which is an ordinary answer rather than a
+         * failure: most addresses have never set one, and protocol addresses never will. Gamma
+         * reports that as a 404, so without this a perfectly good "nobody has claimed this
+         * address" comes back as a node error and stops the run.
+         */
+        identity: async (wallet: string): Promise<Polymarket.Profile | null> => {
+            try {
+                const profile = await this.#gamma.profiles.getPublic({
+                    address: Polymarket.Gamma.Common.WalletAddress.parse(wallet),
+                })
+
+                return Polymarket.Profile.fromGamma(profile)
+            }
+            catch (error) {
+                if (PolymarketPublicSDK.#isNotFound(error))
+                    return null
+
+                throw error
+            }
+        },
     }
 
 

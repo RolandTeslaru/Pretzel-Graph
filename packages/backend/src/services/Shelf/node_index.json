@@ -1,6 +1,6 @@
 {
-  "version": "1785193586219",
-  "generatedAt": "2026-07-27T23:06:26.219Z",
+  "version": "1785284316697",
+  "generatedAt": "2026-07-29T00:18:36.697Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -9262,17 +9262,17 @@
             {
               "value": "search",
               "displayName": "Search",
-              "description": "Search markets or Polymarket's public discovery index."
+              "description": "Find markets, or search events, tags and profiles at once."
             },
             {
               "value": "list",
               "displayName": "List",
-              "description": "List metadata, exchange records, or market analytics."
+              "description": "Browse markets, events, series, trades, holders and more."
             },
             {
               "value": "get",
               "displayName": "Get",
-              "description": "Fetch one resource, market-data view, or analytic."
+              "description": "Fetch one thing by id, or one reading for a token."
             }
           ],
           "kind": "select"
@@ -9389,12 +9389,12 @@
                 {
                   "value": "markets",
                   "displayName": "Markets",
-                  "description": "Search market questions and slugs."
+                  "description": "Market questions, through Gamma's search index."
                 },
                 {
-                  "value": "public",
-                  "displayName": "Public Discovery",
-                  "description": "Search events, markets, tags, and public profiles."
+                  "value": "all",
+                  "displayName": "Everything",
+                  "description": "Events, and optionally tags and public profiles."
                 }
               ],
               "kind": "tab"
@@ -9469,7 +9469,7 @@
               "condition": {
                 "fieldId": "searchKind",
                 "operator": "==",
-                "value": "public"
+                "value": "all"
               },
               "fields": [
                 {
@@ -9533,526 +9533,473 @@
           },
           "fields": [
             {
-              "id": "listAPI",
+              "id": "listResource",
               "advanced": false,
               "required": false,
               "reconcile": true,
-              "displayName": "API",
+              "displayName": "Resource",
               "variant": "MultiOption",
-              "initialValue": "gamma",
+              "initialValue": "markets",
               "options": [
                 {
-                  "value": "gamma",
-                  "displayName": "Gamma",
-                  "description": "Metadata, discovery, discussion, and sports."
+                  "value": "markets",
+                  "displayName": "Markets"
                 },
                 {
-                  "value": "data",
-                  "displayName": "Data",
-                  "description": "Public trades and market-holder analytics."
+                  "value": "events",
+                  "displayName": "Events"
+                },
+                {
+                  "value": "series",
+                  "displayName": "Series",
+                  "description": "Recurring groups of events — leagues, monthly questions."
+                },
+                {
+                  "value": "tags",
+                  "displayName": "Tags"
+                },
+                {
+                  "value": "sports",
+                  "displayName": "Sports"
+                },
+                {
+                  "value": "teams",
+                  "displayName": "Teams"
+                },
+                {
+                  "value": "comments",
+                  "displayName": "Comments"
+                },
+                {
+                  "value": "trades",
+                  "displayName": "Trades",
+                  "description": "A market's public fills."
+                },
+                {
+                  "value": "holders",
+                  "displayName": "Holders",
+                  "description": "The largest position holders on each side."
                 }
               ],
-              "kind": "tab"
+              "kind": "select"
             }
           ],
           "_derivatives": [
             {
               "condition": {
-                "fieldId": "listAPI",
+                "fieldId": "listResource",
                 "operator": "==",
-                "value": "gamma"
+                "value": "markets"
               },
               "fields": [
                 {
-                  "id": "listGammaResource",
+                  "id": "listMarketsStatus",
                   "advanced": false,
                   "required": false,
-                  "reconcile": true,
-                  "displayName": "Resource",
+                  "reconcile": false,
+                  "displayName": "Status",
                   "variant": "MultiOption",
-                  "initialValue": "markets",
+                  "initialValue": "active",
                   "options": [
                     {
-                      "value": "markets",
-                      "displayName": "Markets"
+                      "value": "active",
+                      "displayName": "Active"
                     },
                     {
-                      "value": "events",
-                      "displayName": "Events"
+                      "value": "closed",
+                      "displayName": "Closed"
                     },
                     {
-                      "value": "tags",
-                      "displayName": "Tags"
-                    },
-                    {
-                      "value": "series",
-                      "displayName": "Series"
-                    },
-                    {
-                      "value": "comments",
-                      "displayName": "Comments"
-                    },
-                    {
-                      "value": "sports",
-                      "displayName": "Sports"
-                    },
-                    {
-                      "value": "teams",
-                      "displayName": "Teams"
+                      "value": "all",
+                      "displayName": "All"
                     }
                   ],
-                  "kind": "select"
+                  "kind": "tab"
+                },
+                {
+                  "id": "listMarketsMaxResults",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 20,
+                  "min": 1,
+                  "max": 500,
+                  "step": 1
                 }
               ],
-              "_derivatives": [
+              "outputs": [
                 {
-                  "condition": {
-                    "fieldId": "listGammaResource",
-                    "operator": "==",
-                    "value": "markets"
-                  },
-                  "fields": [
-                    {
-                      "id": "listMarketsStatus",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Status",
-                      "variant": "MultiOption",
-                      "initialValue": "active",
-                      "options": [
-                        {
-                          "value": "active",
-                          "displayName": "Active"
-                        },
-                        {
-                          "value": "closed",
-                          "displayName": "Closed"
-                        },
-                        {
-                          "value": "all",
-                          "displayName": "All"
-                        }
-                      ],
-                      "kind": "tab"
-                    },
-                    {
-                      "id": "listMarketsMaxResults",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Max Results",
-                      "variant": "Integer",
-                      "initialValue": 20,
-                      "min": 1,
-                      "max": 500,
-                      "step": 1
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "markets",
-                      "displayName": "Markets",
-                      "variant": "DataList"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "listGammaResource",
-                    "operator": "==",
-                    "value": "events"
-                  },
-                  "fields": [
-                    {
-                      "id": "listEventsStatus",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Status",
-                      "variant": "MultiOption",
-                      "initialValue": "active",
-                      "options": [
-                        {
-                          "value": "active",
-                          "displayName": "Active"
-                        },
-                        {
-                          "value": "closed",
-                          "displayName": "Closed"
-                        },
-                        {
-                          "value": "all",
-                          "displayName": "All"
-                        }
-                      ],
-                      "kind": "tab"
-                    },
-                    {
-                      "id": "listEventsMaxResults",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Max Results",
-                      "variant": "Integer",
-                      "initialValue": 20,
-                      "min": 1,
-                      "max": 500,
-                      "step": 1
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "events",
-                      "displayName": "Events",
-                      "variant": "DataList"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "listGammaResource",
-                    "operator": "==",
-                    "value": "tags"
-                  },
-                  "fields": [
-                    {
-                      "id": "listTagsMaxResults",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Max Results",
-                      "variant": "Integer",
-                      "initialValue": 20,
-                      "min": 1,
-                      "max": 500,
-                      "step": 1
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "tags",
-                      "displayName": "Tags",
-                      "variant": "DataList"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "listGammaResource",
-                    "operator": "==",
-                    "value": "series"
-                  },
-                  "fields": [
-                    {
-                      "id": "listSeriesSlug",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Slug",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    },
-                    {
-                      "id": "listSeriesMaxResults",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Max Results",
-                      "variant": "Integer",
-                      "initialValue": 20,
-                      "min": 1,
-                      "max": 500,
-                      "step": 1
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "series",
-                      "displayName": "Series",
-                      "variant": "DataList"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "listGammaResource",
-                    "operator": "==",
-                    "value": "comments"
-                  },
-                  "fields": [
-                    {
-                      "id": "listCommentsParentEntityType",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Parent Type",
-                      "variant": "MultiOption",
-                      "initialValue": "Event",
-                      "options": [
-                        {
-                          "value": "Event",
-                          "displayName": "Event"
-                        },
-                        {
-                          "value": "Series",
-                          "displayName": "Series"
-                        },
-                        {
-                          "value": "market",
-                          "displayName": "Market"
-                        }
-                      ],
-                      "kind": "tab"
-                    },
-                    {
-                      "id": "listCommentsParentId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Parent ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    },
-                    {
-                      "id": "listCommentsGetPositions",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Include Positions",
-                      "variant": "Boolean",
-                      "initialValue": false
-                    },
-                    {
-                      "id": "listCommentsHoldersOnly",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Holders Only",
-                      "variant": "Boolean",
-                      "initialValue": false
-                    },
-                    {
-                      "id": "listCommentsMaxResults",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Max Results",
-                      "variant": "Integer",
-                      "initialValue": 20,
-                      "min": 1,
-                      "max": 500,
-                      "step": 1
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "comments",
-                      "displayName": "Comments",
-                      "variant": "DataList"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "listGammaResource",
-                    "operator": "==",
-                    "value": "sports"
-                  },
-                  "outputs": [
-                    {
-                      "id": "sports",
-                      "displayName": "Sports",
-                      "variant": "DataList"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "listGammaResource",
-                    "operator": "==",
-                    "value": "teams"
-                  },
-                  "fields": [
-                    {
-                      "id": "listTeamsName",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Team Name",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    },
-                    {
-                      "id": "listTeamsMaxResults",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Max Results",
-                      "variant": "Integer",
-                      "initialValue": 20,
-                      "min": 1,
-                      "max": 500,
-                      "step": 1
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "teams",
-                      "displayName": "Teams",
-                      "variant": "DataList"
-                    }
-                  ],
-                  "_derivatives": []
+                  "id": "markets",
+                  "displayName": "Markets",
+                  "variant": "DataList"
                 }
-              ]
+              ],
+              "_derivatives": []
             },
             {
               "condition": {
-                "fieldId": "listAPI",
+                "fieldId": "listResource",
                 "operator": "==",
-                "value": "data"
+                "value": "events"
               },
               "fields": [
                 {
-                  "id": "listDataResource",
+                  "id": "listEventsStatus",
                   "advanced": false,
                   "required": false,
-                  "reconcile": true,
-                  "displayName": "Resource",
+                  "reconcile": false,
+                  "displayName": "Status",
                   "variant": "MultiOption",
-                  "initialValue": "trades",
+                  "initialValue": "active",
                   "options": [
                     {
-                      "value": "trades",
-                      "displayName": "Trades"
+                      "value": "active",
+                      "displayName": "Active"
                     },
                     {
-                      "value": "holders",
-                      "displayName": "Holders"
-                    }
-                  ],
-                  "kind": "select"
-                }
-              ],
-              "_derivatives": [
-                {
-                  "condition": {
-                    "fieldId": "listDataResource",
-                    "operator": "==",
-                    "value": "trades"
-                  },
-                  "fields": [
-                    {
-                      "id": "listTradesConditionId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Condition ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": "0x…"
+                      "value": "closed",
+                      "displayName": "Closed"
                     },
                     {
-                      "id": "listTradesSide",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Side",
-                      "variant": "MultiOption",
-                      "initialValue": "all",
-                      "options": [
-                        {
-                          "value": "all",
-                          "displayName": "All"
-                        },
-                        {
-                          "value": "BUY",
-                          "displayName": "Buy"
-                        },
-                        {
-                          "value": "SELL",
-                          "displayName": "Sell"
-                        }
-                      ],
-                      "kind": "tab"
-                    },
-                    {
-                      "id": "listTradesMaxResults",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Max Results",
-                      "variant": "Integer",
-                      "initialValue": 100,
-                      "min": 1,
-                      "max": 10000,
-                      "step": 1
+                      "value": "all",
+                      "displayName": "All"
                     }
                   ],
-                  "outputs": [
-                    {
-                      "id": "trades",
-                      "displayName": "Trades",
-                      "variant": "DataList"
-                    }
-                  ],
-                  "_derivatives": []
+                  "kind": "tab"
                 },
                 {
-                  "condition": {
-                    "fieldId": "listDataResource",
-                    "operator": "==",
-                    "value": "holders"
-                  },
-                  "fields": [
+                  "id": "listEventsMaxResults",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 20,
+                  "min": 1,
+                  "max": 500,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "events",
+                  "displayName": "Events",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "listResource",
+                "operator": "==",
+                "value": "series"
+              },
+              "fields": [
+                {
+                  "id": "listSeriesSlug",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Slug",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                },
+                {
+                  "id": "listSeriesMaxResults",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 20,
+                  "min": 1,
+                  "max": 500,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "series",
+                  "displayName": "Series",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "listResource",
+                "operator": "==",
+                "value": "tags"
+              },
+              "fields": [
+                {
+                  "id": "listTagsMaxResults",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 20,
+                  "min": 1,
+                  "max": 500,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "tags",
+                  "displayName": "Tags",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "listResource",
+                "operator": "==",
+                "value": "sports"
+              },
+              "outputs": [
+                {
+                  "id": "sports",
+                  "displayName": "Sports",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "listResource",
+                "operator": "==",
+                "value": "teams"
+              },
+              "fields": [
+                {
+                  "id": "listTeamsName",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Team Name",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                },
+                {
+                  "id": "listTeamsMaxResults",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 20,
+                  "min": 1,
+                  "max": 500,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "teams",
+                  "displayName": "Teams",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "listResource",
+                "operator": "==",
+                "value": "comments"
+              },
+              "fields": [
+                {
+                  "id": "listCommentsParentEntityType",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Parent Type",
+                  "variant": "MultiOption",
+                  "initialValue": "Event",
+                  "options": [
                     {
-                      "id": "listHoldersConditionId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Condition ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": "0x…"
+                      "value": "Event",
+                      "displayName": "Event"
                     },
                     {
-                      "id": "listHoldersMaxResults",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Max Results",
-                      "variant": "Integer",
-                      "initialValue": 20,
-                      "min": 1,
-                      "max": 20,
-                      "step": 1
-                    }
-                  ],
-                  "outputs": [
+                      "value": "Series",
+                      "displayName": "Series"
+                    },
                     {
-                      "id": "holders",
-                      "displayName": "Holders",
-                      "variant": "DataList"
+                      "value": "market",
+                      "displayName": "Market"
                     }
                   ],
-                  "_derivatives": []
+                  "kind": "tab"
+                },
+                {
+                  "id": "listCommentsParentId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Parent ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                },
+                {
+                  "id": "listCommentsGetPositions",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Include Positions",
+                  "variant": "Boolean",
+                  "initialValue": false
+                },
+                {
+                  "id": "listCommentsHoldersOnly",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Holders Only",
+                  "variant": "Boolean",
+                  "initialValue": false
+                },
+                {
+                  "id": "listCommentsMaxResults",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 20,
+                  "min": 1,
+                  "max": 500,
+                  "step": 1
                 }
-              ]
+              ],
+              "outputs": [
+                {
+                  "id": "comments",
+                  "displayName": "Comments",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "listResource",
+                "operator": "==",
+                "value": "trades"
+              },
+              "fields": [
+                {
+                  "id": "listTradesConditionId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Condition ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "0x…"
+                },
+                {
+                  "id": "listTradesSide",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Side",
+                  "variant": "MultiOption",
+                  "initialValue": "all",
+                  "options": [
+                    {
+                      "value": "all",
+                      "displayName": "All"
+                    },
+                    {
+                      "value": "BUY",
+                      "displayName": "Buy"
+                    },
+                    {
+                      "value": "SELL",
+                      "displayName": "Sell"
+                    }
+                  ],
+                  "kind": "tab"
+                },
+                {
+                  "id": "listTradesMaxResults",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 100,
+                  "min": 1,
+                  "max": 1000,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "trades",
+                  "displayName": "Trades",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "listResource",
+                "operator": "==",
+                "value": "holders"
+              },
+              "fields": [
+                {
+                  "id": "listHoldersConditionId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Condition ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "0x…"
+                },
+                {
+                  "id": "listHoldersMaxResults",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 20,
+                  "min": 1,
+                  "max": 20,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "holders",
+                  "displayName": "Holders",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
             }
           ]
         },
@@ -10064,705 +10011,576 @@
           },
           "fields": [
             {
-              "id": "getAPI",
+              "id": "getResource",
               "advanced": false,
               "required": false,
               "reconcile": true,
-              "displayName": "API",
+              "displayName": "Resource",
               "variant": "MultiOption",
-              "initialValue": "gamma",
+              "initialValue": "market",
               "options": [
                 {
-                  "value": "gamma",
-                  "displayName": "Gamma",
-                  "description": "Markets, events, tags, and series metadata."
+                  "value": "market",
+                  "displayName": "Market"
                 },
                 {
-                  "value": "clob",
-                  "displayName": "CLOB",
-                  "description": "Exchange configuration, prices, books, mechanics, and rewards."
+                  "value": "marketStats",
+                  "displayName": "Market Stats",
+                  "description": "Volume windows, book snapshot, price movement."
                 },
                 {
-                  "value": "data",
-                  "displayName": "Data",
-                  "description": "Open interest and live volume analytics."
+                  "value": "event",
+                  "displayName": "Event",
+                  "description": "An event and the markets it groups."
+                },
+                {
+                  "value": "eventStats",
+                  "displayName": "Event Stats",
+                  "description": "Volume, liquidity and open interest."
+                },
+                {
+                  "value": "series",
+                  "displayName": "Series"
+                },
+                {
+                  "value": "tag",
+                  "displayName": "Tag"
+                },
+                {
+                  "value": "price",
+                  "displayName": "Price",
+                  "description": "One reading for an outcome token."
+                },
+                {
+                  "value": "orderBook",
+                  "displayName": "Order Book"
+                },
+                {
+                  "value": "priceHistory",
+                  "displayName": "Price History"
+                },
+                {
+                  "value": "mechanics",
+                  "displayName": "Mechanics",
+                  "description": "Tick size, fee rate, neg-risk."
+                },
+                {
+                  "value": "marketConfig",
+                  "displayName": "Market Config",
+                  "description": "Exchange configuration — tokens, fees, rewards."
+                },
+                {
+                  "value": "rewards",
+                  "displayName": "Rewards"
+                },
+                {
+                  "value": "openInterest",
+                  "displayName": "Open Interest"
+                },
+                {
+                  "value": "liveVolume",
+                  "displayName": "Live Volume"
                 }
               ],
-              "kind": "tab"
+              "kind": "select"
             }
           ],
           "_derivatives": [
             {
               "condition": {
-                "fieldId": "getAPI",
+                "fieldId": "getResource",
                 "operator": "==",
-                "value": "gamma"
+                "value": "market"
               },
               "fields": [
                 {
-                  "id": "getGammaResource",
+                  "id": "getMarketIdentifier",
                   "advanced": false,
-                  "required": false,
-                  "reconcile": true,
-                  "displayName": "Resource",
-                  "variant": "MultiOption",
-                  "initialValue": "market",
-                  "options": [
-                    {
-                      "value": "market",
-                      "displayName": "Market"
-                    },
-                    {
-                      "value": "event",
-                      "displayName": "Event"
-                    },
-                    {
-                      "value": "tag",
-                      "displayName": "Tag"
-                    },
-                    {
-                      "value": "series",
-                      "displayName": "Series"
-                    }
-                  ],
-                  "kind": "select"
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Market ID or Slug",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
                 }
               ],
-              "_derivatives": [
+              "outputs": [
                 {
-                  "condition": {
-                    "fieldId": "getGammaResource",
-                    "operator": "==",
-                    "value": "market"
-                  },
-                  "fields": [
-                    {
-                      "id": "getMarketLookupBy",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Look Up By",
-                      "variant": "MultiOption",
-                      "initialValue": "id",
-                      "options": [
-                        {
-                          "value": "id",
-                          "displayName": "ID"
-                        },
-                        {
-                          "value": "slug",
-                          "displayName": "Slug"
-                        }
-                      ],
-                      "kind": "tab"
-                    },
-                    {
-                      "id": "getMarketIdentifier",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Market Identifier",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "market",
-                      "displayName": "Market",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "getGammaResource",
-                    "operator": "==",
-                    "value": "event"
-                  },
-                  "fields": [
-                    {
-                      "id": "getEventLookupBy",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Look Up By",
-                      "variant": "MultiOption",
-                      "initialValue": "id",
-                      "options": [
-                        {
-                          "value": "id",
-                          "displayName": "ID"
-                        },
-                        {
-                          "value": "slug",
-                          "displayName": "Slug"
-                        }
-                      ],
-                      "kind": "tab"
-                    },
-                    {
-                      "id": "getEventIdentifier",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Event Identifier",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "event",
-                      "displayName": "Event",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "getGammaResource",
-                    "operator": "==",
-                    "value": "tag"
-                  },
-                  "fields": [
-                    {
-                      "id": "getTagLookupBy",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Look Up By",
-                      "variant": "MultiOption",
-                      "initialValue": "id",
-                      "options": [
-                        {
-                          "value": "id",
-                          "displayName": "ID"
-                        },
-                        {
-                          "value": "slug",
-                          "displayName": "Slug"
-                        }
-                      ],
-                      "kind": "tab"
-                    },
-                    {
-                      "id": "getTagIdentifier",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Tag Identifier",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "tag",
-                      "displayName": "Tag",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "getGammaResource",
-                    "operator": "==",
-                    "value": "series"
-                  },
-                  "fields": [
-                    {
-                      "id": "getSeriesIdentifier",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Series ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "series",
-                      "displayName": "Series",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
+                  "id": "market",
+                  "displayName": "Market",
+                  "variant": "Data"
                 }
-              ]
+              ],
+              "_derivatives": []
             },
             {
               "condition": {
-                "fieldId": "getAPI",
+                "fieldId": "getResource",
                 "operator": "==",
-                "value": "clob"
+                "value": "marketStats"
               },
               "fields": [
                 {
-                  "id": "getClobResource",
+                  "id": "getMarketStatsIdentifier",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Market ID or Slug",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "stats",
+                  "displayName": "Stats",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "event"
+              },
+              "fields": [
+                {
+                  "id": "getEventIdentifier",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Event ID or Slug",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "event",
+                  "displayName": "Event",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "eventStats"
+              },
+              "fields": [
+                {
+                  "id": "getEventStatsIdentifier",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Event ID or Slug",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "stats",
+                  "displayName": "Stats",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "series"
+              },
+              "fields": [
+                {
+                  "id": "getSeriesIdentifier",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Series ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "series",
+                  "displayName": "Series",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "tag"
+              },
+              "fields": [
+                {
+                  "id": "getTagIdentifier",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Tag ID or Slug",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "tag",
+                  "displayName": "Tag",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "price"
+              },
+              "fields": [
+                {
+                  "id": "getPriceTokenId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Token ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                },
+                {
+                  "id": "getPriceKind",
                   "advanced": false,
                   "required": false,
-                  "reconcile": true,
-                  "displayName": "Resource",
+                  "reconcile": false,
+                  "displayName": "Reading",
                   "variant": "MultiOption",
-                  "initialValue": "marketConfiguration",
+                  "initialValue": "midpoint",
                   "options": [
                     {
-                      "value": "marketConfiguration",
-                      "displayName": "Market Configuration"
-                    },
-                    {
-                      "value": "orderBook",
-                      "displayName": "Order Book"
-                    },
-                    {
                       "value": "midpoint",
-                      "displayName": "Midpoint"
+                      "displayName": "Midpoint",
+                      "description": "Mid of the book."
                     },
                     {
-                      "value": "price",
-                      "displayName": "Price"
+                      "value": "buy",
+                      "displayName": "Best Buy",
+                      "description": "Best price to buy at."
+                    },
+                    {
+                      "value": "sell",
+                      "displayName": "Best Sell",
+                      "description": "Best price to sell at."
+                    },
+                    {
+                      "value": "last",
+                      "displayName": "Last Trade",
+                      "description": "Most recent fill."
                     },
                     {
                       "value": "spread",
-                      "displayName": "Spread"
-                    },
-                    {
-                      "value": "lastTradePrice",
-                      "displayName": "Last Trade Price"
-                    },
-                    {
-                      "value": "priceHistory",
-                      "displayName": "Price History"
-                    },
-                    {
-                      "value": "mechanics",
-                      "displayName": "Market Mechanics"
-                    },
-                    {
-                      "value": "rewards",
-                      "displayName": "Market Rewards"
+                      "displayName": "Spread",
+                      "description": "Gap between bid and ask."
                     }
                   ],
                   "kind": "select"
                 }
               ],
-              "_derivatives": [
+              "outputs": [
                 {
-                  "condition": {
-                    "fieldId": "getClobResource",
-                    "operator": "==",
-                    "value": "marketConfiguration"
-                  },
-                  "fields": [
-                    {
-                      "id": "getClobMarketConditionId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Condition ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": "0x…"
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "market",
-                      "displayName": "Market",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "getClobResource",
-                    "operator": "==",
-                    "value": "orderBook"
-                  },
-                  "fields": [
-                    {
-                      "id": "getOrderBookTokenId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Token ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "orderBook",
-                      "displayName": "Order Book",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "getClobResource",
-                    "operator": "==",
-                    "value": "midpoint"
-                  },
-                  "fields": [
-                    {
-                      "id": "getMidpointTokenId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Token ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "midpoint",
-                      "displayName": "Midpoint",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "getClobResource",
-                    "operator": "==",
-                    "value": "price"
-                  },
-                  "fields": [
-                    {
-                      "id": "getPriceTokenId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Token ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    },
-                    {
-                      "id": "getPriceSide",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Side",
-                      "variant": "MultiOption",
-                      "initialValue": "BUY",
-                      "options": [
-                        {
-                          "value": "BUY",
-                          "displayName": "Buy"
-                        },
-                        {
-                          "value": "SELL",
-                          "displayName": "Sell"
-                        }
-                      ],
-                      "kind": "tab"
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "price",
-                      "displayName": "Price",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "getClobResource",
-                    "operator": "==",
-                    "value": "spread"
-                  },
-                  "fields": [
-                    {
-                      "id": "getSpreadTokenId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Token ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "spread",
-                      "displayName": "Spread",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "getClobResource",
-                    "operator": "==",
-                    "value": "lastTradePrice"
-                  },
-                  "fields": [
-                    {
-                      "id": "getLastTradePriceTokenId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Token ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "lastTrade",
-                      "displayName": "Last Trade",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "getClobResource",
-                    "operator": "==",
-                    "value": "priceHistory"
-                  },
-                  "fields": [
-                    {
-                      "id": "getPriceHistoryTokenId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Token ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    },
-                    {
-                      "id": "getPriceHistoryInterval",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Interval",
-                      "variant": "MultiOption",
-                      "initialValue": "1d",
-                      "options": [
-                        {
-                          "value": "1h",
-                          "displayName": "1 hour"
-                        },
-                        {
-                          "value": "6h",
-                          "displayName": "6 hours"
-                        },
-                        {
-                          "value": "1d",
-                          "displayName": "1 day"
-                        },
-                        {
-                          "value": "1w",
-                          "displayName": "1 week"
-                        },
-                        {
-                          "value": "max",
-                          "displayName": "Max"
-                        }
-                      ],
-                      "kind": "select"
-                    },
-                    {
-                      "id": "getPriceHistoryFidelity",
-                      "advanced": false,
-                      "required": false,
-                      "reconcile": false,
-                      "displayName": "Fidelity (minutes)",
-                      "variant": "Integer",
-                      "initialValue": 60,
-                      "min": 1,
-                      "step": 1
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "history",
-                      "displayName": "History",
-                      "variant": "DataList"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "getClobResource",
-                    "operator": "==",
-                    "value": "mechanics"
-                  },
-                  "fields": [
-                    {
-                      "id": "getMarketMechanicsTokenId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Token ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "mechanics",
-                      "displayName": "Mechanics",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
-                },
-                {
-                  "condition": {
-                    "fieldId": "getClobResource",
-                    "operator": "==",
-                    "value": "rewards"
-                  },
-                  "fields": [
-                    {
-                      "id": "getMarketRewardsConditionId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Condition ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": "0x…"
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "rewards",
-                      "displayName": "Rewards",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
+                  "id": "price",
+                  "displayName": "Price",
+                  "variant": "Data"
                 }
-              ]
+              ],
+              "_derivatives": []
             },
             {
               "condition": {
-                "fieldId": "getAPI",
+                "fieldId": "getResource",
                 "operator": "==",
-                "value": "data"
+                "value": "orderBook"
               },
               "fields": [
                 {
-                  "id": "getDataResource",
+                  "id": "getOrderBookTokenId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Token ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                },
+                {
+                  "id": "getOrderBookDepth",
                   "advanced": false,
                   "required": false,
-                  "reconcile": true,
-                  "displayName": "Resource",
+                  "reconcile": false,
+                  "displayName": "Depth",
+                  "tooltip": "Price levels per side, best first. A full book is 200+ levels, nearly all far from the money.",
+                  "variant": "Integer",
+                  "initialValue": 15,
+                  "min": 1,
+                  "max": 50,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "orderBook",
+                  "displayName": "Order Book",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "priceHistory"
+              },
+              "fields": [
+                {
+                  "id": "getPriceHistoryTokenId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Token ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                },
+                {
+                  "id": "getPriceHistoryInterval",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Interval",
                   "variant": "MultiOption",
-                  "initialValue": "openInterest",
+                  "initialValue": "1d",
                   "options": [
                     {
-                      "value": "openInterest",
-                      "displayName": "Open Interest"
+                      "value": "1h",
+                      "displayName": "1 hour"
                     },
                     {
-                      "value": "liveVolume",
-                      "displayName": "Live Volume"
+                      "value": "6h",
+                      "displayName": "6 hours"
+                    },
+                    {
+                      "value": "1d",
+                      "displayName": "1 day"
+                    },
+                    {
+                      "value": "1w",
+                      "displayName": "1 week"
+                    },
+                    {
+                      "value": "max",
+                      "displayName": "Max"
                     }
                   ],
                   "kind": "select"
-                }
-              ],
-              "_derivatives": [
-                {
-                  "condition": {
-                    "fieldId": "getDataResource",
-                    "operator": "==",
-                    "value": "openInterest"
-                  },
-                  "fields": [
-                    {
-                      "id": "getOpenInterestConditionId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Condition ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": "0x…"
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "openInterest",
-                      "displayName": "Open Interest",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
                 },
                 {
-                  "condition": {
-                    "fieldId": "getDataResource",
-                    "operator": "==",
-                    "value": "liveVolume"
-                  },
-                  "fields": [
-                    {
-                      "id": "getLiveVolumeEventId",
-                      "advanced": false,
-                      "required": true,
-                      "reconcile": false,
-                      "displayName": "Event ID",
-                      "variant": "String",
-                      "initialValue": "",
-                      "multiline": false,
-                      "placeholder": ""
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "volume",
-                      "displayName": "Volume",
-                      "variant": "Data"
-                    }
-                  ],
-                  "_derivatives": []
+                  "id": "getPriceHistoryFidelity",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Fidelity (minutes)",
+                  "variant": "Integer",
+                  "initialValue": 60,
+                  "min": 1,
+                  "step": 1
+                },
+                {
+                  "id": "getPriceHistoryPoints",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Readings to return",
+                  "variant": "Integer",
+                  "initialValue": 60,
+                  "min": 2,
+                  "step": 1
                 }
-              ]
+              ],
+              "outputs": [
+                {
+                  "id": "history",
+                  "displayName": "History",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "mechanics"
+              },
+              "fields": [
+                {
+                  "id": "getMarketMechanicsTokenId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Token ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "mechanics",
+                  "displayName": "Mechanics",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "marketConfig"
+              },
+              "fields": [
+                {
+                  "id": "getClobMarketConditionId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Condition ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "0x…"
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "market",
+                  "displayName": "Market",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "rewards"
+              },
+              "fields": [
+                {
+                  "id": "getMarketRewardsConditionId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Condition ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "0x…"
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "rewards",
+                  "displayName": "Rewards",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "openInterest"
+              },
+              "fields": [
+                {
+                  "id": "getOpenInterestConditionId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Condition ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "0x…"
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "openInterest",
+                  "displayName": "Open Interest",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "liveVolume"
+              },
+              "fields": [
+                {
+                  "id": "getLiveVolumeEventId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Event ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "volume",
+                  "displayName": "Volume",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
             }
           ]
         },
@@ -10939,7 +10757,7 @@
             {
               "value": "identity",
               "displayName": "Identity",
-              "description": "The public profile behind the address — name, bio, badges."
+              "description": "The public profile behind the address, if it has one."
             }
           ],
           "kind": "select"

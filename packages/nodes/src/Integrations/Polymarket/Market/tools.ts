@@ -2,6 +2,7 @@ import { tool } from "@langchain/core/tools";
 import { ToolBudget } from "@pretzel-graph/node-sdk";
 import { z } from "zod/v3";
 
+import type { Polymarket } from "../domain";
 import type { PolymarketPublicSDK } from "../sdk";
 
 
@@ -16,10 +17,31 @@ const limitParam = (maximum: number, fallback: number) =>
         .describe(`Maximum records to return (1-${maximum}).`);
 
 const tokenIdParam = z.string()
-    .describe("Token id for a single outcome, taken from a market's clobTokenIds array.");
+    .describe("Token id for a single outcome, taken from the `id` of an entry in a market's `outcomes` array.");
 
 const conditionIdParam = z.string()
     .describe("Market condition id (0x…), taken from a market's conditionId field.");
+
+
+/**
+ * A listed market as an agent needs it, which is less than a node needs.
+ *
+ * `slug` goes because it is the question again in hyphens — 99% of `question`'s length, addressing
+ * nothing `id` doesn't already address. The flags go when they say nothing: a listing filtered to
+ * active markets repeats `active: true, closed: false` on every row, and `resolutionStatus` is null
+ * on 199 markets in 200. Absent means false or unknown.
+ *
+ * Run mode keeps all of it — a node passing markets to another node isn't paying for context.
+ */
+const listed = (market: Polymarket.Market.Meta) => ({
+    ...market,
+    slug:             undefined,
+    active:           market.active === false ? false : undefined,
+    closed:           market.closed || undefined,
+    acceptingOrders:  market.acceptingOrders === false ? false : undefined,
+    resolutionStatus: market.resolutionStatus ?? undefined,
+    negRisk:          market.negRisk || undefined,
+});
 
 
 export function buildTools(polymarket: PolymarketPublicSDK) {
@@ -28,15 +50,15 @@ export function buildTools(polymarket: PolymarketPublicSDK) {
         async ({ query, status, limit }) => {
             const markets = await polymarket.markets.search({ query, status, limit });
 
-            return ToolBudget.list("markets", markets, {
+            return ToolBudget.list("markets", markets.map(listed), {
                 hint: "Narrow the query or lower the limit.",
             });
         },
         {
             name:        "polymarket_search_markets",
-            description: "Search markets by a substring of the question or slug. Returns markets with their outcomes, outcome prices, conditionId and clobTokenIds — the ids other tools need.",
+            description: "Search markets by relevance, matching the whole phrase against Polymarket's own index — natural wording like '2028 presidential election' works better than a single keyword. Each market comes back with its conditionId and its outcomes, each carrying the price and the id that the pricing tools take.",
             schema: z.object({
-                query:  z.string().optional().describe("Substring to match against the market question or slug. Omit to get the top markets by volume."),
+                query:  z.string().optional().describe("What to search for, in natural wording. Omit to get the top markets by volume."),
                 status: statusParam,
                 limit:  limitParam(500, 20),
             }),
@@ -68,11 +90,11 @@ export function buildTools(polymarket: PolymarketPublicSDK) {
         async ({ status, limit }) => {
             const markets = await polymarket.markets.list({ status, limit });
 
-            return ToolBudget.list("markets", markets, { hint: "Lower the limit." });
+            return ToolBudget.list("markets", markets.map(listed), { hint: "Lower the limit." });
         },
         {
             name:        "polymarket_list_markets",
-            description: "List markets ordered by volume, highest first. Returns conditionId and clobTokenIds for each market.",
+            description: "List markets ordered by volume, highest first. Each market carries its conditionId and its outcomes, each with a price and the id the pricing tools take.",
             schema: z.object({
                 status: statusParam,
                 limit:  limitParam(500, 20),
@@ -86,9 +108,28 @@ export function buildTools(polymarket: PolymarketPublicSDK) {
         },
         {
             name:        "polymarket_get_market",
-            description: "Fetch one market in full, including outcomes, outcome prices, conditionId and clobTokenIds.",
+            description: "Fetch one market in full: the question, the resolution rules, its conditionId, and each outcome with its price and id.",
             schema: z.object({
                 identifier: z.string().describe("Numeric market id (e.g. 12345) or market slug (e.g. 'will-x-happen'). Either works."),
+            }),
+        },
+    );
+
+    const getMarketStats = tool(
+        async ({ identifier, includeDescription }) => {
+            const stats = await polymarket.markets.stats(identifier);
+
+            return ToolBudget.value(includeDescription
+                ? stats
+                : { ...stats, description: undefined });
+        },
+        {
+            name:        "polymarket_get_market_stats",
+            description: "Get how one market is trading: volume and price change over the last hour, day, week, month and year, plus liquidity, best bid and ask, and how contested it is. Prefer this over polymarket_get_price_history when the question is whether a market is rising or falling — it answers in one small call instead of a series you have to read.",
+            schema: z.object({
+                identifier: z.string().describe("Numeric market id or market slug. Either works."),
+                includeDescription: z.boolean().default(false)
+                    .describe("Also return the resolution contract — what has to happen for Yes to pay. Several hundred words, so ask for it only when the exact resolution terms matter."),
             }),
         },
     );
@@ -110,14 +151,31 @@ export function buildTools(polymarket: PolymarketPublicSDK) {
     );
 
     const getEvent = tool(
-        async ({ identifier }) => {
-            return ToolBudget.value(await polymarket.events.get(identifier), {
-                hint: "Use polymarket_get_market on a single conditionId for the full detail of one market.",
+        async ({ identifier, minPrice, limit }) => {
+            return ToolBudget.value(await polymarket.events.get(identifier, { minPrice, limit }), {
+                hint: "Raise minPrice, or lower the limit.",
             });
         },
         {
             name:        "polymarket_get_event",
-            description: "Fetch one event with the markets it groups, each with its conditionId, clobTokenIds and current outcome prices. The event's numeric id is what polymarket_get_live_volume expects.",
+            description: "Fetch one event with the markets it groups, longest odds first, each with its conditionId, outcome prices and outcome ids. A large race carries dozens of markets trading near zero, so this returns only those above minPrice by default — activeMarketCount always reports how many exist and marketsShown how many came back. The event's numeric id is what polymarket_get_live_volume expects.",
+            schema: z.object({
+                identifier: z.string().describe("Numeric event id or event slug. Either works."),
+                minPrice:   z.number().min(0).max(1).default(0.01)
+                    .describe("Drop markets trading below this probability, 0-1. Set to 0 for the whole field, including no-hopers."),
+                limit:      z.number().int().min(1).max(500).default(50)
+                    .describe("Maximum markets to return, after ordering by price."),
+            }),
+        },
+    );
+
+    const getEventStats = tool(
+        async ({ identifier }) => {
+            return ToolBudget.value(await polymarket.events.stats(identifier));
+        },
+        {
+            name:        "polymarket_get_event_stats",
+            description: "Get how one event is trading, summed across every market inside it: volume over the last day, week, month and year, liquidity, total open interest, and how contested it is. Use this instead of polymarket_get_event when the question is about the event's size or activity rather than which market is leading.",
             schema: z.object({
                 identifier: z.string().describe("Numeric event id or event slug. Either works."),
             }),
@@ -277,18 +335,19 @@ export function buildTools(polymarket: PolymarketPublicSDK) {
     );
 
     const getPriceHistory = tool(
-        async ({ tokenId, interval, fidelity }) => {
-            const history = await polymarket.prices.history({ tokenId, interval, fidelity });
-
-            return ToolBudget.list("history", history, { hint: "Raise fidelity or use a shorter interval." });
+        async ({ tokenId, interval, fidelity, points }) => {
+            return ToolBudget.value(
+                await polymarket.prices.history({ tokenId, interval, fidelity, points }));
         },
         {
             name:        "polymarket_get_price_history",
-            description: "Get a time series of prices for one outcome token, for charting or trend questions.",
+            description: "Get a time series of prices for one outcome token, for charting or trend questions. Answers with the market the token belongs to alongside the series, so check the returned question or groupItemTitle is the one you meant. Includes first, last, low, high and the change over the period, which is usually enough on its own.",
             schema: z.object({
                 tokenId:  tokenIdParam,
                 interval: z.enum(["1h", "6h", "1d", "1w", "max"]).default("1d").describe("How far back to go."),
                 fidelity: z.number().int().min(1).default(60).describe("Resolution in minutes between points."),
+                points:   z.number().int().min(2).max(200).default(60)
+                    .describe("How many readings to return, sampled evenly across the period. The true total is reported as `readings`."),
             }),
         },
     );
@@ -366,8 +425,10 @@ export function buildTools(polymarket: PolymarketPublicSDK) {
 
         listMarketsTool,
         getMarket,
+        getMarketStats,
         listEventsTool,
         getEvent,
+        getEventStats,
 
         listTags,
         getTag,

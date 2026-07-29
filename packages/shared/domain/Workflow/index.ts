@@ -6,6 +6,7 @@ import * as EdgeMod from "./edge"
 import * as DataMod from "./data"
 import * as DepMod from "./dependency"
 import * as CacheMod from "./cache"
+import * as RepairMod from "./repair"
 import { WorkflowId, FolderId } from "./ids"
 import { WORKFLOW_DATA_VERSION } from "./migrate"
 import { extractExposedInputs as _extractExposedInputs, extractExposedOutputs as _extractExposedOutputs } from "./resolvers"
@@ -33,6 +34,7 @@ export namespace Workflow {
     export import Viewport     = DataMod.Data.Viewport
     export import Dependency   = DepMod.Dependency
     export import Cache        = CacheMod.Cache
+    export import Repair       = RepairMod.Repair
 
     export const createCache        = CacheMod.createCache
     export const resolveShape       = CacheMod.resolveShape
