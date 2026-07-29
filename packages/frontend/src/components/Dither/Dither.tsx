@@ -8,7 +8,7 @@ export type { DitherProps };
 interface Props extends DitherProps {
   /** The Dither WebGL context to drive. Create it outside the component (e.g.
    * module-level) so the canvas + GPU resources survive remounts. */
-  ctx: DitherCtx;
+  ctx: DitherCtx | null;
 }
 
 /**
@@ -21,6 +21,7 @@ export default function Dither({ ctx, ...props }: Props) {
 
   // Keep the ctx props in sync without re-running the mount effect.
   useEffect(() => {
+    if (!ctx) return;
     ctx.setProps(props);
   }, [
     ctx,
@@ -40,7 +41,7 @@ export default function Dither({ ctx, ...props }: Props) {
 
   useEffect(() => {
     const ctn = ctnDom.current;
-    if (!ctn) return;
+    if (!ctn || !ctx) return;
 
     ctx.setProps(props);
     ctx.mount(ctn);
@@ -50,6 +51,8 @@ export default function Dither({ ctx, ...props }: Props) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctx]);
+
+  if (!ctx) return null;
 
   return <div ref={ctnDom} className="dither-container" />;
 }

@@ -70,7 +70,8 @@ export namespace Shelf {
                     blueprintIds: z.array(Foundations.Blueprint.Id)
                 })
                 export const Response = z.object({
-                    blueprints: z.record(Foundations.Blueprint.Id, Foundations.Blueprint.Schema)
+                    blueprints:         z.record(Foundations.Blueprint.Id, Foundations.Blueprint.Schema),
+                    resolutionFailures: z.array(Foundations.Blueprint.ResolutionFailure.Schema),
                 })
 
                 export type Request = z.infer<typeof Request>

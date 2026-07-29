@@ -30,10 +30,19 @@ export class ShelfService {
 
     async getBatchBlueprints(
         payload: Shelf.API.Blueprint.GetBatch.Request
-    ): Promise<{ blueprints: Record<Blueprint.Id, Blueprint> }> {
+    ): Promise<Shelf.API.Blueprint.GetBatch.Response> {
         const index = loadIndex();
         const { blueprintIds } = payload;
         const blueprints: Record<Blueprint.Id, Blueprint> = {};
+        const failures = new Map<string, Blueprint.ResolutionFailure>();
+
+        const addFailure = (failure: Blueprint.ResolutionFailure) => {
+            const key = failure.code === "MISSING_BLUEPRINT"
+                ? failure.blueprintId
+                : failure.reconciledBlueprintId;
+
+            failures.set(`${failure.code}:${key}`, failure);
+        };
 
         for (const id of blueprintIds) {
             const blueprint = index.blueprints[id as Blueprint.Id];
@@ -41,26 +50,64 @@ export class ShelfService {
                 blueprints[id as Blueprint.Id] = blueprint;
                 continue;
             }
-            // Not a base blueprint — it's a reconciled id. Reconstruct it from its encoded values.
-            if (Blueprint.isReconciledId(id)) {
-                const blueprintId = Blueprint.extractBlueprintId(id);
-                const base = index.blueprints[blueprintId];
 
-                // A derivative id encodes the matched path, not field=value pairs — replay it
-                // directly rather than putting it through parseReconciledId.
-                if (base?._derivatives?.length) {
-                    const path = id.slice(blueprintId.length + 1);
-                    blueprints[id as Blueprint.Id] = Blueprint.deriveByPath(base, path);
-                    continue;
-                }
-
-                const { fieldValues } = Blueprint.parseReconciledId(id);
-                const { reconciledBlueprint } = await this.reconcileBlueprint({ blueprintId, fieldValues });
-                blueprints[id as Blueprint.Id] = reconciledBlueprint;
+            if (!Blueprint.isReconciledId(id)) {
+                addFailure({
+                    code:        "MISSING_BLUEPRINT",
+                    blueprintId: id,
+                });
+                continue;
             }
+
+            // Not a base blueprint — it's a reconciled id. Reconstruct it from its encoded values.
+            const blueprintId = Blueprint.extractBlueprintId(id);
+            const base = index.blueprints[blueprintId];
+
+            if (!base) {
+                addFailure({
+                    code:        "MISSING_BLUEPRINT",
+                    blueprintId,
+                });
+                continue;
+            }
+
+            // A caller may request only the reconciled id. Always include the base as the recovery
+            // target when the derivative can no longer be reconstructed.
+            blueprints[blueprintId] = base;
+
+            const path = id.slice(blueprintId.length + 1);
+            const isDerivativePath = path
+                .split(Blueprint.Derivative.SEPARATOR)
+                .some(token => Blueprint.Derivative.parseKey(token) !== null);
+
+            // A derivative id encodes the matched path, not field=value pairs — replay it
+            // directly rather than putting it through parseReconciledId.
+            if (base._derivatives?.length || isDerivativePath) {
+                try {
+                    blueprints[id as Blueprint.Id] = Blueprint.deriveByPath(base, path);
+                } catch (error) {
+                    if (!(error instanceof Blueprint.Derivative.PathNotFoundError))
+                        throw error;
+
+                    addFailure({
+                        code:                  "MISSING_BLUEPRINT_DERIVATIVE",
+                        blueprintId,
+                        reconciledBlueprintId: id,
+                        derivativePath:        path,
+                    });
+                }
+                continue;
+            }
+
+            const { fieldValues } = Blueprint.parseReconciledId(id);
+            const { reconciledBlueprint } = await this.reconcileBlueprint({ blueprintId, fieldValues });
+            blueprints[id as Blueprint.Id] = reconciledBlueprint;
         }
 
-        return { blueprints };
+        return {
+            blueprints,
+            resolutionFailures: [...failures.values()],
+        };
     }
 
 

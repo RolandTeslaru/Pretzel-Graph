@@ -49,15 +49,6 @@ export const Route = createFileRoute('/workflow/$workflowid')({
     loader: ({ params, abortController }) => {
         const workflowId = params.workflowid as Workflow.Id;
 
-        const loadtimeoutId = setTimeout(() => {
-            DialogSDK.actions.push(`workflow-${workflowId}`, (props) => (
-                <DialogSDK.Template dismissible={false} {...props} className='p-4 flex flex-row gap-4'>
-                    <Dialog.Title className='text-lg font-bold'>Retrieving Workflow</Dialog.Title>
-                    <Spinner />
-                </DialogSDK.Template>
-            ))
-        }, 2000)
-
         QuerySDK.client.prefetchQuery({
             queryKey: ["core-blueprints"],
             queryFn: () => ShelfSDK.actions.loadSection("core"),
@@ -94,18 +85,14 @@ export const Route = createFileRoute('/workflow/$workflowid')({
                         : { to: '/home/projects' }
                 )
             })
-            .finally(() => {
-                clearTimeout(loadtimeoutId);
-                DialogSDK.actions.pop(`workflow-${workflowId}`)
-            })
 
         return null;
     },
     onLeave: ({ params }) => {
         const workflowId = params.workflowid as Workflow.Id;
 
-        DialogSDK.actions.pop(`workflow-${workflowId}`)
-        if (!isDevHmrFullReload() && !isDevBrowserUnload()) WorkbenchSDK.actions.commit();
+        if (!isDevHmrFullReload() && !isDevBrowserUnload()) 
+            WorkbenchSDK.actions.commit();
         WorkbenchSDK.actions.workflow.close()
     },
     component: WorkflowLayoutComponent,

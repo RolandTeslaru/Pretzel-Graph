@@ -26,9 +26,9 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 tools: buildTools(polymarket),
             } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-        switch (fields.resource) {
+        if (fields.action === "search") {
 
-            case "searchMarkets":
+            if (fields.searchKind === "markets")
                 return {
                     markets: await polymarket.markets.search({
                         query:  fields.searchMarketsQuery,
@@ -37,128 +37,129 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     }),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-            case "search":
-                return {
-                    results: await polymarket.search.all({
-                        query:           fields.publicSearchQuery,
-                        includeTags:     fields.publicSearchSearchTags,
-                        includeProfiles: fields.publicSearchSearchProfiles,
-                        limit:           fields.publicSearchMaxResults,
-                    }),
-                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+            return {
+                results: await polymarket.search.all({
+                    query:           fields.publicSearchQuery,
+                    includeTags:     fields.publicSearchSearchTags,
+                    includeProfiles: fields.publicSearchSearchProfiles,
+                    limit:           fields.publicSearchMaxResults,
+                }),
+            } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+        }
 
 
-            case "listMarkets":
-                return {
-                    markets: await polymarket.markets.list({
-                        status: fields.listMarketsStatus,
-                        limit:  fields.listMarketsMaxResults,
-                    }),
-                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+        if (fields.action === "list")
+            switch (fields.listResource) {
 
-            case "getMarket":
+                case "markets":
+                    return {
+                        markets: await polymarket.markets.list({
+                            status: fields.listMarketsStatus,
+                            limit:  fields.listMarketsMaxResults,
+                        }),
+                    } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+
+                case "events":
+                    return {
+                        events: await polymarket.events.list({
+                            status: fields.listEventsStatus,
+                            limit:  fields.listEventsMaxResults,
+                        }),
+                    } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+
+                case "series":
+                    return {
+                        series: await polymarket.series.list({
+                            slug:  fields.listSeriesSlug,
+                            limit: fields.listSeriesMaxResults,
+                        }),
+                    } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+
+                case "tags":
+                    return {
+                        tags: await polymarket.tags.list(fields.listTagsMaxResults),
+                    } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+
+                case "sports":
+                    return {
+                        sports: await polymarket.sports.list(),
+                    } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+
+                case "teams":
+                    return {
+                        teams: await polymarket.sports.teams({
+                            name:  fields.listTeamsName,
+                            limit: fields.listTeamsMaxResults,
+                        }),
+                    } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+
+                // The one operation still on a raw client. Comments are deliberately absent from
+                // the SDK so that nothing composing it — the tool node above all — can pull
+                // untrusted user text into an agent's context.
+                case "comments":
+                    return {
+                        comments: await this.gammaClient.comments.list({
+                            parent_entity_type: Polymarket.Gamma.Comment.ParentEntityType.parse(
+                                fields.listCommentsParentEntityType),
+                            parent_entity_id: fields.listCommentsParentId,
+                            get_positions:    fields.listCommentsGetPositions,
+                            holders_only:     fields.listCommentsHoldersOnly,
+                            limit:            fields.listCommentsMaxResults,
+                        }),
+                    } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+
+                case "trades":
+                    return {
+                        trades: await polymarket.trades.forMarket({
+                            conditionId: fields.listTradesConditionId,
+                            side:        fields.listTradesSide === "all" ? undefined : fields.listTradesSide,
+                            limit:       fields.listTradesMaxResults,
+                        }),
+                    } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+
+                case "holders":
+                    return {
+                        holders: await polymarket.holders.forMarket({
+                            conditionId: fields.listHoldersConditionId,
+                            limit:       fields.listHoldersMaxResults,
+                        }),
+                    } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+            }
+
+
+        switch (fields.getResource) {
+
+            case "market":
                 return {
                     market: await polymarket.markets.get(fields.getMarketIdentifier),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-            case "getMarketStats":
+            case "marketStats":
                 return {
                     stats: await polymarket.markets.stats(fields.getMarketStatsIdentifier),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-
-            case "listEvents":
-                return {
-                    events: await polymarket.events.list({
-                        status: fields.listEventsStatus,
-                        limit:  fields.listEventsMaxResults,
-                    }),
-                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
-
-            case "getEvent":
+            case "event":
                 return {
                     event: await polymarket.events.get(fields.getEventIdentifier),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-            case "getEventStats":
+            case "eventStats":
                 return {
                     stats: await polymarket.events.stats(fields.getEventStatsIdentifier),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-
-            case "listSeries":
-                return {
-                    series: await polymarket.series.list({
-                        slug:  fields.listSeriesSlug,
-                        limit: fields.listSeriesMaxResults,
-                    }),
-                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
-
-            case "getSeries":
+            case "series":
                 return {
                     series: await polymarket.series.get(fields.getSeriesIdentifier),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-
-            case "listTags":
-                return {
-                    tags: await polymarket.tags.list(fields.listTagsMaxResults),
-                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
-
-            case "getTag":
+            case "tag":
                 return {
                     tag: await polymarket.tags.get(fields.getTagIdentifier),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-
-            case "listSports":
-                return {
-                    sports: await polymarket.sports.list(),
-                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
-
-            case "listTeams":
-                return {
-                    teams: await polymarket.sports.teams({
-                        name:  fields.listTeamsName,
-                        limit: fields.listTeamsMaxResults,
-                    }),
-                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
-
-            // The one operation still on a raw client. Comments are deliberately absent from the
-            // SDK so that nothing composing it — the tool node above all — can pull untrusted user
-            // text into an agent's context.
-            case "listComments":
-                return {
-                    comments: await this.gammaClient.comments.list({
-                        parent_entity_type: Polymarket.Gamma.Comment.ParentEntityType.parse(
-                            fields.listCommentsParentEntityType),
-                        parent_entity_id: fields.listCommentsParentId,
-                        get_positions:    fields.listCommentsGetPositions,
-                        holders_only:     fields.listCommentsHoldersOnly,
-                        limit:            fields.listCommentsMaxResults,
-                    }),
-                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
-
-
-            case "listTrades":
-                return {
-                    trades: await polymarket.trades.forMarket({
-                        conditionId: fields.listTradesConditionId,
-                        side:        fields.listTradesSide === "all" ? undefined : fields.listTradesSide,
-                        limit:       fields.listTradesMaxResults,
-                    }),
-                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
-
-            case "listHolders":
-                return {
-                    holders: await polymarket.holders.forMarket({
-                        conditionId: fields.listHoldersConditionId,
-                        limit:       fields.listHoldersMaxResults,
-                    }),
-                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
-
-
-            case "getPrice":
+            case "price":
                 return {
                     price: await polymarket.prices.get({
                         tokenId: fields.getPriceTokenId,
@@ -166,7 +167,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     }),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-            case "getOrderBook":
+            case "orderBook":
                 return {
                     orderBook: await polymarket.prices.book({
                         tokenId: fields.getOrderBookTokenId,
@@ -174,33 +175,32 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     }),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-            case "getPriceHistory":
+            case "priceHistory":
                 return {
                     history: await polymarket.prices.history({
                         tokenId:  fields.getPriceHistoryTokenId,
                         interval: fields.getPriceHistoryInterval,
                         fidelity: fields.getPriceHistoryFidelity,
+                        points:   fields.getPriceHistoryPoints,
                     }),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-            case "getMechanics":
+            case "mechanics":
                 return {
                     mechanics: await polymarket.prices.mechanics(fields.getMarketMechanicsTokenId),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-
-            case "getMarketConfig":
+            case "marketConfig":
                 return {
                     market: await polymarket.markets.config(fields.getClobMarketConditionId),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-            case "getRewards":
+            case "rewards":
                 return {
                     rewards: await polymarket.markets.rewards(fields.getMarketRewardsConditionId),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-
-            case "getOpenInterest":
+            case "openInterest":
                 return {
                     openInterest: await polymarket.stats.openInterest(fields.getOpenInterestConditionId),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>;

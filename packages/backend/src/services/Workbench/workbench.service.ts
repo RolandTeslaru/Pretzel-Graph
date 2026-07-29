@@ -40,9 +40,43 @@ export class WorkbenchService {
                     blueprintIds.add(node.reconciledBlueprintId)
             }
 
-            const { blueprints } = await this.shelfService.getBatchBlueprints({ blueprintIds: [...blueprintIds] });
+            const { blueprints, resolutionFailures } = await this.shelfService.getBatchBlueprints({
+                blueprintIds: [...blueprintIds],
+            });
+            const repairs: Workflow.Repair[] = [];
 
-            return { workflow, blueprints };
+            for (const failure of resolutionFailures) {
+                for (const node of Object.values(workflow.data.nodes)) {
+                    if (failure.code === "MISSING_BLUEPRINT") {
+                        // Dependency nodes may use a workflow-specific cosmetic blueprint id that
+                        // is absent from the catalogue by design. Their shape resolves from the
+                        // attached dependency, so this is not damage.
+                        if (node.dependencyRef || node.blueprintId !== failure.blueprintId)
+                            continue;
+
+                        repairs.push({
+                            code:        "MISSING_BLUEPRINT",
+                            nodeId:      node.id,
+                            blueprintId: failure.blueprintId,
+                            resolution:  "REMOVE_NODE",
+                        });
+                        continue;
+                    }
+
+                    if (node.reconciledBlueprintId !== failure.reconciledBlueprintId)
+                        continue;
+
+                    repairs.push({
+                        code:                          "MISSING_BLUEPRINT_DERIVATIVE",
+                        nodeId:                        node.id,
+                        blueprintId:                   failure.blueprintId,
+                        previousReconciledBlueprintId: failure.reconciledBlueprintId,
+                        resolution:                    "RESET_TO_BASE",
+                    });
+                }
+            }
+
+            return { workflow, blueprints, repairs };
         },
 
         commit: async (

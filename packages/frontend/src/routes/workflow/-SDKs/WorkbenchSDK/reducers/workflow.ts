@@ -6,7 +6,7 @@ import { Algorithms } from "@pretzel-graph/shared/domain/Algorithms";
 import { ShelfSDK } from "../../ShelfSDK/sdk";
 
 export const workflowReducers = {
-    open: (s, workflow) => {
+    open: (s, workflow, options = {}) => {
         const data = Workflow.Data.Schema.parse(workflow.data);
 
         s.workflowId = workflow.id;
@@ -35,7 +35,7 @@ export const workflowReducers = {
         });
 
         const prunedCount = data.edges.length - keptEdges.length;
-        s.isDirty = prunedCount > 0;
+        s.isDirty = Boolean(options.repaired) || prunedCount > 0;
 
         if (prunedCount > 0) {
             data.edges = keptEdges;
@@ -106,7 +106,7 @@ export const workflowReducers = {
 } satisfies WorkflowReducers
 
 type WorkflowReducers = {
-    open: (state: WorkbenchSDK.State, workflow: Workflow) => void
+    open: (state: WorkbenchSDK.State, workflow: Workflow, options?: { repaired?: boolean }) => void
     close: (state: WorkbenchSDK.State) => void
     validate: (state: WorkbenchSDK.State) => void
     setFields: (state: WorkbenchSDK.State, fields: Foundations.Field[]) => void

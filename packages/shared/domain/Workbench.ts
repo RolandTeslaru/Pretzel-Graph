@@ -33,6 +33,7 @@ export namespace Workbench {
                 export const Response = z.object({
                     workflow: WorkflowNs.Schema,
                     blueprints: z.record(Foundations.Blueprint.Id, Foundations.Blueprint.Schema),
+                    repairs: z.array(WorkflowNs.Repair.Schema),
                 })
                 export type Response = z.infer<typeof Response>
             }
