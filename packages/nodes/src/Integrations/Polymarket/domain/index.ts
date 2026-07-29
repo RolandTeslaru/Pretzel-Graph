@@ -9,6 +9,8 @@ import * as ActivityMod from "./activity"
 import * as HolderMod from "./holder"
 import * as OrderBookMod from "./orderBook"
 import * as PositionMod from "./position"
+import * as PriceHistoryMod from "./priceHistory"
+import * as ProfileMod from "./profile"
 import * as SeriesMod from "./series"
 import * as SeriesStatsMod from "./seriesStats"
 import * as SportMod from "./sport"
@@ -28,7 +30,9 @@ export namespace Polymarket {
     export import Activity    = ActivityMod.Activity
     export import Holder      = HolderMod.Holder
     export import OrderBook   = OrderBookMod.OrderBook
-    export import Position    = PositionMod.Position
+    export import Position     = PositionMod.Position
+    export import PriceHistory = PriceHistoryMod.PriceHistory
+    export import Profile     = ProfileMod.Profile
     export import Series      = SeriesMod.Series
     export import SeriesStats = SeriesStatsMod.SeriesStats
     export import Sport       = SportMod.Sport

@@ -44,6 +44,21 @@ export namespace Derivative {
     export const Id = z.string().brand("DerivativeId")
     export type  Id = z.infer<typeof Id>
 
+    export class PathNotFoundError extends Error {
+        public override readonly name = "BlueprintDerivativePathNotFoundError"
+
+        constructor(
+            public readonly blueprintId:   Blueprint["id"],
+            public readonly missingTokens: readonly string[],
+        ) {
+            super(
+                `Blueprint.deriveByPath(${blueprintId}): no derivative matching ${
+                    missingTokens.map(token => `"${token}"`).join(", ")
+                }`,
+            )
+        }
+    }
+
     // Equality only. Relational operators make the matched set non-exhaustive, which the
     // path-based identity and any future exhaustiveness check both depend on.
     export const OPERATORS = ["==", "!="] as const
@@ -271,9 +286,7 @@ export function deriveByPath(blueprint: Blueprint, derivativeId: Derivative.Id |
 
     const missing = [...wanted].filter(token => !seen.has(token))
     if (missing.length)
-        throw new Error(
-            `Blueprint.deriveByPath(${blueprint.id}): no derivative matching ${missing.map(t => `"${t}"`).join(", ")}`,
-        )
+        throw new Derivative.PathNotFoundError(blueprint.id, missing)
 
     return assemble(blueprint, accumulator)
 }

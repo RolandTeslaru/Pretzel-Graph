@@ -118,15 +118,60 @@ export namespace Event {
          */
         description: z.string().nullable(),
 
+        /** How many of `activeMarketCount` are in `markets`. Lower when filtered. */
+        marketsShown: z.number().int(),
+
+        /** Longest odds first. */
         markets: z.array(Market.Ref.Schema),
     })
 
-    /** With its markets as references — see Market.Ref for why they aren't full markets. */
-    export const fromGamma = (event: Gamma.Event): Event => ({
-        ...Meta.fromGamma(event),
-        description: event.description ?? null,
-        markets:     liveMarkets(event).map(Market.Ref.fromGamma),
-    })
+
+    /**
+     * What the market is trading at, for ordering. Yes on a binary market, else the first side.
+     *
+     * Null when there is no price at all, which `minPrice` treats as "keep": a market can only be
+     * excluded for trading below the floor, never for being unreadable. Without that, anything
+     * that broke price decoding would empty every event instead of failing visibly.
+     */
+    const leadPrice = (market: Market.Ref): number | null => {
+        const yes = market.outcomes.find(outcome => outcome.outcome === "Yes")
+
+        return (yes ?? market.outcomes[0])?.price ?? null
+    }
+
+    export type Options = {
+        /** Drop markets trading below this, 0-1. A 50-slot race is mostly rows at 0.002. */
+        minPrice?: number
+        /** Keep at most this many, after sorting. */
+        limit?:    number
+    }
+
+    /**
+     * With its markets as references — see Market.Ref for why they aren't full markets.
+     *
+     * Sorted by price because the question asked of an event is almost always "who is leading",
+     * and unsorted that costs a full scan. Filtering is opt-in: `activeMarketCount` keeps saying
+     * how many exist, so a trimmed view can't be mistaken for the whole field.
+     */
+    export const fromGamma = (event: Gamma.Event, options: Options = {}): Event => {
+        const ranked = liveMarkets(event)
+            .map(Market.Ref.fromGamma)
+            .sort((left, right) => (leadPrice(right) ?? 0) - (leadPrice(left) ?? 0))
+
+        const minPrice = options.minPrice ?? 0
+        const kept     = minPrice > 0
+            ? ranked.filter(market => (leadPrice(market) ?? Infinity) >= minPrice)
+            : ranked
+
+        const markets = options.limit !== undefined ? kept.slice(0, options.limit) : kept
+
+        return {
+            ...Meta.fromGamma(event),
+            description:  event.description ?? null,
+            marketsShown: markets.length,
+            markets,
+        }
+    }
 }
 
 export type Event = z.infer<typeof Event.Schema>

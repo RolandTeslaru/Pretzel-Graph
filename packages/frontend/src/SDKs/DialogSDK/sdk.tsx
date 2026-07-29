@@ -121,7 +121,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
     }
 
 
-    public readonly AlertTemplate: DialogSDK.AlertTemplate = ({ children, entry, dialogsSize, index, blockTransparency, className, onCancel, onApprove, type = "warning", dismissible = true }) => {
+    public readonly AlertTemplate: DialogSDK.AlertTemplate = ({ children, entry, dialogsSize, index, blockTransparency, className, onCancel, onApprove, cancelLabel = "Cancel", approveLabel = "Approve", type = "warning", dismissible = true }) => {
         const delayStyle = useAnimationDelay();
         const scale_offset = (index - (dialogsSize - 1)) * 8;
         const y_offset = (index - (dialogsSize - 1)) * 40;
@@ -168,13 +168,13 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                         </div>
                         <AlertDialog.Footer>
                             <AlertDialog.Cancel onClick={(event) => onCancel?.(event, entry, dialogsSize, index)}>
-                                Cancel
+                                {cancelLabel}
                             </AlertDialog.Cancel>
                             <AlertDialog.Action
                                 onClick={(event) => onApprove?.(event, entry, dialogsSize, index)}
                                 variant={type === "danger" ? "destructive" : type}
                             >
-                                Approve
+                                {approveLabel}
                             </AlertDialog.Action>
                         </AlertDialog.Footer>
                     </div>
@@ -242,6 +242,8 @@ export namespace DialogSDK {
 
     export interface AlertTemplateProps extends TemplateProps {
         type?: "default" | "warning" | "danger" | "accent"
+        cancelLabel?: React.ReactNode
+        approveLabel?: React.ReactNode
     }
 
     export interface TemplateProps {

@@ -4,13 +4,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { AssistantSDK } from '../../sdk'
 import AssistantPanel from '../ConversationArea'
 import AssistantList from './AssistantList'
-import Aurora from '@/components/Aurora/Aurora'
-import { createAuroraCtx } from '@/components/Aurora/createAuroraCtx'
 import AuroraRays from '@/components/AuroraRays/AuroraRays'
-
-// Dedicated ctx so the fullscreen aurora never contends with the sidebar's
-// canvas (the two can be mounted at the same time while the dialog opens).
-const auroraCtx = createAuroraCtx()
 
 const FullscreenAssistant = ({ blockTransparency, surfaceStyle }: { blockTransparency: boolean; surfaceStyle: CSSProperties }) => {
     // In the background render solid; on top, frosted glass. `surfaceStyle` carries the stack
