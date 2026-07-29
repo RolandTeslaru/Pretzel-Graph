@@ -1,4 +1,9 @@
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import {
+    defineBlueprint,
+    defineTool,
+    FieldBuilder,
+    OutputBuilder,
+} from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Developer.HttpRequest",
@@ -6,6 +11,7 @@ export const Blueprint = defineBlueprint({
     description: "Makes an HTTP request.",
     icon: "Globe",
     proxyCompatible: true,
+    toolCompatible: true,
     accent: "utility",
     iconColor: "color-blue-400",
     fields: [
@@ -38,4 +44,12 @@ export const Blueprint = defineBlueprint({
             tooltip: "{ status, data } — the response status code and parsed body."
         }),
     ],
+
+    "isConvertedToTool==true": defineTool({
+        fields: [],
+        inputs: [],
+        outputs: [
+            OutputBuilder.ToolList("tools", "HTTP Request Tools"),
+        ],
+    }),
 });

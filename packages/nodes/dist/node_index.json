@@ -1,6 +1,6 @@
 {
-  "version": "1785284316697",
-  "generatedAt": "2026-07-29T00:18:36.697Z",
+  "version": "1785285603854",
+  "generatedAt": "2026-07-29T00:40:03.854Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -1517,6 +1517,7 @@
     },
     "Core.Developer.HttpRequest": {
       "id": "Core.Developer.HttpRequest",
+      "toolCompatible": true,
       "proxyCompatible": true,
       "credentials": [
         {
@@ -1740,6 +1741,16 @@
             }
           ],
           "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
         }
       ],
       "inputs": [],
@@ -1749,6 +1760,34 @@
           "displayName": "Result",
           "tooltip": "{ status, data } — the response status code and parsed body.",
           "variant": "Data"
+        }
+      ],
+      "_derivatives": [
+        {
+          "condition": {
+            "fieldId": "isConvertedToTool",
+            "operator": "==",
+            "value": true
+          },
+          "fields": [],
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "tools",
+              "displayName": "HTTP Request Tools",
+              "variant": "ToolList"
+            }
+          ],
+          "ui": {
+            "accent": "port-Tool"
+          },
+          "replaces": [
+            "fields",
+            "inputs",
+            "outputs"
+          ],
+          "exclusive": true,
+          "_derivatives": []
         }
       ]
     },
