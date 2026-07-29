@@ -106,19 +106,41 @@ export function buildTools(polymarket: PolymarketPublicSDK) {
         },
     );
 
+    const periodParam = z.enum(["DAY", "WEEK", "MONTH", "ALL"]).default("ALL")
+        .describe("Period the ranking covers. Shorter periods rank far fewer wallets, so a trader missing from DAY may still place over ALL.");
+
+    const rankedByParam = z.enum(["PNL", "VOL"]).default("PNL")
+        .describe("Rank by profit or by traded volume.");
+
     const getRank = tool(
-        async ({ wallet, period, rankedBy, limit }) => {
-            const leaderboard = await polymarket.wallets.rank({ wallet, period, rankedBy, limit });
+        async ({ wallet, period, rankedBy }) => {
+            const leaderboard = await polymarket.wallets.rank({ wallet, period, rankedBy });
+
+            return ToolBudget.value(leaderboard);
+        },
+        {
+            name:        "polymarket_profile_rank",
+            description: "Get one wallet's placing on the Polymarket trader leaderboard, by profit or by volume. Answers with nothing when the wallet did not place in that period, which is the normal case — most addresses never rank. Use polymarket_leaderboard to see who did.",
+            schema: z.object({
+                wallet:   walletParam,
+                period:   periodParam,
+                rankedBy: rankedByParam,
+            }),
+        },
+    );
+
+    const getLeaderboard = tool(
+        async ({ period, rankedBy, limit }) => {
+            const leaderboard = await polymarket.wallets.leaderboard({ period, rankedBy, limit });
 
             return ToolBudget.list("leaderboard", leaderboard, { hint: "Lower the limit." });
         },
         {
-            name:        "polymarket_profile_rank",
-            description: "Get a wallet's placing on the Polymarket trader leaderboard, by profit or by volume, over a given period.",
+            name:        "polymarket_leaderboard",
+            description: "List the top Polymarket traders by profit or by traded volume. Use this to find who the significant traders are in the first place — then polymarket_profile_positions or polymarket_profile_activity on a wallet from the list to see what they actually hold or did.",
             schema: z.object({
-                wallet:   walletParam,
-                period:   z.enum(["DAY", "WEEK", "MONTH", "ALL"]).default("DAY").describe("Period the ranking covers."),
-                rankedBy: z.enum(["PNL", "VOL"]).default("PNL").describe("Rank by profit or by traded volume."),
+                period:   periodParam,
+                rankedBy: rankedByParam,
                 limit:    limitParam(50, 25),
             }),
         },
@@ -131,7 +153,7 @@ export function buildTools(polymarket: PolymarketPublicSDK) {
         },
         {
             name:        "polymarket_profile_identity",
-            description: "Look up the public profile behind a wallet address — display name, pseudonym, bio, X handle and badges. Use this to put a name to an address returned by another tool.",
+            description: "Look up the public profile behind a wallet address — display name, pseudonym, when the account was created, and its fee tier. Returns null when the address has no profile, which is the normal case. Use this to put a name to an address returned by another tool.",
             schema: z.object({
                 wallet: walletParam,
             }),
@@ -147,5 +169,6 @@ export function buildTools(polymarket: PolymarketPublicSDK) {
         getValue,
         getMarketsTraded,
         getRank,
+        getLeaderboard,
     ];
 }

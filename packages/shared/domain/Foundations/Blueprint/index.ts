@@ -16,6 +16,28 @@ export namespace Blueprint {
     export const ReconciledId = Blueprint.Id.brand("ReconciledId")
     export type ReconciledId = z.infer<typeof ReconciledId>
 
+    export namespace ResolutionFailure {
+        export const MissingBlueprint = z.object({
+            code:        z.literal("MISSING_BLUEPRINT"),
+            blueprintId: Blueprint.Id,
+        })
+        export type MissingBlueprint = z.infer<typeof MissingBlueprint>
+
+        export const MissingDerivative = z.object({
+            code:                  z.literal("MISSING_BLUEPRINT_DERIVATIVE"),
+            blueprintId:           Blueprint.Id,
+            reconciledBlueprintId: Blueprint.ReconciledId,
+            derivativePath:        z.string(),
+        })
+        export type MissingDerivative = z.infer<typeof MissingDerivative>
+
+        export const Schema = z.discriminatedUnion("code", [
+            MissingBlueprint,
+            MissingDerivative,
+        ])
+    }
+    export type ResolutionFailure = z.infer<typeof ResolutionFailure.Schema>
+
     export const createReconciledId = (
         blueprintId : Blueprint.Id,
         fields      : Field[] | Readonly<Field[]>,

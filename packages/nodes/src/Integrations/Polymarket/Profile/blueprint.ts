@@ -37,7 +37,7 @@ export const Blueprint = defineBlueprint({
                 { value: "value",           displayName: "Portfolio Value",  description: "Total value currently held."                        },
                 { value: "tradedMarkets",   displayName: "Markets Traded",   description: "How many distinct markets this wallet has traded."  },
                 { value: "rank",            displayName: "Leaderboard Rank", description: "Where this wallet places on the trader leaderboard." },
-                { value: "identity",        displayName: "Identity",         description: "The public profile behind the address — name, bio, badges."  },
+                { value: "identity",        displayName: "Identity",         description: "The public profile behind the address, if it has one."       },
             ],
             initialValue: "positions",
         }),

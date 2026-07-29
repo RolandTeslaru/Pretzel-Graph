@@ -5,6 +5,7 @@ import { Workbench, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { ShelfSDK } from "../../ShelfSDK/sdk";
+import { requestWorkflowRepair } from "./workflowRepairDialog";
 
 export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
     const setState = sdk.useStore.setState;
@@ -17,22 +18,40 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
         setFields: withCommit((...props) => setState(s => { reducers.workflow.setFields(s, ...props) })),
         load: async (workflowId, abortSignal) => {
             try {
-                const { workflow, blueprints } = await Workbench.API.Workflow.get(api, { workflowId }, abortSignal)
+                const { workflow, blueprints, repairs } = await Workbench.API.Workflow.get(api, { workflowId }, abortSignal)
 
                 
                 if (!workflow)
                     throw new Error("Workflow not found")
                 
-                Workflow.Schema.parse(workflow);
-                const { data: _data, ...meta } = workflow;
-                
-                // Also update the library metadata cache
-                LibrarySDK.actions.workflow.upsertMeta(meta);
-                
+                const parsedWorkflow = Workflow.Schema.parse(workflow);
+
+                // Repair previews and application both need the current base blueprints available,
+                // but hydrating the catalogue does not mutate the workflow itself.
                 ShelfSDK.actions.upsertBlueprints(blueprints);
 
+                const approved = await requestWorkflowRepair(parsedWorkflow, repairs, abortSignal);
+                if (!approved) {
+                    if (abortSignal.aborted)
+                        throw abortSignal.reason ?? new DOMException("Workflow load aborted", "AbortError");
+
+                    throw new Error("Workflow repair was cancelled");
+                }
+
+                const repaired = Workflow.Repair.applyAll(parsedWorkflow.data, repairs);
+                const workflowToOpen: Workflow = {
+                    ...parsedWorkflow,
+                    data: repaired.data,
+                };
+                const { data: _data, ...meta } = workflowToOpen;
+
+                // Also update the library metadata cache
+                LibrarySDK.actions.workflow.upsertMeta(meta);
+
                 setState(s => {
-                    reducers.workflow.open(s, workflow)
+                    reducers.workflow.open(s, workflowToOpen, {
+                        repaired: repaired.applied > 0,
+                    })
                 });
 
                 // All workflows are migrated (slim nodes, id-array edges, slim deps), so the
