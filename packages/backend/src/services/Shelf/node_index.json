@@ -1,6 +1,6 @@
 {
-  "version": "1785285603854",
-  "generatedAt": "2026-07-29T00:40:03.854Z",
+  "version": "1785287486550",
+  "generatedAt": "2026-07-29T01:11:26.550Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -7223,60 +7223,32 @@
       ],
       "ui": {
         "displayName": "Kalshi Market",
-        "description": "Reads Kalshi prediction-market data: events, markets and order books.",
+        "description": "Reads Kalshi series, events, markets, exchange prices, trades and status.",
         "icon": "Kalshi",
         "accent": "port-DataList"
       },
       "fields": [
         {
-          "id": "eventTicker",
+          "id": "action",
           "advanced": false,
           "required": false,
-          "reconcile": false,
-          "displayName": "Event Ticker",
-          "tooltip": "Optional Kalshi event ticker to scope markets to one event. Leave empty to list markets by status.",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": "KXPRES-24"
-        },
-        {
-          "id": "status",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Status",
-          "tooltip": "Filter markets by status. Used in direct mode and as the default for the tools.",
+          "reconcile": true,
+          "displayName": "Action",
           "variant": "MultiOption",
-          "initialValue": "active",
+          "initialValue": "list",
           "options": [
             {
-              "value": "active",
-              "displayName": "Active (open)"
+              "value": "list",
+              "displayName": "List",
+              "description": "Browse markets, events, series or public trades."
             },
             {
-              "value": "closed",
-              "displayName": "Closed"
-            },
-            {
-              "value": "all",
-              "displayName": "All"
+              "value": "get",
+              "displayName": "Get",
+              "description": "Fetch one resource or exchange reading."
             }
           ],
-          "kind": "select"
-        },
-        {
-          "id": "maxResults",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Max Results",
-          "tooltip": "Maximum number of markets/events to return.",
-          "variant": "Integer",
-          "initialValue": 20,
-          "min": 1,
-          "max": 1000,
-          "step": 1
+          "kind": "tab"
         },
         {
           "id": "signalDependency",
@@ -7369,12 +7341,649 @@
         }
       ],
       "inputs": [],
-      "outputs": [
+      "outputs": [],
+      "_derivatives": [
         {
-          "id": "markets",
-          "displayName": "Markets",
-          "tooltip": "Array of Kalshi markets: { ticker, event_ticker, title, status, yes_bid_dollars, yes_ask_dollars, last_price_dollars, volume_fp, close_time, ... }.",
-          "variant": "DataList"
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "list"
+          },
+          "fields": [
+            {
+              "id": "listResource",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Resource",
+              "variant": "MultiOption",
+              "initialValue": "markets",
+              "options": [
+                {
+                  "value": "markets",
+                  "displayName": "Markets"
+                },
+                {
+                  "value": "events",
+                  "displayName": "Events"
+                },
+                {
+                  "value": "series",
+                  "displayName": "Series"
+                },
+                {
+                  "value": "trades",
+                  "displayName": "Trades",
+                  "description": "Public fills, optionally including the historical partition."
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "listResource",
+                "operator": "==",
+                "value": "markets"
+              },
+              "fields": [
+                {
+                  "id": "listMarketsStatus",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Status",
+                  "variant": "MultiOption",
+                  "initialValue": "open",
+                  "options": [
+                    {
+                      "value": "unopened",
+                      "displayName": "Unopened"
+                    },
+                    {
+                      "value": "open",
+                      "displayName": "Open"
+                    },
+                    {
+                      "value": "paused",
+                      "displayName": "Paused"
+                    },
+                    {
+                      "value": "closed",
+                      "displayName": "Closed"
+                    },
+                    {
+                      "value": "settled",
+                      "displayName": "Settled"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "listMarketsEventTicker",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Event Ticker",
+                  "tooltip": "Optional. Limit results to one event.",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "KXPRES-28"
+                },
+                {
+                  "id": "listMarketsSeriesTicker",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Series Ticker",
+                  "tooltip": "Optional. Limit results to one recurring series.",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "KXPRES"
+                },
+                {
+                  "id": "listMarketsMaxResults",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 20,
+                  "min": 1,
+                  "max": 1000,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "markets",
+                  "displayName": "Markets",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "listResource",
+                "operator": "==",
+                "value": "events"
+              },
+              "fields": [
+                {
+                  "id": "listEventsStatus",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Status",
+                  "variant": "MultiOption",
+                  "initialValue": "open",
+                  "options": [
+                    {
+                      "value": "unopened",
+                      "displayName": "Unopened"
+                    },
+                    {
+                      "value": "open",
+                      "displayName": "Open"
+                    },
+                    {
+                      "value": "closed",
+                      "displayName": "Closed"
+                    },
+                    {
+                      "value": "settled",
+                      "displayName": "Settled"
+                    },
+                    {
+                      "value": "all",
+                      "displayName": "All"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "listEventsSeriesTicker",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Series Ticker",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "KXPRES"
+                },
+                {
+                  "id": "listEventsIncludeMarkets",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Include Markets",
+                  "tooltip": "Embeds compact markets in each event. Leave off when browsing.",
+                  "variant": "Boolean",
+                  "initialValue": false
+                },
+                {
+                  "id": "listEventsMaxResults",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 20,
+                  "min": 1,
+                  "max": 1000,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "events",
+                  "displayName": "Events",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "listResource",
+                "operator": "==",
+                "value": "series"
+              },
+              "fields": [
+                {
+                  "id": "listSeriesCategory",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Category",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "Politics"
+                },
+                {
+                  "id": "listSeriesTags",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Tags",
+                  "tooltip": "Optional comma-separated tags.",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                },
+                {
+                  "id": "listSeriesIncludeVolume",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Include Volume",
+                  "variant": "Boolean",
+                  "initialValue": true
+                },
+                {
+                  "id": "listSeriesMaxResults",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 20,
+                  "min": 1,
+                  "max": 1000,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "series",
+                  "displayName": "Series",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "listResource",
+                "operator": "==",
+                "value": "trades"
+              },
+              "fields": [
+                {
+                  "id": "listTradesTicker",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Market Ticker",
+                  "tooltip": "Optional. Leave empty for trades across markets.",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "KXPRES-28-CANDIDATE"
+                },
+                {
+                  "id": "listTradesIncludeHistorical",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Include Historical",
+                  "tooltip": "Also reads Kalshi's archived trade partition.",
+                  "variant": "Boolean",
+                  "initialValue": false
+                },
+                {
+                  "id": "listTradesBlockOnly",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Block Trades Only",
+                  "variant": "Boolean",
+                  "initialValue": false
+                },
+                {
+                  "id": "listTradesMaxResults",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 100,
+                  "min": 1,
+                  "max": 1000,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "trades",
+                  "displayName": "Trades",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "get"
+          },
+          "fields": [
+            {
+              "id": "getResource",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Resource",
+              "variant": "MultiOption",
+              "initialValue": "market",
+              "options": [
+                {
+                  "value": "market",
+                  "displayName": "Market"
+                },
+                {
+                  "value": "event",
+                  "displayName": "Event"
+                },
+                {
+                  "value": "series",
+                  "displayName": "Series"
+                },
+                {
+                  "value": "orderBook",
+                  "displayName": "Order Book"
+                },
+                {
+                  "value": "priceHistory",
+                  "displayName": "Price History"
+                },
+                {
+                  "value": "exchangeStatus",
+                  "displayName": "Exchange Status"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "market"
+              },
+              "fields": [
+                {
+                  "id": "getMarketTicker",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Market Ticker",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "KXPRES-28-CANDIDATE"
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "market",
+                  "displayName": "Market",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "event"
+              },
+              "fields": [
+                {
+                  "id": "getEventTicker",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Event Ticker",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "KXPRES-28"
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "event",
+                  "displayName": "Event",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "series"
+              },
+              "fields": [
+                {
+                  "id": "getSeriesTicker",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Series Ticker",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "KXPRES"
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "series",
+                  "displayName": "Series",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "orderBook"
+              },
+              "fields": [
+                {
+                  "id": "getOrderBookTicker",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Market Ticker",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                },
+                {
+                  "id": "getOrderBookDepth",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Depth",
+                  "tooltip": "Price levels per outcome, best first.",
+                  "variant": "Integer",
+                  "initialValue": 15,
+                  "min": 1,
+                  "max": 100,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "orderBook",
+                  "displayName": "Order Book",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "priceHistory"
+              },
+              "fields": [
+                {
+                  "id": "getPriceHistoryTicker",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Market Ticker",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                },
+                {
+                  "id": "getPriceHistoryWindow",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Window",
+                  "variant": "MultiOption",
+                  "initialValue": "30d",
+                  "options": [
+                    {
+                      "value": "1d",
+                      "displayName": "1 day"
+                    },
+                    {
+                      "value": "7d",
+                      "displayName": "7 days"
+                    },
+                    {
+                      "value": "30d",
+                      "displayName": "30 days"
+                    },
+                    {
+                      "value": "90d",
+                      "displayName": "90 days"
+                    },
+                    {
+                      "value": "1y",
+                      "displayName": "1 year"
+                    },
+                    {
+                      "value": "max",
+                      "displayName": "Max"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "getPriceHistoryInterval",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Candlestick",
+                  "variant": "MultiOption",
+                  "initialValue": "60",
+                  "options": [
+                    {
+                      "value": "1",
+                      "displayName": "1 minute"
+                    },
+                    {
+                      "value": "60",
+                      "displayName": "1 hour"
+                    },
+                    {
+                      "value": "1440",
+                      "displayName": "1 day"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "getPriceHistoryPoints",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Points to Return",
+                  "tooltip": "Longer responses are evenly sampled while preserving the newest point.",
+                  "variant": "Integer",
+                  "initialValue": 120,
+                  "min": 2,
+                  "max": 500,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "history",
+                  "displayName": "Price History",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "getResource",
+                "operator": "==",
+                "value": "exchangeStatus"
+              },
+              "outputs": [
+                {
+                  "id": "status",
+                  "displayName": "Exchange Status",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "isConvertedToTool",
+            "operator": "==",
+            "value": true
+          },
+          "fields": [],
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "tools",
+              "displayName": "Kalshi Tools",
+              "variant": "ToolList"
+            }
+          ],
+          "ui": {
+            "accent": "port-Tool"
+          },
+          "replaces": [
+            "fields",
+            "inputs",
+            "outputs"
+          ],
+          "exclusive": true,
+          "_derivatives": []
         }
       ]
     },
