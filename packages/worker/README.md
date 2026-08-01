@@ -13,7 +13,7 @@ A workflow is **not** a DAG walk. It's run by **S²Engine** — a *Bulk Asynchro
 | `S2Graph` / `Vertex` | `S2/graph.ts` | The graph: vertices (+ AND/OR/XOR strategy, runCount), arcs, `dependenciesMap`/`dependentsMap`. `__START__` is the entry vertex. |
 | `S2Engine` | `S2/engine.ts` | Pure signal scheduler. Knows nothing about nodes — drives firing via signal accumulation + hooks. |
 | `AggexEngine` | `engine/index.ts` | Wraps S2Engine. Owns the `S2Hooks` (`onNodeFired`/`onNodeExecuted`/`onNodeCompleted`/`onNodeWaiting`/`onNodeError`/`canNodeRun`), the `nodeRuntimeMap` (vertex ↔ `RuntimeNode`), pause/resume + abort, and composes the six engine services below. Delegates the real work to them. |
-| `WorkflowCompiler` | `compiler/index.ts` | Builds the `S2Graph` + execution context, instantiates/registers nodes, wires edges, finds start nodes, handles the igniter. |
+| `TurboGraph` | `compiler/index.ts` | Builds the `S2Graph` + execution context, instantiates/registers nodes, wires edges, finds start nodes, handles the igniter. |
 | `FlightRecorderService` | `engine/flight-recorder-service.ts` | Time-travel recording — builds an `Execution.Recording` of UnitsOfWork, signal/dataRemnant relations, a DataBank of port snapshots, and per-node metrics. Gated by `igniter.record`. |
 
 The engine layering is deliberate: **S2Engine is a domain-agnostic scheduler**; all node/port/workflow knowledge lives in `AggexEngine`, injected as `S2Hooks`.
@@ -33,7 +33,7 @@ The engine layering is deliberate: **S2Engine is a domain-agnostic scheduler**; 
 
 ---
 
-## Phase 1 — Compile (`WorkflowCompiler.compile`)
+## Phase 1 — Compile (`TurboGraph.compile`)
 
 1. Create an `S2Graph` and add the `__START__` vertex.
 2. Build the execution context + all the node-facing APIs (`portAPI`, `propagationAPI`, `schedulerAPI`, `instanceRegistryAPI`, `workflowQueryAPI`, `subWorkflowAPI`, `dependencyAPI`, `credentialsAPI`) — each delegates into `AggexEngine` with the engine execution context.
@@ -300,7 +300,7 @@ Cache = {
 - **Pause**: `pause()` sets a gate awaited after each node completes (`awaitPause`); `resume()` releases it. The worker arms a max-pause timeout that aborts + resumes if a pause runs too long.
 - **Abort**: `abortAPI.signal`; `run()` races ignite vs abort. A plain abort → `"terminated"`; an abort whose reason is `AggexEngine.STOP_AT_TARGET_REASON` resolves as `"completed"` (see below).
 - **Execute up until this point** (`stopAtNodeId`): set from a `workbench_step` igniter (`igniter.targetNodeId`). The **full graph compiles and runs normally** — portals, cycles, sub-workflows all resolve natively — and `onNodeCompleted` aborts the run with `STOP_AT_TARGET_REASON` the moment the target node finishes. The structural "upstream cone" alternative in `compiler/partial.ts` is **parked / not wired** (it can't see portal teleport edges); read its header for the parked replay-from-cache design and why serialization of live LangChain/resource handles shelved it.
-- **Sub-workflows**: `subWorkflowAPI.createEnv()` spins up a nested `AggexEngine` + `WorkflowCompiler` (used by `Core.SubWorkflow.Execute`), **reusing the same airlock isolate** (same tenant); nested nodes get an `enclosingNodeAPI` to write/emit on the parent's ports.
+- **Sub-workflows**: `subWorkflowAPI.createEnv()` spins up a nested `AggexEngine` + `TurboGraph` (used by `Core.SubWorkflow.Execute`), **reusing the same airlock isolate** (same tenant); nested nodes get an `enclosingNodeAPI` to write/emit on the parent's ports.
 - **Flight recording**: only attached when `igniter.record` is set. On completion the `Execution.Recording` is persisted via `Execution.API.update` and published to Redis (`Execution.Recording.LIVE_TTL_SECONDS`) for the timeline viewer.
 
 ---

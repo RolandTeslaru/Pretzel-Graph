@@ -6,7 +6,7 @@ import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { AggexEngine, AggexHooks } from 'src/engine';
 import { FlightRecorderService } from './engine/flight-recorder-service';
 import { container, singleton } from 'tsyringe';
-import { WorkflowCompiler } from './compiler';
+import { TurboGraph } from './turboGraph';
 import { AirlockService } from './airlock';
 import { AxiosService } from './axios';
 import { RealtimeService } from './realtime';
@@ -20,7 +20,7 @@ const MAX_PAUSE_DURATION_MS = 5 * 60_000;
 export class AggexWorkerImpl {
     constructor() { }
 
-    private compiler = new WorkflowCompiler();  
+    private compiler = new TurboGraph();
 
     private runningEnginesMap           = new Map<Execution.Id, AggexEngine>();
     private runningExecutionContextsMap = new Map<Execution.Id, AggexEngine.Execution.Context>()

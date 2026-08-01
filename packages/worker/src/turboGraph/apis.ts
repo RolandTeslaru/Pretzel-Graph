@@ -10,7 +10,7 @@ import { AggexEngine } from "src/engine";
 import { AggexCompilerError } from "../errors";
 import { AirlockService } from "../airlock";
 import { RealtimeService } from "../realtime";
-import { WorkflowCompiler } from "./index";
+import { TurboGraph } from "./index";
 import { createHTTPClientAPI } from "./http";
 import { createProxyAPI } from "./proxy";
 
@@ -102,7 +102,7 @@ export function createExecutionAPIs(
     const subWorkflowAPI = {
         createEnv: () => {
             const subEngine   = new AggexEngine();
-            const subCompiler = new WorkflowCompiler();
+            const subCompiler = new TurboGraph();
             return {
                 // Reuse the SAME airlock ref → shared isolate (same tenant); the child
                 // compile registers its own workflow copy + creates its own scope on it.
