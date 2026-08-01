@@ -37,7 +37,7 @@ import { createContexts } from "./contexts";
 //
 // The returned context is what AggexEngine.run() consumes. Note the graph is a signal graph,
 // not a DAG — nodes fire on accumulated signals and may re-fire, so cycles are legal here.
-export class WorkflowCompiler {
+export class TurboGraph {
     constructor() { }
 
 
@@ -50,7 +50,7 @@ export class WorkflowCompiler {
         engine:              AggexEngine,
         airlock:             AirlockService,
         credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
-        compilationCtx:      WorkflowCompiler.Compilation.Context = createCompilationContext(workflowId),
+        compilationCtx:      TurboGraph.Compilation.Context = createCompilationContext(workflowId),
         enclosingNodeAPI?:   RuntimeNode.ExecutionContext["enclosingNodeAPI"],
     ): Promise<AggexEngine.Execution.Context> {
 
@@ -375,7 +375,7 @@ export class WorkflowCompiler {
         engineExecutionCtx: AggexEngine.Execution.Context,
         nodeExecutionCtx:   RuntimeNode.ExecutionContext,
         wfNode:             Workflow.Node.Raw,
-        compilationCtx:     WorkflowCompiler.Compilation.Context,
+        compilationCtx:     TurboGraph.Compilation.Context,
     ): Promise<void> {
 
         const { compiledGraph: graph } = engineExecutionCtx;
@@ -438,7 +438,7 @@ export class WorkflowCompiler {
 
 
 
-export namespace WorkflowCompiler {
+export namespace TurboGraph {
     export namespace Compilation {
         export interface Context {
             compilePath: readonly Workflow.Id[];
@@ -448,14 +448,14 @@ export namespace WorkflowCompiler {
 
 }
 
-export function createCompilationContext(rootId: Workflow.Id): WorkflowCompiler.Compilation.Context {
+export function createCompilationContext(rootId: Workflow.Id): TurboGraph.Compilation.Context {
     return { compilePath: [rootId] };
 }
 
 export function extendCompilePath(
-    compilePath: WorkflowCompiler.Compilation.Context["compilePath"],
+    compilePath: TurboGraph.Compilation.Context["compilePath"],
     nextId: Workflow.Id,
-): WorkflowCompiler.Compilation.Context {
+): TurboGraph.Compilation.Context {
     return {
         compilePath: [...compilePath, nextId],
     };
