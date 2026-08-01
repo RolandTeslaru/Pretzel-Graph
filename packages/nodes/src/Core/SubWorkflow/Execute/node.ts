@@ -2,7 +2,7 @@ import { RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Airlock, Execution, Workflow } from "@pretzel-graph/shared/domain";
-import { AggexEngine, WorkflowCompiler } from "@pretzel-graph/worker";
+import { AggexEngine, TurboGraph } from "@pretzel-graph/worker";
 import { System } from "@pretzel-graph/shared/system";
 import { Node as ExposeInputPortNode } from "../ExposeInputPort/node";
 
@@ -20,7 +20,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     private aggregatedMetrics?: Record<string, Execution.Recording.Metric>;
 
     protected override async onCompile(
-        compilationCtx: WorkflowCompiler.Compilation.Context,
+        compilationCtx: TurboGraph.Compilation.Context,
     ): Promise<void> {
         const { compilePath, parentWorkflowIgniter } = compilationCtx;
         const workflowNode = this.context.workflowQueryAPI.getNode(this.nodeId);
