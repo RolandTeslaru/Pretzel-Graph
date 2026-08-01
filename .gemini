@@ -26,7 +26,7 @@ All state lives in Zustand stores wrapped by typed SDK classes in `src/SDKs/`. E
 Frontend utilizes TanStack Router with file-based routes (`src/routes/`). `routeTree.gen.ts` is auto-generated and should not be edited manually.
 
 **Execution Engine:**
-- `WorkflowCompiler`: Validates DAG before execution.
+- `TurboGraph`: Compiles the workflow's signal graph before execution.
 - `AggexEngine`: Executes the graph node-by-node, resolving field values and port data.
 - Nodes are implemented under `nodes/` by provider (e.g., Anthropic, OpenAI).
 
