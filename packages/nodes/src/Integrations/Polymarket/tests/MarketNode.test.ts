@@ -134,7 +134,10 @@ describe("Polymarket Market derivatives", () => {
             { isConvertedToTool: true } as never,
         );
 
-        assert.deepEqual(blueprint.outputs.map(output => output.id), ["tools"]);
+        assert.deepEqual(
+            blueprint.outputs.map(output => output.id),
+            ["discoveryTools", "exchangeTools", "analyticsTools"],
+        );
 
         // Tool mode declares no node fields at all — every input is per-call intent and lives in a
         // tool's schema. Only the framework fields survive the replacement, so the node can still
@@ -162,9 +165,18 @@ describe("Polymarket Market derivatives", () => {
     });
 
     it("exposes every operation as a distinct, uniquely named tool", () => {
-        const tools = buildTools({} as never);
+        const groups = buildTools({} as never);
+        const tools  = Object.values(groups).flat();
         const names = tools.map(builtTool => builtTool.name);
 
+        assert.deepEqual(
+            Object.fromEntries(Object.entries(groups).map(([group, groupTools]) => [group, groupTools.length])),
+            {
+                discoveryTools: 12,
+                exchangeTools:   6,
+                analyticsTools:  6,
+            },
+        );
         assert.equal(tools.length, 24);
         assert.equal(new Set(names).size, names.length);
 

@@ -186,6 +186,7 @@ Inside a node you have:
 | `instanceRegistryAPI` | `get(nodeId)` / `getAll()` running node instances |
 | `workflowQueryAPI` | `getNodesByBlueprint(id)`, `getNodeOutput(nodeId, portId)` |
 | `abortAPI` | `signal`, `abort(reason)` |
+| `agentToolBridgeAPI` | bind live `Tool` values to a short-lived, authenticated MCP endpoint for an external agent process |
 | `subWorkflowAPI` | compile + run a nested workflow |
 | `dependencyAPI` | resolve published/draft workflow dependencies |
 | `workflowData` / `workflowId` / `workflowCache` / `session` / `updateSession` | execution state |

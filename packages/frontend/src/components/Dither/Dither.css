@@ -3,3 +3,7 @@
   height: 100%;
   position: relative;
 }
+
+.dither-container > canvas {
+  display: block;
+}

@@ -1,7 +1,6 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { Vertex } from "../S2/graph";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
-import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
 import { Execution } from "@pretzel-graph/shared/domain";
 import { Synthesizer } from "@pretzel-graph/node-sdk";
@@ -103,7 +102,7 @@ export class NodeIOService {
                 const raw = staticValue ?? fallback;
 
                 if (raw !== undefined) {
-                    resolved[input.id] = raw as Field.Value;
+                    resolved[input.id] = Synthesizer.synthesizeInput(input, raw);
                 }
                 else {
                     resolved[input.id] = undefined;
