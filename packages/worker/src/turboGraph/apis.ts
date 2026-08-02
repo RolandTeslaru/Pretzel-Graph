@@ -13,6 +13,7 @@ import { RealtimeService } from "../realtime";
 import { TurboGraph } from "./index";
 import { createHTTPClientAPI } from "./http";
 import { createProxyAPI } from "./proxy";
+import { agentToolBridgeService } from "../tool-bridge/service";
 
 type ExecutionAPIs = Pick<
     RuntimeNode.ExecutionContext,
@@ -31,6 +32,7 @@ type ExecutionAPIs = Pick<
     | "airlockAPI"
     | "httpAPI"
     | "proxyAPI"
+    | "agentToolBridgeAPI"
 >;
 
 // Builds the per-execution API facade injected into every node's ExecutionContext.
@@ -152,6 +154,8 @@ export function createExecutionAPIs(
         abort:  (reason?: any) => abortController.abort(reason),
     };
 
+    const agentToolBridgeAPI = agentToolBridgeService.createAPI(abortAPI.signal);
+
     // Outbound HTTP for integration nodes — clients are pre-bound to this execution's abort
     // signal, so terminate/suspend cancels vendor requests in flight.
     const proxyAPI = createProxyAPI(workflowData, credentialInstances);
@@ -175,6 +179,7 @@ export function createExecutionAPIs(
     return {
         portAPI, propagationAPI, instanceRegistryAPI, workflowQueryAPI,
         schedulerAPI, subWorkflowAPI, dependencyAPI, credentialsAPI,
-        catalogueAPI, abortAPI, realtimeAPI, updateSession, airlockAPI, httpAPI, proxyAPI
+        catalogueAPI, abortAPI, realtimeAPI, updateSession, airlockAPI, httpAPI, proxyAPI,
+        agentToolBridgeAPI,
     };
 }

@@ -5,6 +5,7 @@ import { supabase } from "@/libs/supabase";
 import { SDK } from "../SDKManager";
 import { Auth } from "@pretzel-graph/shared/domain";
 import { _createAuthActions_ } from "./actions";
+import { SystemSDK } from "../SystemSDK";
 
 @SDK("Auth")
 export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
@@ -35,6 +36,8 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
       this.setState(s => { s.isLoading = false })
     }
 
+
+      
     // Listen for changes
     supabase.auth.onAuthStateChange((event, session) => {                                                                                                                                                                         
       if (event === 'SIGNED_IN' && session?.user) {

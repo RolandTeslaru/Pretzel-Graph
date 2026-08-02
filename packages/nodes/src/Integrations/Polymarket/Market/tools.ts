@@ -419,35 +419,40 @@ export function buildTools(polymarket: PolymarketPublicSDK) {
     );
 
 
-    return [
-        searchMarkets,
-        searchAll,
+    return {
+        discoveryTools: [
+            searchMarkets,
+            searchAll,
 
-        listMarketsTool,
-        getMarket,
-        getMarketStats,
-        listEventsTool,
-        getEvent,
-        getEventStats,
+            listMarketsTool,
+            getMarket,
+            listEventsTool,
+            getEvent,
 
-        listTags,
-        getTag,
-        listSeries,
-        getSeries,
-        listSports,
-        listTeams,
+            listTags,
+            getTag,
+            listSeries,
+            getSeries,
+            listSports,
+            listTeams,
+        ],
 
-        listTrades,
-        listHolders,
+        exchangeTools: [
+            getPrice,
+            getOrderBook,
+            getPriceHistory,
+            getMarketMechanics,
+            getMarketConfig,
+            getMarketRewards,
+        ],
 
-        getPrice,
-        getOrderBook,
-        getPriceHistory,
-        getMarketMechanics,
-
-        getMarketConfig,
-        getMarketRewards,
-        getOpenInterest,
-        getLiveVolume,
-    ];
+        analyticsTools: [
+            getMarketStats,
+            getEventStats,
+            listTrades,
+            listHolders,
+            getOpenInterest,
+            getLiveVolume,
+        ],
+    };
 }

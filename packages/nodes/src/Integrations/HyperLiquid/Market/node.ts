@@ -1,118 +1,72 @@
-import { tool } from "@langchain/core/tools";
-import { z } from "zod/v3";
-
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import {
+    RegisterNode,
+    RuntimeNode,
+    type InferOutputs,
+} from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
-import { Blueprint, ToolBlueprint } from "./blueprint";
-import { Candle, HyperLiquidPublicClient } from "../publicClient";
-
-const summarizeCandles = (coin: string, interval: string, candles: Candle[]) => {
-
-    if (!candles.length)
-        return { coin, interval, count: 0, firstClose: null, lastClose: null, change: null, changePct: null };
-
-    const firstClose = parseFloat(candles[0].c);
-    const lastClose  = parseFloat(candles[candles.length - 1].c);
-    const change     = lastClose - firstClose;
-    const changePct  = firstClose === 0 ? null : (change / firstClose) * 100;
-
-    return { coin, interval, count: candles.length, firstClose, lastClose, change, changePct };
-};
+import { HyperLiquidInfoClient } from "../client";
+import { Blueprint } from "./blueprint";
+import { buildTools, selectMids } from "./tools";
 
 
 @RegisterNode(Blueprint.id)
-export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
+export class Node extends RuntimeNode<typeof Blueprint> {
 
-    private readonly client: HyperLiquidPublicClient;
+    readonly #info: HyperLiquidInfoClient;
 
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);
-        this.client = new HyperLiquidPublicClient(this.httpClientFactory);
+        this.#info = new HyperLiquidInfoClient(this.httpClientFactory);
     }
 
-    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
-        const { interval, lookbackHours } = this.fieldValues;
-        const coin = (this.fieldValues.coin ?? "").trim();
 
-        if (!coin)
-            throw new Error("HyperLiquid Market: 'coin' is required (e.g. BTC, ETH).");
+    protected override async onRun(): Promise<Partial<InferOutputs<typeof Blueprint>>> {
+        const fields = this.fieldValues;
 
-        const candles = await this.client.candles(coin, interval, lookbackHours);
-        const summary = summarizeCandles(coin, interval, candles);
+        if (fields.isConvertedToTool === true)
+            return {
+                tools: buildTools(this.#info),
+            } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-        return { candles, summary };
-    }
 
-    protected override async onBuildTool(
-        incoming: InferIncoming<typeof ToolBlueprint>,
-    ): Promise<InferOutputs<typeof ToolBlueprint>> {
-        const { interval: defaultInterval, lookbackHours: defaultLookback } = this.fieldValues;
+        switch (fields.resource) {
+            case "markets": {
+                const markets = fields.marketKind === "spot"
+                    ? await this.#info.spotMarkets()
+                    : await this.#info.perpetualMarkets({ dex: fields.marketsDex });
 
-        const getCandles = tool(
-            async ({ coin, interval, lookbackHours }) => {
-                const candles = await this.client.candles(
-                    coin,
-                    interval ?? defaultInterval,
-                    lookbackHours ?? defaultLookback,
-                );
-                return JSON.stringify(summarizeCandles(coin, interval ?? defaultInterval, candles));
-            },
-            {
-                name: "hyperliquid_get_candles",
-                description: "Download OHLCV candle history from HyperLiquid for a given coin. Returns a summary (count, first/last close, change, change %). Use this to inspect recent price action.",
-                schema: z.object({
-                    coin: z.string().describe("HyperLiquid coin symbol, e.g. BTC, ETH, SOL."),
-                    interval: z.enum(["1m", "5m", "15m", "1h", "4h", "1d"]).optional().describe("Candle interval. Defaults to the node's configured interval."),
-                    lookbackHours: z.number().int().min(1).max(24 * 365).optional().describe("How far back to fetch, in hours. Defaults to the node's configured lookback."),
-                }),
-            },
-        );
+                return {
+                    markets: markets.slice(0, fields.marketsLimit),
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+            }
 
-        const getMids = tool(
-            async ({ coin }) => {
-                const mids = await this.client.mids();
-                if (coin) {
-                    const price = mids[coin];
-                    return price ? `${coin}: ${price}` : `No mid price found for ${coin}.`;
-                }
-                return JSON.stringify(mids);
-            },
-            {
-                name: "hyperliquid_get_mids",
-                description: "Get current mid prices on HyperLiquid. Pass a coin symbol to get just one, or omit to get all.",
-                schema: z.object({
-                    coin: z.string().optional().describe("Optional coin symbol. If omitted, returns mids for every coin."),
-                }),
-            },
-        );
+            case "mids": {
+                const mids = await this.#info.mids({ dex: fields.midsDex });
+                return {
+                    mids: selectMids(mids, fields.midsCoin, fields.midsLimit),
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+            }
 
-        const getOrderBook = tool(
-            async ({ coin }) => {
-                const book = await this.client.orderBook(coin);
-                return JSON.stringify(book);
-            },
-            {
-                name: "hyperliquid_get_order_book",
-                description: "Snapshot the L2 order book for a coin on HyperLiquid. Returns bids and asks.",
-                schema: z.object({
-                    coin: z.string().describe("HyperLiquid coin symbol, e.g. BTC."),
-                }),
-            },
-        );
+            case "candles": {
+                const endTime = Date.now();
+                return {
+                    candles: await this.#info.candles({
+                        coin:      fields.candlesCoin,
+                        interval:  fields.candlesInterval,
+                        startTime: endTime - fields.candlesLookbackHours * 60 * 60 * 1_000,
+                        endTime,
+                    }),
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+            }
 
-        const getMeta = tool(
-            async () => {
-                const meta = await this.client.meta();
-                return JSON.stringify(meta);
-            },
-            {
-                name: "hyperliquid_get_meta",
-                description: "List all coins available on HyperLiquid along with their metadata and market context (mark price, funding, open interest).",
-                schema: z.object({}),
-            },
-        );
-
-        return { tools: [getCandles, getMids, getOrderBook, getMeta] };
+            case "orderBook":
+                return {
+                    orderBook: await this.#info.orderBook({
+                        coin:  fields.orderBookCoin,
+                        depth: fields.orderBookDepth,
+                    }),
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+        }
     }
 }

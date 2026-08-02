@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Button, Form, Input, ScrollArea, Spinner, Switch } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Form, Input, ScrollArea, Select, Spinner, Switch } from '@pretzel-graph/standard-ui/foundations'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { VaultSDK } from '@/SDKs/VaultSDK/sdk'
 import type { Vault } from '@pretzel-graph/shared/domain'
@@ -30,6 +30,10 @@ export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }:
                 f.id,
                 f.variant === 'Boolean' ? z.boolean()
                     : (f.variant === 'Integer' || f.variant === 'Float') ? z.number()
+                        : f.variant === 'MultiOption' ? z.string().refine(
+                            value => (!f.required && value === '') || f.options.some(option => option.value === value),
+                            `Select a valid ${f.displayName}`,
+                        )
                         : f.required ? z.string().min(1, `${f.displayName} is required`) : z.string(),
             ]))
         ),
@@ -45,6 +49,7 @@ export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }:
                 f.id,
                 f.variant === 'Boolean' ? (('initialValue' in f ? f.initialValue : false) ?? false)
                     : (f.variant === 'Integer' || f.variant === 'Float') ? (('initialValue' in f ? f.initialValue : 0) ?? 0)
+                        : f.variant === 'MultiOption' ? (f.initialValue ?? '')
                         : '',
             ])) as Values['fields'],
         },
@@ -141,6 +146,26 @@ export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }:
                                                     ref={field.ref}
                                                     placeholder={'placeholder' in f ? (f.placeholder as string) : undefined}
                                                 />
+                                            ) : f.variant === 'MultiOption' ? (
+                                                <Select.Root
+                                                    value={field.value as string}
+                                                    onValueChange={field.onChange}
+                                                >
+                                                    <Select.Trigger aria-invalid={Boolean(form.formState.errors.fields?.[f.id])}>
+                                                        <Select.Value placeholder={f.placeholder ?? `Select ${f.displayName}`} />
+                                                    </Select.Trigger>
+                                                    <Select.Content size='sm'>
+                                                        {f.options.map(option => (
+                                                            <Select.Item
+                                                                key={option.value}
+                                                                value={option.value}
+                                                                description={option.description}
+                                                            >
+                                                                {option.displayName ?? option.value}
+                                                            </Select.Item>
+                                                        ))}
+                                                    </Select.Content>
+                                                </Select.Root>
                                             ) : (
                                                 <Input
                                                     {...field}

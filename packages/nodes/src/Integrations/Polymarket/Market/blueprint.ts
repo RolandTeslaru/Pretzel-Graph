@@ -375,6 +375,10 @@ export const Blueprint = defineBlueprint({
     "isConvertedToTool==true": defineTool({
         fields:  [],
         inputs:  [],
-        outputs: [OutputBuilder.ToolList("tools", "Polymarket Tools")],
+        outputs: [
+            OutputBuilder.ToolList("discoveryTools", "Discovery Tools"),
+            OutputBuilder.ToolList("exchangeTools", "Exchange Tools"),
+            OutputBuilder.ToolList("analyticsTools", "Analytics Tools"),
+        ],
     }),
 });

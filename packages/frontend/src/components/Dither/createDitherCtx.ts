@@ -233,7 +233,7 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
 
   // No antialias: a fullscreen dither pass has no geometry edges, so MSAA only
   // wastes a multisampled buffer.
-  const renderer = new Renderer({ antialias: false });
+  const renderer = new Renderer({ antialias: false, depth: false });
   const gl = renderer.gl;
   gl.clearColor(0, 0, 0, 1);
   gl.canvas.style.width = '100%';
@@ -246,11 +246,13 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
   const waveGeometry = new Triangle(gl);
   const ditherGeometry = new Triangle(gl);
 
-  let target = new RenderTarget(gl, { width: 1, height: 1 });
+  const target = new RenderTarget(gl, { width: 1, height: 1, depth: false });
 
   const waveProgram = new Program(gl, {
     vertex: VERT,
     fragment: WAVE_FRAG,
+    depthTest: false,
+    depthWrite: false,
     uniforms: {
       uResolution: { value: [1, 1] },
       uTime: { value: 0 },
@@ -266,6 +268,8 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
   const ditherProgram = new Program(gl, {
     vertex: VERT,
     fragment: DITHER_FRAG,
+    depthTest: false,
+    depthWrite: false,
     uniforms: {
       tMap: { value: target.texture },
       uResolution: { value: [1, 1] },
@@ -283,23 +287,10 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
   let animateId = 0;
   let running = false;
   let resizeObserver: ResizeObserver | null = null;
+  let resizeId = 0;
+  let renderedWidth = 0;
+  let renderedHeight = 0;
   const mouse: [number, number] = [0, 0];
-
-  function resize() {
-    if (!container) return;
-    const w = container.offsetWidth || 1;
-    const h = container.offsetHeight || 1;
-    renderer.setSize(w, h);
-    // Dither pass runs at full canvas res (for crisp pixelSize/Bayer blocks)…
-    ditherProgram.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height];
-    // …but the expensive fbm wave pass renders into a downscaled target and is
-    // bilinearly upscaled when sampled, so the noise runs on 1/4 the pixels.
-    const ww = Math.max(1, Math.round(gl.canvas.width * WAVE_SCALE));
-    const wh = Math.max(1, Math.round(gl.canvas.height * WAVE_SCALE));
-    waveProgram.uniforms.uResolution.value = [ww, wh];
-    target.setSize(ww, wh);
-    ditherProgram.uniforms.tMap.value = target.texture;
-  }
 
   const handlePointerMove = (e: PointerEvent) => {
     if (!get('enableMouseInteraction')) return;
@@ -313,11 +304,7 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
   const FRAME_INTERVAL = 1000 / 30;
   let lastFrame = 0;
 
-  const update = (t: number) => {
-    animateId = requestAnimationFrame(update);
-    if (t - lastFrame < FRAME_INTERVAL) return;
-    lastFrame = t;
-
+  const drawFrame = (t: number) => {
     const wu = waveProgram.uniforms;
     if (!get('disableAnimation')) {
       wu.uTime.value = t * 0.001;
@@ -337,6 +324,63 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
     // Pass 1 → offscreen target, Pass 2 → screen.
     renderer.render({ scene: waveMesh, target });
     renderer.render({ scene: ditherMesh });
+  };
+
+  function resizeAndDraw(t: number): boolean {
+    if (!container) return false;
+
+    const width = Math.max(1, Math.round(container.clientWidth));
+    const height = Math.max(1, Math.round(container.clientHeight));
+    if (width === renderedWidth && height === renderedHeight) return false;
+
+    renderedWidth = width;
+    renderedHeight = height;
+    renderer.setSize(width, height);
+
+    // OGL's setSize writes fixed pixel CSS dimensions. Restore fluid sizing so
+    // the existing frame follows the container until the next backing-store
+    // resize is committed.
+    gl.canvas.style.width = '100%';
+    gl.canvas.style.height = '100%';
+
+    // Dither pass runs at full canvas res (for crisp pixelSize/Bayer blocks)…
+    ditherProgram.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height];
+    // …but the expensive fbm wave pass renders into a downscaled target and is
+    // bilinearly upscaled when sampled, so the noise runs on 1/4 the pixels.
+    const waveWidth = Math.max(1, Math.round(gl.canvas.width * WAVE_SCALE));
+    const waveHeight = Math.max(1, Math.round(gl.canvas.height * WAVE_SCALE));
+    waveProgram.uniforms.uResolution.value = [waveWidth, waveHeight];
+    target.setSize(waveWidth, waveHeight);
+    ditherProgram.uniforms.tMap.value = target.texture;
+
+    // Changing canvas.width/height clears the WebGL drawing buffer. Redraw in
+    // the same animation frame instead of leaving a black canvas until the
+    // throttled 30fps loop happens to run again.
+    lastFrame = t;
+    drawFrame(t);
+    return true;
+  }
+
+  function scheduleResize() {
+    if (resizeId) return;
+    resizeId = requestAnimationFrame((t) => {
+      resizeId = 0;
+      resizeAndDraw(t);
+    });
+  }
+
+  function cancelScheduledResize() {
+    if (!resizeId) return;
+    cancelAnimationFrame(resizeId);
+    resizeId = 0;
+  }
+
+  const update = (t: number) => {
+    animateId = requestAnimationFrame(update);
+    if (resizeId) return;
+    if (t - lastFrame < FRAME_INTERVAL) return;
+    lastFrame = t;
+    drawFrame(t);
   };
 
   function start() {
@@ -374,15 +418,20 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
       document.addEventListener('visibilitychange', handleVisibility);
 
       resizeObserver?.disconnect();
-      resizeObserver = new ResizeObserver(() => resize());
+      resizeObserver = new ResizeObserver(() => scheduleResize());
       resizeObserver.observe(nextContainer);
 
-      resize();
+      const now = performance.now();
+      if (!resizeAndDraw(now)) {
+        lastFrame = now;
+        drawFrame(now);
+      }
       start();
     },
 
     unmount() {
       stop();
+      cancelScheduledResize();
       gl.canvas.removeEventListener('pointermove', handlePointerMove);
       document.removeEventListener('visibilitychange', handleVisibility);
       resizeObserver?.disconnect();
@@ -399,6 +448,7 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
 
     destroy() {
       stop();
+      cancelScheduledResize();
       gl.canvas.removeEventListener('pointermove', handlePointerMove);
       document.removeEventListener('visibilitychange', handleVisibility);
       resizeObserver?.disconnect();

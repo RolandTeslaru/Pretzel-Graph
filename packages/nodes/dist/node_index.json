@@ -1,6 +1,6 @@
 {
-  "version": "1785287486550",
-  "generatedAt": "2026-07-29T01:11:26.550Z",
+  "version": "1785710577468",
+  "generatedAt": "2026-08-02T22:42:57.468Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -5369,8 +5369,8 @@
         }
       ]
     },
-    "Integrations.Alpaca.Market": {
-      "id": "Integrations.Alpaca.Market",
+    "Integrations.Alpaca.Account": {
+      "id": "Integrations.Alpaca.Account",
       "toolCompatible": true,
       "proxyCompatible": true,
       "credentials": [
@@ -5395,6 +5395,27 @@
               "displayName": "API Secret",
               "variant": "Password",
               "initialValue": ""
+            },
+            {
+              "id": "environment",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Trading Environment",
+              "tooltip": "Paper and live accounts use different credentials. Existing credentials without this field are treated as paper.",
+              "variant": "MultiOption",
+              "initialValue": "paper",
+              "options": [
+                {
+                  "value": "paper",
+                  "displayName": "Paper"
+                },
+                {
+                  "value": "live",
+                  "displayName": "Live"
+                }
+              ],
+              "kind": "select"
             }
           ],
           "icon": "Alpaca"
@@ -5479,108 +5500,51 @@
         }
       ],
       "ui": {
-        "displayName": "Alpaca Market",
-        "description": "Reads US stock market data and news from Alpaca Market Data APIs.",
+        "displayName": "Alpaca Account",
+        "description": "Reads the Alpaca account attached by the credential: balances, positions, orders and history.",
         "icon": "Alpaca",
         "accent": "port-DataList"
       },
       "fields": [
         {
-          "id": "symbol",
+          "id": "resource",
           "advanced": false,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Symbol",
-          "tooltip": "US stock symbol (e.g. AAPL, MSFT).",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": "AAPL"
-        },
-        {
-          "id": "environment",
-          "advanced": true,
           "required": false,
-          "reconcile": false,
-          "displayName": "Environment",
-          "tooltip": "Used for trading endpoints (assets). Market data endpoints are the same for both.",
+          "reconcile": true,
+          "displayName": "Resource",
           "variant": "MultiOption",
-          "initialValue": "live",
+          "initialValue": "summary",
           "options": [
             {
-              "value": "live",
-              "displayName": "Live"
+              "value": "summary",
+              "displayName": "Account Summary"
             },
             {
-              "value": "paper",
-              "displayName": "Paper"
+              "value": "configuration",
+              "displayName": "Configuration"
+            },
+            {
+              "value": "positions",
+              "displayName": "Positions"
+            },
+            {
+              "value": "orders",
+              "displayName": "Orders"
+            },
+            {
+              "value": "activities",
+              "displayName": "Activities"
+            },
+            {
+              "value": "portfolio",
+              "displayName": "Portfolio"
+            },
+            {
+              "value": "watchlists",
+              "displayName": "Watchlists"
             }
           ],
           "kind": "select"
-        },
-        {
-          "id": "timespan",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Timespan",
-          "tooltip": "Default bars granularity.",
-          "variant": "MultiOption",
-          "initialValue": "minute",
-          "options": [
-            {
-              "value": "minute",
-              "displayName": "Minute"
-            },
-            {
-              "value": "hour",
-              "displayName": "Hour"
-            },
-            {
-              "value": "day",
-              "displayName": "Day"
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "multiplier",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Multiplier",
-          "tooltip": "Default bars multiplier (e.g. 5 + minute = 5Min).",
-          "variant": "Integer",
-          "initialValue": 1,
-          "min": 1,
-          "max": 60,
-          "step": 1
-        },
-        {
-          "id": "lookbackHours",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Lookback (hours)",
-          "tooltip": "Default how far back to fetch bars.",
-          "variant": "Integer",
-          "initialValue": 24,
-          "min": 1,
-          "max": 8760,
-          "step": 1
-        },
-        {
-          "id": "maxBars",
-          "advanced": true,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Max Bars",
-          "tooltip": "Safety cap to prevent huge outputs. Tools can override.",
-          "variant": "Integer",
-          "initialValue": 500,
-          "min": 1,
-          "max": 5000,
-          "step": 1
         },
         {
           "id": "signalDependency",
@@ -5673,24 +5637,3140 @@
         }
       ],
       "inputs": [],
-      "outputs": [
+      "outputs": [],
+      "_derivatives": [
         {
-          "id": "bars",
-          "displayName": "Bars",
-          "tooltip": "Array of OHLCV bars (limited by Max Bars).",
-          "variant": "DataList"
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "summary"
+          },
+          "outputs": [
+            {
+              "id": "account",
+              "displayName": "Account",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
         },
         {
-          "id": "summary",
-          "displayName": "Summary",
-          "tooltip": "Convenience summary about the returned bars.",
-          "variant": "Data"
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "configuration"
+          },
+          "outputs": [
+            {
+              "id": "configuration",
+              "displayName": "Configuration",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
         },
         {
-          "id": "news",
-          "displayName": "News",
-          "tooltip": "Recent news for the symbol (compact).",
-          "variant": "Data"
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "positions"
+          },
+          "fields": [
+            {
+              "id": "positionsAction",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Action",
+              "variant": "MultiOption",
+              "initialValue": "list",
+              "options": [
+                {
+                  "value": "list",
+                  "displayName": "List"
+                },
+                {
+                  "value": "get",
+                  "displayName": "Get"
+                }
+              ],
+              "kind": "tab"
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "positionsAction",
+                "operator": "==",
+                "value": "list"
+              },
+              "outputs": [
+                {
+                  "id": "positions",
+                  "displayName": "Positions",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "positionsAction",
+                "operator": "==",
+                "value": "get"
+              },
+              "fields": [
+                {
+                  "id": "positionSymbolOrId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Symbol or Asset ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "AAPL"
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "position",
+                  "displayName": "Position",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "orders"
+          },
+          "fields": [
+            {
+              "id": "ordersAction",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Action",
+              "variant": "MultiOption",
+              "initialValue": "list",
+              "options": [
+                {
+                  "value": "list",
+                  "displayName": "List"
+                },
+                {
+                  "value": "get",
+                  "displayName": "Get"
+                }
+              ],
+              "kind": "tab"
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "ordersAction",
+                "operator": "==",
+                "value": "list"
+              },
+              "fields": [
+                {
+                  "id": "ordersStatus",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Status",
+                  "variant": "MultiOption",
+                  "initialValue": "open",
+                  "options": [
+                    {
+                      "value": "open",
+                      "displayName": "Open"
+                    },
+                    {
+                      "value": "closed",
+                      "displayName": "Closed"
+                    },
+                    {
+                      "value": "all",
+                      "displayName": "All"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "ordersSymbols",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Symbols",
+                  "tooltip": "Optional symbol filter.",
+                  "variant": "List",
+                  "initialValue": []
+                },
+                {
+                  "id": "ordersSide",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Side",
+                  "variant": "MultiOption",
+                  "initialValue": "all",
+                  "options": [
+                    {
+                      "value": "all",
+                      "displayName": "Both"
+                    },
+                    {
+                      "value": "buy",
+                      "displayName": "Buy"
+                    },
+                    {
+                      "value": "sell",
+                      "displayName": "Sell"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "ordersDirection",
+                  "advanced": true,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Direction",
+                  "variant": "MultiOption",
+                  "initialValue": "desc",
+                  "options": [
+                    {
+                      "value": "desc",
+                      "displayName": "Newest First"
+                    },
+                    {
+                      "value": "asc",
+                      "displayName": "Oldest First"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "ordersAfter",
+                  "advanced": true,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "After",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "2026-07-01T00:00:00Z"
+                },
+                {
+                  "id": "ordersUntil",
+                  "advanced": true,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Until",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "2026-08-01T00:00:00Z"
+                },
+                {
+                  "id": "ordersLimit",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Orders",
+                  "variant": "Integer",
+                  "initialValue": 50,
+                  "min": 1,
+                  "max": 500,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "orders",
+                  "displayName": "Orders",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "ordersAction",
+                "operator": "==",
+                "value": "get"
+              },
+              "fields": [
+                {
+                  "id": "orderId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Order ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "order",
+                  "displayName": "Order",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "activities"
+          },
+          "fields": [
+            {
+              "id": "activityTypes",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Activity Types",
+              "tooltip": "Optional Alpaca activity codes, e.g. FILL, DIV, FEE.",
+              "variant": "List",
+              "initialValue": []
+            },
+            {
+              "id": "activityCategory",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Category",
+              "variant": "MultiOption",
+              "initialValue": "all",
+              "options": [
+                {
+                  "value": "all",
+                  "displayName": "All"
+                },
+                {
+                  "value": "trade_activity",
+                  "displayName": "Trades"
+                },
+                {
+                  "value": "non_trade_activity",
+                  "displayName": "Non-trade"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "activityDirection",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Direction",
+              "variant": "MultiOption",
+              "initialValue": "desc",
+              "options": [
+                {
+                  "value": "desc",
+                  "displayName": "Newest First"
+                },
+                {
+                  "value": "asc",
+                  "displayName": "Oldest First"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "activityAfter",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "After",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-07-01T00:00:00Z"
+            },
+            {
+              "id": "activityUntil",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Until",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-08-01T00:00:00Z"
+            },
+            {
+              "id": "activityLimit",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Activities",
+              "variant": "Integer",
+              "initialValue": 50,
+              "min": 1,
+              "max": 500,
+              "step": 1
+            }
+          ],
+          "outputs": [
+            {
+              "id": "activities",
+              "displayName": "Activities",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "portfolio"
+          },
+          "fields": [
+            {
+              "id": "portfolioPeriod",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Period",
+              "tooltip": "Examples: 1D, 1M, 3M, 1A or all.",
+              "variant": "String",
+              "initialValue": "1M",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "portfolioTimeframe",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Timeframe",
+              "tooltip": "Examples: 1Min, 5Min, 1H or 1D.",
+              "variant": "String",
+              "initialValue": "1D",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "portfolioStart",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Start",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-07-01T00:00:00Z"
+            },
+            {
+              "id": "portfolioEnd",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "End",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-08-01T00:00:00Z"
+            },
+            {
+              "id": "portfolioExtendedHours",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Extended Hours",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "outputs": [
+            {
+              "id": "portfolio",
+              "displayName": "Portfolio History",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "watchlists"
+          },
+          "fields": [
+            {
+              "id": "watchlistsAction",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Action",
+              "variant": "MultiOption",
+              "initialValue": "list",
+              "options": [
+                {
+                  "value": "list",
+                  "displayName": "List"
+                },
+                {
+                  "value": "get",
+                  "displayName": "Get"
+                }
+              ],
+              "kind": "tab"
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "watchlistsAction",
+                "operator": "==",
+                "value": "list"
+              },
+              "outputs": [
+                {
+                  "id": "watchlists",
+                  "displayName": "Watchlists",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "watchlistsAction",
+                "operator": "==",
+                "value": "get"
+              },
+              "fields": [
+                {
+                  "id": "watchlistId",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Watchlist ID",
+                  "tooltip": "Provide an ID, or leave empty and use Name.",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                },
+                {
+                  "id": "watchlistName",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Watchlist Name",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "watchlist",
+                  "displayName": "Watchlist",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "isConvertedToTool",
+            "operator": "==",
+            "value": true
+          },
+          "fields": [],
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "tools",
+              "displayName": "Alpaca Account Tools",
+              "variant": "ToolList"
+            }
+          ],
+          "ui": {
+            "accent": "port-Tool"
+          },
+          "replaces": [
+            "fields",
+            "inputs",
+            "outputs"
+          ],
+          "exclusive": true,
+          "_derivatives": []
+        }
+      ]
+    },
+    "Integrations.Alpaca.Market": {
+      "id": "Integrations.Alpaca.Market",
+      "toolCompatible": true,
+      "proxyCompatible": true,
+      "credentials": [
+        {
+          "id": "alpacaApi",
+          "displayName": "Alpaca",
+          "fields": [
+            {
+              "id": "apiKeyId",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key ID",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "apiSecret",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Secret",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "environment",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Trading Environment",
+              "tooltip": "Paper and live accounts use different credentials. Existing credentials without this field are treated as paper.",
+              "variant": "MultiOption",
+              "initialValue": "paper",
+              "options": [
+                {
+                  "value": "paper",
+                  "displayName": "Paper"
+                },
+                {
+                  "value": "live",
+                  "displayName": "Live"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "icon": "Alpaca"
+        },
+        {
+          "id": "networkProxy",
+          "displayName": "Proxy",
+          "fields": [
+            {
+              "id": "protocol",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Protocol",
+              "variant": "MultiOption",
+              "initialValue": "http",
+              "options": [
+                {
+                  "value": "http",
+                  "displayName": "HTTP",
+                  "description": "CONNECT tunnel. Works for https targets."
+                },
+                {
+                  "value": "https",
+                  "displayName": "HTTPS",
+                  "description": "As HTTP, but the hop to the proxy is itself TLS."
+                },
+                {
+                  "value": "socks5",
+                  "displayName": "SOCKS5",
+                  "description": "What most residential/geo providers issue."
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "proxy.provider.com"
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 8080,
+              "min": 1,
+              "max": 65535,
+              "step": 1
+            },
+            {
+              "id": "username",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Username",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "NetworkProxy",
+          "optional": true
+        }
+      ],
+      "ui": {
+        "displayName": "Alpaca Market",
+        "description": "Reads Alpaca instruments, stock/crypto/option prices, news and market status.",
+        "icon": "Alpaca",
+        "accent": "port-DataList"
+      },
+      "fields": [
+        {
+          "id": "resource",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Resource",
+          "variant": "MultiOption",
+          "initialValue": "assets",
+          "options": [
+            {
+              "value": "assets",
+              "displayName": "Assets"
+            },
+            {
+              "value": "clock",
+              "displayName": "Market Clock"
+            },
+            {
+              "value": "calendar",
+              "displayName": "Calendar"
+            },
+            {
+              "value": "bars",
+              "displayName": "Bars"
+            },
+            {
+              "value": "trades",
+              "displayName": "Trades"
+            },
+            {
+              "value": "quotes",
+              "displayName": "Quotes"
+            },
+            {
+              "value": "snapshot",
+              "displayName": "Snapshot"
+            },
+            {
+              "value": "news",
+              "displayName": "News"
+            },
+            {
+              "value": "options",
+              "displayName": "Options"
+            },
+            {
+              "value": "screener",
+              "displayName": "Screener"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [],
+      "outputs": [],
+      "_derivatives": [
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "assets"
+          },
+          "fields": [
+            {
+              "id": "assetsAction",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Action",
+              "variant": "MultiOption",
+              "initialValue": "list",
+              "options": [
+                {
+                  "value": "list",
+                  "displayName": "List"
+                },
+                {
+                  "value": "get",
+                  "displayName": "Get"
+                }
+              ],
+              "kind": "tab"
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "assetsAction",
+                "operator": "==",
+                "value": "list"
+              },
+              "fields": [
+                {
+                  "id": "assetsQuery",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Search",
+                  "tooltip": "Optional local symbol/name filter over Alpaca's asset catalogue.",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "Apple or AAPL"
+                },
+                {
+                  "id": "assetsStatus",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Status",
+                  "variant": "MultiOption",
+                  "initialValue": "active",
+                  "options": [
+                    {
+                      "value": "active",
+                      "displayName": "Active"
+                    },
+                    {
+                      "value": "inactive",
+                      "displayName": "Inactive"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "assetsClass",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Asset Class",
+                  "variant": "MultiOption",
+                  "initialValue": "us_equity",
+                  "options": [
+                    {
+                      "value": "all",
+                      "displayName": "All"
+                    },
+                    {
+                      "value": "us_equity",
+                      "displayName": "US Equity"
+                    },
+                    {
+                      "value": "crypto",
+                      "displayName": "Crypto"
+                    },
+                    {
+                      "value": "us_option",
+                      "displayName": "US Option"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "assetsExchange",
+                  "advanced": true,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Exchange",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "NASDAQ"
+                },
+                {
+                  "id": "assetsLimit",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 20,
+                  "min": 1,
+                  "max": 1000,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "assets",
+                  "displayName": "Assets",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "assetsAction",
+                "operator": "==",
+                "value": "get"
+              },
+              "fields": [
+                {
+                  "id": "assetSymbolOrId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Symbol or Asset ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "AAPL"
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "asset",
+                  "displayName": "Asset",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "clock"
+          },
+          "outputs": [
+            {
+              "id": "clock",
+              "displayName": "Market Clock",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "calendar"
+          },
+          "fields": [
+            {
+              "id": "calendarStart",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Start",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-08-01"
+            },
+            {
+              "id": "calendarEnd",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "End",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-08-31"
+            },
+            {
+              "id": "calendarLimit",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Days",
+              "variant": "Integer",
+              "initialValue": 30,
+              "min": 1,
+              "max": 1000,
+              "step": 1
+            }
+          ],
+          "outputs": [
+            {
+              "id": "calendar",
+              "displayName": "Calendar",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "bars"
+          },
+          "fields": [
+            {
+              "id": "barsAssetClass",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Asset Class",
+              "variant": "MultiOption",
+              "initialValue": "stock",
+              "options": [
+                {
+                  "value": "stock",
+                  "displayName": "Stock"
+                },
+                {
+                  "value": "crypto",
+                  "displayName": "Crypto"
+                },
+                {
+                  "value": "option",
+                  "displayName": "Option"
+                }
+              ],
+              "kind": "tab"
+            },
+            {
+              "id": "barsSymbol",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Symbol",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "AAPL, BTC/USD, or AAPL260116C00200000"
+            },
+            {
+              "id": "barsUnit",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Timeframe",
+              "variant": "MultiOption",
+              "initialValue": "hour",
+              "options": [
+                {
+                  "value": "minute",
+                  "displayName": "Minute"
+                },
+                {
+                  "value": "hour",
+                  "displayName": "Hour"
+                },
+                {
+                  "value": "day",
+                  "displayName": "Day"
+                },
+                {
+                  "value": "week",
+                  "displayName": "Week"
+                },
+                {
+                  "value": "month",
+                  "displayName": "Month"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "barsMultiplier",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Multiplier",
+              "variant": "Integer",
+              "initialValue": 1,
+              "min": 1,
+              "max": 59,
+              "step": 1
+            },
+            {
+              "id": "barsStart",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Start",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-07-01T00:00:00Z"
+            },
+            {
+              "id": "barsEnd",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "End",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-08-01T00:00:00Z"
+            },
+            {
+              "id": "barsLimit",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Bars",
+              "variant": "Integer",
+              "initialValue": 200,
+              "min": 1,
+              "max": 5000,
+              "step": 1
+            },
+            {
+              "id": "barsFeed",
+              "advanced": true,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Stock Feed",
+              "tooltip": "Used only for stocks.",
+              "variant": "MultiOption",
+              "initialValue": "iex",
+              "options": [
+                {
+                  "value": "iex",
+                  "displayName": "IEX",
+                  "description": "Available on the basic data plan."
+                },
+                {
+                  "value": "sip",
+                  "displayName": "SIP",
+                  "description": "Consolidated US feed; subscription may be required."
+                },
+                {
+                  "value": "otc",
+                  "displayName": "OTC"
+                },
+                {
+                  "value": "boats",
+                  "displayName": "Overnight"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "bars",
+              "displayName": "Bars",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "trades"
+          },
+          "fields": [
+            {
+              "id": "tradesAssetClass",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Asset Class",
+              "variant": "MultiOption",
+              "initialValue": "stock",
+              "options": [
+                {
+                  "value": "stock",
+                  "displayName": "Stock"
+                },
+                {
+                  "value": "crypto",
+                  "displayName": "Crypto"
+                },
+                {
+                  "value": "option",
+                  "displayName": "Option"
+                }
+              ],
+              "kind": "tab"
+            },
+            {
+              "id": "tradesSymbol",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Symbol",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "tradesStart",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Start",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-07-01T00:00:00Z"
+            },
+            {
+              "id": "tradesEnd",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "End",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-08-01T00:00:00Z"
+            },
+            {
+              "id": "tradesLimit",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Trades",
+              "variant": "Integer",
+              "initialValue": 100,
+              "min": 1,
+              "max": 1000,
+              "step": 1
+            },
+            {
+              "id": "tradesFeed",
+              "advanced": true,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Stock Feed",
+              "tooltip": "Used only for stocks.",
+              "variant": "MultiOption",
+              "initialValue": "iex",
+              "options": [
+                {
+                  "value": "iex",
+                  "displayName": "IEX",
+                  "description": "Available on the basic data plan."
+                },
+                {
+                  "value": "sip",
+                  "displayName": "SIP",
+                  "description": "Consolidated US feed; subscription may be required."
+                },
+                {
+                  "value": "otc",
+                  "displayName": "OTC"
+                },
+                {
+                  "value": "boats",
+                  "displayName": "Overnight"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "trades",
+              "displayName": "Trades",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "quotes"
+          },
+          "fields": [
+            {
+              "id": "quotesAssetClass",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Asset Class",
+              "variant": "MultiOption",
+              "initialValue": "stock",
+              "options": [
+                {
+                  "value": "stock",
+                  "displayName": "Stock"
+                },
+                {
+                  "value": "crypto",
+                  "displayName": "Crypto"
+                }
+              ],
+              "kind": "tab"
+            },
+            {
+              "id": "quotesSymbol",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Symbol",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "quotesStart",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Start",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-07-01T00:00:00Z"
+            },
+            {
+              "id": "quotesEnd",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "End",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-08-01T00:00:00Z"
+            },
+            {
+              "id": "quotesLimit",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Quotes",
+              "variant": "Integer",
+              "initialValue": 100,
+              "min": 1,
+              "max": 1000,
+              "step": 1
+            },
+            {
+              "id": "quotesFeed",
+              "advanced": true,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Stock Feed",
+              "tooltip": "Used only for stocks.",
+              "variant": "MultiOption",
+              "initialValue": "iex",
+              "options": [
+                {
+                  "value": "iex",
+                  "displayName": "IEX",
+                  "description": "Available on the basic data plan."
+                },
+                {
+                  "value": "sip",
+                  "displayName": "SIP",
+                  "description": "Consolidated US feed; subscription may be required."
+                },
+                {
+                  "value": "otc",
+                  "displayName": "OTC"
+                },
+                {
+                  "value": "boats",
+                  "displayName": "Overnight"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "quotes",
+              "displayName": "Quotes",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "snapshot"
+          },
+          "fields": [
+            {
+              "id": "snapshotAssetClass",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Asset Class",
+              "variant": "MultiOption",
+              "initialValue": "stock",
+              "options": [
+                {
+                  "value": "stock",
+                  "displayName": "Stock"
+                },
+                {
+                  "value": "crypto",
+                  "displayName": "Crypto"
+                }
+              ],
+              "kind": "tab"
+            },
+            {
+              "id": "snapshotSymbol",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Symbol",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "snapshotFeed",
+              "advanced": true,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Stock Feed",
+              "tooltip": "Used only for stocks.",
+              "variant": "MultiOption",
+              "initialValue": "iex",
+              "options": [
+                {
+                  "value": "iex",
+                  "displayName": "IEX",
+                  "description": "Available on the basic data plan."
+                },
+                {
+                  "value": "sip",
+                  "displayName": "SIP",
+                  "description": "Consolidated US feed; subscription may be required."
+                },
+                {
+                  "value": "otc",
+                  "displayName": "OTC"
+                },
+                {
+                  "value": "boats",
+                  "displayName": "Overnight"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "snapshot",
+              "displayName": "Snapshot",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "news"
+          },
+          "fields": [
+            {
+              "id": "newsSymbols",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Symbols",
+              "tooltip": "Optional. Leave empty for recent market-wide news.",
+              "variant": "List",
+              "initialValue": []
+            },
+            {
+              "id": "newsStart",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Start",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-07-01T00:00:00Z"
+            },
+            {
+              "id": "newsEnd",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "End",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "2026-08-01T00:00:00Z"
+            },
+            {
+              "id": "newsLimit",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Articles",
+              "variant": "Integer",
+              "initialValue": 10,
+              "min": 1,
+              "max": 100,
+              "step": 1
+            }
+          ],
+          "outputs": [
+            {
+              "id": "news",
+              "displayName": "News",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "options"
+          },
+          "fields": [
+            {
+              "id": "optionsAction",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Action",
+              "variant": "MultiOption",
+              "initialValue": "listContracts",
+              "options": [
+                {
+                  "value": "listContracts",
+                  "displayName": "List Contracts"
+                },
+                {
+                  "value": "getContract",
+                  "displayName": "Get Contract"
+                },
+                {
+                  "value": "chain",
+                  "displayName": "Option Chain"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "optionsAction",
+                "operator": "==",
+                "value": "listContracts"
+              },
+              "fields": [
+                {
+                  "id": "contractsUnderlyings",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Underlying Symbols",
+                  "tooltip": "Optional symbols such as AAPL or SPY.",
+                  "variant": "List",
+                  "initialValue": []
+                },
+                {
+                  "id": "contractsStatus",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Status",
+                  "variant": "MultiOption",
+                  "initialValue": "active",
+                  "options": [
+                    {
+                      "value": "active",
+                      "displayName": "Active"
+                    },
+                    {
+                      "value": "inactive",
+                      "displayName": "Inactive"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "contractsType",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Type",
+                  "variant": "MultiOption",
+                  "initialValue": "all",
+                  "options": [
+                    {
+                      "value": "all",
+                      "displayName": "Calls & Puts"
+                    },
+                    {
+                      "value": "call",
+                      "displayName": "Calls"
+                    },
+                    {
+                      "value": "put",
+                      "displayName": "Puts"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "contractsExpiration",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Expiration Date",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "2026-12-18"
+                },
+                {
+                  "id": "contractsLimit",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Contracts",
+                  "variant": "Integer",
+                  "initialValue": 50,
+                  "min": 1,
+                  "max": 1000,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "contracts",
+                  "displayName": "Option Contracts",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "optionsAction",
+                "operator": "==",
+                "value": "getContract"
+              },
+              "fields": [
+                {
+                  "id": "contractSymbolOrId",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Contract Symbol or ID",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "contract",
+                  "displayName": "Option Contract",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "optionsAction",
+                "operator": "==",
+                "value": "chain"
+              },
+              "fields": [
+                {
+                  "id": "chainUnderlying",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Underlying Symbol",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "AAPL"
+                },
+                {
+                  "id": "chainType",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Type",
+                  "variant": "MultiOption",
+                  "initialValue": "all",
+                  "options": [
+                    {
+                      "value": "all",
+                      "displayName": "Calls & Puts"
+                    },
+                    {
+                      "value": "call",
+                      "displayName": "Calls"
+                    },
+                    {
+                      "value": "put",
+                      "displayName": "Puts"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "chainExpiration",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Expiration Date",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": "2026-12-18"
+                },
+                {
+                  "id": "chainStrikeFrom",
+                  "advanced": true,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Minimum Strike",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                },
+                {
+                  "id": "chainStrikeTo",
+                  "advanced": true,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Maximum Strike",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                },
+                {
+                  "id": "chainLimit",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Contracts",
+                  "variant": "Integer",
+                  "initialValue": 50,
+                  "min": 1,
+                  "max": 500,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "chain",
+                  "displayName": "Option Chain",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "screener"
+          },
+          "fields": [
+            {
+              "id": "screenerView",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "View",
+              "variant": "MultiOption",
+              "initialValue": "mostActive",
+              "options": [
+                {
+                  "value": "mostActive",
+                  "displayName": "Most Active"
+                },
+                {
+                  "value": "movers",
+                  "displayName": "Movers"
+                }
+              ],
+              "kind": "tab"
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "screenerView",
+                "operator": "==",
+                "value": "mostActive"
+              },
+              "fields": [
+                {
+                  "id": "activeBy",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Rank By",
+                  "variant": "MultiOption",
+                  "initialValue": "volume",
+                  "options": [
+                    {
+                      "value": "volume",
+                      "displayName": "Volume"
+                    },
+                    {
+                      "value": "trades",
+                      "displayName": "Trades"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "activeLimit",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Results",
+                  "variant": "Integer",
+                  "initialValue": 10,
+                  "min": 1,
+                  "max": 100,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "active",
+                  "displayName": "Most Active",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "screenerView",
+                "operator": "==",
+                "value": "movers"
+              },
+              "fields": [
+                {
+                  "id": "moversMarket",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Market",
+                  "variant": "MultiOption",
+                  "initialValue": "stocks",
+                  "options": [
+                    {
+                      "value": "stocks",
+                      "displayName": "Stocks"
+                    },
+                    {
+                      "value": "crypto",
+                      "displayName": "Crypto"
+                    }
+                  ],
+                  "kind": "select"
+                },
+                {
+                  "id": "moversLimit",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Max Per Side",
+                  "variant": "Integer",
+                  "initialValue": 10,
+                  "min": 1,
+                  "max": 100,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "movers",
+                  "displayName": "Movers",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "isConvertedToTool",
+            "operator": "==",
+            "value": true
+          },
+          "fields": [],
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "tools",
+              "displayName": "Alpaca Market Tools",
+              "variant": "ToolList"
+            }
+          ],
+          "ui": {
+            "accent": "port-Tool"
+          },
+          "replaces": [
+            "fields",
+            "inputs",
+            "outputs"
+          ],
+          "exclusive": true,
+          "_derivatives": []
+        }
+      ]
+    },
+    "Integrations.Alpaca.Trading": {
+      "id": "Integrations.Alpaca.Trading",
+      "toolCompatible": true,
+      "proxyCompatible": true,
+      "credentials": [
+        {
+          "id": "alpacaApi",
+          "displayName": "Alpaca",
+          "fields": [
+            {
+              "id": "apiKeyId",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Key ID",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "apiSecret",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "API Secret",
+              "variant": "Password",
+              "initialValue": ""
+            },
+            {
+              "id": "environment",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Trading Environment",
+              "tooltip": "Paper and live accounts use different credentials. Existing credentials without this field are treated as paper.",
+              "variant": "MultiOption",
+              "initialValue": "paper",
+              "options": [
+                {
+                  "value": "paper",
+                  "displayName": "Paper"
+                },
+                {
+                  "value": "live",
+                  "displayName": "Live"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "icon": "Alpaca"
+        },
+        {
+          "id": "networkProxy",
+          "displayName": "Proxy",
+          "fields": [
+            {
+              "id": "protocol",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Protocol",
+              "variant": "MultiOption",
+              "initialValue": "http",
+              "options": [
+                {
+                  "value": "http",
+                  "displayName": "HTTP",
+                  "description": "CONNECT tunnel. Works for https targets."
+                },
+                {
+                  "value": "https",
+                  "displayName": "HTTPS",
+                  "description": "As HTTP, but the hop to the proxy is itself TLS."
+                },
+                {
+                  "value": "socks5",
+                  "displayName": "SOCKS5",
+                  "description": "What most residential/geo providers issue."
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "host",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Host",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "proxy.provider.com"
+            },
+            {
+              "id": "port",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Port",
+              "variant": "Integer",
+              "initialValue": 8080,
+              "min": 1,
+              "max": 65535,
+              "step": 1
+            },
+            {
+              "id": "username",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Username",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "password",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Password",
+              "variant": "Password",
+              "initialValue": ""
+            }
+          ],
+          "icon": "NetworkProxy",
+          "optional": true
+        }
+      ],
+      "ui": {
+        "displayName": "Alpaca Trading",
+        "description": "Places, replaces and cancels Alpaca orders and closes positions.",
+        "icon": "Alpaca",
+        "accent": "port-Data"
+      },
+      "fields": [
+        {
+          "id": "action",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Action",
+          "variant": "MultiOption",
+          "initialValue": "submit",
+          "options": [
+            {
+              "value": "submit",
+              "displayName": "Submit Order"
+            },
+            {
+              "value": "replace",
+              "displayName": "Replace Order"
+            },
+            {
+              "value": "cancel",
+              "displayName": "Cancel Order"
+            },
+            {
+              "value": "cancelAll",
+              "displayName": "Cancel All Orders"
+            },
+            {
+              "value": "closePosition",
+              "displayName": "Close Position"
+            },
+            {
+              "value": "closeAll",
+              "displayName": "Close All Positions"
+            },
+            {
+              "value": "exerciseOption",
+              "displayName": "Exercise Option"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "isConvertedToTool",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "hidden": true,
+          "displayName": "Tool Mode",
+          "variant": "Boolean",
+          "initialValue": false
+        }
+      ],
+      "inputs": [],
+      "outputs": [],
+      "_derivatives": [
+        {
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "submit"
+          },
+          "fields": [
+            {
+              "id": "submitSymbol",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Symbol",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "AAPL"
+            },
+            {
+              "id": "submitSide",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Side",
+              "variant": "MultiOption",
+              "initialValue": "buy",
+              "options": [
+                {
+                  "value": "buy",
+                  "displayName": "Buy"
+                },
+                {
+                  "value": "sell",
+                  "displayName": "Sell"
+                }
+              ],
+              "kind": "tab"
+            },
+            {
+              "id": "orderType",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Order Type",
+              "variant": "MultiOption",
+              "initialValue": "market",
+              "options": [
+                {
+                  "value": "market",
+                  "displayName": "Market"
+                },
+                {
+                  "value": "limit",
+                  "displayName": "Limit"
+                },
+                {
+                  "value": "stop",
+                  "displayName": "Stop"
+                },
+                {
+                  "value": "stop_limit",
+                  "displayName": "Stop Limit"
+                },
+                {
+                  "value": "trailing_stop",
+                  "displayName": "Trailing Stop"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "submitTimeInForce",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Time in Force",
+              "variant": "MultiOption",
+              "initialValue": "day",
+              "options": [
+                {
+                  "value": "day",
+                  "displayName": "Day"
+                },
+                {
+                  "value": "gtc",
+                  "displayName": "Good Until Canceled"
+                },
+                {
+                  "value": "opg",
+                  "displayName": "Market Open"
+                },
+                {
+                  "value": "cls",
+                  "displayName": "Market Close"
+                },
+                {
+                  "value": "ioc",
+                  "displayName": "Immediate or Cancel"
+                },
+                {
+                  "value": "fok",
+                  "displayName": "Fill or Kill"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "extendedHours",
+              "advanced": true,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Extended Hours",
+              "tooltip": "Supported only for eligible limit orders and time-in-force combinations.",
+              "variant": "Boolean",
+              "initialValue": false
+            },
+            {
+              "id": "clientOrderId",
+              "advanced": true,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Client Order ID",
+              "tooltip": "Optional stable id used to reconcile an ambiguous transport failure.",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "submitConfirmLive",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Confirm Live Mutation",
+              "tooltip": "Required when the attached credential targets live trading. Paper trading ignores it.",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "orderType",
+                "operator": "==",
+                "value": "market"
+              },
+              "fields": [
+                {
+                  "id": "marketQuantity",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Quantity",
+                  "tooltip": "Provide Quantity or Notional, not both.",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                },
+                {
+                  "id": "marketNotional",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Notional",
+                  "tooltip": "Dollar amount. Provide Quantity or Notional, not both.",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "order",
+                  "displayName": "Order",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "orderType",
+                "operator": "==",
+                "value": "limit"
+              },
+              "fields": [
+                {
+                  "id": "limitQuantity",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Quantity",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                },
+                {
+                  "id": "limitPrice",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Limit Price",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "order",
+                  "displayName": "Order",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "orderType",
+                "operator": "==",
+                "value": "stop"
+              },
+              "fields": [
+                {
+                  "id": "stopQuantity",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Quantity",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                },
+                {
+                  "id": "stopPrice",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Stop Price",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "order",
+                  "displayName": "Order",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "orderType",
+                "operator": "==",
+                "value": "stop_limit"
+              },
+              "fields": [
+                {
+                  "id": "stopLimitQuantity",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Quantity",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                },
+                {
+                  "id": "stopLimitStopPrice",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Stop Price",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                },
+                {
+                  "id": "stopLimitLimitPrice",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Limit Price",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "order",
+                  "displayName": "Order",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "orderType",
+                "operator": "==",
+                "value": "trailing_stop"
+              },
+              "fields": [
+                {
+                  "id": "trailingQuantity",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Quantity",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                },
+                {
+                  "id": "trailingMode",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": true,
+                  "displayName": "Trail By",
+                  "variant": "MultiOption",
+                  "initialValue": "percent",
+                  "options": [
+                    {
+                      "value": "price",
+                      "displayName": "Price"
+                    },
+                    {
+                      "value": "percent",
+                      "displayName": "Percent"
+                    }
+                  ],
+                  "kind": "tab"
+                }
+              ],
+              "_derivatives": [
+                {
+                  "condition": {
+                    "fieldId": "trailingMode",
+                    "operator": "==",
+                    "value": "price"
+                  },
+                  "fields": [
+                    {
+                      "id": "trailingPrice",
+                      "advanced": false,
+                      "required": true,
+                      "reconcile": false,
+                      "displayName": "Trail Price",
+                      "variant": "Float",
+                      "initialValue": 0,
+                      "min": 0,
+                      "step": 0.1
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "order",
+                      "displayName": "Order",
+                      "variant": "Data"
+                    }
+                  ],
+                  "_derivatives": []
+                },
+                {
+                  "condition": {
+                    "fieldId": "trailingMode",
+                    "operator": "==",
+                    "value": "percent"
+                  },
+                  "fields": [
+                    {
+                      "id": "trailingPercent",
+                      "advanced": false,
+                      "required": true,
+                      "reconcile": false,
+                      "displayName": "Trail Percent",
+                      "variant": "Float",
+                      "initialValue": 0,
+                      "min": 0,
+                      "step": 0.1
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "order",
+                      "displayName": "Order",
+                      "variant": "Data"
+                    }
+                  ],
+                  "_derivatives": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "replace"
+          },
+          "fields": [
+            {
+              "id": "replaceOrderId",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Order ID",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "replaceQuantity",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "New Quantity",
+              "variant": "Float",
+              "initialValue": 0,
+              "min": 0,
+              "step": 0.1
+            },
+            {
+              "id": "replaceLimitPrice",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "New Limit Price",
+              "variant": "Float",
+              "initialValue": 0,
+              "min": 0,
+              "step": 0.1
+            },
+            {
+              "id": "replaceStopPrice",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "New Stop Price",
+              "variant": "Float",
+              "initialValue": 0,
+              "min": 0,
+              "step": 0.1
+            },
+            {
+              "id": "replaceTrail",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "New Trail",
+              "variant": "Float",
+              "initialValue": 0,
+              "min": 0,
+              "step": 0.1
+            },
+            {
+              "id": "replaceTimeInForce",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Time in Force",
+              "variant": "MultiOption",
+              "initialValue": "day",
+              "options": [
+                {
+                  "value": "day",
+                  "displayName": "Day"
+                },
+                {
+                  "value": "gtc",
+                  "displayName": "Good Until Canceled"
+                },
+                {
+                  "value": "opg",
+                  "displayName": "Market Open"
+                },
+                {
+                  "value": "cls",
+                  "displayName": "Market Close"
+                },
+                {
+                  "value": "ioc",
+                  "displayName": "Immediate or Cancel"
+                },
+                {
+                  "value": "fok",
+                  "displayName": "Fill or Kill"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "replaceClientOrderId",
+              "advanced": true,
+              "required": false,
+              "reconcile": false,
+              "displayName": "New Client Order ID",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "replaceConfirmLive",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Confirm Live Mutation",
+              "tooltip": "Required when the attached credential targets live trading. Paper trading ignores it.",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "outputs": [
+            {
+              "id": "order",
+              "displayName": "Replacement Order",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "cancel"
+          },
+          "fields": [
+            {
+              "id": "cancelOrderId",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Order ID",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "cancelConfirmLive",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Confirm Live Mutation",
+              "tooltip": "Required when the attached credential targets live trading. Paper trading ignores it.",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "displayName": "Cancellation",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "cancelAll"
+          },
+          "fields": [
+            {
+              "id": "cancelAllConfirmLive",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Confirm Live Mutation",
+              "tooltip": "Required when the attached credential targets live trading. Paper trading ignores it.",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "displayName": "Cancellation",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "closePosition"
+          },
+          "fields": [
+            {
+              "id": "closeSymbolOrId",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Symbol or Asset ID",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "closeAmountType",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Close",
+              "variant": "MultiOption",
+              "initialValue": "all",
+              "options": [
+                {
+                  "value": "all",
+                  "displayName": "Entire Position"
+                },
+                {
+                  "value": "quantity",
+                  "displayName": "Quantity"
+                },
+                {
+                  "value": "percentage",
+                  "displayName": "Percentage"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "closeConfirmLive",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Confirm Live Mutation",
+              "tooltip": "Required when the attached credential targets live trading. Paper trading ignores it.",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "closeAmountType",
+                "operator": "==",
+                "value": "all"
+              },
+              "outputs": [
+                {
+                  "id": "order",
+                  "displayName": "Closing Order",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "closeAmountType",
+                "operator": "==",
+                "value": "quantity"
+              },
+              "fields": [
+                {
+                  "id": "closeQuantity",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Quantity",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 0.1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "order",
+                  "displayName": "Closing Order",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "closeAmountType",
+                "operator": "==",
+                "value": "percentage"
+              },
+              "fields": [
+                {
+                  "id": "closePercentage",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Percentage",
+                  "variant": "Float",
+                  "initialValue": 0,
+                  "min": 0,
+                  "max": 100,
+                  "step": 0.1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "order",
+                  "displayName": "Closing Order",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "closeAll"
+          },
+          "fields": [
+            {
+              "id": "closeAllCancelOrders",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Cancel Open Orders First",
+              "variant": "Boolean",
+              "initialValue": false
+            },
+            {
+              "id": "closeAllConfirmLive",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Confirm Live Mutation",
+              "tooltip": "Required when the attached credential targets live trading. Paper trading ignores it.",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "displayName": "Close Result",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "exerciseOption"
+          },
+          "fields": [
+            {
+              "id": "exerciseSymbolOrId",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Option Symbol or Contract ID",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "exerciseConfirmLive",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Confirm Live Mutation",
+              "tooltip": "Required when the attached credential targets live trading. Paper trading ignores it.",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "displayName": "Exercise Result",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "isConvertedToTool",
+            "operator": "==",
+            "value": true
+          },
+          "fields": [],
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "tools",
+              "displayName": "Alpaca Trading Tools",
+              "variant": "ToolList"
+            }
+          ],
+          "ui": {
+            "accent": "port-Tool"
+          },
+          "replaces": [
+            "fields",
+            "inputs",
+            "outputs"
+          ],
+          "exclusive": true,
+          "_derivatives": []
         }
       ]
     },
@@ -5859,6 +8939,219 @@
           "displayName": "Language Model",
           "tooltip": "The language model instance used for this response, useful for chaining calls with the same model and settings.",
           "variant": "LanguageModel"
+        }
+      ]
+    },
+    "Integrations.Anthropic.ClaudeCode": {
+      "id": "Integrations.Anthropic.ClaudeCode",
+      "credentials": [],
+      "ui": {
+        "displayName": "Claude Code",
+        "description": "Runs the locally authenticated Claude Code agent, optionally with PretzelGraph tools.",
+        "icon": "Anthropic",
+        "accent": "port-LanguageModel"
+      },
+      "fields": [
+        {
+          "id": "workingDirectory",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Working Directory",
+          "tooltip": "Path relative to PRETZEL_AGENT_WORKSPACE_ROOT.",
+          "variant": "String",
+          "initialValue": ".",
+          "multiline": false,
+          "placeholder": ""
+        },
+        {
+          "id": "model",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Model",
+          "tooltip": "Claude Code model alias. The alias follows the latest model available to the authenticated account.",
+          "variant": "MultiOption",
+          "initialValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "displayName": "Default"
+            },
+            {
+              "value": "sonnet",
+              "displayName": "Latest Sonnet"
+            },
+            {
+              "value": "opus",
+              "displayName": "Latest Opus"
+            },
+            {
+              "value": "fable",
+              "displayName": "Latest Fable"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "effort",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Effort",
+          "tooltip": "Reasoning effort passed to Claude Code for this run.",
+          "variant": "MultiOption",
+          "initialValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "displayName": "Default"
+            },
+            {
+              "value": "low",
+              "displayName": "Low"
+            },
+            {
+              "value": "medium",
+              "displayName": "Medium"
+            },
+            {
+              "value": "high",
+              "displayName": "High"
+            },
+            {
+              "value": "xhigh",
+              "displayName": "Extra high"
+            },
+            {
+              "value": "max",
+              "displayName": "Max"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "timeoutSeconds",
+          "advanced": true,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Timeout",
+          "tooltip": "Maximum duration of the complete Claude Code run, in seconds.",
+          "variant": "Integer",
+          "initialValue": 300,
+          "min": 1,
+          "max": 3600,
+          "step": 1
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "messages",
+          "displayName": "Messages",
+          "tooltip": "Conversation history owned by PretzelGraph. A single Message is automatically wrapped into a list.",
+          "internal": false,
+          "variant": "MessageList",
+          "required": true
+        },
+        {
+          "id": "tools",
+          "displayName": "Tools",
+          "tooltip": "Optional PretzelGraph tools exposed to Claude Code through a temporary MCP bridge.",
+          "internal": false,
+          "variant": "ToolList",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "message",
+          "displayName": "Message",
+          "variant": "Message"
+        },
+        {
+          "id": "extras",
+          "displayName": "Extras",
+          "tooltip": "Provider execution metadata for the stateless agent run.",
+          "variant": "Data"
         }
       ]
     },
@@ -6664,108 +9957,76 @@
     "Integrations.HyperLiquid.Account": {
       "id": "Integrations.HyperLiquid.Account",
       "toolCompatible": true,
-      "proxyCompatible": true,
-      "credentials": [
-        {
-          "id": "networkProxy",
-          "displayName": "Proxy",
-          "fields": [
-            {
-              "id": "protocol",
-              "advanced": false,
-              "required": false,
-              "reconcile": false,
-              "displayName": "Protocol",
-              "variant": "MultiOption",
-              "initialValue": "http",
-              "options": [
-                {
-                  "value": "http",
-                  "displayName": "HTTP",
-                  "description": "CONNECT tunnel. Works for https targets."
-                },
-                {
-                  "value": "https",
-                  "displayName": "HTTPS",
-                  "description": "As HTTP, but the hop to the proxy is itself TLS."
-                },
-                {
-                  "value": "socks5",
-                  "displayName": "SOCKS5",
-                  "description": "What most residential/geo providers issue."
-                }
-              ],
-              "kind": "select"
-            },
-            {
-              "id": "host",
-              "advanced": false,
-              "required": true,
-              "reconcile": false,
-              "displayName": "Host",
-              "variant": "String",
-              "initialValue": "",
-              "multiline": false,
-              "placeholder": "proxy.provider.com"
-            },
-            {
-              "id": "port",
-              "advanced": false,
-              "required": true,
-              "reconcile": false,
-              "displayName": "Port",
-              "variant": "Integer",
-              "initialValue": 8080,
-              "min": 1,
-              "max": 65535,
-              "step": 1
-            },
-            {
-              "id": "username",
-              "advanced": false,
-              "required": false,
-              "reconcile": false,
-              "displayName": "Username",
-              "variant": "String",
-              "initialValue": "",
-              "multiline": false,
-              "placeholder": ""
-            },
-            {
-              "id": "password",
-              "advanced": false,
-              "required": false,
-              "reconcile": false,
-              "displayName": "Password",
-              "variant": "Password",
-              "initialValue": ""
-            }
-          ],
-          "icon": "NetworkProxy",
-          "optional": true
-        }
-      ],
+      "credentials": [],
       "ui": {
         "displayName": "HyperLiquid Account",
-        "description": "Reads HyperLiquid account state for a wallet address: positions, balance, open orders, fills. Public read-only — only a wallet address is required, never a private key.",
+        "description": "Reads normalized public account state, balances, positions, orders, fills and funding.",
         "icon": "HyperLiquid",
-        "accent": "port-Json",
+        "accent": "port-Data",
         "iconColor": "color-cyan-500"
       },
       "fields": [
+        {
+          "id": "resource",
+          "advanced": false,
+          "required": false,
+          "reconcile": true,
+          "displayName": "Resource",
+          "variant": "MultiOption",
+          "initialValue": "state",
+          "options": [
+            {
+              "value": "state",
+              "displayName": "Perpetual State"
+            },
+            {
+              "value": "positions",
+              "displayName": "Positions"
+            },
+            {
+              "value": "spotBalances",
+              "displayName": "Spot Balances"
+            },
+            {
+              "value": "openOrders",
+              "displayName": "Open Orders"
+            },
+            {
+              "value": "fills",
+              "displayName": "Fills"
+            },
+            {
+              "value": "funding",
+              "displayName": "Funding"
+            }
+          ],
+          "kind": "select"
+        },
         {
           "id": "address",
           "advanced": false,
           "required": true,
           "reconcile": false,
           "displayName": "Wallet Address",
-          "tooltip": "Public EVM wallet address. Read-only — no signing or private key involved.",
+          "tooltip": "Actual master or sub-account address. Read-only; an agent-wallet address usually returns empty account state.",
           "variant": "String",
           "initialValue": "",
           "multiline": false,
           "placeholder": "0x..."
         },
         {
+          "id": "dex",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Perpetual DEX",
+          "tooltip": "Optional HIP-3 DEX name. Empty selects Hyperliquid's original perpetual DEX.",
+          "variant": "String",
+          "initialValue": "",
+          "multiline": false,
+          "placeholder": "xyz"
+        },
+        {
           "id": "signalDependency",
           "advanced": false,
           "required": false,
@@ -6856,180 +10117,251 @@
         }
       ],
       "inputs": [],
-      "outputs": [
+      "outputs": [],
+      "_derivatives": [
         {
-          "id": "state",
-          "displayName": "Clearinghouse State",
-          "tooltip": "Full clearinghouseState response: margin summary, asset positions, withdrawable, etc.",
-          "variant": "Data"
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "state"
+          },
+          "outputs": [
+            {
+              "id": "state",
+              "displayName": "Perpetual State",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
         },
         {
-          "id": "positions",
-          "displayName": "Positions",
-          "tooltip": "Array of open positions extracted from clearinghouseState.assetPositions.",
-          "variant": "DataList"
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "positions"
+          },
+          "outputs": [
+            {
+              "id": "positions",
+              "displayName": "Positions",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
         },
         {
-          "id": "openOrders",
-          "displayName": "Open Orders",
-          "tooltip": "Array of currently resting orders for the address.",
-          "variant": "DataList"
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "spotBalances"
+          },
+          "outputs": [
+            {
+              "id": "spotBalances",
+              "displayName": "Spot Balances",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "openOrders"
+          },
+          "outputs": [
+            {
+              "id": "openOrders",
+              "displayName": "Open Orders",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "fills"
+          },
+          "fields": [
+            {
+              "id": "fillsLookbackHours",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Lookback (hours)",
+              "variant": "Integer",
+              "initialValue": 168,
+              "min": 1,
+              "max": 8760,
+              "step": 1
+            },
+            {
+              "id": "fillsLimit",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Results",
+              "variant": "Integer",
+              "initialValue": 100,
+              "min": 1,
+              "max": 2000,
+              "step": 1
+            },
+            {
+              "id": "fillsAggregateByTime",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Aggregate Partial Fills",
+              "variant": "Boolean",
+              "initialValue": true
+            }
+          ],
+          "outputs": [
+            {
+              "id": "fills",
+              "displayName": "Fills",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "funding"
+          },
+          "fields": [
+            {
+              "id": "fundingLookbackHours",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Lookback (hours)",
+              "variant": "Integer",
+              "initialValue": 168,
+              "min": 1,
+              "max": 8760,
+              "step": 1
+            },
+            {
+              "id": "fundingLimit",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Results",
+              "variant": "Integer",
+              "initialValue": 100,
+              "min": 1,
+              "max": 500,
+              "step": 1
+            }
+          ],
+          "outputs": [
+            {
+              "id": "funding",
+              "displayName": "Funding",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "isConvertedToTool",
+            "operator": "==",
+            "value": true
+          },
+          "fields": [
+            {
+              "id": "address",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Default Wallet Address",
+              "tooltip": "Optional default actual account address. Every tool call may override it.",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "0x..."
+            },
+            {
+              "id": "dex",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Default Perpetual DEX",
+              "tooltip": "Optional HIP-3 DEX used when a tool call does not specify one.",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "xyz"
+            }
+          ],
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "tools",
+              "displayName": "Hyperliquid Account Tools",
+              "variant": "ToolList"
+            }
+          ],
+          "ui": {
+            "accent": "port-Tool"
+          },
+          "replaces": [
+            "fields",
+            "inputs",
+            "outputs"
+          ],
+          "exclusive": true,
+          "_derivatives": []
         }
       ]
     },
     "Integrations.HyperLiquid.Market": {
       "id": "Integrations.HyperLiquid.Market",
       "toolCompatible": true,
-      "proxyCompatible": true,
-      "credentials": [
-        {
-          "id": "networkProxy",
-          "displayName": "Proxy",
-          "fields": [
-            {
-              "id": "protocol",
-              "advanced": false,
-              "required": false,
-              "reconcile": false,
-              "displayName": "Protocol",
-              "variant": "MultiOption",
-              "initialValue": "http",
-              "options": [
-                {
-                  "value": "http",
-                  "displayName": "HTTP",
-                  "description": "CONNECT tunnel. Works for https targets."
-                },
-                {
-                  "value": "https",
-                  "displayName": "HTTPS",
-                  "description": "As HTTP, but the hop to the proxy is itself TLS."
-                },
-                {
-                  "value": "socks5",
-                  "displayName": "SOCKS5",
-                  "description": "What most residential/geo providers issue."
-                }
-              ],
-              "kind": "select"
-            },
-            {
-              "id": "host",
-              "advanced": false,
-              "required": true,
-              "reconcile": false,
-              "displayName": "Host",
-              "variant": "String",
-              "initialValue": "",
-              "multiline": false,
-              "placeholder": "proxy.provider.com"
-            },
-            {
-              "id": "port",
-              "advanced": false,
-              "required": true,
-              "reconcile": false,
-              "displayName": "Port",
-              "variant": "Integer",
-              "initialValue": 8080,
-              "min": 1,
-              "max": 65535,
-              "step": 1
-            },
-            {
-              "id": "username",
-              "advanced": false,
-              "required": false,
-              "reconcile": false,
-              "displayName": "Username",
-              "variant": "String",
-              "initialValue": "",
-              "multiline": false,
-              "placeholder": ""
-            },
-            {
-              "id": "password",
-              "advanced": false,
-              "required": false,
-              "reconcile": false,
-              "displayName": "Password",
-              "variant": "Password",
-              "initialValue": ""
-            }
-          ],
-          "icon": "NetworkProxy",
-          "optional": true
-        }
-      ],
+      "credentials": [],
       "ui": {
         "displayName": "HyperLiquid Market",
-        "description": "Reads HyperLiquid market data: candle history, order book, mid prices and asset metadata.",
+        "description": "Reads normalized Hyperliquid perpetual and Spot markets, prices, candles and order books.",
         "icon": "HyperLiquid",
         "accent": "port-DataList",
         "iconColor": "color-cyan-500"
       },
       "fields": [
         {
-          "id": "coin",
-          "advanced": false,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Coin",
-          "tooltip": "HyperLiquid coin symbol (e.g. BTC, ETH, SOL).",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": "BTC"
-        },
-        {
-          "id": "interval",
+          "id": "resource",
           "advanced": false,
           "required": false,
-          "reconcile": false,
-          "displayName": "Interval",
-          "tooltip": "Candle interval. Used in direct mode and as the default for the getCandles tool.",
+          "reconcile": true,
+          "displayName": "Resource",
           "variant": "MultiOption",
-          "initialValue": "1h",
+          "initialValue": "markets",
           "options": [
             {
-              "value": "1m",
-              "displayName": "1 minute"
+              "value": "markets",
+              "displayName": "Markets"
             },
             {
-              "value": "5m",
-              "displayName": "5 minutes"
+              "value": "mids",
+              "displayName": "Mid Prices"
             },
             {
-              "value": "15m",
-              "displayName": "15 minutes"
+              "value": "candles",
+              "displayName": "Candles"
             },
             {
-              "value": "1h",
-              "displayName": "1 hour"
-            },
-            {
-              "value": "4h",
-              "displayName": "4 hours"
-            },
-            {
-              "value": "1d",
-              "displayName": "1 day"
+              "value": "orderBook",
+              "displayName": "Order Book"
             }
           ],
           "kind": "select"
-        },
-        {
-          "id": "lookbackHours",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Lookback (hours)",
-          "tooltip": "How far back to fetch candles, in hours. The end time is always 'now'.",
-          "variant": "Integer",
-          "initialValue": 24,
-          "min": 1,
-          "max": 8760,
-          "step": 1
         },
         {
           "id": "signalDependency",
@@ -7122,18 +10454,299 @@
         }
       ],
       "inputs": [],
-      "outputs": [
+      "outputs": [],
+      "_derivatives": [
         {
-          "id": "candles",
-          "displayName": "Candles",
-          "tooltip": "Array of OHLCV candles: { t, T, s, i, o, c, h, l, v, n }.",
-          "variant": "DataList"
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "markets"
+          },
+          "fields": [
+            {
+              "id": "marketKind",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Market Type",
+              "variant": "MultiOption",
+              "initialValue": "perpetual",
+              "options": [
+                {
+                  "value": "perpetual",
+                  "displayName": "Perpetuals"
+                },
+                {
+                  "value": "spot",
+                  "displayName": "Spot"
+                }
+              ],
+              "kind": "tab"
+            },
+            {
+              "id": "marketsDex",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Perpetual DEX",
+              "tooltip": "Optional HIP-3 DEX name. Empty selects Hyperliquid's original perpetual DEX. Ignored for Spot.",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "xyz"
+            },
+            {
+              "id": "marketsLimit",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Results",
+              "variant": "Integer",
+              "initialValue": 50,
+              "min": 1,
+              "max": 500,
+              "step": 1
+            }
+          ],
+          "outputs": [
+            {
+              "id": "markets",
+              "displayName": "Markets",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
         },
         {
-          "id": "summary",
-          "displayName": "Summary",
-          "tooltip": "Convenience summary: { coin, interval, count, firstClose, lastClose, change, changePct }.",
-          "variant": "Data"
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "mids"
+          },
+          "fields": [
+            {
+              "id": "midsDex",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Perpetual DEX",
+              "tooltip": "Optional HIP-3 DEX name. Empty selects the original DEX and includes Spot mids.",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "xyz"
+            },
+            {
+              "id": "midsCoin",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Coin",
+              "tooltip": "Optional exact symbol or pair. Leave empty to browse prices.",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "BTC"
+            },
+            {
+              "id": "midsLimit",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Results",
+              "variant": "Integer",
+              "initialValue": 100,
+              "min": 1,
+              "max": 1000,
+              "step": 1
+            }
+          ],
+          "outputs": [
+            {
+              "id": "mids",
+              "displayName": "Mid Prices",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "candles"
+          },
+          "fields": [
+            {
+              "id": "candlesCoin",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Coin",
+              "tooltip": "Perpetual symbol (BTC), Spot pair (PURR/USDC or @107), or HIP-3 name (dex:coin).",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "BTC"
+            },
+            {
+              "id": "candlesInterval",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Interval",
+              "variant": "MultiOption",
+              "initialValue": "1h",
+              "options": [
+                {
+                  "value": "1m",
+                  "displayName": "1 minute"
+                },
+                {
+                  "value": "3m",
+                  "displayName": "3 minutes"
+                },
+                {
+                  "value": "5m",
+                  "displayName": "5 minutes"
+                },
+                {
+                  "value": "15m",
+                  "displayName": "15 minutes"
+                },
+                {
+                  "value": "30m",
+                  "displayName": "30 minutes"
+                },
+                {
+                  "value": "1h",
+                  "displayName": "1 hour"
+                },
+                {
+                  "value": "2h",
+                  "displayName": "2 hours"
+                },
+                {
+                  "value": "4h",
+                  "displayName": "4 hours"
+                },
+                {
+                  "value": "8h",
+                  "displayName": "8 hours"
+                },
+                {
+                  "value": "12h",
+                  "displayName": "12 hours"
+                },
+                {
+                  "value": "1d",
+                  "displayName": "1 day"
+                },
+                {
+                  "value": "3d",
+                  "displayName": "3 days"
+                },
+                {
+                  "value": "1w",
+                  "displayName": "1 week"
+                },
+                {
+                  "value": "1M",
+                  "displayName": "1 month"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "candlesLookbackHours",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Lookback (hours)",
+              "tooltip": "Requested window ending now. Hyperliquid may return only its bounded recent candle history.",
+              "variant": "Integer",
+              "initialValue": 24,
+              "min": 1,
+              "max": 8760,
+              "step": 1
+            }
+          ],
+          "outputs": [
+            {
+              "id": "candles",
+              "displayName": "Candles",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "orderBook"
+          },
+          "fields": [
+            {
+              "id": "orderBookCoin",
+              "advanced": false,
+              "required": true,
+              "reconcile": false,
+              "displayName": "Coin",
+              "tooltip": "Perpetual symbol, Spot pair/@index, or HIP-3 dex:coin name.",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "BTC"
+            },
+            {
+              "id": "orderBookDepth",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Depth",
+              "tooltip": "Price levels per side, best first. Hyperliquid returns at most 20.",
+              "variant": "Integer",
+              "initialValue": 15,
+              "min": 1,
+              "max": 20,
+              "step": 1
+            }
+          ],
+          "outputs": [
+            {
+              "id": "orderBook",
+              "displayName": "Order Book",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "isConvertedToTool",
+            "operator": "==",
+            "value": true
+          },
+          "fields": [],
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "tools",
+              "displayName": "Hyperliquid Market Tools",
+              "variant": "ToolList"
+            }
+          ],
+          "ui": {
+            "accent": "port-Tool"
+          },
+          "replaces": [
+            "fields",
+            "inputs",
+            "outputs"
+          ],
+          "exclusive": true,
+          "_derivatives": []
         }
       ]
     },
@@ -8910,6 +12523,260 @@
           "displayName": "Language Model",
           "tooltip": "The language model instance used for this response, useful for chaining calls with the same model and settings.",
           "variant": "LanguageModel"
+        }
+      ]
+    },
+    "Integrations.OpenAI.Codex": {
+      "id": "Integrations.OpenAI.Codex",
+      "credentials": [],
+      "ui": {
+        "displayName": "Codex",
+        "description": "Runs the locally authenticated Codex coding agent, optionally with PretzelGraph tools.",
+        "icon": "OpenAI",
+        "accent": "port-LanguageModel"
+      },
+      "fields": [
+        {
+          "id": "workingDirectory",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Working Directory",
+          "tooltip": "Path relative to PRETZEL_AGENT_WORKSPACE_ROOT.",
+          "variant": "String",
+          "initialValue": ".",
+          "multiline": false,
+          "placeholder": ""
+        },
+        {
+          "id": "model",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Model",
+          "tooltip": "Model used by Codex. Availability depends on the authenticated account.",
+          "variant": "MultiOption",
+          "initialValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "displayName": "Default"
+            },
+            {
+              "value": "gpt-5.6-sol",
+              "displayName": "GPT-5.6 Sol"
+            },
+            {
+              "value": "gpt-5.6-terra",
+              "displayName": "GPT-5.6 Terra"
+            },
+            {
+              "value": "gpt-5.6-luna",
+              "displayName": "GPT-5.6 Luna"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "effort",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Effort",
+          "tooltip": "Higher reasoning effort can improve difficult work but takes longer and uses more tokens.",
+          "variant": "MultiOption",
+          "initialValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "displayName": "Default"
+            },
+            {
+              "value": "minimal",
+              "displayName": "Minimal"
+            },
+            {
+              "value": "low",
+              "displayName": "Low"
+            },
+            {
+              "value": "medium",
+              "displayName": "Medium"
+            },
+            {
+              "value": "high",
+              "displayName": "High"
+            },
+            {
+              "value": "xhigh",
+              "displayName": "Extra high"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "speed",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Speed",
+          "tooltip": "Fast uses the Codex Fast service tier when supported and consumes subscription credits faster.",
+          "variant": "MultiOption",
+          "initialValue": "standard",
+          "options": [
+            {
+              "value": "standard",
+              "displayName": "Standard"
+            },
+            {
+              "value": "fast",
+              "displayName": "Fast"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "permissionMode",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Permissions",
+          "variant": "MultiOption",
+          "initialValue": "read-only",
+          "options": [
+            {
+              "value": "read-only",
+              "displayName": "Read only"
+            },
+            {
+              "value": "workspace-write",
+              "displayName": "Edit workspace"
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "timeoutSeconds",
+          "advanced": true,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Timeout",
+          "tooltip": "Maximum duration of the complete Codex run, in seconds.",
+          "variant": "Integer",
+          "initialValue": 300,
+          "min": 1,
+          "max": 3600,
+          "step": 1
+        },
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "id": "messages",
+          "displayName": "Messages",
+          "tooltip": "Conversation history owned by PretzelGraph. A single Message is automatically wrapped into a list.",
+          "internal": false,
+          "variant": "MessageList",
+          "required": true
+        },
+        {
+          "id": "tools",
+          "displayName": "Tools",
+          "tooltip": "Optional PretzelGraph tools exposed to Codex through a temporary MCP bridge.",
+          "internal": false,
+          "variant": "ToolList",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "id": "message",
+          "displayName": "Message",
+          "variant": "Message"
+        },
+        {
+          "id": "extras",
+          "displayName": "Extras",
+          "tooltip": "Provider execution metadata for the stateless agent run.",
+          "variant": "Data"
         }
       ]
     },
@@ -11242,8 +15109,18 @@
           "inputs": [],
           "outputs": [
             {
-              "id": "tools",
-              "displayName": "Polymarket Tools",
+              "id": "discoveryTools",
+              "displayName": "Discovery Tools",
+              "variant": "ToolList"
+            },
+            {
+              "id": "exchangeTools",
+              "displayName": "Exchange Tools",
+              "variant": "ToolList"
+            },
+            {
+              "id": "analyticsTools",
+              "displayName": "Analytics Tools",
               "variant": "ToolList"
             }
           ],

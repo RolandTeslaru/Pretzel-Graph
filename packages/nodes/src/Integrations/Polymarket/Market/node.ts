@@ -22,9 +22,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         // defineTool is terminal and total-replacing, so tool mode is a disjoint arm — none of the
         // run-mode fields exist here, and there's no reconciliation to do. One entry point.
         if (fields.isConvertedToTool === true)
-            return {
-                tools: buildTools(polymarket),
-            } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+            return buildTools(polymarket) satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
         if (fields.action === "search") {
 
