@@ -1,9 +1,6 @@
 import { CanActivate, ExecutionContext as NestExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { Token } from '@/domain/Token';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 export interface InternalAuthenticatedRequest extends Request {
     internal: {

@@ -1,8 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Auth } from '@pretzel-graph/shared/domain';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';

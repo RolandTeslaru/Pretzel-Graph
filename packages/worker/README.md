@@ -217,6 +217,7 @@ The surface is **tiered by intended audience** — this is a convention, not enf
 | `abortAPI.signal` / `abort()` | cancellation (+ the `this.AbortablePromise` helper) |
 | `workflowQueryAPI.getNodesByBlueprint(id)` / `getNodeOutput(nodeId, portId)` | query the graph / read another node's output |
 | `dependencyAPI.getPublished/getDraft(workflowId)` | resolve workflow dependencies |
+| `agentToolBridgeAPI.bind(tools)` | expose this run's live tools to a local coding-agent process through authenticated MCP |
 | read-only `session` / `workflowData` / `workflowId` / `executionId` / `chat_id` / `workflowCache` | execution state |
 
 ### Tier 2 — output & propagation (nodes that emit beyond a plain `onRun` return)
@@ -238,6 +239,14 @@ The surface is **tiered by intended audience** — this is a convention, not enf
 | `subWorkflowAPI.createEnv()` | compile + run a nested workflow | SubWorkflow.Execute |
 
 **Signal-path rule:** to fan out downstream, use **`propagationAPI`** (edge-aware — it updates `edge_state`). `schedulerAPI.signalNode` is the **raw** primitive that *skips* edge bookkeeping; it's only for plumbing nodes that manage their own edge state. Don't reach for `schedulerAPI` from an integration node.
+
+### Local coding-agent bridge
+
+The Codex and Claude Code nodes launch their installed CLIs as complete agent processes. They use the CLI's cached local authentication; backend API-key environment variables are not forwarded. A connected `ToolList` is registered on a loopback-only MCP endpoint with a per-run bearer token, then removed when the node completes or the execution aborts.
+
+- `PRETZEL_AGENT_WORKSPACE_ROOT` constrains allowed working directories. If unset, the worker uses the nearest Git root above its current directory.
+- `PRETZEL_CODEX_BIN` and `PRETZEL_CLAUDE_BIN` can override the executable paths.
+- Codex defaults to a read-only sandbox and can be switched to workspace-write on the node. Claude Code runs with `--dangerously-skip-permissions`, so it inherits the full filesystem and command permissions of the worker's OS user.
 
 ---
 

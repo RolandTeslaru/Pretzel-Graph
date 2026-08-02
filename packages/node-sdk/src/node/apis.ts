@@ -4,6 +4,7 @@ import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import type { CompilationContext } from "../compiler-context";
 import type { InferCredentialValues, InferFieldValues } from "../types";
 import type { RuntimeNode } from "./index";
+import type { LC } from "../langchain";
 
 // Publishes execution events over the websocket, and lets a node emit-then-block until a
 // matching signal event comes back (e.g. human review, external webhook confirmation).
@@ -125,4 +126,26 @@ export interface SubWorkflowAPI {
 export interface DependencyAPI {
     getPublished: (workflowId: Workflow.Id) => Workflow.Dependency.Publication,
     getDraft:     (workflowId: Workflow.Id) => Workflow.Dependency.Draft,
+}
+
+/**
+ * A short-lived MCP endpoint backed by live tools from the current execution.
+ * The endpoint is loopback-only; callers must still send the bearer token.
+ */
+export interface AgentToolBinding {
+    readonly url:         string,
+    readonly bearerToken: string,
+    readonly toolNames:   readonly string[],
+    close: () => Promise<void>,
+}
+
+/**
+ * Makes in-memory LangChain tools available to an external agent process through MCP.
+ * Implemented by the worker so transport lifetime follows the workflow execution.
+ */
+export interface AgentToolBridgeAPI {
+    bind: (
+        tools: readonly LC.Tool[],
+        options?: { timeoutMs?: number },
+    ) => Promise<AgentToolBinding>,
 }

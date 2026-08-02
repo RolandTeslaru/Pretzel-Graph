@@ -171,13 +171,20 @@ export const BUNDLE_DRAWERS = {
     displayName: "Alpaca",
     id: "alpaca",
     icon: "Alpaca",
-    blueprintIds: ["Integrations.Alpaca.Market"]
+    blueprintIds: [
+      "Integrations.Alpaca.Market",
+      "Integrations.Alpaca.Account",
+      "Integrations.Alpaca.Trading"
+    ]
   },
   anthropic: {
     displayName: "Anthropic",
     id: "anthropic",
     icon: "Anthropic",
-    blueprintIds: ["Integrations.Anthropic.Chat"]
+    blueprintIds: [
+      "Integrations.Anthropic.Chat",
+      "Integrations.Anthropic.ClaudeCode"
+    ]
   },
   apify: {
     displayName: "Apify",
@@ -525,7 +532,10 @@ export const BUNDLE_DRAWERS = {
     displayName: "OpenAI",
     id: "openai",
     icon: "OpenAI",
-    blueprintIds: ["Integrations.OpenAI.Chat"]
+    blueprintIds: [
+      "Integrations.OpenAI.Chat",
+      "Integrations.OpenAI.Codex"
+    ]
   },
   openrouter: {
     displayName: "OpenRouter",

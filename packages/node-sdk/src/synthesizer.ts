@@ -181,13 +181,13 @@ export class Synthesizer {
     ): any {
         switch (input.variant) {
             case "Message":
-                return this.coerceMessage("human", staticValue as string);
+                return this.coerceMessage("human", staticValue as LC.BaseMessage | string);
             case "MessageList":
                 if(Array.isArray(staticValue)){
                     if(staticValue.every(el => typeof el === "string")){
                         return staticValue.map(str => this.coerceMessage("human", str));
                     }
-                    else if(staticValue.every(el => typeof el === "object" && "content" in el && typeof el.content === "string")){
+                    else if(staticValue.every(el => el !== null && typeof el === "object" && "content" in el && typeof el.content === "string")){
                         return staticValue.map(msgObj => this.coerceMessage("human", msgObj as LC.BaseMessage | string));
                     }
                     else {
@@ -205,6 +205,11 @@ export class Synthesizer {
 
             case "Document":
                 return new LC.Document({ pageContent: String(staticValue) });
+
+            case "Data":
+            case "DataList":
+            case "DataFrame":
+                return staticValue;
 
             case "LanguageModel":
             case "Embeddings":

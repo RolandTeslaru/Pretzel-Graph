@@ -11,5 +11,13 @@ export const Alpaca = defineCredential({
         FieldBuilder.Password("apiSecret", "API Secret", {
             required: true
         }),
+        FieldBuilder.MultiOption("environment", "Trading Environment", {
+            options: [
+                { value: "paper", displayName: "Paper" },
+                { value: "live",  displayName: "Live"  },
+            ],
+            initialValue: "paper",
+            tooltip: "Paper and live accounts use different credentials. Existing credentials without this field are treated as paper.",
+        }),
     ],
 })
