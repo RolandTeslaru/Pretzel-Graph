@@ -12,6 +12,7 @@ import {
     EnclosingNodeAPI,
     SubWorkflowAPI,
     DependencyAPI,
+    AgentToolBridgeAPI,
 } from "./apis";
 import { HTTP } from "../domain/http";
 import { NetworkProxy } from "../domain/networkProxy";
@@ -42,4 +43,5 @@ export interface ExecutionContext {
     readonly dependencyAPI:           DependencyAPI,
     readonly httpAPI:                 HTTP.ClientAPI,
     readonly proxyAPI:                NetworkProxy.API,
+    readonly agentToolBridgeAPI:      AgentToolBridgeAPI,
 }

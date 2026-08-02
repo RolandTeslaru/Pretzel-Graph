@@ -1,12 +1,13 @@
+// Must stay first: populates process.env from the repo-root .env before any
+// module that reads it at import time is evaluated.
+import './load-env';
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as express from 'express';
 import { WsAdapter } from '@nestjs/platform-ws';
-import dotenv from 'dotenv';
 import path from 'path';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
-
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 CatalogueService.setNodesRoot(path.resolve(__dirname, '../../nodes/src'));
 
