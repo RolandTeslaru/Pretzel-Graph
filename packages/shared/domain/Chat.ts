@@ -411,6 +411,24 @@ export namespace Chat {
             )
             return data
         }
+
+        export namespace ListByWorkflow {
+            export const Request = z.object({
+                workflow_id: Workflow.Id,
+            })
+            export type Request = z.infer<typeof Request>
+
+            export const Response = z.object({
+                chats: z.array(Chat.Schema),
+            })
+            export type Response = z.infer<typeof Response>
+        }
+        export async function listByWorkflow(api: AxiosInstance, req: ListByWorkflow.Request): Promise<ListByWorkflow.Response> {
+            const { data } = await api.post<ListByWorkflow.Response>(
+                "/api/chat/list-by-workflow", req
+            )
+            return data
+        }
     }
 }
 export type Chat = z.infer<typeof Chat.Schema>

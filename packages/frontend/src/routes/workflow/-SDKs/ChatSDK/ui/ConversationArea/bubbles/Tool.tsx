@@ -1,16 +1,11 @@
 import { Chat } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { motion } from 'motion/react'
 
 const ToolBubble = ({ message }: { message: Chat.Message.Tool }) => {
     const isSuccess = message.data.status === "success";
 
     return (
-        <motion.div
-            initial={{ opacity: 0, height: 0, scale: 0.95 }}
-            animate={{ opacity: 1, height: 'auto', scale: 1 }}
-            className="flex flex-col items-start w-full gap-1"
-        >
+        <div className="flex flex-col items-start w-full gap-1">
             <div className="flex flex-row gap-2 bg-(--port-Tool)/10 border border-(--port-Tool)/20 rounded-lg px-1 h-7 text-xs text-muted-foreground w-fit max-w-[90%]">
                 <div className='h-fit my-auto pl-1'>
                     {isSuccess ? (
@@ -38,7 +33,7 @@ const ToolBubble = ({ message }: { message: Chat.Message.Tool }) => {
                     {message.data.error}
                 </div>
             )}
-        </motion.div>
+        </div>
     )
 }
 

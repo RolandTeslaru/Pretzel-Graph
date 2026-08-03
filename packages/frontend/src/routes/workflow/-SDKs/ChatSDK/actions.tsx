@@ -1,4 +1,4 @@
-import { Chat, Execution, SystemError } from "@pretzel-graph/shared/domain";
+import { Chat, Execution, SystemError, Workflow } from "@pretzel-graph/shared/domain";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import type { ChatSDKImpl } from "./sdk";
 import { toast } from "sonner";
@@ -87,20 +87,27 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
         },
 
         chat: {
-            getAll: async () => {
+            listByWorkflow: async (workflowId: Workflow.Id) => {
                 try {
-                    const { chats } = await Chat.API.list(api, {});
+                    const { chats } = await Chat.API.listByWorkflow(api, { workflow_id: workflowId });
+
                     sdk.setState(s => {
+                        s.chats = {};
                         chats.forEach(chat => {
-                            if (!s.chats[chat.id]) {
-                                s.chats[chat.id] = chat;
-                            }
-                        })
-                    })
+                            s.chats[chat.id] = chat;
+                        });
+
+                        if (!s.chats[s.currentChatId]) {
+                            s.currentChatId = Chat.createId();
+                            s.messages = [];
+                            s.messagesRecord = {};
+                        }
+                    });
+
                     return true;
                 } catch (err) {
                     toast.error(SystemError.messageFrom(err));
-                    console.error("Failed to get chats", err);
+                    console.error("Failed to list chats by workflow", err);
                     return false;
                 }
             },
@@ -224,7 +231,7 @@ export interface ChatSDKActions {
         }) => Promise<void>
     }
     chat: {
-        getAll: () => Promise<boolean>
+        listByWorkflow: (workflowId: Workflow.Id) => Promise<boolean>
         load: (chatId: Chat.Id) => Promise<void>
         new: () => void
         clearMessages: () => Promise<void>
