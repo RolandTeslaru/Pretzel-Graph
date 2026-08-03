@@ -1,6 +1,6 @@
 {
-  "version": "1785749598913",
-  "generatedAt": "2026-08-03T09:33:18.913Z",
+  "version": "1785790140072",
+  "generatedAt": "2026-08-03T20:49:00.072Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -2850,17 +2850,58 @@
           "kind": "select"
         }
       ],
-      "inputs": [
+      "inputs": [],
+      "outputs": [],
+      "_derivatives": [
         {
-          "id": "input",
-          "displayName": "Input",
-          "internal": false,
-          "polymorphicGroupId": "portal",
-          "variant": "Unresolved",
-          "required": false
+          "condition": {
+            "fieldId": "direction",
+            "operator": "==",
+            "value": "in"
+          },
+          "inputs": [
+            {
+              "id": "input",
+              "displayName": "Input",
+              "internal": false,
+              "polymorphicGroupId": "portal",
+              "variant": "Unresolved",
+              "required": false
+            }
+          ],
+          "ui": {
+            "icon": "PortalIn"
+          },
+          "replaces": [
+            "inputs",
+            "outputs"
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "direction",
+            "operator": "==",
+            "value": "out"
+          },
+          "outputs": [
+            {
+              "id": "output",
+              "displayName": "Output",
+              "polymorphicGroupId": "portal",
+              "variant": "Unresolved"
+            }
+          ],
+          "ui": {
+            "icon": "PortalOut"
+          },
+          "replaces": [
+            "inputs",
+            "outputs"
+          ],
+          "_derivatives": []
         }
-      ],
-      "outputs": []
+      ]
     },
     "Core.Routing.Router": {
       "id": "Core.Routing.Router",
@@ -3409,7 +3450,38 @@
           "required": false
         }
       ],
-      "outputs": []
+      "outputs": [],
+      "_derivatives": [
+        {
+          "condition": {
+            "fieldId": "mode",
+            "operator": "==",
+            "value": "stop"
+          },
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "mode",
+            "operator": "==",
+            "value": "error"
+          },
+          "fields": [
+            {
+              "id": "message",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Error Message",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": true,
+              "placeholder": "Workflow terminated."
+            }
+          ],
+          "_derivatives": []
+        }
+      ]
     },
     "Core.SubWorkflow.Execute": {
       "id": "Core.SubWorkflow.Execute",
@@ -4479,6 +4551,29 @@
           "id": "message",
           "displayName": "Message",
           "variant": "Message"
+        }
+      ],
+      "_derivatives": [
+        {
+          "condition": {
+            "fieldId": "role",
+            "operator": "==",
+            "value": "Tool"
+          },
+          "fields": [
+            {
+              "id": "toolCallId",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Tool Call ID",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "Required for Tool messages"
+            }
+          ],
+          "_derivatives": []
         }
       ]
     },
@@ -9143,382 +9238,6 @@
         }
       ]
     },
-    "Integrations.Coinbase.Market": {
-      "id": "Integrations.Coinbase.Market",
-      "toolCompatible": true,
-      "credentials": [],
-      "ui": {
-        "displayName": "DeFi Market Data",
-        "description": "Fetches live DeFi market data: Pyth for real-time asset prices, DeFiLlama for protocol TVL and analytics.",
-        "icon": "Coinbase",
-        "accent": "port-Json"
-      },
-      "fields": [
-        {
-          "id": "query",
-          "advanced": false,
-          "required": true,
-          "reconcile": false,
-          "displayName": "Query",
-          "tooltip": "For Pyth: a coin symbol (e.g. BTC, ETH, SOL). For DeFiLlama: a protocol slug (e.g. uniswap, aave, curve).",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": "BTC  or  uniswap"
-        },
-        {
-          "id": "dataSource",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Source",
-          "tooltip": "Pyth returns live price data for crypto assets. DeFiLlama returns TVL and chain breakdown for DeFi protocols.",
-          "variant": "MultiOption",
-          "initialValue": "pyth",
-          "options": [
-            {
-              "value": "pyth",
-              "displayName": "Pyth — Asset Price"
-            },
-            {
-              "value": "defillama",
-              "displayName": "DeFiLlama — Protocol TVL"
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "signalDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Signal Dependency",
-          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All signals required",
-              "description": "Fire only once every upstream signal has arrived."
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one signal required",
-              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
-            },
-            {
-              "value": "XOR",
-              "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "Wait & Join",
-              "description": "Wait until every wired input port has resolved, then read all of them."
-            },
-            {
-              "value": "OR",
-              "displayName": "Follow Trigger",
-              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "onErrorStrategy",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "On Error",
-          "tooltip": "What happens when this node's execution throws.",
-          "variant": "MultiOption",
-          "initialValue": "propagate",
-          "options": [
-            {
-              "value": "terminate",
-              "displayName": "Terminate workflow",
-              "description": "Fail the whole run."
-            },
-            {
-              "value": "propagate",
-              "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges."
-            },
-            {
-              "value": "do_nothing",
-              "displayName": "Do nothing",
-              "description": "Swallow the error — no signal, no termination. Downstream stalls."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "isConvertedToTool",
-          "advanced": false,
-          "required": false,
-          "reconcile": true,
-          "hidden": true,
-          "displayName": "Tool Mode",
-          "variant": "Boolean",
-          "initialValue": false
-        }
-      ],
-      "inputs": [],
-      "outputs": [
-        {
-          "id": "price",
-          "displayName": "Price (USD)",
-          "tooltip": "Numeric USD price. Only populated when Data Source is Pyth.",
-          "variant": "Data"
-        },
-        {
-          "id": "data",
-          "displayName": "Full Data",
-          "tooltip": "Complete parsed response from the selected data source.",
-          "variant": "Data"
-        }
-      ]
-    },
-    "Integrations.Coinbase.Token": {
-      "id": "Integrations.Coinbase.Token",
-      "toolCompatible": true,
-      "credentials": [
-        {
-          "id": "coinbaseApi",
-          "displayName": "Coinbase",
-          "fields": [
-            {
-              "id": "cdpKeyId",
-              "advanced": false,
-              "required": true,
-              "reconcile": false,
-              "displayName": "CDP Key ID",
-              "tooltip": "Coinbase Developer Platform API key ID. Not sensitive on its own.",
-              "variant": "String",
-              "initialValue": "",
-              "multiline": false,
-              "placeholder": ""
-            },
-            {
-              "id": "cdpKeySecret",
-              "advanced": false,
-              "required": true,
-              "reconcile": false,
-              "displayName": "CDP Key Secret",
-              "tooltip": "Coinbase Developer Platform API key secret.",
-              "variant": "Password",
-              "initialValue": ""
-            },
-            {
-              "id": "walletSecret",
-              "advanced": false,
-              "required": true,
-              "reconcile": false,
-              "displayName": "Wallet Secret",
-              "tooltip": "CDP wallet encryption secret.",
-              "variant": "Password",
-              "initialValue": ""
-            }
-          ],
-          "icon": "Coinbase"
-        }
-      ],
-      "ui": {
-        "displayName": "ERC-20 Token",
-        "description": "Read ERC-20 token balances and allowances, or transfer and approve tokens using a Coinbase-managed CDP wallet.",
-        "icon": "Coinbase",
-        "accent": "port-Json"
-      },
-      "fields": [
-        {
-          "id": "networkId",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Network",
-          "tooltip": "The EVM network your wallet operates on.",
-          "variant": "MultiOption",
-          "initialValue": "base-mainnet",
-          "options": [
-            {
-              "value": "base-mainnet",
-              "displayName": "Base"
-            },
-            {
-              "value": "ethereum-mainnet",
-              "displayName": "Ethereum"
-            },
-            {
-              "value": "polygon-mainnet",
-              "displayName": "Polygon"
-            },
-            {
-              "value": "arbitrum-mainnet",
-              "displayName": "Arbitrum"
-            },
-            {
-              "value": "base-sepolia",
-              "displayName": "Base Sepolia (testnet)"
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "walletAddress",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Wallet Address",
-          "tooltip": "Optional. Load an existing CDP wallet by its EVM address. If empty, a new wallet is created.",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": "0x... (leave empty to create a new wallet)"
-        },
-        {
-          "id": "tokenAddress",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Token Address",
-          "tooltip": "ERC-20 contract address. Leave empty to query native ETH/MATIC balance.",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": "0x... (leave empty for native ETH)"
-        },
-        {
-          "id": "targetAddress",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Target Address",
-          "tooltip": "Address to check the balance for. Defaults to the node's own wallet address.",
-          "variant": "String",
-          "initialValue": "",
-          "multiline": false,
-          "placeholder": "0x... (defaults to wallet address)"
-        },
-        {
-          "id": "signalDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Signal Dependency",
-          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All signals required",
-              "description": "Fire only once every upstream signal has arrived."
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one signal required",
-              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
-            },
-            {
-              "value": "XOR",
-              "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "Wait & Join",
-              "description": "Wait until every wired input port has resolved, then read all of them."
-            },
-            {
-              "value": "OR",
-              "displayName": "Follow Trigger",
-              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "onErrorStrategy",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "On Error",
-          "tooltip": "What happens when this node's execution throws.",
-          "variant": "MultiOption",
-          "initialValue": "propagate",
-          "options": [
-            {
-              "value": "terminate",
-              "displayName": "Terminate workflow",
-              "description": "Fail the whole run."
-            },
-            {
-              "value": "propagate",
-              "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges."
-            },
-            {
-              "value": "do_nothing",
-              "displayName": "Do nothing",
-              "description": "Swallow the error — no signal, no termination. Downstream stalls."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "isConvertedToTool",
-          "advanced": false,
-          "required": false,
-          "reconcile": true,
-          "hidden": true,
-          "displayName": "Tool Mode",
-          "variant": "Boolean",
-          "initialValue": false
-        }
-      ],
-      "inputs": [],
-      "outputs": [
-        {
-          "id": "balance",
-          "displayName": "Balance",
-          "tooltip": "Token balance as a number.",
-          "variant": "Data"
-        },
-        {
-          "id": "data",
-          "displayName": "Full Response",
-          "tooltip": "Complete balance response including token metadata.",
-          "variant": "Data"
-        }
-      ]
-    },
     "Integrations.Google.Gemini": {
       "id": "Integrations.Google.Gemini",
       "credentials": [
@@ -9939,6 +9658,89 @@
           "displayName": "Documents",
           "tooltip": "Search results as Document objects (pageContent + metadata).",
           "variant": "DataList"
+        }
+      ],
+      "_derivatives": [
+        {
+          "condition": {
+            "fieldId": "isConvertedToTool",
+            "operator": "==",
+            "value": true
+          },
+          "fields": [
+            {
+              "id": "maxResults",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Results",
+              "tooltip": "Google Custom Search returns up to 10 results per request.",
+              "variant": "Integer",
+              "initialValue": 5,
+              "min": 1,
+              "max": 10,
+              "step": 1
+            },
+            {
+              "id": "searchType",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Search Type",
+              "variant": "MultiOption",
+              "initialValue": "web",
+              "options": [
+                {
+                  "value": "web",
+                  "displayName": "Web"
+                },
+                {
+                  "value": "image",
+                  "displayName": "Image"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "safeSearch",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Safe Search",
+              "variant": "MultiOption",
+              "initialValue": "off",
+              "options": [
+                {
+                  "value": "off",
+                  "displayName": "Off"
+                },
+                {
+                  "value": "active",
+                  "displayName": "Active"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "tool",
+              "displayName": "Search Tool",
+              "tooltip": "A tool that can be called to perform a Google search with the specified query.",
+              "variant": "Tool"
+            }
+          ],
+          "ui": {
+            "accent": "port-Tool"
+          },
+          "replaces": [
+            "fields",
+            "inputs",
+            "outputs"
+          ],
+          "exclusive": true,
+          "_derivatives": []
         }
       ]
     },
@@ -11691,7 +11493,7 @@
       ],
       "ui": {
         "displayName": "Massive Market",
-        "description": "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, and ticker search.",
+        "description": "Reads US stock market data from Massive (formerly Polygon.io): candle history, snapshots, company details, financials, and market status.",
         "icon": "Massive",
         "accent": "port-DataList"
       },
@@ -11832,18 +11634,281 @@
         }
       ],
       "inputs": [],
-      "outputs": [
+      "outputs": [],
+      "_derivatives": [
         {
-          "id": "candles",
-          "displayName": "Candles",
-          "tooltip": "Array of OHLCV aggregates (bars) returned by Massive.",
-          "variant": "DataList"
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "candles"
+          },
+          "fields": [
+            {
+              "id": "timespan",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Timespan",
+              "tooltip": "Candle granularity.",
+              "variant": "MultiOption",
+              "initialValue": "minute",
+              "options": [
+                {
+                  "value": "minute",
+                  "displayName": "Minute"
+                },
+                {
+                  "value": "hour",
+                  "displayName": "Hour"
+                },
+                {
+                  "value": "day",
+                  "displayName": "Day"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "multiplier",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Multiplier",
+              "tooltip": "Candle multiplier (e.g. 5 + minute = 5-minute candles).",
+              "variant": "Integer",
+              "initialValue": 1,
+              "min": 1,
+              "max": 60,
+              "step": 1
+            },
+            {
+              "id": "lookbackHours",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Lookback (hours)",
+              "tooltip": "How far back to fetch candles, in hours. The end time is always 'now'.",
+              "variant": "Integer",
+              "initialValue": 24,
+              "min": 1,
+              "max": 8760,
+              "step": 1
+            },
+            {
+              "id": "adjusted",
+              "advanced": true,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Adjusted",
+              "tooltip": "Whether to request adjusted data for aggregates when supported by the API.",
+              "variant": "Boolean",
+              "initialValue": true
+            }
+          ],
+          "outputs": [
+            {
+              "id": "candles",
+              "displayName": "Candles",
+              "tooltip": "Array of OHLCV aggregates (bars) returned by Massive.",
+              "variant": "DataList"
+            },
+            {
+              "id": "summary",
+              "displayName": "Summary",
+              "tooltip": "Convenience summary: { ticker, timespan, multiplier, count, firstClose, lastClose, change, changePct }.",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
         },
         {
-          "id": "summary",
-          "displayName": "Summary",
-          "tooltip": "Convenience summary: { ticker, timespan, multiplier, count, firstClose, lastClose, change, changePct }.",
-          "variant": "Data"
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "snapshot"
+          },
+          "outputs": [
+            {
+              "id": "data",
+              "displayName": "Snapshot",
+              "tooltip": "Live state: today's OHLC and volume, change, the previous day's bar, last trade and last quote.",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "details"
+          },
+          "outputs": [
+            {
+              "id": "data",
+              "displayName": "Details",
+              "tooltip": "Company reference data: name, description, market cap, shares outstanding, exchange, branding.",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "financials"
+          },
+          "fields": [
+            {
+              "id": "timeframe",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Timeframe",
+              "tooltip": "Reporting period for the financial statements.",
+              "variant": "MultiOption",
+              "initialValue": "quarterly",
+              "options": [
+                {
+                  "value": "annual",
+                  "displayName": "Annual"
+                },
+                {
+                  "value": "quarterly",
+                  "displayName": "Quarterly"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "limit",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Limit",
+              "tooltip": "How many reporting periods to return.",
+              "variant": "Integer",
+              "initialValue": 4,
+              "min": 1,
+              "max": 100,
+              "step": 1
+            }
+          ],
+          "outputs": [
+            {
+              "id": "data",
+              "displayName": "Financials",
+              "tooltip": "One item per reporting period: income statement, balance sheet and cash flow.",
+              "variant": "DataList"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "action",
+            "operator": "==",
+            "value": "marketStatus"
+          },
+          "outputs": [
+            {
+              "id": "data",
+              "displayName": "Market Status",
+              "tooltip": "Whether US markets are currently open, plus after-hours and per-exchange status.",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "isConvertedToTool",
+            "operator": "==",
+            "value": true
+          },
+          "fields": [
+            {
+              "id": "timespan",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Default Timespan",
+              "tooltip": "Default timespan used by getCandles when the agent doesn't specify one.",
+              "variant": "MultiOption",
+              "initialValue": "minute",
+              "options": [
+                {
+                  "value": "minute",
+                  "displayName": "Minute"
+                },
+                {
+                  "value": "hour",
+                  "displayName": "Hour"
+                },
+                {
+                  "value": "day",
+                  "displayName": "Day"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "multiplier",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Default Multiplier",
+              "tooltip": "Default multiplier used by getCandles when the agent doesn't specify one.",
+              "variant": "Integer",
+              "initialValue": 1,
+              "min": 1,
+              "max": 60,
+              "step": 1
+            },
+            {
+              "id": "lookbackHours",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Default Lookback (hours)",
+              "tooltip": "Default lookback used by getCandles when the agent doesn't specify one.",
+              "variant": "Integer",
+              "initialValue": 24,
+              "min": 1,
+              "max": 8760,
+              "step": 1
+            },
+            {
+              "id": "adjusted",
+              "advanced": true,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Adjusted",
+              "tooltip": "Whether to request adjusted data for aggregates when supported by the API.",
+              "variant": "Boolean",
+              "initialValue": true
+            }
+          ],
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "tools",
+              "displayName": "Massive Tools",
+              "tooltip": "Toolkit: massive_get_candles, massive_get_news, massive_get_snapshot, massive_get_last_trade, massive_get_last_quote, massive_get_ticker_details, massive_search_tickers, massive_get_financials, massive_get_market_status.",
+              "variant": "ToolList"
+            }
+          ],
+          "ui": {
+            "accent": "port-Tool"
+          },
+          "replaces": [
+            "fields",
+            "inputs",
+            "outputs"
+          ],
+          "exclusive": true,
+          "_derivatives": []
         }
       ]
     },
@@ -11871,9 +11936,8 @@
               "required": false,
               "reconcile": false,
               "displayName": "Port",
-              "tooltip": "Leave blank for a mongodb+srv (Atlas) connection.",
+              "tooltip": "Leave blank for Atlas (mongodb+srv); enter a port only for a direct mongodb connection.",
               "variant": "Integer",
-              "initialValue": 27017,
               "step": 1
             },
             {
@@ -11968,27 +12032,6 @@
           "placeholder": "users"
         },
         {
-          "id": "query",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Query",
-          "tooltip": "Filter document, e.g. { \"status\": \"active\" }.",
-          "variant": "Json",
-          "initialValue": {}
-        },
-        {
-          "id": "limit",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Limit",
-          "variant": "Integer",
-          "initialValue": 50,
-          "min": 1,
-          "step": 1
-        },
-        {
           "id": "signalDependency",
           "advanced": false,
           "required": false,
@@ -12069,12 +12112,129 @@
         }
       ],
       "inputs": [],
-      "outputs": [
+      "outputs": [],
+      "_derivatives": [
         {
-          "id": "result",
-          "displayName": "Documents",
-          "tooltip": "Documents matched by the query — one item per document.",
-          "variant": "DataList"
+          "condition": {
+            "fieldId": "operation",
+            "operator": "!=",
+            "value": "insert"
+          },
+          "fields": [
+            {
+              "id": "query",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Query",
+              "tooltip": "Filter document, e.g. { \"status\": \"active\" }.",
+              "variant": "Json",
+              "initialValue": {}
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "operation",
+                "operator": "==",
+                "value": "find"
+              },
+              "fields": [
+                {
+                  "id": "limit",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Limit",
+                  "variant": "Integer",
+                  "initialValue": 50,
+                  "min": 1,
+                  "step": 1
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "result",
+                  "displayName": "Documents",
+                  "tooltip": "Documents matched by the query — one item per document.",
+                  "variant": "DataList"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "operation",
+                "operator": "==",
+                "value": "update"
+              },
+              "fields": [
+                {
+                  "id": "update",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Update",
+                  "tooltip": "Fields to $set, e.g. { \"status\": \"archived\" }.",
+                  "variant": "Json",
+                  "initialValue": {}
+                }
+              ],
+              "outputs": [
+                {
+                  "id": "result",
+                  "displayName": "Result",
+                  "tooltip": "Update result summary.",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "operation",
+                "operator": "==",
+                "value": "delete"
+              },
+              "outputs": [
+                {
+                  "id": "result",
+                  "displayName": "Result",
+                  "tooltip": "Delete result summary.",
+                  "variant": "Data"
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "operation",
+            "operator": "==",
+            "value": "insert"
+          },
+          "fields": [
+            {
+              "id": "documents",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Documents",
+              "tooltip": "Array of documents to insert.",
+              "variant": "Json",
+              "initialValue": []
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "displayName": "Result",
+              "tooltip": "Insert result summary.",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
         }
       ]
     },
@@ -12833,34 +12993,6 @@
           "kind": "select"
         },
         {
-          "id": "model",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Model",
-          "variant": "MultiOption",
-          "initialValue": "google/gemini-3.1-pro-preview",
-          "options": [
-            {
-              "value": "google/gemini-3.1-pro-preview",
-              "displayName": "Gemini 3.1 Pro Preview"
-            },
-            {
-              "value": "google/gemini-3.1-flash-lite-preview",
-              "displayName": "Gemini 3.1 Flash Lite Preview"
-            },
-            {
-              "value": "google/gemini-3-flash-preview",
-              "displayName": "Gemini 3 Flash Preview"
-            },
-            {
-              "value": "google/gemma-4-31b-it",
-              "displayName": "Gemma 4 31B IT"
-            }
-          ],
-          "kind": "select"
-        },
-        {
           "id": "temperature",
           "advanced": false,
           "required": false,
@@ -12986,6 +13118,308 @@
           "displayName": "Language Model",
           "tooltip": "The OpenRouter language model instance.",
           "variant": "LanguageModel"
+        }
+      ],
+      "_derivatives": [
+        {
+          "condition": {
+            "fieldId": "provider",
+            "operator": "==",
+            "value": "Anthropic"
+          },
+          "fields": [
+            {
+              "id": "anthropicModel",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Model",
+              "variant": "MultiOption",
+              "initialValue": "anthropic/claude-opus-4.6",
+              "options": [
+                {
+                  "value": "anthropic/claude-opus-4.6",
+                  "displayName": "Claude Opus 4.6"
+                },
+                {
+                  "value": "anthropic/claude-sonnet-4.6",
+                  "displayName": "Claude Sonnet 4.6"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "provider",
+            "operator": "==",
+            "value": "Google"
+          },
+          "fields": [
+            {
+              "id": "googleModel",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Model",
+              "variant": "MultiOption",
+              "initialValue": "google/gemini-3.1-pro-preview",
+              "options": [
+                {
+                  "value": "google/gemini-3.1-pro-preview",
+                  "displayName": "Gemini 3.1 Pro Preview"
+                },
+                {
+                  "value": "google/gemini-3.1-flash-lite-preview",
+                  "displayName": "Gemini 3.1 Flash Lite Preview"
+                },
+                {
+                  "value": "google/gemini-3-flash-preview",
+                  "displayName": "Gemini 3 Flash Preview"
+                },
+                {
+                  "value": "google/gemma-4-31b-it",
+                  "displayName": "Gemma 4 31B IT"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "provider",
+            "operator": "==",
+            "value": "OpenAI"
+          },
+          "fields": [
+            {
+              "id": "openAIModel",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Model",
+              "variant": "MultiOption",
+              "initialValue": "openai/gpt-5.4-pro",
+              "options": [
+                {
+                  "value": "openai/gpt-5.4-pro",
+                  "displayName": "GPT-5.4 Pro"
+                },
+                {
+                  "value": "openai/gpt-5.4",
+                  "displayName": "GPT-5.4"
+                },
+                {
+                  "value": "openai/gpt-5.4-mini",
+                  "displayName": "GPT-5.4 Mini"
+                },
+                {
+                  "value": "openai/gpt-5.4-nano",
+                  "displayName": "GPT-5.4 Nano"
+                },
+                {
+                  "value": "openai/gpt-5.3-chat",
+                  "displayName": "GPT-5.3 Chat"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "provider",
+            "operator": "==",
+            "value": "Meta"
+          },
+          "fields": [
+            {
+              "id": "metaModel",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Model",
+              "variant": "MultiOption",
+              "initialValue": "meta-llama/llama-4-maverick-17b-128e-instruct",
+              "options": [
+                {
+                  "value": "meta-llama/llama-4-maverick-17b-128e-instruct",
+                  "displayName": "Llama 4 Maverick 17B"
+                },
+                {
+                  "value": "meta-llama/llama-4-scout-17b-16e-instruct",
+                  "displayName": "Llama 4 Scout 17B"
+                },
+                {
+                  "value": "meta-llama/llama-3.3-70b-instruct",
+                  "displayName": "Llama 3.3 70B"
+                },
+                {
+                  "value": "meta-llama/llama-3.1-405b-instruct",
+                  "displayName": "Llama 3.1 405B"
+                },
+                {
+                  "value": "meta-llama/llama-3.1-70b-instruct",
+                  "displayName": "Llama 3.1 70B"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "provider",
+            "operator": "==",
+            "value": "DeepSeek"
+          },
+          "fields": [
+            {
+              "id": "deepSeekModel",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Model",
+              "variant": "MultiOption",
+              "initialValue": "deepseek/deepseek-v3.2-speciale-20251201",
+              "options": [
+                {
+                  "value": "deepseek/deepseek-v3.2-speciale-20251201",
+                  "displayName": "DeepSeek V3.2 Speciale"
+                },
+                {
+                  "value": "deepseek/deepseek-v3.2-20251201",
+                  "displayName": "DeepSeek V3.2"
+                },
+                {
+                  "value": "deepseek/deepseek-r1-0528",
+                  "displayName": "DeepSeek R1 0528"
+                },
+                {
+                  "value": "deepseek/deepseek-r1",
+                  "displayName": "DeepSeek R1"
+                },
+                {
+                  "value": "deepseek/deepseek-chat-v3-0324",
+                  "displayName": "DeepSeek Chat V3"
+                },
+                {
+                  "value": "deepseek/deepseek-r1-distill-llama-70b",
+                  "displayName": "DeepSeek R1 Distill Llama 70B"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "provider",
+            "operator": "==",
+            "value": "Mistral"
+          },
+          "fields": [
+            {
+              "id": "mistralModel",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Model",
+              "variant": "MultiOption",
+              "initialValue": "mistralai/mistral-small-2603",
+              "options": [
+                {
+                  "value": "mistralai/mistral-small-2603",
+                  "displayName": "Mistral Small 2603"
+                },
+                {
+                  "value": "mistralai/mistral-small-creative",
+                  "displayName": "Mistral Small Creative"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "provider",
+            "operator": "==",
+            "value": "Cohere"
+          },
+          "fields": [
+            {
+              "id": "cohereModel",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Model",
+              "variant": "MultiOption",
+              "initialValue": "cohere/command-a-03-2025",
+              "options": [
+                {
+                  "value": "cohere/command-a-03-2025",
+                  "displayName": "Command A 03-2025"
+                },
+                {
+                  "value": "cohere/command-a",
+                  "displayName": "Command A"
+                },
+                {
+                  "value": "cohere/command-r-plus-08-2024",
+                  "displayName": "Command R+ 08-2024"
+                },
+                {
+                  "value": "cohere/command-r-08-2024",
+                  "displayName": "Command R 08-2024"
+                },
+                {
+                  "value": "cohere/command-r7b-12-2024",
+                  "displayName": "Command R7B 12-2024"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "provider",
+            "operator": "==",
+            "value": "xAI"
+          },
+          "fields": [
+            {
+              "id": "xaiModel",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Model",
+              "variant": "MultiOption",
+              "initialValue": "x-ai/grok-4.20",
+              "options": [
+                {
+                  "value": "x-ai/grok-4.20",
+                  "displayName": "Grok 4.20"
+                },
+                {
+                  "value": "x-ai/grok-4.20-multi-agent",
+                  "displayName": "Grok 4.20 Multi-Agent"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": []
         }
       ]
     },
@@ -15878,23 +16312,6 @@
       },
       "fields": [
         {
-          "id": "operation",
-          "advanced": false,
-          "required": false,
-          "reconcile": true,
-          "displayName": "Operation",
-          "tooltip": "What this node does against the database.",
-          "variant": "MultiOption",
-          "initialValue": "executeQuery",
-          "options": [
-            {
-              "value": "executeQuery",
-              "displayName": "Execute Query"
-            }
-          ],
-          "kind": "select"
-        },
-        {
           "id": "query",
           "advanced": false,
           "required": false,
@@ -15996,8 +16413,8 @@
         }
       ]
     },
-    "Integrations.Redis.Command": {
-      "id": "Integrations.Redis.Command",
+    "Integrations.Redis.Database": {
+      "id": "Integrations.Redis.Database",
       "credentials": [
         {
           "id": "redis",
@@ -16025,6 +16442,18 @@
               "step": 1
             },
             {
+              "id": "username",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Username",
+              "tooltip": "Optional Redis ACL username.",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false,
+              "placeholder": "default"
+            },
+            {
               "id": "password",
               "advanced": false,
               "required": false,
@@ -16042,39 +16471,49 @@
               "variant": "Integer",
               "initialValue": 0,
               "step": 1
+            },
+            {
+              "id": "tls",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Use TLS",
+              "tooltip": "Enable TLS for discrete host and port credentials. A rediss:// URL enables TLS automatically.",
+              "variant": "Boolean",
+              "initialValue": false
             }
           ],
           "icon": "Redis"
         }
       ],
       "ui": {
-        "displayName": "Redis",
-        "description": "Runs a command against a Redis server.",
+        "displayName": "Redis Database",
+        "description": "Runs bounded String, Key, and Hash operations against a Redis database.",
         "icon": "Redis",
         "accent": "utility"
       },
       "fields": [
         {
-          "id": "operation",
+          "id": "resource",
           "advanced": false,
           "required": false,
           "reconcile": true,
-          "displayName": "Operation",
-          "tooltip": "The Redis command to run.",
+          "displayName": "Resource",
+          "tooltip": "The Redis data structure to work with.",
           "variant": "MultiOption",
-          "initialValue": "GET",
+          "initialValue": "string",
           "options": [
             {
-              "value": "GET",
-              "displayName": "Get"
+              "value": "string",
+              "displayName": "String"
             },
             {
-              "value": "SET",
-              "displayName": "Set"
+              "value": "key",
+              "displayName": "Key"
             },
             {
-              "value": "DELETE",
-              "displayName": "Delete"
+              "value": "hash",
+              "displayName": "Hash"
             }
           ],
           "kind": "select"
@@ -16175,8 +16614,337 @@
         {
           "id": "result",
           "displayName": "Result",
-          "tooltip": "GET → value (or null); SET → \"OK\"; DELETE → number of keys removed.",
+          "tooltip": "The scalar, object, or command summary returned by Redis.",
           "variant": "Data"
+        }
+      ],
+      "_derivatives": [
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "string"
+          },
+          "fields": [
+            {
+              "id": "stringOperation",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Operation",
+              "variant": "MultiOption",
+              "initialValue": "GET",
+              "options": [
+                {
+                  "value": "GET",
+                  "displayName": "Get"
+                },
+                {
+                  "value": "SET",
+                  "displayName": "Set"
+                },
+                {
+                  "value": "INCREMENT",
+                  "displayName": "Increment"
+                },
+                {
+                  "value": "DECREMENT",
+                  "displayName": "Decrement"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "stringOperation",
+                "operator": "==",
+                "value": "GET"
+              },
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "stringOperation",
+                "operator": "==",
+                "value": "SET"
+              },
+              "fields": [
+                {
+                  "id": "stringValue",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Value",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": true,
+                  "placeholder": ""
+                },
+                {
+                  "id": "stringTtl",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "TTL (seconds)",
+                  "tooltip": "0 = no expiry.",
+                  "variant": "Integer",
+                  "initialValue": 0,
+                  "min": 0,
+                  "step": 1
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "stringOperation",
+                "operator": "==",
+                "value": "INCREMENT"
+              },
+              "fields": [
+                {
+                  "id": "incrementAmount",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Amount",
+                  "variant": "Integer",
+                  "initialValue": 1,
+                  "min": 1,
+                  "step": 1
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "stringOperation",
+                "operator": "==",
+                "value": "DECREMENT"
+              },
+              "fields": [
+                {
+                  "id": "decrementAmount",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Amount",
+                  "variant": "Integer",
+                  "initialValue": 1,
+                  "min": 1,
+                  "step": 1
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "key"
+          },
+          "fields": [
+            {
+              "id": "keyOperation",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Operation",
+              "variant": "MultiOption",
+              "initialValue": "EXISTS",
+              "options": [
+                {
+                  "value": "EXISTS",
+                  "displayName": "Exists"
+                },
+                {
+                  "value": "DELETE",
+                  "displayName": "Delete"
+                },
+                {
+                  "value": "EXPIRE",
+                  "displayName": "Set Expiry"
+                },
+                {
+                  "value": "TTL",
+                  "displayName": "Get TTL"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "keyOperation",
+                "operator": "==",
+                "value": "EXISTS"
+              },
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "keyOperation",
+                "operator": "==",
+                "value": "DELETE"
+              },
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "keyOperation",
+                "operator": "==",
+                "value": "EXPIRE"
+              },
+              "fields": [
+                {
+                  "id": "expirySeconds",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "TTL (seconds)",
+                  "variant": "Integer",
+                  "initialValue": 3600,
+                  "min": 1,
+                  "step": 1
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "keyOperation",
+                "operator": "==",
+                "value": "TTL"
+              },
+              "_derivatives": []
+            }
+          ]
+        },
+        {
+          "condition": {
+            "fieldId": "resource",
+            "operator": "==",
+            "value": "hash"
+          },
+          "fields": [
+            {
+              "id": "hashOperation",
+              "advanced": false,
+              "required": false,
+              "reconcile": true,
+              "displayName": "Operation",
+              "variant": "MultiOption",
+              "initialValue": "HGET",
+              "options": [
+                {
+                  "value": "HGET",
+                  "displayName": "Get Field"
+                },
+                {
+                  "value": "HSET",
+                  "displayName": "Set Field"
+                },
+                {
+                  "value": "HGETALL",
+                  "displayName": "Get All"
+                },
+                {
+                  "value": "HDELETE",
+                  "displayName": "Delete Field"
+                }
+              ],
+              "kind": "select"
+            }
+          ],
+          "_derivatives": [
+            {
+              "condition": {
+                "fieldId": "hashOperation",
+                "operator": "==",
+                "value": "HGET"
+              },
+              "fields": [
+                {
+                  "id": "hashGetField",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Field",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "hashOperation",
+                "operator": "==",
+                "value": "HSET"
+              },
+              "fields": [
+                {
+                  "id": "hashSetField",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Field",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                },
+                {
+                  "id": "hashSetValue",
+                  "advanced": false,
+                  "required": false,
+                  "reconcile": false,
+                  "displayName": "Value",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": true,
+                  "placeholder": ""
+                }
+              ],
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "hashOperation",
+                "operator": "==",
+                "value": "HGETALL"
+              },
+              "_derivatives": []
+            },
+            {
+              "condition": {
+                "fieldId": "hashOperation",
+                "operator": "==",
+                "value": "HDELETE"
+              },
+              "fields": [
+                {
+                  "id": "hashDeleteField",
+                  "advanced": false,
+                  "required": true,
+                  "reconcile": false,
+                  "displayName": "Field",
+                  "variant": "String",
+                  "initialValue": "",
+                  "multiline": false,
+                  "placeholder": ""
+                }
+              ],
+              "_derivatives": []
+            }
+          ]
         }
       ]
     },
@@ -16518,6 +17286,79 @@
           "displayName": "Documents",
           "tooltip": "Search results as Document objects (pageContent + metadata).",
           "variant": "DataList"
+        }
+      ],
+      "_derivatives": [
+        {
+          "condition": {
+            "fieldId": "isConvertedToTool",
+            "operator": "==",
+            "value": true
+          },
+          "fields": [
+            {
+              "id": "maxResults",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Max Results",
+              "variant": "Integer",
+              "initialValue": 5,
+              "min": 1,
+              "max": 20,
+              "step": 1
+            },
+            {
+              "id": "searchDepth",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Search Depth",
+              "tooltip": "Advanced costs more Tavily credits but returns richer results.",
+              "variant": "MultiOption",
+              "initialValue": "basic",
+              "options": [
+                {
+                  "value": "basic",
+                  "displayName": "Basic"
+                },
+                {
+                  "value": "advanced",
+                  "displayName": "Advanced"
+                }
+              ],
+              "kind": "select"
+            },
+            {
+              "id": "includeAnswer",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Include Answer",
+              "tooltip": "Tavily pre-summarizes an answer from the search results.",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "tool",
+              "displayName": "Search Tool",
+              "tooltip": "A tool that can be called to perform a search with the specified query.",
+              "variant": "Tool"
+            }
+          ],
+          "ui": {
+            "accent": "port-Tool"
+          },
+          "replaces": [
+            "fields",
+            "inputs",
+            "outputs"
+          ],
+          "exclusive": true,
+          "_derivatives": []
         }
       ]
     },
