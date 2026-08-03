@@ -38,21 +38,6 @@ export namespace Blueprint {
     }
     export type ResolutionFailure = z.infer<typeof ResolutionFailure.Schema>
 
-    export const createReconciledId = (
-        blueprintId : Blueprint.Id,
-        fields      : Field[] | Readonly<Field[]>,
-        values      : Record<Field.Id, Field.Value>,
-        anticipate? : Partial<Record<Field.Id, Field.Value>>
-    ): Blueprint.ReconciledId => {
-        const parts = fields
-            .filter(f => f.reconcile)
-            .map(f => `${f.id}=${String(anticipate?.[f.id] ?? values[f.id] ?? f.initialValue)}`)
-            .sort()
-            .join(",");
-
-        return `${blueprintId}:${parts}` as Blueprint.ReconciledId;
-    }
-
     export import Derivative = DerivativeMod.Derivative
 
     // Folds `_derivatives` against a node's field values. Shared so the editor and the
@@ -61,46 +46,26 @@ export namespace Blueprint {
     export const deriveByPath = DerivativeMod.deriveByPath
 
     /**
-     * Identity for a node's resolved blueprint, whichever mechanism produced it.
-     *
-     * Derivative blueprints key on the matched path (`Blueprint.Id:shape==number/rounding!=none`)
-     * rather than createReconciledId's flat pair list — that only folds reconcile fields declared
-     * on the *base*, so a discriminant introduced by a branch would never change the key.
+     * Identity for a node's resolved derivative. Static blueprints keep their base id; derivative
+     * blueprints key on the matched path (`Blueprint.Id:shape==number/rounding!=none`).
      */
     export const deriveId = (
         blueprint   : Blueprint,
         fieldValues : Record<Field.Id, Field.Value>,
     ): Blueprint.ReconciledId => {
         if (!blueprint._derivatives?.length)
-            return createReconciledId(blueprint.id, blueprint.fields, fieldValues);
+            return blueprint.id as Blueprint.ReconciledId;
 
         const { derivativeId } = derive(blueprint, fieldValues);
 
         return (derivativeId ? `${blueprint.id}:${derivativeId}` : blueprint.id) as Blueprint.ReconciledId;
     }
 
-    // Reconciled ids are `${blueprintId}:${field=value,...}`. Base ids never contain a colon.
+    // Resolved derivative ids are `${blueprintId}:${derivativePath}`. Base ids never contain a colon.
     export const isReconciledId = (id: string): id is Blueprint.ReconciledId => id.includes(":");
 
     export const extractBlueprintId = (id: Blueprint.ReconciledId | string): Blueprint.Id =>
         id.split(":")[0] as Blueprint.Id;
-
-    export const parseReconciledId = (id: Blueprint.ReconciledId | string): {
-        blueprintId: Blueprint.Id;
-        fieldValues: Record<Field.Id, Field.Value>;
-    } => {
-        const [blueprintId, parts] = id.split(":") as [Blueprint.Id, string | undefined];
-        const fieldValues: Record<Field.Id, Field.Value> = {};
-        if (parts)
-            for (const pair of parts.split(",")) {
-                const eq = pair.indexOf("=");
-                if (eq === -1) continue;
-                fieldValues[pair.slice(0, eq) as Field.Id] = pair.slice(eq + 1);
-            }
-        return { blueprintId, fieldValues };
-    }
-
-
 
     export namespace Meta {
 

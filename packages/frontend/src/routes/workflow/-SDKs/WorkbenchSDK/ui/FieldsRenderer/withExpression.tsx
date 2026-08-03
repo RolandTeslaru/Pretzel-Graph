@@ -14,7 +14,7 @@ interface Props {
     onCommit: () => void
     nodeId: Workflow.Node.Id
     displayName: string
-    // reconcile fields drive node reconciliation and can't be turned into expressions —
+    // Derivative condition fields drive structural resolution and can't become expressions —
     // suppress the static/expression toggle entirely for them.
     reconcile?: boolean
     // item-scoped field → expose $item / $itemIndex in the expression editor's autocomplete.

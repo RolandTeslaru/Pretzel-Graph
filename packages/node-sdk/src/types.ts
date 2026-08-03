@@ -181,24 +181,6 @@ export type InferFieldValues<D> = 0 extends (1 & D) ? any
         : ToolArm<D, Definitionof<D>> | RunArm<D, Definitionof<D>>;
 
 /**
- * Subset of InferFieldValues restricted to reconcile fields (marked via FieldBuilder.reconciling).
- * This is what a reconciler receives — it may only branch on reconcile fields, since those are the
- * only ones in the reconciled identity (createReconciledId). Reading any other field is a type error.
- */
-export type InferReconcilingFieldValues<D> = 0 extends (1 & D) ? any
-    : D extends { fields: infer T }
-    ? T extends readonly { id: string }[]
-    ? { [K in T[number]as K extends { reconcile: true }
-        ? K extends { __literalId?: infer Id extends string }
-        ? Id
-        : K extends { id: infer Id extends string } ? Id : never
-        : never
-        ]: K extends { initialValue: infer IV } ? IV : any
-    }
-    : never
-    : Record<string, never>;
-
-/**
  * Complement of InferFieldValues: only the item-scoped fields, keyed by literal id, mapped to
  * their value type. These are NOT in `this.fieldValues` — they're evaluated per-item via
  * RuntimeNode.evalItemField. Keying off the required literal `{ itemScoped: true }` (set by

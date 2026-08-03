@@ -5,11 +5,9 @@
 - **`blueprint.ts`** — declares the node's identity, fields, input/output ports, and credentials (the *shape*, used by the editor and the type system).
 - **`node.ts`** — the `RuntimeNode` subclass that *executes* (the *behavior*, run by the worker).
 
-Optionally a third:
+Conditional fields and ports are declared directly in `blueprint.ts` as derivatives.
 
-- **`reconcile.ts`** — mutates the field/port schema in response to a field change (e.g. an `operation` selector that swaps which fields are shown).
-
-Nodes are resolved by a **blueprint-id → path convention**. Blueprint id `Integrations.Postgres.Query` lives at `packages/nodes/src/Integrations/Postgres/Query/{blueprint,node,reconcile}.ts`. There is no central registry import — `CatalogueService` dynamic-imports by path.
+Nodes are resolved by a **blueprint-id → path convention**. Blueprint id `Integrations.Postgres.Query` lives at `packages/nodes/src/Integrations/Postgres/Query/{blueprint,node}.ts`. There is no central registry import — `CatalogueService` dynamic-imports by path.
 
 ---
 
@@ -82,7 +80,9 @@ Then the **three wiring steps** (see the checklist at the bottom):
 
 Fields are the node's **static config form**. Every builder shares these `BaseProps`:
 
-`id` (required, branded `Field.Id`), `displayName` (required), `required?`, `hidden?`, `tooltip?`, `reconcile?` (fire `reconcile.ts` on change), plus a per-type `initialValue`.
+`id` (required, branded `Field.Id`), `displayName` (required), `required?`, `hidden?`, `tooltip?`, plus a per-type `initialValue`.
+
+Do not set `reconcile` manually. `defineBlueprint` marks fields used by derivative conditions so the editor knows when to resolve a new derivative.
 
 | Builder | Value type | Notes |
 |---|---|---|
@@ -231,23 +231,37 @@ static loaders = defineLoaders<typeof Blueprint>()({
 
 ---
 
-## `reconcile.ts` — operation-driven schemas
+## Inline derivatives — operation-driven schemas
 
-When a field with `reconcile: true` changes, `reconcile(blueprint, changedFieldId, newValue)` returns a mutated blueprint (add/remove fields **or output ports**). Used for an `operation` selector that shows different fields per operation.
+Add condition keys to the object passed to `defineBlueprint`. A matching branch contributes fields, inputs, outputs, credentials, or UI overrides to the resolved blueprint. Conditions can nest, and `InferFieldValues` narrows the resulting runtime values without casts.
 
 ```ts
-export const reconcile = (blueprint, changedFieldId, newValue) => {
-    const next = cloneDeep(blueprint);
-    if (changedFieldId !== "operation") return next;
-    const fields = new Map(next.fields.map(f => [f.id, f]));
-    if (newValue === "SET") fields.set("value", FieldBuilder.String({ id: "value", displayName: "Value" }));
-    else fields.delete("value");
-    next.fields = [...fields.values()];
-    return next;
-};
+export const Blueprint = defineBlueprint({
+    id: "Integrations.Acme.Database",
+    displayName: "Acme Database",
+    description: "Reads and writes values.",
+    icon: "Database",
+    fields: [
+        FieldBuilder.MultiOption("operation", "Operation", {
+            options: [
+                { value: "GET", displayName: "Get" },
+                { value: "SET", displayName: "Set" },
+            ],
+            initialValue: "GET",
+        }),
+        FieldBuilder.String("key", "Key", { required: true }),
+    ],
+    inputs: [],
+    outputs: [OutputBuilder.Data("result", "Result")],
+
+    "operation==GET": {},
+    "operation==SET": {
+        fields: [FieldBuilder.String("value", "Value")],
+    },
+});
 ```
 
-**Important wrinkle:** the base blueprint = the **default** field set (reconcile only runs on *change*, never at node creation). And `InferFieldValues` reflects the *static base* — fields/ports added by reconcile are **not** in the inferred type, so `onRun`/loaders read them via a cast (`(this.fieldValues as Record<string, unknown>).value`). See `Integrations/Massive/Market` for a remaining legacy example; new operation-style nodes should use inline blueprint derivatives such as `Integrations/Redis/Database`.
+Use `field==value` or `field!=value`. Branch members are additive by default; use `replaces` when a branch must replace an existing member. The compiler validates condition fields and option values when the blueprint module loads, stamps condition fields as derivative triggers, and serializes the branches into `_derivatives`. Runtime and Shelf resolution use only this serialized derivative tree.
 
 ---
 
@@ -272,7 +286,7 @@ Each process (backend for loaders, worker for execution) holds its own manager s
 
 ## Checklist for a new node
 
-1. `blueprint.ts` + `node.ts` (+ `reconcile.ts`) under the path matching the blueprint id.
+1. `blueprint.ts` + `node.ts` under the path matching the blueprint id; declare conditional shapes as inline derivatives.
 2. Decorate the class with `@RegisterNode(Blueprint.id)` and set `public readonly Blueprint = Blueprint`.
 3. Credential (if any): define under `Credentials/`, re-export from `Credentials/index.ts`.
 4. Register the blueprint id in the right drawer in `packages/shared/constants/drawers.ts`.

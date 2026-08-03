@@ -96,7 +96,7 @@ describe("Polymarket Market derivatives", () => {
         assert.deepEqual(blueprint.outputs.map(output => output.id), ["markets"]);
     });
 
-    it("marks every condition field as reconciling", () => {
+    it("marks every condition field as a derivative trigger", () => {
         // Two axes now: the API level is gone, answered by PolymarketPublicSDK instead.
         const conditionIds = new Set([
             "action",
@@ -201,10 +201,10 @@ describe("Polymarket Market derivatives", () => {
         assert.deepEqual(replayed.outputs, blueprint.outputs);
     });
 
-    it("derives and caches through the catalogue without reconcile.ts", async () => {
+    it("derives and caches its inline blueprint branch", async () => {
         CatalogueService.setNodesRoot(nodesRoot);
 
-        const result = await CatalogueService.reconcile(
+        const result = await CatalogueService.resolveBlueprint(
             Blueprint.id,
             { action: "get", getResource: "orderBook" } as never,
         );
