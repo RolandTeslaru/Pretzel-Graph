@@ -2,7 +2,6 @@ import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@/SDKs/Base";
 import { SDK } from "@/SDKs/SDKManager";
 import { Chat } from "@pretzel-graph/shared/domain";
-import { QuerySDK } from "@/SDKs/QuerySDK/sdk";
 import { createChatSDKActions, type ChatSDKActions } from "./actions";
 import { createChatSDKReducers, type ChatSDKReducers } from "./reducers";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
@@ -15,13 +14,6 @@ import { shallow } from "zustand/shallow";
 export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
     constructor() {
         super()
-        QuerySDK.client.invalidateQueries({ queryKey: ["chats"] })
-        QuerySDK.client.fetchQuery({
-            queryKey: ["chats"],
-            queryFn: () => this.actions.chat.getAll(),
-            staleTime: Infinity
-        })
-
         this.runtime.unsubscribeFromChatChannel = RealtimeSDK.subscribeToChannel(
             Chat.Event.getChannel(this.state.currentChatId),
             this.handleOnEvent
