@@ -1,27 +1,36 @@
-import { type WheelEvent, useMemo, useRef } from 'react'
+import { type WheelEvent, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Button, Form, Input, ScrollArea, Select, Spinner, Switch } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, Button, Form, Input, ScrollArea, Select, Spinner, Switch } from '@pretzel-graph/standard-ui/foundations'
+import { VaultSDK } from '../sdk'
 import { DialogSDK } from '@/SDKs/DialogSDK'
-import { VaultSDK } from '@/SDKs/VaultSDK/sdk'
 import type { Vault } from '@pretzel-graph/shared/domain'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { VaultGlyph } from '@pretzel-graph/standard-ui/brands/vaultGlyph'
 
-interface Props {
-    credentialTemplate: Vault.Credential.Template
-    dialogId: string
-    onCreated?: (instanceId: Vault.Credential.Instance.Id) => void
+interface UpdateProps {
+    instanceId: Vault.Credential.Instance.Id
+    onUpdateComplete?: (instanceId: Vault.Credential.Instance.Id) => void
+    onRemoved?: () => void
 }
 
-export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }: Props) => {
+interface Props {
+    credentialTemplate: Vault.Credential.Template
+    onCreated?: (instanceId: Vault.Credential.Instance.Id) => void
+    updateProps?: UpdateProps
+}
+
+export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: Props) => {
     // ScrollArea.Root forwards its ref to the underlying viewport.
     const viewportRef = useRef<HTMLDivElement>(null)
 
     // The footer sits outside <form> (it's pinned over the scroll area), so Save links back by id.
-    const formId = `add-credential-form-${dialogId}`
+    const formId = useId()
+
+    const [isLoadingValues, setIsLoadingValues] = useState(Boolean(updateProps))
+    const [isRemoving, setIsRemoving] = useState(false)
 
     const schema = useMemo(() => z.object({
         name: z.string().trim().min(1, 'Name is required'),
@@ -41,33 +50,89 @@ export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }:
 
     type Values = z.infer<typeof schema>
 
+    const getDefaultValues = (): Values => ({
+        name: '',
+        fields: Object.fromEntries(credentialTemplate.fields.map(f => [
+            f.id,
+            f.variant === 'Boolean' ? (('initialValue' in f ? f.initialValue : false) ?? false)
+                : (f.variant === 'Integer' || f.variant === 'Float') ? (('initialValue' in f ? f.initialValue : 0) ?? 0)
+                    : f.variant === 'MultiOption' ? (f.initialValue ?? '')
+                        : '',
+        ])) as Values['fields'],
+    })
+
     const form = useForm<Values>({
         resolver: zodResolver(schema),
-        defaultValues: {
-            name: '',
-            fields: Object.fromEntries(credentialTemplate.fields.map(f => [
-                f.id,
-                f.variant === 'Boolean' ? (('initialValue' in f ? f.initialValue : false) ?? false)
-                    : (f.variant === 'Integer' || f.variant === 'Float') ? (('initialValue' in f ? f.initialValue : 0) ?? 0)
-                        : f.variant === 'MultiOption' ? (f.initialValue ?? '')
-                        : '',
-            ])) as Values['fields'],
-        },
+        defaultValues: getDefaultValues(),
     })
+
+    useEffect(() => {
+        if (!updateProps)
+            return
+
+        setIsLoadingValues(true)
+
+        VaultSDK.actions.reveal(updateProps.instanceId)
+            .then(fieldValues => {
+                const name = VaultSDK.state.credentialInstances[updateProps.instanceId]?.name ?? ''
+                form.reset({ name, fields: fieldValues as Values['fields'] })
+            })
+            .catch(() => {})
+            .finally(() => setIsLoadingValues(false))
+    }, [updateProps?.instanceId])
 
     const onSubmit = async (values: Values) => {
         try {
-            const instance = await VaultSDK.actions.create({
-                name: values.name,
-                templateId: credentialTemplate.id,
-                fieldValues: values.fields,
-            })
-            toast.success(`${credentialTemplate.displayName} credential saved`)
-            onCreated?.(instance.id)
-            DialogSDK.actions.pop(dialogId)
+            if (updateProps) {
+                await VaultSDK.actions.update.values({
+                    id: updateProps.instanceId,
+                    name: values.name,
+                    fieldValues: values.fields,
+                })
+                toast.success(`${credentialTemplate.displayName} credential updated`)
+                updateProps.onUpdateComplete?.(updateProps.instanceId)
+            } else {
+                const instance = await VaultSDK.actions.create({
+                    name: values.name,
+                    templateId: credentialTemplate.id,
+                    fieldValues: values.fields,
+                })
+                toast.success(`${credentialTemplate.displayName} credential saved`)
+                onCreated?.(instance.id)
+            }
         } catch {
             // SDK already toasted
         }
+    }
+
+    const onRemove = () => {
+        if (!updateProps)
+            return
+
+        const dialogId = `remove-credential-${updateProps.instanceId}`
+        DialogSDK.actions.push(dialogId, props => (
+            <DialogSDK.AlertTemplate
+                {...props}
+                type='danger'
+                onApprove={async () => {
+                    setIsRemoving(true)
+                    try {
+                        await VaultSDK.actions.remove(updateProps.instanceId)
+                        DialogSDK.actions.pop(dialogId)
+                        updateProps.onRemoved?.()
+                    } finally {
+                        setIsRemoving(false)
+                    }
+                }}
+                onCancel={() => DialogSDK.actions.pop(dialogId)}
+            >
+                <AlertDialog.Title>Are you sure?</AlertDialog.Title>
+                <AlertDialog.Description>
+                    Deleting {credentialTemplate.displayName} credential cannot be undone.
+                    Workflows using it will stop working.
+                </AlertDialog.Description>
+            </DialogSDK.AlertTemplate>
+        ))
     }
 
     // Something upstream eats the wheel before it reaches the viewport, so drive it by hand.
@@ -100,7 +165,7 @@ export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }:
                 <div className='pointer-events-none absolute top-0 left-0 z-90 flex flex-row gap-2 items-center px-4 pt-6 pb-4'>
                     <LazyIcon name={credentialTemplate.icon ?? ""} className='size-5' />
                     <p className='text-sm font-semibold text-foreground'>
-                        Add {credentialTemplate.displayName} Credentials
+                        {updateProps ? 'Edit' : 'Add'} {credentialTemplate.displayName} Credentials
                     </p>
                 </div>
                 {/* Content */}
@@ -186,14 +251,19 @@ export const AddCredentialDialog = ({ credentialTemplate, dialogId, onCreated }:
                 </ScrollArea.Root>
 
                 {/* Footer */}
-                <div className='pointer-events-none absolute bottom-0 right-0 pt-2 px-4 pb-4 pt-2 mt-auto flex justify-end gap-2'>
-                    <Button type='button' variant='ghost' className='pointer-events-auto rounded-full' onClick={() => DialogSDK.actions.pop(dialogId)}>
-                        Cancel
-                    </Button>
-                    <Button type='submit' form={formId} className='pointer-events-auto rounded-full' disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting && <Spinner className='mr-2 h-4 w-4' />}
-                        Save
-                    </Button>
+                <div className='pointer-events-none absolute bottom-0 left-0 right-0 pt-2 px-4 pb-4 pt-2 mt-auto w-full flex'>
+                    <div className='ml-auto gap-2 flex'>
+                        {updateProps ? (
+                            <Button type='button' variant='ghost-destructive' className='pointer-events-auto rounded-full' onClick={onRemove} disabled={isRemoving || form.formState.isSubmitting}>
+                                {isRemoving && <Spinner className='mr-2 h-4 w-4' />}
+                                Remove
+                            </Button>
+                        ) : <div />}
+                        <Button type='submit' form={formId} className='pointer-events-auto rounded-full' disabled={form.formState.isSubmitting || isLoadingValues || isRemoving}>
+                            {form.formState.isSubmitting && <Spinner className='mr-2 h-4 w-4' />}
+                            Save
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

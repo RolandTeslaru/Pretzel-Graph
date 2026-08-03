@@ -377,6 +377,36 @@ export namespace FieldBuilder {
         };
     }
 
+    export function CalendarRange<T_Id extends string, T_Required extends boolean = false>(
+        id: T_Id, displayName: string, options: {
+        initialValue?: Field.CalendarRange.Value;
+        placeholder?: string;
+        maxDate?: string;
+    } & BaseOptions<T_Required> = {},
+    ): T_Return<T_Id, "CalendarRange", Field.CalendarRange, T_Required> {
+        return {
+            ...buildBase(id, displayName, options),
+            variant:      "CalendarRange",
+            initialValue: options.initialValue ?? {},
+            placeholder:  options.placeholder,
+            maxDate:      options.maxDate,
+        };
+    }
+
+    export function CalendarDateTimeRange<T_Id extends string, T_Required extends boolean = false>(
+        id: T_Id, displayName: string, options: {
+        initialValue?: Field.CalendarDateTimeRange.Value;
+        placeholder?: string;
+    } & BaseOptions<T_Required> = {},
+    ): T_Return<T_Id, "CalendarDateTimeRange", Field.CalendarDateTimeRange, T_Required> {
+        return {
+            ...buildBase(id, displayName, options),
+            variant:      "CalendarDateTimeRange",
+            initialValue: options.initialValue ?? { startTime: "", endTime: "" },
+            placeholder:  options.placeholder,
+        };
+    }
+
 
 
     // Framework-owned fields appended to every blueprint by defineBlueprint. They are also
