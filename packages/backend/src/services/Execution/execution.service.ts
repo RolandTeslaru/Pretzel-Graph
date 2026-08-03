@@ -6,7 +6,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { createAuthenticatedClient, createServiceClient } from '@/utils/supabase';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { Auth, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
-import { CatalogueService, mapFieldValues } from '@pretzel-graph/node-sdk';
+import { CatalogueService } from '@pretzel-graph/node-sdk';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
 import { RealtimeService } from '../Realtime/realtime.service';
@@ -92,7 +92,7 @@ export class ExecutionService {
 
 
 
-    // Resolve each node's (possibly reconciled) blueprint so validation can derive fields/ports.
+    // Resolve each node's derivative blueprint so validation sees its final fields and ports.
     private async resolveBlueprints(
         workflowData: Workflow.Data,
     ): Promise<Record<Blueprint.Id, Blueprint>> {
@@ -113,9 +113,13 @@ export class ExecutionService {
             }
 
             if (node.reconciledBlueprintId) {
-                const fieldValues = mapFieldValues(base.fields, workflowData.staticValues[node.id] ?? {});
-                const reconciled = await CatalogueService.reconcile(node.blueprintId, fieldValues);
-                if (reconciled) blueprints[node.reconciledBlueprintId] = reconciled;
+                const path = Blueprint.isReconciledId(node.reconciledBlueprintId)
+                    ? node.reconciledBlueprintId.slice(base.id.length + 1)
+                    : null;
+                const derived = path
+                    ? Blueprint.deriveByPath(base, path)
+                    : Blueprint.derive(base, workflowData.staticValues[node.id] ?? {}).blueprint;
+                blueprints[node.reconciledBlueprintId] = derived;
             } else {
                 blueprints[node.blueprintId] = base;
             }

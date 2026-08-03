@@ -8,7 +8,7 @@ type S      = WorkbenchSDK.State
 type NodeId = Workflow.Node.Id
 
 export const nodeReducers = {
-    // Lifecycle: create / remove / recreate / duplicate / reconcile / wipe / disconnect
+    // Lifecycle: create / remove / recreate / duplicate / apply derivative / wipe / disconnect
     // + validate / clearIssues (kept here since lifecycle is their primary consumer).
     ...nodeLifecycleReducers,
     ...nodeValueReducers,

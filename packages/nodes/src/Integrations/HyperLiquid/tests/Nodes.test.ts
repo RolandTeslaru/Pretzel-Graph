@@ -136,14 +136,14 @@ describe("Hyperliquid node blueprints", () => {
     });
 
 
-    it("derives through the catalogue without legacy reconcile.ts files", async () => {
+    it("resolves inline derivatives through the catalogue", async () => {
         CatalogueService.setNodesRoot(nodesRoot);
 
-        const market = await CatalogueService.reconcile(
+        const market = await CatalogueService.resolveBlueprint(
             MarketBlueprint.id,
             { resource: "orderBook" } as never,
         );
-        const account = await CatalogueService.reconcile(
+        const account = await CatalogueService.resolveBlueprint(
             AccountBlueprint.id,
             { resource: "fills" } as never,
         );

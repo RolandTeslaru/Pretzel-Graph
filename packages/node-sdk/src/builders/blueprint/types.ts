@@ -79,7 +79,7 @@ export type ConditionKey = `${string}==${string}` | `${string}!=${string}`
 /**
  * A terminal contribution — a contribution, not a scope.
  *
- * Tool mode inverts the node's philosophy: instead of selecting one action and reconciling to it,
+ * Tool mode inverts the node's philosophy: instead of selecting one action and deriving its shape,
  * the node exposes its whole surface and the agent picks. So it declares its own fields and ports
  * outright rather than layering onto the run-mode ones, and nothing nests inside it. Condition
  * keys are typed `never` here to enforce that at the call site.

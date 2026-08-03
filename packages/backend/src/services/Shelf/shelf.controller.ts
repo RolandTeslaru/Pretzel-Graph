@@ -33,11 +33,11 @@ export class ShelfController {
         return this.shelfService.getAllInSection(body);
     }
 
-    @Post('blueprint/reconcile')
+    @Post('blueprint/derive')
     @HttpCode(200)
-    async reconcileBlueprint(
-        @ZodBody(Shelf.API.Blueprint.Reconcile.Request) body: Shelf.API.Blueprint.Reconcile.Request,
+    deriveBlueprint(
+        @ZodBody(Shelf.API.Blueprint.Derive.Request) body: Shelf.API.Blueprint.Derive.Request,
     ) {
-        return await this.shelfService.reconcileBlueprint(body);
+        return this.shelfService.deriveBlueprint(body);
     }
 }

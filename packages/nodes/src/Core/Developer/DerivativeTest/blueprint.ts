@@ -66,7 +66,7 @@ export const Blueprint = defineBlueprint({
         },
     },
 
-    // Tool mode inverts the philosophy: nothing to select and nothing to reconcile — the node
+    // Tool mode inverts the philosophy: nothing to select or derive — the node
     // exposes its surface and the agent picks. defineTool is terminal, so it replaces the run-mode
     // structure outright rather than layering onto it. No separate ToolBlueprint export.
     "isConvertedToTool==true": defineTool({

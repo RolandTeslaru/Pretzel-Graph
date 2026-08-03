@@ -9,7 +9,7 @@ export { ToolBudget } from "./tools/budget";
 export { HTTP } from "./domain/http";
 export { NetworkProxy } from "./domain/networkProxy";
 export { Synthesizer } from "./synthesizer";
-export { mapFieldValues, pickReconcilingValues } from "./utils/mapFieldValues";
+export { mapFieldValues } from "./utils/mapFieldValues";
 export { ConnectionManager } from "./db/connection-manager";
 export { SqlConnectionManager } from "./db/sql-connection-manager";
 export { postgres, toPgCreds } from "./db/postgres";

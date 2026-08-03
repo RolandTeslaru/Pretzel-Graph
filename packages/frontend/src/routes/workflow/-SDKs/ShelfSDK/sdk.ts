@@ -32,7 +32,7 @@ export class ShelfSDKImpl extends BaseSDK<ShelfSDK.State> {
                 selectionFilters: new Set<Shelf.Section>(["core"]),
                 dataTypes: null
             },
-            reconciledBlueprintsCache: {}
+            derivedBlueprintsCache: {}
         }))
     )
 
@@ -61,7 +61,7 @@ export namespace ShelfSDK {
             selectionFilters: Set<Shelf.Section>
             dataTypes: Set<Foundations.Port.Variant> | null
         },
-        reconciledBlueprintsCache: Record<Foundations.Blueprint.ReconciledId, Foundations.Blueprint>
+        derivedBlueprintsCache: Record<Foundations.Blueprint.ReconciledId, Foundations.Blueprint>
     }
 
     export type Actions = _ShelfActions

@@ -109,25 +109,25 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
                 setState(s => { sdk.reducers.searchFilter.toggleDataType(s, ...props) }),
         },
 
-        getReconciledBlueprint: async (blueprint, fieldValues, { onApiFetch } = {}) => {
-            const reconciledId = Foundations.Blueprint.deriveId(blueprint, fieldValues);
+        getDerivedBlueprint: async (blueprint, fieldValues, { onApiFetch } = {}) => {
+            const derivedId = Foundations.Blueprint.deriveId(blueprint, fieldValues);
 
-            const cached = getState().reconciledBlueprintsCache[reconciledId];
+            const cached = getState().derivedBlueprintsCache[derivedId];
             if (cached) return cached;
 
             onApiFetch?.();
 
-            const { reconciledBlueprint } = await Shelf.API.Blueprint.reconcile(api, {
+            const { derivedBlueprint } = await Shelf.API.Blueprint.derive(api, {
                 blueprintId: blueprint.id, fieldValues
             });
 
             setState(s => {
-                s.reconciledBlueprintsCache[reconciledId] = reconciledBlueprint;
+                s.derivedBlueprintsCache[derivedId] = derivedBlueprint;
                 // Also key it in the main blueprint map — derive-on-read (getInputs/getFields/…)
                 // resolves a node's blueprint by `reconciledBlueprintId` out of `blueprints`.
-                s.blueprints[reconciledId] = reconciledBlueprint;
+                s.blueprints[derivedId] = derivedBlueprint;
             });
-            return reconciledBlueprint;
+            return derivedBlueprint;
         }
     } satisfies _ShelfActions
 }
@@ -148,7 +148,7 @@ export type _ShelfActions = {
         toggleDataType: DropFirstArg<ShelfSDK.Reducers["searchFilter"]["toggleDataType"]>;
     };
 
-    getReconciledBlueprint: (
+    getDerivedBlueprint: (
         blueprint: Foundations.Blueprint,
         fieldValues: Record<Foundations.Field.Id, Foundations.Field.Value>,
         callbacks?: { onApiFetch?: () => void }

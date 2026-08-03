@@ -22,7 +22,7 @@ import { createContexts } from "./contexts";
 
 // Turns stored Workflow.Data into a runnable execution context. compile() in order:
 //
-//   1. Resolve every node's blueprint — load, reconcile, or fall back to a subworkflow
+//   1. Resolve every node's blueprint — load, derive, or fall back to a subworkflow
 //      dependency — which warms CatalogueService for the sync reads later steps rely on.
 //   2. Build the Workflow.Cache (resolved port/field shapes, fat edges) off those blueprints.
 //   3. Create the S2Graph and its START vertex.
@@ -287,37 +287,25 @@ export class TurboGraph {
 
 
 
-    // Derivative blueprints replay the path the editor already settled on rather than re-deriving
-    // from field values: only base fields are known here, and a nested discriminant is declared by
-    // the branch that introduces it — so derive() would fall back to its initialValue and silently
-    // resolve a different branch. Legacy reconcile.ts nodes keep the value-encoded id.
+    // Replay the derivative path the editor already settled on rather than re-deriving it from
+    // base field values. A nested discriminant belongs to the branch that introduces it, so the
+    // persisted path is the authoritative identity for an existing node.
     private async deriveNodeBlueprint(
         wfNode:       Workflow.Node.Raw,
         base:         Foundations.Blueprint,
         staticValues: Record<Foundations.Field.Id, Foundations.Field.Value>,
     ): Promise<Foundations.Blueprint | null> {
 
-        if (base._derivatives?.length) {
-
-            // No path to replay when the node was never reconciled, or when a null derivativeId
-            // serialised as the bare blueprint id — fall back to deriving from what we have.
-            const path = wfNode.reconciledBlueprintId && Blueprint.isReconciledId(wfNode.reconciledBlueprintId)
-                ? wfNode.reconciledBlueprintId.slice(base.id.length + 1)
-                : null;
-
-            if (!path)
-                return Blueprint.derive(base, staticValues).blueprint;
-
-            return Blueprint.deriveByPath(base, path);
-        }
-
-        if (!wfNode.reconciledBlueprintId)
+        if (!base._derivatives?.length)
             return base;
 
-        return await CatalogueService.reconcile(
-            wfNode.blueprintId,
-            mapFieldValues(base.fields, staticValues),
-        );
+        const path = wfNode.reconciledBlueprintId && Blueprint.isReconciledId(wfNode.reconciledBlueprintId)
+            ? wfNode.reconciledBlueprintId.slice(base.id.length + 1)
+            : null;
+
+        return path
+            ? Blueprint.deriveByPath(base, path)
+            : Blueprint.derive(base, staticValues).blueprint;
     }
 
 
@@ -386,7 +374,7 @@ export class TurboGraph {
 
         this.assertProxySupported(wfNode, blueprint, engineExecutionCtx);
 
-        // Resolved blueprint, so this includes reconcile-added fields.
+        // Resolved blueprint, so this includes derivative-contributed fields.
         const fieldValues = mapFieldValues(blueprint.fields, staticValues);
 
         const instance = new RuntimeNode(wfNode.id, nodeExecutionCtx);
