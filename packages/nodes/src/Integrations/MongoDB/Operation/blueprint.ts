@@ -9,9 +9,7 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     credentials: [Mongo],
     fields: [
-        // operation drives the field schema via reconcile. Base (find default) is
-        // operation + collection + query + limit; other operations swap in their fields.
-        FieldBuilder.reconciling(FieldBuilder.MultiOption("operation", "Operation", {
+        FieldBuilder.MultiOption("operation", "Operation", {
             options: [
                 { value: "find",   displayName: "Find" },
                 { value: "insert", displayName: "Insert" },
@@ -21,26 +19,71 @@ export const Blueprint = defineBlueprint({
 
             initialValue: "find",
             tooltip: "The MongoDB operation to run."
-        })),
+        }),
         FieldBuilder.String("collection", "Collection", {
             required: true,
             placeholder: "users"
         }),
-        FieldBuilder.Json("query", "Query", {
-            initialValue: {},
-            tooltip: "Filter document, e.g. { \"status\": \"active\" }."
-        }),
-        FieldBuilder.Integer("limit", "Limit", {
-            initialValue: 50,
-            min: 1
-        }),
     ],
     inputs: [],
-    outputs: [
-        // find (default) emits a DataList of documents. reconcile swaps this to a single
-        // Data port for insert/update/delete (which return a summary object).
-        OutputBuilder.DataList("result", "Documents", {
-            tooltip: "Documents matched by the query — one item per document."
-        }),
-    ],
+    outputs: [],
+
+    "operation!=insert": {
+        fields: [
+            FieldBuilder.Json("query", "Query", {
+                initialValue: {},
+                tooltip: "Filter document, e.g. { \"status\": \"active\" }."
+            }),
+        ],
+
+        "operation==find": {
+            fields: [
+                FieldBuilder.Integer("limit", "Limit", {
+                    initialValue: 50,
+                    min: 1
+                }),
+            ],
+            outputs: [
+                OutputBuilder.DataList("result", "Documents", {
+                    tooltip: "Documents matched by the query — one item per document."
+                }),
+            ],
+        },
+
+        "operation==update": {
+            fields: [
+                FieldBuilder.Json("update", "Update", {
+                    initialValue: {},
+                    tooltip: "Fields to $set, e.g. { \"status\": \"archived\" }."
+                }),
+            ],
+            outputs: [
+                OutputBuilder.Data("result", "Result", {
+                    tooltip: "Update result summary."
+                }),
+            ],
+        },
+
+        "operation==delete": {
+            outputs: [
+                OutputBuilder.Data("result", "Result", {
+                    tooltip: "Delete result summary."
+                }),
+            ],
+        },
+    },
+
+    "operation==insert": {
+        fields: [
+            FieldBuilder.Json("documents", "Documents", {
+                initialValue: [],
+                tooltip: "Array of documents to insert."
+            }),
+        ],
+        outputs: [
+            OutputBuilder.Data("result", "Result", {
+                tooltip: "Insert result summary."
+            }),
+        ],
+    },
 });

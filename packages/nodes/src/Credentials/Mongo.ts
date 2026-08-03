@@ -10,8 +10,7 @@ export const Mongo = defineCredential({
             initialValue: "localhost"
         }),
         FieldBuilder.Integer("port", "Port", {
-            initialValue: 27017,
-            tooltip: "Leave blank for a mongodb+srv (Atlas) connection."
+            tooltip: "Leave blank for Atlas (mongodb+srv); enter a port only for a direct mongodb connection."
         }),
         FieldBuilder.String("database", "Database", {
             required: true

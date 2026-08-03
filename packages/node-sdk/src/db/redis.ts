@@ -4,8 +4,10 @@ import { ConnectionManager } from "./connection-manager";
 export type RedisCreds = {
     host: string;
     port: number;
+    username?: string;
     password?: string;
     db?: number;
+    tls?: boolean;
 };
 
 class RedisConnectionManager extends ConnectionManager<RedisCreds, Redis> {
@@ -13,8 +15,10 @@ class RedisConnectionManager extends ConnectionManager<RedisCreds, Redis> {
         const client = new Redis({
             host: c.host,
             port: c.port,
+            username: c.username || undefined,
             password: c.password || undefined,
             db: c.db ?? 0,
+            tls: c.tls ? {} : undefined,
             maxRetriesPerRequest: 1,
         });
         // Swallow connection-level error events so a bad host doesn't crash the process —
@@ -36,7 +40,9 @@ export function toRedisCreds(values: Record<string, unknown>): RedisCreds {
     return {
         host: String(values.host ?? ""),
         port: Number(values.port),
+        username: values.username ? String(values.username) : undefined,
         password: values.password ? String(values.password) : undefined,
         db: Number(values.db ?? 0),
+        tls: values.tls === true || values.tls === "true",
     };
 }

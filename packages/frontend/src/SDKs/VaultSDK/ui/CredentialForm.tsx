@@ -22,6 +22,54 @@ interface Props {
     updateProps?: UpdateProps
 }
 
+type CredentialField = Vault.Credential.Template['fields'][number]
+
+const createFieldSchema = (field: CredentialField) => {
+    switch (field.variant) {
+        case 'Boolean':
+            return z.boolean()
+
+        case 'Integer':
+        case 'Float':
+            return field.required
+                ? z.number()
+                : z.union([z.number(), z.literal('')])
+
+        case 'MultiOption':
+            return z.string().refine(
+                value =>
+                    (!field.required && value === '') ||
+                    field.options.some(option => option.value === value),
+                `Select a valid ${field.displayName}`,
+            )
+
+        default:
+            return field.required
+                ? z.string().min(1, `${field.displayName} is required`)
+                : z.string()
+    }
+}
+
+const getFieldDefaultValue = (field: CredentialField) => {
+    switch (field.variant) {
+        case 'Boolean':
+            return field.initialValue ?? false
+
+        case 'Integer':
+        case 'Float':
+            return field.initialValue ?? (field.required ? 0 : '')
+
+        case 'MultiOption':
+            return field.initialValue ?? ''
+
+        case 'String':
+            return field.initialValue ?? ''
+
+        default:
+            return ''
+    }
+}
+
 export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: Props) => {
     // ScrollArea.Root forwards its ref to the underlying viewport.
     const viewportRef = useRef<HTMLDivElement>(null)
@@ -35,16 +83,12 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
     const schema = useMemo(() => z.object({
         name: z.string().trim().min(1, 'Name is required'),
         fields: z.object(
-            Object.fromEntries(credentialTemplate.fields.map(f => [
-                f.id,
-                f.variant === 'Boolean' ? z.boolean()
-                    : (f.variant === 'Integer' || f.variant === 'Float') ? z.number()
-                        : f.variant === 'MultiOption' ? z.string().refine(
-                            value => (!f.required && value === '') || f.options.some(option => option.value === value),
-                            `Select a valid ${f.displayName}`,
-                        )
-                        : f.required ? z.string().min(1, `${f.displayName} is required`) : z.string(),
-            ]))
+            Object.fromEntries(
+                credentialTemplate.fields.map(field => [
+                    field.id,
+                    createFieldSchema(field),
+                ]),
+            ),
         ),
     }), [credentialTemplate])
 
@@ -52,13 +96,12 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
 
     const getDefaultValues = (): Values => ({
         name: '',
-        fields: Object.fromEntries(credentialTemplate.fields.map(f => [
-            f.id,
-            f.variant === 'Boolean' ? (('initialValue' in f ? f.initialValue : false) ?? false)
-                : (f.variant === 'Integer' || f.variant === 'Float') ? (('initialValue' in f ? f.initialValue : 0) ?? 0)
-                    : f.variant === 'MultiOption' ? (f.initialValue ?? '')
-                        : '',
-        ])) as Values['fields'],
+        fields: Object.fromEntries(
+            credentialTemplate.fields.map(field => [
+                field.id,
+                getFieldDefaultValue(field),
+            ]),
+        ) as Values['fields'],
     })
 
     const form = useForm<Values>({
@@ -204,8 +247,8 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
                                             ) : (f.variant === 'Integer' || f.variant === 'Float') ? (
                                                 <Input
                                                     type='number'
-                                                    value={field.value as number}
-                                                    onChange={e => field.onChange(e.target.valueAsNumber)}
+                                                    value={(field.value ?? '') as number | ''}
+                                                    onChange={e => field.onChange(e.target.value === '' ? '' : e.target.valueAsNumber)}
                                                     onBlur={field.onBlur}
                                                     name={field.name}
                                                     ref={field.ref}
