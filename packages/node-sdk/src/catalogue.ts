@@ -2,7 +2,6 @@ import { container, singleton } from "tsyringe";
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import type { RuntimeNode } from "./node";
 import type { Loader } from "./builders/loaders";
-import { pickReconcilingValues } from "./utils/mapFieldValues";
 
 export type NodeConstructor = {
     new(
@@ -28,8 +27,8 @@ class CatalogueServiceImpl {
 
     private nodesRoot: string = "";
 
-    // Base + reconciled blueprints in one map. ReconciledId is a Blueprint.Id sub-brand,
-    // so a reconciled variant keys the same cache as its base.
+    // Base + resolved derivative blueprints share one cache. ReconciledId remains the persisted
+    // workflow brand, but every non-base cache key is now a derivative path.
     private blueprintCache = new Map<Foundations.Blueprint.Id, Foundations.Blueprint>();
 
     public setNodesRoot(rootPath: string) {
@@ -82,37 +81,28 @@ class CatalogueServiceImpl {
         }
     }
 
-    // Resolve the (possibly reconciled) blueprint for a node's field values. Pure + content-addressed:
-    // the reconciler folds structure from base off `fieldValues`, keyed/cached by reconciledId.
-    public async reconcile(
+    // Resolve a blueprint's derivative for the supplied field values. Static blueprints return
+    // their base unchanged; there is no dynamic module or mutation fallback.
+    public async resolveBlueprint(
         blueprintId: Foundations.Blueprint.Id,
         fieldValues: Record<Foundations.Field.Id, Foundations.Field.Value>,
     ): Promise<Foundations.Blueprint | null> {
         const base = await this.loadBlueprint(blueprintId);
         if (!base) return null;
 
-        const reconciledId = Foundations.Blueprint.deriveId(base, fieldValues);
-        const cached = this.blueprintCache.get(reconciledId);
+        if (!base._derivatives?.length)
+            return base;
+
+        const resolvedId = Foundations.Blueprint.deriveId(base, fieldValues);
+        const cached = this.blueprintCache.get(resolvedId);
         if (cached) return cached;
 
-        // Derivative blueprints fold their own tree — no reconcile.ts, and the full field values,
-        // since a discriminant may be introduced by a branch rather than declared on the base.
-        if (base._derivatives?.length) {
-            const { blueprint } = Foundations.Blueprint.derive(base, fieldValues);
-            this.blueprintCache.set(reconciledId, blueprint);
-            return blueprint;
-        }
-
-        const reconciler = await this.getReconciler(blueprintId);
-        if (!reconciler) return base;
-
-        // Reconcilers see only reconcile-field values — the same set that keys reconciledId.
-        const reconciled = reconciler(structuredClone(base), pickReconcilingValues(base.fields, fieldValues));
-        this.blueprintCache.set(reconciledId, reconciled);
-        return reconciled;
+        const { blueprint } = Foundations.Blueprint.derive(base, fieldValues);
+        this.blueprintCache.set(resolvedId, blueprint);
+        return blueprint;
     }
 
-    // Sync cache read for the hot path — the compiler warms the cache (loadBlueprint/reconcile/
+    // Sync cache read for the hot path — the compiler warms the cache (loadBlueprint/resolveBlueprint/
     // registerBlueprint) during prepareNode, so execution-time lookups never hit the async import.
     public getBlueprint(id: Foundations.Blueprint.Id): Foundations.Blueprint | undefined {
         return this.blueprintCache.get(id);
@@ -120,27 +110,6 @@ class CatalogueServiceImpl {
 
     public registerBlueprint(id: Foundations.Blueprint.Id, blueprint: Foundations.Blueprint): void {
         this.blueprintCache.set(id, blueprint);
-    }
-
-    public async getReconciler(blueprintId: Foundations.Blueprint.Id) {
-        if (!this.nodesRoot)
-            throw new Error(`[CatalogueService] nodesRoot not set. Call setNodesRoot() before loading reconcilers.`);
-
-        const relativePath = blueprintId.replace(/\./g, "/");
-        const fullPath = `${this.nodesRoot}/${relativePath}/reconcile`;
-
-        try {
-            const module = await import(fullPath);
-            return module.reconcile || module.default;
-
-        } catch (error: any) {
-            if (error.code === "MODULE_NOT_FOUND" || error.code === "ERR_MODULE_NOT_FOUND") {
-                return (blueprint: Foundations.Blueprint) => blueprint;
-            }
-
-            console.error(`[CatalogueService] Failed to load reconcile for '${blueprintId}':`, error);
-            return null;
-        }
     }
 
     public async getLoader(

@@ -3,8 +3,8 @@ import type { ShelfSDK } from "./sdk";
 
 export function _createShelfSelectors_(){
     return {
-        getReconciledBlueprint: (state: ShelfSDK.State, reconciledId: Foundations.Blueprint.ReconciledId): Foundations.Blueprint | null => {
-            return state.reconciledBlueprintsCache[reconciledId] ?? null;
+        getDerivedBlueprint: (state: ShelfSDK.State, derivedId: Foundations.Blueprint.ReconciledId): Foundations.Blueprint | null => {
+            return state.derivedBlueprintsCache[derivedId] ?? null;
         }
     } satisfies _ShelfSelectors
 }

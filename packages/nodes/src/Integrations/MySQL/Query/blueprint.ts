@@ -9,17 +9,6 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     credentials: [MySQL],
     fields: [
-        // The operation drives the node's field schema via reconcile. Only "executeQuery"
-        // exists for now (needs just the query field). Future operations — select / insert /
-        // update / upsert / delete — will reconcile in schema / table ResourceLoader fields.
-        FieldBuilder.reconciling(FieldBuilder.MultiOption("operation", "Operation", {
-            options: [
-                { value: "executeQuery", displayName: "Execute Query" },
-            ],
-
-            initialValue: "executeQuery",
-            tooltip: "What this node does against the database."
-        })),
         FieldBuilder.String("query", "Query", {
             multiline: true,
             initialValue: "SELECT * FROM ",

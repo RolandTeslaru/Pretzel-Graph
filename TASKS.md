@@ -38,7 +38,7 @@
 
 - [x] **node-sdk:** `ConnectionManager` base + `SqlConnectionManager` (`withConnection` / `DISCARD ALL`) + Postgres adapter in `src/db/`; added `pg` dep; exported `postgres`/`toPgCreds`.
 - [x] **nodes:** `Credentials/Postgres.ts` credential template (+ re-export from `Credentials/index.ts`).
-- [x] **nodes:** `Integrations/Postgres/Query` blueprint + node — `operation` MultiOption (reconcile:true) + `query`; `executeQuery` operation only. schema/table fields + loaders parked for future operations (see reconcile.ts + spec).
+- [x] **nodes:** `Integrations/Postgres/Query` blueprint + node — `query` field and `executeQuery` behavior. Schema/table fields + loaders remain parked for future derivative-backed operations (see spec).
 - [x] **shared:** registered `Integrations.Postgres.Query` in a new `postgres` drawer (`constants/drawers.ts`).
 - [x] **catalog:** ran `generate-indexes` — node present in `node_index.json` (dist + backend shelf).
 - [x] **typecheck:** node-sdk / nodes / shared / backend / worker all clean.
@@ -60,7 +60,7 @@
 
 - [ ] **node-sdk:** `mongo.ts` adapter (`ConnectionManager` base, cache `MongoClient`, discrete-fields→URI composition, `toMongoCreds`); add `mongodb` dep; export from index.
 - [ ] **nodes:** `Credentials/Mongo.ts` (discrete fields) + barrel export.
-- [ ] **nodes:** `Integrations/MongoDB/Operation` blueprint + reconcile + node — find/insert/update/delete; `_id` string→ObjectId in, deep-normalize docs out; single `Json` `result` output.
+- [x] **nodes:** `Integrations/MongoDB/Operation` blueprint + inline derivatives + node — find/insert/update/delete; `_id` string→ObjectId in, deep-normalize docs out; bounded data outputs.
 - [ ] **shared:** add `Integrations.MongoDB.Operation` to the `mongodb` drawer.
 - [ ] **catalog:** `generate-indexes`; typecheck all packages.
 - [ ] **follow-up:** database/collection ResourceLoader dropdowns (exercises credential injection); then `aggregate` / findOneAnd* / TLS cert fields / per-op `DataList`.
@@ -68,7 +68,7 @@
 ### Follow-ups (specs not yet written)
 
 - [ ] Query-key composition: include `dependsOn` field values in the resource-loader query key so editing an upstream field auto-invalidates dependent loaders.
-- [ ] Postgres node operations: `select` / `insert` / `update` / `upsert` / `delete` — each reconciles in `schema` / `table` ResourceLoader fields (+ un-park the schema/table loaders; cast `fieldValues` for reconcile-added fields). Then column loader / resource-mapper grid; SSH tunneling; MySQL / Mongo adapters.
+- [ ] Postgres node operations: `select` / `insert` / `update` / `upsert` / `delete` — each declares `schema` / `table` ResourceLoader fields in an inline derivative. Then column loader / resource-mapper grid and SSH tunneling.
 - [ ] Postgres credential SSL: replace the `Use SSL` boolean (currently verify-against-system-CAs) with an n8n-style ssl-mode (`disable`/`require`/`verify-full`) + explicit "allow self-signed" opt-in, to support self-hosted / self-signed Postgres.
 
 ## Debug Mode (warm-kernel stepping) — [spec](SPECS/debug-mode.md)

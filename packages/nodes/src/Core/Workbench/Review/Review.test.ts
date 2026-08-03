@@ -54,16 +54,16 @@ describe("Workbench Review derivatives", () => {
         assert.deepEqual(blueprint.outputs.map(output => String(output.id)), ["approved", "rejected"]);
     });
 
-    it("marks the mode field as reconciling automatically", () => {
+    it("marks the mode field as a derivative trigger automatically", () => {
         const variant = Blueprint.fields.find(field => String(field.id) === "variant");
 
         assert.equal(variant?.reconcile, true);
     });
 
-    it("derives through the catalogue without reconcile.ts", async () => {
+    it("resolves its inline derivative through the catalogue", async () => {
         CatalogueService.setNodesRoot(nodesRoot);
 
-        const result = await CatalogueService.reconcile(
+        const result = await CatalogueService.resolveBlueprint(
             Blueprint.id,
             { variant: "choice" } as never,
         );
