@@ -20,12 +20,15 @@ const CanvasNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
 
   const hyNode = WorkbenchSDK.useNode(nodeId);
 
-  // Handle positions (Left<->Right) flip with node.isFlipped / isMinimized.
-  // XYFlow caches handle bounds, so tell it to re-measure and reroute edges.
+  // Handle positions flip with node.isFlipped / isMinimized, and handles themselves change
+  // when the resolved port shape changes (e.g. tool-mode reconcile swaps every output for a
+  // single Tool port). XYFlow caches handle bounds per node, so tell it to re-measure and
+  // reroute edges whenever any of that changes — otherwise new/moved handles are invisible
+  // to connection dragging even though they've already rendered.
   const updateNodeInternals = useUpdateNodeInternals()
   useEffect(() => {
     updateNodeInternals(nodeId)
-  }, [nodeId, hyNode?.ui?.isFlipped, hyNode?.ui?.isMinimized, updateNodeInternals])
+  }, [nodeId, hyNode?.ui?.isFlipped, hyNode?.ui?.isMinimized, hyNode?.inputs, hyNode?.outputs, updateNodeInternals])
 
   if (!hyNode)
     return null;

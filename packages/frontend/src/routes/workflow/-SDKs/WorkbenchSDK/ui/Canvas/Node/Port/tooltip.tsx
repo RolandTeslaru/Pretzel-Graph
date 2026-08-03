@@ -1,7 +1,7 @@
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import React, { useMemo } from 'react'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk';
-import { PortBadge } from '../../../PortBadge';
+import { PortBadge } from './port-badge';
 
 interface Props {
   handleType: 'target' | 'source'
