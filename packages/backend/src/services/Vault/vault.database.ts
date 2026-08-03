@@ -82,6 +82,20 @@ class CredentialInstanceMethods {
 
         return data;
     }
+
+    @SupabaseAssert('vault.credentialInstance.update')
+    @ZodReturn(Vault.Credential.Instance.Schema)
+    async update(supabase: SupabaseClient, id: Vault.Credential.Instance.Id, name: string, blob: Vault.Credential.Instance.EncryptedBlob): Promise<Vault.Credential.Instance> {
+        const { data } = await supabase
+            .from('credential_instance')
+            .update({ name, blob })
+            .eq('id', id)
+            .select<string, Vault.Credential.Instance>('id, name, template_id, created_at, updated_at, blob')
+            .single()
+            .throwOnError();
+
+        return data;
+    }
 }
 
 @Injectable()

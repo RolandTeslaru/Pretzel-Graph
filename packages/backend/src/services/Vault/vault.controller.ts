@@ -48,4 +48,13 @@ export class VaultController {
     ): Promise<Vault.API.CredentialInstance.UpdateName.Response> {
         return this.vaultService.credentialInstance.updateName(req.token, { id, name });
     }
+
+    @Patch('credential-instances/:id')
+    async update(
+        @Req() req: AuthenticatedRequest,
+        @Param('id') id: Vault.Credential.Instance.Id,
+        @ZodBody(Vault.API.CredentialInstance.Update.Request.omit({ id: true })) body: Omit<Vault.API.CredentialInstance.Update.Request, 'id'>,
+    ): Promise<Vault.API.CredentialInstance.Update.Response> {
+        return this.vaultService.credentialInstance.update(req.token, { id, ...body });
+    }
 }

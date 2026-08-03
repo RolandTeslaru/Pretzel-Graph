@@ -127,11 +127,8 @@ export const Blueprint = defineBlueprint({
 
     "resource==calendar": {
         fields: [
-            FieldBuilder.String("calendarStart", "Start", {
-                placeholder: "2026-08-01",
-            }),
-            FieldBuilder.String("calendarEnd", "End", {
-                placeholder: "2026-08-31",
+            FieldBuilder.CalendarRange("calendarRange", "Date Range", {
+                placeholder: "Choose trading days",
             }),
             FieldBuilder.Integer("calendarLimit", "Max Days", {
                 initialValue: 30,

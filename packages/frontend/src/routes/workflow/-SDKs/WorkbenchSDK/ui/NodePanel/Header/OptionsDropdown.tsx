@@ -3,7 +3,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { WorkbenchSDK } from '../../../sdk'
-import { AddCredentialDialog } from '../AddCredentialDialog'
+import { CredentialForm } from '@/SDKs/VaultSDK/ui/CredentialForm'
 import { PROXY_TEMPLATE_ID } from '../proxy'
 
 interface Props {
@@ -29,9 +29,8 @@ export const OptionsDropdown = ({ hyNode, onEdit }: Props) => {
 
         DialogSDK.actions.push(dialogId, props => (
             <DialogSDK.Template {...props}>
-                <AddCredentialDialog
+                <CredentialForm
                     credentialTemplate={proxyTemplate}
-                    dialogId={dialogId}
                     onCreated={instanceId => setProxyInstance(instanceId)}
                 />
             </DialogSDK.Template>

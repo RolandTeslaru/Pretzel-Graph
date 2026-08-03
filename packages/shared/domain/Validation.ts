@@ -1,6 +1,7 @@
 import { Workflow } from "./Workflow"
 import { Port } from "./Foundations/Port"
 import { Foundations } from "./Foundations";
+import { Field as FoundationField } from "./Foundations/Field";
 import { Vault } from "./Vault";
 
 type Connection = {
@@ -24,6 +25,30 @@ export namespace Validation {
                 workflowData: Workflow.Data
             ): Issue.Field | null {
                 if (!field.required) return null;
+
+                if (field.variant === "CalendarRange") {
+                    const range = FoundationField.CalendarRange.Value.safeParse(
+                        workflowData.staticValues[nodeId]?.[field.id] ?? field.initialValue,
+                    );
+                    if (!range.success || !range.data.from || !range.data.to)
+                        return {
+                            field,
+                            type: 'missing_value' as const,
+                        }
+                    return null;
+                }
+
+                if (field.variant === "CalendarDateTimeRange") {
+                    const range = FoundationField.CalendarDateTimeRange.Value.safeParse(
+                        workflowData.staticValues[nodeId]?.[field.id] ?? field.initialValue,
+                    );
+                    if (!range.success || !range.data.date || !range.data.startTime || !range.data.endTime)
+                        return {
+                            field,
+                            type: 'missing_value' as const,
+                        }
+                    return null;
+                }
 
                 const value = workflowData.staticValues[nodeId]?.[field.id] ?? field.initialValue;
 

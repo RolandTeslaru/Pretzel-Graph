@@ -1,5 +1,5 @@
 import { WorkbenchSDK } from '../../sdk'
-import { CredentialPicker } from '../NodePanel/CredentialPicker'
+import { CredentialPicker } from '../CredentialsRenderer/CredentialPicker'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 
 export const CredentialsSettings = () => {

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useState } from "react"
+import type { DateRange } from "react-day-picker"
 
 import {
     Example,
@@ -22,6 +23,8 @@ import {
     Card,
 } from '@pretzel-graph/standard-ui/foundations/card'
 import { Checkbox } from '@pretzel-graph/standard-ui/foundations/checkbox'
+import { Calendar } from '@pretzel-graph/standard-ui/foundations/calendar'
+import { CalendarDateTimeRange } from '@pretzel-graph/standard-ui/foundations/calendar-date-time-range'
 import {
     DropdownMenu,
 } from '@pretzel-graph/standard-ui/foundations/dropdownMenu'
@@ -114,8 +117,71 @@ export default function CoverExample() {
                 <InputsWithCard />
                 <NotificationExample />
                 <ContextMenuExample />
+                <CalendarExamples />
             </ExampleWrapper>
         </div>
+    )
+}
+
+function CalendarExamples() {
+    const [date, setDate] = useState<Date>()
+    const [range, setRange] = useState<DateRange>()
+
+    const formatDate = (value: Date) => new Intl.DateTimeFormat(undefined, {
+        year:  'numeric',
+        month: 'short',
+        day:   'numeric',
+    }).format(value)
+
+    return (
+        <Example title="Calendar" className="w-full">
+            <div className="grid w-full gap-6 md:grid-cols-2">
+                <div className="flex flex-col gap-3">
+                    <div>
+                        <p className="text-sm font-medium text-label-primary">Single date</p>
+                        <p className="text-xs text-label-secondary">Select one calendar day.</p>
+                    </div>
+                    <div className="w-fit rounded-xl border border-border bg-popover p-2">
+                        <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={setDate}
+                        />
+                    </div>
+                    <p className="text-xs text-label-secondary">
+                        {date ? `Selected: ${formatDate(date)}` : 'No date selected'}
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                    <div>
+                        <p className="text-sm font-medium text-label-primary">Date range</p>
+                        <p className="text-xs text-label-secondary">Select a start and end date.</p>
+                    </div>
+                    <div className="w-fit rounded-xl border border-border bg-popover p-2">
+                        <Calendar
+                            mode="range"
+                            captionLayout="dropdown"
+                            selected={range}
+                            onSelect={setRange}
+                        />
+                    </div>
+                    <p className="text-xs text-label-secondary">
+                        {range?.from
+                            ? `Selected: ${formatDate(range.from)}${range.to ? ` – ${formatDate(range.to)}` : ''}`
+                            : 'No range selected'}
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                    <div>
+                        <p className="text-sm font-medium text-label-primary">Date and time range</p>
+                        <p className="text-xs text-label-secondary">Select one date with start and end times.</p>
+                    </div>
+                    <CalendarDateTimeRange />
+                </div>
+            </div>
+        </Example>
     )
 }
 

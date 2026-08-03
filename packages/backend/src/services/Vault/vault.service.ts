@@ -60,5 +60,15 @@ export class VaultService {
             const instance = await this.database.credentialInstance.updateName(supabase, req);
             return { instance };
         },
+
+        update: async (
+            token: Token.UserSupabaseJWT,
+            req: Vault.API.CredentialInstance.Update.Request,
+        ): Promise<Vault.API.CredentialInstance.Update.Response> => {
+            const supabase = createAuthenticatedClient(token);
+            const blob      = encryptCredentialBlob(req.fieldValues);
+            const instance  = await this.database.credentialInstance.update(supabase, req.id, req.name, blob);
+            return { instance };
+        },
     };
 }

@@ -5,13 +5,13 @@ import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { Accordion } from '@pretzel-graph/standard-ui/foundations/accordion';
-import { FieldRenderer } from '../FieldRenderer';
-import { INPUT_RENDERER_MAP } from '../InputRenderer';
+import { FieldRenderer } from '../FieldsRenderer';
+import { INPUT_RENDERER_MAP } from '../InputsRenderer';
 import { NodeSidebarHeader } from './Header';
 import { NodeSidebarFooter  as Footer} from './Footer';
 import WebhookRenderer from './webhook-renderer';
 import { InputItem } from './input-renderer';
-import { CredentialPicker } from './CredentialPicker';
+import { CredentialPicker } from '../CredentialsRenderer/CredentialPicker';
 import { DependencySelector } from './DependencySelector'
 import { PROXY_TEMPLATE_ID } from './proxy'
 
