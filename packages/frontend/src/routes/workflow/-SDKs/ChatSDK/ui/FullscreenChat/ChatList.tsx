@@ -1,8 +1,10 @@
 import { ChatSDK } from '../../sdk'
 import { Input } from '@pretzel-graph/standard-ui/foundations/input'
 import { ContextMenu, Separator } from '@pretzel-graph/standard-ui/foundations'
-import type { Chat } from '@pretzel-graph/shared/domain'
+import type { Chat, Workflow } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
+import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import { useParams } from '@tanstack/react-router'
 
 function formatChatDate(iso: string): string {
     const date = new Date(iso)
@@ -32,7 +34,7 @@ const Item = ({ chat, isCurrent }: { chat: Chat, isCurrent: boolean }) => {
     return (
         <ContextMenu.Root>
             <ContextMenu.Trigger asChild>
-                <div className={`${isCurrent ? 'bg-primary/30 text-primary' : 'group hover:bg-secondary active:bg-secondary/80'} flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors duration-150`}
+                <div className={`${isCurrent ? 'bg-[var(--port-Message)]/20 text-primary' : 'group hover:bg-secondary active:bg-secondary/80'} flex items-start gap-2.5 px-3 py-2.5 cursor-pointer `}
                     onClick={() => {
                         ChatSDK.actions.chat.load(chat.id);
                     }}
@@ -61,9 +63,18 @@ const Item = ({ chat, isCurrent }: { chat: Chat, isCurrent: boolean }) => {
 }
 
 const ChatList = () => {
+    const { workflowid } = useParams({ from: '/workflow/$workflowid' })
+    const workflowId = workflowid as Workflow.Id
+
     const chats = ChatSDK.useStore(s => s.chats);
 
     const currentchatId = ChatSDK.useStore(s => s.currentChatId);
+
+    QuerySDK.useQuery(
+        ['chats', workflowId],
+        () => ChatSDK.actions.chat.listByWorkflow(workflowId),
+        { staleTime: Infinity },
+    )
 
     return (
         <div className='flex flex-col h-full overflow-hidden'>
@@ -75,7 +86,7 @@ const ChatList = () => {
             <Separator className={"w-[calc(100%-16px)] mx-auto"} />
 
             {/* Scrollable list */}
-            <div className='flex flex-col overflow-y-auto flex-1 py-1'>
+            <div className='flex flex-col overflow-y-auto flex-1'>
                 {Object.values(chats).map((chat) => (
                     <Item key={chat.id} chat={chat} isCurrent={chat.id === currentchatId} />
                 ))}

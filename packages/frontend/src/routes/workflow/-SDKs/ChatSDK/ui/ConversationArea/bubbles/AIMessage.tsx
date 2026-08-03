@@ -1,6 +1,5 @@
 import { Chat } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { motion } from 'motion/react'
 import { Spinner } from '@pretzel-graph/standard-ui/foundations'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -10,11 +9,7 @@ const AIMessageBubble = ({ message }: { message: Chat.Message.AI }) => {
   const showSpinner = message.content === "" && message.data.isProcessing
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      className="flex flex-col items-start w-full gap-1"
-    >
+    <div className="flex flex-col items-start w-full gap-1">
       {message.content && 
         <div className="flex flex-row gap-3 items-end max-w-[85%]">
           <div className="bg-muted/40 border border-border text-foreground px-2 py-0.5 rounded-2xl rounded-bl-sm text-sm shadow-sm">
@@ -41,7 +36,7 @@ const AIMessageBubble = ({ message }: { message: Chat.Message.AI }) => {
           ))}
         </div>
       )}
-    </motion.div>
+    </div>
   )
 }
 

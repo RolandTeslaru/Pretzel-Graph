@@ -63,6 +63,20 @@ class ChatMethods {
         return data ?? [];
     }
 
+    @SupabaseAssert('chat.listByWorkflow')
+    @ZodReturn(Chat.Schema.array())
+    async listByWorkflow(supabase: SupabaseClient, userId: Auth.User.Id, workflowId: Workflow.Id): Promise<Chat[]> {
+        const { data } = await supabase
+            .from('chats')
+            .select<string, Chat>('*')
+            .eq('user_id', userId)
+            .eq('workflow_id', workflowId)
+            .order('updated_at', { ascending: false })
+            .throwOnError();
+
+        return data ?? [];
+    }
+
     @SupabaseAssert('chat.ensure')
     @ZodReturn(Chat.Schema)
     async ensure(supabase: SupabaseClient, userId: Auth.User.Id, chatId: Chat.Id, workflow_id: Workflow.Id, name = 'New Chat'): Promise<Chat> {

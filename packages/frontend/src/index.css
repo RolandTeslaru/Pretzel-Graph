@@ -284,7 +284,7 @@ code {
   --port-Text: theme(--color-slate-400);
 
   --card-foreground: theme(--color-white);
-  --popover: theme(--color-neutral-800);
+  --popover: rgb(35, 35, 39);
   --popover-foreground: theme(--color-neutral-100);
 
   --primary: theme(--color-orange-500);

@@ -51,7 +51,7 @@ const WorkflowSettings = () => {
 
     return (
         <div className='pl-2 flex flex-row gap-4 !overflow-hidden'>
-            <div className='p-0.5 my-2 bg-accent/50 rounded-lg w-50 border border-border shadow-lg shadow-black/10 shrink-0'>
+            <div className='p-0.5 py-2 w-50  shrink-0 border-r border-border'>
                 <div className='inline-flex items-center px-1'>
                     <SystemIcons.Cog className='size-4 m-2' />
                     <p className='font-medium text-sm'>Workflow Settings</p>
