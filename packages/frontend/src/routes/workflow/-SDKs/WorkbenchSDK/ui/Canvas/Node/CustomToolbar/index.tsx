@@ -8,7 +8,7 @@ import { OptionsDropdown } from './OptionsDropdown'
 import Tipped from '@/components/Tipped'
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 import { PROXY_TEMPLATE_ID } from '../../../NodePanel/proxy'
-import { CredentialPicker } from '../../../NodePanel/CredentialPicker'
+import { CredentialPicker } from '../../../CredentialsRenderer/CredentialPicker'
 import { DialogSDK } from '@/SDKs/DialogSDK'
 
 interface Props {

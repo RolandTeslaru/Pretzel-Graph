@@ -2,8 +2,8 @@ import React, { memo, useMemo } from 'react'
 import { WorkbenchSDK } from '../../../../sdk'
 import { Workflow, Foundations } from '@pretzel-graph/shared/domain';
 import { Port } from '../Port'
-import { INPUT_RENDERER_MAP } from '../../../InputRenderer';
-import { InputLabel, type InputLabelSize, type InputLabelVariant } from '../../../InputRenderer/label';
+import { INPUT_RENDERER_MAP } from '../../../InputsRenderer';
+import { InputLabel, type InputLabelSize, type InputLabelVariant } from '../../../InputsRenderer/label';
 
 const Item: React.FC<{
     input: Foundations.Port.Input

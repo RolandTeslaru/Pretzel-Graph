@@ -51,8 +51,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             case "calendar":
                 return {
                     calendar: await market.calendar({
-                        start: fields.calendarStart,
-                        end:   fields.calendarEnd,
+                        start: fields.calendarRange.from,
+                        end:   fields.calendarRange.to,
                         limit: fields.calendarLimit,
                     }),
                 } satisfies InferOutputs<typeof Blueprint, typeof fields>
