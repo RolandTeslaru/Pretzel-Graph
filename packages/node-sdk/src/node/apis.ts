@@ -23,7 +23,7 @@ export interface RealtimeAPI {
     ) => Promise<S>,
 }
 
-// Resolves each node's post-reconcile blueprint from the catalogue cache (warmed by the
+// Resolves each node's derivative blueprint from the catalogue cache (warmed by the
 // compiler). Read sites join against this instead of the slim workflow node.
 export interface CatalogueAPI {
     getBlueprint: (nodeId: Workflow.Node.Id) => Foundations.Blueprint,

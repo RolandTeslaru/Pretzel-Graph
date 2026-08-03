@@ -71,10 +71,10 @@ describe("Massive Market derivatives", () => {
         assert.equal(blueprint.ui.accent, "port-Tool");
     });
 
-    it("derives through the catalogue without reconcile.ts", async () => {
+    it("resolves its inline derivative through the catalogue", async () => {
         CatalogueService.setNodesRoot(nodesRoot);
 
-        const result = await CatalogueService.reconcile(
+        const result = await CatalogueService.resolveBlueprint(
             Blueprint.id,
             { action: "financials" } as never,
         );

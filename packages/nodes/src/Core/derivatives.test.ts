@@ -66,7 +66,7 @@ describe("blueprint derivatives", () => {
             .filter(f => f.reconcile && !FieldBuilder.DEFAULTS.IDS.has(String(f.id)))
             .map(f => String(f.id))
 
-        // `action` is branched on at the root; nothing was wrapped in FieldBuilder.reconciling.
+        // `action` is branched on at the root; condition fields are stamped automatically.
         assert.deepEqual(discriminants, ["action"])
 
         // A discriminant declared inside a branch and branched on deeper is stamped too —

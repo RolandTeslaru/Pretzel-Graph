@@ -30,7 +30,7 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
             }
 
             if (field.reconcile) {
-                console.log(`Field ${field.id} requires reconciliation`)
+                console.log(`Field ${field.id} selects a blueprint derivative`)
 
                 try {
                     // The BASE, not the node's current blueprint — derive() strips _derivatives
@@ -44,8 +44,8 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
                     // Merge the just-set value in — getValues is read pre-commit, so it's stale.
                     const fieldValues = { ...sel.field.getValues(sdk.state, nodeId), [field.id]: value };
 
-                    const reconciledBlueprint = await createToastPromise(
-                        ShelfSDK.actions.getReconciledBlueprint(
+                    const derivedBlueprint = await createToastPromise(
+                        ShelfSDK.actions.getDerivedBlueprint(
                             blueprint, fieldValues,
                             {
                                 onApiFetch: () => {
@@ -55,7 +55,7 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
                         ),
                         {
                             loading : `Reconciling node ${nodeId}`,
-                            success : `Node reconciled`,
+                            success : `Node derivative resolved`,
                             error   : (e: any) => e instanceof Error ? e.message : String(e),
                         }
                     );
@@ -63,12 +63,12 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
                     const reconciledBlueprintId = Blueprint.deriveId(blueprint, fieldValues);
 
                     setState(withCyclesRecompute(s => {
-                        reducers.node.reconcile(s, nodeId, reconciledBlueprint, reconciledBlueprintId)
+                        reducers.node.applyDerivative(s, nodeId, derivedBlueprint, reconciledBlueprintId)
                         reducers.field.unmarkAsReconciling(s, nodeId, field.id);
                         reducers.node.validate(s, nodeId);
                     }));
                 } catch (error) {
-                    throw new Error(`Could not reconcile node ${nodeId} via field ${field.id}. ${error instanceof Error ? error.message : String(error)}`)
+                    throw new Error(`Could not derive node ${nodeId} via field ${field.id}. ${error instanceof Error ? error.message : String(error)}`)
                 }
             }
 

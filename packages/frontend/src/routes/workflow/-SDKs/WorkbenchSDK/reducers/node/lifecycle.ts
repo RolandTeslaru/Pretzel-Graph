@@ -200,7 +200,7 @@ export const nodeLifecycleReducers = {
 
         return newNode;
     },
-    reconcile: (s, nodeId, blueprint, reconciledBlueprintId) => {
+    applyDerivative: (s, nodeId, blueprint, reconciledBlueprintId) => {
         s.isDirty = true;
         const node = s.data.nodes[nodeId];
         if (!node)
@@ -209,8 +209,8 @@ export const nodeLifecycleReducers = {
         if (node.blueprintId !== blueprint.id)
             throw new Error(`Node ${nodeId} is not of type ${blueprint.id}`);
 
-        // Diff the node's current base ports against the reconciled ones (added ports are
-        // untouched — they survive reconcile and aren't part of the blueprint diff).
+        // Diff the node's current base ports against the derived ones (added ports are
+        // untouched — they survive shape changes and aren't part of the blueprint diff).
         const oldBlueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
 
         // --- Diff inputs: remove edges for removed/variant-changed inputs ---
@@ -238,7 +238,7 @@ export const nodeLifecycleReducers = {
                 s.reducers.edge.remove(s, edgeId);
         }
 
-        // Point the node at the reconciled blueprint; fields/ports now derive from it.
+        // Point the node at the resolved derivative; fields and ports now derive from it.
         node.reconciledBlueprintId = reconciledBlueprintId;
         s.reducers.cache.resolvedShape.recreate(s, nodeId);
 
@@ -303,7 +303,7 @@ export interface NodeLifecycleReducers {
         staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>;
         credentialInstanceIds?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>;
     }) => Workflow.Node.Raw;
-    reconcile   : (s: S, nodeId: NodeId, blueprint: Foundations.Blueprint, reconciledBlueprintId: Foundations.Blueprint.ReconciledId) => void;
+    applyDerivative: (s: S, nodeId: NodeId, blueprint: Foundations.Blueprint, reconciledBlueprintId: Foundations.Blueprint.ReconciledId) => void;
     wipe        : (s: S, nodeId: NodeId, replace?: Partial<Workflow.Node.Raw>) => void;
     validate    : (s: S, nodeId: NodeId) => void;
     clearIssues : (s: S, nodeId: NodeId) => void;

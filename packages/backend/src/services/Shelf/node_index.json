@@ -1,6 +1,6 @@
 {
-  "version": "1785790513832",
-  "generatedAt": "2026-08-03T20:55:13.832Z",
+  "version": "1785791173598",
+  "generatedAt": "2026-08-03T21:06:13.598Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -12409,23 +12409,6 @@
         "accent": "utility"
       },
       "fields": [
-        {
-          "id": "operation",
-          "advanced": false,
-          "required": false,
-          "reconcile": true,
-          "displayName": "Operation",
-          "tooltip": "What this node does against the database.",
-          "variant": "MultiOption",
-          "initialValue": "executeQuery",
-          "options": [
-            {
-              "value": "executeQuery",
-              "displayName": "Execute Query"
-            }
-          ],
-          "kind": "select"
-        },
         {
           "id": "query",
           "advanced": false,

@@ -129,7 +129,7 @@ export function createExecutionAPIs(
     } satisfies RuntimeNode.ExecutionContext["dependencyAPI"];
 
     const catalogueAPI = {
-        // Sync read of the resolved (post-reconcile) blueprint, warmed by prepareNode.
+        // Sync read of the resolved derivative blueprint, warmed by prepareNode.
         getBlueprint: (nodeId) => {
             const n = workflowData.nodes[nodeId];
             const bp = CatalogueService.getBlueprint(n.reconciledBlueprintId ?? n.blueprintId);

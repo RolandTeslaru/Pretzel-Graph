@@ -37,7 +37,7 @@ export namespace FieldBuilder {
             tooltip:     options.tooltip,
             required:    options.required ?? false,
             advanced:    options.advanced ?? false,
-            reconcile:   false,   // set true only via FieldBuilder.reconciling(...)
+            reconcile:   false,   // derivative compilation stamps condition fields true
             hidden:      options.hidden,
             ...buildItemScoped(options.itemScoped),
         } satisfies { id: T_Id & Field.Id } & OmitId<Field.Base>
@@ -63,20 +63,6 @@ export namespace FieldBuilder {
     export function itemScoped<F extends { id: string }>(field: F): F & { itemScoped: true } {
         return { ...field, itemScoped: true };
     }
-
-    /**
-     * Marks a field as a reconcile trigger: changing it re-runs the node's reconciler, and its value
-     * is part of the reconciled identity. Carries the `reconcile: true` literal so
-     * InferReconcilingFieldValues can expose it — the reconciler may only read reconcile fields.
-     *
-     * @example FieldBuilder.reconciling(FieldBuilder.MultiOption("operation", "Operation", { ... }))
-     */
-    export function reconciling<F extends { id: string }>(field: F): F & { reconcile: true } {
-        return { ...field, reconcile: true };
-    }
-
-
-
 
     export function UniqueString<T_Id extends string, T_Required extends boolean = false, const T_ItemScoped extends boolean = false>(
         id:          T_Id,
@@ -413,14 +399,14 @@ export namespace FieldBuilder {
     // passed to the shape compiler as ambient fields, so a blueprint can branch on one
     // ("isConvertedToTool=true") without declaring it.
     export namespace DEFAULTS {
-        export const toolConvertedField = FieldBuilder.reconciling(FieldBuilder.Boolean(
+        export const toolConvertedField = FieldBuilder.Boolean(
             "isConvertedToTool",
             "Tool Mode",
             {
-            hidden:       true,
-            initialValue: false,
+                hidden:       true,
+                initialValue: false,
             },
-        ));
+        );
 
         export const signalDependencyStrategyField = FieldBuilder.MultiOption(
             "signalDependency",

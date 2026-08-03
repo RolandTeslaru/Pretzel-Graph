@@ -143,14 +143,14 @@ describe("Alpaca Trading derivatives", () => {
         assert.ok(names.every(name => name.startsWith("alpaca_trading_")))
     })
 
-    it("reconciles new namespaces directly through the catalogue", async () => {
+    it("resolves new namespace derivatives through the catalogue", async () => {
         CatalogueService.setNodesRoot(nodesRoot)
 
-        const account = await CatalogueService.reconcile(
+        const account = await CatalogueService.resolveBlueprint(
             AccountBlueprint.id,
             { resource: "positions", positionsAction: "get" } as never,
         )
-        const trading = await CatalogueService.reconcile(
+        const trading = await CatalogueService.resolveBlueprint(
             TradingBlueprint.id,
             { action: "cancel" } as never,
         )
