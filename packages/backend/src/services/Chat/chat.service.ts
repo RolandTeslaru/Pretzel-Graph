@@ -61,6 +61,20 @@ export class ChatService {
         return { chats };
     }
 
+    async listByWorkflow(
+        token: string,
+        userId: Auth.User.Id,
+        payload: Chat.API.ListByWorkflow.Request
+    ): Promise<Chat.API.ListByWorkflow.Response> {
+        const supabase = createAuthenticatedClient(token);
+        const { workflow_id } = payload;
+
+        await this.ownership.assertWorkflow(workflow_id, userId);
+
+        const chats = await this.database.chat.listByWorkflow(supabase, userId, workflow_id);
+        return { chats };
+    }
+
     async erase(
         token: string,
         userId: Auth.User.Id,

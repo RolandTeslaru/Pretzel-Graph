@@ -1,12 +1,22 @@
 import { useState } from 'react'
 import { DropdownMenu, Input } from '@pretzel-graph/standard-ui/foundations'
 import { ChatSDK } from '../../sdk'
+import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import { useParams } from '@tanstack/react-router'
+import type { Workflow } from '@pretzel-graph/shared/domain'
 
 const SelectChat = () => {
   const [query, setQuery] = useState('')
+  const { workflowid } = useParams({ from: '/workflow/$workflowid' })
+  const workflowId = workflowid as Workflow.Id
 
   const chats = ChatSDK.useStore(s => s.chats);
 
+  QuerySDK.useQuery(
+    ['chats', workflowId],
+    () => ChatSDK.actions.chat.listByWorkflow(workflowId),
+    { staleTime: Infinity },
+  )
 
   return (
     <div className='flex flex-col gap-2'>

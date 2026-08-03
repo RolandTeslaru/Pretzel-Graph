@@ -47,6 +47,16 @@ export class ChatController {
     }
 
 
+    @Post('list-by-workflow')
+    @HttpCode(200)
+    async listByWorkflow(
+        @Req() req: AuthenticatedRequest,
+        @ZodBody(Chat.API.ListByWorkflow.Request) body: Chat.API.ListByWorkflow.Request,
+    ) {
+        return await this.chatService.listByWorkflow(req.token, req.user.id as Auth.User.Id, body);
+    }
+
+
     @Post('erase')
     @HttpCode(200)
     async erase(

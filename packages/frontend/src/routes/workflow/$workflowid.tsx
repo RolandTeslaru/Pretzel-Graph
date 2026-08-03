@@ -7,6 +7,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useEffect, useRef, useCallback } from 'react'
 import { Dialog, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import NodeSidebar from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/NodePanel'
+import { ChatSDK } from '@/routes/workflow/-SDKs/ChatSDK/sdk'
 import ChatSidebar from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatSidebar'
 import AssistantSidebar from '@/routes/workflow/-SDKs/AssistantSDK/ui/Sidebar'
 import SpotlightSearch from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/SpotlightSearch'
@@ -68,6 +69,10 @@ export const Route = createFileRoute('/workflow/$workflowid')({
             queryKey: ['version-control', 'publications', workflowId],
             queryFn: () => VersionControlSDK.actions.list(workflowId),
             staleTime: 30_000,
+        })
+        QuerySDK.client.prefetchQuery({
+            queryKey: ['chats', workflowId],
+            queryFn: () => ChatSDK.actions.chat.listByWorkflow(workflowId),
         })
 
         ExecutionSDK.actions.clear();
