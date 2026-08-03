@@ -4,10 +4,6 @@ import { Blueprint } from "./blueprint";
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    // NOTE: schema / table ResourceLoader loaders are parked until the select / insert / …
-    // operations are added — see SPECS/postgres-node.md. They read a `schema` field that only
-    // exists once reconcile adds it for those operations.
-
     protected override async onRun(
         _incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {

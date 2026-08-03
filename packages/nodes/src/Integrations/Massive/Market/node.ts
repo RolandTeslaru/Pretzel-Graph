@@ -1,10 +1,10 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import { InferOutputs, RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
-import { Blueprint, ToolBlueprint } from "./blueprint";
+import { Blueprint } from "./blueprint";
 
 import {
     compactNews,
@@ -24,7 +24,7 @@ import {
 } from "./fetch";
 
 @RegisterNode(Blueprint.id)
-export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
+export class Node extends RuntimeNode<typeof Blueprint> {
 
     private readonly client: ReturnType<typeof createMassiveClient>;
 
@@ -34,74 +34,80 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         this.client = createMassiveClient(this.httpClientFactory, requireMassiveApiKey(apiKey));
     }
 
-    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
+    protected override async onRun() {
+        const fields = this.fieldValues;
 
-        // reconcile-added fields aren't in the inferred field values, so they're read via a cast.
-        const fields = this.fieldValues as Record<string, any>;
-        const action = (fields.action ?? "candles") as
-            "candles" | "snapshot" | "details" | "financials" | "marketStatus";
+        if (fields.isConvertedToTool === true)
+            return {
+                tools: this.buildTools(fields),
+            } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-        if (action === "marketStatus")
-            return { data: await fetchMarketStatus(this.client) } as any;
+        if (fields.action === "marketStatus")
+            return {
+                data: await fetchMarketStatus(this.client),
+            } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-        const ticker = normalizeTicker(this.fieldValues.ticker);
+        const ticker = normalizeTicker(fields.ticker);
 
         if (!ticker)
             throw new Error("Massive Market: 'ticker' input is required (e.g. AAPL, MSFT).");
 
-        switch (action) {
+        switch (fields.action) {
 
             case "snapshot":
-                return { data: await fetchSnapshot(this.client, ticker) } as any;
+                return {
+                    data: await fetchSnapshot(this.client, ticker),
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
             case "details":
-                return { data: await fetchTickerDetails(this.client, ticker) } as any;
+                return {
+                    data: await fetchTickerDetails(this.client, ticker),
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
             case "financials":
                 return {
                     data: await fetchFinancials(this.client, {
                         ticker,
-                        timeframe: (fields.timeframe ?? "quarterly") as "annual" | "quarterly",
-                        limit: fields.limit ?? 4,
+                        timeframe: fields.timeframe,
+                        limit:     fields.limit,
                     }),
-                } as any;
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-            case "candles":
-            default: {
-                const timespan = (fields.timespan ?? "minute") as "minute" | "hour" | "day";
-                const multiplier = fields.multiplier ?? 1;
-
+            case "candles": {
                 const candles = await fetchAggs(this.client, {
                     ticker,
-                    multiplier,
-                    timespan,
-                    lookbackHours: fields.lookbackHours ?? 24,
-                    adjusted: fields.adjusted ?? true,
+                    multiplier:    fields.multiplier,
+                    timespan:      fields.timespan,
+                    lookbackHours: fields.lookbackHours,
+                    adjusted:      fields.adjusted,
                 });
 
-                return { candles, summary: summarizeAggs(ticker, timespan, multiplier, candles) } as any;
+                return {
+                    candles,
+                    summary: summarizeAggs(ticker, fields.timespan, fields.multiplier, candles),
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
             }
         }
     }
 
-    protected override async onBuildTool(
-        incoming: InferIncoming<typeof ToolBlueprint>,
-    ): Promise<InferOutputs<typeof ToolBlueprint>> {
-        // These live on ToolBlueprint, which isn't what `fieldValues` is typed from.
-        const toolFields = this.fieldValues as Record<string, any>;
-
-        const defaultTimespan   = (toolFields.timespan ?? "minute") as "minute" | "hour" | "day";
-        const defaultMultiplier = toolFields.multiplier ?? 1;
-        const defaultLookback   = toolFields.lookbackHours ?? 24;
-        const adjusted          = toolFields.adjusted ?? true;
+    private buildTools(defaults: {
+        timespan:      "minute" | "hour" | "day";
+        multiplier:    number;
+        lookbackHours: number;
+        adjusted:      boolean;
+    }) {
+        const defaultTimespan   = defaults.timespan;
+        const defaultMultiplier = defaults.multiplier;
+        const defaultLookback   = defaults.lookbackHours;
+        const adjusted          = defaults.adjusted;
 
         const getCandles = tool(
             async ({ ticker, timespan, multiplier, lookbackHours }) => {
                 const normalizedTicker = normalizeTicker(ticker);
                 const candles = await fetchAggs(this.client, {
                     ticker: normalizedTicker,
-                    timespan: (timespan ?? defaultTimespan) as "minute" | "hour" | "day",
-                    multiplier: multiplier ?? defaultMultiplier,
+                    timespan:      timespan ?? defaultTimespan,
+                    multiplier:    multiplier ?? defaultMultiplier,
                     lookbackHours: lookbackHours ?? defaultLookback,
                     adjusted,
                 });
@@ -254,8 +260,8 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
             async ({ ticker, timeframe, limit }) => {
                 const results = await fetchFinancials(this.client, {
                     ticker: normalizeTicker(ticker),
-                    timeframe: (timeframe ?? "quarterly") as "annual" | "quarterly",
-                    limit: limit ?? 4,
+                    timeframe: timeframe ?? "quarterly",
+                    limit:     limit ?? 4,
                 });
                 return JSON.stringify({ count: results.length, results });
             },
@@ -279,6 +285,16 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
             },
         );
 
-        return { tools: [getCandles, getNews, getSnapshot, getLastTrade, getLastQuote, getTickerDetails, searchTickersTool, getFinancials, getMarketStatus] };
+        return [
+            getCandles,
+            getNews,
+            getSnapshot,
+            getLastTrade,
+            getLastQuote,
+            getTickerDetails,
+            searchTickersTool,
+            getFinancials,
+            getMarketStatus,
+        ];
     }
 }

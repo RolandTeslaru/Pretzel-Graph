@@ -247,7 +247,7 @@ export const reconcile = (blueprint, changedFieldId, newValue) => {
 };
 ```
 
-**Important wrinkle:** the base blueprint = the **default** field set (reconcile only runs on *change*, never at node creation). And `InferFieldValues` reflects the *static base* — fields/ports added by reconcile are **not** in the inferred type, so `onRun`/loaders read them via a cast (`(this.fieldValues as Record<string, unknown>).value`). See `Integrations/Redis/Command` and `Integrations/MongoDB/Operation`.
+**Important wrinkle:** the base blueprint = the **default** field set (reconcile only runs on *change*, never at node creation). And `InferFieldValues` reflects the *static base* — fields/ports added by reconcile are **not** in the inferred type, so `onRun`/loaders read them via a cast (`(this.fieldValues as Record<string, unknown>).value`). See `Integrations/Massive/Market` for a remaining legacy example; new operation-style nodes should use inline blueprint derivatives such as `Integrations/Redis/Database`.
 
 ---
 

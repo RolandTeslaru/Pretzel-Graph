@@ -228,12 +228,6 @@ export const BUNDLE_DRAWERS = {
     icon: "Cassandra",
     blueprintIds: []
   },
-  coinbase: {
-    displayName: "Coinbase",
-    id: "coinbase",
-    icon: "Coinbase",
-    blueprintIds: ["Integrations.Coinbase.Market", "Integrations.Coinbase.Token"]
-  },
   chroma: {
     displayName: "Chroma",
     id: "chroma",
@@ -583,7 +577,7 @@ export const BUNDLE_DRAWERS = {
     displayName: "Redis",
     id: "redis",
     icon: "Redis",
-    blueprintIds: ["Integrations.Redis.Command"]
+    blueprintIds: ["Integrations.Redis.Database"]
   },
   sambanova: {
     displayName: "SambaNova",

@@ -1,4 +1,9 @@
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import {
+    defineBlueprint,
+    defineTool,
+    FieldBuilder,
+    OutputBuilder,
+} from "@pretzel-graph/node-sdk";
 import { GoogleSearch } from "@pretzel-graph/nodes/Credentials/GoogleSearch";
 
 const queryField = FieldBuilder.String("query", "Query", {
@@ -6,7 +11,7 @@ const queryField = FieldBuilder.String("query", "Query", {
     placeholder: "What do you want to search for?"
 });
 
-const fields = [
+const searchSettings = () => [
     FieldBuilder.Integer("maxResults", "Max Results", {
         initialValue: 5,
         min: 1,
@@ -29,7 +34,7 @@ const fields = [
 
         initialValue: "off"
     }),
-];
+] as const;
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Google.Search",
@@ -39,28 +44,21 @@ export const Blueprint = defineBlueprint({
     icon: "GoogleSearch",
     accent: "port-DataList",
     toolCompatible: true,
-    fields: [queryField, ...fields],
+    fields: [queryField, ...searchSettings()],
     inputs: [],
     outputs: [
         OutputBuilder.DataList("documents", "Documents", {
             tooltip: "Search results as Document objects (pageContent + metadata)."
         }),
     ],
-});
 
-export const ToolBlueprint = defineBlueprint({
-    id: "Integrations.Google.Search",
-    credentials: [GoogleSearch],
-    displayName: "Google Search",
-    description: "Searches the web using Google Custom Search and returns the results as documents.",
-    icon: "GoogleSearch",
-    accent: "port-Tool",
-    toolCompatible: true,
-    fields,
-    inputs: [],
-    outputs: [
-        OutputBuilder.Tool("tool", "Search Tool", {
-            tooltip: "A tool that can be called to perform a Google search with the specified query."
-        }),
-    ],
+    "isConvertedToTool==true": defineTool({
+        fields: searchSettings(),
+        inputs: [],
+        outputs: [
+            OutputBuilder.Tool("tool", "Search Tool", {
+                tooltip: "A tool that can be called to perform a Google search with the specified query."
+            }),
+        ],
+    }),
 });

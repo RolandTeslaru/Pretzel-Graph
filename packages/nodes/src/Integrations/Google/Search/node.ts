@@ -1,11 +1,10 @@
 import axios from "axios";
 import { Document } from "@langchain/core/documents";
 import { tool } from "@langchain/core/tools";
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
-import { Workflow } from "@pretzel-graph/shared/domain";
+import { RegisterNode, RuntimeNode, InferOutputs } from "@pretzel-graph/node-sdk";
 import { z } from "zod/v3";
 
-import { Blueprint, ToolBlueprint } from "./blueprint";
+import { Blueprint } from "./blueprint";
 
 type GoogleSearchType = "web" | "image";
 type GoogleSafeSearch = "off" | "active";
@@ -65,7 +64,7 @@ function itemToDocument(item: GoogleCustomSearchItem, index: number, query: stri
 }
 
 @RegisterNode(Blueprint.id)
-export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
+export class Node extends RuntimeNode<typeof Blueprint> {
 
     private async search(query: string) {
         const { apiKey, searchEngineId } = this.context.credentialsAPI.getDecryptedValue(this.credentials.googleSearchApi.blob);
@@ -93,38 +92,37 @@ export class Node extends RuntimeNode<typeof Blueprint, typeof ToolBlueprint> {
         return (response.data.items ?? []).map((item, index) => itemToDocument(item, index, query, searchType));
     }
 
-    protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {
-        const documents = await this.search(this.fieldValues.query);
+    protected override async onRun() {
+        const fields = this.fieldValues;
 
-        return { documents };
-    }
+        if (fields.isConvertedToTool === true)
+            return {
+                tool: tool(
+                    async ({ query }) => {
+                        const documents = await this.search(query);
+                        const content = documents
+                            .map((document, index) => {
+                                const title = document.metadata?.title ?? "";
+                                const source = document.metadata?.source ?? "";
+                                return `[${index + 1}] ${title}\n${source}\n${document.pageContent}`;
+                            })
+                            .join("\n\n");
 
-    protected override async onBuildTool(
-        incoming: InferIncoming<typeof ToolBlueprint>,
-    ): Promise<InferOutputs<typeof ToolBlueprint>> {
-        return {
-            tool: tool(
-                async ({ query }) => {
-                    const documents = await this.search(query);
-                    const content = documents
-                        .map((d, i) => {
-                            const title = d.metadata?.title ?? "";
-                            const source = d.metadata?.source ?? "";
-                            return `[${i + 1}] ${title}\n${source}\n${d.pageContent}`;
-                        })
-                        .join("\n\n");
+                        return [content, documents];
+                    },
+                    {
+                        name: "google_search",
+                        description: "Searches the web using Google Custom Search API.",
+                        schema: z.object({
+                            query: z.string().describe("The search query to run against the Google Custom Search API."),
+                        }),
+                        responseFormat: "content_and_artifact",
+                    },
+                ),
+            } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-                    return [content, documents];
-                },
-                {
-                    name: "google_search",
-                    description: "Searches the web using Google Custom Search API.",
-                    schema: z.object({
-                        query: z.string().describe("The search query to run against the Google Custom Search API."),
-                    }),
-                    responseFormat: "content_and_artifact",
-                },
-            ),
-        };
+        const documents = await this.search(fields.query);
+
+        return { documents } satisfies InferOutputs<typeof Blueprint, typeof fields>;
     }
 }
