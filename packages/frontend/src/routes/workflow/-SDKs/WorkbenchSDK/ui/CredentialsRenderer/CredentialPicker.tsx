@@ -111,7 +111,7 @@ export const CredentialPicker = memo(
                         </Select.Content>
                     </Select.Root>
                     {instanceId ? (
-                        <FloatContainer>
+                        <FloatContainer className="shadow-md! shadow-black/10!">
                             <Button
                                 variant="ghost"
                                 size="icon-xxs"
