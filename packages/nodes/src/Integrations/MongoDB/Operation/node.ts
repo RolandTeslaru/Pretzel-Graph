@@ -1,9 +1,21 @@
 import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs, mongo, toMongoCreds } from "@pretzel-graph/node-sdk";
-import { ObjectId } from "mongodb";
+import { ObjectId, type Document, type Filter } from "mongodb";
 import { Blueprint } from "./blueprint";
 
+function isDocument(value: unknown): value is Document {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function asDocument(value: unknown): Document {
+    return isDocument(value) ? value : {};
+}
+
+function asDocuments(value: unknown): Document[] {
+    return Array.isArray(value) ? value.filter(isDocument) : [];
+}
+
 /** Convert a filter's string `_id` to an ObjectId so it matches stored documents. */
-function withObjectId(filter: Record<string, unknown>): Record<string, unknown> {
+function withObjectId(filter: Document): Filter<Document> {
     if (filter && typeof filter._id === "string") {
         return { ...filter, _id: new ObjectId(filter._id) };
     }
@@ -18,42 +30,53 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(
         _incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
+    ) {
+        const fields = this.fieldValues;
         const creds = toMongoCreds(this.context.credentialsAPI.getDecryptedValue(this.credentials.mongoDb.blob));
         const client = await mongo.get(creds);
-        const coll = client.db(creds.database).collection(this.fieldValues.collection);
+        const coll = client.db(creds.database).collection(fields.collection);
 
-        // query / limit / update / documents are reconcile-added — not in InferFieldValues — so cast.
-        const f = this.fieldValues as Record<string, unknown>;
-        const operation = this.fieldValues.operation;
-
-        switch (operation) {
+        switch (fields.operation) {
             case "find": {
-                const query = withObjectId((f.query as Record<string, unknown>) ?? {});
-                const limit = Number(f.limit ?? 50);
-                const docs = await coll.find(query as never).limit(limit).toArray();
-                return { result: plain(docs) };
+                const query = withObjectId(asDocument(fields.query));
+                const docs = await coll.find(query).limit(fields.limit).toArray();
+                return {
+                    result: plain(docs),
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
             }
-            // insert/update/delete reconcile the output to a single Data port, so the result is
-            // a summary object — not reflected in InferOutputs (DataList), hence the cast.
+
             case "insert": {
-                const documents = (f.documents as Record<string, unknown>[]) ?? [];
-                const res = await coll.insertMany(documents as never);
-                return { result: { insertedCount: res.insertedCount, insertedIds: plain(res.insertedIds) } } as unknown as InferOutputs<typeof Blueprint>;
+                const documents = asDocuments(fields.documents);
+                const res = await coll.insertMany(documents);
+                return {
+                    result: {
+                        insertedCount: res.insertedCount,
+                        insertedIds: plain(res.insertedIds),
+                    },
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
             }
+
             case "update": {
-                const query = withObjectId((f.query as Record<string, unknown>) ?? {});
-                const update = (f.update as Record<string, unknown>) ?? {};
-                const res = await coll.updateMany(query as never, { $set: update });
-                return { result: { matchedCount: res.matchedCount, modifiedCount: res.modifiedCount } } as unknown as InferOutputs<typeof Blueprint>;
+                const query = withObjectId(asDocument(fields.query));
+                const update = asDocument(fields.update);
+                const res = await coll.updateMany(query, { $set: update });
+                return {
+                    result: {
+                        matchedCount: res.matchedCount,
+                        modifiedCount: res.modifiedCount,
+                    },
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
             }
+
             case "delete": {
-                const query = withObjectId((f.query as Record<string, unknown>) ?? {});
-                const res = await coll.deleteMany(query as never);
-                return { result: { deletedCount: res.deletedCount } } as unknown as InferOutputs<typeof Blueprint>;
+                const query = withObjectId(asDocument(fields.query));
+                const res = await coll.deleteMany(query);
+                return {
+                    result: {
+                        deletedCount: res.deletedCount,
+                    },
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
             }
-            default:
-                return { result: [] };
         }
     }
 }

@@ -15,8 +15,6 @@
   },
   "dependencies": {
     "@alpacahq/alpaca-trade-api": "4.0.1",
-    "@coinbase/agentkit": "^0.10.4",
-    "@coinbase/cdp-sdk": "^1.47.0",
     "@langchain/anthropic": "*",
     "@langchain/community": "*",
     "@langchain/core": "*",

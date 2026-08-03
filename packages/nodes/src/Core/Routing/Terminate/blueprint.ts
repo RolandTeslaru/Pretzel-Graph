@@ -8,9 +8,7 @@ export const Blueprint = defineBlueprint({
     accent: "group-routing",
     iconColor: "destructive",
     fields: [
-        // mode drives the field schema via reconcile. Base (stop) needs no extra field;
-        // error reconciles in `message`.
-        FieldBuilder.reconciling(FieldBuilder.MultiOption("mode", "Mode", {
+        FieldBuilder.MultiOption("mode", "Mode", {
             variant: "tab",
 
             options: [
@@ -20,7 +18,7 @@ export const Blueprint = defineBlueprint({
 
             initialValue: "stop",
             tooltip: "Stop → end the run cleanly. Error → fail the run with a message."
-        })),
+        }),
     ],
     inputs: [
         InputBuilder.Unresolved("trigger", "Trigger", {
@@ -30,4 +28,16 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     outputs: [],
+
+    "mode==stop": {},
+
+    "mode==error": {
+        fields: [
+            FieldBuilder.String("message", "Error Message", {
+                multiline: true,
+                initialValue: "",
+                placeholder: "Workflow terminated."
+            }),
+        ],
+    },
 });

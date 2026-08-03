@@ -11,27 +11,31 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(
         incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<InferOutputs<typeof Blueprint>> {
+    ) {
 
-        if(this.fieldValues.direction === "in") {
+        const fields = this.fieldValues;
+
+        if(fields.direction === "in") {
+            const resolvedIncoming = this.incomingFor(fields, incoming);
             
             const outNodes = this.context
                 .workflowQueryAPI
                 .getNodesByBlueprint<typeof Blueprint>(Blueprint.id)
-                .filter(({ fields, node }) => (fields["portalId"] === this.fieldValues.portalId) && (fields["direction"] === "out") && (node.id !== this.nodeId));
+                .filter(({ fields: candidateFields, node }) => (candidateFields["portalId"] === fields.portalId) && (candidateFields["direction"] === "out") && (node.id !== this.nodeId));
     
             for (const { node } of outNodes) {
                 const instance = this.context.instanceRegistryAPI.get(node.id);
                 if (!(instance instanceof Node)) continue;
     
-                instance.injectedData = incoming.input;
+                instance.injectedData = resolvedIncoming.input;
                 this.context.schedulerAPI.fireNode(node.id as Workflow.Node.Id);
             }
 
-            return {}
+            return {} satisfies InferOutputs<typeof Blueprint, typeof fields>;
         }
-        else {
-            return { output: this.injectedData }
-        }
+
+        return {
+            output: this.injectedData,
+        } satisfies InferOutputs<typeof Blueprint, typeof fields>;
     }
 }

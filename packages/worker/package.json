@@ -11,8 +11,6 @@
         "test": "jest"
     },
     "dependencies": {
-        "@coinbase/agentkit": "^0.10.4",
-        "@coinbase/cdp-sdk": "^1.47.0",
         "@langchain/community": "^1.1.27",
         "@modelcontextprotocol/sdk": "^1.30.0",
         "@pretzel-graph/node-sdk": "*",

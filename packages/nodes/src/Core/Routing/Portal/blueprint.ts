@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.Portal",
@@ -8,7 +8,7 @@ export const Blueprint = defineBlueprint({
     accent: "group-routing",
     iconColor: "color-sky-400",
     fields: [
-        FieldBuilder.reconciling(FieldBuilder.MultiOption("direction", "Direction", {
+        FieldBuilder.MultiOption("direction", "Direction", {
             variant: "tab",
             initialValue: "in",
 
@@ -16,17 +16,35 @@ export const Blueprint = defineBlueprint({
                 { value: "in", displayName: "In" },
                 { value: "out", displayName: "Out" },
             ]
-        })),
+        }),
         FieldBuilder.UniqueString("portalId", "Portal ID", {
             required: true
         }),
-
-        
     ],
-    inputs: [
-        InputBuilder.Unresolved("input", "Input", {
-            polymorphicGroupId: "portal"
-        }),
-    ],
+    inputs: [],
     outputs: [],
+
+    "direction==in": {
+        ui: {
+            icon: "PortalIn",
+        },
+        inputs: [
+            InputBuilder.Unresolved("input", "Input", {
+                polymorphicGroupId: "portal"
+            }),
+        ],
+        replaces: ["inputs", "outputs"],
+    },
+
+    "direction==out": {
+        ui: {
+            icon: "PortalOut",
+        },
+        outputs: [
+            OutputBuilder.Unresolved("output", "Output", {
+                polymorphicGroupId: "portal"
+            }),
+        ],
+        replaces: ["inputs", "outputs"],
+    },
 });
