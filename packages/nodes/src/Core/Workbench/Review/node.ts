@@ -1,21 +1,60 @@
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
-import { Blueprint } from "./blueprint";
+import {
+    InferIncoming,
+    InferOutputs,
+    RegisterNode,
+    RuntimeNode,
+} from "@pretzel-graph/node-sdk";
 import { HumanReview } from "@pretzel-graph/shared/domain";
+
+import { Blueprint } from "./blueprint";
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(
         incoming: InferIncoming<typeof Blueprint>,
-    ): Promise<Partial<InferOutputs<typeof Blueprint>>> {
-        const execId  = this.context.executionId;
-        const request = HumanReview.Request.Schema.parse(this.buildRequest());
+    ) {
+        const fields = this.fieldValues;
+        const baseRequest = {
+            id:          crypto.randomUUID() as HumanReview.Request.Id,
+            nodeId:      this.nodeId,
+            executionId: this.context.executionId,
+            title:       fields.title || undefined,
+            message:     fields.message || undefined,
+            createdAt:   Date.now(),
+            timeoutMs:   fields.timeoutMs,
+        };
 
-        // Surface the dialog, park until the human responds (or the execution aborts / times out).
+        const request = HumanReview.Request.Schema.parse(
+            fields.variant === "confirm"
+                ? {
+                    ...baseRequest,
+                    variant:      fields.variant,
+                    approveLabel: fields.approveLabel,
+                    rejectLabel:  fields.rejectLabel,
+                }
+                : fields.variant === "choice"
+                    ? {
+                        ...baseRequest,
+                        variant:     fields.variant,
+                        options:     fields.options,
+                        multiple:    fields.multiple,
+                        allowCustom: fields.allowCustom,
+                    }
+                    : {
+                        ...baseRequest,
+                        variant: fields.variant,
+                        fields:  fields.formFields,
+                    },
+        );
+
+        const execId = this.context.executionId;
+
+        // Surface the dialog, then park until the human responds or the wait times out.
         const { resolution } = await this.context.realtimeAPI.emitAndAwaitSignal(
             HumanReview.Event.Sent.Schema.parse({
                 channel: HumanReview.Event.getChannel(execId),
-                type: "human-review:sent",
+                type:    "human-review:sent",
                 request,
             }),
             HumanReview.Signal.HumanResponded.getChannel(execId, request.id),
@@ -23,61 +62,43 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             request.timeoutMs,
         );
 
-        // Confirm the workbench can close the dialog.
         this.context.realtimeAPI.emit(HumanReview.Event.Resolved.Schema.parse({
-            channel: HumanReview.Event.getChannel(execId),
-            type: "human-review:resolved",
+            channel:   HumanReview.Event.getChannel(execId),
+            type:      "human-review:resolved",
             requestId: request.id,
             resolution,
         }));
 
-        return this.mapResolution(resolution, incoming);
-    }
+        const mismatchedVariant = () => new Error(
+            `Workbench Review: expected a ${fields.variant} resolution, received ${resolution.variant}.`,
+        );
 
-    // reconcile-added fields aren't in InferFieldValues, so the variant config is read via cast.
-    private buildRequest() {
-        const f = this.fieldValues as Record<string, any>;
-        const base = {
-            id:          crypto.randomUUID() as HumanReview.Request.Id,
-            nodeId:      this.nodeId,
-            executionId: this.context.executionId,
-            title:       f.title || undefined,
-            message:     f.message || undefined,
-            createdAt:   Date.now(),
-            timeoutMs:   f.timeoutMs,
-        };
-
-        switch (f.variant) {
-            case "choice":
-                return { ...base, variant: "choice", options: f.options ?? [], multiple: !!f.multiple, allowCustom: !!f.allowCustom };
-            case "form":
-                return { ...base, variant: "form", fields: f.formFields ?? [] };
-            case "confirm":
-            default:
-                return { ...base, variant: "confirm", approveLabel: f.approveLabel, rejectLabel: f.rejectLabel };
-        }
-    }
-
-    // Map the human's answer onto the (reconcile-driven) output ports. The variant ports
-    // aren't in the static InferOutputs, so the result is cast.
-    private mapResolution(
-        resolution: HumanReview.Resolution,
-        incoming: InferIncoming<typeof Blueprint>,
-    ): Partial<InferOutputs<typeof Blueprint>> {
-        let result: Record<string, unknown>;
         switch (resolution.variant) {
             case "confirm":
-                result = resolution.approved
-                    ? { approved: incoming.input ?? null }
-                    : { rejected: incoming.input ?? null };
-                break;
+                if (fields.variant !== "confirm")
+                    throw mismatchedVariant();
+
+                return (
+                    resolution.approved
+                        ? { approved: incoming.input ?? null }
+                        : { rejected: incoming.input ?? null }
+                ) satisfies Partial<InferOutputs<typeof Blueprint, typeof fields>>;
+
             case "choice":
-                result = { value: resolution.values };
-                break;
+                if (fields.variant !== "choice")
+                    throw mismatchedVariant();
+
+                return {
+                    value: resolution.values,
+                } satisfies Partial<InferOutputs<typeof Blueprint, typeof fields>>;
+
             case "form":
-                result = { values: resolution.values };
-                break;
+                if (fields.variant !== "form")
+                    throw mismatchedVariant();
+
+                return {
+                    values: resolution.values,
+                } satisfies Partial<InferOutputs<typeof Blueprint, typeof fields>>;
         }
-        return result as Partial<InferOutputs<typeof Blueprint>>;
     }
 }

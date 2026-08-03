@@ -1,6 +1,6 @@
 {
-  "version": "1785790140072",
-  "generatedAt": "2026-08-03T20:49:00.072Z",
+  "version": "1785790513832",
+  "generatedAt": "2026-08-03T20:55:13.832Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -5335,28 +5335,6 @@
           "step": 1
         },
         {
-          "id": "approveLabel",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Approve label",
-          "variant": "String",
-          "initialValue": "Approve",
-          "multiline": false,
-          "placeholder": ""
-        },
-        {
-          "id": "rejectLabel",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Reject label",
-          "variant": "String",
-          "initialValue": "Reject",
-          "multiline": false,
-          "placeholder": ""
-        },
-        {
           "id": "signalDependency",
           "advanced": false,
           "required": false,
@@ -5447,20 +5425,134 @@
           "required": false
         }
       ],
-      "outputs": [
+      "outputs": [],
+      "_derivatives": [
         {
-          "id": "approved",
-          "displayName": "Approved",
-          "tooltip": "Fires when the human approves.",
-          "polymorphicGroupId": "data",
-          "variant": "Unresolved"
+          "condition": {
+            "fieldId": "variant",
+            "operator": "==",
+            "value": "confirm"
+          },
+          "fields": [
+            {
+              "id": "approveLabel",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Approve label",
+              "variant": "String",
+              "initialValue": "Approve",
+              "multiline": false,
+              "placeholder": ""
+            },
+            {
+              "id": "rejectLabel",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Reject label",
+              "variant": "String",
+              "initialValue": "Reject",
+              "multiline": false,
+              "placeholder": ""
+            }
+          ],
+          "outputs": [
+            {
+              "id": "approved",
+              "displayName": "Approved",
+              "tooltip": "Fires when the human approves.",
+              "polymorphicGroupId": "data",
+              "variant": "Unresolved"
+            },
+            {
+              "id": "rejected",
+              "displayName": "Rejected",
+              "tooltip": "Fires when the human rejects.",
+              "polymorphicGroupId": "data",
+              "variant": "Unresolved"
+            }
+          ],
+          "_derivatives": []
         },
         {
-          "id": "rejected",
-          "displayName": "Rejected",
-          "tooltip": "Fires when the human rejects.",
-          "polymorphicGroupId": "data",
-          "variant": "Unresolved"
+          "condition": {
+            "fieldId": "variant",
+            "operator": "==",
+            "value": "choice"
+          },
+          "fields": [
+            {
+              "id": "options",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Options",
+              "tooltip": "Array of { label, value }.",
+              "variant": "Json",
+              "initialValue": [
+                {
+                  "label": "Option 1",
+                  "value": "1"
+                }
+              ]
+            },
+            {
+              "id": "multiple",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Allow multiple",
+              "variant": "Boolean",
+              "initialValue": false
+            },
+            {
+              "id": "allowCustom",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Allow custom answer",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "outputs": [
+            {
+              "id": "value",
+              "displayName": "Value",
+              "tooltip": "The chosen value(s).",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
+        },
+        {
+          "condition": {
+            "fieldId": "variant",
+            "operator": "==",
+            "value": "form"
+          },
+          "fields": [
+            {
+              "id": "formFields",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Form fields",
+              "tooltip": "Field definitions to render in the dialog.",
+              "variant": "Json",
+              "initialValue": []
+            }
+          ],
+          "outputs": [
+            {
+              "id": "values",
+              "displayName": "Values",
+              "tooltip": "The collected form values.",
+              "variant": "Data"
+            }
+          ],
+          "_derivatives": []
         }
       ]
     },
