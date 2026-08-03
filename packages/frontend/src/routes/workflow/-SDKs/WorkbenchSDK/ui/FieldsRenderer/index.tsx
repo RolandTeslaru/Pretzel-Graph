@@ -14,6 +14,8 @@ import { CaseListField } from './CaseList'
 import { JsonField } from './Json'
 import { VariadicField } from './Variadic'
 import { ResourceLoaderField } from './ResourceLoader'
+import { CalendarRangeField } from './CalendarRange'
+import { CalendarDateTimeRangeField } from './CalendarDateTimeRange'
 
 export { FieldLabel } from './FieldLabel'
 export type { RendererProps } from './FieldLabel'
@@ -28,6 +30,8 @@ export { ScriptField } from './Script'
 export { ConditionField } from './Condition'
 export { CaseListField } from './CaseList'
 export { JsonField } from './Json'
+export { CalendarRangeField } from './CalendarRange'
+export { CalendarDateTimeRangeField } from './CalendarDateTimeRange'
 
 // ── Dispatcher ──────────────────────────────────────────────
 
@@ -54,6 +58,8 @@ export const FIELD_RENDERER_MAP: FieldRendererMapType = {
     CaseList: CaseListField,
     Variadic: VariadicField,
     ResourceLoader: ResourceLoaderField,
+    CalendarRange: CalendarRangeField,
+    CalendarDateTimeRange: CalendarDateTimeRangeField,
 }
 
 /** Renders the appropriate field component based on variant */

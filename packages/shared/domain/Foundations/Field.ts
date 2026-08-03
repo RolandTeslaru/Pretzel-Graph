@@ -43,6 +43,8 @@ export namespace Field {
         "CaseList",
         "Variadic",
         "ResourceLoader",
+        "CalendarRange",
+        "CalendarDateTimeRange",
     ])
     export type Variant = z.infer<typeof Variant>
 
@@ -368,6 +370,40 @@ export namespace Field {
 
     export interface ResourceLoader extends z.infer<typeof ResourceLoader.Schema> {}
 
+    export namespace CalendarRange {
+        export const Value = z.object({
+            from: z.iso.date().optional(),
+            to:   z.iso.date().optional(),
+        });
+        export type Value = z.infer<typeof Value>;
+
+        export const Schema = Field.Base.extend({
+            variant:      configLiteral("CalendarRange"),
+            initialValue: Value,
+            placeholder:  z.string().optional(),
+            maxDate:      z.iso.date().optional(),
+        });
+    }
+
+    export interface CalendarRange extends z.infer<typeof CalendarRange.Schema> {}
+
+    export namespace CalendarDateTimeRange {
+        export const Value = z.object({
+            date:      z.iso.date().optional(),
+            startTime: z.union([z.literal(""), z.iso.time()]),
+            endTime:   z.union([z.literal(""), z.iso.time()]),
+        });
+        export type Value = z.infer<typeof Value>;
+
+        export const Schema = Field.Base.extend({
+            variant:      configLiteral("CalendarDateTimeRange"),
+            initialValue: Value,
+            placeholder:  z.string().optional(),
+        });
+    }
+
+    export interface CalendarDateTimeRange extends z.infer<typeof CalendarDateTimeRange.Schema> {}
+
     export interface Integer extends z.infer<typeof Integer> { }
     export interface Float extends z.infer<typeof Float> { }
     export interface String extends z.infer<typeof String> { }
@@ -401,6 +437,8 @@ export namespace Field {
         CaseList.Schema,
         Variadic,
         ResourceLoader.Schema,
+        CalendarRange.Schema,
+        CalendarDateTimeRange.Schema,
     ]);
 
     export type Schema = z.infer<typeof Schema>;

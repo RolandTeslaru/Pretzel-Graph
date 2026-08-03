@@ -143,6 +143,26 @@ export namespace Vault {
                 return data
             }
 
+            export namespace Update {
+                export const Request = z.object({
+                    id:          Credential.Instance.Id,
+                    name:        z.string().min(1),
+                    fieldValues: Credential.Instance.DecryptedValues,
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({
+                    instance: Credential.Instance.Schema,
+                })
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function update(api: AxiosInstance, req: Update.Request): Promise<Update.Response> {
+                const { id, ...payload } = req
+                const { data } = await api.patch<Update.Response>(`/api/vault/credential-instances/${id}`, payload)
+                return data
+            }
+
             export namespace Reveal {
                 export const Response = z.object({
                     fieldValues: Credential.Instance.DecryptedValues,

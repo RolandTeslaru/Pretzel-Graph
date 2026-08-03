@@ -7,8 +7,10 @@ export type _VaultSDKActions = {
     refreshAll: () => Promise<void>
     create:     (req: Vault.API.CredentialInstance.Create.Request) => Promise<Vault.Credential.Instance>
     remove:     (id: Vault.Credential.Instance.Id) => Promise<void>
+    reveal:     (id: Vault.Credential.Instance.Id) => Promise<Vault.Credential.Instance.DecryptedValues>
     update: {
-        name: (id: Vault.Credential.Instance.Id, name: string) => Promise<void>
+        name:   (id: Vault.Credential.Instance.Id, name: string) => Promise<void>
+        values: (req: Vault.API.CredentialInstance.Update.Request) => Promise<void>
     }
 }
 
@@ -49,6 +51,17 @@ export function _createVaultActions_(sdk: VaultSDKImpl): _VaultSDKActions {
             }
         },
 
+        reveal: async (id) => {
+            try {
+                const { fieldValues } = await Vault.API.CredentialInstance.reveal(api, id)
+                return fieldValues
+            } catch (err) {
+                console.error('VaultSDK.reveal failed', err)
+                toast.error('Failed to load credential values')
+                throw err
+            }
+        },
+
         update: {
             name: async (id, name) => {
                 try {
@@ -57,6 +70,17 @@ export function _createVaultActions_(sdk: VaultSDKImpl): _VaultSDKActions {
                 } catch (err) {
                     console.error('VaultSDK.update.name failed', err)
                     toast.error('Failed to rename credential')
+                    throw err
+                }
+            },
+
+            values: async (req) => {
+                try {
+                    const { instance } = await Vault.API.CredentialInstance.update(api, req)
+                    setState(s => { if (s.credentialInstances[req.id]) s.credentialInstances[req.id] = instance })
+                } catch (err) {
+                    console.error('VaultSDK.update.values failed', err)
+                    toast.error('Failed to update credential')
                     throw err
                 }
             },

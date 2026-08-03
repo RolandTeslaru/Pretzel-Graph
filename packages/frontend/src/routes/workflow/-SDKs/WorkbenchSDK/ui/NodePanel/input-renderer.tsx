@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
-import { INPUT_RENDERER_MAP } from '../InputRenderer'
+import { INPUT_RENDERER_MAP } from '../InputsRenderer'
 
 export const InputItem = memo(({ input, nodeId }: { input: Foundations.Port.Input, nodeId: Workflow.Node.Id }) => {
 
