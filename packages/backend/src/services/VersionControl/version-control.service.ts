@@ -45,6 +45,15 @@ export class VersionControlService {
         return { activeWorkflows };
     }
 
+    async getActiveByWorkflow(
+        token: string,
+        payload: VersionControl.API.GetActiveByWorkflow.Request,
+    ): Promise<VersionControl.API.GetActiveByWorkflow.Response> {
+        const supabase = createAuthenticatedClient(token);
+        const publication = await this.database.getActiveByWorkflow(supabase, payload);
+        return { publication };
+    }
+
     async get(
         token: string,
         payload: VersionControl.API.Get.Request,
