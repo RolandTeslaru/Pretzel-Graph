@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { Link } from '@tanstack/react-router'
 import { DialogSDK } from '@/SDKs/DialogSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
@@ -12,10 +11,29 @@ import { WorkflowGlyph } from '@pretzel-graph/standard-ui/brands/workflowGlyph'
 import { api } from '@/SDKs/ApiInterceptorSDK'
 import { toast } from 'sonner'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
+import type { FolderViewSize } from './size'
+import classNames from 'classnames'
 
 interface WorkflowCardProps {
     workflow: Library.WorkflowMeta
+    size?: FolderViewSize
+    onClick?: () => void
 }
+
+const sizeStyles = {
+    default: {
+        card: 'p-4',
+        name: 'text-sm',
+        icon: 40,
+        glyph: 52,
+    },
+    sm: {
+        card: 'p-2',
+        name: 'text-xs',
+        icon: 24,
+        glyph: 32,
+    },
+} as const
 
 function iconColor(workflow: Library.WorkflowMeta) {
     const token = workflow.icon_color ?? workflow.accent
@@ -23,35 +41,36 @@ function iconColor(workflow: Library.WorkflowMeta) {
     return token ? `var(--${token})` : "var(--primary)"
 }
 
-export function WorkflowCard({ workflow }: WorkflowCardProps) {
+export function WorkflowCard({ workflow, size = 'default', onClick }: WorkflowCardProps) {
 
     const hasActiveWorkflow = VersionControlSDK.useStore((s) => Boolean(s.activeWorkflows[workflow.id]))
 
+    const styles = sizeStyles[size]
+
     return (
         <WorkflowCardContextMenu workflow={workflow}>
-            <Link
-                to="/workflow/$workflowid"
-                params={{ workflowid: workflow.id }}
-                className="p-4 flex flex-col gap-1 hover:bg-accent/30 rounded-md relative m-auto"
+            <div
+                onClick={onClick}
+                className={classNames('flex flex-col gap-1 hover:bg-accent/30 rounded-md relative m-auto cursor-pointer select-none', styles.card)}
             >
                 {workflow.icon ? (
                     <LazyIcon
                         name={workflow.icon}
-                        size={40}
+                        size={styles.icon}
                         className="shrink-0 w-fit h-fit m-auto"
                         style={{ color: iconColor(workflow) }}
                     />
                 ) : (
                     <WorkflowGlyph
-                        width={52}
-                        height={52}
+                        width={styles.glyph}
+                        height={styles.glyph}
                         className="shrink-0 m-auto"
                         style={{ color: "var(--primary)" }}
                     />
                 )}
                 <div className="min-w-0 flex flex-col gap-1">
-                   
-                    <p className="font-medium text-sm text-center truncate">{workflow.display_name || 'Untitled'}</p>
+
+                    <p className={classNames('font-medium text-center truncate', styles.name)}>{workflow.display_name || 'Untitled'}</p>
                     {hasActiveWorkflow ? (
                         <Badge variant="success" className='mx-auto'>
                             Active
@@ -73,7 +92,7 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
                         <p className="text-xs opacity-60 truncate max-w-30 mt-0.5">{workflow.description}</p>
                     )} */}
                 </div>
-            </Link>
+            </div>
         </WorkflowCardContextMenu>
     )
 }
