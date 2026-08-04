@@ -1,23 +1,49 @@
 import { useMemo, useState } from 'react'
-import { useDebounce } from 'use-debounce'
-import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { Tree } from '@/components/Tree/Tree'
 import type { Tree as TreeDomain } from '@/components/Tree/domain'
-import { ContextMenu, Input } from '@pretzel-graph/standard-ui/foundations'
+import { ContextMenu, SearchInput } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { LibrarySDK } from '../sdk'
 import type { FileSystemNodeData } from '../actions'
 import type { Library, Workflow } from '@pretzel-graph/shared/domain'
-import { openEditFolderDialog, openEditProjectDialog, openEditWorkflowDialog } from './CreateDialogs'
+import { openEditFolderDialog, openEditProjectDialog, openEditWorkflowDialog } from './create-dialogs'
 import { openDeleteFolderDialog } from '@/routes/home/projects/-components/FolderCard'
 import { openDeleteProjectDialog } from '@/routes/home/projects/-components/ProjectCard'
 import { openDeleteWorkflowDialog } from '@/routes/home/projects/-components/WorkflowCard'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import classNames from 'classnames';
 
+type FileSystemTreeSize = 'default' | 'sm'
+
 type FileSystemTreeProps = {
     className?: string
+    size?: FileSystemTreeSize
+    cwd?: Library.Folder.Id
+    selectedWorkflowId?: Workflow.Id
+    onFolderClick?: (folderId: Library.Folder.Id) => void
+    onWorkflowClick?: (workflowId: Workflow.Id) => void
 }
+
+const sizeStyles = {
+    default: {
+        row: 'h-7.5 text-sm',
+        indent: 'w-5',
+        line: 'left-[7px]',
+        radius: 'rounded-bl-lg',
+        corner: 'top-[calc(50%-8px)] h-2',
+        icon: 'h-4 w-4',
+        search: 'sm',
+    },
+    sm: {
+        row: 'h-6 text-xs',
+        indent: 'w-4',
+        line: 'left-[6px]',
+        radius: 'rounded-bl-md',
+        corner: 'top-[calc(50%-6px)] h-1.5',
+        icon: 'h-3.5 w-3.5',
+        search: 'xs',
+    },
+} as const
 
 type FileNode = TreeDomain.Dummy.Branch<FileSystemNodeData>
 
@@ -53,55 +79,31 @@ function filterTree(root: FileNode, query: string): FileNode {
     return { childBranches: kept as FileNode['childBranches'] }
 }
 
-export function FileSystemTree({ className }: FileSystemTreeProps) {
-    const navigate = useNavigate()
-    const pathname = useRouterState({ select: (s) => s.location.pathname })
+export function FileSystemTree({ className, size = 'default', cwd, selectedWorkflowId, onFolderClick, onWorkflowClick }: FileSystemTreeProps) {
+    const styles = sizeStyles[size]
 
     const treeData = LibrarySDK.useStore((s) => s.treeData)
 
-    const [search, setSearch] = useState('')
-    const [debouncedSearch] = useDebounce(search, 250)
-    const query = debouncedSearch.trim().toLowerCase()
+    const [query, setQuery] = useState('')
 
     const displayTree = useMemo(
         () => (query ? filterTree(treeData, query) : treeData),
         [treeData, query],
     )
 
-    const pathParts = pathname.split('/').filter(Boolean)
-    const selectedFolderId = pathParts.length === 3 && pathParts[0] === 'home' && pathParts[1] === 'projects'
-        ? pathParts[2]
-        : undefined
-    const selectedWorkflowId = pathParts.length === 2 && pathParts[0] === 'workflow'
-        ? pathParts[1]
-        : undefined
-    const selectedKey = selectedWorkflowId
-        ? `workflow:${selectedWorkflowId}`
-        : selectedFolderId
-            ? `folder:${selectedFolderId}`
-            : undefined
-
-    const handleSelect = (key: string) => {
-        if (key.startsWith('folder:')) {
-            const folderId = key.slice('folder:'.length) as Library.Folder.Id
-            navigate({ to: '/home/projects/$folderId', params: { folderId } })
-        } else if (key.startsWith('workflow:')) {
-            const workflowid = key.slice('workflow:'.length) as Workflow.Id
-            navigate({ to: '/workflow/$workflowid', params: { workflowid } })
-        }
-    }
+    const selectedFolderKey = cwd ? `folder:${cwd}` : undefined
+    const selectedWorkflowKey = selectedWorkflowId ? `workflow:${selectedWorkflowId}` : undefined
 
     const hasFolders = treeData.childBranches && Object.keys(treeData.childBranches).length > 0
     const hasResults = displayTree.childBranches && Object.keys(displayTree.childBranches).length > 0
 
     return (
-        <>
+        <div className='relative'>
             <div className='sticky z-10 top-1 flex flex-row gap-1 mb-3'>
-                <Input className='rounded-full! mx-1 backdrop-blur-md'
-                    placeholder='Search'
-                    size='sm'
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                <SearchInput className='rounded-full! backdrop-blur-md'
+                    wrapperClassName='flex-1 mx-1'
+                    size={styles.search}
+                    onSearch={(value) => setQuery(value.trim().toLowerCase())}
                 />
             </div>
             {!hasFolders ? (
@@ -116,13 +118,15 @@ export function FileSystemTree({ className }: FileSystemTreeProps) {
                     renderBranch={(props) => (
                         <FileSystemTreeItem
                             {...props}
-                            isSelected={props.branch.key === selectedKey}
-                            onSelect={handleSelect}
+                            isSelected={props.branch.key === selectedFolderKey || props.branch.key === selectedWorkflowKey}
+                            styles={styles}
+                            onFolderClick={onFolderClick}
+                            onWorkflowClick={onWorkflowClick}
                         />
                     )}
                 />
             )}
-        </>
+        </div>
     )
 }
 
@@ -134,16 +138,28 @@ function FileSystemTreeItem({
     isLastSibling,
     onToggle,
     isSelected,
-    onSelect,
+    styles,
+    onFolderClick,
+    onWorkflowClick,
 }: TreeDomain.Branch.RenderProps<FileSystemNodeData> & {
     isSelected: boolean
-    onSelect: (key: string) => void
+    styles: (typeof sizeStyles)[FileSystemTreeSize]
+    onFolderClick?: (folderId: Library.Folder.Id) => void
+    onWorkflowClick?: (workflowId: Workflow.Id) => void
 }) {
     const key = branch.key
     const isFolder = key.startsWith('folder:')
+    const folderId = isFolder
+        ? (key.slice('folder:'.length) as Library.Folder.Id)
+        : undefined
     const workflowId = key.startsWith('workflow:')
         ? (key.slice('workflow:'.length) as Workflow.Id)
         : undefined
+
+    const handleClick = () => {
+        if (folderId) return onFolderClick?.(folderId)
+        if (workflowId) return onWorkflowClick?.(workflowId)
+    }
 
     const hasActiveWorkflow = VersionControlSDK.useStore((s) => (
         workflowId ? Boolean(s.activeWorkflows[workflowId]) : false
@@ -200,21 +216,30 @@ function FileSystemTreeItem({
         <ContextMenu.Root>
             <ContextMenu.Trigger asChild>
                 <div
-                    className={`flex items-center h-7.5 pr-1 pl-1 rounded-md cursor-pointer select-none text-sm ${isSelected ? 'bg-accent' : 'hover:bg-accent/50'}`}
-                    onClick={() => onSelect(key)}
+                    className={classNames(
+                        'flex items-center pr-1 pl-1 rounded-md cursor-pointer select-none',
+                        styles.row,
+                        isSelected ? 'bg-accent' : 'hover:bg-accent/50',
+                    )}
+                    onClick={handleClick}
                 >
                     {Array.from({ length: level }).map((_, i) => {
                         const isInnermost = i === level - 1
                         return (
-                            <span key={i} className='shrink-0 w-5 relative self-stretch'>
+                            <span key={i} className={classNames('shrink-0 relative self-stretch opacity-20', styles.indent)}>
                                 {isInnermost ? (
                                     isLastSibling ? (
-                                        <span className='absolute top-0 h-1/2 left-[7px] right-1.5 border-l border-b border-accent-foreground/20 rounded-bl-lg' />
+                                        <span className={classNames('absolute top-0 h-1/2 right-0.5 border-l border-b border-accent-foreground', styles.line, styles.radius)} />
                                     ) : (
-                                        <span className='absolute inset-y-0 left-[7px] border-l border-accent-foreground/20' />
+                                        <>
+                                            <span className={classNames('absolute inset-y-0 border-l border-accent-foreground', styles.line)} />
+                                            {isFolder && (
+                                                <span className={classNames('absolute right-0.5 border-l border-b border-accent-foreground', styles.line, styles.radius, styles.corner)} />
+                                            )}
+                                        </>
                                     )
                                 ) : !branch.ancestorIsLast[i + 1] ? (
-                                    <span className='absolute inset-y-0 left-[7px] border-l border-accent-foreground/20' />
+                                    <span className={classNames('absolute inset-y-0 border-l border-accent-foreground', styles.line)} />
                                 ) : null}
                             </span>
                         )
@@ -222,14 +247,14 @@ function FileSystemTreeItem({
                     {!isLeaf ? (
                         <span className='shrink-0' onClick={handleToggle}>
                             <SystemIcons.ChevronRight
-                                className='h-4 w-4 text-muted-foreground transition-transform duration-150'
+                                className={classNames('text-muted-foreground transition-transform duration-150', styles.icon)}
                                 style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
                             />
                         </span>
                     ) : (
                         <></>
                     )}
-                    <Icon className={`mr-1 h-4 w-4 shrink-0 ${isFolder ? 'text-muted-foreground' : 'text-primary'}`} />
+                    <Icon className={classNames('mr-1 shrink-0', styles.icon, isFolder ? 'text-muted-foreground' : 'text-primary')} />
                     <span className='min-w-0 flex-1 truncate whitespace-nowrap text-foreground'>{branch.data?.name}</span>
                     {hasActiveWorkflow ? (
                         <div className='my-auto ml-1 h-1.5 w-1.5 shrink-0 rounded-full bg-green-400' />

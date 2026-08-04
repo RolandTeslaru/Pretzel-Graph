@@ -9,6 +9,7 @@ export { DateInput } from "./DateInput"
 export { ContextMenu } from "./contextMenu";
 // Input
 export { Input } from "./input";
+export { SearchInput } from "./searchInput";
 
 // Label
 export { Label } from "./label";
