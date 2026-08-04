@@ -20,6 +20,8 @@ import { Execution, type Workflow } from '@pretzel-graph/shared/domain'
 import { api } from '@/SDKs/ApiInterceptorSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import WorkflowPicker from '@/SDKs/LibrarySDK/ui/WorkflowPicker'
+import { WorkflowGlyph } from '@pretzel-graph/standard-ui/brands/workflowGlyph'
 
 
 export const Route = createFileRoute('/home/executions')({
@@ -28,12 +30,12 @@ export const Route = createFileRoute('/home/executions')({
 
 
 const STATUS_VARIANT: Record<Execution.Status, 'success' | 'destructive' | 'secondary' | 'outline'> = {
-    pending:    'outline',
-    running:    'secondary',
-    paused:     'secondary',
-    suspended:  'secondary',
-    completed:  'success',
-    failed:     'destructive',
+    pending: 'outline',
+    running: 'secondary',
+    paused: 'secondary',
+    suspended: 'secondary',
+    completed: 'success',
+    failed: 'destructive',
     terminated: 'destructive',
 }
 
@@ -120,39 +122,34 @@ const columns: ColumnDef<typeof features, Execution.Meta, any>[] = [
 
 
 function ExecutionsRoute() {
-    const workflowMetas = LibrarySDK.useStore(s => s.workflowMetas)
     const [workflowId, setWorkflowId] = useState<Workflow.Id>()
-
-    const workflows = useMemo(
-        () => Object.values(workflowMetas).sort((a, b) => a.display_name.localeCompare(b.display_name)),
-        [workflowMetas],
-    )
 
     return (
         <ScrollArea.Root className='h-[calc(100vh-60px)] pr-10'>
             <div className='flex flex-col gap-4 pb-10'>
 
-                <div className='flex items-center gap-3'>
-                    <span className='text-sm font-medium'>Workflow</span>
-
-                    <Select.Root value={workflowId} onValueChange={v => setWorkflowId(v as Workflow.Id)}>
-                        <Select.Trigger className='w-72 h-8 text-xs'>
-                            <Select.Value placeholder='Select a workflow…' />
-                        </Select.Trigger>
-
-                        <Select.Content>
-                            {workflows.map(w => (
-                                <Select.Item key={w.id} value={w.id} className='text-xs'>
-                                    {w.display_name || 'Untitled'}
-                                </Select.Item>
-                            ))}
-                        </Select.Content>
-                    </Select.Root>
-                </div>
-
                 {workflowId
-                    ? <ExecutionsTable key={workflowId} workflowId={workflowId} />
-                    : <Placeholder text='Select a workflow to see its executions.' />
+                    ? (
+                        <>
+
+                            <div className='flex items-center gap-3'>
+                                <WorkflowPicker selectedWorkflowId={workflowId} selectWorkflow={(id) => setWorkflowId(id)} />
+                            </div>
+                            <ExecutionsTable key={workflowId} workflowId={workflowId} />
+                        </>
+                    )
+                    : (
+                        <>
+                            <div className='flex items-center gap-3'>
+                                <WorkflowPicker selectedWorkflowId={workflowId} selectWorkflow={(id) => setWorkflowId(id)} />
+                                
+                            </div>
+                            <div className='absolute top-1/2 left-1/2 -translate-1/2'>
+                                <WorkflowGlyph className='size-20 text-primary mx-auto opacity-20'/>
+                                <p className='text-muted-foreground'>Select a Workflow</p>
+                            </div>
+                        </>
+                    )
                 }
 
             </div>
@@ -183,11 +180,11 @@ function ExecutionsTable({ workflowId }: { workflowId: Workflow.Id }) {
     const hasFilters = table.state.columnFilters.length > 0
 
     const emptyMessage =
-        isError                   ? 'Could not load executions.'
-        : isPending               ? 'Loading executions…'
-        : executions.length === 0 ? 'This workflow has no executions yet.'
-        : rows.length === 0       ? 'No executions match these filters.'
-        : null
+        isError ? 'Could not load executions.'
+            : isPending ? 'Loading executions…'
+                : executions.length === 0 ? 'This workflow has no executions yet.'
+                    : rows.length === 0 ? 'No executions match these filters.'
+                        : null
 
     return (
         <div className='flex flex-col gap-3'>
@@ -265,9 +262,9 @@ function ExecutionsTable({ workflowId }: { workflowId: Workflow.Id }) {
 
 
 const HEAD_WIDTH: Record<string, string> = {
-    status:        'w-[110px]',
-    created_at:    'w-[180px]',
-    duration:      'w-[100px]',
+    status: 'w-[110px]',
+    created_at: 'w-[180px]',
+    duration: 'w-[100px]',
     has_recording: 'w-[90px]',
 }
 

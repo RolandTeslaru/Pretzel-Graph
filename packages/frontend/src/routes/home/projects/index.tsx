@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Button } from '@pretzel-graph/standard-ui/foundations'
-import { openCreateProjectDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
+import { openCreateProjectDialog } from '@/SDKs/LibrarySDK/ui/create-dialogs'
 import { ProjectCard } from './-components/ProjectCard'
 import Breadcrumbs from './-components/Breadcrumbs'
 

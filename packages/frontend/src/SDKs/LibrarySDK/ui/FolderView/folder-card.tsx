@@ -1,38 +1,57 @@
 import type { ReactNode } from 'react'
-import { Link } from '@tanstack/react-router'
 import { DialogSDK } from '@/SDKs/DialogSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { AlertDialog, ContextMenu } from '@pretzel-graph/standard-ui/foundations'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { openEditFolderDialog } from '@/SDKs/LibrarySDK/ui/create-dialogs'
-import { FolderIcon } from './FolderIcon'
+import { FolderIcon } from './folder-icon'
+import type { FolderViewSize } from './size'
+import classNames from 'classnames'
 
 interface FolderCardProps {
     folder: Library.Folder
+    size?: FolderViewSize
+    onClick?: () => void
 }
 
-export function FolderCard({ folder }: FolderCardProps) {
+const sizeStyles = {
+    default: {
+        card: 'p-4',
+        icon: 'size-20',
+        name: 'text-sm',
+        meta: 'text-xs mt-2',
+    },
+    sm: {
+        card: 'p-2',
+        icon: 'size-12',
+        name: 'text-xs',
+        meta: 'text-[10px] mt-1',
+    },
+} as const
+
+export function FolderCard({ folder, size = 'default', onClick }: FolderCardProps) {
     const itemCount = LibrarySDK.useStore((s) =>
         Object.values(s.folders).filter((f) => f.parent_folder_id === folder.id).length +
         Object.values(s.workflowMetas).filter((w) => w.folder_id === folder.id).length,
     )
 
+    const styles = sizeStyles[size]
+
     return (
         <FolderCardContextMenu folder={folder}>
-            <Link
-                to="/home/projects/$folderId"
-                params={{ folderId: folder.id }}
-                className="p-4 flex flex-col gap-1 hover:bg-accent/30 rounded-md relative m-auto"
+            <div
+                onClick={onClick}
+                className={classNames('flex flex-col gap-1 hover:bg-accent/30 rounded-md relative m-auto cursor-pointer select-none', styles.card)}
             >
-                <FolderIcon color="var(--primary)" className="size-20 shrink-0 mx-auto" />
+                <FolderIcon color="var(--primary)" className={classNames('shrink-0 mx-auto', styles.icon)} />
                 <div className="min-w-0 flex-1">
-                    <p className="font-medium text-sm text-center truncate">{folder.display_name}</p>
-                    <div className="text-xs opacity-50 mt-2 flex items-center justify-center gap-3">
+                    <p className={classNames('font-medium text-center truncate', styles.name)}>{folder.display_name}</p>
+                    <div className={classNames('opacity-50 flex items-center justify-center gap-3', styles.meta)}>
                         <span>{itemCount} item{itemCount === 1 ? '' : 's'}</span>
                     </div>
                 </div>
-            </Link>
+            </div>
         </FolderCardContextMenu>
     )
 }
