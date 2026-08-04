@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
-    columnFacetingFeature,
     columnFilteringFeature,
     createColumnHelper,
-    createFacetedUniqueValues,
     createFilteredRowModel,
     createSortedRowModel,
     rowSortingFeature,
@@ -14,11 +12,10 @@ import {
     tableFeatures,
     useTable,
 } from '@tanstack/react-table'
-import { Badge, Button, DropdownMenu, ScrollArea, Select, Table } from '@pretzel-graph/standard-ui/foundations'
+import { Badge, Button, DropdownMenu, ScrollArea, Table } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Execution, type Workflow } from '@pretzel-graph/shared/domain'
 import { api } from '@/SDKs/ApiInterceptorSDK/sdk'
-import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import WorkflowPicker from '@/SDKs/LibrarySDK/ui/WorkflowPicker'
 import { WorkflowGlyph } from '@pretzel-graph/standard-ui/brands/workflowGlyph'
@@ -47,14 +44,21 @@ const features = tableFeatures({
 
     columnFilteringFeature,
     filteredRowModel: createFilteredRowModel(),
-
-    columnFacetingFeature,
-    facetedUniqueValues: createFacetedUniqueValues(),
 })
 
 
 const includesSome = (row: { getValue: (id: string) => unknown }, columnId: string, selected: unknown[]) =>
     selected.length === 0 || selected.includes(row.getValue(columnId))
+
+
+// Single source of truth for the filterable columns: the column defs accessor rows
+// through these, and the facet counts are derived from the same functions, so the
+// dropdown options can never drift from what the column actually shows.
+const FILTERABLE: Record<string, (e: Execution.Meta) => unknown> = {
+    status:        e => e.status,
+    trigger:       e => e.igniter.variant,
+    has_recording: e => e.has_recording,
+}
 
 
 const columnHelper = createColumnHelper<typeof features, Execution.Meta>()
@@ -63,7 +67,7 @@ const columnHelper = createColumnHelper<typeof features, Execution.Meta>()
 // Date, number, boolean) and v9's ColumnDef union won't unify them otherwise.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const columns: ColumnDef<typeof features, Execution.Meta, any>[] = [
-    columnHelper.accessor('status', {
+    columnHelper.accessor(FILTERABLE.status, {
         id: 'status',
         header: 'Status',
         enableSorting: false,
@@ -79,7 +83,7 @@ const columns: ColumnDef<typeof features, Execution.Meta, any>[] = [
         },
     }),
 
-    columnHelper.accessor(row => row.igniter.variant, {
+    columnHelper.accessor(FILTERABLE.trigger, {
         id: 'trigger',
         header: 'Trigger',
         enableSorting: false,
@@ -109,7 +113,7 @@ const columns: ColumnDef<typeof features, Execution.Meta, any>[] = [
         ),
     }),
 
-    columnHelper.accessor('has_recording', {
+    columnHelper.accessor(FILTERABLE.has_recording, {
         id: 'has_recording',
         header: 'Recording',
         enableSorting: false,
@@ -177,7 +181,41 @@ function ExecutionsTable({ workflowId }: { workflowId: Workflow.Id }) {
     )
 
     const rows = table.getRowModel().rows
-    const hasFilters = table.state.columnFilters.length > 0
+    const filters = table.state.columnFilters
+    const hasFilters = filters.length > 0
+
+    // Facets computed straight from the fetched rows rather than the table's faceting
+    // feature — that reads a render-phase snapshot which lags, so options intermittently
+    // came back empty. Each column's counts honour every *other* column's filter.
+    const facets = useMemo(() => {
+        const byColumn: Record<string, Map<unknown, number>> = {}
+
+        for (const [columnId, accessor] of Object.entries(FILTERABLE)) {
+            const others = filters.filter(f => f.id !== columnId)
+            const counts = new Map<unknown, number>()
+
+            for (const execution of executions) {
+                const passesOthers = others.every(f => {
+                    const otherAccessor = FILTERABLE[f.id]
+
+                    if (!otherAccessor)
+                        return true
+
+                    return (f.value as unknown[]).includes(otherAccessor(execution))
+                })
+
+                if (!passesOthers)
+                    continue
+
+                const value = accessor(execution)
+                counts.set(value, (counts.get(value) ?? 0) + 1)
+            }
+
+            byColumn[columnId] = counts
+        }
+
+        return byColumn
+    }, [executions, filters])
 
     const emptyMessage =
         isError ? 'Could not load executions.'
@@ -215,7 +253,11 @@ function ExecutionsTable({ workflowId }: { workflowId: Workflow.Id }) {
                             {group.headers.map(header => (
                                 <Table.Head key={header.id} className={HEAD_WIDTH[header.column.id]}>
                                     {header.column.getCanFilter()
-                                        ? <FilterHeader column={header.column} filters={table.state.columnFilters} />
+                                        ? <FilterHeader
+                                            column={header.column}
+                                            filters={filters}
+                                            facets={facets[header.column.id] ?? EMPTY_FACETS}
+                                        />
                                         : header.column.getCanSort()
                                             ? (
                                                 <button
@@ -273,21 +315,25 @@ type FilterColumn = {
     id: string
     columnDef: { header?: unknown }
     setFilterValue: (value: unknown) => void
-    getFacetedUniqueValues: () => Map<unknown, number>
 }
 
 type ColumnFilter = { id: string, value: unknown }
+
+const EMPTY_FACETS = new Map<unknown, number>()
 
 const FACET_LABEL: Record<string, (value: unknown) => string> = {
     has_recording: value => value ? 'With recording' : 'No recording',
 }
 
-// `selected` comes from table.state (the subscribed selector), not column.getFilterValue().
-// The latter reads a render-phase atom snapshot that lags a render, so the checkmarks
-// never caught up with the filter that was already applied to the rows.
-function FilterHeader({ column, filters }: { column: FilterColumn, filters: ColumnFilter[] }) {
+// Both `selected` and `facets` are passed in from state the component subscribes to,
+// never read live off the table during render — those reads are served from a
+// render-phase snapshot that lags, which is what made this dropdown unreliable.
+function FilterHeader({ column, filters, facets }: {
+    column: FilterColumn
+    filters: ColumnFilter[]
+    facets: Map<unknown, number>
+}) {
     const selected = (filters.find(f => f.id === column.id)?.value as unknown[]) ?? []
-    const facets = column.getFacetedUniqueValues()
     const label = String(column.columnDef.header ?? column.id)
     const format = FACET_LABEL[column.id] ?? String
 

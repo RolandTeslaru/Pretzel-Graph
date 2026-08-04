@@ -10,6 +10,7 @@ import { executionSelectors, type ExecutionSelectors } from './execution';
 import { graphSelectors, type GraphSelectors } from './graph';
 import { dependencySelectors, type DependencySelectors } from './dependency';
 import { layoutSelectors, type LayoutSelectors } from './layout';
+import { workflowSelectors, type WorkflowSelectors } from './workflow';
 import type { WorkbenchSDK } from '../sdk';
 import type { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { ShelfSDK } from '../../ShelfSDK/sdk';
@@ -32,6 +33,7 @@ export interface WorkbenchSDKSelectors {
     graph          : GraphSelectors
     dependency     : DependencySelectors
     layout         : LayoutSelectors
+    workflow       : WorkflowSelectors
 }
 
 export const workbenchSelectors = {
@@ -66,4 +68,5 @@ export const workbenchSelectors = {
     graph          : graphSelectors,
     dependency     : dependencySelectors,
     layout         : layoutSelectors,
+    workflow       : workflowSelectors,
 } satisfies WorkbenchSDKSelectors
