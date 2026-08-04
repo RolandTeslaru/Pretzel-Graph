@@ -5,17 +5,15 @@ import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import WorkflowCanvas from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/Canvas'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useEffect, useRef, useCallback } from 'react'
-import { Dialog, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { Spinner } from '@pretzel-graph/standard-ui/foundations'
 import NodeSidebar from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/NodePanel'
 import { ChatSDK } from '@/routes/workflow/-SDKs/ChatSDK/sdk'
 import ChatSidebar from '@/routes/workflow/-SDKs/ChatSDK/ui/ChatSidebar'
 import AssistantSidebar from '@/routes/workflow/-SDKs/AssistantSDK/ui/Sidebar'
 import SpotlightSearch from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/SpotlightSearch'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { DialogSDK } from '@/SDKs/DialogSDK'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK/sdk'
-import { HumanReviewSDK } from './-SDKs/HumanReviewSDK/sdk'
 import { ExecutionSDK } from './-SDKs/ExecutionSDK/sdk'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { BottomPanel } from './-panels/BottomPanel'
@@ -182,10 +180,19 @@ function WorkflowLayoutComponent() {
         }
     }, [])
 
+    const isLoaded = WorkbenchSDK.useStore(s => s.selectors.workflow.isLoaded(s))
+
     return (
         <>
 
-            <div className="h-screen flex flex-col">
+            <div className="h-screen flex flex-col relative">
+
+                {!isLoaded && (
+                    <div className='fixed top-1/2 left-1/2 -translate-1/2 z-50'>
+                        <Spinner className="w-[50px] h-[50px] "/>
+                    </div>
+                )}
+
                 {/* Canvas — fills all space the drawer doesn't take */}
                 <div
                     ref={canvasRef}
