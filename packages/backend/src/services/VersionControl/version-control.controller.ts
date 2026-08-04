@@ -32,6 +32,15 @@ export class VersionControlController {
         return this.service.listActiveWorkflows(req.token);
     }
 
+    @Get('active/:workflowId')
+    async getActiveByWorkflow(
+        @Req() req: AuthenticatedRequest,
+        @Param('workflowId') workflowId: string,
+    ) {
+        const payload = VersionControl.API.GetActiveByWorkflow.Request.parse({ workflowId });
+        return this.service.getActiveByWorkflow(req.token, payload);
+    }
+
     @Get(':publicationId')
     async get(
         @Req() req: AuthenticatedRequest,

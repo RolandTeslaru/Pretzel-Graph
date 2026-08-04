@@ -60,6 +60,24 @@ export class VersionControlDatabase {
         );
     }
 
+    @SupabaseAssert('versionControl.getActiveByWorkflow')
+    @ZodReturn(VersionControl.Publication.Meta.Schema.nullable())
+    async getActiveByWorkflow(supabase: SupabaseClient, { workflowId }: VersionControl.API.GetActiveByWorkflow.Request): Promise<VersionControl.Publication.Meta | null> {
+        const user_id = await getUserId(supabase);
+        if (!user_id) throw new Error('Unauthenticated');
+
+        const { data: row } = await supabase
+            .from('version_control')
+            .select('id, workflow_id, version, name, description, is_active, published_at')
+            .eq('user_id', user_id)
+            .eq('workflow_id', workflowId)
+            .eq('is_active', true)
+            .maybeSingle()
+            .throwOnError();
+
+        return row ?? null;
+    }
+
     @SupabaseAssert('publication.get')
     @ZodReturn(VersionControl.Publication.Schema)
     async get(supabase: SupabaseClient, { publicationId }: VersionControl.API.Get.Request): Promise<VersionControl.Publication> {

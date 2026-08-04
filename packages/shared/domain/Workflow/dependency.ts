@@ -72,5 +72,8 @@ export namespace Dependency {
     }
 
     export const Schema = z.union([Publication.Schema, Draft.Schema])
+
+    export const Variant = z.enum(["draft", "publication"])
+    export type Variant = z.infer<typeof Variant>
 }
 export type Dependency = z.infer<typeof Dependency.Schema>

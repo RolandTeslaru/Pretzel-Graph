@@ -145,6 +145,22 @@ export namespace VersionControl {
             return data;
         }
 
+        export namespace GetActiveByWorkflow {
+            export const Request = z.object({
+                workflowId: Workflow.Id,
+            })
+            export type Request = z.infer<typeof Request>
+
+            export const Response = z.object({
+                publication: Publication.Meta.Schema.nullable(),
+            })
+            export type Response = z.infer<typeof Response>
+        }
+        export async function getActiveByWorkflow(api: AxiosInstance, req: GetActiveByWorkflow.Request): Promise<GetActiveByWorkflow.Response> {
+            const { data } = await api.get<GetActiveByWorkflow.Response>(`/api/version-control/active/${req.workflowId}`);
+            return data;
+        }
+
         export namespace Get {
             export const Request = z.object({
                 publicationId: Publication.Id,
