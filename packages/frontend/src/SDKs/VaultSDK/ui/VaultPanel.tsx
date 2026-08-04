@@ -14,7 +14,7 @@ const VaultPanel = () => {
     const instances = VaultSDK.useStore(s => Object.values(s.credentialInstances))
 
     useEffect(() => {
-        VaultSDK.actions.refreshAll()
+        VaultSDK.actions.instance.refreshAll()
     }, [])
 
     return (
@@ -61,7 +61,7 @@ const CredentialItem = ({ instance }: { instance: Vault.Credential.Instance }) =
     const handleSave = async () => {
         setIsLoading(true)
         try {
-            await VaultSDK.actions.update.name(instance.id, localName)
+            await VaultSDK.actions.instance.update.name(instance.id, localName)
         } finally {
             setIsLoading(false)
         }
@@ -75,7 +75,7 @@ const CredentialItem = ({ instance }: { instance: Vault.Credential.Instance }) =
                 {...props}
                 type='danger'
                 onApprove={async () => {
-                    await VaultSDK.actions.remove(instance.id)
+                    await VaultSDK.actions.instance.remove(instance.id)
                     DialogSDK.actions.pop(`delete-credential-${instance.id}`)
                 }}
                 onCancel={() => DialogSDK.actions.pop(`delete-credential-${instance.id}`)}

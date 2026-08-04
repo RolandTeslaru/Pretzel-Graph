@@ -50,7 +50,7 @@ const Search = () => {
                         <SystemIcons.Filter/>
                     </Button>
                 </Popover.Trigger>
-                <Popover.Content side='right' align="start" sideOffset={18} className='w-[200px] mt-[-12px] p-2 bg-popover text-popover-foreground rounded-xl shadow-lg'>
+                <Popover.Content side='right' align="start" sideOffset={18} className='w-[200px] mt-[-12px] p-2 bg-popover text-popover-foreground border border-popover-border rounded-xl shadow-lg'>
                     <div className='text-sm'>Filter options coming soon!</div>
                 </Popover.Content>
             </Popover.Root>

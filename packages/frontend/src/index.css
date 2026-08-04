@@ -86,10 +86,11 @@ code {
 
   --popover: theme(--color-white);
   --popover-foreground: theme(--color-black);
+  --popover-border: var(--border);
 
   --primary: theme(--color-orange-500);
   --primary-foreground: theme(--color-white);
-  --primary-accent: theme(--color-orange-300);
+  --primary-accent: theme(--color-orange-400);
   --primary-hover: theme(--color-amber-500);
   --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
 
@@ -169,7 +170,7 @@ code {
   --port-LanguageModel-glow: theme(--color-fuchsia-100);
 
   --port-Tool: theme(--color-cyan-400);
-  --port-Tool-foreground: theme(--color-cyan-400);
+  --port-Tool-foreground: theme(--color-cyan-500);
   --port-Tool-accent: theme(--color-cyan-200);
   --port-Tool-glow: theme(--color-cyan-600);
 
@@ -276,7 +277,7 @@ code {
 
 
   --foreground: theme(--color-white);
-  --card: rgb(35, 35, 39);
+  --card: rgb(35, 35, 35);
   --card-float: rgb(22, 22, 22);
 
 
@@ -284,8 +285,9 @@ code {
   --port-Text: theme(--color-slate-400);
 
   --card-foreground: theme(--color-white);
-  --popover: rgb(35, 35, 39);
+  --popover: rgb(43, 43, 43);
   --popover-foreground: theme(--color-neutral-100);
+  --popover-border: rgb(71, 71, 71);
 
   --primary: theme(--color-orange-500);
   --primary-foreground: theme(--color-white);
@@ -299,10 +301,10 @@ code {
   --accent-foreground: theme(--color-white);
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: rgb(45, 45, 45);
+  --border: rgb(50, 50, 50);
 
   /* --border: theme(--color-stone-800); */
-  --input: rgb(25, 25, 30);
+  --input: rgb(45, 45, 45);
   --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
 
 
@@ -336,6 +338,8 @@ code {
   --utility-foreground: theme(--color-neutral-200);
 
   --group-routing: theme(--color-neutral-500);
+
+  --port-Tool-foreground: theme(--color-cyan-300);
 
   /* Dark mode: glow uses the base port color (already vibrant on dark bg) */
   --port-Message-glow: theme(--color-blue-300);

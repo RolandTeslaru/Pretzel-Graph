@@ -114,7 +114,7 @@ const Content: SelectComponents.Content = ({
       <SelectPrimitive.Content
         className={cn(
           `bg-popover/80 backdrop-blur-sm text-popover-foreground min-w-[8rem] 
-           overflow-x-hidden overflow-y-auto rounded-lg border border-border
+           overflow-x-hidden overflow-y-auto rounded-lg border border-popover-border
            shadow-xl
            dark:shadow-black/30
            light:shadow-neutral-950/30
