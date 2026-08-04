@@ -9,6 +9,21 @@ import { ZodBody, ZodStringBody } from '../../pipes/zod.pipe';
 export class VaultController {
     constructor(private readonly vaultService: VaultService) {}
 
+    @Get('credential-templates/:id')
+    getCredentialTemplate(
+        @Param('id') id: Vault.Credential.Template.Id,
+    ): Vault.API.CredentialTemplate.Get.Response {
+        return this.vaultService.credentialTemplate.get(id);
+    }
+
+    @Post('credential-templates/getBatch')
+    @HttpCode(200)
+    getBatchCredentialTemplates(
+        @ZodBody(Vault.API.CredentialTemplate.GetBatch.Request) body: Vault.API.CredentialTemplate.GetBatch.Request,
+    ): Vault.API.CredentialTemplate.GetBatch.Response {
+        return this.vaultService.credentialTemplate.getBatch(body);
+    }
+
     @Get('credential-instances')
     async list(@Req() req: AuthenticatedRequest): Promise<Vault.API.CredentialInstance.List.Response> {
         return this.vaultService.credentialInstance.list(req.token);

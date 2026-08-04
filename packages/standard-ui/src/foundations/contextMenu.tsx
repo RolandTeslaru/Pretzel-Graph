@@ -68,7 +68,7 @@ function Content({ className, ...rest }: ContextMenuComponents.Content) {
           data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2
           z-50 max-h-(--radix-context-menu-content-available-height) min-w-[8rem]
           origin-(--radix-context-menu-content-transform-origin) overflow-x-hidden overflow-y-auto
-          rounded-lg border border-border p-1
+          rounded-lg border border-popover-border p-1
           shadow-xl backdrop-blur-sm
           dark:shadow-black/50
           light:shadow-neutral-950/50`,
@@ -124,7 +124,7 @@ function SubContent({ className, ...rest }: ContextMenuComponents.SubContent) {
            data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2
            data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem]
            origin-(--radix-context-menu-content-transform-origin) backdrop-blur-md
-           overflow-hidden rounded-lg border border-border p-1 shadow-lg`,
+           overflow-hidden rounded-lg border border-popover-border p-1 shadow-lg`,
           className
         )}
         {...rest}

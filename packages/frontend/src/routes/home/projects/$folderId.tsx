@@ -72,7 +72,7 @@ function FolderView({ folderId }: { folderId: Library.Folder.Id }) {
     return (
         <>
             {/* Top Bar */}
-            <div className="absolute top-0 w-full flex items-center justify-between mb-4 z-10">
+            <div className="absolute top-0 pr-10 w-full flex items-center justify-between mb-4 z-10">
                 <Breadcrumbs cwd={breadCrumbs} />
                 <div className="flex items-center gap-2">
                     <Button
@@ -93,7 +93,7 @@ function FolderView({ folderId }: { folderId: Library.Folder.Id }) {
                 </div>
             </div>
 
-            <div className='pt-12 pb-20'>
+            <div className='pt-12 pb-20 pr-10'>
                 {isEmpty ? (
                     <EmptyFolder />
                 ) : (

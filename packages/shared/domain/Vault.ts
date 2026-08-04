@@ -76,6 +76,43 @@ export namespace Vault {
 
 
     export namespace API {
+        export namespace CredentialTemplate {
+
+            export namespace Get {
+                export const Request = z.object({
+                    id: Credential.Template.Id,
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({
+                    template: Credential.Template.Schema,
+                })
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function get(api: AxiosInstance, id: Credential.Template.Id): Promise<Get.Response> {
+                const { data } = await api.get<Get.Response>(`/api/vault/credential-templates/${id}`)
+                return data
+            }
+
+            export namespace GetBatch {
+                export const Request = z.object({
+                    ids: z.array(Credential.Template.Id),
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({
+                    templates: z.record(Credential.Template.Id, Credential.Template.Schema),
+                })
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function getBatch(api: AxiosInstance, req: GetBatch.Request): Promise<GetBatch.Response> {
+                const { data } = await api.post<GetBatch.Response>('/api/vault/credential-templates/getBatch', req)
+                return data
+            }
+        }
+
         export namespace CredentialInstance {
 
             export namespace List {
