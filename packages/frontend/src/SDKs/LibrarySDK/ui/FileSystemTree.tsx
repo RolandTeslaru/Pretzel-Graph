@@ -13,6 +13,7 @@ import { openDeleteFolderDialog } from '@/routes/home/projects/-components/Folde
 import { openDeleteProjectDialog } from '@/routes/home/projects/-components/ProjectCard'
 import { openDeleteWorkflowDialog } from '@/routes/home/projects/-components/WorkflowCard'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
+import classNames from 'classnames';
 
 type FileSystemTreeProps = {
     className?: string
@@ -96,8 +97,8 @@ export function FileSystemTree({ className }: FileSystemTreeProps) {
     return (
         <>
             <div className='sticky z-10 top-1 flex flex-row gap-1 mb-3'>
-                <Input className='rounded-full!'
-                    placeholder='Search in Tree'
+                <Input className='rounded-full! mx-1 backdrop-blur-md'
+                    placeholder='Search'
                     size='sm'
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
