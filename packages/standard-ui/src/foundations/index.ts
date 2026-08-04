@@ -37,6 +37,9 @@ export { DualRangeSlider } from "./dualRangeSlider";
 // Switch
 export { Switch } from "./switch";
 
+// Table
+export { Table } from "./table";
+
 // Tabs
 export { Tabs } from "./tabs";
 
