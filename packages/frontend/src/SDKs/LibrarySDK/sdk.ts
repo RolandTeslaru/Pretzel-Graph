@@ -20,6 +20,7 @@ export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
             workflowMetas: {},
             treeExpandedByFolderId: {},
             treeData: {},
+            selectors: _createLibrarySelectors_(this)
         })),
         shallow
     )
@@ -38,6 +39,7 @@ export namespace LibrarySDK {
 
     export type State = {
         folders: Record<Library.Folder.Id, Library.Folder>;
+        selectors: _LibrarySDKSelectors
         workflowMetas: Record<Workflow.Id, Library.WorkflowMeta>;
         treeExpandedByFolderId: Record<Library.Folder.Id, boolean>;
         treeData: TreeDomain.Dummy.Branch<FileSystemNodeData>;
