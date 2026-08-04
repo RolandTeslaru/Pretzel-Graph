@@ -28,6 +28,15 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
             return data;
         },
 
+        getActiveByWorkflowId: async (workflowId) => {
+            const data = await VersionControl.API.getActiveByWorkflow(api, { workflowId });
+            sdk.setState(s => {
+                if (data.publication) sdk.reducers.activeWorkflows.upsert(s, data.publication);
+                else sdk.reducers.activeWorkflows.removeByWorkflowId(s, workflowId);
+            });
+            return data;
+        },
+
         get: async (publicationId) => {
             return VersionControl.API.get(api, { publicationId });
         },
@@ -118,6 +127,7 @@ export type VersionControlSDKActions = {
     publish: (payload: VersionControl.API.Publish.Request) => Promise<VersionControl.API.Publish.Response>
     list: (workflowId: Workflow.Id) => Promise<VersionControl.API.List.Response>
     listActiveWorkflows: () => Promise<VersionControl.API.ListActiveWorkflows.Response>
+    getActiveByWorkflowId: (workflowId: Workflow.Id) => Promise<VersionControl.API.GetActiveByWorkflow.Response>
     get: (publicationId: VersionControl.Publication.Id) => Promise<VersionControl.API.Get.Response>
     activate: (publicationId: VersionControl.Publication.Id) => Promise<VersionControl.API.Activate.Response>
     deactivate: (publicationId: VersionControl.Publication.Id) => Promise<VersionControl.API.Deactivate.Response>
