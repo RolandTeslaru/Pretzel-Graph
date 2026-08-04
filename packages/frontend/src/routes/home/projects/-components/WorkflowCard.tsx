@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { DialogSDK } from '@/SDKs/DialogSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { AlertDialog, ContextMenu } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, Badge, ContextMenu, Tooltip } from '@pretzel-graph/standard-ui/foundations'
 import { Workbench } from '@pretzel-graph/shared/domain'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { openEditWorkflowDialog } from '@/SDKs/LibrarySDK/ui/CreateDialogs'
@@ -11,6 +11,7 @@ import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { WorkflowGlyph } from '@pretzel-graph/standard-ui/brands/workflowGlyph'
 import { api } from '@/SDKs/ApiInterceptorSDK'
 import { toast } from 'sonner'
+import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 
 interface WorkflowCardProps {
     workflow: Library.WorkflowMeta
@@ -23,6 +24,9 @@ function iconColor(workflow: Library.WorkflowMeta) {
 }
 
 export function WorkflowCard({ workflow }: WorkflowCardProps) {
+
+    const hasActiveWorkflow = VersionControlSDK.useStore((s) => Boolean(s.activeWorkflows[workflow.id]))
+
     return (
         <WorkflowCardContextMenu workflow={workflow}>
             <Link
@@ -45,8 +49,26 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
                         style={{ color: "var(--primary)" }}
                     />
                 )}
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex flex-col gap-1">
+                   
                     <p className="font-medium text-sm text-center truncate">{workflow.display_name || 'Untitled'}</p>
+                    {hasActiveWorkflow ? (
+                        <Badge variant="success" className='mx-auto'>
+                            Active
+                        </Badge>
+                    ) : null}
+                    {workflow.is_public &&
+                        <>
+                            <Tooltip.Root>
+                                <Tooltip.Trigger className='absolute top-1 left-1 '>
+                                    <SystemIcons.Globe className='text-blue-400'/>
+                                </Tooltip.Trigger>
+                                <Tooltip.Content>
+                                    This workflow is public and visible to others
+                                </Tooltip.Content>
+                            </Tooltip.Root>
+                        </>
+                    }
                     {/* {workflow.description && (
                         <p className="text-xs opacity-60 truncate max-w-30 mt-0.5">{workflow.description}</p>
                     )} */}
