@@ -349,6 +349,7 @@ const config: Config = {
                     DEFAULT: "var(--popover)",
                     foreground: "var(--popover-foreground)",
                 },
+                "popover-border": "var(--popover-border)",
                 card: {
                     DEFAULT: "var(--card)",
                     float: "var(--card-float)",

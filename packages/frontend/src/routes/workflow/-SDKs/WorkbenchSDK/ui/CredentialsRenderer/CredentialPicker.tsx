@@ -27,7 +27,7 @@ export const CredentialPicker = memo(
 
         useEffect(() => {
             if (instances.length === 0) {
-                VaultSDK.actions.refreshAll().catch(() => { });
+                VaultSDK.actions.instance.refreshAll().catch(() => { });
             }
         }, []);
 

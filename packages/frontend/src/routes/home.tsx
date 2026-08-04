@@ -83,7 +83,7 @@ function HomeLayout() {
                             {currentNav && currentNav.label}
                         </h1>
                     </nav>
-                    <main className=" pl-3 pr-10 w-6xl">
+                    <main className=" pl-3 w-6xl">
                         <Outlet />
                     </main>
                 </div>
