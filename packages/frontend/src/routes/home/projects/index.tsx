@@ -21,7 +21,7 @@ function ProjectsRoute() {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 pr-10">
                 <Button className="ml-auto" size="sm" onClick={() => openCreateProjectDialog()}>
                     <SystemIcons.Plus />
                     New project

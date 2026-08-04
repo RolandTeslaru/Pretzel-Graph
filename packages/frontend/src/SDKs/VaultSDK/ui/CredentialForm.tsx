@@ -115,7 +115,7 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
 
         setIsLoadingValues(true)
 
-        VaultSDK.actions.reveal(updateProps.instanceId)
+        VaultSDK.actions.instance.reveal(updateProps.instanceId)
             .then(fieldValues => {
                 const name = VaultSDK.state.credentialInstances[updateProps.instanceId]?.name ?? ''
                 form.reset({ name, fields: fieldValues as Values['fields'] })
@@ -127,7 +127,7 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
     const onSubmit = async (values: Values) => {
         try {
             if (updateProps) {
-                await VaultSDK.actions.update.values({
+                await VaultSDK.actions.instance.update.values({
                     id: updateProps.instanceId,
                     name: values.name,
                     fieldValues: values.fields,
@@ -135,7 +135,7 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
                 toast.success(`${credentialTemplate.displayName} credential updated`)
                 updateProps.onUpdateComplete?.(updateProps.instanceId)
             } else {
-                const instance = await VaultSDK.actions.create({
+                const instance = await VaultSDK.actions.instance.create({
                     name: values.name,
                     templateId: credentialTemplate.id,
                     fieldValues: values.fields,
@@ -160,7 +160,7 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
                 onApprove={async () => {
                     setIsRemoving(true)
                     try {
-                        await VaultSDK.actions.remove(updateProps.instanceId)
+                        await VaultSDK.actions.instance.remove(updateProps.instanceId)
                         DialogSDK.actions.pop(dialogId)
                         updateProps.onRemoved?.()
                     } finally {

@@ -14,6 +14,7 @@ export class VaultSDKImpl extends BaseSDK<VaultSDK.State> {
     public readonly useStore: BaseSDK.Store<VaultSDK.State> = createWithEqualityFn(
         immer<VaultSDK.State>(() => ({
             credentialInstances: {},
+            credentialTemplates: {},
             selectors: _vaultSelectors_,
         })),
         shallow
@@ -30,6 +31,7 @@ export namespace VaultSDK {
 
     export type State = {
         credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>
+        credentialTemplates: Record<Vault.Credential.Template.Id, Vault.Credential.Template>
         selectors:           VaultSDK.Selectors
     }
 
