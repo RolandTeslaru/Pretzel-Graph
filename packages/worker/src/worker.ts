@@ -125,6 +125,7 @@ export class AggexWorkerImpl {
         // One Isolate per execution = the tenant/security boundary. Owned here (outermost),
         // passed by ref into the compiler, and disposed in `finally`.
         const airlock = new AirlockService();
+        const origin = performance.now();
 
         try {
             let executionCtx!: AggexEngine.Execution.Context;
@@ -165,7 +166,6 @@ export class AggexWorkerImpl {
             engine = new AggexEngine(aggexHooks);
             this.runningEnginesMap.set(executionId, engine);
 
-            const origin = performance.now();
             recorder = new FlightRecorderService(executionId, workflowId, workflowData, origin);
             if(igniter.record)
                 engine.attachFlightRecorder(recorder);
@@ -179,8 +179,9 @@ export class AggexWorkerImpl {
             const session = executionCtx.session;
             const status = result.status === 'terminated' ? 'terminated' : 'completed';
             const recording = (igniter.record && recorder) ? recorder.getRecording() : null;
+            const duration = performance.now() - origin;
 
-            await Execution.API.update(AxiosService.api, { executionId, status, session, recording });
+            await Execution.API.update(AxiosService.api, { executionId, status, duration, session, recording });
 
             if (status === 'terminated')
                 this.emit<Execution.Event.Terminated>({ executionId, workflowId, type: "terminated", channel: eventChannel });
@@ -211,8 +212,9 @@ export class AggexWorkerImpl {
             const executionCtx = this.runningExecutionContextsMap.get(execution.id)!;
             const session = executionCtx?.session ?? Execution.Session.createInitial();
             const recording = (igniter.record && recorder) ? recorder.getRecording() : null;
+            const duration = performance.now() - origin;
 
-            await Execution.API.update(AxiosService.api, { executionId: execution.id, status: 'failed', session, recording }).catch(() => {});
+            await Execution.API.update(AxiosService.api, { executionId: execution.id, status: 'failed', duration, session, recording }).catch(() => {});
 
             this.emit<Execution.Event.Failed>({
                 executionId: execution.id,
