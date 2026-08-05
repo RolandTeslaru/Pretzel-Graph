@@ -379,7 +379,9 @@ export function createDitherCtx(initialProps: DitherProps = {}): DitherCtx {
     animateId = requestAnimationFrame(update);
     if (resizeId) return;
     if (t - lastFrame < FRAME_INTERVAL) return;
-    lastFrame = t;
+    // Carry the remainder so vsync quantization doesn't stretch the interval
+    // (naive reset yields 24fps on a 120Hz display instead of 30).
+    lastFrame = t - ((t - lastFrame) % FRAME_INTERVAL);
     drawFrame(t);
   };
 

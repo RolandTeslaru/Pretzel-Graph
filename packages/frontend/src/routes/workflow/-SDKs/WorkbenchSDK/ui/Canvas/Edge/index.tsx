@@ -1,9 +1,11 @@
-import { memo, useId, useCallback, useRef, useEffect } from 'react';
+import { memo, useCallback, useRef, useEffect } from 'react';
+import { useDebounce } from 'use-debounce';
 import { type EdgeProps, getBezierPath } from '@xyflow/react';
 import { WorkbenchSDK } from '../../../sdk';
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 import CanvasEdgeLabel from './label';
+import { type EdgeColorKey, edgeColor, edgeMarkerId } from './markers';
 
 const CanvasEdge = memo(({
     source,
@@ -31,25 +33,33 @@ const CanvasEdge = memo(({
     const sourceNodeId = source as Workflow.Node.Id;
     const sourcePortId = sourceHandleId as Foundations.Port.Output.Id;
 
-    const markerId = useId();
-
     // Compositor-only dot: bake the bezier into transform keyframes so the GPU moves a
     // once-rasterized quad each frame (no repaint). Rebuilds only when the path changes.
+    // Debounced: while the path is moving (node drag) the dot is hidden and no
+    // keyframes are built; they rebuild once the path has settled.
     const dotRef = useRef<SVGCircleElement>(null);
+    const [settledPath] = useDebounce(edgePath, 150);
+    const pathSettled = settledPath === edgePath;
+
     useEffect(() => {
         const el = dotRef.current;
-        if (!el) return;
+        if (!el || !pathSettled) return;
+
         const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        p.setAttribute('d', edgePath);
+        p.setAttribute('d', settledPath);
         const len = p.getTotalLength();
         const N = 30;
         const frames = Array.from({ length: N + 1 }, (_, i) => {
             const pt = p.getPointAtLength((i / N) * len);
             return { transform: `translate(${pt.x}px, ${pt.y}px)`, offset: i / N };
         });
-        const anim = el.animate(frames, { duration: 3000, iterations: Infinity, easing: 'linear' });
+        // steps(90) over the 3s loop caps the dot at 30 position updates/s.
+        // startTime = 0 phase-locks every dot to the document timeline so all
+        // dots step on the same ticks and the compositor idles between them.
+        const anim = el.animate(frames, { duration: 3000, iterations: Infinity, easing: 'steps(90)' });
+        anim.startTime = 0;
         return () => anim.cancel();
-    }, [edgePath]);
+    }, [settledPath, pathSettled]);
 
     const output = WorkbenchSDK.useOutput(sourceNodeId, sourcePortId);
 
@@ -69,20 +79,22 @@ const CanvasEdge = memo(({
         return null;
     }
 
-    const defaultColor = `var(--port-${output.variant})`;
     const isActive = edgeStatus.runCount > 0 && edgeStatus.status !== "idle";
     const isWaiting = edgeStatus.status === "waiting";
     const isPreparing = edgeStatus.status === "preparing";
 
-    const statusColor = isActive
-        ? edgeStatus.status === "completed" ? defaultColor
-        : isPreparing ? defaultColor
-        : "var(--status-waiting)"
-        : defaultColor;
+    const statusKey: EdgeColorKey = isActive
+        ? edgeStatus.status === "completed" ? output.variant
+        : isPreparing ? output.variant
+        : "waiting"
+        : output.variant;
 
-    const displayColor = selected
-        ? 'var(--secondary-foreground)'
-        : sourceErrored ? 'var(--destructive)' : statusColor;
+    const displayKey: EdgeColorKey = selected
+        ? 'selected'
+        : sourceErrored ? 'destructive' : statusKey;
+
+    const statusColor = edgeColor(statusKey);
+    const displayColor = edgeColor(displayKey);
 
     const edgeStyle: React.CSSProperties = {
         ...style,
@@ -94,24 +106,6 @@ const CanvasEdge = memo(({
 
     return (
         <g>
-            <defs>
-                <marker
-                    id={markerId}
-                    markerWidth="12"
-                    markerHeight="12"
-                    viewBox="-10 -10 20 20"
-                    refX="0"
-                    refY="0"
-                    orient="auto-start-reverse"
-                    markerUnits="strokeWidth"
-                >
-                    <polyline
-                        points="-5,-4 0,0 -5,4 -5,-4"
-                        fill={displayColor}
-                        stroke={displayColor}
-                    />
-                </marker>
-            </defs>
             {/* Invisible wider path for easier clicking */}
             <path
                 d={edgePath}
@@ -123,17 +117,14 @@ const CanvasEdge = memo(({
             <path
                 d={edgePath}
                 fill="none"
-                markerEnd={`url(#${markerId})`}
-                style={{
-                    ...edgeStyle,
-                    animation: (isWaiting || isPreparing) ? `edge-dash-flow 0.6s linear infinite` : undefined,
-                }}
+                markerEnd={`url(#${edgeMarkerId(displayKey)})`}
+                style={edgeStyle}
             />
             <circle
                 ref={dotRef}
                 r={3}
                 fill={displayColor}
-                style={{ willChange: 'transform', pointerEvents: 'none' }}
+                style={{ pointerEvents: 'none', visibility: pathSettled ? undefined : 'hidden' }}
             />
             <CanvasEdgeLabel
                 selected={selected}
