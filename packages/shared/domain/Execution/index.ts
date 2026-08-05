@@ -230,6 +230,7 @@ export namespace Execution {
             export const Request = z.object({
                 executionId: Execution.Id,
                 status:      Status.optional(),
+                duration:    z.number().optional(),
                 session:     Session.Update.optional(),
                 recording:   Execution.Recording.Schema.nullable().optional(),
             })
