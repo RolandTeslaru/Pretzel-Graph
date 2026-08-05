@@ -4,7 +4,7 @@ How PretzelGraph compiles a workflow and executes it. Read this before touching 
 
 ## TL;DR
 
-A workflow is **not** a DAG walk. It's run by **S²Engine** — a *Bulk Asynchronous Parallel Directed **Cyclical** Signal-based Graph Engine* (Pregel-like super-steps). Nodes fire when enough **signals** accumulate on them; they may fire **repeatedly** (cycles are first-class); a runaway-cycle guard stops infinite loops. Two independent dependency layers gate firing: **signal dependency** (how many upstream signals arrived) and **data dependency** (whether wired input ports actually have data).
+A workflow runs on **S²Engine** — a *Bulk Asynchronous Parallel Directed **Cyclical** Signal-based Graph Engine*. Each vertex fires independently, as soon as its own signal strategy (AND/OR/XOR) is satisfied — there's no global round or step boundary; dependents are scheduled via microtask, not synchronized in lockstep. Nodes fire when enough **signals** accumulate on them; they may fire **repeatedly** (cycles are first-class); a runaway-cycle guard stops infinite loops. Two independent dependency layers gate firing: **signal dependency** (how many upstream signals arrived) and **data dependency** (whether wired input ports actually have data).
 
 ## The pieces
 
