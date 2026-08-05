@@ -4,7 +4,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## Project Overview
 
-**PretzelGraph** is a monorepo for a visual agent workflow editor. Users build AI agent pipelines visually using a node-graph canvas. The system compiles those graphs and executes them via a LangGraph-based engine.
+**PretzelGraph** is a monorepo for a visual agent workflow editor. Users build AI agent pipelines visually using a node-graph canvas. The system compiles those graphs and executes them via a signal-based execution engine (S²Engine).
 
 ## Development Commands
 
@@ -45,7 +45,7 @@ packages/
   standard-ui/ # UI component library (Radix + Tailwind foundations, icons)
   node-sdk/    # Node authoring SDK — RuntimeNode, builders, CatalogueService, db/ connection managers
   nodes/       # Node implementations (blueprint.ts + node.ts) organized by provider
-  worker/      # Workflow execution engine (LangChain + LangGraph)
+  worker/      # Workflow execution engine (LangChain + S²Engine)
   webhook/     # Inbound webhook receiver
 ```
 
@@ -76,10 +76,10 @@ Branded string types (e.g., `Workflow.Id`, `Node.Id`) are used throughout for ty
 ### Execution Engine (`worker`) + Nodes (`nodes`, `node-sdk`)
 **Full engine/scheduler docs: `packages/worker/README.md`** (S²Engine, signal vs data dependency, propagation strategies, cycles).
 - `compiler/` — Builds the `S2Graph` + execution context, instantiates/registers nodes, wires edges, finds start nodes
-- `engine/` — `AggexEngine` wraps the signal-based `S2Engine`; runs each node, resolves incoming port data, projects outputs. **Not a DAG walk** — nodes fire on accumulated signals and may re-fire (cycles are first-class).
+- `engine/` — `AggexEngine` wraps the signal-based `S2Engine`; runs each node, resolves incoming port data, projects outputs. Nodes fire on accumulated signals and may re-fire — cycles are first-class.
 - Node implementations live in **`packages/nodes/src/`** (NOT in worker), organized by provider (`Core/`, `Integrations/<Provider>/`). Each node is `blueprint.ts` + `node.ts`; conditional fields and ports are inline blueprint derivatives.
 - `packages/node-sdk/` is the authoring SDK: `RuntimeNode` base class, field/credential/blueprint builders, `CatalogueService` (resolves nodes by blueprint-id path convention), and `src/db/` connection managers (`ConnectionManager` → `SqlConnectionManager`; Postgres/MySQL/Redis/Mongo adapters).
-- Uses LangGraph state machines for agent loop execution
+- Agent loop execution runs on the signal-based S²Engine (see `engine/` above)
 
 ### Backend
 NestJS server on port 3001 (configurable via `.env` `PORT`). Routes:
