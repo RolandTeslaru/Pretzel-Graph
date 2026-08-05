@@ -5,10 +5,10 @@ import { WorkbenchSDK } from "../WorkbenchSDK/sdk"
 
 export const executionSDKSelectors = {
     getNodeStatus: (s, nodeId) => {
-        return s.currentExecution?.session.node_status?.[nodeId] ?? { status: "idle" }
+        return s.currentExecution?.session.node_status?.[nodeId] ?? Execution.Session.NodeStatus.IDLE
     },
     getEdgeStatus: (s, edgeId) => {
-        return s.currentExecution?.session.edge_state?.[edgeId] ?? { status: "idle", runCount: 0 }
+        return s.currentExecution?.session.edge_state?.[edgeId] ?? Execution.Session.EdgeState.IDLE
     },
     getEdgeItemCount: (s, sourceNodeId, sourcePortId) => {
         const projection = s.currentExecution?.session.node_output_projections[sourceNodeId]?.[sourcePortId]

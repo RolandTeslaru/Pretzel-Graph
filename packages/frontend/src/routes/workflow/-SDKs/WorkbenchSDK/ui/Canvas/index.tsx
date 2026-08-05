@@ -6,6 +6,7 @@ import { createCycleSelectionDrivers } from '../../utils/createDrivers'
 import { useCanvasKeyBindings } from '../../hooks/useCanvasKeyBindings'
 import { SelectionContextMenu } from './SelectionContextMenu'
 import { PaneContextMenu } from './PaneContextMenu'
+import { EdgeMarkerDefs } from './Edge/markers'
 
 type NodeDriver = WorkbenchSDK.NodeDriver | WorkbenchSDK.CycleSelectionNodeDriver
 type EdgeDriver = WorkbenchSDK.EdgeDriver
@@ -25,6 +26,7 @@ const WorkflowCanvas: React.FC = memo(() => {
 
     return (
         <div ref={WorkbenchSDK.canvasWrapper} className='w-full h-full relative'>
+            <EdgeMarkerDefs />
             <CanvasRenderer />
             <SelectionContextMenu />
             <PaneContextMenu />
