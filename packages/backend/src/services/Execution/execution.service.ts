@@ -400,8 +400,8 @@ export class ExecutionService {
     public async update(
         payload: Execution.API.Update.Request
     ): Promise<Execution.API.Update.Response> {
-        const { executionId, status, session, recording } = payload;
-        await this.database.update(this.serviceSupabase, { executionId, status, session, recording });
+        const { executionId, status, duration, session, recording } = payload;
+        await this.database.update(this.serviceSupabase, { executionId, status, duration, session, recording });
         return {};
     }
 
