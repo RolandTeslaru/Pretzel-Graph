@@ -18,6 +18,8 @@ export namespace Session {
             completed_at: supabaseTimestamp.optional(),
         })
         export type Type = z.infer<typeof Schema>
+
+        export const IDLE: Type = { status: "idle" }
     }
     export type NodeStatus = z.infer<typeof NodeStatus.Schema>
 
@@ -27,6 +29,8 @@ export namespace Session {
             runCount: z.number().default(0),
         })
         export type Type = z.infer<typeof Schema>
+
+        export const IDLE: Type = { status: "idle", runCount: 0 }
     }
     export type EdgeState = z.infer<typeof EdgeState.Schema>
 
