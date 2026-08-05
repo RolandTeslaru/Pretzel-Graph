@@ -8,11 +8,29 @@ import { SDK } from "@/SDKs/SDKManager";
 import { _createStackActions_, type _StackSDKActions_ } from "./actions";
 import { stackReducers } from "./reducers";
 import { AnimatePresence, motion } from "motion/react";
+import { useMounted } from "@/hooks/useMounted";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import StackDebugPanel from "./ui/StackDebugPanel";
 
 enableMapSet()
+
+// Memo boundaries so overlay-level re-renders (any stack mutation) stop cascading
+// into panel content. Immer keeps untouched panel/companion identities stable, so
+// the shallow compare bails for every panel the mutation didn't affect.
+const PanelEntry = memo(({ panel, stackSize, index }: {
+    panel: StackSDK.Panel
+    stackSize: number
+    index: number
+}) => <>{panel.renderer({ panel, stackSize, index })}</>)
+
+const CompanionEntry = memo(({ companion, parentPanel, stackSize, index, isFront }: {
+    companion: StackSDK.Companion
+    parentPanel: StackSDK.Panel
+    stackSize: number
+    index: number
+    isFront: boolean
+}) => <>{companion.renderer({ stackSize, index, isFront, parentPanel, companion })}</>)
 
 @SDK("Stack")
 export class StackSDKImpl extends BaseSDK<StackSDK.State> {
@@ -57,12 +75,17 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                         const isFront = depth === 0
                         return (
                             <React.Fragment key={panelId}>
-                                {panel.renderer({ panel, stackSize, index })}
+                                <PanelEntry panel={panel} stackSize={stackSize} index={index} />
 
                                 {Array.from(panel.companions).map(([companionId, companion]) => (
-                                    <React.Fragment key={companionId}>
-                                        {companion.renderer({ stackSize, index, isFront, parentPanel: panel, companion })}
-                                    </React.Fragment>
+                                    <CompanionEntry
+                                        key={companionId}
+                                        companion={companion}
+                                        parentPanel={panel}
+                                        stackSize={stackSize}
+                                        index={index}
+                                        isFront={isFront}
+                                    />
                                 ))}
                             </React.Fragment>
                         )
@@ -99,17 +122,21 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                 StackSDK.actions.bringToFront(panel.id)
         }
 
+        // Hold the enter pose until the mount commit has painted — the panel's
+        // content mounts while nothing moves, then the spring runs uncontested.
+        const mounted = useMounted()
+
         return (
             <motion.div
                 layout
                 initial={{ x: "100%", opacity: 0 }}
-                animate={{
+                animate={mounted ? {
                     x: baseXOffset - rightShift,
                     y: baseYOffset,
                     opacity: 1,
                     scale: scale,
                     filter: `brightness(${brightness})`,
-                }}
+                } : undefined}
                 exit={{ x: "100%", opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 style={{ zIndex: 20 + index }}
@@ -160,18 +187,20 @@ export class StackSDKImpl extends BaseSDK<StackSDK.State> {
                 StackSDK.actions.bringToFront(parentPanel.id)
         }
 
+        const mounted = useMounted()
+
         return (
             <motion.div
                 layout
                 onClick={handleClick}
                 initial={{ ...enterVector, opacity: 0 }}
-                animate={{
+                animate={mounted ? {
                     x: xOffset - rightShift,
                     y: yOffset,
                     opacity: 1,
                     scale: scale,
                     filter: `brightness(${brightness})`,
-                }}
+                } : undefined}
                 exit={{ ...enterVector, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 style={{ zIndex: 19 + index }}

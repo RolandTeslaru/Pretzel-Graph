@@ -86,7 +86,7 @@ export const BottomPanel = () => {
                                 <div className='h-full flex flex-row gap-1.5'>
                                     <SystemIcons.Film className='size-4 text-secondary-foreground my-auto' />
                                     {/* <p className='text-sm font-medium text-muted-foreground my-auto h-auto'>Ready</p> */}
-                                    <div className={`content-[""] my-auto w-2 h-2  rounded-full animate-pulse ${isActivelyRecording ? 'bg-red-500' : 'bg-green-500'}`} />
+                                    <div className={`content-[""] my-auto w-2 h-2  rounded-full ${isActivelyRecording ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
                                 </div>
                             </Tipped>
                         )}
