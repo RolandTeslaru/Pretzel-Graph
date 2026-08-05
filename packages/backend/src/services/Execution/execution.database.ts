@@ -83,6 +83,7 @@ export class ExecutionDatabase {
     async update(supabase: SupabaseClient, props: {
         executionId: Execution.Id,
         status?:     Execution.Status,
+        duration?:   number,
         error?:      string,
         session?:    Execution.Session.Update,
         recording?:  Execution.Recording | null,
@@ -91,6 +92,7 @@ export class ExecutionDatabase {
             .from('executions')
             .update({
                 ...(props.status    !== undefined && { status:    props.status }),
+                ...(props.duration  !== undefined && { duration:  props.duration }),
                 ...(props.error     !== undefined && { error:     props.error }),
                 ...(props.session   !== undefined && { session:   props.session }),
                 ...(props.recording !== undefined && { recording: props.recording }),
