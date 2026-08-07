@@ -6,20 +6,6 @@ import { Field } from "./Foundations/Field";
 export namespace Vault {
 
     export namespace Database {
-        export namespace Row {
-            export namespace CredentialInstance {
-                export const Schema = z.object({
-                    id:          z.uuid().brand("CredentialInstanceId"),
-                    template_id: z.string().brand("CredentialTemplateId"),
-                    user_id:     Auth.User.Id,
-                    name:        z.string(),
-                    created_at:  z.string(),
-                    updated_at:  z.string(),
-                    blob:        z.string().brand("EncryptedBlob"),
-                })
-            }
-        }
-
         export namespace Insert {
             export namespace CredentialInstance {
                 export const Schema = z.object({
@@ -53,7 +39,14 @@ export namespace Vault {
             export const Id = z.uuid().brand("CredentialInstanceId");
             export type Id = z.infer<typeof Id>
 
-            export const Schema = Database.Row.CredentialInstance.Schema.omit({ user_id: true })
+            export const Schema = z.object({
+                id:          Id,
+                template_id: Template.Id,
+                name:        z.string(),
+                created_at:  z.string(),
+                updated_at:  z.string(),
+                blob:        z.string().brand("EncryptedBlob"),
+            })
 
             export const EncryptedBlob = z.string().brand("EncryptedBlob")
             type EncryptedBlobBase = z.infer<typeof EncryptedBlob>

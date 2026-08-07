@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { createAuthenticatedClient } from '@/utils/supabase';
+import { Principal } from '@/domain/Principal';
 import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { LibraryDatabase } from './library.database';
 
@@ -9,113 +9,100 @@ export class LibraryService {
 
     public readonly bootstrap = {
         get: async (
-            token: string,
+            principal: Principal.User,
         ): Promise<Library.API.Bootstrap.Get.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            return await this.database.bootstrap.get(supabase);
+            return await this.database.bootstrap.get(principal.supabase);
         },
     };
 
     public readonly project = {
         create: async (
-            token: string,
+            principal: Principal.User,
             payload: Library.API.Project.Create.Request,
         ): Promise<Library.API.Project.Create.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            return await this.database.project.create(supabase, payload);
+            return await this.database.project.create(principal.supabase, payload);
         },
 
         update: async (
-            token: string,
+            principal: Principal.User,
             payload: Library.API.Project.Update.Request,
         ): Promise<Library.API.Project.Update.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            return await this.database.project.update(supabase, payload);
+            return await this.database.project.update(principal.supabase, payload);
         },
 
         list: async (
-            token: string,
+            principal: Principal.User,
         ): Promise<Library.API.Project.List.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            return await this.database.project.list(supabase);
+            return await this.database.project.list(principal.supabase);
         }
     };
 
     public readonly folder = {
         create: async (
-            token: string,
+            principal: Principal.User,
             payload: Library.API.Folder.Create.Request,
         ): Promise<Library.API.Folder.Create.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            return await this.database.folder.create(supabase, payload);
+            return await this.database.folder.create(principal.supabase, payload);
         },
 
         update: async (
-            token: string,
+            principal: Principal.User,
             payload: Library.API.Folder.Update.Request,
         ): Promise<Library.API.Folder.Update.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            return await this.database.folder.update(supabase, payload);
+            return await this.database.folder.update(principal.supabase, payload);
         },
 
         delete: async (
-            token: string,
+            principal: Principal.User,
             id: Library.Folder.Id,
         ): Promise<Library.API.Folder.Remove.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            await this.database.folder.delete(supabase, id);
+            await this.database.folder.delete(principal.supabase, id);
             return { ok: true };
         },
 
         getContents: async (
-            token: string,
+            principal: Principal.User,
             id: Library.Folder.Id,
         ): Promise<Library.API.Folder.GetContents.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            return await this.database.folder.getContents(supabase, id);
+            return await this.database.folder.getContents(principal.supabase, id);
         }
     };
 
     public readonly workflow = {
         create: async (
-            token: string,
+            principal: Principal.User,
             payload: Library.API.Workflow.Create.Request,
         ): Promise<Library.API.Workflow.Create.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            return await this.database.workflow.create(supabase, payload);
+            return await this.database.workflow.create(principal.supabase, payload);
         },
 
         get: async (
-            token: string,
+            principal: Principal.User,
             workflowId: Workflow.Id,
         ): Promise<Library.API.Workflow.Get.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            return await this.database.workflow.get(supabase, workflowId);
+            return await this.database.workflow.get(principal.supabase, workflowId);
         },
 
         update: async (
-            token: string,
+            principal: Principal.User,
             payload: Library.API.Workflow.Update.Request,
         ): Promise<Library.API.Workflow.Update.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            return await this.database.workflow.update(supabase, payload);
+            return await this.database.workflow.update(principal.supabase, payload);
         },
 
         delete: async (
-            token: string,
+            principal: Principal.User,
             id: Workflow.Id,
         ): Promise<Library.API.Workflow.Remove.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            await this.database.workflow.delete(supabase, id);
+            await this.database.workflow.delete(principal.supabase, id);
             return { ok: true };
         },
 
         duplicate: async (
-            token: string,
+            principal: Principal.User,
             id: Workflow.Id,
         ): Promise<Library.API.Workflow.Duplicate.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            return await this.database.workflow.duplicate(supabase, id);
+            return await this.database.workflow.duplicate(principal.supabase, id);
         },
     };
 }

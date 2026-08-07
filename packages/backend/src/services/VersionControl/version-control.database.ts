@@ -1,132 +1,121 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { getUserId } from '@/utils/supabase';
-import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
-import { SupabaseAssert, ZodReturn } from '../../decorators/database';
+import { sql } from 'kysely';
 import { z } from 'zod';
+import { Auth, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
+import { DB } from '@/db';
+import { SupabaseAssert, ZodReturn } from '../../decorators/database';
+
+const META_COLUMNS = ['id', 'workflow_id', 'version', 'name', 'description', 'is_active', 'published_at'] as const;
 
 @Injectable()
 export class VersionControlDatabase {
 
     @SupabaseAssert('publication.publish')
     @ZodReturn(VersionControl.Publication.Schema)
-    async publish(supabase: SupabaseClient, { workflowId, name, description, workflowData }: VersionControl.API.Publish.Request): Promise<VersionControl.Publication> {
-        const user_id = await getUserId(supabase);
-        if (!user_id) throw new Error('Unauthenticated');
+    async publish(trx: DB.Scope, userId: Auth.User.Id, { workflowId, name, description, workflowData }: VersionControl.API.Publish.Request): Promise<VersionControl.Publication> {
+        // Named-arg notation picks the 5-arg overload; there is a 3-arg one too.
+        const { rows } = await sql<DB.VersionControl.Row>`
+            select * from publish_workflow(
+                p_workflow_id   => ${workflowId}::uuid,
+                p_user_id       => ${userId}::uuid,
+                p_name          => ${name}::text,
+                p_description   => ${description ?? null}::text,
+                p_workflow_data => ${JSON.stringify(workflowData)}::jsonb
+            )
+        `.execute(trx);
 
-        const { data: row } = await supabase
-            .rpc('publish_workflow', {
-                p_workflow_id:   workflowId,
-                p_user_id:       user_id,
-                p_name:          name,
-                p_description:   description ?? null,
-                p_workflow_data: workflowData,
-            })
-            .single()
-            .throwOnError();
-
-        return row as VersionControl.Publication;
+        return DB.VersionControl.toDomain(rows[0]);
     }
 
     @SupabaseAssert('publication.list')
     @ZodReturn(VersionControl.Publication.Meta.Schema.array())
-    async list(supabase: SupabaseClient, { workflowId }: VersionControl.API.List.Request): Promise<VersionControl.Publication.Meta[]> {
-        const { data } = await supabase
-            .from('version_control')
-            .select('id, workflow_id, version, name, description, is_active, published_at')
-            .eq('workflow_id', workflowId)
-            .order('version', { ascending: false })
-            .throwOnError();
+    async list(trx: DB.Scope, { workflowId }: VersionControl.API.List.Request): Promise<VersionControl.Publication.Meta[]> {
+        // No user_id filter: the SELECT policy also exposes active publications
+        // of public workflows, which this endpoint relies on.
+        const rows = await trx
+            .selectFrom('version_control')
+            .select(META_COLUMNS)
+            .where('workflow_id', '=', workflowId)
+            .orderBy('version', 'desc')
+            .execute();
 
-        return data ?? [];
+        return rows.map(DB.VersionControl.toMeta);
     }
 
     @SupabaseAssert('versionControl.listActiveWorkflows')
     @ZodReturn(z.record(Workflow.Id, VersionControl.Publication.Meta.Schema))
-    async listActiveWorkflows(supabase: SupabaseClient): Promise<Record<Workflow.Id, VersionControl.Publication.Meta>> {
-        const user_id = await getUserId(supabase);
-        if (!user_id) throw new Error('Unauthenticated');
-
-        const { data: rows } = await supabase
-            .from('version_control')
-            .select('id, workflow_id, version, name, description, is_active, published_at')
-            .eq('user_id', user_id)
-            .eq('is_active', true)
-            .order('published_at', { ascending: false })
-            .throwOnError();
+    async listActiveWorkflows(trx: DB.Scope, userId: Auth.User.Id): Promise<Record<Workflow.Id, VersionControl.Publication.Meta>> {
+        const rows = await trx
+            .selectFrom('version_control')
+            .select(META_COLUMNS)
+            .where('user_id', '=', userId)
+            .where('is_active', '=', true)
+            .orderBy('published_at', 'desc')
+            .execute();
 
         return Object.fromEntries(
-            (rows ?? []).map((r) => [r.workflow_id, r]),
-        );
+            rows.map((row) => [row.workflow_id, DB.VersionControl.toMeta(row)]),
+        ) as Record<Workflow.Id, VersionControl.Publication.Meta>;
     }
 
     @SupabaseAssert('versionControl.getActiveByWorkflow')
     @ZodReturn(VersionControl.Publication.Meta.Schema.nullable())
-    async getActiveByWorkflow(supabase: SupabaseClient, { workflowId }: VersionControl.API.GetActiveByWorkflow.Request): Promise<VersionControl.Publication.Meta | null> {
-        const user_id = await getUserId(supabase);
-        if (!user_id) throw new Error('Unauthenticated');
+    async getActiveByWorkflow(trx: DB.Scope, userId: Auth.User.Id, { workflowId }: VersionControl.API.GetActiveByWorkflow.Request): Promise<VersionControl.Publication.Meta | null> {
+        const row = await trx
+            .selectFrom('version_control')
+            .select(META_COLUMNS)
+            .where('user_id', '=', userId)
+            .where('workflow_id', '=', workflowId)
+            .where('is_active', '=', true)
+            .executeTakeFirst();
 
-        const { data: row } = await supabase
-            .from('version_control')
-            .select('id, workflow_id, version, name, description, is_active, published_at')
-            .eq('user_id', user_id)
-            .eq('workflow_id', workflowId)
-            .eq('is_active', true)
-            .maybeSingle()
-            .throwOnError();
-
-        return row ?? null;
+        return row ? DB.VersionControl.toMeta(row) : null;
     }
 
     @SupabaseAssert('publication.get')
     @ZodReturn(VersionControl.Publication.Schema)
-    async get(supabase: SupabaseClient, { publicationId }: VersionControl.API.Get.Request): Promise<VersionControl.Publication> {
-        const { data: row } = await supabase
-            .from('version_control')
-            .select('*')
-            .eq('id', publicationId)
-            .single()
-            .throwOnError();
+    async get(trx: DB.Scope, { publicationId }: VersionControl.API.Get.Request): Promise<VersionControl.Publication> {
+        const row = await trx
+            .selectFrom('version_control')
+            .selectAll()
+            .where('id', '=', publicationId)
+            .executeTakeFirstOrThrow();
 
-        return row
+        return DB.VersionControl.toDomain(row);
     }
 
     @SupabaseAssert('publication.activate')
     @ZodReturn(VersionControl.Publication.Schema)
-    async activate(supabase: SupabaseClient, { publicationId }: VersionControl.API.Activate.Request): Promise<VersionControl.Publication> {
-        const { data: row } = await supabase
-            .rpc('activate_publication', { p_publication_id: publicationId })
-            .single()
-            .throwOnError();
+    async activate(trx: DB.Scope, { publicationId }: VersionControl.API.Activate.Request): Promise<VersionControl.Publication> {
+        // SECURITY INVOKER — resolves through RLS, so it only works inside a scope.
+        const { rows } = await sql<DB.VersionControl.Row>`
+            select * from activate_publication(${publicationId}::uuid)
+        `.execute(trx);
 
-        return row as VersionControl.Publication;
+        return DB.VersionControl.toDomain(rows[0]);
     }
 
     @SupabaseAssert('publication.deactivate')
     @ZodReturn(VersionControl.Publication.Schema)
-    async deactivate(supabase: SupabaseClient, { publicationId }: VersionControl.API.Deactivate.Request): Promise<VersionControl.Publication> {
-        const { data: row } = await supabase
-            .from('version_control')
-            .update({ is_active: false })
-            .eq('id', publicationId)
-            .select('*')
-            .single()
-            .throwOnError();
+    async deactivate(trx: DB.Scope, { publicationId }: VersionControl.API.Deactivate.Request): Promise<VersionControl.Publication> {
+        const row = await trx
+            .updateTable('version_control')
+            .set({ is_active: false })
+            .where('id', '=', publicationId)
+            .returningAll()
+            .executeTakeFirstOrThrow();
 
-        return row;
+        return DB.VersionControl.toDomain(row);
     }
 
     @SupabaseAssert('publication.remove')
     @ZodReturn(z.object({ workflowId: Workflow.Id, wasActive: z.boolean() }))
-    async remove(supabase: SupabaseClient, { publicationId }: VersionControl.API.Remove.Request): Promise<{ workflowId: Workflow.Id; wasActive: boolean }> {
-        const { data: row } = await supabase
-            .from('version_control')
-            .select('workflow_id, is_active')
-            .eq('id', publicationId)
-            .single()
-            .throwOnError();
-
-        await supabase.from('version_control').delete().eq('id', publicationId).throwOnError();
+    async remove(trx: DB.Scope, { publicationId }: VersionControl.API.Remove.Request): Promise<{ workflowId: Workflow.Id; wasActive: boolean }> {
+        const row = await trx
+            .deleteFrom('version_control')
+            .where('id', '=', publicationId)
+            .returning(['workflow_id', 'is_active'])
+            .executeTakeFirstOrThrow();
 
         return { workflowId: row.workflow_id, wasActive: row.is_active };
     }

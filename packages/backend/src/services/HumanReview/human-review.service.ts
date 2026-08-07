@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Auth, HumanReview } from '@pretzel-graph/shared/domain';
+import { Principal } from '@/domain/Principal';
+import { HumanReview } from '@pretzel-graph/shared/domain';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { PermissionService } from '../Permission/permission.service';
 
@@ -14,10 +15,10 @@ export class HumanReviewService {
     // wait for the worker's Event.Resolved so the response only returns once the engine has
     // actually consumed the answer and un-parked (the human already replied, so this is a fast ack).
     async humanResponded(
-        userId: Auth.User.Id,
+        principal: Principal.User,
         { executionId, requestId, resolution }: HumanReview.API.HumanResponded.Request,
     ): Promise<HumanReview.API.HumanResponded.Response> {
-        await this.ownership.assertExecution(executionId, userId);
+        await this.ownership.assertExecution(executionId, principal.userId);
 
         const success = await this.realtime.signalAndAwaitEvent<HumanReview.Signal.HumanResponded.Schema>(
             {

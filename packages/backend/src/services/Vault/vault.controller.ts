@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Delete, Patch, Body, Param, UseGuards, Req, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Patch, Param, UseGuards, HttpCode } from '@nestjs/common';
 import { VaultService } from './vault.service';
 import { Vault } from '@pretzel-graph/shared/domain';
-import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
+import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
+import { CurrentUser } from '@/decorators/principal';
+import { Principal } from '@/domain/Principal';
 import { ZodBody, ZodStringBody } from '../../pipes/zod.pipe';
 
 @Controller('vault')
@@ -25,51 +27,51 @@ export class VaultController {
     }
 
     @Get('credential-instances')
-    async list(@Req() req: AuthenticatedRequest): Promise<Vault.API.CredentialInstance.List.Response> {
-        return this.vaultService.credentialInstance.list(req.token);
+    async list(@CurrentUser() principal: Principal.User): Promise<Vault.API.CredentialInstance.List.Response> {
+        return this.vaultService.credentialInstance.list(principal);
     }
 
     @Post('credential-instances')
     @HttpCode(200)
     async create(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(Vault.API.CredentialInstance.Create.Request) body: Vault.API.CredentialInstance.Create.Request,
     ): Promise<Vault.API.CredentialInstance.Create.Response> {
-        return this.vaultService.credentialInstance.create(req.token, body);
+        return this.vaultService.credentialInstance.create(principal, body);
     }
 
     @Delete('credential-instances/:id')
     async remove(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @Param('id') id: Vault.Credential.Instance.Id,
     ): Promise<Vault.API.CredentialInstance.Remove.Response> {
-        return this.vaultService.credentialInstance.remove(req.token, { id });
+        return this.vaultService.credentialInstance.remove(principal, { id });
     }
 
     @Post('credential-instances/:id/reveal')
     @HttpCode(200)
     async reveal(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @Param('id') id: Vault.Credential.Instance.Id,
     ): Promise<Vault.API.CredentialInstance.Reveal.Response> {
-        return this.vaultService.credentialInstance.reveal(req.token, id);
+        return this.vaultService.credentialInstance.reveal(principal, id);
     }
 
     @Patch('credential-instances/:id/name')
     async updateName(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @Param('id') id: Vault.Credential.Instance.Id,
         @ZodStringBody('name') name: string,
     ): Promise<Vault.API.CredentialInstance.UpdateName.Response> {
-        return this.vaultService.credentialInstance.updateName(req.token, { id, name });
+        return this.vaultService.credentialInstance.updateName(principal, { id, name });
     }
 
     @Patch('credential-instances/:id')
     async update(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @Param('id') id: Vault.Credential.Instance.Id,
         @ZodBody(Vault.API.CredentialInstance.Update.Request.omit({ id: true })) body: Omit<Vault.API.CredentialInstance.Update.Request, 'id'>,
     ): Promise<Vault.API.CredentialInstance.Update.Response> {
-        return this.vaultService.credentialInstance.update(req.token, { id, ...body });
+        return this.vaultService.credentialInstance.update(principal, { id, ...body });
     }
 }
