@@ -1,9 +1,11 @@
-import { Controller, Post, Get, UseGuards, Req, HttpCode } from '@nestjs/common';
+import { Controller, Post, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { ExecutionService } from './execution.service';
 import { Auth, Execution } from '@pretzel-graph/shared/domain';
-import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
+import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
 import { InternalAuthGuard, InternalAuthenticatedRequest } from '../../auth/internal-auth.guard';
 import { ApiKeyAuthGuard, ApiKeyAuthenticatedRequest } from '../../auth/api-key-auth.guard';
+import { CurrentUser } from '@/decorators/principal';
+import { Principal } from '@/domain/Principal';
 import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('execution')
@@ -14,10 +16,10 @@ export class ExecutionController {
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async run(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(Execution.API.Run.Request) body: Execution.API.Run.Request,
     ) {
-        return this.executionService.runFromUser(req.token, req.user.id as Auth.User.Id, body);
+        return this.executionService.runFromUser(principal, body);
     }
 
     @Post('internal/run')
@@ -34,57 +36,57 @@ export class ExecutionController {
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async pause(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(Execution.API.Pause.Request) body: Execution.API.Pause.Request,
     ) {
-        return this.executionService.pause(req.token, req.user.id as Auth.User.Id, body);
+        return this.executionService.pause(principal, body);
     }
 
     @Post('resume')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async resume(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(Execution.API.Resume.Request) body: Execution.API.Resume.Request,
     ) {
-        return this.executionService.resume(req.token, req.user.id as Auth.User.Id, body);
+        return this.executionService.resume(principal, body);
     }
 
     @Post('heartbeat')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async heartbeat(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(Execution.API.Heartbeat.Request) body: Execution.API.Heartbeat.Request,
     ) {
-        return this.executionService.heartbeat(req.token, req.user.id as Auth.User.Id, body);
+        return this.executionService.heartbeat(principal, body);
     }
 
     @Post('suspend')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async suspend(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(Execution.API.Suspend.Request) body: Execution.API.Suspend.Request,
     ) {
-        return this.executionService.suspend(req.token, req.user.id as Auth.User.Id, body);
+        return this.executionService.suspend(principal, body);
     }
 
     @Post('terminate')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async terminate(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(Execution.API.Terminate.Request) body: Execution.API.Terminate.Request,
     ) {
-        return this.executionService.terminate(req.token, req.user.id as Auth.User.Id, body);
+        return this.executionService.terminate(principal, body);
     }
 
     @Post('terminate-all')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
-    async terminateAll(@Req() req: AuthenticatedRequest) {
-        return this.executionService.terminateAll(req.token, req.user.id as Auth.User.Id);
+    async terminateAll(@CurrentUser() principal: Principal.User) {
+        return this.executionService.terminateAll(principal);
     }
 
     @Post('finalise')
@@ -100,10 +102,10 @@ export class ExecutionController {
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async get(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(Execution.API.Get.Request) body: Execution.API.Get.Request,
     ) {
-        return this.executionService.get(req.token, req.user.id as Auth.User.Id, body);
+        return this.executionService.get(principal, body);
     }
 
     @Post('update')
@@ -119,27 +121,27 @@ export class ExecutionController {
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async metaList(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(Execution.API.Meta.List.Request) body: Execution.API.Meta.List.Request,
     ) {
-        return this.executionService.meta.list(req.token, body);
+        return this.executionService.meta.list(principal, body);
     }
 
     @Post('meta/get')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async metaGet(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(Execution.API.Meta.Get.Request) body: Execution.API.Meta.Get.Request,
     ) {
-        return this.executionService.meta.get(req.token, req.user.id as Auth.User.Id, body);
+        return this.executionService.meta.get(principal, body);
     }
 
     @Post('meta/list-active')
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
-    async metaListActive(@Req() req: AuthenticatedRequest) {
-        return this.executionService.meta.listActive(req.token, req.user.id as Auth.User.Id);
+    async metaListActive(@CurrentUser() principal: Principal.User) {
+        return this.executionService.meta.listActive(principal);
     }
 
     @Post('sdk/run')
@@ -156,9 +158,9 @@ export class ExecutionController {
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async recordingGetLive(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(Execution.API.Recording.GetLive.Request) body: Execution.API.Recording.GetLive.Request,
     ) {
-        return this.executionService.recording.getLive(req.token, req.user.id as Auth.User.Id, body);
+        return this.executionService.recording.getLive(principal, body);
     }
 }

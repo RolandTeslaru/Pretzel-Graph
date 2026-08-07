@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { createAuthenticatedClient } from '@/utils/supabase';
-import { Auth, Chat } from '@pretzel-graph/shared/domain';
+import { Principal } from '@/domain/Principal';
+import { Chat } from '@pretzel-graph/shared/domain';
 import { ChatDatabase } from './chat.database';
 import { PermissionService } from '../Permission/permission.service';
 
@@ -12,106 +12,91 @@ export class ChatService {
     ) {}
 
     async create(
-        token: string,
-        userId: Auth.User.Id,
+        principal: Principal.User,
         payload: Chat.API.Create.Request
     ): Promise<Chat.API.Create.Response> {
-        const supabase = createAuthenticatedClient(token);
         const { workflow_id, name } = payload;
 
         // Don't let a chat be attached to a workflow the user doesn't own.
-        await this.ownership.assertWorkflow(workflow_id, userId);
+        await this.ownership.assertWorkflow(workflow_id, principal.userId);
 
         const chat = await this.database.chat.create(
-            supabase, userId, workflow_id, name
+            principal.supabase, principal.userId, workflow_id, name
         );
 
         return { chat };
     }
 
     async ensure(
-        token: string,
-        userId: Auth.User.Id,
+        principal: Principal.User,
         payload: Chat.API.Ensure.Request
     ): Promise<Chat.API.Ensure.Response> {
-        const supabase = createAuthenticatedClient(token);
         const { chatId, workflow_id, name } = payload;
 
-        await this.ownership.assertWorkflow(workflow_id, userId);
+        await this.ownership.assertWorkflow(workflow_id, principal.userId);
 
-        const chat = await this.database.chat.ensure(supabase, userId, chatId, workflow_id, name);
+        const chat = await this.database.chat.ensure(principal.supabase, principal.userId, chatId, workflow_id, name);
         return { chat };
     }
 
     async get(
-        token: string,
-        userId: Auth.User.Id,
+        principal: Principal.User,
         payload: Chat.API.Get.Request
     ): Promise<Chat.API.Get.Response> {
-        const supabase = createAuthenticatedClient(token);
-        return await this.database.chat.get(supabase, userId, payload.chatId);
+        return await this.database.chat.get(principal.supabase, principal.userId, payload.chatId);
     }
 
     async list(
-        token: string,
-        userId: Auth.User.Id
+        principal: Principal.User,
     ): Promise<Chat.API.List.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const chats = await this.database.chat.list(supabase, userId);
+        const chats = await this.database.chat.list(principal.supabase, principal.userId);
         return { chats };
     }
 
     async listByWorkflow(
-        token: string,
-        userId: Auth.User.Id,
+        principal: Principal.User,
         payload: Chat.API.ListByWorkflow.Request
     ): Promise<Chat.API.ListByWorkflow.Response> {
-        const supabase = createAuthenticatedClient(token);
         const { workflow_id } = payload;
 
-        await this.ownership.assertWorkflow(workflow_id, userId);
+        await this.ownership.assertWorkflow(workflow_id, principal.userId);
 
-        const chats = await this.database.chat.listByWorkflow(supabase, userId, workflow_id);
+        const chats = await this.database.chat.listByWorkflow(principal.supabase, principal.userId, workflow_id);
         return { chats };
     }
 
     async erase(
-        token: string,
-        userId: Auth.User.Id,
+        principal: Principal.User,
         payload: Chat.API.Erase.Request
     ): Promise<Chat.API.Erase.Response> {
-        const supabase = createAuthenticatedClient(token);
-        await this.database.chat.erase(supabase, userId, payload.chatId);
+        await this.database.chat.erase(principal.supabase, principal.userId, payload.chatId);
         return {};
     }
 
     public readonly message = {
         add: async (
-            token: string,
+            principal: Principal.User,
             payload: Chat.API.Message.Add.Request
         ): Promise<Chat.API.Message.Add.Response> => {
-            const supabase = createAuthenticatedClient(token);
             const { chatId, messages } = payload;
-            await this.database.message.add(supabase, chatId, messages);
+            await this.database.message.add(principal.supabase, chatId, messages);
             return {};
         },
 
         erase: async (
-            token: string,
+            principal: Principal.User,
             payload: Chat.API.Message.Erase.Request
         ): Promise<Chat.API.Message.Erase.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            await this.database.message.erase(supabase, payload.messageId);
+            await this.database.message.erase(principal.supabase, payload.messageId);
             return {};
         },
 
         update: async (
-            token: string,
+            principal: Principal.User,
             payload: Chat.API.Message.Update.Request
         ): Promise<Chat.API.Message.Update.Response> => {
-            const supabase = createAuthenticatedClient(token);
             const { messageId, content } = payload;
-            await this.database.message.update(supabase, messageId, content);
+            await this.database.message.update(principal.supabase, messageId, content);
             return {};
         }
     };

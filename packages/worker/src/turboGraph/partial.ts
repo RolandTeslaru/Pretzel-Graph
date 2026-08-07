@@ -45,9 +45,9 @@ export function collectUpstreamCone(
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * The original design ran only the target + the *minimal missing* upstream sub-chain,
- * replaying cached upstreams (fire-but-don't-execute) from a seeded session — n8n's
- * runData-reuse, adapted to our signal/data dependency model. It was implemented and
- * working at the graph level, then shelved. Keeping the design here in case we revisit.
+ * replaying cached upstreams (fire-but-don't-execute) from a seeded session, resolved
+ * against our signal/data dependency model. It was implemented and working at the
+ * graph level, then shelved. Keeping the design here in case we revisit.
  *
  * The shape:
  *   planPartialRun(target, data, cache, session) -> { mustRun, replay }

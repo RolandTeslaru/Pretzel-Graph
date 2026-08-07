@@ -1,7 +1,9 @@
-import { Controller, Post, UseGuards, Req, HttpCode } from '@nestjs/common';
+import { Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
 import { HumanReviewService } from './human-review.service';
-import { Auth, HumanReview } from '@pretzel-graph/shared/domain';
-import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
+import { HumanReview } from '@pretzel-graph/shared/domain';
+import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
+import { CurrentUser } from '@/decorators/principal';
+import { Principal } from '@/domain/Principal';
 import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('human-review')
@@ -12,9 +14,9 @@ export class HumanReviewController {
     @UseGuards(SupabaseAuthGuard)
     @HttpCode(200)
     async respond(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(HumanReview.API.HumanResponded.Request) body: HumanReview.API.HumanResponded.Request,
     ) {
-        return this.humanReviewService.humanResponded(req.user.id as Auth.User.Id, body);
+        return this.humanReviewService.humanResponded(principal, body);
     }
 }

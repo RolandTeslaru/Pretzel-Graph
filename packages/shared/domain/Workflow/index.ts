@@ -63,15 +63,6 @@ export namespace Workflow {
         data: Data.Schema
     });
 
-    export namespace Database {
-        export namespace Row {
-            export const Schema = Workflow.Schema.extend({
-                user_id: Auth.User.Id,
-            })
-        }
-        export type Row = z.infer<typeof Row.Schema>
-    }
-
     export const INITIAL = {
         id:             "" as Workflow.Id,
         locked:         false,

@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { createAuthenticatedClient } from '@/utils/supabase';
+import { Principal } from '@/domain/Principal';
 import { Vault } from '@pretzel-graph/shared/domain';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
-import { Token } from '@/domain/Token';
 import { VaultDatabase } from './vault.database';
 import { encryptCredentialBlob, decryptCredentialBlob } from './vault.encryption';
 
@@ -46,21 +45,19 @@ export class VaultService {
 
     public readonly credentialInstance = {
         list: async (
-            token: Token.UserSupabaseJWT,
+            principal: Principal.User,
         ): Promise<Vault.API.CredentialInstance.List.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            const rows = await this.database.credentialInstance.list(supabase);
+            const rows = await this.database.credentialInstance.list(principal.supabase);
             const instances = Object.fromEntries(rows.map(i => [i.id, i])) as Vault.API.CredentialInstance.List.Response['instances'];
             return { instances };
         },
 
         create: async (
-            token: Token.UserSupabaseJWT,
+            principal: Principal.User,
             req: Vault.API.CredentialInstance.Create.Request,
         ): Promise<Vault.API.CredentialInstance.Create.Response> => {
-            const supabase = createAuthenticatedClient(token);
             const blob     = encryptCredentialBlob(req.fieldValues);
-            const instance = await this.database.credentialInstance.create(supabase, {
+            const instance = await this.database.credentialInstance.create(principal.supabase, {
                 name:       req.name,
                 templateId: req.templateId,
                 blob,
@@ -69,40 +66,36 @@ export class VaultService {
         },
 
         remove: async (
-            token: Token.UserSupabaseJWT,
+            principal: Principal.User,
             req: Vault.API.CredentialInstance.Remove.Request,
         ): Promise<Vault.API.CredentialInstance.Remove.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            await this.database.credentialInstance.remove(supabase, req.id);
+            await this.database.credentialInstance.remove(principal.supabase, req.id);
             return { ok: true };
         },
 
         reveal: async (
-            token: Token.UserSupabaseJWT,
+            principal: Principal.User,
             id: Vault.Credential.Instance.Id,
         ): Promise<Vault.API.CredentialInstance.Reveal.Response> => {
-            const supabase  = createAuthenticatedClient(token);
-            const blob      = await this.database.credentialInstance.fetchBlob(supabase, id);
+            const blob        = await this.database.credentialInstance.fetchBlob(principal.supabase, id);
             const fieldValues = decryptCredentialBlob(blob);
             return { fieldValues };
         },
 
         updateName: async (
-            token: Token.UserSupabaseJWT,
+            principal: Principal.User,
             req: Vault.API.CredentialInstance.UpdateName.Request,
         ): Promise<Vault.API.CredentialInstance.UpdateName.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            const instance = await this.database.credentialInstance.updateName(supabase, req);
+            const instance = await this.database.credentialInstance.updateName(principal.supabase, req);
             return { instance };
         },
 
         update: async (
-            token: Token.UserSupabaseJWT,
+            principal: Principal.User,
             req: Vault.API.CredentialInstance.Update.Request,
         ): Promise<Vault.API.CredentialInstance.Update.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            const blob      = encryptCredentialBlob(req.fieldValues);
-            const instance  = await this.database.credentialInstance.update(supabase, req.id, req.name, blob);
+            const blob     = encryptCredentialBlob(req.fieldValues);
+            const instance = await this.database.credentialInstance.update(principal.supabase, req.id, req.name, blob);
             return { instance };
         },
     };

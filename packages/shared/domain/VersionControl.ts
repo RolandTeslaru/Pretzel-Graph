@@ -24,13 +24,6 @@ export namespace VersionControl {
             published_at:  z.coerce.date(),
         })
 
-        export namespace Database {
-            export namespace Row {
-                export const Schema = Publication.Schema.extend({ user_id: Auth.User.Id })
-            }
-            export type Row = z.infer<typeof Row.Schema>
-        }
-
         export namespace Meta {
             export const Schema = Publication.Schema.omit({
                 workflow_data: true,

@@ -59,15 +59,6 @@ export namespace Execution {
         updated_at:  supabaseTimestamp,
     })
 
-    export namespace Database {
-        export namespace Row {
-            export const Schema = Execution.Schema.extend({
-                user_id: Auth.User.Id,
-            })
-        }
-        export type Row = z.infer<typeof Schema>
-    }
-
     export const Meta = Schema.omit({ session: true, recording: true }).extend({
         has_recording: z.boolean(),
     })

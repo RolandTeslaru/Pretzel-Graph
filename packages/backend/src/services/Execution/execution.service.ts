@@ -3,7 +3,8 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue, QueueEvents } from 'bullmq';
 import Redis from 'ioredis';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { createAuthenticatedClient, createServiceClient } from '@/utils/supabase';
+import { createServiceClient } from '@/utils/supabase';
+import { Principal } from '@/domain/Principal';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { Auth, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
@@ -11,7 +12,6 @@ import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { PermissionService } from '../Permission/permission.service';
-import { Token } from '@/domain/Token';
 import { ExecutionDatabase } from './execution.database';
 import { ChatDatabase } from '../Chat/chat.database';
 import { VaultDatabase } from '../Vault/vault.database';
@@ -51,13 +51,11 @@ export class ExecutionService {
 
 
     public async runFromUser(
-        token:   Token.UserSupabaseJWT,
-        userId:  Auth.User.Id,
-        payload: Execution.API.Run.Request,
+        principal: Principal.User,
+        payload:   Execution.API.Run.Request,
     ): Promise<Execution.API.Run.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const ownerId = await this.ownership.assertWorkflow(payload.workflowId, userId);
-        return this.runCore(supabase, ownerId, payload, payload.igniter);
+        const ownerId = await this.ownership.assertWorkflow(payload.workflowId, principal.userId);
+        return this.runCore(principal.supabase, ownerId, payload, payload.igniter);
     }
 
 
@@ -228,14 +226,12 @@ export class ExecutionService {
 
 
     public async pause(
-        token:   Token.UserSupabaseJWT,
-        userId:  Auth.User.Id,
-        payload: Execution.API.Pause.Request,
+        principal: Principal.User,
+        payload:   Execution.API.Pause.Request,
     ): Promise<Execution.API.Pause.Response> {
         const { executionId } = payload;
-        const supabase = createAuthenticatedClient(token);
 
-        await this.ownership.assertExecution(executionId, userId);
+        await this.ownership.assertExecution(executionId, principal.userId);
 
         const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Pause>(
             { channel: Execution.Signal.getChannel(executionId), type: 'pause', executionId },
@@ -243,7 +239,7 @@ export class ExecutionService {
             'paused',
         );
 
-        if (success) await this.database.update(supabase, { executionId, status: 'paused' });
+        if (success) await this.database.update(principal.supabase, { executionId, status: 'paused' });
         return { success };
     }
 
@@ -251,14 +247,12 @@ export class ExecutionService {
 
 
     public async resume(
-        token:   Token.UserSupabaseJWT,
-        userId:  Auth.User.Id,
-        payload: Execution.API.Resume.Request,
+        principal: Principal.User,
+        payload:   Execution.API.Resume.Request,
     ): Promise<Execution.API.Resume.Response> {
         const { executionId } = payload;
-        const supabase = createAuthenticatedClient(token);
 
-        await this.ownership.assertExecution(executionId, userId);
+        await this.ownership.assertExecution(executionId, principal.userId);
 
         const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Resume>(
             { channel: Execution.Signal.getChannel(executionId), type: 'resume', executionId },
@@ -266,7 +260,7 @@ export class ExecutionService {
             'resumed',
         );
 
-        if (success) await this.database.update(supabase, { executionId, status: 'running' });
+        if (success) await this.database.update(principal.supabase, { executionId, status: 'running' });
         return { success };
     }
 
@@ -274,13 +268,12 @@ export class ExecutionService {
 
 
     public async heartbeat(
-        token:   Token.UserSupabaseJWT,
-        userId:  Auth.User.Id,
-        payload: Execution.API.Heartbeat.Request,
+        principal: Principal.User,
+        payload:   Execution.API.Heartbeat.Request,
     ): Promise<Execution.API.Heartbeat.Response> {
         const { executionId } = payload;
 
-        await this.ownership.assertExecution(executionId, userId);
+        await this.ownership.assertExecution(executionId, principal.userId);
 
         const channel = Execution.Signal.getChannel(executionId)
 
@@ -296,14 +289,12 @@ export class ExecutionService {
 
 
     public async suspend(
-        token:   Token.UserSupabaseJWT,
-        userId:  Auth.User.Id,
-        payload: Execution.API.Suspend.Request,
+        principal: Principal.User,
+        payload:   Execution.API.Suspend.Request,
     ): Promise<Execution.API.Suspend.Response> {
-        const supabase = createAuthenticatedClient(token);
         const { executionId } = payload;
 
-        await this.ownership.assertExecution(executionId, userId);
+        await this.ownership.assertExecution(executionId, principal.userId);
 
         const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Suspend>(
             { channel: Execution.Signal.getChannel(executionId), type: 'suspend', executionId },
@@ -311,7 +302,7 @@ export class ExecutionService {
             'suspended',
         );
 
-        if (success) await this.database.update(supabase, { executionId, status: 'suspended' });
+        if (success) await this.database.update(principal.supabase, { executionId, status: 'suspended' });
         return { success };
     }
 
@@ -319,14 +310,12 @@ export class ExecutionService {
 
 
     public async terminate(
-        token:   Token.UserSupabaseJWT,
-        userId:  Auth.User.Id,
-        payload: Execution.API.Terminate.Request,
+        principal: Principal.User,
+        payload:   Execution.API.Terminate.Request,
     ): Promise<Execution.API.Terminate.Response> {
         const { executionId } = payload;
 
-        const supabase = createAuthenticatedClient(token);
-        await this.ownership.assertExecution(executionId, userId);
+        await this.ownership.assertExecution(executionId, principal.userId);
 
         const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Terminate>(
             { channel: Execution.Signal.getChannel(executionId), type: 'terminate', executionId },
@@ -334,7 +323,7 @@ export class ExecutionService {
             'terminated',
         );
 
-        if (success) await this.database.update(supabase, { executionId, status: 'terminated' });
+        if (success) await this.database.update(principal.supabase, { executionId, status: 'terminated' });
         return { success };
     }
 
@@ -351,10 +340,9 @@ export class ExecutionService {
 
 
     public async terminateAll(
-        token:  Token.UserSupabaseJWT,
-        userId: Auth.User.Id
+        principal: Principal.User,
     ): Promise<Execution.API.TerminateAll.Response> {
-        await this.ownership.assertUserAdmin(userId);
+        await this.ownership.assertUserAdmin(principal.userId);
 
         const activeExecutionIds = await this.database.listActiveIds(this.serviceSupabase);
         if (activeExecutionIds.length === 0) return { terminatedCount: 0 };
@@ -380,16 +368,14 @@ export class ExecutionService {
 
 
     public async get(
-        token:   Token.UserSupabaseJWT,
-        userId:  Auth.User.Id, 
-        payload: Execution.API.Get.Request
+        principal: Principal.User,
+        payload:   Execution.API.Get.Request
     ): Promise<Execution.API.Get.Response> {
         const { executionId } = payload;
-        const supabase = createAuthenticatedClient(token);
 
-        await this.ownership.assertExecution(executionId, userId);
+        await this.ownership.assertExecution(executionId, principal.userId);
 
-        const execution = await this.database.get(supabase, executionId);
+        const execution = await this.database.get(principal.supabase, executionId);
 
         return { execution };
     }
@@ -409,11 +395,10 @@ export class ExecutionService {
     public readonly recording = {
 
         getLive: async (
-            token:   Token.UserSupabaseJWT,
-            userId:  Auth.User.Id,
-            payload: Execution.API.Recording.GetLive.Request,
+            principal: Principal.User,
+            payload:   Execution.API.Recording.GetLive.Request,
         ): Promise<Execution.API.Recording.GetLive.Response> => {
-            await this.ownership.assertExecution(payload.executionId, userId);
+            await this.ownership.assertExecution(payload.executionId, principal.userId);
             const key = Execution.Event.getChannel(payload.executionId);
             const raw = await this.redis.get(key);
             if (!raw) throw new SystemError(SystemError.Code.NOT_FOUND, 'Live recording not found or expired');
@@ -426,43 +411,38 @@ export class ExecutionService {
     public meta = {
 
         get: async (
-            token:   Token.UserSupabaseJWT,
-            userId:  Auth.User.Id,
-            payload: Execution.API.Meta.Get.Request
+            principal: Principal.User,
+            payload:   Execution.API.Meta.Get.Request
         ): Promise<Execution.API.Meta.Get.Response> => {
-            const supabase = createAuthenticatedClient(token);
             const { executionId } = payload;
 
-            await this.ownership.assertExecution(executionId, userId);
+            await this.ownership.assertExecution(executionId, principal.userId);
 
-            const meta = await this.database.meta.get(supabase, executionId);
+            const meta = await this.database.meta.get(principal.supabase, executionId);
 
             return { execution: meta };
         },
 
 
         list: async (
-            token:   Token.UserSupabaseJWT, 
-            payload: Execution.API.Meta.List.Request
+            principal: Principal.User,
+            payload:   Execution.API.Meta.List.Request
         ): Promise<Execution.API.Meta.List.Response> => {
             const { workflowId } = payload;
-            const supabase = createAuthenticatedClient(token);
 
-            const metaList = await this.database.meta.list(supabase, workflowId);
+            const metaList = await this.database.meta.list(principal.supabase, workflowId);
 
             return { executions: metaList };
         },
-        
+
 
 
         listActive: async (
-            token:  Token.UserSupabaseJWT,
-            userId: Auth.User.Id
+            principal: Principal.User,
         ): Promise<Execution.API.Meta.ListActive.Response> => {
-            const supabase = createAuthenticatedClient(token);
-            await this.ownership.assertUserAdmin(userId);
+            await this.ownership.assertUserAdmin(principal.userId);
 
-            const executions = await this.database.meta.listActive(supabase);
+            const executions = await this.database.meta.listActive(principal.supabase);
 
             return { executions: executions };
         }
