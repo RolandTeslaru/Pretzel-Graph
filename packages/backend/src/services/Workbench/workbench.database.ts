@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { DB } from '@/db';
 import { getUserId } from '@/utils/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { SystemError, VersionControl, Workflow, Workbench } from '@pretzel-graph/shared/domain';
@@ -39,10 +40,10 @@ class WorkflowMethods {
             .from('workflows')
             .select('*')
             .eq('id', workflowId)
-            .single<Workflow.Database.Row>()
+            .single<DB.Workflow.Row>()
             .throwOnError();
 
-        return row;
+        return DB.Workflow.toDomain(row);
     }
 
     @SupabaseAssert('workbench.workflow.commit')
@@ -68,7 +69,7 @@ class PublishedDependencyMethods {
             .select('id, display_name, icon, accent')
             .eq('id', workflowId)
             .or(`user_id.eq.${requesterId},is_public.eq.true`)
-            .maybeSingle<Pick<Workflow.Database.Row, 'id' | 'display_name' | 'icon' | 'accent'>>()
+            .maybeSingle<Pick<DB.Workflow.Row, 'id' | 'display_name' | 'icon' | 'accent'>>()
             .throwOnError();
 
         if (!workflow)
@@ -144,7 +145,7 @@ class DraftDependencyMethods {
             .select('id, display_name, icon, accent, data, updated_at')
             .eq('id', workflowId)
             .or(`user_id.eq.${requesterId},is_public.eq.true`)
-            .maybeSingle<Pick<Workflow.Database.Row, 'id' | 'display_name' | 'icon' | 'accent' | 'data' | 'updated_at'>>()
+            .maybeSingle<Pick<DB.Workflow.Row, 'id' | 'display_name' | 'icon' | 'accent' | 'data' | 'updated_at'>>()
             .throwOnError();
 
         if (!row)
@@ -180,7 +181,7 @@ class DraftDependencyMethods {
         const updates: Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo> = {};
         for (const row of rows ?? []) {
             const stored = currentUpdatedAt.get(row.id as Workflow.Id);
-            const rowDate = new Date(row.updated_at);
+            const rowDate = row.updated_at;
             if (stored && rowDate.getTime() !== stored.getTime())
                 updates[row.id as Workflow.Id] = {
                     workflowId:          row.id as Workflow.Id,

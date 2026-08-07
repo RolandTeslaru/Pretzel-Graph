@@ -22,21 +22,9 @@ export namespace Library {
 
 
     export namespace WorkflowMeta {
-        export const Schema = DomainWorkflow.Database.Row.Schema.omit({ 
-            data: true,
-            user_id: true
-         })
+        export const Schema = DomainWorkflow.Schema.omit({ data: true })
     }
     export type WorkflowMeta = z.infer<typeof WorkflowMeta.Schema>
-
-    export namespace Database {
-        export namespace FolderRow {
-            export const Schema = Folder.Schema.extend({
-                user_id: z.uuid().brand("UserId"),
-            })
-        }
-        export type FolderRow = z.infer<typeof Database.FolderRow.Schema>
-    }
 
     // ─────────────────────────────────────────────────────────────
     // API request/response shapes

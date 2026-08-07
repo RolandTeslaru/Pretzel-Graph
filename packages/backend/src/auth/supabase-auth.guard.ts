@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext as NestExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { Token } from '@/domain/Token';
+import { Principal } from '@/domain/Principal';
 import { createAuthenticatedClient, getUserId } from '../utils/supabase';
 import { Auth } from '@pretzel-graph/shared/domain';
 
@@ -9,6 +10,7 @@ export interface AuthenticatedRequest extends Request {
         id: Auth.User.Id;
     };
     token: Token.UserSupabaseJWT;
+    principal: Principal.User;
 }
 
 @Injectable()
@@ -29,7 +31,9 @@ export class SupabaseAuthGuard implements CanActivate {
                 throw new UnauthorizedException('Invalid token');
             }
 
-            // Attach user and token to the request object
+            request.principal = { type: 'user', userId, supabase };
+
+            // Legacy fields — drop once every controller reads the principal.
             request.user = { id: userId };
             request.token = token;
 

@@ -1,7 +1,9 @@
-import { Controller, Post, Get, Delete, Param, UseGuards, Req, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, UseGuards, HttpCode } from '@nestjs/common';
 import { VersionControl } from '@pretzel-graph/shared/domain';
 import { VersionControlService } from './version-control.service';
-import { SupabaseAuthGuard, AuthenticatedRequest } from '../../auth/supabase-auth.guard';
+import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
+import { CurrentUser } from '@/decorators/principal';
+import { Principal } from '@/domain/Principal';
 import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('version-control')
@@ -12,70 +14,70 @@ export class VersionControlController {
     @Post('publish')
     @HttpCode(200)
     async publish(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @ZodBody(VersionControl.API.Publish.Request) body: VersionControl.API.Publish.Request,
     ) {
-        return this.service.publish(req.token, body);
+        return this.service.publish(principal, body);
     }
 
     @Get('list/:workflowId')
     async list(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @Param('workflowId') workflowId: string,
     ) {
         const payload = VersionControl.API.List.Request.parse({ workflowId });
-        return this.service.list(req.token, payload);
+        return this.service.list(principal, payload);
     }
 
     @Get('active')
-    async listActiveWorkflows(@Req() req: AuthenticatedRequest) {
-        return this.service.listActiveWorkflows(req.token);
+    async listActiveWorkflows(@CurrentUser() principal: Principal.User) {
+        return this.service.listActiveWorkflows(principal);
     }
 
     @Get('active/:workflowId')
     async getActiveByWorkflow(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @Param('workflowId') workflowId: string,
     ) {
         const payload = VersionControl.API.GetActiveByWorkflow.Request.parse({ workflowId });
-        return this.service.getActiveByWorkflow(req.token, payload);
+        return this.service.getActiveByWorkflow(principal, payload);
     }
 
     @Get(':publicationId')
     async get(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @Param('publicationId') publicationId: string,
     ) {
         const payload = VersionControl.API.Get.Request.parse({ publicationId });
-        return this.service.get(req.token, payload);
+        return this.service.get(principal, payload);
     }
 
     @Post(':publicationId/activate')
     @HttpCode(200)
     async activate(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @Param('publicationId') publicationId: string,
     ) {
         const payload = VersionControl.API.Activate.Request.parse({ publicationId });
-        return this.service.activate(req.token, payload);
+        return this.service.activate(principal, payload);
     }
 
     @Post(':publicationId/deactivate')
     @HttpCode(200)
     async deactivate(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @Param('publicationId') publicationId: string,
     ) {
         const payload = VersionControl.API.Deactivate.Request.parse({ publicationId });
-        return this.service.deactivate(req.token, payload);
+        return this.service.deactivate(principal, payload);
     }
 
     @Delete(':publicationId')
     async remove(
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() principal: Principal.User,
         @Param('publicationId') publicationId: string,
     ) {
         const payload = VersionControl.API.Remove.Request.parse({ publicationId });
-        return this.service.remove(req.token, payload);
+        return this.service.remove(principal, payload);
     }
 }

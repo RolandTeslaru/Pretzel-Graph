@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { createAuthenticatedClient } from '@/utils/supabase';
+import { Principal } from '@/domain/Principal';
+import { DB } from '@/db';
 import { VersionControl } from '@pretzel-graph/shared/domain';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { VersionControlDatabase } from './version-control.database';
@@ -12,11 +13,10 @@ export class VersionControlService {
     ) {}
 
     async publish(
-        token: string,
+        principal: Principal.User,
         payload: VersionControl.API.Publish.Request,
     ): Promise<VersionControl.API.Publish.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const publication = await this.database.publish(supabase, payload);
+        const publication = await DB.asUser(principal, (trx) => this.database.publish(trx, principal.userId, payload));
         publication.is_active = true;
         this.realtime.emitSignal<VersionControl.Signal.Published>({
             channel: VersionControl.Signal.getChannel(publication.workflow_id, 'published'),
@@ -29,46 +29,41 @@ export class VersionControlService {
     }
 
     async list(
-        token: string,
+        principal: Principal.User,
         payload: VersionControl.API.List.Request,
     ): Promise<VersionControl.API.List.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const publications = await this.database.list(supabase, payload);
+        const publications = await DB.asUser(principal, (trx) => this.database.list(trx, payload));
         return { publications };
     }
 
     async listActiveWorkflows(
-        token: string,
+        principal: Principal.User,
     ): Promise<VersionControl.API.ListActiveWorkflows.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const activeWorkflows = await this.database.listActiveWorkflows(supabase);
+        const activeWorkflows = await DB.asUser(principal, (trx) => this.database.listActiveWorkflows(trx, principal.userId));
         return { activeWorkflows };
     }
 
     async getActiveByWorkflow(
-        token: string,
+        principal: Principal.User,
         payload: VersionControl.API.GetActiveByWorkflow.Request,
     ): Promise<VersionControl.API.GetActiveByWorkflow.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const publication = await this.database.getActiveByWorkflow(supabase, payload);
+        const publication = await DB.asUser(principal, (trx) => this.database.getActiveByWorkflow(trx, principal.userId, payload));
         return { publication };
     }
 
     async get(
-        token: string,
+        principal: Principal.User,
         payload: VersionControl.API.Get.Request,
     ): Promise<VersionControl.API.Get.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const publication = await this.database.get(supabase, payload);
+        const publication = await DB.asUser(principal, (trx) => this.database.get(trx, payload));
         return { publication };
     }
 
     async activate(
-        token: string,
+        principal: Principal.User,
         payload: VersionControl.API.Activate.Request,
     ): Promise<VersionControl.API.Activate.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const publication = await this.database.activate(supabase, payload);
+        const publication = await DB.asUser(principal, (trx) => this.database.activate(trx, payload));
         this.realtime.emitSignal<VersionControl.Signal.Activated>({
             channel: VersionControl.Signal.getChannel(publication.workflow_id, 'activated'),
             type: 'activated',
@@ -80,11 +75,10 @@ export class VersionControlService {
     }
 
     async deactivate(
-        token: string,
+        principal: Principal.User,
         payload: VersionControl.API.Deactivate.Request,
     ): Promise<VersionControl.API.Deactivate.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const publication = await this.database.deactivate(supabase, payload);
+        const publication = await DB.asUser(principal, (trx) => this.database.deactivate(trx, payload));
         this.realtime.emitSignal<VersionControl.Signal.Deactivated>({
             channel: VersionControl.Signal.getChannel(publication.workflow_id, 'deactivated'),
             type: 'deactivated',
@@ -95,11 +89,10 @@ export class VersionControlService {
     }
 
     async remove(
-        token: string,
+        principal: Principal.User,
         payload: VersionControl.API.Remove.Request,
     ): Promise<VersionControl.API.Remove.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const { workflowId } = await this.database.remove(supabase, payload);
+        const { workflowId } = await DB.asUser(principal, (trx) => this.database.remove(trx, payload));
         this.realtime.emitSignal<VersionControl.Signal.Removed>({
             channel: VersionControl.Signal.getChannel(workflowId, 'removed'),
             type: 'removed',
