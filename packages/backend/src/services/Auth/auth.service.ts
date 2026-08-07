@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { createAuthenticatedClient } from '@/utils/supabase';
+import { Principal } from '@/domain/Principal';
 import { withSupabaseAssert } from '@pretzel-graph/shared/errors/supabase';
 import { Auth } from '@pretzel-graph/shared/domain';
 
@@ -22,9 +22,8 @@ export class AuthService {
         }),
     };
 
-    public async getMe(token: string, userId: Auth.User.Id): Promise<Auth.API.Me.Get.Response> {
-        const supabase = createAuthenticatedClient(token);
-        const user = await this.dbOps.getMe(supabase, userId);
+    public async getMe(principal: Principal.User): Promise<Auth.API.Me.Get.Response> {
+        const user = await this.dbOps.getMe(principal.supabase, principal.userId);
         return { user };
     }
 }

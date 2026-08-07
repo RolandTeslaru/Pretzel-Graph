@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { DB } from '@/db';
 import { Auth, Chat, Workflow } from '@pretzel-graph/shared/domain';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { SupabaseAssert, ZodReturn } from '../../decorators/database';
@@ -36,7 +37,7 @@ class ChatMethods {
     async get(supabase: SupabaseClient, userId: Auth.User.Id, chatId: Chat.Id): Promise<{ chat: Chat; messages: Chat.Message[] }> {
         const { data } = await supabase
             .from('chats')
-            .select<string, Chat & { chat_messages: Chat.Database.Row.Message[] }>('id, user_id, workflow_id, name, created_at, updated_at, chat_messages(*)')
+            .select<string, Chat & { chat_messages: DB.Chat.MessageRow[] }>('id, user_id, workflow_id, name, created_at, updated_at, chat_messages(*)')
             .eq('id', chatId)
             .eq('user_id', userId)
             .order('id', { referencedTable: 'chat_messages', ascending: true })

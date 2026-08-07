@@ -196,25 +196,6 @@ export namespace Chat {
     }
     export type Event = z.infer<typeof Event.Schema>
 
-    const MessageRowSchema = Message.Schema.and(z.object({
-        chat_id:    Id,
-        created_at: supabaseTimestamp,
-        updated_at: supabaseTimestamp,
-    }))
-
-    export namespace Database {
-        export namespace Row {
-            export const Chat = Schema.extend({
-                user_id: Auth.User.Id,
-            })
-
-            export namespace Message {
-                export const Schema = MessageRowSchema
-            }
-            export type Message = z.infer<typeof Message.Schema>
-        }
-    }
-
     export namespace API {
         export namespace Message {
             export namespace Add {

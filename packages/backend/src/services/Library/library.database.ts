@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { DB } from '@/db';
 import { getUserId } from '@/utils/supabase';
 import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -54,7 +55,7 @@ class ProjectMethods {
             .from('folders')
             .insert({ ...payload, is_root: true, user_id })
             .select()
-            .single<Library.Database.FolderRow>()
+            .single<DB.Folder.Row>()
             .throwOnError();
 
         return row;
@@ -72,7 +73,7 @@ class ProjectMethods {
             .eq('id', payload.id)
             .eq('is_root', true)
             .select('*')
-            .single<Library.Database.FolderRow>()
+            .single<DB.Folder.Row>()
             .throwOnError();
 
         return row;
@@ -109,7 +110,7 @@ class FolderMethods {
             .from('folders')
             .insert({ ...payload, user_id })
             .select()
-            .single<Library.Database.FolderRow>()
+            .single<DB.Folder.Row>()
             .throwOnError();
 
         return row;
@@ -126,7 +127,7 @@ class FolderMethods {
             })
             .eq('id', payload.id)
             .select('*')
-            .single<Library.Database.FolderRow>()
+            .single<DB.Folder.Row>()
             .throwOnError();
 
         return row;
@@ -179,10 +180,10 @@ class WorkflowMethods {
                 data:   Workflow.INITIAL.data,
             })
             .select()
-            .single<Workflow.Database.Row>()
+            .single<DB.Workflow.Row>()
             .throwOnError();
 
-        return row;
+        return DB.Workflow.toDomain(row);
     }
 
     @SupabaseAssert('workflow.update')
@@ -214,10 +215,10 @@ class WorkflowMethods {
             .from('workflows')
             .select('*')
             .eq('id', workflowId)
-            .single<Workflow.Database.Row>()
+            .single<DB.Workflow.Row>()
             .throwOnError();
 
-        return row;
+        return DB.Workflow.toDomain(row);
     }
 
     @SupabaseAssert('workflow.delete')
@@ -235,7 +236,7 @@ class WorkflowMethods {
             .from('workflows')
             .select('*')
             .eq('id', id)
-            .single<Workflow.Database.Row>()
+            .single<DB.Workflow.Row>()
             .throwOnError();
 
         const { data: row } = await supabase
@@ -253,10 +254,10 @@ class WorkflowMethods {
                 is_public:    false,
             })
             .select()
-            .single<Workflow.Database.Row>()
+            .single<DB.Workflow.Row>()
             .throwOnError();
 
-        return row;
+        return DB.Workflow.toDomain(row);
     }
 }
 
