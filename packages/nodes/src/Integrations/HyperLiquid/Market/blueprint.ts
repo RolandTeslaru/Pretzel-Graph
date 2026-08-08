@@ -119,7 +119,7 @@ export const Blueprint = defineBlueprint({
             FieldBuilder.String("orderBookCoin", "Coin", {
                 required:    true,
                 placeholder: "BTC",
-                tooltip:     "Perpetual symbol, Spot pair/@index, or HIP-3 dex:coin name.",
+                tooltip:     "Perpetual symbol (BTC), Spot pair (PURR/USDC or @107), or HIP-3 name (dex:coin).",
             }),
             FieldBuilder.Integer("orderBookDepth", "Depth", {
                 initialValue: 15,

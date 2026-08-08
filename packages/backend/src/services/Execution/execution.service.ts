@@ -92,18 +92,21 @@ export class ExecutionService {
         const blueprints: Record<Blueprint.Id, Blueprint> = {};
 
         for (const node of Object.values(workflowData.nodes)) {
-            const base = await CatalogueService.loadBlueprint(node.blueprintId);
+            // Subworkflow dependency node: absent from the catalogue by design, so never attempt the
+            // path-convention import. Its blueprint is the Core.SubWorkflow.Execute container's —
+            // exposed ports derive from the embedded dependency at read time (resolveInputs/Outputs).
+            // Mirrors the compiler's resolveDependencyNode.
+            if (node.dependencyRef) {
+                const executeBp = await CatalogueService.loadBlueprint("Core.SubWorkflow.Execute" as Blueprint.Id);
 
-            // Subworkflow dependency node: absent from the catalogue by design. Its blueprint is the
-            // Core.SubWorkflow.Execute container's — exposed ports derive from the embedded dependency
-            // at read time (resolveInputs/Outputs). Mirrors the compiler's resolveDependencyNode.
-            if (!base) {
-                if (node.dependencyRef) {
-                    const executeBp = await CatalogueService.loadBlueprint("Core.SubWorkflow.Execute" as Blueprint.Id);
-                    if (executeBp) blueprints[node.blueprintId] = executeBp;
-                }
+                if (executeBp) blueprints[node.blueprintId] = executeBp;
+
                 continue;
             }
+
+            const base = await CatalogueService.loadBlueprint(node.blueprintId);
+
+            if (!base) continue;
 
             if (node.reconciledBlueprintId) {
                 const path = Blueprint.isReconciledId(node.reconciledBlueprintId)
