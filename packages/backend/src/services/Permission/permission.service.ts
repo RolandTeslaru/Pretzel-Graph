@@ -1,6 +1,7 @@
 import { DB } from '@/db';
 import { Injectable } from "@nestjs/common";
 import { Auth, Chat, Execution, SystemError, Workflow } from "@pretzel-graph/shared/domain";
+import { Principal } from "@/domain/Principal";
 
 
 const OWNERSHIP_CACHE_TTL_MS = 5 * 60_000   // 5 min — ownership rarely changes in a single-owner model
@@ -10,6 +11,8 @@ const OWNERSHIP_CACHE_MAX = 10_000
 export class PermissionService {
 
     private ownershipCache = new Map<Workflow.Id | Chat.Id | Execution.Id, { ownerId: Auth.User.Id, expiresAt: number }>();
+
+    private executionContextCache = new Map<Execution.Id, { ownerId: Auth.User.Id, igniter: Execution.Igniter, expiresAt: number }>();
 
     // Cache the fact (resource → owner), never the miss. Compare against the requester live.
     private cacheOwner(id: Workflow.Id | Chat.Id | Execution.Id, ownerId: Auth.User.Id) {
@@ -37,9 +40,14 @@ export class PermissionService {
 
     private pruneExpired() {
         const now = Date.now();
+
         for (const [key, entry] of this.ownershipCache)
             if (entry.expiresAt <= now)
                 this.ownershipCache.delete(key);
+
+        for (const [key, entry] of this.executionContextCache)
+            if (entry.expiresAt <= now)
+                this.executionContextCache.delete(key);
     }
 
 
@@ -84,16 +92,18 @@ export class PermissionService {
         return ownerId
     }
 
-    public async assertExecutionChat(
-        executionId: Execution.Id,
-        chatId:      Chat.Id,
+    /**
+     * RLS already confines a delegated write to the owner's own chats, so this is not
+     * what makes it safe — it makes failures uniform. Without it a foreign chatId reads
+     * back as an empty list rather than an error, and the error kind would vary by
+     * whether the chat exists, which tells the workflow author something they should
+     * not learn.
+     */
+    public async assertDelegateChat(
+        delegate: Principal.Delegate,
+        chatId:   Chat.Id,
     ) {
-        const requesterId = await this.loadExecutionOwner(executionId);
-
-        if (!requesterId)
-            throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
-
-        return this.assertChat(chatId, requesterId);
+        return this.assertChat(chatId, delegate.actingAsUserId);
     }
 
 
@@ -126,23 +136,64 @@ export class PermissionService {
     public async loadExecutionOwner(
         executionId: Execution.Id
     ): Promise<Auth.User.Id | null> {
-        const cached = this.getCachedOwner(executionId);
-        if (cached)
+        const context = await this.loadExecutionContext(executionId);
+        return context?.ownerId ?? null;
+    }
+
+
+    /**
+     * Owner + igniter in one read — the two facts needed to mint a delegated
+     * principal. Both are immutable after insert, so caching them together is safe.
+     */
+    public async loadExecutionContext(
+        executionId: Execution.Id
+    ): Promise<{ ownerId: Auth.User.Id, igniter: Execution.Igniter } | null> {
+        const cached = this.executionContextCache.get(executionId);
+        if (cached && cached.expiresAt > Date.now())
             return cached;
 
-        const row = await DB.asService('load execution owner', (db) =>
+        const row = await DB.asService('load execution context', (db) =>
             db
                 .selectFrom('executions')
-                .select('user_id')
+                .select(['user_id', 'igniter'])
                 .where('id', '=', executionId)
                 .executeTakeFirst(),
         );
         if (!row)
             return null;   // never cache the miss — preemptive subscribe relies on re-checking
 
-        const ownerId = row.user_id;
-        this.cacheOwner(executionId, ownerId);
-        return ownerId;
+        const context = { ownerId: row.user_id, igniter: row.igniter };
+
+        this.executionContextCache.set(executionId, {
+            ...context,
+            expiresAt: Date.now() + OWNERSHIP_CACHE_TTL_MS,
+        });
+        this.cacheOwner(executionId, context.ownerId);
+
+        return context;
+    }
+
+
+    /**
+     * Builds the principal a running execution acts under. Derived here rather than
+     * accepted from the worker, which knows only its own execution id — so a leaked
+     * runtime-node token can act on existing executions as their real owners, but
+     * cannot name a user.
+     */
+    public async resolveDelegate(
+        executionId: Execution.Id
+    ): Promise<Principal.Delegate> {
+        const context = await this.loadExecutionContext(executionId);
+
+        if (!context)
+            throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
+
+        return {
+            type: 'delegate',
+            actingAsUserId: context.ownerId,
+            executionId,
+            via: context.igniter.variant,
+        };
     }
 
 

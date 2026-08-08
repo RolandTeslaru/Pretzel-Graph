@@ -1,6 +1,6 @@
 import { Execution, Vault } from "@pretzel-graph/shared/domain";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { RuntimeNode } from "@pretzel-graph/node-sdk";
+import { HTTP, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { AggexEngine } from "src/engine";
 
 import { AirlockService } from "../airlock";
@@ -20,15 +20,16 @@ export function createContexts(params: {
     graph:               S2Graph,
     credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
     realtime:            RealtimeService,
+    internalAPI:         HTTP.Client,
     enclosingNodeAPI?:   RuntimeNode.ExecutionContext["enclosingNodeAPI"],
 }): { nodeExecutionCtx: RuntimeNode.ExecutionContext; engineExecutionCtx: AggexEngine.Execution.Context } {
     const {
         engine, airlock, execution, workflowId, workflowData, workflowCache,
-        graph, credentialInstances, realtime, enclosingNodeAPI,
+        graph, credentialInstances, realtime, internalAPI, enclosingNodeAPI,
     } = params;
 
     const ctxRef = { current: null! as AggexEngine.Execution.Context };
-    const apis = createExecutionAPIs(engine, airlock, ctxRef, execution, workflowId, workflowData, credentialInstances, realtime);
+    const apis = createExecutionAPIs(engine, airlock, ctxRef, execution, workflowId, workflowData, credentialInstances, realtime, internalAPI);
 
     const base = {
         executionId: execution.id,

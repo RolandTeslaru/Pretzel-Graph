@@ -15,6 +15,7 @@ import { ExecutionDatabase } from './execution.database';
 import { ChatDatabase } from '../Chat/chat.database';
 import { VaultDatabase } from '../Vault/vault.database';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
+import { ExecutionToken } from '@/auth/execution-token';
 
 @Injectable()
 export class ExecutionService {
@@ -37,7 +38,7 @@ export class ExecutionService {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
             console.error(`[Execution] ${jobId} failed:`, failedReason);
             const status = failedReason === 'terminated' ? 'terminated' : 'failed';
-            await DB.asService('mark failed BullMQ execution', (db) => this.database.update(db, { executionId: jobId as Execution.Id, status, error: failedReason }));
+            await DB.asService('mark failed BullMQ execution', (db) => this.database.finalise(db, { executionId: jobId as Execution.Id, status, error: failedReason }));
         });
     }
 
@@ -121,7 +122,7 @@ export class ExecutionService {
     }
 
     private async runCore(
-        withDatabase: DB.Delegate,
+        withDatabase: DB.Opener,
         userId:   Auth.User.Id,
         payload:  Execution.API.Run.Request,
         igniter:  Execution.Igniter,
@@ -175,13 +176,14 @@ export class ExecutionService {
                 workflowId,
                 workflowData,
                 credentialInstances,
+                executionToken: ExecutionToken.sign(executionId),
             };
 
             await this.executionQueue.add('run', queueItem, { jobId: executionId });
 
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            await withDatabase((db) => this.database.update(db, { executionId, status: 'failed', error: message }));
+            await DB.asService('mark execution failed at enqueue', (db) => this.database.finalise(db, { executionId, status: 'failed', error: message }));
             throw error;
         }
 
@@ -192,7 +194,7 @@ export class ExecutionService {
         );
 
         if (!started) {
-            await withDatabase((db) => this.database.update(db, { executionId, status: 'failed', error: 'No worker picked up the job' }));
+            await DB.asService('mark execution failed — no worker', (db) => this.database.finalise(db, { executionId, status: 'failed', error: 'No worker picked up the job' }));
             this.executionQueue.remove(executionId).catch(err =>
                 console.error('Failed to remove execution from queue after start timeout', err)
             );
@@ -233,7 +235,7 @@ export class ExecutionService {
             'paused',
         );
 
-        if (success) await DB.asUser(principal, (db) => this.database.update(db, { executionId, status: 'paused' }));
+        if (success) await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'paused' }));
         return { success };
     }
 
@@ -254,7 +256,7 @@ export class ExecutionService {
             'resumed',
         );
 
-        if (success) await DB.asUser(principal, (db) => this.database.update(db, { executionId, status: 'running' }));
+        if (success) await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'running' }));
         return { success };
     }
 
@@ -296,7 +298,7 @@ export class ExecutionService {
             'suspended',
         );
 
-        if (success) await DB.asUser(principal, (db) => this.database.update(db, { executionId, status: 'suspended' }));
+        if (success) await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'suspended' }));
         return { success };
     }
 
@@ -317,7 +319,7 @@ export class ExecutionService {
             'terminated',
         );
 
-        if (success) await DB.asUser(principal, (db) => this.database.update(db, { executionId, status: 'terminated' }));
+        if (success) await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'terminated' }));
         return { success };
     }
 
@@ -325,7 +327,7 @@ export class ExecutionService {
 
 
     public async finalise({ executionId, status }: Execution.API.Finalise.Request): Promise<Execution.API.Finalise.Response> {
-        await DB.asService('finalise execution', (db) => this.database.update(db, { executionId, status }));
+        await DB.asService('finalise execution', (db) => this.database.finalise(db, { executionId, status }));
         return {};
     }
 
@@ -383,7 +385,11 @@ export class ExecutionService {
         payload: Execution.API.Update.Request
     ): Promise<Execution.API.Update.Response> {
         const { executionId, status, duration, session, recording } = payload;
-        await DB.asService('persist worker execution update', (db) => this.database.update(db, { executionId, status, duration, session, recording }));
+        // Progress from the running graph — written as the execution's owner, so RLS
+        // scopes it. Terminal results arrive on /finalise, which stays on the service role.
+        const delegate = await this.ownership.resolveDelegate(executionId);
+
+        await DB.asDelegate(delegate, (trx) => this.database.updateProgress(trx, { executionId, status, duration, session, recording }));
         return {};
     }
 

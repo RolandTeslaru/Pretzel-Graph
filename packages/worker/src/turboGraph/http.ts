@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig, isAxiosError } from "axios";
 import { HTTP } from "@pretzel-graph/node-sdk";
+import { Execution } from "@pretzel-graph/shared/domain";
 
 const DEFAULT_TIMEOUT_MS  = 30_000;
 const DEFAULT_RETRIES     = 2;
@@ -195,4 +196,22 @@ export function createHTTPClientAPI(executionSignal: AbortSignal): HTTP.ClientAP
             };
         },
     };
+}
+
+
+/**
+ * The client nodes use to reach our own backend, authenticated as one execution.
+ *
+ * Not built through `RuntimeNode.httpClientFactory` on purpose — that binds the node's
+ * proxy credential, and routing this traffic through a user-configured proxy would hand
+ * the execution token to whoever operates it. Third-party egress is proxied; internal
+ * calls are not. See SPECS/execution-token-delegation.md.
+ */
+export function createInternalClient(executionToken: Execution.Token): HTTP.Client {
+
+    return createHTTPClientAPI(new AbortController().signal).create({
+        vendor:  "Pretzel backend",
+        baseURL: process.env.API_URL,
+        headers: { [Execution.Token.HEADER]: executionToken },
+    });
 }
