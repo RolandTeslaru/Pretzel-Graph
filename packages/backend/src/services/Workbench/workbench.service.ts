@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
+import { DB } from '@/db';
 import { Workflow, Workbench, Vault, Foundations } from '@pretzel-graph/shared/domain';
 import { WorkbenchDatabase } from './workbench.database';
 import { VaultDatabase } from '../Vault/vault.database';
@@ -20,7 +21,7 @@ export class WorkbenchService {
             principal: Principal.User,
             payload: Workbench.API.Workflow.Create.Request,
         ): Promise<Workbench.API.Workflow.Create.Response> => {
-            const workflow_id = await this.database.workflow.create(principal.supabase, payload);
+            const workflow_id = await DB.asUser(principal, (trx) => this.database.workflow.create(trx, principal.userId, payload));
             return { workflow_id };
         },
 
@@ -28,7 +29,7 @@ export class WorkbenchService {
             principal: Principal.User,
             workflowId: Workflow.Id,
         ): Promise<Workbench.API.Workflow.Get.Response> => {
-            const workflow = await this.database.workflow.get(principal.supabase, workflowId);
+            const workflow = await DB.asUser(principal, (trx) => this.database.workflow.get(trx, workflowId));
 
             const blueprintIds = new Set<Foundations.Blueprint.Id>()
             for (const node of Object.values(workflow.data.nodes)){
@@ -80,7 +81,7 @@ export class WorkbenchService {
             principal: Principal.User,
             payload: Workbench.API.Workflow.Commit.Request,
         ): Promise<Workbench.API.Workflow.Commit.Response> => {
-            await this.database.workflow.commit(principal.supabase, payload);
+            await DB.asUser(principal, (trx) => this.database.workflow.commit(trx, payload));
             return {};
         },
     };
@@ -91,7 +92,7 @@ export class WorkbenchService {
                 principal: Principal.User,
                 payload: Workbench.API.Dependency.Published.Load.Request,
             ): Promise<Workbench.API.Dependency.Published.Load.Response> => {
-                const dependency = await this.database.dependency.published.load(principal.supabase, payload.dependencyId);
+                const dependency = await DB.asUser(principal, (trx) => this.database.dependency.published.load(trx, payload.dependencyId));
                 return { dependency };
             },
 
@@ -99,7 +100,7 @@ export class WorkbenchService {
                 principal: Principal.User,
                 payload: Workbench.API.Dependency.Published.CheckUpdates.Request,
             ): Promise<Workbench.API.Dependency.Published.CheckUpdates.Response> => {
-                const updates = await this.database.dependency.published.checkUpdates(principal.supabase, payload.dependencies);
+                const updates = await DB.asUser(principal, (trx) => this.database.dependency.published.checkUpdates(trx, payload.dependencies));
                 return { updates };
             },
         },
@@ -109,7 +110,7 @@ export class WorkbenchService {
                 principal: Principal.User,
                 payload: Workbench.API.Dependency.Draft.Load.Request,
             ): Promise<Workbench.API.Dependency.Draft.Load.Response> => {
-                const dependency = await this.database.dependency.draft.load(principal.supabase, payload.dependencyId);
+                const dependency = await DB.asUser(principal, (trx) => this.database.dependency.draft.load(trx, payload.dependencyId));
                 return { dependency };
             },
 
@@ -117,7 +118,7 @@ export class WorkbenchService {
                 principal: Principal.User,
                 payload: Workbench.API.Dependency.Draft.CheckUpdates.Request,
             ): Promise<Workbench.API.Dependency.Draft.CheckUpdates.Response> => {
-                const updates = await this.database.dependency.draft.checkUpdates(principal.supabase, payload.dependencies);
+                const updates = await DB.asUser(principal, (trx) => this.database.dependency.draft.checkUpdates(trx, payload.dependencies));
                 return { updates };
             },
         },
@@ -144,7 +145,7 @@ export class WorkbenchService {
                 // instance id simply yields no row (same guarantee as VaultService.reveal).
                 const ids = Object.values(payload.credentialInstanceIds);
                 const instances = ids.length
-                    ? await this.vaultDatabase.credentialInstance.listByIds(principal.supabase, ids)
+                    ? await DB.asUser(principal, (trx) => this.vaultDatabase.credentialInstance.listByIds(trx, ids))
                     : [];
                 const byId = new Map(instances.map(i => [i.id, i]));
 

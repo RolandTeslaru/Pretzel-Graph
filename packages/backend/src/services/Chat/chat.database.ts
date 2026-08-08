@@ -1,194 +1,236 @@
 import { Injectable } from '@nestjs/common';
-import { DB } from '@/db';
-import { Auth, Chat, Workflow } from '@pretzel-graph/shared/domain';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { SupabaseAssert, ZodReturn } from '../../decorators/database';
 import { z } from 'zod';
+import { Auth, Chat, Workflow } from '@pretzel-graph/shared/domain';
+import { DB } from '@/db';
+import { ZodReturn } from '../../decorators/database';
+import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
 
+@DatabaseClass
 class ChatMethods {
 
-    @SupabaseAssert('chat.create')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Chat.Schema)
-    async create(supabase: SupabaseClient, userId: Auth.User.Id, workflow_id: Workflow.Id, name = 'New Chat'): Promise<Chat> {
-        const { data } = await supabase
-            .from('chats')
-            .insert({
+    async create(
+        trx: DB.UserTransaction,
+        userId: Auth.User.Id,
+        workflowId: Workflow.Id,
+        name = 'New Chat',
+    ): Promise<Chat> {
+        const row = await trx
+            .insertInto('chats')
+            .values({
                 user_id: userId,
-                workflow_id,
-                name: name ?? 'New Chat',
-                created_at: new Date(),
-                updated_at: new Date(),
+                workflow_id: workflowId,
+                name,
             })
-            .select<string, { id: Chat.Id }>('id')
-            .single()
-            .throwOnError();
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
+        return Chat.Schema.parse(row);
+    }
+
+    @AllowedDatabaseRoles("user")
+    @ZodReturn(z.object({ chat: Chat.Schema, messages: Chat.Message.Schema.array() }))
+    async get(
+        trx: DB.UserTransaction,
+        userId: Auth.User.Id,
+        chatId: Chat.Id,
+    ): Promise<{ chat: Chat; messages: Chat.Message[] }> {
+        const chat = await trx
+            .selectFrom('chats')
+            .selectAll()
+            .where('id', '=', chatId)
+            .where('user_id', '=', userId)
+            .executeTakeFirstOrThrow();
+
+        const rows = await trx
+            .selectFrom('chat_messages')
+            .selectAll()
+            .where('chat_id', '=', chatId)
+            .orderBy('id')
+            .execute();
 
         return {
-            id: data!.id,
-            workflow_id,
-            name: name ?? 'New Chat',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            chat: Chat.Schema.parse(chat),
+            messages: rows.map((row) => Chat.Message.Schema.parse(row)),
         };
     }
 
-    @SupabaseAssert('chat.get')
-    @ZodReturn(z.object({ chat: Chat.Schema, messages: Chat.Message.Schema.array() }))
-    async get(supabase: SupabaseClient, userId: Auth.User.Id, chatId: Chat.Id): Promise<{ chat: Chat; messages: Chat.Message[] }> {
-        const { data } = await supabase
-            .from('chats')
-            .select<string, Chat & { chat_messages: DB.Chat.MessageRow[] }>('id, user_id, workflow_id, name, created_at, updated_at, chat_messages(*)')
-            .eq('id', chatId)
-            .eq('user_id', userId)
-            .order('id', { referencedTable: 'chat_messages', ascending: true })
-            .single()
-            .throwOnError();
-
-        if (!data)
-            throw new Error('Chat not found');
-
-        const { chat_messages, ...chat } = data;
-        return { chat, messages: (chat_messages ?? []).map(message => Chat.Message.Schema.parse(message)) };
-    }
-
-    @SupabaseAssert('chat.list')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Chat.Schema.array())
-    async list(supabase: SupabaseClient, userId: Auth.User.Id): Promise<Chat[]> {
-        const { data } = await supabase
-            .from('chats')
-            .select<string, Chat>('*')
-            .eq('user_id', userId)
-            .order('updated_at', { ascending: false })
-            .throwOnError();
+    async list(trx: DB.UserTransaction, userId: Auth.User.Id): Promise<Chat[]> {
+        const rows = await trx
+            .selectFrom('chats')
+            .selectAll()
+            .where('user_id', '=', userId)
+            .orderBy('updated_at', 'desc')
+            .execute();
 
-        return data ?? [];
+        return rows.map((row) => Chat.Schema.parse(row));
     }
 
-    @SupabaseAssert('chat.listByWorkflow')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Chat.Schema.array())
-    async listByWorkflow(supabase: SupabaseClient, userId: Auth.User.Id, workflowId: Workflow.Id): Promise<Chat[]> {
-        const { data } = await supabase
-            .from('chats')
-            .select<string, Chat>('*')
-            .eq('user_id', userId)
-            .eq('workflow_id', workflowId)
-            .order('updated_at', { ascending: false })
-            .throwOnError();
+    async listByWorkflow(
+        trx: DB.UserTransaction,
+        userId: Auth.User.Id,
+        workflowId: Workflow.Id,
+    ): Promise<Chat[]> {
+        const rows = await trx
+            .selectFrom('chats')
+            .selectAll()
+            .where('user_id', '=', userId)
+            .where('workflow_id', '=', workflowId)
+            .orderBy('updated_at', 'desc')
+            .execute();
 
-        return data ?? [];
+        return rows.map((row) => Chat.Schema.parse(row));
     }
 
-    @SupabaseAssert('chat.ensure')
+    @AllowedDatabaseRoles("user", "service")
     @ZodReturn(Chat.Schema)
-    async ensure(supabase: SupabaseClient, userId: Auth.User.Id, chatId: Chat.Id, workflow_id: Workflow.Id, name = 'New Chat'): Promise<Chat> {
-        const { data: existing } = await supabase
-            .from('chats')
-            .select<string, Chat>('*')
-            .eq('id', chatId)
-            .eq('user_id', userId)
-            .single();
+    async ensure(
+        trx: DB.Transaction<'user' | 'service'>,
+        userId: Auth.User.Id,
+        chatId: Chat.Id,
+        workflowId: Workflow.Id,
+        name = 'New Chat',
+    ): Promise<Chat> {
+        const existing = await trx
+            .selectFrom('chats')
+            .selectAll()
+            .where('id', '=', chatId)
+            .where('user_id', '=', userId)
+            .executeTakeFirst();
 
-        if (existing) return existing;
+        if (existing)
+            return Chat.Schema.parse(existing);
 
-        const { data } = await supabase
-            .from('chats')
-            .insert({
+        const row = await trx
+            .insertInto('chats')
+            .values({
                 id: chatId,
                 user_id: userId,
-                workflow_id,
-                name: name ?? 'New Chat',
-                created_at: new Date(),
-                updated_at: new Date(),
+                workflow_id: workflowId,
+                name,
             })
-            .select<string, Chat>('*')
-            .single()
-            .throwOnError();
+            .returningAll()
+            .executeTakeFirstOrThrow();
 
-        if (!data)
-            throw new Error('Missing inserted chat');
-
-        return data;
+        return Chat.Schema.parse(row);
     }
 
-    @SupabaseAssert('chat.erase')
-    async erase(supabase: SupabaseClient, userId: Auth.User.Id, chatId: Chat.Id): Promise<void> {
-        await supabase.from('chat_messages').delete().eq('chat_id', chatId).throwOnError();
-        await supabase.from('chats').delete().eq('id', chatId).eq('user_id', userId).throwOnError();
+    @AllowedDatabaseRoles("user")
+    async erase(
+        trx: DB.UserTransaction,
+        userId: Auth.User.Id,
+        chatId: Chat.Id,
+    ): Promise<void> {
+        await trx
+            .deleteFrom('chat_messages')
+            .where('chat_id', '=', chatId)
+            .execute();
+
+        await trx
+            .deleteFrom('chats')
+            .where('id', '=', chatId)
+            .where('user_id', '=', userId)
+            .execute();
     }
 }
 
+@DatabaseClass
 class MessageMethods {
 
-    @SupabaseAssert('message.add')
-    async add(supabase: SupabaseClient, chatId: Chat.Id, messages: Chat.Message[]): Promise<void> {
-        await supabase
-            .from('chat_messages')
-            .insert(messages.map(message => ({
-                id:          message.id,
-                chat_id:     chatId,
-                role:        message.role,
-                content:     message.content,
-                data:        message.data ?? {},
+    @AllowedDatabaseRoles("user", "service")
+    async add(
+        trx: DB.Transaction<'user' | 'service'>,
+        chatId: Chat.Id,
+        messages: Chat.Message[],
+    ): Promise<void> {
+        if (!messages.length)
+            return;
+
+        await trx
+            .insertInto('chat_messages')
+            .values(messages.map((message) => ({
+                id: message.id,
+                chat_id: chatId,
+                role: message.role,
+                content: message.content,
+                data: message.data ?? {},
                 attachments: message.attachments ?? null,
             })))
-            .throwOnError();
+            .execute();
     }
 
-    @SupabaseAssert('message.erase')
-    async erase(supabase: SupabaseClient, messageId: Chat.Message.Id): Promise<void> {
-        await supabase.from('chat_messages').delete().eq('id', messageId).throwOnError();
+    @AllowedDatabaseRoles("user")
+    async erase(trx: DB.UserTransaction, messageId: Chat.Message.Id): Promise<void> {
+        await trx
+            .deleteFrom('chat_messages')
+            .where('id', '=', messageId)
+            .execute();
     }
 
-    @SupabaseAssert('message.update')
-    async update(supabase: SupabaseClient, messageId: Chat.Message.Id, content: string): Promise<void> {
-        await supabase.from('chat_messages').update({ content }).eq('id', messageId).throwOnError();
+    @AllowedDatabaseRoles("user")
+    async update(
+        trx: DB.UserTransaction,
+        messageId: Chat.Message.Id,
+        content: string,
+    ): Promise<void> {
+        await trx
+            .updateTable('chat_messages')
+            .set({ content })
+            .where('id', '=', messageId)
+            .execute();
     }
 
-    @SupabaseAssert('message.updateInChat')
-    async updateInChat(supabase: SupabaseClient, chatId: Chat.Id, messageId: Chat.Message.Id, content: string): Promise<void> {
-        await supabase
-            .from('chat_messages')
-            .update({ content })
-            .eq('id', messageId)
-            .eq('chat_id', chatId)
-            .throwOnError();
+    @AllowedDatabaseRoles("user", "service")
+    async updateInChat(
+        trx: DB.Transaction<'user' | 'service'>,
+        chatId: Chat.Id,
+        messageId: Chat.Message.Id,
+        content: string,
+    ): Promise<void> {
+        await trx
+            .updateTable('chat_messages')
+            .set({ content })
+            .where('id', '=', messageId)
+            .where('chat_id', '=', chatId)
+            .execute();
     }
 
-    @SupabaseAssert('message.list')
+    @AllowedDatabaseRoles("user", "service")
     @ZodReturn(Chat.Message.Schema.array())
-    async list(supabase: SupabaseClient, chatId: Chat.Id): Promise<Chat.Message[]> {
-        const { data } = await supabase
-            .from('chat_messages')
-            .select('*')
-            .eq('chat_id', chatId)
-            .order('id', { ascending: true })
-            .throwOnError();
+    async list(trx: DB.Transaction<'user' | 'service'>, chatId: Chat.Id): Promise<Chat.Message[]> {
+        const rows = await trx
+            .selectFrom('chat_messages')
+            .selectAll()
+            .where('chat_id', '=', chatId)
+            .orderBy('id')
+            .execute();
 
-        return (data ?? []).map(message => Chat.Message.Schema.parse(message));
+        return rows.map((row) => Chat.Message.Schema.parse(row));
     }
 
-    @SupabaseAssert('message.overwrite')
-    async overwrite(supabase: SupabaseClient, chatId: Chat.Id, messages: Chat.Message[]): Promise<void> {
-        await supabase.from('chat_messages').delete().eq('chat_id', chatId).throwOnError();
+    @AllowedDatabaseRoles("user", "service")
+    async overwrite(
+        trx: DB.Transaction<'user' | 'service'>,
+        chatId: Chat.Id,
+        messages: Chat.Message[],
+    ): Promise<void> {
+        await trx
+            .deleteFrom('chat_messages')
+            .where('chat_id', '=', chatId)
+            .execute();
 
-        if (messages.length === 0) return;
-
-        await supabase
-            .from('chat_messages')
-            .insert(messages.map(message => ({
-                id:          message.id,
-                chat_id:     chatId,
-                role:        message.role,
-                content:     message.content,
-                data:        message.data ?? {},
-                attachments: message.attachments ?? null,
-            })))
-            .throwOnError();
+        await this.add(trx, chatId, messages);
     }
 }
 
 @Injectable()
+@DatabaseClass
 export class ChatDatabase {
-    public readonly chat    = new ChatMethods();
+    public readonly chat = new ChatMethods();
     public readonly message = new MessageMethods();
 }

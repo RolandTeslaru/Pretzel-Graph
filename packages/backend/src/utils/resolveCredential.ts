@@ -1,16 +1,14 @@
-import { type SupabaseClient } from "@supabase/supabase-js";
-import { Vault } from "@pretzel-graph/shared/domain";
+import { Vault } from '@pretzel-graph/shared/domain';
+import { DB } from '@/db';
 
 export async function resolveCredential(
-    supabase: SupabaseClient,
+    trx: DB.Transaction<'user' | 'service'>,
     instanceId: Vault.Credential.Instance.Id,
 ): Promise<Vault.Credential.Instance> {
-    const { data, error } = await supabase
-        .from('credential_instance')
-        .select('id, name, template_id, created_at, updated_at, blob')
-        .eq('id', instanceId)
-        .single();
-
-    if (error) throw error;
-    return Vault.Credential.Instance.Schema.parse(data);
+    const row = await trx
+        .selectFrom('credential_instance')
+        .selectAll()
+        .where('id', '=', instanceId)
+        .executeTakeFirstOrThrow();
+    return DB.CredentialInstance.toDomain(row);
 }

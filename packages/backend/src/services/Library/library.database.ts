@@ -1,270 +1,329 @@
 import { Injectable } from '@nestjs/common';
-import { DB } from '@/db';
-import { getUserId } from '@/utils/supabase';
-import { Library, Workflow } from '@pretzel-graph/shared/domain';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { SupabaseAssert, ZodReturn } from '../../decorators/database';
 import { z } from 'zod';
+import { Auth, Library, Workflow } from '@pretzel-graph/shared/domain';
+import { DB } from '@/db';
+import { ZodReturn } from '../../decorators/database';
+import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
 
+const WORKFLOW_META_COLUMNS = [
+    'id',
+    'folder_id',
+    'display_name',
+    'description',
+    'icon',
+    'accent',
+    'icon_color',
+    'locked',
+    'is_public',
+    'mcp_enabled',
+    'created_at',
+    'updated_at',
+] as const;
+
+const toWorkflowMeta = (row: unknown) => Library.WorkflowMeta.Schema.parse(row);
+
+@DatabaseClass
 class BootstrapMethods {
 
-    @SupabaseAssert('bootstrap.get')
     @ZodReturn(z.object({
-        projects:       Library.Folder.Schema.array(),
-        folders:        Library.Folder.Schema.array(),
+        projects: Library.Folder.Schema.array(),
+        folders: Library.Folder.Schema.array(),
         workflow_metas: Library.WorkflowMeta.Schema.array(),
     }))
-    async get(supabase: SupabaseClient): Promise<Library.API.Bootstrap.Get.Response> {
-        const [projectsRes, foldersRes, workflowMetasRes] = await Promise.all([
-            supabase
-                .from('folders')
-                .select('*')
-                .eq('is_root', true)
-                .is('parent_folder_id', null)
-                .order('created_at', { ascending: false })
-                .throwOnError(),
-            supabase
-                .from('folders')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .throwOnError(),
-            supabase
-                .from('workflows')
-                .select('id, folder_id, display_name, description, icon, accent, icon_color, locked, is_public, mcp_enabled, created_at, updated_at')
-                .order('created_at', { ascending: false })
-                .throwOnError(),
+    @AllowedDatabaseRoles("user")
+    async get(trx: DB.UserTransaction): Promise<Library.API.Bootstrap.Get.Response> {
+        const [projects, folders, workflowMetas] = await Promise.all([
+            trx
+                .selectFrom('folders')
+                .selectAll()
+                .where('is_root', '=', true)
+                .where('parent_folder_id', 'is', null)
+                .orderBy('created_at', 'desc')
+                .execute(),
+            trx
+                .selectFrom('folders')
+                .selectAll()
+                .orderBy('created_at', 'desc')
+                .execute(),
+            trx
+                .selectFrom('workflows')
+                .select(WORKFLOW_META_COLUMNS)
+                .orderBy('created_at', 'desc')
+                .execute(),
         ]);
 
         return {
-            projects:       projectsRes.data      ?? [],
-            folders:        foldersRes.data        ?? [],
-            workflow_metas: workflowMetasRes.data  ?? [],
+            projects: projects.map(DB.Folder.toDomain),
+            folders: folders.map(DB.Folder.toDomain),
+            workflow_metas: workflowMetas.map(toWorkflowMeta),
         };
     }
 }
 
+@DatabaseClass
 class ProjectMethods {
 
-    @SupabaseAssert('project.create')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Library.Folder.Schema)
-    async create(supabase: SupabaseClient, payload: Library.API.Project.Create.Request): Promise<Library.Folder> {
-        const user_id = await getUserId(supabase);
-        if (!user_id) throw new Error('Unauthenticated');
-
-        const { data: row } = await supabase
-            .from('folders')
-            .insert({ ...payload, is_root: true, user_id })
-            .select()
-            .single<DB.Folder.Row>()
-            .throwOnError();
-
-        return row;
-    }
-
-    @SupabaseAssert('project.update')
-    @ZodReturn(Library.Folder.Schema)
-    async update(supabase: SupabaseClient, payload: Library.API.Project.Update.Request): Promise<Library.Folder> {
-        const { data: row } = await supabase
-            .from('folders')
-            .update({
-                display_name: payload.display_name,
-                description:  payload.description ?? null,
+    async create(
+        trx: DB.UserTransaction,
+        userId: Auth.User.Id,
+        payload: Library.API.Project.Create.Request,
+    ): Promise<Library.Folder> {
+        const row = await trx
+            .insertInto('folders')
+            .values({
+                ...payload,
+                user_id: userId,
+                is_root: true,
+                parent_folder_id: null,
             })
-            .eq('id', payload.id)
-            .eq('is_root', true)
-            .select('*')
-            .single<DB.Folder.Row>()
-            .throwOnError();
+            .returningAll()
+            .executeTakeFirstOrThrow();
 
-        return row;
+        return DB.Folder.toDomain(row);
     }
 
-    @SupabaseAssert('project.list')
-    @ZodReturn(Library.Folder.Schema.array())
-    async list(supabase: SupabaseClient): Promise<Library.Folder[]> {
-        const { data: rows } = await supabase
-            .from('folders')
-            .select('*')
-            .eq('is_root', true)
-            .is('parent_folder_id', null)
-            .order('created_at', { ascending: false })
-            .throwOnError();
+    @AllowedDatabaseRoles("user")
+    @ZodReturn(Library.Folder.Schema)
+    async update(
+        trx: DB.UserTransaction,
+        payload: Library.API.Project.Update.Request,
+    ): Promise<Library.Folder> {
+        const row = await trx
+            .updateTable('folders')
+            .set({
+                display_name: payload.display_name,
+                description: payload.description ?? null,
+            })
+            .where('id', '=', payload.id)
+            .where('is_root', '=', true)
+            .returningAll()
+            .executeTakeFirstOrThrow();
 
-        return rows ?? [];
+        return DB.Folder.toDomain(row);
+    }
+
+    @AllowedDatabaseRoles("user")
+    @ZodReturn(Library.Folder.Schema.array())
+    async list(trx: DB.UserTransaction): Promise<Library.Folder[]> {
+        const rows = await trx
+            .selectFrom('folders')
+            .selectAll()
+            .where('is_root', '=', true)
+            .where('parent_folder_id', 'is', null)
+            .orderBy('created_at', 'desc')
+            .execute();
+
+        return rows.map(DB.Folder.toDomain);
     }
 }
 
+@DatabaseClass
 class FolderMethods {
 
-    @SupabaseAssert('folder.create')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Library.Folder.Schema)
-    async create(supabase: SupabaseClient, payload: {
-        parent_folder_id: Library.Folder.Id;
-        display_name:     string;
-        description?:     string | null;
-    }): Promise<Library.Folder> {
-        const user_id = await getUserId(supabase);
-        if (!user_id) throw new Error('Unauthenticated');
-
-        const { data: row } = await supabase
-            .from('folders')
-            .insert({ ...payload, user_id })
-            .select()
-            .single<DB.Folder.Row>()
-            .throwOnError();
-
-        return row;
-    }
-
-    @SupabaseAssert('folder.update')
-    @ZodReturn(Library.Folder.Schema)
-    async update(supabase: SupabaseClient, payload: Library.API.Folder.Update.Request): Promise<Library.Folder> {
-        const { data: row } = await supabase
-            .from('folders')
-            .update({
-                display_name: payload.display_name,
-                description:  payload.description ?? null,
+    async create(
+        trx: DB.UserTransaction,
+        userId: Auth.User.Id,
+        payload: Library.API.Folder.Create.Request,
+    ): Promise<Library.Folder> {
+        const row = await trx
+            .insertInto('folders')
+            .values({
+                ...payload,
+                user_id: userId,
+                is_root: false,
             })
-            .eq('id', payload.id)
-            .select('*')
-            .single<DB.Folder.Row>()
-            .throwOnError();
+            .returningAll()
+            .executeTakeFirstOrThrow();
 
-        return row;
+        return DB.Folder.toDomain(row);
     }
 
-    @SupabaseAssert('folder.delete')
-    async delete(supabase: SupabaseClient, id: Library.Folder.Id): Promise<void> {
-        await supabase.from('folders').delete().eq('id', id).throwOnError();
+    @AllowedDatabaseRoles("user")
+    @ZodReturn(Library.Folder.Schema)
+    async update(
+        trx: DB.UserTransaction,
+        payload: Library.API.Folder.Update.Request,
+    ): Promise<Library.Folder> {
+        const row = await trx
+            .updateTable('folders')
+            .set({
+                display_name: payload.display_name,
+                description: payload.description ?? null,
+            })
+            .where('id', '=', payload.id)
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
+        return DB.Folder.toDomain(row);
     }
 
-    @SupabaseAssert('folder.getContents')
+    @AllowedDatabaseRoles("user")
+    async delete(trx: DB.UserTransaction, id: Library.Folder.Id): Promise<void> {
+        await trx
+            .deleteFrom('folders')
+            .where('id', '=', id)
+            .execute();
+    }
+
     @ZodReturn(z.object({
-        folder:        Library.Folder.Schema,
+        folder: Library.Folder.Schema,
         child_folders: Library.Folder.Schema.array(),
-        workflows:     Library.WorkflowMeta.Schema.array(),
+        workflows: Library.WorkflowMeta.Schema.array(),
     }))
-    async getContents(supabase: SupabaseClient, id: Library.Folder.Id): Promise<Library.API.Folder.GetContents.Response> {
-        const [folderRes, childFoldersRes, workflowMetasRes] = await Promise.all([
-            supabase.from('folders').select('*').eq('id', id).single().throwOnError(),
-            supabase.from('folders').select('*').eq('parent_folder_id', id).throwOnError(),
-            supabase
-                .from('workflows')
-                .select('id, folder_id, display_name, description, icon, accent, icon_color, locked, is_public, mcp_enabled, created_at, updated_at')
-                .eq('folder_id', id)
-                .throwOnError(),
+    @AllowedDatabaseRoles("user")
+    async getContents(
+        trx: DB.UserTransaction,
+        id: Library.Folder.Id,
+    ): Promise<Library.API.Folder.GetContents.Response> {
+        const [folder, children, workflows] = await Promise.all([
+            trx
+                .selectFrom('folders')
+                .selectAll()
+                .where('id', '=', id)
+                .executeTakeFirstOrThrow(),
+            trx
+                .selectFrom('folders')
+                .selectAll()
+                .where('parent_folder_id', '=', id)
+                .execute(),
+            trx
+                .selectFrom('workflows')
+                .select(WORKFLOW_META_COLUMNS)
+                .where('folder_id', '=', id)
+                .execute(),
         ]);
 
         return {
-            folder:        folderRes.data,
-            child_folders: childFoldersRes.data  ?? [],
-            workflows:     workflowMetasRes.data  ?? [],
+            folder: DB.Folder.toDomain(folder),
+            child_folders: children.map(DB.Folder.toDomain),
+            workflows: workflows.map(toWorkflowMeta),
         };
     }
 }
 
+@DatabaseClass
 class WorkflowMethods {
 
-    @SupabaseAssert('workflow.create')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Workflow.Schema)
-    async create(supabase: SupabaseClient, payload: Library.API.Workflow.Create.Request): Promise<Workflow> {
-        const user_id = await getUserId(supabase);
-        if (!user_id) throw new Error('Unauthenticated');
-
-        const { data: row } = await supabase
-            .from('workflows')
-            .insert({
+    async create(
+        trx: DB.UserTransaction,
+        userId: Auth.User.Id,
+        payload: Library.API.Workflow.Create.Request,
+    ): Promise<Workflow> {
+        const row = await trx
+            .insertInto('workflows')
+            .values({
                 ...payload,
-                user_id,
+                user_id: userId,
                 locked: false,
-                data:   Workflow.INITIAL.data,
+                data: Workflow.INITIAL.data,
             })
-            .select()
-            .single<DB.Workflow.Row>()
-            .throwOnError();
+            .returningAll()
+            .executeTakeFirstOrThrow();
 
         return DB.Workflow.toDomain(row);
     }
 
-    @SupabaseAssert('workflow.update')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Library.WorkflowMeta.Schema)
-    async update(supabase: SupabaseClient, payload: Library.API.Workflow.Update.Request): Promise<Library.WorkflowMeta> {
-        const { data: row } = await supabase
-            .from('workflows')
-            .update({
-                ...(payload.display_name !== undefined && { display_name: payload.display_name }),
-                ...(payload.description  !== undefined && { description:  payload.description ?? null }),
-                ...(payload.icon         !== undefined && { icon:         payload.icon }),
-                ...(payload.accent       !== undefined && { accent:       payload.accent }),
-                ...(payload.icon_color   !== undefined && { icon_color:   payload.icon_color }),
-                ...(payload.is_public    !== undefined && { is_public:    payload.is_public }),
-                ...(payload.locked       !== undefined && { locked:       payload.locked }),
+    async update(
+        trx: DB.UserTransaction,
+        payload: Library.API.Workflow.Update.Request,
+    ): Promise<Library.WorkflowMeta> {
+        const row = await trx
+            .updateTable('workflows')
+            .set({
+                ...(payload.display_name !== undefined && {
+                    display_name: payload.display_name,
+                }),
+                ...(payload.description !== undefined && {
+                    description: payload.description ?? null,
+                }),
+                ...(payload.icon !== undefined && { icon: payload.icon }),
+                ...(payload.accent !== undefined && { accent: payload.accent }),
+                ...(payload.icon_color !== undefined && {
+                    icon_color: payload.icon_color,
+                }),
+                ...(payload.is_public !== undefined && {
+                    is_public: payload.is_public,
+                }),
+                ...(payload.locked !== undefined && { locked: payload.locked }),
             })
-            .eq('id', payload.id)
-            .select('id, folder_id, display_name, description, icon, accent, icon_color, locked, is_public, mcp_enabled, created_at, updated_at')
-            .single()
-            .throwOnError();
+            .where('id', '=', payload.id)
+            .returning(WORKFLOW_META_COLUMNS)
+            .executeTakeFirstOrThrow();
 
-        return row;
+        return toWorkflowMeta(row);
     }
 
-    @SupabaseAssert('workflow.get')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Workflow.Schema)
-    async get(supabase: SupabaseClient, workflowId: Workflow.Id): Promise<Workflow> {
-        const { data: row } = await supabase
-            .from('workflows')
-            .select('*')
-            .eq('id', workflowId)
-            .single<DB.Workflow.Row>()
-            .throwOnError();
+    async get(
+        trx: DB.UserTransaction,
+        workflowId: Workflow.Id,
+    ): Promise<Workflow> {
+        const row = await trx
+            .selectFrom('workflows')
+            .selectAll()
+            .where('id', '=', workflowId)
+            .executeTakeFirstOrThrow();
 
         return DB.Workflow.toDomain(row);
     }
 
-    @SupabaseAssert('workflow.delete')
-    async delete(supabase: SupabaseClient, id: Workflow.Id): Promise<void> {
-        await supabase.from('workflows').delete().eq('id', id).throwOnError();
+    @AllowedDatabaseRoles("user")
+    async delete(trx: DB.UserTransaction, id: Workflow.Id): Promise<void> {
+        await trx
+            .deleteFrom('workflows')
+            .where('id', '=', id)
+            .execute();
     }
 
-    @SupabaseAssert('workflow.duplicate')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Workflow.Schema)
-    async duplicate(supabase: SupabaseClient, id: Workflow.Id): Promise<Workflow> {
-        const user_id = await getUserId(supabase);
-        if (!user_id) throw new Error('Unauthenticated');
+    async duplicate(
+        trx: DB.UserTransaction,
+        userId: Auth.User.Id,
+        id: Workflow.Id,
+    ): Promise<Workflow> {
+        const source = await trx
+            .selectFrom('workflows')
+            .selectAll()
+            .where('id', '=', id)
+            .executeTakeFirstOrThrow();
 
-        const { data: source } = await supabase
-            .from('workflows')
-            .select('*')
-            .eq('id', id)
-            .single<DB.Workflow.Row>()
-            .throwOnError();
-
-        const { data: row } = await supabase
-            .from('workflows')
-            .insert({
-                folder_id:    source.folder_id,
+        const row = await trx
+            .insertInto('workflows')
+            .values({
+                folder_id: source.folder_id,
                 display_name: `Copy of ${source.display_name}`,
-                description:  source.description,
-                icon:         source.icon,
-                accent:       source.accent,
-                icon_color:   source.icon_color,
-                data:         source.data,
-                user_id,
-                locked:       false,
-                is_public:    false,
+                description: source.description,
+                icon: source.icon,
+                accent: source.accent,
+                icon_color: source.icon_color,
+                data: source.data,
+                user_id: userId,
+                locked: false,
+                is_public: false,
+                mcp_enabled: source.mcp_enabled,
             })
-            .select()
-            .single<DB.Workflow.Row>()
-            .throwOnError();
+            .returningAll()
+            .executeTakeFirstOrThrow();
 
         return DB.Workflow.toDomain(row);
     }
 }
 
 @Injectable()
+@DatabaseClass
 export class LibraryDatabase {
     public readonly bootstrap = new BootstrapMethods();
-    public readonly project   = new ProjectMethods();
-    public readonly folder    = new FolderMethods();
-    public readonly workflow  = new WorkflowMethods();
+    public readonly project = new ProjectMethods();
+    public readonly folder = new FolderMethods();
+    public readonly workflow = new WorkflowMethods();
 }

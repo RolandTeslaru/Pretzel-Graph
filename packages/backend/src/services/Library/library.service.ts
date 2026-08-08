@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
+import { DB } from '@/db';
 import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { LibraryDatabase } from './library.database';
 
@@ -11,7 +12,7 @@ export class LibraryService {
         get: async (
             principal: Principal.User,
         ): Promise<Library.API.Bootstrap.Get.Response> => {
-            return await this.database.bootstrap.get(principal.supabase);
+            return DB.asUser(principal, (trx) => this.database.bootstrap.get(trx));
         },
     };
 
@@ -20,20 +21,20 @@ export class LibraryService {
             principal: Principal.User,
             payload: Library.API.Project.Create.Request,
         ): Promise<Library.API.Project.Create.Response> => {
-            return await this.database.project.create(principal.supabase, payload);
+            return DB.asUser(principal, (trx) => this.database.project.create(trx, principal.userId, payload));
         },
 
         update: async (
             principal: Principal.User,
             payload: Library.API.Project.Update.Request,
         ): Promise<Library.API.Project.Update.Response> => {
-            return await this.database.project.update(principal.supabase, payload);
+            return DB.asUser(principal, (trx) => this.database.project.update(trx, payload));
         },
 
         list: async (
             principal: Principal.User,
         ): Promise<Library.API.Project.List.Response> => {
-            return await this.database.project.list(principal.supabase);
+            return DB.asUser(principal, (trx) => this.database.project.list(trx));
         }
     };
 
@@ -42,21 +43,21 @@ export class LibraryService {
             principal: Principal.User,
             payload: Library.API.Folder.Create.Request,
         ): Promise<Library.API.Folder.Create.Response> => {
-            return await this.database.folder.create(principal.supabase, payload);
+            return DB.asUser(principal, (trx) => this.database.folder.create(trx, principal.userId, payload));
         },
 
         update: async (
             principal: Principal.User,
             payload: Library.API.Folder.Update.Request,
         ): Promise<Library.API.Folder.Update.Response> => {
-            return await this.database.folder.update(principal.supabase, payload);
+            return DB.asUser(principal, (trx) => this.database.folder.update(trx, payload));
         },
 
         delete: async (
             principal: Principal.User,
             id: Library.Folder.Id,
         ): Promise<Library.API.Folder.Remove.Response> => {
-            await this.database.folder.delete(principal.supabase, id);
+            await DB.asUser(principal, (trx) => this.database.folder.delete(trx, id));
             return { ok: true };
         },
 
@@ -64,7 +65,7 @@ export class LibraryService {
             principal: Principal.User,
             id: Library.Folder.Id,
         ): Promise<Library.API.Folder.GetContents.Response> => {
-            return await this.database.folder.getContents(principal.supabase, id);
+            return DB.asUser(principal, (trx) => this.database.folder.getContents(trx, id));
         }
     };
 
@@ -73,28 +74,28 @@ export class LibraryService {
             principal: Principal.User,
             payload: Library.API.Workflow.Create.Request,
         ): Promise<Library.API.Workflow.Create.Response> => {
-            return await this.database.workflow.create(principal.supabase, payload);
+            return DB.asUser(principal, (trx) => this.database.workflow.create(trx, principal.userId, payload));
         },
 
         get: async (
             principal: Principal.User,
             workflowId: Workflow.Id,
         ): Promise<Library.API.Workflow.Get.Response> => {
-            return await this.database.workflow.get(principal.supabase, workflowId);
+            return DB.asUser(principal, (trx) => this.database.workflow.get(trx, workflowId));
         },
 
         update: async (
             principal: Principal.User,
             payload: Library.API.Workflow.Update.Request,
         ): Promise<Library.API.Workflow.Update.Response> => {
-            return await this.database.workflow.update(principal.supabase, payload);
+            return DB.asUser(principal, (trx) => this.database.workflow.update(trx, payload));
         },
 
         delete: async (
             principal: Principal.User,
             id: Workflow.Id,
         ): Promise<Library.API.Workflow.Remove.Response> => {
-            await this.database.workflow.delete(principal.supabase, id);
+            await DB.asUser(principal, (trx) => this.database.workflow.delete(trx, id));
             return { ok: true };
         },
 
@@ -102,7 +103,7 @@ export class LibraryService {
             principal: Principal.User,
             id: Workflow.Id,
         ): Promise<Library.API.Workflow.Duplicate.Response> => {
-            return await this.database.workflow.duplicate(principal.supabase, id);
+            return DB.asUser(principal, (trx) => this.database.workflow.duplicate(trx, principal.userId, id));
         },
     };
 }
