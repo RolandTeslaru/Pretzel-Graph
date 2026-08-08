@@ -1,7 +1,7 @@
 import { createParamDecorator, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 
-export const CurrentPrincipal = createParamDecorator(
+export const AuthenticatedPrincipal = createParamDecorator(
     (_data: unknown, ctx: ExecutionContext): Principal => {
         const { principal } = ctx.switchToHttp().getRequest<{ principal?: Principal }>();
 
@@ -12,7 +12,7 @@ export const CurrentPrincipal = createParamDecorator(
     },
 );
 
-export const CurrentUser = createParamDecorator(
+export const AuthenticatedUser = createParamDecorator(
     (_data: unknown, ctx: ExecutionContext): Principal.User => {
         const { principal } = ctx.switchToHttp().getRequest<{ principal?: Principal }>();
 

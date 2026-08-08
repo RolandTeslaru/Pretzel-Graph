@@ -2,7 +2,7 @@ import { Controller, Get, Post, Delete, Patch, Param, UseGuards, HttpCode } from
 import { VaultService } from './vault.service';
 import { Vault } from '@pretzel-graph/shared/domain';
 import { UserAuthGuard } from '../../auth/user-auth.guard';
-import { CurrentUser } from '@/decorators/principal';
+import { AuthenticatedUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { ZodBody, ZodStringBody } from '../../pipes/zod.pipe';
 
@@ -27,14 +27,14 @@ export class VaultController {
     }
 
     @Get('credential-instances')
-    async list(@CurrentUser() principal: Principal.User): Promise<Vault.API.CredentialInstance.List.Response> {
+    async list(@AuthenticatedUser() principal: Principal.User): Promise<Vault.API.CredentialInstance.List.Response> {
         return this.vaultService.credentialInstance.list(principal);
     }
 
     @Post('credential-instances')
     @HttpCode(200)
     async create(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Vault.API.CredentialInstance.Create.Request) body: Vault.API.CredentialInstance.Create.Request,
     ): Promise<Vault.API.CredentialInstance.Create.Response> {
         return this.vaultService.credentialInstance.create(principal, body);
@@ -42,7 +42,7 @@ export class VaultController {
 
     @Delete('credential-instances/:id')
     async remove(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @Param('id') id: Vault.Credential.Instance.Id,
     ): Promise<Vault.API.CredentialInstance.Remove.Response> {
         return this.vaultService.credentialInstance.remove(principal, { id });
@@ -51,7 +51,7 @@ export class VaultController {
     @Post('credential-instances/:id/reveal')
     @HttpCode(200)
     async reveal(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @Param('id') id: Vault.Credential.Instance.Id,
     ): Promise<Vault.API.CredentialInstance.Reveal.Response> {
         return this.vaultService.credentialInstance.reveal(principal, id);
@@ -59,7 +59,7 @@ export class VaultController {
 
     @Patch('credential-instances/:id/name')
     async updateName(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @Param('id') id: Vault.Credential.Instance.Id,
         @ZodStringBody('name') name: string,
     ): Promise<Vault.API.CredentialInstance.UpdateName.Response> {
@@ -68,7 +68,7 @@ export class VaultController {
 
     @Patch('credential-instances/:id')
     async update(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @Param('id') id: Vault.Credential.Instance.Id,
         @ZodBody(Vault.API.CredentialInstance.Update.Request.omit({ id: true })) body: Omit<Vault.API.CredentialInstance.Update.Request, 'id'>,
     ): Promise<Vault.API.CredentialInstance.Update.Response> {
