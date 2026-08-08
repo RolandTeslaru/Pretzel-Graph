@@ -142,9 +142,9 @@ class ChatMethods {
 @DatabaseClass
 class MessageMethods {
 
-    @AllowedDatabaseRoles("user", "service")
+    @AllowedDatabaseRoles("user", "delegate")
     async add(
-        trx: DB.Transaction<'user' | 'service'>,
+        trx: DB.Transaction<'user' | 'delegate'>,
         chatId: Chat.Id,
         messages: Chat.Message[],
     ): Promise<void> {
@@ -185,9 +185,9 @@ class MessageMethods {
             .execute();
     }
 
-    @AllowedDatabaseRoles("user", "service")
+    @AllowedDatabaseRoles("user", "delegate")
     async updateInChat(
-        trx: DB.Transaction<'user' | 'service'>,
+        trx: DB.Transaction<'user' | 'delegate'>,
         chatId: Chat.Id,
         messageId: Chat.Message.Id,
         content: string,
@@ -200,9 +200,9 @@ class MessageMethods {
             .execute();
     }
 
-    @AllowedDatabaseRoles("user", "service")
+    @AllowedDatabaseRoles("user", "delegate")
     @ZodReturn(Chat.Message.Schema.array())
-    async list(trx: DB.Transaction<'user' | 'service'>, chatId: Chat.Id): Promise<Chat.Message[]> {
+    async list(trx: DB.Transaction<'user' | 'delegate'>, chatId: Chat.Id): Promise<Chat.Message[]> {
         const rows = await trx
             .selectFrom('chat_messages')
             .selectAll()
@@ -213,9 +213,9 @@ class MessageMethods {
         return rows.map((row) => Chat.Message.Schema.parse(row));
     }
 
-    @AllowedDatabaseRoles("user", "service")
+    @AllowedDatabaseRoles("user", "delegate")
     async overwrite(
-        trx: DB.Transaction<'user' | 'service'>,
+        trx: DB.Transaction<'user' | 'delegate'>,
         chatId: Chat.Id,
         messages: Chat.Message[],
     ): Promise<void> {

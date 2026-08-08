@@ -23,6 +23,36 @@ const metaSelection = [
     sql<boolean>`recording is not null`.as('has_recording'),
 ] as const;
 
+type Patch = {
+    executionId: Execution.Id;
+    status?: Execution.Status;
+    duration?: number;
+    error?: string;
+    session?: Execution.Session.Update;
+    recording?: Execution.Recording | null;
+};
+
+// Shared by updateProgress and finalise — the columns are the same, only who may
+// write them differs. Module-level so @DatabaseClass doesn't treat it as a method.
+async function applyPatch(trx: DB.Transaction<DB.Role>, props: Patch): Promise<void> {
+    await trx
+        .updateTable('executions')
+        .set({
+            ...(props.status !== undefined && { status: props.status }),
+            ...(props.duration !== undefined && { duration: props.duration }),
+            ...(props.error !== undefined && {
+                error: new SystemError(
+                    SystemError.Code.INFRA_UNKNOWN,
+                    props.error,
+                ).toJSON(),
+            }),
+            ...(props.session !== undefined && { session: props.session }),
+            ...(props.recording !== undefined && { recording: props.recording }),
+        })
+        .where('id', '=', props.executionId)
+        .execute();
+}
+
 @DatabaseClass
 class MetaMethods {
 
@@ -108,34 +138,29 @@ export class ExecutionDatabase {
         return executionId;
     }
 
-    @AllowedDatabaseRoles("user", "service")
-    async update(
-        trx: DB.Transaction<'user' | 'service'>,
-        props: {
-            executionId: Execution.Id;
-            status?: Execution.Status;
-            duration?: number;
-            error?: string;
-            session?: Execution.Session.Update;
-            recording?: Execution.Recording | null;
-        },
+    /**
+     * Progress writes from a request or a running execution. RLS scopes the row to
+     * the acting user, so a delegated write can only touch its own owner's execution.
+     */
+    @AllowedDatabaseRoles("user", "delegate")
+    async updateProgress(
+        trx: DB.Transaction<'user' | 'delegate'>,
+        props: Omit<Patch, 'error'>,
     ): Promise<void> {
-        await trx
-            .updateTable('executions')
-            .set({
-                ...(props.status !== undefined && { status: props.status }),
-                ...(props.duration !== undefined && { duration: props.duration }),
-                ...(props.error !== undefined && {
-                    error: new SystemError(
-                        SystemError.Code.INFRA_UNKNOWN,
-                        props.error,
-                    ).toJSON(),
-                }),
-                ...(props.session !== undefined && { session: props.session }),
-                ...(props.recording !== undefined && { recording: props.recording }),
-            })
-            .where('id', '=', props.executionId)
-            .execute();
+        await applyPatch(trx, props);
+    }
+
+    /**
+     * Terminal writes with no principal behind them — the worker reporting a result,
+     * a BullMQ failure, an enqueue that never reached a worker. Deliberately on the
+     * service role: a wrong policy must never leave an execution unreapable.
+     */
+    @AllowedDatabaseRoles("service")
+    async finalise(
+        trx: DB.Transaction<'service'>,
+        props: Patch,
+    ): Promise<void> {
+        await applyPatch(trx, props);
     }
 
     @AllowedDatabaseRoles("user")

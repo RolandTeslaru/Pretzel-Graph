@@ -4,7 +4,6 @@ import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferOutputs } from "@pretzel-graph/node-sdk";
 import { HumanMessage } from "@langchain/core/messages";
 import { Chat, Execution, Webhook } from "@pretzel-graph/shared/domain";
-import { api } from "../../../services/AxiosService";
 import { InternalChatAPI } from "../internal-api";
 
 @RegisterNode(Blueprint.id)
@@ -30,7 +29,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const chatId = Chat.Id.parse(this.fieldValues.chat_id);
 
         if (this.fieldValues.write_to_session)
-            await InternalChatAPI.messageAdd(this.context.executionId, chatId, [this.message]);
+            await InternalChatAPI.messageAdd(this.context.internalAPI, chatId, [this.message]);
 
         const msg = new HumanMessage({ content: this.message.content });
 
@@ -41,7 +40,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     private async waitForMessage(){
         const { workflowId } = this.context;
 
-        await Webhook.Test.API.register(api, { workflowId, path: Node.WEBHOOK_PATH, method: "POST" });
+        await Webhook.Test.API.register(this.context.internalAPI.raw, { workflowId, path: Node.WEBHOOK_PATH, method: "POST" });
 
         const signal = await this.context.realtimeAPI.awaitSignal(
             // @ts-expect-error TODO: Chat.Signal not defined yet

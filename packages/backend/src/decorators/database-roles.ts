@@ -22,7 +22,7 @@ function registryOf(prototype: object): Registry {
  * signature doesn't handle.
  *
  * Runtime: reads the tag `asUser`/`asService` attached to the handle. Catches
- * what types can't — `as any`, and `DB.Delegate`, where the role is erased.
+ * what types can't — `as any`, and `DB.Opener`, where the role is erased.
  */
 export function AllowedDatabaseRoles<R extends DB.Role>(...roles: R[]) {
     return <T extends (trx: DB.Transaction<R>, ...rest: never[]) => unknown>(

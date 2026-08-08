@@ -3,7 +3,7 @@ import { Execution, Realtime, Vault } from "@pretzel-graph/shared/domain";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
-import { CatalogueService, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
+import { CatalogueService, HTTP, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
 import { decryptCredentialBlob } from "src/credentials";
 import { AggexEngine } from "src/engine";
 
@@ -33,6 +33,7 @@ type ExecutionAPIs = Pick<
     | "httpAPI"
     | "proxyAPI"
     | "agentToolBridgeAPI"
+    | "internalAPI"
 >;
 
 // Builds the per-execution API facade injected into every node's ExecutionContext.
@@ -45,6 +46,7 @@ export function createExecutionAPIs(
     workflowData:        Workflow.Data,
     credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
     realtime:            RealtimeService,
+    internalAPI:         HTTP.Client,
 ): ExecutionAPIs {
     const portAPI = {
         write: (nodeId, outputId, value) => engine.services.nodeIO.writePort(ctxRef.current, nodeId, outputId, value),
@@ -109,7 +111,9 @@ export function createExecutionAPIs(
                 // Reuse the SAME airlock ref → shared isolate (same tenant); the child
                 // compile registers its own workflow copy + creates its own scope on it.
                 compile: (workflowId, workflowData, execution, compilationCtx, enclosingNodeAPI) =>
-                    subCompiler.compile(workflowId, workflowData, execution, realtime, subEngine, airlock, credentialInstances, compilationCtx, enclosingNodeAPI),
+                    // Same internalAPI: a sub-workflow reuses the parent execution id, so the
+                    // parent token is the right credential for it.
+                    subCompiler.compile(workflowId, workflowData, execution, realtime, subEngine, airlock, credentialInstances, internalAPI, compilationCtx, enclosingNodeAPI),
                 run: (ctx: unknown) => subEngine.run(ctx as AggexEngine.Execution.Context),
             };
         },
@@ -180,6 +184,6 @@ export function createExecutionAPIs(
         portAPI, propagationAPI, instanceRegistryAPI, workflowQueryAPI,
         schedulerAPI, subWorkflowAPI, dependencyAPI, credentialsAPI,
         catalogueAPI, abortAPI, realtimeAPI, updateSession, airlockAPI, httpAPI, proxyAPI,
-        agentToolBridgeAPI,
+        agentToolBridgeAPI, internalAPI,
     };
 }

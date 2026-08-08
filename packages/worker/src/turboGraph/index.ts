@@ -6,7 +6,7 @@
 import { Airlock, Execution, Foundations, Realtime, Vault } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { CatalogueService, NetworkProxy, RuntimeNode, mapFieldValues, type NodeConstructor } from "@pretzel-graph/node-sdk";
+import { CatalogueService, HTTP, NetworkProxy, RuntimeNode, mapFieldValues, type NodeConstructor } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 
 import { AggexCompilerError } from "../errors";
@@ -50,6 +50,7 @@ export class TurboGraph {
         engine:              AggexEngine,
         airlock:             AirlockService,
         credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
+        internalAPI:         HTTP.Client,
         compilationCtx:      TurboGraph.Compilation.Context = createCompilationContext(workflowId),
         enclosingNodeAPI?:   RuntimeNode.ExecutionContext["enclosingNodeAPI"],
     ): Promise<AggexEngine.Execution.Context> {
@@ -68,7 +69,7 @@ export class TurboGraph {
 
         const { nodeExecutionCtx, engineExecutionCtx } = createContexts({
             engine, airlock, execution, workflowId, workflowData, workflowCache,
-            graph, credentialInstances, realtime, enclosingNodeAPI,
+            graph, credentialInstances, realtime, internalAPI, enclosingNodeAPI,
         });
 
         for (const wfNode of Object.values(nodes)) {

@@ -12,10 +12,14 @@ export class AxiosServiceImpl {
     public init() {
         // REQUEST INTERCEPTOR: Inject internal service token
         this.api.interceptors.request.use(async (config) => {
-            config.baseURL = process.env.API_URL;
+            const apiUrl = process.env.API_URL;
+            config.baseURL = apiUrl;
+
             const token = process.env.WORKER_SERVICE_INTERNAL_TOKEN;
 
-            if (token) {
+            // An absolute url overrides baseURL, so without this check any caller
+            // reaching for this client could hand our token to a third-party host.
+            if (token && apiUrl && new URL(config.url ?? '', apiUrl).origin === new URL(apiUrl).origin) {
                 config.headers['Internal-Service-Token'] = token;
             }
 
