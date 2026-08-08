@@ -28,6 +28,22 @@ export namespace Execution {
     export import Session = SessionMod.Session
     export import Igniter = IgniterMod.Igniter
 
+    /**
+     * A per-execution bearer credential: signed at enqueue, presented by the worker on
+     * internal routes, and the sole source of the execution id those routes act on.
+     *
+     * Only the type lives here. sign/verify are in backend/src/auth/execution-token.ts
+     * and stay there — they hold EXECUTION_TOKEN_SIGNING_KEY, so the worker can carry a
+     * token but has no way to produce one. See SPECS/execution-token-delegation.md.
+     */
+    export namespace Token {
+        export const Schema = z.string().brand("ExecutionToken")
+
+        /** Node lowercases inbound header names — set and read with this exact value. */
+        export const HEADER = "execution-token"
+    }
+    export type Token = z.infer<typeof Token.Schema>
+
     export namespace Queue {
         export const ID = 'workflow-execution'
         export const Item = z.object({
@@ -35,6 +51,7 @@ export namespace Execution {
             workflowId:          Workflow.Id,
             workflowData:        Workflow.Data.Schema,
             credentialInstances: z.record(Vault.Credential.Instance.Id, Vault.Credential.Instance.Schema),
+            executionToken:      Token.Schema,
         })
         export type Item = z.infer<typeof Item>
     }

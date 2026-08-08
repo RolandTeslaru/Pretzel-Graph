@@ -253,7 +253,13 @@ export namespace DB {
         credential_instance: Table<typeof CredentialInstance.Row, 'id' | Stamps>;
     }
 
-    export const Role = { User: 'user', Service: 'service' } as const;
+    /**
+     * `user` and `delegate` are indistinguishable to Postgres — both connect as
+     * `authenticated` with the same auth.uid(), so RLS treats them identically.
+     * The split exists only here, so a running workflow can be denied things its
+     * owner may do (publishing, minting keys, writing secrets).
+     */
+    export const Role = { User: 'user', Delegate: 'delegate', Service: 'service' } as const;
     export type  Role = typeof Role[keyof typeof Role];
 
     /**
@@ -266,13 +272,19 @@ export namespace DB {
     /** The common case: RLS is on and auth.uid() is the acting user. */
     export type UserTransaction = Transaction<typeof Role.User>;
 
+    /** RLS is on and auth.uid() is whoever the running execution acts for. */
+    export type DelegateTransaction = Transaction<typeof Role.Delegate>;
+
     /**
-     * A transaction with its identity already bound, passed as a value. Lets one
+     * Opens a transaction with its identity already bound, passed as a value. Lets one
      * code path be reached as a user or as the service role without branching:
      * `(fn) => DB.asUser(principal, fn)` / `(fn) => DB.asService(why, fn)`.
      * The role is erased here — this is why the runtime tag exists.
+     *
+     * Unrelated to Principal.Delegate / asDelegate: an execution acting for its owner
+     * gets its own scope, never this.
      */
-    export type Delegate = <T>(fn: (trx: Transaction<Role>) => Promise<T>) => Promise<T>;
+    export type Opener = <T>(fn: (trx: Transaction<'user' | 'service'>) => Promise<T>) => Promise<T>;
 
     // The brand is a phantom type, so @AllowedDatabaseRoles has nothing to read.
     // symbol is the runtime half — attached by the two functions below, checked
@@ -290,12 +302,13 @@ export namespace DB {
     // Only what the wrapper needs, so a future ApiKey principal satisfies it.
     type ActingUser = Pick<Principal.User, 'userId'>;
 
-    /** Runs `fn` inside a transaction acting as `principal`, with RLS enforced. */
-    export async function asUser<T>(
-        principal: ActingUser,
-        fn: (trx: UserTransaction) => Promise<T>,
+    /** Opens an RLS-bound transaction as `userId` and tags it with `role`. */
+    async function enter<R extends Role, T>(
+        userId: Auth.User.Id,
+        role: R,
+        fn: (trx: Transaction<R>) => Promise<T>,
     ): Promise<T> {
-        const claims = JSON.stringify({ sub: principal.userId, role: 'authenticated' });
+        const claims = JSON.stringify({ sub: userId, role: 'authenticated' });
 
         return rls().transaction().execute(async (trx) => {
             // set_config, not SET LOCAL: SET takes no bind parameters, so the
@@ -308,8 +321,28 @@ export namespace DB {
                     set_config('request.jwt.claims', ${claims}, true)
             `.execute(trx);
 
-            return fn(tag(trx, Role.User));
+            return fn(tag(trx, role));
         });
+    }
+
+    /** Runs `fn` inside a transaction acting as `principal`, with RLS enforced. */
+    export async function asUser<T>(
+        principal: ActingUser,
+        fn: (trx: UserTransaction) => Promise<T>,
+    ): Promise<T> {
+        return enter(principal.userId, Role.User, fn);
+    }
+
+    /**
+     * Runs `fn` as the user a running execution acts for. Same Postgres identity as
+     * asUser — the separate tag is what keeps workflow-reachable methods opt-in.
+     * The principal is derived from the execution row, never sent by the worker.
+     */
+    export async function asDelegate<T>(
+        principal: Principal.Delegate,
+        fn: (trx: DelegateTransaction) => Promise<T>,
+    ): Promise<T> {
+        return enter(principal.actingAsUserId, Role.Delegate, fn);
     }
 
     /** Runs `fn` with RLS bypassed. `reason` is mandatory so every bypass is greppable. */

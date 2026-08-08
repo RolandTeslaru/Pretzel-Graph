@@ -41,6 +41,10 @@ export interface ExecutionContext {
     readonly enclosingNodeAPI?:       EnclosingNodeAPI,
     readonly subWorkflowAPI:          SubWorkflowAPI,
     readonly dependencyAPI:           DependencyAPI,
+    /** Backend internal routes. Carries this execution's token and is NOT proxied —
+     *  never build one from httpClientFactory, that would send the token through the
+     *  node's proxy credential. Third-party egress belongs on httpClientFactory. */
+    readonly internalAPI:             HTTP.Client,
     readonly httpAPI:                 HTTP.ClientAPI,
     readonly proxyAPI:                NetworkProxy.API,
     readonly agentToolBridgeAPI:      AgentToolBridgeAPI,

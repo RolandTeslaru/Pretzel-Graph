@@ -19,14 +19,14 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         if (overwrite) {
             const messages = overwrite.map(msg => Synthesizer.lcToChatMessage(msg));
-            await InternalChatAPI.messageOverwrite(this.context.executionId, chatId, messages);
+            await InternalChatAPI.messageOverwrite(this.context.internalAPI, chatId, messages);
             return { history : overwrite };
         } else if (append) {
             const messages = append.map(msg => Synthesizer.lcToChatMessage(msg));
-            await InternalChatAPI.messageAdd(this.context.executionId, chatId, messages);
+            await InternalChatAPI.messageAdd(this.context.internalAPI, chatId, messages);
         }
 
-        const { data } = await InternalChatAPI.messageList(this.context.executionId, chatId);
+        const { data } = await InternalChatAPI.messageList(this.context.internalAPI, chatId);
 
         return {
             history: (data?.messages ?? []).map(msg => Synthesizer.chatMessageToLC(msg)),

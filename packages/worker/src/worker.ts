@@ -7,6 +7,7 @@ import { AggexEngine, AggexHooks } from 'src/engine';
 import { FlightRecorderService } from './engine/flight-recorder-service';
 import { container, singleton } from 'tsyringe';
 import { TurboGraph } from './turboGraph';
+import { createInternalClient } from './turboGraph/http';
 import { AirlockService } from './airlock';
 import { AxiosService } from './axios';
 import { RealtimeService } from './realtime';
@@ -72,7 +73,7 @@ export class AggexWorkerImpl {
         bullJob: BullJob<Execution.Queue.Item>,
         token?: string
     ) => {
-        const { workflowId, workflowData, execution, credentialInstances } = bullJob.data;
+        const { workflowId, workflowData, execution, credentialInstances, executionToken } = bullJob.data;
         const executionId = execution.id;
         const { igniter } = execution;
         console.log(`Processing job ${bullJob.id} for workflow ${workflowId} with execution id ${execution.id}`);
@@ -170,8 +171,13 @@ export class AggexWorkerImpl {
             if(igniter.record)
                 engine.attachFlightRecorder(recorder);
 
+            // Backend internal routes, authenticated as THIS execution. Deliberately built
+            // here rather than from httpClientFactory: that binds the node's proxy credential,
+            // which would send the token through a user-configured proxy.
+            const internalAPI = createInternalClient(executionToken);
+
             // Compile and register execution context
-            executionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.realtime, engine, airlock, credentialInstances);
+            executionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.realtime, engine, airlock, credentialInstances, internalAPI);
             this.runningExecutionContextsMap.set(executionId, executionCtx);
 
             const result = await engine.run(executionCtx);
