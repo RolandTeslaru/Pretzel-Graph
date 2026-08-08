@@ -2,7 +2,7 @@ import { Controller, Post, Get, Delete, Body, Param, UseGuards, HttpCode, Patch 
 import { LibraryService } from './library.service';
 import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { UserAuthGuard } from '../../auth/user-auth.guard';
-import { CurrentUser } from '@/decorators/principal';
+import { AuthenticatedUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { ZodBody } from '../../pipes/zod.pipe';
 
@@ -13,7 +13,7 @@ export class LibraryController {
 
     // ── Bootstrap ─────────────────────────────────────────
     @Get('bootstrap')
-    async getBootstrap(@CurrentUser() principal: Principal.User) {
+    async getBootstrap(@AuthenticatedUser() principal: Principal.User) {
         return await this.libraryService.bootstrap.get(principal);
     }
 
@@ -21,20 +21,20 @@ export class LibraryController {
     @Post('projects')
     @HttpCode(200)
     async createProject(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Library.API.Project.Create.Request) body: Library.API.Project.Create.Request,
     ) {
         return await this.libraryService.project.create(principal, body);
     }
 
     @Get('projects')
-    async listProjects(@CurrentUser() principal: Principal.User) {
+    async listProjects(@AuthenticatedUser() principal: Principal.User) {
         return await this.libraryService.project.list(principal);
     }
 
     @Patch('projects/:id')
     async updateProject(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @Param('id') id: Library.Folder.Id,
         @Body() body: Omit<Library.API.Project.Update.Request, 'id'>
     ) {
@@ -47,25 +47,25 @@ export class LibraryController {
     @Post('folders')
     @HttpCode(200)
     async createFolder(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Library.API.Folder.Create.Request) body: Library.API.Folder.Create.Request,
     ) {
         return await this.libraryService.folder.create(principal, body);
     }
 
     @Patch('folders/:id')
-    async updateFolder(@CurrentUser() principal: Principal.User, @Param('id') id: Library.Folder.Id, @Body() body: Omit<Library.API.Folder.Update.Request, 'id'>) {
+    async updateFolder(@AuthenticatedUser() principal: Principal.User, @Param('id') id: Library.Folder.Id, @Body() body: Omit<Library.API.Folder.Update.Request, 'id'>) {
         const payload = Library.API.Folder.Update.Request.parse({ ...body, id });
         return await this.libraryService.folder.update(principal, payload);
     }
 
     @Delete('folders/:id')
-    async deleteFolder(@CurrentUser() principal: Principal.User, @Param('id') id: Library.Folder.Id) {
+    async deleteFolder(@AuthenticatedUser() principal: Principal.User, @Param('id') id: Library.Folder.Id) {
         return await this.libraryService.folder.delete(principal, id);
     }
 
     @Get('folders/:id/contents')
-    async getFolderContents(@CurrentUser() principal: Principal.User, @Param('id') id: Library.Folder.Id) {
+    async getFolderContents(@AuthenticatedUser() principal: Principal.User, @Param('id') id: Library.Folder.Id) {
         return await this.libraryService.folder.getContents(principal, id);
     }
 
@@ -74,31 +74,31 @@ export class LibraryController {
     @Post('workflows')
     @HttpCode(200)
     async createWorkflow(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Library.API.Workflow.Create.Request) body: Library.API.Workflow.Create.Request,
     ) {
         return await this.libraryService.workflow.create(principal, body);
     }
 
     @Get('workflows/:id')
-    async getWorkflow(@CurrentUser() principal: Principal.User, @Param('id') id: Workflow.Id) {
+    async getWorkflow(@AuthenticatedUser() principal: Principal.User, @Param('id') id: Workflow.Id) {
         return await this.libraryService.workflow.get(principal, id);
     }
 
     @Patch('workflows/:id')
-    async updateWorkflow(@CurrentUser() principal: Principal.User, @Param('id') id: Workflow.Id, @Body() body: Omit<Library.API.Workflow.Update.Request, 'id'>) {
+    async updateWorkflow(@AuthenticatedUser() principal: Principal.User, @Param('id') id: Workflow.Id, @Body() body: Omit<Library.API.Workflow.Update.Request, 'id'>) {
         const payload = Library.API.Workflow.Update.Request.parse({ ...body, id });
         return await this.libraryService.workflow.update(principal, payload);
     }
 
     @Delete('workflows/:id')
-    async deleteWorkflow(@CurrentUser() principal: Principal.User, @Param('id') id: Workflow.Id) {
+    async deleteWorkflow(@AuthenticatedUser() principal: Principal.User, @Param('id') id: Workflow.Id) {
         return await this.libraryService.workflow.delete(principal, id);
     }
 
     @Post('workflows/:id/duplicate')
     @HttpCode(200)
-    async duplicateWorkflow(@CurrentUser() principal: Principal.User, @Param('id') id: Workflow.Id) {
+    async duplicateWorkflow(@AuthenticatedUser() principal: Principal.User, @Param('id') id: Workflow.Id) {
         return await this.libraryService.workflow.duplicate(principal, id);
     }
 }

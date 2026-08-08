@@ -4,7 +4,7 @@ import { Auth, Execution } from '@pretzel-graph/shared/domain';
 import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { InternalAuthGuard, InternalAuthenticatedRequest } from '../../auth/internal-auth.guard';
 import { ApiKeyAuthGuard, ApiKeyAuthenticatedRequest } from '../../auth/api-key-auth.guard';
-import { CurrentUser } from '@/decorators/principal';
+import { AuthenticatedUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { ZodBody } from '../../pipes/zod.pipe';
 
@@ -16,7 +16,7 @@ export class ExecutionController {
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async run(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Execution.API.Run.Request) body: Execution.API.Run.Request,
     ) {
         return this.executionService.runFromUser(principal, body);
@@ -36,7 +36,7 @@ export class ExecutionController {
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async pause(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Execution.API.Pause.Request) body: Execution.API.Pause.Request,
     ) {
         return this.executionService.pause(principal, body);
@@ -46,7 +46,7 @@ export class ExecutionController {
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async resume(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Execution.API.Resume.Request) body: Execution.API.Resume.Request,
     ) {
         return this.executionService.resume(principal, body);
@@ -56,7 +56,7 @@ export class ExecutionController {
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async heartbeat(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Execution.API.Heartbeat.Request) body: Execution.API.Heartbeat.Request,
     ) {
         return this.executionService.heartbeat(principal, body);
@@ -66,7 +66,7 @@ export class ExecutionController {
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async suspend(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Execution.API.Suspend.Request) body: Execution.API.Suspend.Request,
     ) {
         return this.executionService.suspend(principal, body);
@@ -76,7 +76,7 @@ export class ExecutionController {
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async terminate(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Execution.API.Terminate.Request) body: Execution.API.Terminate.Request,
     ) {
         return this.executionService.terminate(principal, body);
@@ -85,7 +85,7 @@ export class ExecutionController {
     @Post('terminate-all')
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
-    async terminateAll(@CurrentUser() principal: Principal.User) {
+    async terminateAll(@AuthenticatedUser() principal: Principal.User) {
         return this.executionService.terminateAll(principal);
     }
 
@@ -102,7 +102,7 @@ export class ExecutionController {
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async get(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Execution.API.Get.Request) body: Execution.API.Get.Request,
     ) {
         return this.executionService.get(principal, body);
@@ -121,7 +121,7 @@ export class ExecutionController {
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async metaList(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Execution.API.Meta.List.Request) body: Execution.API.Meta.List.Request,
     ) {
         return this.executionService.meta.list(principal, body);
@@ -131,7 +131,7 @@ export class ExecutionController {
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async metaGet(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Execution.API.Meta.Get.Request) body: Execution.API.Meta.Get.Request,
     ) {
         return this.executionService.meta.get(principal, body);
@@ -140,7 +140,7 @@ export class ExecutionController {
     @Post('meta/list-active')
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
-    async metaListActive(@CurrentUser() principal: Principal.User) {
+    async metaListActive(@AuthenticatedUser() principal: Principal.User) {
         return this.executionService.meta.listActive(principal);
     }
 
@@ -173,7 +173,7 @@ export class ExecutionController {
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async recordingGetLive(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(Execution.API.Recording.GetLive.Request) body: Execution.API.Recording.GetLive.Request,
     ) {
         return this.executionService.recording.getLive(principal, body);
