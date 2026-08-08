@@ -87,10 +87,10 @@ class ChatMethods {
         return rows.map((row) => Chat.Schema.parse(row));
     }
 
-    @AllowedDatabaseRoles("user", "service")
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Chat.Schema)
     async ensure(
-        trx: DB.Transaction<'user' | 'service'>,
+        trx: DB.UserTransaction,
         userId: Auth.User.Id,
         chatId: Chat.Id,
         workflowId: Workflow.Id,
