@@ -86,6 +86,7 @@ export class S2Engine {
 
             case "XOR":
                 if (receivedSignals.size > 1) {
+                    this.ctx.settled = true;
                     this.ctx.reject(new S2EngineXORCollisionError(Array.from(receivedSignals), vertexId));
                     assesment = false;
                 }
@@ -182,21 +183,22 @@ export class S2Engine {
         this.ctx.activeVertexes ++;
         this.ctx.hooks.onVertexFired?.(vertexId);
 
-        const vertex = this.ctx.graph.vertices.get(vertexId);
-        if (!vertex)
-            throw new S2EngineError(`Attempted to fire non-existent vertex ${vertexId}.`);
-
-        vertex.track();
-
-        if(this.isShortCircuiting(vertexId)) {
-            this.ctx.settled = true;
-            const err = new S2EngineShortCircuitError(vertexId, vertex.getRunCount());
-            this.ctx.hooks.onVertexError?.(vertexId, err);
-            this.ctx.reject(err);
-            return;
-        }
-
         try {
+            const vertex = this.ctx.graph.vertices.get(vertexId);
+
+            if (!vertex)
+                throw new S2EngineError(`Attempted to fire non-existent vertex ${vertexId}.`);
+
+            vertex.track();
+
+            if(this.isShortCircuiting(vertexId)) {
+                this.ctx.settled = true;
+                const err = new S2EngineShortCircuitError(vertexId, vertex.getRunCount());
+                this.ctx.hooks.onVertexError?.(vertexId, err);
+                this.ctx.reject(err);
+                return;
+            }
+
             const signalSet = await this.ctx.hooks.onVertexExecute(vertexId, signals);
 
             this.ctx.activeVertexes --;
