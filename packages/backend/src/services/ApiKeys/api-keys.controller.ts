@@ -2,7 +2,7 @@ import { Controller, Post, Get, UseGuards, HttpCode } from '@nestjs/common';
 import { ApiKeysService } from './api-keys.service';
 import { ApiKey } from '@pretzel-graph/shared/domain';
 import { UserAuthGuard } from '../../auth/user-auth.guard';
-import { CurrentUser } from '@/decorators/principal';
+import { AuthenticatedUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { ZodBody } from '../../pipes/zod.pipe';
 
@@ -14,21 +14,21 @@ export class ApiKeysController {
     @Post('create')
     @HttpCode(200)
     async create(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(ApiKey.API.Create.Request) body: ApiKey.API.Create.Request,
     ) {
         return this.apiKeysService.create(principal, body);
     }
 
     @Get('list')
-    async list(@CurrentUser() principal: Principal.User) {
+    async list(@AuthenticatedUser() principal: Principal.User) {
         return this.apiKeysService.list(principal);
     }
 
     @Post('revoke')
     @HttpCode(200)
     async revoke(
-        @CurrentUser() principal: Principal.User,
+        @AuthenticatedUser() principal: Principal.User,
         @ZodBody(ApiKey.API.Revoke.Request) body: ApiKey.API.Revoke.Request,
     ) {
         return this.apiKeysService.revoke(principal, body);
