@@ -4,7 +4,6 @@ import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Webhook } from "@pretzel-graph/shared/domain/Webhook";
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
-import { AxiosService } from "../../services/AxiosService";
 import Redis from "ioredis";
 
 type AnyRecord = Record<string, unknown>;
@@ -51,7 +50,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const method = this.fieldValues.method as Webhook.Method;
 
         console.log(`[WebhookNode] Registering test webhook [${method}] /${workflowId}/${path}`);
-        await Webhook.Test.API.register(AxiosService.api, { workflowId, path, method });
+        await Webhook.Test.API.register(this.context.internalAPI.raw, { workflowId, path, method });
         console.log(`[WebhookNode] Waiting for test payload on channel=${Webhook.Test.ResolveSignal.getChannel(this.context.executionId)}`);
 
         const signal = await this.context.realtimeAPI.awaitSignal(

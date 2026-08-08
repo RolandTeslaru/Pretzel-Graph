@@ -27,7 +27,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         // chat_id is a user-editable field, so the backend owns both the ownership check and
         // the broadcast — this node never publishes to a chat channel directly.
         await InternalChatAPI.messageAdd(
-            this.context.executionId,
+            this.context.internalAPI,
             chatId,
             messages,
             { persist: this.fieldValues.write_to_session, broadcast: true },

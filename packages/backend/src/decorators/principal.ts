@@ -12,6 +12,18 @@ export const AuthenticatedPrincipal = createParamDecorator(
     },
 );
 
+/** The principal a running execution acts under. Populated by DelegateAuthGuard. */
+export const AuthenticatedDelegate = createParamDecorator(
+    (_data: unknown, ctx: ExecutionContext): Principal.Delegate => {
+        const { delegate } = ctx.switchToHttp().getRequest<{ delegate?: Principal.Delegate }>();
+
+        if (!delegate)
+            throw new UnauthorizedException('No delegate on request');
+
+        return delegate;
+    },
+);
+
 export const AuthenticatedUser = createParamDecorator(
     (_data: unknown, ctx: ExecutionContext): Principal.User => {
         const { principal } = ctx.switchToHttp().getRequest<{ principal?: Principal }>();
