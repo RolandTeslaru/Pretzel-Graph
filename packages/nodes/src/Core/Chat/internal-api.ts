@@ -2,8 +2,15 @@ import { Chat, Execution } from "@pretzel-graph/shared/domain";
 import { AxiosService } from "../../services/AxiosService";
 
 export const InternalChatAPI = {
-    messageAdd: (executionId: Execution.Id, chatId: Chat.Id, messages: Chat.Message[]) =>
-        AxiosService.api.post('/api/internal/chat/message/add', { executionId, chatId, messages }),
+    // persist: store the messages. broadcast: publish message:added on the chat channel.
+    // They are independent — Chat.Output broadcasts whether or not it stores.
+    messageAdd: (
+        executionId: Execution.Id,
+        chatId: Chat.Id,
+        messages: Chat.Message[],
+        opts?: { persist?: boolean; broadcast?: boolean },
+    ) =>
+        AxiosService.api.post('/api/internal/chat/message/add', { executionId, chatId, messages, ...opts }),
     messageUpdate: (executionId: Execution.Id, chatId: Chat.Id, payload: Chat.API.Message.Update.Request) =>
         AxiosService.api.post('/api/internal/chat/message/update', { executionId, chatId, ...payload }),
     messageList: (executionId: Execution.Id, chatId: Chat.Id) =>
