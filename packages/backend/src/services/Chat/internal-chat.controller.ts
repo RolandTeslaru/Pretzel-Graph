@@ -5,6 +5,7 @@ import { DB } from '@/db';
 import { ChatDatabase } from './chat.database';
 import { ZodBody } from '../../pipes/zod.pipe';
 import { PermissionService } from '../Permission/permission.service';
+import { RealtimeService } from '../Realtime/realtime.service';
 import { z } from 'zod';
 
 const accessRequest = z.object({
@@ -13,7 +14,9 @@ const accessRequest = z.object({
 });
 
 const addMessageRequest = accessRequest.extend({
-    messages: z.array(Chat.Message.Schema),
+    messages:  z.array(Chat.Message.Schema),
+    persist:   z.boolean().default(true),
+    broadcast: z.boolean().default(false),
 });
 
 const updateMessageRequest = accessRequest.extend({
@@ -31,8 +34,11 @@ export class InternalChatController {
     constructor(
         private readonly database: ChatDatabase,
         private readonly ownership: PermissionService,
+        private readonly realtime: RealtimeService,
     ) {}
 
+    // The chat id arrives from a user-editable node field, so the broadcast lives here —
+    // behind assertExecutionChat — rather than in the worker, which cannot check ownership.
     @Post('message/add')
     @HttpCode(200)
     async addMessage(
@@ -40,7 +46,17 @@ export class InternalChatController {
     ) {
         await this.ownership.assertExecutionChat(body.executionId, body.chatId);
 
-        await DB.asService('internal chat message add', (db) => this.database.message.add(db, body.chatId, body.messages));
+        if (body.persist)
+            await DB.asService('internal chat message add', (db) => this.database.message.add(db, body.chatId, body.messages));
+
+        if (body.broadcast)
+            this.realtime.emitSignal<Chat.Event.Message.Added>({
+                type:     'message:added',
+                channel:  Chat.Event.getChannel(body.chatId),
+                chatId:   body.chatId,
+                messages: body.messages,
+            });
+
         return {};
     }
 
