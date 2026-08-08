@@ -1,170 +1,226 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { sql } from 'kysely';
 import { Auth, Chat, Execution, Workflow } from '@pretzel-graph/shared/domain';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
-import { SupabaseAssert, ZodReturn } from '../../decorators/database';
+import { DB } from '@/db';
+import { ZodReturn } from '../../decorators/database';
+import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
 
+const META_COLUMNS = [
+    'id',
+    'workflow_id',
+    'igniter',
+    'status',
+    'duration',
+    'error',
+    'chat_id',
+    'created_at',
+    'updated_at',
+] as const;
+
+const metaSelection = [
+    ...META_COLUMNS,
+    sql<boolean>`recording is not null`.as('has_recording'),
+] as const;
+
+@DatabaseClass
 class MetaMethods {
 
-    @SupabaseAssert('execution.meta.get')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Execution.Meta)
-    async get(supabase: SupabaseClient, executionId: Execution.Id): Promise<Execution.Meta> {
-        const { data } = await supabase
-            .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at, has_recording')
-            .eq('id', executionId)
-            .single()
-            .throwOnError();
+    async get(
+        trx: DB.UserTransaction,
+        executionId: Execution.Id,
+    ): Promise<Execution.Meta> {
+        const row = await trx
+            .selectFrom('executions')
+            .select(metaSelection)
+            .where('id', '=', executionId)
+            .executeTakeFirstOrThrow();
 
-        return data;
+        return Execution.Meta.parse(row);
     }
 
-    @SupabaseAssert('execution.meta.list')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Execution.Meta.array())
-    async list(supabase: SupabaseClient, workflowId: Workflow.Id): Promise<Execution.Meta[]> {
-        const { data } = await supabase
-            .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at, has_recording')
-            .eq('workflow_id', workflowId)
-            .order('created_at', { ascending: false })
-            .throwOnError();
+    async list(
+        trx: DB.UserTransaction,
+        workflowId: Workflow.Id,
+    ): Promise<Execution.Meta[]> {
+        const rows = await trx
+            .selectFrom('executions')
+            .select(metaSelection)
+            .where('workflow_id', '=', workflowId)
+            .orderBy('created_at', 'desc')
+            .execute();
 
-        return data ?? [];
+        return rows.map((row) => Execution.Meta.parse(row));
     }
 
-    @SupabaseAssert('execution.meta.listActive')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Execution.Meta.array())
-    async listActive(supabase: SupabaseClient): Promise<Execution.Meta[]> {
-        const { data } = await supabase
-            .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, chat_id, created_at, updated_at, has_recording')
-            .in('status', ['pending', 'running'])
-            .order('created_at', { ascending: false })
-            .throwOnError();
+    async listActive(trx: DB.UserTransaction): Promise<Execution.Meta[]> {
+        const rows = await trx
+            .selectFrom('executions')
+            .select(metaSelection)
+            .where('status', 'in', ['pending', 'running'])
+            .orderBy('created_at', 'desc')
+            .execute();
 
-        return data ?? [];
+        return rows.map((row) => Execution.Meta.parse(row));
     }
 }
 
 @Injectable()
+@DatabaseClass
 export class ExecutionDatabase {
+    public readonly meta = new MetaMethods();
 
-    public readonly meta      = new MetaMethods();
-
-    @SupabaseAssert('execution.create')
-    async create(supabase: SupabaseClient, props: {
-        workflowId:   Workflow.Id,
-        userId:       Auth.User.Id,
-        igniter:      Execution.Igniter,
-        session:      Execution.Session,
-        executionId?: Execution.Id,
-        chatId?:      Chat.Id,
-    }): Promise<Execution.Id> {
+    @AllowedDatabaseRoles("user", "service")
+    async create(
+        trx: DB.Transaction<'user' | 'service'>,
+        props: {
+            workflowId: Workflow.Id;
+            userId: Auth.User.Id;
+            igniter: Execution.Igniter;
+            session: Execution.Session;
+            executionId?: Execution.Id;
+            chatId?: Chat.Id;
+        },
+    ): Promise<Execution.Id> {
         const executionId = props.executionId ?? crypto.randomUUID() as Execution.Id;
-        await supabase
-            .from('executions')
-            .insert({
-                id:          executionId,
+
+        await trx
+            .insertInto('executions')
+            .values({
+                id: executionId,
                 workflow_id: props.workflowId,
-                user_id:     props.userId,
-                igniter:     props.igniter,
-                status:      'pending',
-                duration:    0,
-                session:     props.session,
-                chat_id:     props.chatId ?? null,
-                created_at:  new Date(),
-                updated_at:  new Date(),
+                user_id: props.userId,
+                igniter: props.igniter,
+                status: 'pending',
+                duration: 0,
+                session: props.session,
+                chat_id: props.chatId ?? null,
+                recording: null,
             })
-            .throwOnError();
+            .execute();
+
         return executionId;
     }
 
-    @SupabaseAssert('execution.update')
-    async update(supabase: SupabaseClient, props: {
-        executionId: Execution.Id,
-        status?:     Execution.Status,
-        duration?:   number,
-        error?:      string,
-        session?:    Execution.Session.Update,
-        recording?:  Execution.Recording | null,
-    }): Promise<void> {
-        await supabase
-            .from('executions')
-            .update({
-                ...(props.status    !== undefined && { status:    props.status }),
-                ...(props.duration  !== undefined && { duration:  props.duration }),
-                ...(props.error     !== undefined && { error:     props.error }),
-                ...(props.session   !== undefined && { session:   props.session }),
+    @AllowedDatabaseRoles("user", "service")
+    async update(
+        trx: DB.Transaction<'user' | 'service'>,
+        props: {
+            executionId: Execution.Id;
+            status?: Execution.Status;
+            duration?: number;
+            error?: string;
+            session?: Execution.Session.Update;
+            recording?: Execution.Recording | null;
+        },
+    ): Promise<void> {
+        await trx
+            .updateTable('executions')
+            .set({
+                ...(props.status !== undefined && { status: props.status }),
+                ...(props.duration !== undefined && { duration: props.duration }),
+                ...(props.error !== undefined && {
+                    error: new SystemError(
+                        SystemError.Code.INFRA_UNKNOWN,
+                        props.error,
+                    ).toJSON(),
+                }),
+                ...(props.session !== undefined && { session: props.session }),
                 ...(props.recording !== undefined && { recording: props.recording }),
-                updated_at: new Date(),
             })
-            .eq('id', props.executionId)
-            .throwOnError();
+            .where('id', '=', props.executionId)
+            .execute();
     }
 
-    @SupabaseAssert('execution.getStatus')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Execution.Status)
-    async getStatus(supabase: SupabaseClient, executionId: Execution.Id): Promise<Execution.Status> {
-        const { data } = await supabase
-            .from('executions')
-            .select<'status', { status: string }>('status')
-            .eq('id', executionId)
-            .single()
-            .throwOnError();
+    async getStatus(
+        trx: DB.UserTransaction,
+        executionId: Execution.Id,
+    ): Promise<Execution.Status> {
+        const row = await trx
+            .selectFrom('executions')
+            .select('status')
+            .where('id', '=', executionId)
+            .executeTakeFirstOrThrow();
 
-        return data!.status as Execution.Status;
+        return row.status;
     }
 
-    @SupabaseAssert('execution.get')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Execution.Schema)
-    async get(supabase: SupabaseClient, executionId: Execution.Id): Promise<Execution> {
-        const { data } = await supabase
-            .from('executions')
-            .select('id, workflow_id, igniter, status, duration, error, session, recording, chat_id, created_at, updated_at')
-            .eq('id', executionId)
-            .single()
-            .throwOnError();
+    async get(
+        trx: DB.UserTransaction,
+        executionId: Execution.Id,
+    ): Promise<Execution> {
+        const row = await trx
+            .selectFrom('executions')
+            .selectAll()
+            .where('id', '=', executionId)
+            .executeTakeFirstOrThrow();
 
-        return data;
+        return DB.Execution.toDomain(row);
     }
 
-    @SupabaseAssert('execution.sdk.getActivePublishedWorkflowData')
+    @AllowedDatabaseRoles("user", "service")
     @ZodReturn(Workflow.Data.Schema)
-    async getActivePublishedWorkflowData(supabase: SupabaseClient, workflowId: Workflow.Id): Promise<Workflow.Data> {
-        const { data: row } = await supabase
-            .from('version_control')
+    async getActivePublishedWorkflowData(
+        trx: DB.Transaction<'user' | 'service'>,
+        workflowId: Workflow.Id,
+    ): Promise<Workflow.Data> {
+        const row = await trx
+            .selectFrom('version_control')
             .select('workflow_data')
-            .eq('workflow_id', workflowId)
-            .eq('is_active', true)
-            .single()
-            .throwOnError();
+            .where('workflow_id', '=', workflowId)
+            .where('is_active', '=', true)
+            .executeTakeFirst();
 
         if (!row)
-            throw new SystemError(SystemError.Code.NOT_FOUND, 'No active published version found for this workflow');
+            throw new SystemError(
+                SystemError.Code.NOT_FOUND,
+                'No active published version found for this workflow',
+            );
 
-        return row.workflow_data;
+        return Workflow.Data.Schema.parse(row.workflow_data);
     }
 
-    @SupabaseAssert('execution.listActiveIds')
+    @AllowedDatabaseRoles("user", "service")
     @ZodReturn(Execution.Id.array())
-    async listActiveIds(supabase: SupabaseClient): Promise<Execution.Id[]> {
-        const { data } = await supabase
-            .from('executions')
+    async listActiveIds(trx: DB.Transaction<'user' | 'service'>): Promise<Execution.Id[]> {
+        const rows = await trx
+            .selectFrom('executions')
             .select('id')
-            .in('status', ['pending', 'running'])
-            .throwOnError();
+            .where('status', 'in', ['pending', 'running'])
+            .execute();
 
-        return (data ?? []).map(row => row.id);
+        return rows.map((row) => row.id);
     }
 
-    @SupabaseAssert('execution.terminateMany')
-    async terminateMany(supabase: SupabaseClient, executionIds: Execution.Id[], error: string): Promise<void> {
-        if (executionIds.length === 0) return;
+    @AllowedDatabaseRoles("user", "service")
+    async terminateMany(
+        trx: DB.Transaction<'user' | 'service'>,
+        executionIds: Execution.Id[],
+        error: string,
+    ): Promise<void> {
+        if (!executionIds.length)
+            return;
 
-        await supabase
-            .from('executions')
-            .update({ status: 'terminated', error, updated_at: new Date() })
-            .in('id', executionIds)
-            .throwOnError();
+        await trx
+            .updateTable('executions')
+            .set({
+                status: 'terminated',
+                error: new SystemError(
+                    SystemError.Code.INFRA_UNKNOWN,
+                    error,
+                ).toJSON(),
+            })
+            .where('id', 'in', executionIds)
+            .execute();
     }
 }

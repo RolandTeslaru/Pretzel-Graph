@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext as NestExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { createHash } from 'crypto';
-import { createServiceClient } from '../utils/supabase';
 import { Auth, ApiKey } from '@pretzel-graph/shared/domain';
+import { DB } from '@/db';
 
 export interface ApiKeyAuthenticatedRequest extends Request {
     user: {
@@ -32,22 +32,32 @@ export class ApiKeyAuthGuard implements CanActivate {
 
         const keyHash = hashKey(parsed.data);
 
-        const supabase = createServiceClient();
-        const { data: row } = await supabase
-            .from('api_keys')
-            .select('id, user_id')
-            .eq('key_hash', keyHash)
-            .is('revoked_at', null)
-            .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-            .single();
+        const row = await DB.asService('authenticate API key', (db) =>
+            db
+                .selectFrom('api_keys')
+                .select(['id', 'user_id'])
+                .where('key_hash', '=', keyHash)
+                .where('revoked_at', 'is', null)
+                .where((eb) => eb.or([
+                    eb('expires_at', 'is', null),
+                    eb('expires_at', '>', new Date().toISOString()),
+                ]))
+                .executeTakeFirst(),
+        );
 
         if (!row) throw new UnauthorizedException('Invalid or expired API key');
 
-        request.user   = { id: row.user_id as Auth.User.Id };
-        request.apiKey = { id: row.id as ApiKey.Id };
+        request.user   = { id: row.user_id };
+        request.apiKey = { id: row.id };
 
         // fire-and-forget: best-effort last_used_at update
-        supabase.from('api_keys').update({ last_used_at: new Date().toISOString() }).eq('id', row.id);
+        void DB.asService('record API key use', (db) =>
+            db
+                .updateTable('api_keys')
+                .set({ last_used_at: new Date().toISOString() })
+                .where('id', '=', row.id)
+                .execute(),
+        );
 
         return true;
     }

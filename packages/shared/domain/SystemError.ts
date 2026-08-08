@@ -113,7 +113,13 @@ export namespace SystemError {
         INFRA_DATABASE_ERROR = 5001,
         INFRA_QUEUE_ERROR = 5002,
         INFRA_UNKNOWN = 5999,
+
+        // Request-shaped failures. Postgres SQLSTATEs map onto these — see
+        // DatabaseClass in backend/src/decorators/transactional.ts.
+        BAD_REQUEST = 400,
+        FORBIDDEN = 403,
         NOT_FOUND = 404,
+        CONFLICT = 409,
     }
 
 

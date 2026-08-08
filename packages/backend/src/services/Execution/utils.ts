@@ -1,10 +1,10 @@
-import { SupabaseClient } from "@supabase/supabase-js";
 import { Vault, Workflow } from "@pretzel-graph/shared/domain";
 import { resolveCredential } from "@/utils/resolveCredential";
+import { DB } from '@/db';
 
 export class SecretsResolver {
     public static async resolveWorkflow(
-        supabase: SupabaseClient,
+        trx: DB.Transaction<'user' | 'service'>,
         workflowData: Workflow.Data,
         _workflowId?: Workflow.Id,
     ) {
@@ -16,7 +16,7 @@ export class SecretsResolver {
 
             for (const instanceId of Object.values(instanceIds) as Vault.Credential.Instance.Id[]) {
                 if (!(instanceId in cache))
-                    cache[instanceId] = await resolveCredential(supabase, instanceId);
+                    cache[instanceId] = await resolveCredential(trx, instanceId);
             }
         }
     }

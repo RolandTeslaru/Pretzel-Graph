@@ -1,13 +1,13 @@
 import { Controller, UseGuards, Get, Post, Param, HttpCode } from '@nestjs/common';
 import { WorkbenchService } from './workbench.service';
-import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
+import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { CurrentUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { Workflow, Workbench } from '@pretzel-graph/shared/domain';
 import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('workbench')
-@UseGuards(SupabaseAuthGuard)
+@UseGuards(UserAuthGuard)
 export class WorkbenchController {
     constructor(private readonly workbenchService: WorkbenchService) { }
 

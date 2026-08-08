@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Principal } from '@/domain/Principal';
+import { DB } from '@/db';
 import { Vault } from '@pretzel-graph/shared/domain';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { VaultDatabase } from './vault.database';
@@ -47,7 +48,7 @@ export class VaultService {
         list: async (
             principal: Principal.User,
         ): Promise<Vault.API.CredentialInstance.List.Response> => {
-            const rows = await this.database.credentialInstance.list(principal.supabase);
+            const rows = await DB.asUser(principal, (trx) => this.database.credentialInstance.list(trx));
             const instances = Object.fromEntries(rows.map(i => [i.id, i])) as Vault.API.CredentialInstance.List.Response['instances'];
             return { instances };
         },
@@ -57,11 +58,11 @@ export class VaultService {
             req: Vault.API.CredentialInstance.Create.Request,
         ): Promise<Vault.API.CredentialInstance.Create.Response> => {
             const blob     = encryptCredentialBlob(req.fieldValues);
-            const instance = await this.database.credentialInstance.create(principal.supabase, {
+            const instance = await DB.asUser(principal, (trx) => this.database.credentialInstance.create(trx, principal.userId, {
                 name:       req.name,
                 templateId: req.templateId,
                 blob,
-            });
+            }));
             return { instance };
         },
 
@@ -69,7 +70,7 @@ export class VaultService {
             principal: Principal.User,
             req: Vault.API.CredentialInstance.Remove.Request,
         ): Promise<Vault.API.CredentialInstance.Remove.Response> => {
-            await this.database.credentialInstance.remove(principal.supabase, req.id);
+            await DB.asUser(principal, (trx) => this.database.credentialInstance.remove(trx, req.id));
             return { ok: true };
         },
 
@@ -77,7 +78,7 @@ export class VaultService {
             principal: Principal.User,
             id: Vault.Credential.Instance.Id,
         ): Promise<Vault.API.CredentialInstance.Reveal.Response> => {
-            const blob        = await this.database.credentialInstance.fetchBlob(principal.supabase, id);
+            const blob = await DB.asUser(principal, (trx) => this.database.credentialInstance.fetchBlob(trx, id));
             const fieldValues = decryptCredentialBlob(blob);
             return { fieldValues };
         },
@@ -86,7 +87,7 @@ export class VaultService {
             principal: Principal.User,
             req: Vault.API.CredentialInstance.UpdateName.Request,
         ): Promise<Vault.API.CredentialInstance.UpdateName.Response> => {
-            const instance = await this.database.credentialInstance.updateName(principal.supabase, req);
+            const instance = await DB.asUser(principal, (trx) => this.database.credentialInstance.updateName(trx, req));
             return { instance };
         },
 
@@ -95,7 +96,7 @@ export class VaultService {
             req: Vault.API.CredentialInstance.Update.Request,
         ): Promise<Vault.API.CredentialInstance.Update.Response> => {
             const blob     = encryptCredentialBlob(req.fieldValues);
-            const instance = await this.database.credentialInstance.update(principal.supabase, req.id, req.name, blob);
+            const instance = await DB.asUser(principal, (trx) => this.database.credentialInstance.update(trx, req.id, req.name, blob));
             return { instance };
         },
     };
