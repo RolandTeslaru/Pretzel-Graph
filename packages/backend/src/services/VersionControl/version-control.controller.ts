@@ -1,13 +1,13 @@
 import { Controller, Post, Get, Delete, Param, UseGuards, HttpCode } from '@nestjs/common';
 import { VersionControl } from '@pretzel-graph/shared/domain';
 import { VersionControlService } from './version-control.service';
-import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
+import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { CurrentUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('version-control')
-@UseGuards(SupabaseAuthGuard)
+@UseGuards(UserAuthGuard)
 export class VersionControlController {
     constructor(private readonly service: VersionControlService) {}
 

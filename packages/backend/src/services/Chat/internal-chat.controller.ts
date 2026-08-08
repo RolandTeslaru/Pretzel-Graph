@@ -1,7 +1,7 @@
 import { Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
 import { Chat, Execution } from '@pretzel-graph/shared/domain';
 import { RuntimeNodeAuthGuard } from '../../auth/runtime-node-auth.guard';
-import { createServiceClient } from '../../utils/supabase';
+import { DB } from '@/db';
 import { ChatDatabase } from './chat.database';
 import { ZodBody } from '../../pipes/zod.pipe';
 import { PermissionService } from '../Permission/permission.service';
@@ -40,8 +40,7 @@ export class InternalChatController {
     ) {
         await this.ownership.assertExecutionChat(body.executionId, body.chatId);
 
-        const supabase = createServiceClient();
-        await this.database.message.add(supabase, body.chatId, body.messages);
+        await DB.asService('internal chat message add', (db) => this.database.message.add(db, body.chatId, body.messages));
         return {};
     }
 
@@ -52,8 +51,7 @@ export class InternalChatController {
     ) {
         await this.ownership.assertExecutionChat(body.executionId, body.chatId);
 
-        const supabase = createServiceClient();
-        await this.database.message.updateInChat(supabase, body.chatId, body.messageId, body.content);
+        await DB.asService('internal chat message update', (db) => this.database.message.updateInChat(db, body.chatId, body.messageId, body.content));
         return {};
     }
 
@@ -62,8 +60,7 @@ export class InternalChatController {
     async listMessages(@ZodBody(accessRequest) body: z.infer<typeof accessRequest>) {
         await this.ownership.assertExecutionChat(body.executionId, body.chatId);
 
-        const supabase = createServiceClient();
-        const messages = await this.database.message.list(supabase, body.chatId);
+        const messages = await DB.asService('internal chat message list', (db) => this.database.message.list(db, body.chatId));
         return { messages };
     }
 
@@ -72,8 +69,7 @@ export class InternalChatController {
     async overwriteMessages(@ZodBody(overwriteMessagesRequest) body: z.infer<typeof overwriteMessagesRequest>) {
         await this.ownership.assertExecutionChat(body.executionId, body.chatId);
 
-        const supabase = createServiceClient();
-        await this.database.message.overwrite(supabase, body.chatId, body.messages);
+        await DB.asService('internal chat message overwrite', (db) => this.database.message.overwrite(db, body.chatId, body.messages));
         return {};
     }
 }

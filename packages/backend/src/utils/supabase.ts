@@ -19,12 +19,6 @@ export const createAuthenticatedClient = (accessToken: string) => {
     });
 };
 
-export const createServiceClient = () => {
-    return createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!,{
-        auth: { persistSession: false }
-    })
-}
-
 export const getUserId = async (supabase: SupabaseClient) => {
     const { data: { user } } = await supabase.auth.getUser();
     return user?.id as Auth.User.Id;

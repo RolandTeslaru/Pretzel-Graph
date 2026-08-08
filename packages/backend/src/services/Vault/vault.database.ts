@@ -1,104 +1,125 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { Vault } from '@pretzel-graph/shared/domain';
-import { SupabaseAssert, ZodReturn } from '../../decorators/database';
+import { Auth, Vault } from '@pretzel-graph/shared/domain';
+import { DB } from '@/db';
+import { ZodReturn } from '../../decorators/database';
+import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
 
+@DatabaseClass
 class CredentialInstanceMethods {
 
-    @SupabaseAssert('vault.credentialInstance.list')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Vault.Credential.Instance.Schema.array())
-    async list(supabase: SupabaseClient): Promise<Vault.Credential.Instance[]> {
-        const { data } = await supabase
-            .from('credential_instance')
-            .select<string, Vault.Credential.Instance>('id, name, template_id, created_at, updated_at, blob')
-            .order('created_at', { ascending: false })
-            .throwOnError();
+    async list(trx: DB.UserTransaction): Promise<Vault.Credential.Instance[]> {
+        const rows = await trx
+            .selectFrom('credential_instance')
+            .selectAll()
+            .orderBy('created_at', 'desc')
+            .execute();
 
-        return data ?? [];
+        return rows.map(DB.CredentialInstance.toDomain);
     }
 
-    @SupabaseAssert('vault.credentialInstance.create')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Vault.Credential.Instance.Schema)
-    async create(supabase: SupabaseClient, insert: Vault.Database.Insert.CredentialInstance): Promise<Vault.Credential.Instance> {
-        const { data } = await supabase
-            .from('credential_instance')
-            .insert({
-                name:        insert.name,
+    async create(
+        trx: DB.UserTransaction,
+        userId: Auth.User.Id,
+        insert: Vault.Database.Insert.CredentialInstance,
+    ): Promise<Vault.Credential.Instance> {
+        const row = await trx
+            .insertInto('credential_instance')
+            .values({
+                user_id: userId,
+                name: insert.name,
                 template_id: insert.templateId,
-                blob:        insert.blob,
+                blob: insert.blob,
             })
-            .select<string, Vault.Credential.Instance>('id, name, template_id, created_at, updated_at, blob')
-            .single()
-            .throwOnError();
+            .returningAll()
+            .executeTakeFirstOrThrow();
 
-        return data;
+        return DB.CredentialInstance.toDomain(row);
     }
 
-    @SupabaseAssert('vault.credentialInstance.remove')
-    async remove(supabase: SupabaseClient, id: Vault.Credential.Instance.Id): Promise<void> {
-        await supabase
-            .from('credential_instance')
-            .delete()
-            .eq('id', id)
-            .throwOnError();
+    @AllowedDatabaseRoles("user")
+    async remove(
+        trx: DB.UserTransaction,
+        id: Vault.Credential.Instance.Id,
+    ): Promise<void> {
+        await trx
+            .deleteFrom('credential_instance')
+            .where('id', '=', id)
+            .execute();
     }
 
-    @SupabaseAssert('vault.credentialInstance.fetchBlob')
-    async fetchBlob(supabase: SupabaseClient, id: Vault.Credential.Instance.Id): Promise<Vault.Credential.Instance.EncryptedBlob> {
-        const { data } = await supabase
-            .from('credential_instance')
-            .select<string, { blob: Vault.Credential.Instance.EncryptedBlob }>('blob')
-            .eq('id', id)
-            .single()
-            .throwOnError();
+    @AllowedDatabaseRoles("user")
+    async fetchBlob(
+        trx: DB.UserTransaction,
+        id: Vault.Credential.Instance.Id,
+    ): Promise<Vault.Credential.Instance.EncryptedBlob> {
+        const row = await trx
+            .selectFrom('credential_instance')
+            .select('blob')
+            .where('id', '=', id)
+            .executeTakeFirstOrThrow();
 
-        return data!.blob;
+        return row.blob;
     }
 
-    @SupabaseAssert('vault.credentialInstance.listByIds')
+    @AllowedDatabaseRoles("user", "service")
     @ZodReturn(Vault.Credential.Instance.Schema.array())
-    async listByIds(supabase: SupabaseClient, ids: Vault.Credential.Instance.Id[]): Promise<Vault.Credential.Instance[]> {
-        if (ids.length === 0) return [];
+    async listByIds(
+        trx: DB.Transaction<'user' | 'service'>,
+        ids: Vault.Credential.Instance.Id[],
+    ): Promise<Vault.Credential.Instance[]> {
+        if (!ids.length)
+            return [];
 
-        const { data } = await supabase
-            .from('credential_instance')
-            .select<string, Vault.Credential.Instance>('id, name, template_id, created_at, updated_at, blob')
-            .in('id', ids)
-            .throwOnError();
+        const rows = await trx
+            .selectFrom('credential_instance')
+            .selectAll()
+            .where('id', 'in', ids)
+            .execute();
 
-        return data ?? [];
+        return rows.map(DB.CredentialInstance.toDomain);
     }
 
-    @SupabaseAssert('vault.credentialInstance.updateName')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Vault.Credential.Instance.Schema)
-    async updateName(supabase: SupabaseClient, req: Vault.API.CredentialInstance.UpdateName.Request): Promise<Vault.Credential.Instance> {
-        const { data } = await supabase
-            .from('credential_instance')
-            .update({ name: req.name })
-            .eq('id', req.id)
-            .select<string, Vault.Credential.Instance>('id, name, template_id, created_at, updated_at, blob')
-            .single()
-            .throwOnError();
+    async updateName(
+        trx: DB.UserTransaction,
+        req: Vault.API.CredentialInstance.UpdateName.Request,
+    ): Promise<Vault.Credential.Instance> {
+        const row = await trx
+            .updateTable('credential_instance')
+            .set({ name: req.name })
+            .where('id', '=', req.id)
+            .returningAll()
+            .executeTakeFirstOrThrow();
 
-        return data;
+        return DB.CredentialInstance.toDomain(row);
     }
 
-    @SupabaseAssert('vault.credentialInstance.update')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Vault.Credential.Instance.Schema)
-    async update(supabase: SupabaseClient, id: Vault.Credential.Instance.Id, name: string, blob: Vault.Credential.Instance.EncryptedBlob): Promise<Vault.Credential.Instance> {
-        const { data } = await supabase
-            .from('credential_instance')
-            .update({ name, blob })
-            .eq('id', id)
-            .select<string, Vault.Credential.Instance>('id, name, template_id, created_at, updated_at, blob')
-            .single()
-            .throwOnError();
+    async update(
+        trx: DB.UserTransaction,
+        id: Vault.Credential.Instance.Id,
+        name: string,
+        blob: Vault.Credential.Instance.EncryptedBlob,
+    ): Promise<Vault.Credential.Instance> {
+        const row = await trx
+            .updateTable('credential_instance')
+            .set({ name, blob })
+            .where('id', '=', id)
+            .returningAll()
+            .executeTakeFirstOrThrow();
 
-        return data;
+        return DB.CredentialInstance.toDomain(row);
     }
 }
 
 @Injectable()
+@DatabaseClass
 export class VaultDatabase {
     public readonly credentialInstance = new CredentialInstanceMethods();
 }

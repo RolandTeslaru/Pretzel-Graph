@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { createHash } from 'crypto';
 import { Principal } from '@/domain/Principal';
-import { ApiKey, SystemError } from '@pretzel-graph/shared/domain';
+import { ApiKey } from '@pretzel-graph/shared/domain';
+import { DB } from '@/db';
 
 function generateRawKey(): ApiKey.Raw {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -25,35 +26,63 @@ export class ApiKeysService {
         const prefix = raw.slice(0, 12);
         const keyHash = hashKey(raw);
 
-        const { data, error } = await principal.supabase
-            .from('api_keys')
-            .insert({ user_id: principal.userId, name: req.name, prefix, key_hash: keyHash })
-            .select('id, user_id, name, prefix, last_used_at, expires_at, revoked_at, created_at')
-            .single();
-
-        if (error || !data) throw new SystemError(SystemError.Code.INFRA_UNKNOWN, 'Failed to create API key');
+        const data = await DB.asUser(principal, (trx) =>
+            trx
+                .insertInto('api_keys')
+                .values({
+                    user_id: principal.userId,
+                    name: req.name,
+                    prefix,
+                    key_hash: keyHash,
+                    last_used_at: null,
+                    expires_at: null,
+                    revoked_at: null,
+                })
+                .returning([
+                    'id',
+                    'user_id',
+                    'name',
+                    'prefix',
+                    'last_used_at',
+                    'expires_at',
+                    'revoked_at',
+                    'created_at',
+                ])
+                .executeTakeFirstOrThrow(),
+        );
 
         return { apiKey: ApiKey.Schema.parse(data), raw };
     }
 
     async list(principal: Principal.User): Promise<ApiKey.API.List.Response> {
-        const { data, error } = await principal.supabase
-            .from('api_keys')
-            .select('id, user_id, name, prefix, last_used_at, expires_at, revoked_at, created_at')
-            .order('created_at', { ascending: false });
+        const data = await DB.asUser(principal, (trx) =>
+            trx
+                .selectFrom('api_keys')
+                .select([
+                    'id',
+                    'user_id',
+                    'name',
+                    'prefix',
+                    'last_used_at',
+                    'expires_at',
+                    'revoked_at',
+                    'created_at',
+                ])
+                .orderBy('created_at', 'desc')
+                .execute(),
+        );
 
-        if (error) throw new SystemError(SystemError.Code.INFRA_UNKNOWN, 'Failed to list API keys');
-
-        return { apiKeys: (data ?? []).map(row => ApiKey.Schema.parse(row)) };
+        return { apiKeys: data.map((row) => ApiKey.Schema.parse(row)) };
     }
 
     async revoke(principal: Principal.User, req: ApiKey.API.Revoke.Request): Promise<ApiKey.API.Revoke.Response> {
-        const { error } = await principal.supabase
-            .from('api_keys')
-            .update({ revoked_at: new Date().toISOString() })
-            .eq('id', req.id);
-
-        if (error) throw new SystemError(SystemError.Code.INFRA_UNKNOWN, 'Failed to revoke API key');
+        await DB.asUser(principal, (trx) =>
+            trx
+                .updateTable('api_keys')
+                .set({ revoked_at: new Date().toISOString() })
+                .where('id', '=', req.id)
+                .execute(),
+        );
 
         return {};
     }

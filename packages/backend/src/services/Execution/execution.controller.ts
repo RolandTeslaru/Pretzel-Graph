@@ -1,7 +1,7 @@
 import { Controller, Post, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { ExecutionService } from './execution.service';
 import { Auth, Execution } from '@pretzel-graph/shared/domain';
-import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
+import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { InternalAuthGuard, InternalAuthenticatedRequest } from '../../auth/internal-auth.guard';
 import { ApiKeyAuthGuard, ApiKeyAuthenticatedRequest } from '../../auth/api-key-auth.guard';
 import { CurrentUser } from '@/decorators/principal';
@@ -13,7 +13,7 @@ export class ExecutionController {
     constructor(private readonly executionService: ExecutionService) {}
 
     @Post('run')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async run(
         @CurrentUser() principal: Principal.User,
@@ -33,7 +33,7 @@ export class ExecutionController {
     }
 
     @Post('pause')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async pause(
         @CurrentUser() principal: Principal.User,
@@ -43,7 +43,7 @@ export class ExecutionController {
     }
 
     @Post('resume')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async resume(
         @CurrentUser() principal: Principal.User,
@@ -53,7 +53,7 @@ export class ExecutionController {
     }
 
     @Post('heartbeat')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async heartbeat(
         @CurrentUser() principal: Principal.User,
@@ -63,7 +63,7 @@ export class ExecutionController {
     }
 
     @Post('suspend')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async suspend(
         @CurrentUser() principal: Principal.User,
@@ -73,7 +73,7 @@ export class ExecutionController {
     }
 
     @Post('terminate')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async terminate(
         @CurrentUser() principal: Principal.User,
@@ -83,7 +83,7 @@ export class ExecutionController {
     }
 
     @Post('terminate-all')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async terminateAll(@CurrentUser() principal: Principal.User) {
         return this.executionService.terminateAll(principal);
@@ -99,7 +99,7 @@ export class ExecutionController {
     }
 
     @Post('get')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async get(
         @CurrentUser() principal: Principal.User,
@@ -118,7 +118,7 @@ export class ExecutionController {
     }
 
     @Post('meta/list')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async metaList(
         @CurrentUser() principal: Principal.User,
@@ -128,7 +128,7 @@ export class ExecutionController {
     }
 
     @Post('meta/get')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async metaGet(
         @CurrentUser() principal: Principal.User,
@@ -138,24 +138,39 @@ export class ExecutionController {
     }
 
     @Post('meta/list-active')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async metaListActive(@CurrentUser() principal: Principal.User) {
         return this.executionService.meta.listActive(principal);
     }
 
-    @Post('sdk/run')
-    @UseGuards(ApiKeyAuthGuard)
-    @HttpCode(200)
-    async sdkRun(
-        @Req() req: ApiKeyAuthenticatedRequest,
-        @ZodBody(Execution.API.SdkRun.Request) body: Execution.API.SdkRun.Request,
-    ) {
-        return this.executionService.runFromSdk(req.user.id as Auth.User.Id, body);
-    }
+    // DISABLED — route intentionally unregistered, do not restore as-is.
+    //
+    // runFromSdk loads the published workflow by id with no ownership check
+    // (execution.database.ts getActivePublishedWorkflowData filters on
+    // workflow_id + is_active only) and then runs it under a service-role
+    // handle, so credential resolution is RLS-free. Any API key holder could
+    // therefore execute another user's workflow with that user's credentials
+    // and read the output. Unreachable today only because no API keys exist.
+    //
+    // Before re-enabling, decide what this endpoint is for:
+    //   - "run my own workflows" -> add ownership.assertWorkflow(workflowId, userId)
+    //     ahead of the load, mirroring runFromUser
+    //   - "let others invoke my published workflow" -> the assert is wrong; needs
+    //     a consent model and the caller's own credentials, not the owner's
+    //
+    // @Post('sdk/run')
+    // @UseGuards(ApiKeyAuthGuard)
+    // @HttpCode(200)
+    // async sdkRun(
+    //     @Req() req: ApiKeyAuthenticatedRequest,
+    //     @ZodBody(Execution.API.SdkRun.Request) body: Execution.API.SdkRun.Request,
+    // ) {
+    //     return this.executionService.runFromSdk(req.user.id as Auth.User.Id, body);
+    // }
 
     @Post('recording/get-live')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async recordingGetLive(
         @CurrentUser() principal: Principal.User,

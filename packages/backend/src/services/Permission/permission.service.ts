@@ -1,4 +1,4 @@
-import { createServiceClient } from "@/utils/supabase";
+import { DB } from '@/db';
 import { Injectable } from "@nestjs/common";
 import { Auth, Chat, Execution, SystemError, Workflow } from "@pretzel-graph/shared/domain";
 
@@ -8,8 +8,6 @@ const OWNERSHIP_CACHE_MAX = 10_000
 
 @Injectable()
 export class PermissionService {
-
-    private readonly serviceSupabase = createServiceClient();
 
     private ownershipCache = new Map<Workflow.Id | Chat.Id | Execution.Id, { ownerId: Auth.User.Id, expiresAt: number }>();
 
@@ -109,16 +107,17 @@ export class PermissionService {
         if (cached)
             return cached;
 
-        const { data, error } = await this.serviceSupabase
-            .from('workflows')
-            .select('user_id')
-            .eq('id', workflowId)
-            .maybeSingle();
-
-        if (error || !data?.user_id)
+        const row = await DB.asService('load workflow owner', (db) =>
+            db
+                .selectFrom('workflows')
+                .select('user_id')
+                .where('id', '=', workflowId)
+                .executeTakeFirst(),
+        );
+        if (!row)
             throw new SystemError(SystemError.Code.NOT_FOUND, 'Workflow not found');
 
-        const ownerId = data.user_id as Auth.User.Id;
+        const ownerId = row.user_id;
         this.cacheOwner(workflowId, ownerId);
         return ownerId;
     }
@@ -131,16 +130,17 @@ export class PermissionService {
         if (cached)
             return cached;
 
-        const { data } = await this.serviceSupabase
-            .from('executions')
-            .select('user_id')
-            .eq('id', executionId)
-            .maybeSingle();
-
-        if (!data?.user_id)
+        const row = await DB.asService('load execution owner', (db) =>
+            db
+                .selectFrom('executions')
+                .select('user_id')
+                .where('id', '=', executionId)
+                .executeTakeFirst(),
+        );
+        if (!row)
             return null;   // never cache the miss — preemptive subscribe relies on re-checking
 
-        const ownerId = data.user_id as Auth.User.Id;
+        const ownerId = row.user_id;
         this.cacheOwner(executionId, ownerId);
         return ownerId;
     }
@@ -153,16 +153,17 @@ export class PermissionService {
         if (cached)
             return cached;
 
-        const { data } = await this.serviceSupabase
-            .from('chats')
-            .select('user_id')
-            .eq('id', chatId)
-            .maybeSingle();
-
-        if (!data?.user_id)
+        const row = await DB.asService('load chat owner', (db) =>
+            db
+                .selectFrom('chats')
+                .select('user_id')
+                .where('id', '=', chatId)
+                .executeTakeFirst(),
+        );
+        if (!row)
             return null;   // never cache the miss
 
-        const ownerId = data.user_id as Auth.User.Id;
+        const ownerId = row.user_id;
         this.cacheOwner(chatId, ownerId);
         return ownerId;
     }
@@ -171,13 +172,14 @@ export class PermissionService {
     public async assertUserAdmin(
         userId: Auth.User.Id
     ) {
-        const { data, error } = await this.serviceSupabase
-            .from('users')
-            .select('is_admin')
-            .eq('id', userId)
-            .single();
-
-        if (error || !data?.is_admin)
+        const row = await DB.asService('check user admin', (db) =>
+            db
+                .selectFrom('users')
+                .select('is_admin')
+                .where('id', '=', userId)
+                .executeTakeFirst(),
+        );
+        if (!row?.is_admin)
             throw new SystemError(SystemError.Code.INFRA_UNKNOWN, 'Admin access required');
     }
 }
