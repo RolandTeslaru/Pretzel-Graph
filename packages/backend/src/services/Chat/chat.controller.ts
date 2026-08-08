@@ -1,13 +1,13 @@
 import { Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { Chat } from '@pretzel-graph/shared/domain';
-import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
+import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { CurrentUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('chat')
-@UseGuards(SupabaseAuthGuard)
+@UseGuards(UserAuthGuard)
 export class ChatController {
     constructor(private readonly chatService: ChatService) { }
 

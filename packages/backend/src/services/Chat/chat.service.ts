@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
+import { DB } from '@/db';
 import { Chat } from '@pretzel-graph/shared/domain';
 import { ChatDatabase } from './chat.database';
 import { PermissionService } from '../Permission/permission.service';
@@ -20,9 +21,7 @@ export class ChatService {
         // Don't let a chat be attached to a workflow the user doesn't own.
         await this.ownership.assertWorkflow(workflow_id, principal.userId);
 
-        const chat = await this.database.chat.create(
-            principal.supabase, principal.userId, workflow_id, name
-        );
+        const chat = await DB.asUser(principal, (trx) => this.database.chat.create(trx, principal.userId, workflow_id, name));
 
         return { chat };
     }
@@ -35,7 +34,7 @@ export class ChatService {
 
         await this.ownership.assertWorkflow(workflow_id, principal.userId);
 
-        const chat = await this.database.chat.ensure(principal.supabase, principal.userId, chatId, workflow_id, name);
+        const chat = await DB.asUser(principal, (trx) => this.database.chat.ensure(trx, principal.userId, chatId, workflow_id, name));
         return { chat };
     }
 
@@ -43,13 +42,13 @@ export class ChatService {
         principal: Principal.User,
         payload: Chat.API.Get.Request
     ): Promise<Chat.API.Get.Response> {
-        return await this.database.chat.get(principal.supabase, principal.userId, payload.chatId);
+        return DB.asUser(principal, (trx) => this.database.chat.get(trx, principal.userId, payload.chatId));
     }
 
     async list(
         principal: Principal.User,
     ): Promise<Chat.API.List.Response> {
-        const chats = await this.database.chat.list(principal.supabase, principal.userId);
+        const chats = await DB.asUser(principal, (trx) => this.database.chat.list(trx, principal.userId));
         return { chats };
     }
 
@@ -61,7 +60,7 @@ export class ChatService {
 
         await this.ownership.assertWorkflow(workflow_id, principal.userId);
 
-        const chats = await this.database.chat.listByWorkflow(principal.supabase, principal.userId, workflow_id);
+        const chats = await DB.asUser(principal, (trx) => this.database.chat.listByWorkflow(trx, principal.userId, workflow_id));
         return { chats };
     }
 
@@ -69,7 +68,7 @@ export class ChatService {
         principal: Principal.User,
         payload: Chat.API.Erase.Request
     ): Promise<Chat.API.Erase.Response> {
-        await this.database.chat.erase(principal.supabase, principal.userId, payload.chatId);
+        await DB.asUser(principal, (trx) => this.database.chat.erase(trx, principal.userId, payload.chatId));
         return {};
     }
 
@@ -79,7 +78,7 @@ export class ChatService {
             payload: Chat.API.Message.Add.Request
         ): Promise<Chat.API.Message.Add.Response> => {
             const { chatId, messages } = payload;
-            await this.database.message.add(principal.supabase, chatId, messages);
+            await DB.asUser(principal, (trx) => this.database.message.add(trx, chatId, messages));
             return {};
         },
 
@@ -87,7 +86,7 @@ export class ChatService {
             principal: Principal.User,
             payload: Chat.API.Message.Erase.Request
         ): Promise<Chat.API.Message.Erase.Response> => {
-            await this.database.message.erase(principal.supabase, payload.messageId);
+            await DB.asUser(principal, (trx) => this.database.message.erase(trx, payload.messageId));
             return {};
         },
 
@@ -96,7 +95,7 @@ export class ChatService {
             payload: Chat.API.Message.Update.Request
         ): Promise<Chat.API.Message.Update.Response> => {
             const { messageId, content } = payload;
-            await this.database.message.update(principal.supabase, messageId, content);
+            await DB.asUser(principal, (trx) => this.database.message.update(trx, messageId, content));
             return {};
         }
     };

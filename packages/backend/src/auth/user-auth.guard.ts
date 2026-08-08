@@ -14,7 +14,7 @@ export interface AuthenticatedRequest extends Request {
 }
 
 @Injectable()
-export class SupabaseAuthGuard implements CanActivate {
+export class UserAuthGuard implements CanActivate {
     async canActivate(context: NestExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
         const token = this.extractTokenFromHeader(request);
@@ -31,7 +31,7 @@ export class SupabaseAuthGuard implements CanActivate {
                 throw new UnauthorizedException('Invalid token');
             }
 
-            request.principal = { type: 'user', userId, supabase };
+            request.principal = { type: 'user', userId };
 
             // Legacy fields — drop once every controller reads the principal.
             request.user = { id: userId };

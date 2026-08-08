@@ -2,9 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue, QueueEvents } from 'bullmq';
 import Redis from 'ioredis';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { createServiceClient } from '@/utils/supabase';
 import { Principal } from '@/domain/Principal';
+import { DB } from '@/db';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { Auth, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
@@ -26,11 +25,6 @@ export class ExecutionService {
 
     private readonly redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 
-    private readonly serviceSupabase = createServiceClient();
-
-
-
-
     constructor(
         @InjectQueue(Execution.Queue.ID)
         private readonly executionQueue: Queue,
@@ -43,7 +37,7 @@ export class ExecutionService {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
             console.error(`[Execution] ${jobId} failed:`, failedReason);
             const status = failedReason === 'terminated' ? 'terminated' : 'failed';
-            await this.database.update(this.serviceSupabase, { executionId: jobId as Execution.Id, status, error: failedReason });
+            await DB.asService('mark failed BullMQ execution', (db) => this.database.update(db, { executionId: jobId as Execution.Id, status, error: failedReason }));
         });
     }
 
@@ -55,7 +49,7 @@ export class ExecutionService {
         payload:   Execution.API.Run.Request,
     ): Promise<Execution.API.Run.Response> {
         const ownerId = await this.ownership.assertWorkflow(payload.workflowId, principal.userId);
-        return this.runCore(principal.supabase, ownerId, payload, payload.igniter);
+        return this.runCore((fn) => DB.asUser(principal, fn), ownerId, payload, payload.igniter);
     }
 
 
@@ -69,18 +63,18 @@ export class ExecutionService {
 
         const ownerId = await this.ownership.loadWorkflowOwner(payload.workflowId);
 
-        return this.runCore(this.serviceSupabase, ownerId, payload, payload.igniter);
+        return this.runCore((fn) => DB.asService(`run workflow from ${service}`, fn), ownerId, payload, payload.igniter);
     }
 
     public async runFromSdk(
         userId:  Auth.User.Id,
         payload: Execution.API.SdkRun.Request,
     ): Promise<Execution.API.SdkRun.Response> {
-        const workflowData = await this.database.getActivePublishedWorkflowData(this.serviceSupabase, payload.workflowId);
+        const workflowData = await DB.asService('load SDK publication', (db) => this.database.getActivePublishedWorkflowData(db, payload.workflowId));
         const igniter: Execution.Igniter = { variant: 'sdk', record: false, inputs: payload.inputs };
 
         const runPayload: Execution.API.Run.Request = { workflowId: payload.workflowId, workflowData, igniter };
-        const result = await this.runCore(this.serviceSupabase, userId, runPayload, igniter);
+        const result = await this.runCore((fn) => DB.asService('run SDK workflow', fn), userId, runPayload, igniter);
 
         if (payload.await) return result;
 
@@ -127,7 +121,7 @@ export class ExecutionService {
     }
 
     private async runCore(
-        supabase: SupabaseClient,
+        withDatabase: DB.Delegate,
         userId:   Auth.User.Id,
         payload:  Execution.API.Run.Request,
         igniter:  Execution.Igniter,
@@ -153,10 +147,10 @@ export class ExecutionService {
             );
 
         if (chatId)
-            await this.chatDatabase.chat.ensure(supabase, userId, chatId, workflowId);
+            await withDatabase((db) => this.chatDatabase.chat.ensure(db, userId, chatId, workflowId));
 
         const session = Execution.Session.createInitial();
-        const executionId = await this.database.create(supabase, { workflowId, userId, igniter, session, executionId: payload.executionId, chatId: chatId });
+        const executionId = await withDatabase((db) => this.database.create(db, { workflowId, userId, igniter, session, executionId: payload.executionId, chatId }));
 
         const execution = {
             id: executionId,
@@ -173,7 +167,7 @@ export class ExecutionService {
 
         try {
             const credentialInstanceIds = collectCredentialInstanceIds(workflowData);
-            const instances = await this.vaultDatabase.credentialInstance.listByIds(supabase, [...credentialInstanceIds]);
+            const instances = await withDatabase((db) => this.vaultDatabase.credentialInstance.listByIds(db, [...credentialInstanceIds]));
             const credentialInstances = Object.fromEntries(instances.map(i => [i.id, i])) as Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>;
 
             const queueItem: Execution.Queue.Item = {
@@ -187,7 +181,7 @@ export class ExecutionService {
 
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            await this.database.update(supabase, { executionId, status: 'failed', error: message });
+            await withDatabase((db) => this.database.update(db, { executionId, status: 'failed', error: message }));
             throw error;
         }
 
@@ -198,7 +192,7 @@ export class ExecutionService {
         );
 
         if (!started) {
-            await this.database.update(supabase, { executionId, status: 'failed', error: 'No worker picked up the job' });
+            await withDatabase((db) => this.database.update(db, { executionId, status: 'failed', error: 'No worker picked up the job' }));
             this.executionQueue.remove(executionId).catch(err =>
                 console.error('Failed to remove execution from queue after start timeout', err)
             );
@@ -239,7 +233,7 @@ export class ExecutionService {
             'paused',
         );
 
-        if (success) await this.database.update(principal.supabase, { executionId, status: 'paused' });
+        if (success) await DB.asUser(principal, (db) => this.database.update(db, { executionId, status: 'paused' }));
         return { success };
     }
 
@@ -260,7 +254,7 @@ export class ExecutionService {
             'resumed',
         );
 
-        if (success) await this.database.update(principal.supabase, { executionId, status: 'running' });
+        if (success) await DB.asUser(principal, (db) => this.database.update(db, { executionId, status: 'running' }));
         return { success };
     }
 
@@ -302,7 +296,7 @@ export class ExecutionService {
             'suspended',
         );
 
-        if (success) await this.database.update(principal.supabase, { executionId, status: 'suspended' });
+        if (success) await DB.asUser(principal, (db) => this.database.update(db, { executionId, status: 'suspended' }));
         return { success };
     }
 
@@ -323,7 +317,7 @@ export class ExecutionService {
             'terminated',
         );
 
-        if (success) await this.database.update(principal.supabase, { executionId, status: 'terminated' });
+        if (success) await DB.asUser(principal, (db) => this.database.update(db, { executionId, status: 'terminated' }));
         return { success };
     }
 
@@ -331,7 +325,7 @@ export class ExecutionService {
 
 
     public async finalise({ executionId, status }: Execution.API.Finalise.Request): Promise<Execution.API.Finalise.Response> {
-        await this.database.update(this.serviceSupabase, { executionId, status });
+        await DB.asService('finalise execution', (db) => this.database.update(db, { executionId, status }));
         return {};
     }
 
@@ -344,7 +338,7 @@ export class ExecutionService {
     ): Promise<Execution.API.TerminateAll.Response> {
         await this.ownership.assertUserAdmin(principal.userId);
 
-        const activeExecutionIds = await this.database.listActiveIds(this.serviceSupabase);
+        const activeExecutionIds = await DB.asService('list active executions for termination', (db) => this.database.listActiveIds(db));
         if (activeExecutionIds.length === 0) return { terminatedCount: 0 };
 
         for (const executionId of activeExecutionIds) {
@@ -359,7 +353,9 @@ export class ExecutionService {
         for (const job of waiting) 
             await job.remove();
 
-        await this.database.terminateMany(this.serviceSupabase, activeExecutionIds, 'Terminated by admin');
+        const terminateActive = (trx: DB.Transaction<'user' | 'service'>) => this.database.terminateMany(trx, activeExecutionIds, 'Terminated by admin');
+
+        await DB.asService('terminate active executions', terminateActive);
 
         return { terminatedCount: activeExecutionIds.length };
     }
@@ -375,7 +371,7 @@ export class ExecutionService {
 
         await this.ownership.assertExecution(executionId, principal.userId);
 
-        const execution = await this.database.get(principal.supabase, executionId);
+        const execution = await DB.asUser(principal, (db) => this.database.get(db, executionId));
 
         return { execution };
     }
@@ -387,7 +383,7 @@ export class ExecutionService {
         payload: Execution.API.Update.Request
     ): Promise<Execution.API.Update.Response> {
         const { executionId, status, duration, session, recording } = payload;
-        await this.database.update(this.serviceSupabase, { executionId, status, duration, session, recording });
+        await DB.asService('persist worker execution update', (db) => this.database.update(db, { executionId, status, duration, session, recording }));
         return {};
     }
 
@@ -418,7 +414,7 @@ export class ExecutionService {
 
             await this.ownership.assertExecution(executionId, principal.userId);
 
-            const meta = await this.database.meta.get(principal.supabase, executionId);
+            const meta = await DB.asUser(principal, (db) => this.database.meta.get(db, executionId));
 
             return { execution: meta };
         },
@@ -430,7 +426,7 @@ export class ExecutionService {
         ): Promise<Execution.API.Meta.List.Response> => {
             const { workflowId } = payload;
 
-            const metaList = await this.database.meta.list(principal.supabase, workflowId);
+            const metaList = await DB.asUser(principal, (db) => this.database.meta.list(db, workflowId));
 
             return { executions: metaList };
         },
@@ -442,7 +438,7 @@ export class ExecutionService {
         ): Promise<Execution.API.Meta.ListActive.Response> => {
             await this.ownership.assertUserAdmin(principal.userId);
 
-            const executions = await this.database.meta.listActive(principal.supabase);
+            const executions = await DB.asUser(principal, (db) => this.database.meta.listActive(db));
 
             return { executions: executions };
         }
@@ -450,6 +446,7 @@ export class ExecutionService {
 
 
 }
+
 
 function collectCredentialInstanceIds(workflowData: Workflow.Data): Set<Vault.Credential.Instance.Id> {
     const ids = new Set<Vault.Credential.Instance.Id>();

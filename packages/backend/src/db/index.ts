@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Kysely, PostgresDialect, Transaction, sql } from 'kysely';
+import { Kysely, PostgresDialect, Transaction as KyselyTransaction, sql } from 'kysely';
 import type { ColumnType, Generated } from 'kysely';
 import { Pool, types as pgTypes, type CustomTypesConfig } from 'pg';
 import {
@@ -253,11 +253,39 @@ export namespace DB {
         credential_instance: Table<typeof CredentialInstance.Row, 'id' | Stamps>;
     }
 
-    /** An RLS-scoped transaction. */
-    export type Scope = Transaction<Tables>;
+    export const Role = { User: 'user', Service: 'service' } as const;
+    export type  Role = typeof Role[keyof typeof Role];
 
-    /** What every data-layer method accepts — a scope or the elevated handle. */
-    export type Any = Kysely<Tables> | Transaction<Tables>;
+    /**
+     * A transaction, branded with the identity it runs as. No default on `R` —
+     * a signature must state which roles it accepts, so the permissive form
+     * costs more to write than the safe one.
+     */
+    export type Transaction<R extends Role> = KyselyTransaction<Tables> & { readonly __as: R };
+
+    /** The common case: RLS is on and auth.uid() is the acting user. */
+    export type UserTransaction = Transaction<typeof Role.User>;
+
+    /**
+     * A transaction with its identity already bound, passed as a value. Lets one
+     * code path be reached as a user or as the service role without branching:
+     * `(fn) => DB.asUser(principal, fn)` / `(fn) => DB.asService(why, fn)`.
+     * The role is erased here — this is why the runtime tag exists.
+     */
+    export type Delegate = <T>(fn: (trx: Transaction<Role>) => Promise<T>) => Promise<T>;
+
+    // The brand is a phantom type, so @AllowedDatabaseRoles has nothing to read.
+    // symbol is the runtime half — attached by the two functions below, checked
+    // by the decorator. Symbol.for so a duplicated module still matches.
+    const ROLE = Symbol.for('pretzel.db.role');
+
+    const tag = <R extends Role>(trx: KyselyTransaction<Tables>, role: R): Transaction<R> => {
+        Object.defineProperty(trx, ROLE, { value: role, enumerable: false, configurable: true });
+        return trx as Transaction<R>;
+    };
+
+    export const roleOf = (handle: unknown): Role | undefined =>
+        (handle as Record<symbol, Role> | null | undefined)?.[ROLE];
 
     // Only what the wrapper needs, so a future ApiKey principal satisfies it.
     type ActingUser = Pick<Principal.User, 'userId'>;
@@ -265,7 +293,7 @@ export namespace DB {
     /** Runs `fn` inside a transaction acting as `principal`, with RLS enforced. */
     export async function asUser<T>(
         principal: ActingUser,
-        fn: (trx: Scope) => Promise<T>,
+        fn: (trx: UserTransaction) => Promise<T>,
     ): Promise<T> {
         const claims = JSON.stringify({ sub: principal.userId, role: 'authenticated' });
 
@@ -280,17 +308,17 @@ export namespace DB {
                     set_config('request.jwt.claims', ${claims}, true)
             `.execute(trx);
 
-            return fn(trx);
+            return fn(tag(trx, Role.User));
         });
     }
 
     /** Runs `fn` with RLS bypassed. `reason` is mandatory so every bypass is greppable. */
-    export async function withServiceRole<T>(
+    export async function asService<T>(
         reason: string,
-        fn: (db: Kysely<Tables>) => Promise<T>,
+        fn: (trx: Transaction<typeof Role.Service>) => Promise<T>,
     ): Promise<T> {
         void reason;
-        return fn(service());
+        return service().transaction().execute((trx) => fn(tag(trx, Role.Service)));
     }
 
     export async function destroyPools(): Promise<void> {

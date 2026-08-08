@@ -1,205 +1,237 @@
 import { Injectable } from '@nestjs/common';
-import { DB } from '@/db';
-import { getUserId } from '@/utils/supabase';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { SystemError, VersionControl, Workflow, Workbench } from '@pretzel-graph/shared/domain';
-import { SupabaseAssert, ZodReturn } from '../../decorators/database';
 import { z } from 'zod';
+import { Auth, SystemError, Workflow, Workbench } from '@pretzel-graph/shared/domain';
+import { DB } from '@/db';
+import { ZodReturn } from '../../decorators/database';
+import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
 
+@DatabaseClass
 class WorkflowMethods {
 
-    @SupabaseAssert('workbench.workflow.create')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Workflow.Id)
-    async create(supabase: SupabaseClient, payload: Workbench.API.Workflow.Create.Request): Promise<Workflow.Id> {
-        const workflow = payload.workflow;
-        const user_id = await getUserId(supabase);
-        if (!user_id) throw new Error('Unauthenticated');
-
-        const { data: row } = await supabase
-            .from('workflows')
-            .insert({
-                folder_id:    workflow.folder_id,
+    async create(
+        trx: DB.UserTransaction,
+        userId: Auth.User.Id,
+        payload: Workbench.API.Workflow.Create.Request,
+    ): Promise<Workflow.Id> {
+        const { workflow } = payload;
+        const row = await trx
+            .insertInto('workflows')
+            .values({
+                folder_id: workflow.folder_id,
                 display_name: workflow.display_name,
-                description:  workflow.description,
-                locked:       workflow.locked,
-                mcp_enabled:  false,
-                data:         workflow.data,
-                user_id,
+                description: workflow.description,
+                icon: workflow.icon,
+                accent: workflow.accent,
+                icon_color: workflow.icon_color,
+                locked: workflow.locked,
+                mcp_enabled: false,
+                data: workflow.data,
+                user_id: userId,
             })
-            .select('id')
-            .single<{ id: Workflow.Id }>()
-            .throwOnError();
+            .returning('id')
+            .executeTakeFirstOrThrow();
 
-        return row!.id;
+        return row.id;
     }
 
-    @SupabaseAssert('workbench.workflow.get')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Workflow.Schema)
-    async get(supabase: SupabaseClient, workflowId: Workflow.Id): Promise<Workflow> {
-        const { data: row } = await supabase
-            .from('workflows')
-            .select('*')
-            .eq('id', workflowId)
-            .single<DB.Workflow.Row>()
-            .throwOnError();
+    async get(trx: DB.UserTransaction, workflowId: Workflow.Id): Promise<Workflow> {
+        const row = await trx
+            .selectFrom('workflows')
+            .selectAll()
+            .where('id', '=', workflowId)
+            .executeTakeFirstOrThrow();
 
         return DB.Workflow.toDomain(row);
     }
 
-    @SupabaseAssert('workbench.workflow.commit')
-    async commit(supabase: SupabaseClient, payload: Workbench.API.Workflow.Commit.Request): Promise<void> {
-        await supabase
-            .from('workflows')
-            .update({ data: payload.data, updated_at: new Date().toISOString() })
-            .eq('id', payload.workflowId)
-            .throwOnError();
+    @AllowedDatabaseRoles("user")
+    async commit(
+        trx: DB.UserTransaction,
+        payload: Workbench.API.Workflow.Commit.Request,
+    ): Promise<void> {
+        await trx
+            .updateTable('workflows')
+            .set({ data: payload.data })
+            .where('id', '=', payload.workflowId)
+            .execute();
     }
 }
 
+@DatabaseClass
 class PublishedDependencyMethods {
 
-    @SupabaseAssert('workbench.dependency.published.load')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Workflow.Dependency.Publication.Schema)
-    async load(supabase: SupabaseClient, workflowId: Workflow.Id): Promise<Workflow.Dependency.Publication> {
-        const requesterId = await getUserId(supabase);
-        if (!requesterId) throw new Error('Unauthenticated');
-
-        const { data: workflow } = await supabase
-            .from('workflows')
-            .select('id, display_name, icon, accent')
-            .eq('id', workflowId)
-            .or(`user_id.eq.${requesterId},is_public.eq.true`)
-            .maybeSingle<Pick<DB.Workflow.Row, 'id' | 'display_name' | 'icon' | 'accent'>>()
-            .throwOnError();
+    async load(
+        trx: DB.UserTransaction,
+        workflowId: Workflow.Id,
+    ): Promise<Workflow.Dependency.Publication> {
+        // RLS is the authority here: the scope exposes either an owned workflow
+        // or an active publication of a public workflow.
+        const workflow = await trx
+            .selectFrom('workflows')
+            .select(['id', 'display_name', 'icon', 'accent'])
+            .where('id', '=', workflowId)
+            .executeTakeFirst();
 
         if (!workflow)
-            throw new SystemError(SystemError.Code.NOT_FOUND, 'Workflow not found or not public');
+            throw new SystemError(
+                SystemError.Code.NOT_FOUND,
+                'Workflow not found or not public',
+            );
 
-        const { data: row } = await supabase
-            .from('version_control')
-            .select('*')
-            .eq('workflow_id', workflowId)
-            .eq('is_active', true)
-            .maybeSingle()
-            .throwOnError();
+        const row = await trx
+            .selectFrom('version_control')
+            .selectAll()
+            .where('workflow_id', '=', workflowId)
+            .where('is_active', '=', true)
+            .executeTakeFirst();
 
         if (!row)
-            throw new SystemError(SystemError.Code.NOT_FOUND, 'No active publication found for this public workflow');
+            throw new SystemError(
+                SystemError.Code.NOT_FOUND,
+                'No active publication found for this public workflow',
+            );
 
-        const publication = VersionControl.Publication.Schema.parse(row);
+        const publication = DB.VersionControl.toDomain(row);
 
         return {
             ...publication,
             publication_name: publication.name,
-            display_name:     workflow.display_name,
-            icon:             workflow.icon,
-            accent:           workflow.accent,
+            display_name: workflow.display_name,
+            icon: workflow.icon,
+            accent: workflow.accent,
         };
     }
 
-    @SupabaseAssert('workbench.dependency.published.checkUpdates')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(z.record(Workflow.Id, Workflow.Dependency.Publication.UpdateInfo))
     async checkUpdates(
-        supabase:     SupabaseClient,
+        trx: DB.UserTransaction,
         dependencies: Workbench.API.Dependency.Published.CheckUpdates.Request['dependencies'],
     ): Promise<Record<Workflow.Id, Workflow.Dependency.Publication.UpdateInfo>> {
-        if (dependencies.length === 0) return {};
+        if (!dependencies.length)
+            return {};
 
-        const workflowIds = dependencies.map(d => d.workflowId);
-        const currentPublicationById = new Map(dependencies.map(d => [d.workflowId, d.publicationId]));
+        const storedByWorkflow = new Map(
+            dependencies.map((dependency) => [
+                dependency.workflowId,
+                dependency.publicationId,
+            ]),
+        );
+        const workflowIds = dependencies.map((dependency) => dependency.workflowId);
 
-        const { data: rows } = await supabase
-            .from('version_control')
-            .select('id, workflow_id, version, name, description')
-            .in('workflow_id', workflowIds)
-            .eq('is_active', true)
-            .throwOnError();
+        const rows = await trx
+            .selectFrom('version_control')
+            .select(['id', 'workflow_id', 'version', 'name', 'description'])
+            .where('workflow_id', 'in', workflowIds)
+            .where('is_active', '=', true)
+            .execute();
 
         const updates: Record<Workflow.Id, Workflow.Dependency.Publication.UpdateInfo> = {};
-        for (const row of rows ?? []) {
-            const stored = currentPublicationById.get(row.workflow_id as Workflow.Id);
-            if (stored && stored !== row.id)
-                updates[row.workflow_id as Workflow.Id] = {
-                    workflowId:    row.workflow_id as Workflow.Id,
-                    publicationId: row.id,
-                    version:       row.version,
-                    name:          row.name,
-                    description:   row.description ?? null,
-                };
+
+        for (const row of rows) {
+            if (storedByWorkflow.get(row.workflow_id) === row.id)
+                continue;
+
+            updates[row.workflow_id] = {
+                workflowId: row.workflow_id,
+                publicationId: row.id,
+                version: row.version,
+                name: row.name,
+                description: row.description,
+            };
         }
 
         return updates;
     }
 }
 
+@DatabaseClass
 class DraftDependencyMethods {
 
-    @SupabaseAssert('workbench.dependency.draft.load')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Workflow.Dependency.Draft.Schema)
-    async load(supabase: SupabaseClient, workflowId: Workflow.Id): Promise<Workflow.Dependency.Draft> {
-        const requesterId = await getUserId(supabase);
-        if (!requesterId) throw new Error('Unauthenticated');
-
-        const { data: row } = await supabase
-            .from('workflows')
-            .select('id, display_name, icon, accent, data, updated_at')
-            .eq('id', workflowId)
-            .or(`user_id.eq.${requesterId},is_public.eq.true`)
-            .maybeSingle<Pick<DB.Workflow.Row, 'id' | 'display_name' | 'icon' | 'accent' | 'data' | 'updated_at'>>()
-            .throwOnError();
+    async load(
+        trx: DB.UserTransaction,
+        workflowId: Workflow.Id,
+    ): Promise<Workflow.Dependency.Draft> {
+        const row = await trx
+            .selectFrom('workflows')
+            .select(['id', 'display_name', 'icon', 'accent', 'data', 'updated_at'])
+            .where('id', '=', workflowId)
+            .executeTakeFirst();
 
         if (!row)
-            throw new SystemError(SystemError.Code.NOT_FOUND, 'Workflow not found or not accessible');
+            throw new SystemError(
+                SystemError.Code.NOT_FOUND,
+                'Workflow not found or not accessible',
+            );
 
         return {
-            workflow_id:         row.id,
-            workflow_data:       Workflow.Data.Schema.parse(row.data),
-            display_name:        row.display_name,
-            icon:                row.icon,
-            accent:              row.accent,
+            workflow_id: row.id,
+            workflow_data: Workflow.Data.Schema.parse(row.data),
+            display_name: row.display_name,
+            icon: row.icon,
+            accent: row.accent,
             workflow_updated_at: row.updated_at,
         };
     }
 
-    @SupabaseAssert('workbench.dependency.draft.checkUpdates')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(z.record(Workflow.Id, Workflow.Dependency.Draft.UpdateInfo))
     async checkUpdates(
-        supabase:     SupabaseClient,
+        trx: DB.UserTransaction,
         dependencies: Workbench.API.Dependency.Draft.CheckUpdates.Request['dependencies'],
     ): Promise<Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>> {
-        if (dependencies.length === 0) return {};
+        if (!dependencies.length)
+            return {};
 
-        const workflowIds = dependencies.map(d => d.workflowId);
-        const currentUpdatedAt = new Map(dependencies.map(d => [d.workflowId, d.workflow_updated_at]));
+        const storedByWorkflow = new Map(
+            dependencies.map((dependency) => [
+                dependency.workflowId,
+                dependency.workflow_updated_at,
+            ]),
+        );
+        const workflowIds = dependencies.map((dependency) => dependency.workflowId);
 
-        const { data: rows } = await supabase
-            .from('workflows')
-            .select('id, updated_at')
-            .in('id', workflowIds)
-            .throwOnError();
+        const rows = await trx
+            .selectFrom('workflows')
+            .select(['id', 'updated_at'])
+            .where('id', 'in', workflowIds)
+            .execute();
 
         const updates: Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo> = {};
-        for (const row of rows ?? []) {
-            const stored = currentUpdatedAt.get(row.id as Workflow.Id);
-            const rowDate = row.updated_at;
-            if (stored && rowDate.getTime() !== stored.getTime())
-                updates[row.id as Workflow.Id] = {
-                    workflowId:          row.id as Workflow.Id,
-                    workflow_updated_at: rowDate,
+
+        for (const row of rows) {
+            const stored = storedByWorkflow.get(row.id);
+            const changed = new Date(stored ?? 0).getTime() !== new Date(row.updated_at).getTime();
+
+            if (changed) {
+                updates[row.id] = {
+                    workflowId: row.id,
+                    workflow_updated_at: row.updated_at,
                 };
+            }
         }
 
         return updates;
     }
 }
 
+@DatabaseClass
 class DependencyMethods {
     public readonly published = new PublishedDependencyMethods();
-    public readonly draft     = new DraftDependencyMethods();
+    public readonly draft = new DraftDependencyMethods();
 }
 
 @Injectable()
+@DatabaseClass
 export class WorkbenchDatabase {
-    public readonly workflow   = new WorkflowMethods();
+    public readonly workflow = new WorkflowMethods();
     public readonly dependency = new DependencyMethods();
 }

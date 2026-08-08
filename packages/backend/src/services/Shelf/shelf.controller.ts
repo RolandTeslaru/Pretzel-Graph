@@ -1,11 +1,11 @@
 import { Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
 import { ShelfService } from './shelf.service';
 import { Shelf } from '@pretzel-graph/shared/domain';
-import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
+import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('shelf')
-@UseGuards(SupabaseAuthGuard)
+@UseGuards(UserAuthGuard)
 export class ShelfController {
     constructor(private readonly shelfService: ShelfService) { }
 

@@ -1,13 +1,13 @@
 import { Controller, Post, Get, Delete, Body, Param, UseGuards, HttpCode, Patch } from '@nestjs/common';
 import { LibraryService } from './library.service';
 import { Library, Workflow } from '@pretzel-graph/shared/domain';
-import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
+import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { CurrentUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { ZodBody } from '../../pipes/zod.pipe';
 
 @Controller('library')
-@UseGuards(SupabaseAuthGuard)
+@UseGuards(UserAuthGuard)
 export class LibraryController {
     constructor(private readonly libraryService: LibraryService) { }
 

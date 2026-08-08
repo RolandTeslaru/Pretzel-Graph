@@ -3,16 +3,18 @@ import { sql } from 'kysely';
 import { z } from 'zod';
 import { Auth, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
-import { SupabaseAssert, ZodReturn } from '../../decorators/database';
+import { ZodReturn } from '../../decorators/database';
+import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
 
 const META_COLUMNS = ['id', 'workflow_id', 'version', 'name', 'description', 'is_active', 'published_at'] as const;
 
 @Injectable()
+@DatabaseClass
 export class VersionControlDatabase {
 
-    @SupabaseAssert('publication.publish')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Schema)
-    async publish(trx: DB.Scope, userId: Auth.User.Id, { workflowId, name, description, workflowData }: VersionControl.API.Publish.Request): Promise<VersionControl.Publication> {
+    async publish(trx: DB.UserTransaction, userId: Auth.User.Id, { workflowId, name, description, workflowData }: VersionControl.API.Publish.Request): Promise<VersionControl.Publication> {
         // Named-arg notation picks the 5-arg overload; there is a 3-arg one too.
         const { rows } = await sql<DB.VersionControl.Row>`
             select * from publish_workflow(
@@ -27,9 +29,9 @@ export class VersionControlDatabase {
         return DB.VersionControl.toDomain(rows[0]);
     }
 
-    @SupabaseAssert('publication.list')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Meta.Schema.array())
-    async list(trx: DB.Scope, { workflowId }: VersionControl.API.List.Request): Promise<VersionControl.Publication.Meta[]> {
+    async list(trx: DB.UserTransaction, { workflowId }: VersionControl.API.List.Request): Promise<VersionControl.Publication.Meta[]> {
         // No user_id filter: the SELECT policy also exposes active publications
         // of public workflows, which this endpoint relies on.
         const rows = await trx
@@ -42,9 +44,9 @@ export class VersionControlDatabase {
         return rows.map(DB.VersionControl.toMeta);
     }
 
-    @SupabaseAssert('versionControl.listActiveWorkflows')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(z.record(Workflow.Id, VersionControl.Publication.Meta.Schema))
-    async listActiveWorkflows(trx: DB.Scope, userId: Auth.User.Id): Promise<Record<Workflow.Id, VersionControl.Publication.Meta>> {
+    async listActiveWorkflows(trx: DB.UserTransaction, userId: Auth.User.Id): Promise<Record<Workflow.Id, VersionControl.Publication.Meta>> {
         const rows = await trx
             .selectFrom('version_control')
             .select(META_COLUMNS)
@@ -58,9 +60,9 @@ export class VersionControlDatabase {
         ) as Record<Workflow.Id, VersionControl.Publication.Meta>;
     }
 
-    @SupabaseAssert('versionControl.getActiveByWorkflow')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Meta.Schema.nullable())
-    async getActiveByWorkflow(trx: DB.Scope, userId: Auth.User.Id, { workflowId }: VersionControl.API.GetActiveByWorkflow.Request): Promise<VersionControl.Publication.Meta | null> {
+    async getActiveByWorkflow(trx: DB.UserTransaction, userId: Auth.User.Id, { workflowId }: VersionControl.API.GetActiveByWorkflow.Request): Promise<VersionControl.Publication.Meta | null> {
         const row = await trx
             .selectFrom('version_control')
             .select(META_COLUMNS)
@@ -72,9 +74,9 @@ export class VersionControlDatabase {
         return row ? DB.VersionControl.toMeta(row) : null;
     }
 
-    @SupabaseAssert('publication.get')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Schema)
-    async get(trx: DB.Scope, { publicationId }: VersionControl.API.Get.Request): Promise<VersionControl.Publication> {
+    async get(trx: DB.UserTransaction, { publicationId }: VersionControl.API.Get.Request): Promise<VersionControl.Publication> {
         const row = await trx
             .selectFrom('version_control')
             .selectAll()
@@ -84,9 +86,9 @@ export class VersionControlDatabase {
         return DB.VersionControl.toDomain(row);
     }
 
-    @SupabaseAssert('publication.activate')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Schema)
-    async activate(trx: DB.Scope, { publicationId }: VersionControl.API.Activate.Request): Promise<VersionControl.Publication> {
+    async activate(trx: DB.UserTransaction, { publicationId }: VersionControl.API.Activate.Request): Promise<VersionControl.Publication> {
         // SECURITY INVOKER — resolves through RLS, so it only works inside a scope.
         const { rows } = await sql<DB.VersionControl.Row>`
             select * from activate_publication(${publicationId}::uuid)
@@ -95,9 +97,9 @@ export class VersionControlDatabase {
         return DB.VersionControl.toDomain(rows[0]);
     }
 
-    @SupabaseAssert('publication.deactivate')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Schema)
-    async deactivate(trx: DB.Scope, { publicationId }: VersionControl.API.Deactivate.Request): Promise<VersionControl.Publication> {
+    async deactivate(trx: DB.UserTransaction, { publicationId }: VersionControl.API.Deactivate.Request): Promise<VersionControl.Publication> {
         const row = await trx
             .updateTable('version_control')
             .set({ is_active: false })
@@ -108,9 +110,9 @@ export class VersionControlDatabase {
         return DB.VersionControl.toDomain(row);
     }
 
-    @SupabaseAssert('publication.remove')
+    @AllowedDatabaseRoles("user")
     @ZodReturn(z.object({ workflowId: Workflow.Id, wasActive: z.boolean() }))
-    async remove(trx: DB.Scope, { publicationId }: VersionControl.API.Remove.Request): Promise<{ workflowId: Workflow.Id; wasActive: boolean }> {
+    async remove(trx: DB.UserTransaction, { publicationId }: VersionControl.API.Remove.Request): Promise<{ workflowId: Workflow.Id; wasActive: boolean }> {
         const row = await trx
             .deleteFrom('version_control')
             .where('id', '=', publicationId)

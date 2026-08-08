@@ -1,7 +1,7 @@
 import { Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
 import { HumanReviewService } from './human-review.service';
 import { HumanReview } from '@pretzel-graph/shared/domain';
-import { SupabaseAuthGuard } from '../../auth/supabase-auth.guard';
+import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { CurrentUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { ZodBody } from '../../pipes/zod.pipe';
@@ -11,7 +11,7 @@ export class HumanReviewController {
     constructor(private readonly humanReviewService: HumanReviewService) {}
 
     @Post('respond')
-    @UseGuards(SupabaseAuthGuard)
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async respond(
         @CurrentUser() principal: Principal.User,
