@@ -22,14 +22,23 @@ export namespace HTTP {
         }
     }
 
+    /** Per-request config. Extends axios's own so any existing call site still type-checks. */
+    export interface RequestConfig extends AxiosRequestConfig {
+        /** Narrows the client's retry rule for this one request. Return false to treat an
+         *  otherwise-retryable failure as permanent — some vendors answer a bad argument with a
+         *  5xx, and retrying that only delays the error. Receives the response status (undefined
+         *  for a network error) and the parsed body. */
+        retryable?: (status: number | undefined, body: unknown) => boolean,
+    }
+
     /** Thin client over an axios instance: verbs resolve to the response body, `raw` is the
      *  escape hatch for callers that need headers/status. */
     export interface Client {
-        get:    <T>(url: string, config?: AxiosRequestConfig) => Promise<T>,
-        post:   <T>(url: string, data?: unknown, config?: AxiosRequestConfig) => Promise<T>,
-        put:    <T>(url: string, data?: unknown, config?: AxiosRequestConfig) => Promise<T>,
-        patch:  <T>(url: string, data?: unknown, config?: AxiosRequestConfig) => Promise<T>,
-        delete: <T>(url: string, config?: AxiosRequestConfig) => Promise<T>,
+        get:    <T>(url: string, config?: RequestConfig) => Promise<T>,
+        post:   <T>(url: string, data?: unknown, config?: RequestConfig) => Promise<T>,
+        put:    <T>(url: string, data?: unknown, config?: RequestConfig) => Promise<T>,
+        patch:  <T>(url: string, data?: unknown, config?: RequestConfig) => Promise<T>,
+        delete: <T>(url: string, config?: RequestConfig) => Promise<T>,
         raw:    AxiosInstance,
     }
 
