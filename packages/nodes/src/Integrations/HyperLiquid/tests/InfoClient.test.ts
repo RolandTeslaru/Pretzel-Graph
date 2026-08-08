@@ -1,5 +1,9 @@
+import "reflect-metadata";
+
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
+import { HTTP } from "@pretzel-graph/node-sdk";
 
 import {
     HYPERLIQUID_INFO_URL,
@@ -75,6 +79,47 @@ describe("HyperLiquidInfoClient", () => {
         assert.equal(account.state.dex, "xyz");
         assert.equal(balances[0].coin, "USDC");
         assert.equal(http.calls[1].payload.user, ADDRESS.toLowerCase());
+    });
+
+
+    it("names the coin when candles come back as a bodiless 500", async () => {
+        const http = new HTTPMock({
+            candleSnapshot: () => {
+                throw new HTTP.Error(
+                    "HyperLiquid request failed: POST  -> 500 Internal Server Error.",
+                    "HyperLiquid", "POST", "", 500, null,
+                );
+            },
+        });
+        const client = new HyperLiquidInfoClient(http.api);
+
+        await assert.rejects(
+            () => client.candles({ coin: "BTC/USD", interval: "1h", startTime: 1_000, endTime: 2_000 }),
+            /unknown coin 'BTC\/USD'.*BTC\/USDC or BTCUSDT are not valid/s,
+        );
+    });
+
+
+    it("names the coin when the order book comes back null", async () => {
+        const http = new HTTPMock({ l2Book: null });
+        const client = new HyperLiquidInfoClient(http.api);
+
+        await assert.rejects(
+            () => client.orderBook({ coin: "HYPE/USDC" }),
+            /unknown coin 'HYPE\/USDC'/,
+        );
+    });
+
+
+    it("leaves unrelated transport failures untouched", async () => {
+        const http = new HTTPMock({
+            l2Book: () => {
+                throw new HTTP.Error("HyperLiquid rate limited.", "HyperLiquid", "POST", "", 429, { error: "429" });
+            },
+        });
+        const client = new HyperLiquidInfoClient(http.api);
+
+        await assert.rejects(() => client.orderBook({ coin: "BTC" }), /rate limited/);
     });
 
 

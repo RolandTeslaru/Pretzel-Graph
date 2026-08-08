@@ -1,10 +1,20 @@
-import type { HTTP } from "@pretzel-graph/node-sdk";
+import { HTTP } from "@pretzel-graph/node-sdk";
 import type { z } from "zod";
 
 import { HyperLiquid } from "../domain";
 
 
 export const HYPERLIQUID_INFO_URL = "https://api.hyperliquid.xyz/info";
+
+/**
+ * The accepted coin id forms, worded for whoever has to correct a bad one — a user reading a
+ * field tooltip or a model retrying a tool call.
+ */
+export const COIN_ID_FORMS =
+    "Perpetuals use the bare uppercase base ticker (BTC, ETH, HYPE). "
+    + "Spot uses the @index id (@107); PURR/USDC is the one pair name that also resolves. "
+    + "HIP-3 markets use dex:coin. "
+    + "Exchange-style pair ids such as BTC/USD, BTC/USDC or BTCUSDT are not valid here.";
 
 
 type CandleArgs = {
@@ -63,6 +73,47 @@ export class HyperLiquidInfoClient {
     }
 
 
+    /**
+     * A coin-scoped read. Hyperliquid reports an unknown coin two different ways — a bodiless 500
+     * on `candleSnapshot`, a null 200 on `l2Book` — and neither names the coin, so both surface as
+     * one message that says which id failed and what a valid one looks like.
+     *
+     * That bodiless 500 is permanent, so it opts out of the retry loop; a 500 that carries a body
+     * is a real server fault and still retries.
+     */
+    async #postForCoin<TSchema extends z.ZodType>(
+        coin: string,
+        payload: Record<string, unknown>,
+        schema: TSchema,
+    ): Promise<z.output<TSchema>> {
+
+        let response: unknown;
+
+        try {
+            response = await this.#http.post<unknown>("", payload, {
+                retryable: (status, body) => !(status === 500 && body == null),
+            });
+        }
+        catch (error) {
+
+            if (error instanceof HTTP.Error && error.status === 500 && error.body == null)
+                throw HyperLiquidInfoClient.#unknownCoin(coin);
+
+            throw error;
+        }
+
+        if (response == null)
+            throw HyperLiquidInfoClient.#unknownCoin(coin);
+
+        return schema.parse(response);
+    }
+
+
+    static #unknownCoin(coin: string): Error {
+        return new Error(`Hyperliquid: unknown coin '${coin}'. ${COIN_ID_FORMS}`);
+    }
+
+
     static #required(value: string, name: string): string {
         const text = value.trim();
 
@@ -95,7 +146,7 @@ export class HyperLiquidInfoClient {
         if (!Number.isSafeInteger(args.startTime) || !Number.isSafeInteger(endTime) || args.startTime >= endTime)
             throw new Error("Hyperliquid: candle startTime must be an integer before endTime.");
 
-        const response = await this.#post({
+        const response = await this.#postForCoin(coin, {
             type: "candleSnapshot",
             req: { coin, interval, startTime: args.startTime, endTime },
         }, HyperLiquid.API.CandleSnapshot);
@@ -122,7 +173,7 @@ export class HyperLiquidInfoClient {
         if (args.mantissa !== undefined && args.nSigFigs !== 5)
             throw new Error("Hyperliquid: mantissa is only valid when nSigFigs is 5.");
 
-        const response = await this.#post({
+        const response = await this.#postForCoin(coin, {
             type: "l2Book",
             coin,
             ...(args.nSigFigs !== undefined ? { nSigFigs: args.nSigFigs } : {}),

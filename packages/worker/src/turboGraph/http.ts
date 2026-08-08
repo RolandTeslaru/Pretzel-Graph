@@ -61,13 +61,18 @@ const toHTTPError = (vendor: string, err: unknown): HTTP.Error => {
 };
 
 
-// Retry transient failures and network errors; never a 4xx, and never an abort.
+// Retry transient failures and network errors; never a 4xx, and never an abort. A request may
+// narrow this further via `retryable`, but never widen it.
 const isRetryable = (err: unknown): boolean => {
 
     if (!isAxiosError(err) || err.code === "ERR_CANCELED")
         return false;
 
     const status = err.response?.status;
+    const narrow = (err.config as HTTP.RequestConfig | undefined)?.retryable;
+
+    if (narrow && !narrow(status, err.response?.data))
+        return false;
 
     if (status === undefined)
         return true;
@@ -177,19 +182,19 @@ export function createHTTPClientAPI(executionSignal: AbortSignal): HTTP.ClientAP
 
             return {
 
-                get: <T>(url: string, config?: AxiosRequestConfig) =>
+                get: <T>(url: string, config?: HTTP.RequestConfig) =>
                     instance.get<T>(url, config).then(r => r.data),
 
-                post: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
+                post: <T>(url: string, data?: unknown, config?: HTTP.RequestConfig) =>
                     instance.post<T>(url, data, config).then(r => r.data),
 
-                put: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
+                put: <T>(url: string, data?: unknown, config?: HTTP.RequestConfig) =>
                     instance.put<T>(url, data, config).then(r => r.data),
 
-                patch: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
+                patch: <T>(url: string, data?: unknown, config?: HTTP.RequestConfig) =>
                     instance.patch<T>(url, data, config).then(r => r.data),
 
-                delete: <T>(url: string, config?: AxiosRequestConfig) =>
+                delete: <T>(url: string, config?: HTTP.RequestConfig) =>
                     instance.delete<T>(url, config).then(r => r.data),
 
                 raw: instance,
