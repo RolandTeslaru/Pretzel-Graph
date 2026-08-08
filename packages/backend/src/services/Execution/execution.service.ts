@@ -50,36 +50,27 @@ export class ExecutionService {
         payload:   Execution.API.Run.Request,
     ): Promise<Execution.API.Run.Response> {
         const ownerId = await this.ownership.assertWorkflow(payload.workflowId, principal.userId);
-        return this.runCore((fn) => DB.asUser(principal, fn), ownerId, payload, payload.igniter);
+        return this.runCore(ownerId, payload, payload.igniter);
     }
 
 
 
 
 
+    /**
+     * A trigger with no user session behind it — today an inbound webhook. The run still
+     * belongs to someone: the webhook only exists because that user published the workflow,
+     * so it acts on their behalf and runs with their privileges.
+     */
     public async runFromService(
         payload: Execution.API.Run.InternalRequest,
         service: string,
     ): Promise<Execution.API.Run.Response> {
+        void service;
 
         const ownerId = await this.ownership.loadWorkflowOwner(payload.workflowId);
 
-        return this.runCore((fn) => DB.asService(`run workflow from ${service}`, fn), ownerId, payload, payload.igniter);
-    }
-
-    public async runFromSdk(
-        userId:  Auth.User.Id,
-        payload: Execution.API.SdkRun.Request,
-    ): Promise<Execution.API.SdkRun.Response> {
-        const workflowData = await DB.asService('load SDK publication', (db) => this.database.getActivePublishedWorkflowData(db, payload.workflowId));
-        const igniter: Execution.Igniter = { variant: 'sdk', record: false, inputs: payload.inputs };
-
-        const runPayload: Execution.API.Run.Request = { workflowId: payload.workflowId, workflowData, igniter };
-        const result = await this.runCore((fn) => DB.asService('run SDK workflow', fn), userId, runPayload, igniter);
-
-        if (payload.await) return result;
-
-        return { executionId: result.execution.id };
+        return this.runCore(ownerId, payload, payload.igniter);
     }
 
 
@@ -124,12 +115,19 @@ export class ExecutionService {
         return blueprints;
     }
 
+    /**
+     * Every run acts as the workflow's owner, whoever triggered it — a user clicking Run
+     * is the owner (assertWorkflow enforces it), and a webhook fires because that owner
+     * published the workflow. So setup binds one identity here rather than taking it from
+     * the caller. RLS then scopes credential resolution on both paths.
+     */
     private async runCore(
-        withDatabase: DB.Opener,
         userId:   Auth.User.Id,
         payload:  Execution.API.Run.Request,
         igniter:  Execution.Igniter,
     ): Promise<Execution.API.Run.Response> {
+        const withDatabase = <T>(fn: (trx: DB.UserTransaction) => Promise<T>) => DB.asUser({ userId }, fn);
+
         const { workflowId } = payload;
         const chatId = igniter.chat_id;
         const workflowData = payload.workflowData;

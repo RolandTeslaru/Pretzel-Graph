@@ -275,17 +275,6 @@ export namespace DB {
     /** RLS is on and auth.uid() is whoever the running execution acts for. */
     export type DelegateTransaction = Transaction<typeof Role.Delegate>;
 
-    /**
-     * Opens a transaction with its identity already bound, passed as a value. Lets one
-     * code path be reached as a user or as the service role without branching:
-     * `(fn) => DB.asUser(principal, fn)` / `(fn) => DB.asService(why, fn)`.
-     * The role is erased here — this is why the runtime tag exists.
-     *
-     * Unrelated to Principal.Delegate / asDelegate: an execution acting for its owner
-     * gets its own scope, never this.
-     */
-    export type Opener = <T>(fn: (trx: Transaction<'user' | 'service'>) => Promise<T>) => Promise<T>;
-
     // The brand is a phantom type, so @AllowedDatabaseRoles has nothing to read.
     // symbol is the runtime half — attached by the two functions below, checked
     // by the decorator. Symbol.for so a duplicated module still matches.

@@ -106,9 +106,9 @@ class MetaMethods {
 export class ExecutionDatabase {
     public readonly meta = new MetaMethods();
 
-    @AllowedDatabaseRoles("user", "service")
+    @AllowedDatabaseRoles("user")
     async create(
-        trx: DB.Transaction<'user' | 'service'>,
+        trx: DB.UserTransaction,
         props: {
             workflowId: Workflow.Id;
             userId: Auth.User.Id;
@@ -191,28 +191,6 @@ export class ExecutionDatabase {
             .executeTakeFirstOrThrow();
 
         return DB.Execution.toDomain(row);
-    }
-
-    @AllowedDatabaseRoles("user", "service")
-    @ZodReturn(Workflow.Data.Schema)
-    async getActivePublishedWorkflowData(
-        trx: DB.Transaction<'user' | 'service'>,
-        workflowId: Workflow.Id,
-    ): Promise<Workflow.Data> {
-        const row = await trx
-            .selectFrom('version_control')
-            .select('workflow_data')
-            .where('workflow_id', '=', workflowId)
-            .where('is_active', '=', true)
-            .executeTakeFirst();
-
-        if (!row)
-            throw new SystemError(
-                SystemError.Code.NOT_FOUND,
-                'No active published version found for this workflow',
-            );
-
-        return Workflow.Data.Schema.parse(row.workflow_data);
     }
 
     @AllowedDatabaseRoles("user", "service")

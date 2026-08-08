@@ -65,10 +65,10 @@ class CredentialInstanceMethods {
         return row.blob;
     }
 
-    @AllowedDatabaseRoles("user", "service")
+    @AllowedDatabaseRoles("user")
     @ZodReturn(Vault.Credential.Instance.Schema.array())
     async listByIds(
-        trx: DB.Transaction<'user' | 'service'>,
+        trx: DB.UserTransaction,
         ids: Vault.Credential.Instance.Id[],
     ): Promise<Vault.Credential.Instance[]> {
         if (!ids.length)

@@ -1,9 +1,8 @@
 import { Controller, Post, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { ExecutionService } from './execution.service';
-import { Auth, Execution } from '@pretzel-graph/shared/domain';
+import { Execution } from '@pretzel-graph/shared/domain';
 import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { InternalAuthGuard, InternalAuthenticatedRequest } from '../../auth/internal-auth.guard';
-import { ApiKeyAuthGuard, ApiKeyAuthenticatedRequest } from '../../auth/api-key-auth.guard';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { ZodBody } from '../../pipes/zod.pipe';
@@ -144,30 +143,23 @@ export class ExecutionController {
         return this.executionService.meta.listActive(principal);
     }
 
-    // DISABLED — route intentionally unregistered, do not restore as-is.
+    // REMOVED — there is no sdk/run route and no runFromSdk. Rebuild, don't restore.
     //
-    // runFromSdk loads the published workflow by id with no ownership check
-    // (execution.database.ts getActivePublishedWorkflowData filters on
-    // workflow_id + is_active only) and then runs it under a service-role
-    // handle, so credential resolution is RLS-free. Any API key holder could
-    // therefore execute another user's workflow with that user's credentials
-    // and read the output. Unreachable today only because no API keys exist.
+    // The old implementation loaded a published workflow by id with no ownership
+    // check, then ran it under a service-role handle with the *caller* as owner —
+    // so credential resolution was RLS-free and returned the publisher's secrets to
+    // whoever held an API key. Unreachable in practice only because no keys exist.
     //
-    // Before re-enabling, decide what this endpoint is for:
-    //   - "run my own workflows" -> add ownership.assertWorkflow(workflowId, userId)
-    //     ahead of the load, mirroring runFromUser
-    //   - "let others invoke my published workflow" -> the assert is wrong; needs
-    //     a consent model and the caller's own credentials, not the owner's
+    // It was deleted rather than converted, because every run now acts as the
+    // workflow owner and the SDK case is the one where caller and owner differ.
+    // Nothing here can be made correct without first deciding what the endpoint is:
+    //   - "run my own workflows"          -> assertWorkflow(workflowId, callerId),
+    //                                        mirroring runFromUser
+    //   - "let others invoke my workflow" -> a consent model, and whose credentials
+    //                                        the run uses is the open question
     //
-    // @Post('sdk/run')
-    // @UseGuards(ApiKeyAuthGuard)
-    // @HttpCode(200)
-    // async sdkRun(
-    //     @Req() req: ApiKeyAuthenticatedRequest,
-    //     @ZodBody(Execution.API.SdkRun.Request) body: Execution.API.SdkRun.Request,
-    // ) {
-    //     return this.executionService.runFromSdk(req.user.id as Auth.User.Id, body);
-    // }
+    // Execution.API.SdkRun still exists in shared as the wire contract.
+    // See SPECS/delegated-execution-principal.md, "Open Questions".
 
     @Post('recording/get-live')
     @UseGuards(UserAuthGuard)
