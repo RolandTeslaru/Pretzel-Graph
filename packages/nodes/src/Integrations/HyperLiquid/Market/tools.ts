@@ -16,6 +16,15 @@ const limit = (fallback: number, maximum: number) => z.number().int().min(1).max
     .default(fallback)
     .describe("Maximum records to return.");
 
+// Every tool def is permanent agent context, so this carries only what tells a right id from a
+// wrong one. The full rules live in the unknown-coin error, which costs nothing until it fires.
+const COIN_DESCRIPTION =
+    "Exact coin id: perp base ticker, uppercase (BTC, ETH, HYPE); Spot @index (@107); "
+    + "HIP-3 dex:coin. Pair ids (BTC/USD, BTCUSDT) are rejected. "
+    + "Look one up with hyperliquid_list_markets.";
+
+const coin = z.string().describe(COIN_DESCRIPTION);
+
 
 export const selectMids = (
     mids: readonly HyperLiquid.Mid[],
@@ -46,7 +55,7 @@ export function buildTools(
         },
         {
             name:        "hyperliquid_list_markets",
-            description: "List normalized Hyperliquid perpetual or Spot markets ordered by 24-hour notional volume. Perpetual results include leverage, funding, open interest and mark/oracle prices; Spot results include pair and token metadata.",
+            description: "List normalized Hyperliquid perpetual or Spot markets ordered by 24-hour notional volume. Perpetual results include leverage, funding, open interest and mark/oracle prices; Spot results include pair and token metadata. Each result's coin id is the exact value the other Hyperliquid tools accept.",
             schema: z.object({
                 kind: z.enum(["perpetual", "spot"]).default("perpetual"),
                 dex:  z.string().optional().describe("Optional HIP-3 perpetual DEX. Ignored for Spot."),
@@ -65,9 +74,9 @@ export function buildTools(
         },
         {
             name:        "hyperliquid_get_mids",
-            description: "Get current Hyperliquid mid prices. Pass an exact perpetual symbol, Spot pair/@index, or HIP-3 coin to return one reading; omit it to browse a bounded list.",
+            description: "Get current Hyperliquid mid prices. Pass an exact coin id to return one reading; omit it to browse a bounded list.",
             schema: z.object({
-                coin: z.string().optional(),
+                coin: coin.optional().describe(`${COIN_DESCRIPTION} Omit to list every market's mid.`),
                 dex:  z.string().optional().describe("Optional HIP-3 perpetual DEX."),
                 limit: limit(100, 1_000),
             }),
@@ -93,7 +102,7 @@ export function buildTools(
             name:        "hyperliquid_get_candles",
             description: "Get normalized Hyperliquid OHLCV candles. The exchange retains only a bounded recent candle history.",
             schema: z.object({
-                coin: z.string().describe("Perpetual symbol, Spot pair/@index, or HIP-3 dex:coin name."),
+                coin,
                 interval: interval.default("1h"),
                 lookbackHours: z.number().int().min(1).max(24 * 365).default(24),
             }),
@@ -110,7 +119,7 @@ export function buildTools(
             name:        "hyperliquid_get_order_book",
             description: "Get a normalized L2 order book with best-first bids and asks, best prices, spread and total level counts.",
             schema: z.object({
-                coin:  z.string().describe("Perpetual symbol, Spot pair/@index, or HIP-3 dex:coin name."),
+                coin,
                 depth: z.number().int().min(1).max(20).default(15),
             }),
         },

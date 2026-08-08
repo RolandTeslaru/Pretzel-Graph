@@ -436,13 +436,19 @@ export class Synthesizer {
                 return { ...base, role: "human", data: meta } satisfies Chat.Message.Human;
             case "tool": {
                 const lcMsg = msg as LC.ToolMessage;
+                const status = lcMsg.status ?? "success";
+
+                // LC has no error field — a failed tool carries its reason in content.
+                const error = status === "error" ? base.content : undefined;
+
                 return {
                     ...base,
                     role: "tool",
                     data: {
                         tool_call_id: Chat.ToolCall.Id.parse(lcMsg.tool_call_id),
                         tool_name:    lcMsg.name ?? "",
-                        status:       lcMsg.status ?? "success",
+                        status,
+                        error,
                         artifact:     lcMsg.artifact ?? null,
                         ...meta,
                     },

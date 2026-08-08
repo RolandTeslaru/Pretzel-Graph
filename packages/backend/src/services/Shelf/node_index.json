@@ -1,6 +1,6 @@
 {
-  "version": "1786209713777",
-  "generatedAt": "2026-08-08T17:21:53.777Z",
+  "version": "1786218573304",
+  "generatedAt": "2026-08-08T19:49:33.304Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -10575,7 +10575,7 @@
               "required": true,
               "reconcile": false,
               "displayName": "Coin",
-              "tooltip": "Perpetual symbol, Spot pair/@index, or HIP-3 dex:coin name.",
+              "tooltip": "Perpetual symbol (BTC), Spot pair (PURR/USDC or @107), or HIP-3 name (dex:coin).",
               "variant": "String",
               "initialValue": "",
               "multiline": false,

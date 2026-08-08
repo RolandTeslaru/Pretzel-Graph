@@ -264,15 +264,20 @@ export class TurboGraph {
         workflowData: Workflow.Data,
     ): Promise<Foundations.Blueprint> {
 
-        const staticValues = workflowData.staticValues[wfNode.id] ?? {};
-        const base         = await CatalogueService.loadBlueprint(wfNode.blueprintId);
+        // A dependency node is absent from the catalogue by design — go straight to the
+        // Core.SubWorkflow.Execute container instead of attempting the path-convention import.
+        let blueprint: Foundations.Blueprint | null = null;
 
-        let blueprint = base
-            ? await this.deriveNodeBlueprint(wfNode, base, staticValues)
-            : base;
-
-        if (!blueprint)
+        if (wfNode.dependencyRef) {
             blueprint = (await this.resolveDependencyNode(wfNode, workflowData)).blueprint;
+
+        } else {
+            const staticValues = workflowData.staticValues[wfNode.id] ?? {};
+            const base         = await CatalogueService.loadBlueprint(wfNode.blueprintId);
+
+            if (base)
+                blueprint = await this.deriveNodeBlueprint(wfNode, base, staticValues);
+        }
 
         if (!blueprint)
             throw new AggexCompilerError(
@@ -316,11 +321,14 @@ export class TurboGraph {
         engineExecutionCtx: AggexEngine.Execution.Context,
     ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Foundations.Blueprint }> {
 
-        let RuntimeNode = await CatalogueService.getNode(wfNode.blueprintId);
+        // A dependency node has no class of its own — its cosmetic blueprintId resolves to nothing
+        // in the catalogue, so skip the lookup and let resolveDependencyNode supply the container.
+        let RuntimeNode = wfNode.dependencyRef
+            ? null
+            : await CatalogueService.getNode(wfNode.blueprintId);
+
         let blueprint: Foundations.Blueprint | null = await this.resolveBlueprint(wfNode, engineExecutionCtx.workflowData);
 
-        // Gate on the class, not the blueprint: a dependency node has no class of its own, but its
-        // blueprint is cached under the cosmetic id, so on later compiles only getNode stays null.
         if (!RuntimeNode)
             ({ RuntimeNode, blueprint } = await this.resolveDependencyNode(wfNode, engineExecutionCtx.workflowData));
 
