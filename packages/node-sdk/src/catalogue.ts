@@ -4,6 +4,7 @@ import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { RuntimeNode } from "./node";
 import type { Loader } from "./builders/loaders";
+import { PUBLIC_WORKFLOW_BLUEPRINTS } from "@pretzel-graph/shared/constants/publicWorkflows";
 
 export type NodeConstructor = {
     new(
@@ -109,12 +110,17 @@ class CatalogueServiceImpl {
         return blueprint;
     }
 
-    // Sync cache read for the hot path — the compiler warms the cache (loadBlueprint/resolveBlueprint/
-    // registerBlueprint) during prepareNode, so execution-time lookups never hit the async import.
+    // Sync cache read for the hot path — the compiler warms the cache (loadBaseBlueprint/
+    // resolveBlueprint) during prepareNode, so execution-time lookups never hit the async import.
     public getBlueprint(id: Blueprint.Id): Blueprint | undefined {
-        return this.blueprintCache.get(id);
+        let bp = this.blueprintCache.get(id);
+        if(!bp && id in PUBLIC_WORKFLOW_BLUEPRINTS)
+            return this.blueprintCache.get("Core.SubWorkflow.Execute" as Blueprint.Id)
+
+        return bp
     }
 
+    // To be deleted
     public registerBlueprint(id: Blueprint.Id, blueprint: Blueprint): void {
         this.blueprintCache.set(id, blueprint);
     }
