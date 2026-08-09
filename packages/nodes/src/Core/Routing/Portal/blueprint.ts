@@ -7,6 +7,7 @@ export const Blueprint = defineBlueprint({
     icon: "PortalIn",
     accent: "group-routing",
     iconColor: "color-sky-400",
+    passive: true,
     fields: [
         FieldBuilder.MultiOption("direction", "Direction", {
             variant: "tab",

@@ -26,6 +26,15 @@ export namespace Igniter {
         targetNodeId: Workflow.Node.Id,
     })
 
+    // Run from the editor with one igniteable node elected. Igniteable nodes never
+    // self-start, so a run that wants one has to name it; that node becomes the
+    // start node. Carries no payload — whatever the node waits on arrives out of
+    // band, and nothing here knows what kind of node it is.
+    export const WorkbenchIgniter = Base.extend({
+        variant: z.literal("workbench_igniter"),
+        nodeId: Workflow.Node.Id,
+    })
+
     export const SubWorkflow = Base.extend({
         variant: z.literal("sub_workflow"),
         parentNodeId: Workflow.Node.Id,
@@ -64,6 +73,7 @@ export namespace Igniter {
     export const Schema = z.discriminatedUnion("variant", [
         WorkbenchManual,
         WorkbenchStep,
+        WorkbenchIgniter,
         SubWorkflow,
         ChatMessage,
         Webhook,

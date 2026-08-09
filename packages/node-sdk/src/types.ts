@@ -32,7 +32,7 @@ type FlatFieldValues<D> = D extends { fields: infer T }
 type StructuralKey =
     | "id" | "displayName" | "description" | "icon" | "accent" | "iconColor"
     | "fields" | "inputs" | "outputs" | "credentials" | "webhooks"
-    | "toolCompatible" | "proxyCompatible" | "flags" | "itemScope" | "ui"
+    | "toolCompatible" | "proxyCompatible" | "igniter" | "passive" | "flags" | "itemScope" | "ui"
     | "replaces" | "__tool"
 
 type ConditionKeys<T> = Exclude<Extract<keyof T, string>, StructuralKey>
