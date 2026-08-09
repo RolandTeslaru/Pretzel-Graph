@@ -6,7 +6,7 @@
 import { Airlock, Execution, Foundations, Realtime, Vault } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { CatalogueService, HTTP, NetworkProxy, RuntimeNode, mapFieldValues, type NodeConstructor } from "@pretzel-graph/node-sdk";
+import { CatalogueService, HTTP, NetworkProxy, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 
 import { AggexCompilerError } from "../errors";
@@ -22,8 +22,8 @@ import { createContexts } from "./contexts";
 
 // Turns stored Workflow.Data into a runnable execution context. compile() in order:
 //
-//   1. Resolve every node's blueprint — load, derive, or fall back to a subworkflow
-//      dependency — which warms CatalogueService for the sync reads later steps rely on.
+//   1. Resolve every node's blueprint via CatalogueService — load, derive, or fall back to a
+//      subworkflow dependency — into a map keyed the way createCache indexes it.
 //   2. Build the Workflow.Cache (resolved port/field shapes, fat edges) off those blueprints.
 //   3. Create the S2Graph and its START vertex.
 //   4. Register the workflow with the airlock sandbox.
@@ -55,7 +55,7 @@ export class TurboGraph {
         enclosingNodeAPI?:   RuntimeNode.ExecutionContext["enclosingNodeAPI"],
     ): Promise<AggexEngine.Execution.Context> {
 
-        const blueprints    = await this.createBlueprintFetcher(workflowData);
+        const blueprints    = await this.loadAllBlueprints(workflowData);
         const workflowCache = Workflow.createCache(workflowData, blueprints);
 
         const graph = new S2Graph();
@@ -116,23 +116,22 @@ export class TurboGraph {
 
 
 
-    private async createBlueprintFetcher(workflowData: Workflow.Data): Promise<Record<Blueprint.Id, Blueprint>> {
+    // Resolves every node's blueprint up front — createCache reads synchronously, so nothing can
+    // stay behind an await by the time it runs. Keyed the way createCache indexes it.
+    private async loadAllBlueprints(workflowData: Workflow.Data): Promise<Record<Blueprint.Id, Blueprint>> {
 
-        for (const wfNode of Object.values(workflowData.nodes))
-            await this.resolveBlueprint(wfNode, workflowData);
+        const blueprints: Record<Blueprint.Id, Blueprint> = {};
 
+        for (const wfNode of Object.values(workflowData.nodes)) {
 
-        // createCache only needs sync indexed reads; the compiler warms CatalogueService first.
-        return new Proxy({} as Record<Blueprint.Id, Blueprint>, {
+            const staticValues = workflowData.staticValues[wfNode.id] ?? {};
 
-            get: (_target, blueprintId: string | symbol) => {
+            const { blueprint } = await CatalogueService.resolveWorkflowNode(wfNode, staticValues, workflowData);
 
-                if (typeof blueprintId !== "string")
-                    return undefined;
+            blueprints[wfNode.reconciledBlueprintId ?? wfNode.blueprintId] = blueprint;
+        }
 
-                return CatalogueService.getBlueprint(blueprintId as Blueprint.Id);
-            },
-        });
+        return blueprints;
     }
 
 
@@ -144,11 +143,12 @@ export class TurboGraph {
 
             const blueprint    = ctx.catalogueAPI.getBlueprint(node.id);
             const staticValues = ctx.workflowData.staticValues[node.id] ?? {};
+            const modes        = ctx.workflowData.fieldExpressions?.[node.id] ?? {};
             const values       = mapFieldValues(blueprint.fields, staticValues);
 
             for (const field of blueprint.fields) {
 
-                if (Field.isExpression(field) === false)
+                if (Field.usesExpression(field, modes[field.id]) === false)
                     continue;
 
                 const raw = values[field.id];
@@ -159,7 +159,7 @@ export class TurboGraph {
                 try {
                     airlock.compileExpression(
                         Airlock.Source.asExpression(raw),
-                        Airlock.coerceTargetForVariant(field.variant),
+                        Airlock.coerceTargetForField(field),
                     );
                 }
                 catch {
@@ -195,151 +195,6 @@ export class TurboGraph {
                 break;
             }
         }
-    }
-
-
-
-    private getDependencyStore(
-        workflowData: Workflow.Data,
-        wfNode: Workflow.Node.Raw,
-    ) {
-        if (!wfNode.dependencyRef)
-            return null;
-
-        const { workflowId, mode } = wfNode.dependencyRef;
-
-        const store = mode === "publication"
-            ? workflowData.dependencies?.published
-            : workflowData.dependencies?.draft;
-
-        return {
-            workflowId,
-            dependency: store?.[workflowId] ?? null,
-        };
-    }
-
-
-
-    private async resolveDependencyNode(
-        wfNode: Workflow.Node.Raw,
-        workflowData: Workflow.Data,
-    ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Blueprint | null }> {
-
-        if (!wfNode.dependencyRef)
-            throw new AggexCompilerError(
-                SystemError.Code.COMPILATION_NODE_NOT_FOUND,
-                `Could not find node with blueprintId "${wfNode.blueprintId}" in the catalogue`,
-                { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
-            );
-
-        const dependencyRef = this.getDependencyStore(workflowData, wfNode);
-        const hasDep        = !!dependencyRef?.dependency;
-
-        if (!hasDep || !dependencyRef)
-            throw new AggexCompilerError(
-                SystemError.Code.COMPILATION_MISSING_SUBWORKFLOW_DEPENDENCY,
-                `Missing dependency "${dependencyRef?.workflowId ?? "unknown"}" for node "${wfNode.id}"`,
-                { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId, missingDependencyId: dependencyRef?.workflowId } }
-            );
-
-        const executeId   = "Core.SubWorkflow.Execute" as Blueprint.Id;
-        const RuntimeNode = await CatalogueService.getNodeConstructor(executeId);
-
-        if (!RuntimeNode)
-            throw new AggexCompilerError(
-                SystemError.Code.COMPILATION_NODE_NOT_FOUND,
-                `Core.SubWorkflow.Execute node not found in the catalogue`,
-                { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
-            );
-
-        const blueprint = await CatalogueService.loadBaseBlueprint(executeId);
-
-        return { RuntimeNode, blueprint };
-    }
-
-
-
-    private async resolveBlueprint(
-        wfNode: Workflow.Node.Raw,
-        workflowData: Workflow.Data,
-    ): Promise<Blueprint> {
-
-        // A dependency node is absent from the catalogue by design — go straight to the
-        // Core.SubWorkflow.Execute container instead of attempting the path-convention import.
-        let blueprint: Blueprint | null = null;
-
-        if (wfNode.dependencyRef) {
-            blueprint = (await this.resolveDependencyNode(wfNode, workflowData)).blueprint;
-
-        } else {
-            const staticValues = workflowData.staticValues[wfNode.id] ?? {};
-            const base         = await CatalogueService.loadBaseBlueprint(wfNode.blueprintId);
-
-            if (base)
-                blueprint = await this.deriveNodeBlueprint(wfNode, base, staticValues);
-        }
-
-        if (!blueprint)
-            throw new AggexCompilerError(
-                SystemError.Code.COMPILATION_NODE_NOT_FOUND,
-                `Could not resolve node "${wfNode.id}" (${wfNode.blueprintId})`,
-                { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } },
-            );
-
-        CatalogueService.registerBlueprint(wfNode.reconciledBlueprintId ?? wfNode.blueprintId, blueprint);
-
-        return blueprint;
-    }
-
-
-
-    // Replay the derivative path the editor already settled on rather than re-deriving it from
-    // base field values. A nested discriminant belongs to the branch that introduces it, so the
-    // persisted path is the authoritative identity for an existing node.
-    private async deriveNodeBlueprint(
-        wfNode:       Workflow.Node.Raw,
-        base:         Blueprint,
-        staticValues: Record<Field.Id, Field.Value>,
-    ): Promise<Blueprint | null> {
-
-        if (!base._derivatives?.length)
-            return base;
-
-        const path = wfNode.reconciledBlueprintId && Blueprint.isReconciledId(wfNode.reconciledBlueprintId)
-            ? wfNode.reconciledBlueprintId.slice(base.id.length + 1)
-            : null;
-
-        return path
-            ? Blueprint.deriveByPath(base, path)
-            : Blueprint.derive(base, staticValues).blueprint;
-    }
-
-
-
-    private async resolveNode(
-        wfNode: Workflow.Node.Raw,
-        wfData: Workflow.Data,
-    ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Blueprint }> {
-
-        // A dependency node has no class of its own — its cosmetic blueprintId resolves to nothing
-        // in the catalogue, so skip the lookup and let resolveDependencyNode supply the container.
-        let RuntimeNode = wfNode.dependencyRef
-            ? null
-            : await CatalogueService.getNodeConstructor(wfNode.blueprintId);
-
-        let blueprint: Blueprint | null = await this.resolveBlueprint(wfNode, wfData);
-
-        if (!RuntimeNode)
-            ({ RuntimeNode, blueprint } = await this.resolveDependencyNode(wfNode, wfData));
-
-        if (!RuntimeNode || !blueprint)
-            throw new AggexCompilerError(
-                SystemError.Code.COMPILATION_NODE_NOT_FOUND,
-                `Could not resolve node "${wfNode.id}" (${wfNode.blueprintId})`,
-                { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } },
-            );
-
-        return { RuntimeNode, blueprint };
     }
 
 
@@ -380,7 +235,6 @@ export class TurboGraph {
         const workflowData = engineExecutionCtx.workflowData
         const staticValues = workflowData.staticValues[wfNode.id] ?? {};
 
-        // const { RuntimeNode, blueprint } = await this.resolveNode(wfNode, engineExecutionCtx);
         const { RuntimeNode, blueprint } = await CatalogueService.resolveWorkflowNode(wfNode, staticValues, workflowData);
 
         this.assertProxySupported(wfNode, blueprint, engineExecutionCtx);
