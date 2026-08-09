@@ -8,6 +8,7 @@ export const Blueprint = defineBlueprint({
     description: "Starts the workflow from inbound webhook requests.",
     icon: "Webhook",
     accent: "utility",
+    igniter: true,
     fields: [
         FieldBuilder.UniqueString("path", "Path", {
             required: true,
@@ -52,17 +53,8 @@ export const Blueprint = defineBlueprint({
         }
     ],
     outputs: [
-        OutputBuilder.Data("body", "Body", {
-            tooltip: "Webhook request body."
-        }),
-        OutputBuilder.Data("headers", "Headers", {
-            tooltip: "Webhook request headers."
-        }),
-        OutputBuilder.Data("query", "Query", {
-            tooltip: "Webhook query parameters."
-        }),
-        OutputBuilder.Data("params", "Params", {
-            tooltip: "Webhook path parameters."
+        OutputBuilder.Data("payload", "Payload", {
+            tooltip: "The inbound request — method, path, headers, query and body."
         }),
     ],
 });

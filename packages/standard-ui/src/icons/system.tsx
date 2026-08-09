@@ -39,6 +39,14 @@ export const PingingAlertTriangle: React.FC<BaseIconProps & {
 }
 
 
+export const Ambient: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <circle cx="12" cy="12" r="9.55" strokeDasharray="2 4" opacity={0.4} />
+        <circle cx="12" cy="12" r="4" />
+    </BaseIcon>
+)
+Ambient.displayName = "Ambient"
+
 export const ArrowLeft: React.FC<BaseIconProps> = (props) => (
     <BaseIcon {...props}><path d="M19 12H5M12 19l-7-7 7-7"></path></BaseIcon>
 )

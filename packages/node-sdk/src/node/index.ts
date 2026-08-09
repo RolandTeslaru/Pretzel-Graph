@@ -26,10 +26,6 @@ export abstract class RuntimeNode<
 
     protected isWaiting: boolean = false;
 
-    /** Exclude this node from the automatic __START__ wiring — it will only
-     *  fire when explicitly triggered by another node via schedulerAPI or propagationAPI. */
-    public readonly IS_PASSIVE: boolean = false
-
     /** Read by the engine's error interception hook: if an incoming error envelope
      *  is found, a catching node materializes it to `onError` instead of re-propagating. */
     public readonly CATCHES_ERROR: boolean = false
