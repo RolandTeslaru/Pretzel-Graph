@@ -21,8 +21,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private payload: Webhook.Payload | null = null;
 
-    
-    
+
     protected override async onWebhook(webhookPayload: AnyRecord) {
         console.log(`[WebhookNode] Payload injected via igniter — method=${(webhookPayload as Webhook.Payload).method} path=${(webhookPayload as Webhook.Payload).path}`);
         this.payload = webhookPayload as Webhook.Payload;
@@ -36,10 +35,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         console.log(`[WebhookNode] Resolving with method=${this.payload.method} path=${this.payload.path}`);
         return {
-            body: this.payload.body ?? null,
-            headers: toRecord(this.payload.headers),
-            query: toRecord(this.payload.query),
-            params: {},
+            payload: {
+                method: this.payload.method,
+                path: this.payload.path,
+                headers: toRecord(this.payload.headers),
+                query: toRecord(this.payload.query),
+                body: this.payload.body ?? null,
+            },
         };
     }
 

@@ -97,7 +97,17 @@ export class TurboGraph {
         }
 
 
-        const startNodes = this.findStartNodes(nodes, edges, (id) => engine.instanceRegistryAPI.get(id));
+        const electedNodeId = "nodeId" in execution.igniter ? execution.igniter.nodeId : undefined;
+
+        if (electedNodeId !== undefined)
+            this.assertIgniteable(electedNodeId, engineExecutionCtx);
+
+        const startNodes = this.findStartNodes(
+            nodes,
+            edges,
+            (id) => engineExecutionCtx.catalogueAPI.getBlueprint(id),
+            electedNodeId,
+        );
 
         if (startNodes.length === 0)
             throw new AggexCompilerError(
@@ -260,10 +270,36 @@ export class TurboGraph {
 
 
 
+    // Only igniteable nodes can be elected — otherwise the igniter could promote a
+    // node that has no way to start anything, and it would run against nothing.
+    private assertIgniteable(
+        nodeId: Workflow.Node.Id,
+        ctx:    AggexEngine.Execution.Context,
+    ): void {
+
+        const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);
+
+        if (blueprint?.igniter)
+            return;
+
+        throw new AggexCompilerError(
+            SystemError.Code.COMPILATION_NOT_IGNITEABLE,
+            `Node "${blueprint?.ui.displayName ?? nodeId}" is not an igniter and cannot start a run.`,
+            { data: { nodeId } },
+        );
+    }
+
+
+
+    // Igniters never self-start, so a graph of nothing but igniters has no
+    // conventional start node. The run elects exactly one, and that one is promoted
+    // here. Passive nodes are excluded outright — they are never electable, and only
+    // ever fire when another node triggers them mid-run.
     private findStartNodes(
-        nodes:       Workflow.Data["nodes"],
-        edges:       Workflow.Cache["edges"],
-        getInstance: (id: Workflow.Node.Id) => RuntimeNode<Blueprint> | undefined,
+        nodes:          Workflow.Data["nodes"],
+        edges:          Workflow.Cache["edges"],
+        getBlueprint:   (id: Workflow.Node.Id) => Blueprint | undefined,
+        electedNodeId?: Workflow.Node.Id,
     ): Workflow.Node.Id[] {
 
         const targetNodeIds = new Set<Workflow.Node.Id>();
@@ -278,9 +314,12 @@ export class TurboGraph {
             if (targetNodeIds.has(node.id))
                 return false;
 
-            const instance = getInstance(node.id);
+            const blueprint = getBlueprint(node.id);
 
-            if (instance?.IS_PASSIVE)
+            if (blueprint?.passive)
+                return false;
+
+            if (blueprint?.igniter && node.id !== electedNodeId)
                 return false;
 
             return true;

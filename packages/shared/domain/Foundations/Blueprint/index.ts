@@ -83,6 +83,12 @@ export namespace Blueprint {
             // Node routes its outbound HTTP through RuntimeNode.httpClientFactory, so an
             // attached networkProxy credential actually applies. Absent/false => no proxy slot.
             proxyCompatible:      z.boolean().optional(),
+            // Node is a trigger: it never self-starts, and a run has to elect it by id
+            // (Execution.Igniter "workbench_igniter"). The editor marks these on canvas.
+            igniter:              z.boolean().optional(),
+            // Node never self-starts and is never electable either — it only fires when
+            // another node triggers it mid-run via schedulerAPI/propagationAPI.
+            passive:              z.boolean().optional(),
             dependencyRef:        DependencyRef.Schema.optional(),
             flags:                z.record(z.string(), z.unknown()).optional(),
             credentials:          z.array(Vault.Credential.Template.Schema).readonly().optional(),

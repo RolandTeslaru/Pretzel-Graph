@@ -1,6 +1,6 @@
 {
-  "version": "1786285268237",
-  "generatedAt": "2026-08-09T14:21:08.237Z",
+  "version": "1786293184690",
+  "generatedAt": "2026-08-09T16:33:04.690Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -2731,6 +2731,7 @@
     },
     "Core.Routing.Portal": {
       "id": "Core.Routing.Portal",
+      "passive": true,
       "credentials": [],
       "ui": {
         "displayName": "Portal",
@@ -5078,6 +5079,7 @@
     },
     "Core.Webhook": {
       "id": "Core.Webhook",
+      "igniter": true,
       "credentials": [],
       "ui": {
         "displayName": "Webhook",
@@ -5234,27 +5236,9 @@
       "inputs": [],
       "outputs": [
         {
-          "id": "body",
-          "displayName": "Body",
-          "tooltip": "Webhook request body.",
-          "variant": "Data"
-        },
-        {
-          "id": "headers",
-          "displayName": "Headers",
-          "tooltip": "Webhook request headers.",
-          "variant": "Data"
-        },
-        {
-          "id": "query",
-          "displayName": "Query",
-          "tooltip": "Webhook query parameters.",
-          "variant": "Data"
-        },
-        {
-          "id": "params",
-          "displayName": "Params",
-          "tooltip": "Webhook path parameters.",
+          "id": "payload",
+          "displayName": "Payload",
+          "tooltip": "The inbound request — method, path, headers, query and body.",
           "variant": "Data"
         }
       ],

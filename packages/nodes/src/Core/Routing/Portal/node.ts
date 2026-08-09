@@ -5,8 +5,6 @@ import { Workflow } from "@pretzel-graph/shared/domain";
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    public override readonly IS_PASSIVE = true
-
     public injectedData: unknown = undefined;
 
     protected override async onRun(

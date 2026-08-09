@@ -200,6 +200,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             selectUoW:      (id)   => { sdk.setState(s => { sdk.reducers.timeline.selectUoW(s, id) }) },
         },
         runStep: (targetNodeId: Workflow.Node.Id) => run({ variant: "workbench_step", targetNodeId, record: false }),
+        runWithIgniteableNode: (nodeId: Workflow.Node.Id) => run({ variant: "workbench_igniter", nodeId }),
     } satisfies ExecutionSDKActions
 
     return actions;
@@ -209,6 +210,7 @@ export type ExecutionSDKActions = {
 
     run: (igniter: Execution.Igniter) => Promise<Execution.Id | null>,
     runStep: (targetNodeId: Workflow.Node.Id) => Promise<Execution.Id | null>,
+    runWithIgniteableNode: (nodeId: Workflow.Node.Id) => Promise<Execution.Id | null>,
     setCurrentExecution: (execution: Execution) => void,
     loadHistory: (workflowId: Workflow.Id) => Promise<Execution.Meta[]>,
     clear: () => void,
