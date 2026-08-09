@@ -14,6 +14,8 @@ import { cn } from '@/utils/styleUtils';
 import { StatusBorder } from './StatusBorder';
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk';
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
+import Tipped from '@/components/Tipped';
 
 const CanvasNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const nodeId = props.id as Workflow.Node.Id;
@@ -48,7 +50,9 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
   ])
 
   const isMinimized = hyNode.ui.isMinimized;
-  const isDisabled = hyNode.isDisabled
+  const isDisabled  = hyNode.isDisabled
+  const isIgniter   = hyNode.blueprint.igniter ?? false
+  const isPassive   = hyNode.blueprint.passive ?? false
 
   let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
@@ -73,6 +77,21 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
           </div>
         </NodeToolbar>
       )}
+
+      {isIgniter && 
+        <div className='absolute top-1 -left-8'>
+          <Tipped label='Igniteble node'>
+            <SystemIcons.Zap className='size-6 dark:text-yellow-300 text-yellow-400'/>
+          </Tipped>
+        </div>
+      }
+      {isPassive && 
+        <div className='absolute top-1 -left-8'>
+          <Tipped label='Igniteble node'>
+            <SystemIcons.Ambient className='size-6 dark:text-cyan-300 text-cyan-400'/>
+          </Tipped>
+        </div>
+      }
 
       <div className={cn(
           "animate-in fade-in-0 duration-200 ease-out transition-colors",

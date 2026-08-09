@@ -38,6 +38,8 @@ export function defineBlueprint<
     webhooks?:        TWebhooks;
     toolCompatible?:  TToolCompatible;
     proxyCompatible?: boolean;
+    igniter?:         boolean;
+    passive?:         boolean;
     credentials?:     TCredentials;
     flags?:           TFlags;
     itemScope?:       string;
@@ -86,6 +88,8 @@ export function defineBlueprint<
         webhooks:        definition.webhooks,
         toolCompatible:  definition.toolCompatible as TToolCompatible,
         proxyCompatible: definition.proxyCompatible,
+        igniter:         definition.igniter,
+        passive:         definition.passive,
         credentials: (
             definition.proxyCompatible
                 ? [...(definition.credentials ?? []), NetworkProxyCredential]

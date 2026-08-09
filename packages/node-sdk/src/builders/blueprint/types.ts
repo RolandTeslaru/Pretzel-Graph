@@ -10,12 +10,12 @@ import { FieldBuilder }            from "../field";
 export type ReservedDefinitionKey =
     | "id" | "displayName" | "description" | "icon" | "accent" | "iconColor"
     | "fields" | "inputs" | "outputs" | "credentials" | "webhooks"
-    | "toolCompatible" | "proxyCompatible" | "flags" | "itemScope"
+    | "toolCompatible" | "proxyCompatible" | "igniter" | "passive" | "flags" | "itemScope"
 
 export const RESERVED_DEFINITION_KEYS: ReadonlySet<string> = new Set<ReservedDefinitionKey>([
     "id", "displayName", "description", "icon", "accent", "iconColor",
     "fields", "inputs", "outputs", "credentials", "webhooks",
-    "toolCompatible", "proxyCompatible", "flags", "itemScope",
+    "toolCompatible", "proxyCompatible", "igniter", "passive", "flags", "itemScope",
 ])
 
 
@@ -48,6 +48,8 @@ export type DefineBlueprintReturn<
     readonly webhooks?:        TWebhooks;
     readonly toolCompatible:   TToolCompatible;
     readonly proxyCompatible?: boolean;
+    readonly igniter?:         boolean;
+    readonly passive?:         boolean;
     readonly credentials:      TCredentials;
     readonly flags?:           TFlags;
     // Input port id whose array is iterated for this node's item-scoped fields (FieldBuilder.itemScoped).
