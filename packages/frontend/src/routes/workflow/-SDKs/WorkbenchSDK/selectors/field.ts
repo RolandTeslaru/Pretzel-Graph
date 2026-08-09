@@ -3,7 +3,7 @@ import type { ConditionSelectors } from "./condition";
 import { caseListSelectors } from "./caseList";
 import type { CaseListSelectors } from "./caseList";
 import type { WorkbenchSDK } from "../sdk";
-import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
+import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 import type { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
 import type { Validation, Workflow } from '@pretzel-graph/shared/domain';
 import { nodeSelectors } from "./node";
@@ -14,20 +14,39 @@ export interface FieldSelectors {
     getIssue       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Validation.Issue.Field | null
     getValues      : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Field.Id, any>
     isReconciling  : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => boolean
+    usesExpression : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, field: Field | Field.Id, defaultValue?: boolean) => boolean
     condition      : ConditionSelectors
     caseList       : CaseListSelectors
 }
 
-export const fieldSelectors = {
-    get: (s, nodeId, fieldId) => {
-        const node = s.data.nodes[nodeId]
-        if (!node) return null;
+// Standalone so `usesExpression` can reuse it — referencing it through `fieldSelectors` from
+// inside the object's own initializer makes the whole literal circularly inferred.
+const getField: FieldSelectors["get"] = (s, nodeId, fieldId) => {
+    const node = s.data.nodes[nodeId]
+    if (!node) return null;
 
-        return nodeSelectors.getFields(s, nodeId).find(f => f.id === fieldId) ?? null;
-    },
+    return nodeSelectors.getFields(s, nodeId).find(f => f.id === fieldId) ?? null;
+}
+
+export const fieldSelectors = {
+    get: getField,
     getValue: (s, nodeId, fieldId, fallback = null) => s.data.staticValues[nodeId]?.[fieldId] ?? fallback,
     getIssue: (s, nodeId, fieldId) => s.issues.nodes[nodeId]?.fields[fieldId] ?? null,
     isReconciling: (s, nodeId, fieldId) => s.reconcilingFields[nodeId]?.has(fieldId) ?? false,
+
+    // Whether this field's stored value is airlock source rather than a literal. Takes the field
+    // itself when the caller already has it — renderers do, and looking it up would rescan the
+    // node's field array on every store change. `defaultValue` covers an unresolvable field id.
+    usesExpression: (s, nodeId, field, defaultValue = false) => {
+        const resolved = typeof field === "string"
+            ? getField(s, nodeId, field)
+            : field
+
+        if (!resolved) return defaultValue;
+
+        return Field.usesExpression(resolved, s.data.fieldExpressions[nodeId]?.[resolved.id])
+    },
+
     getValues: (s, nodeId) => {
         const node = s.data.nodes[nodeId]
         if (!node) return {};

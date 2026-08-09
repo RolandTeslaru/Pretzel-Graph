@@ -9,13 +9,17 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     iconColor: "primary",
     fields: [
+        // Both static-only: extractExposedPorts reads them to build the enclosing Execute
+        // node's port shape, which happens in the editor with no airlock in sight.
         FieldBuilder.Boolean("required", "Required", {
-            initialValue: false
+            initialValue: false,
+            only: "static"
         }),
         FieldBuilder.UniqueString("exposed_port_id", "Exposed Port ID", {
             prefix: "ExposedInputPort-",
             length: 5,
-            required: false
+            required: false,
+            only: "static"
         })
     ],
     inputs: [],

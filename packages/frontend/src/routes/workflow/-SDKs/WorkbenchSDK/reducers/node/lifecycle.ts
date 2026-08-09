@@ -41,6 +41,7 @@ export const nodeLifecycleReducers = {
             delete nodes[deletedNodeId];
 
         delete staticValues[deletedNodeId];
+        delete s.data.fieldExpressions[deletedNodeId];
         delete s.data.credentialInstanceIds[deletedNodeId];
 
         s.reducers.cache.deleteNode(s, deletedNodeId);
@@ -192,6 +193,7 @@ export const nodeLifecycleReducers = {
         // may pass a snapshot taken at copy time so later edits don't leak in.
         s.data.nodes[newNodeId] = newNode;
         s.data.staticValues[newNodeId] = cloneDeep(overrides?.staticValues ?? s.data.staticValues[originalNode.id]);
+        s.data.fieldExpressions[newNodeId] = cloneDeep(overrides?.fieldExpressions ?? s.data.fieldExpressions[originalNode.id] ?? {});
         s.reducers.node.populateCredentialInstances(s, newNodeId, overrides?.credentialInstanceIds ?? s.data.credentialInstanceIds[originalNode.id]);
 
         s.reducers.layout.node.add(s, newNodeId, position);
@@ -264,6 +266,7 @@ export const nodeLifecycleReducers = {
 
         s.data.nodes[nodeId]    = wiped;
         s.data.staticValues[nodeId] = {};
+        s.data.fieldExpressions[nodeId] = {};
         delete s.data.credentialInstanceIds[nodeId];
 
         s.reducers.cache.createNode(s, wiped);
@@ -301,6 +304,7 @@ export interface NodeLifecycleReducers {
     recreate    : (s: S, nodeId: NodeId, blueprint: Foundations.Blueprint) => void;
     duplicate   : (s: S, originalNode: Workflow.Node.Raw, position?: { x: number, y: number }, overrides?: {
         staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>;
+        fieldExpressions?: Record<Foundations.Field.Id, boolean>;
         credentialInstanceIds?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>;
     }) => Workflow.Node.Raw;
     applyDerivative: (s: S, nodeId: NodeId, blueprint: Foundations.Blueprint, reconciledBlueprintId: Foundations.Blueprint.ReconciledId) => void;

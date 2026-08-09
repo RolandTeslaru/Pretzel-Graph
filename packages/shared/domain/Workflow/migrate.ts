@@ -30,7 +30,32 @@ export function migrateWorkflowDataToLatest(raw: any): any {
     if (data.edges && !Array.isArray(data.edges))
         data.edges = Object.keys(data.edges);
 
+    liftAddedFieldExpressions(data);
+
     return data;
+}
+
+// `isExpression` used to live on the Field itself. On a user-added field that made it persisted
+// per-node state, which is exactly what `fieldExpressions` now holds — so lift it across and drop
+// the key. (On blueprint fields the flag was never persisted at all; nothing to migrate there.)
+function liftAddedFieldExpressions(data: any): void {
+    for (const [nodeId, node] of Object.entries<any>(data.nodes ?? {})) {
+        if (!Array.isArray(node?.addedFields)) continue;
+
+        node.addedFields = node.addedFields.map((field: any) => {
+            if (!field || !("isExpression" in field)) return field;
+
+            const { isExpression, ...rest } = field;
+
+            if (isExpression === true) {
+                data.fieldExpressions ??= {};
+                data.fieldExpressions[nodeId] ??= {};
+                data.fieldExpressions[nodeId][field.id] = true;
+            }
+
+            return rest;
+        });
+    }
 }
 
 function migrateV1toV2(raw: any): any {

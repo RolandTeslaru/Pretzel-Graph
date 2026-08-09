@@ -143,12 +143,12 @@ export class TurboGraph {
 
             const blueprint    = ctx.catalogueAPI.getBlueprint(node.id);
             const staticValues = ctx.workflowData.staticValues[node.id] ?? {};
-            const modes        = ctx.workflowData.fieldExpressions?.[node.id] ?? {};
+            const expressionOverrides = ctx.workflowData.fieldExpressions?.[node.id] ?? {};
             const values       = mapFieldValues(blueprint.fields, staticValues);
 
             for (const field of blueprint.fields) {
 
-                if (Field.usesExpression(field, modes[field.id]) === false)
+                if (Field.usesExpression(field, expressionOverrides[field.id]) === false)
                     continue;
 
                 const raw = values[field.id];
@@ -159,7 +159,7 @@ export class TurboGraph {
                 try {
                     airlock.compileExpression(
                         Airlock.Source.asExpression(raw),
-                        Airlock.coerceTargetForField(field),
+                        Airlock.coerceTargetForVariant(field.variant),
                     );
                 }
                 catch {

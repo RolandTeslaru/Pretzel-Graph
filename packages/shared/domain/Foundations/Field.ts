@@ -59,7 +59,8 @@ export namespace Field {
         max: z.int().optional(),
         step: z.int().optional(),
         slider: z.boolean().optional(),
-        isExpression: z.boolean().optional(),
+        isExpressionInitially: z.boolean().optional(),
+        only: z.enum(["static", "expression"]).optional(),
     })
 
     export const Float = Field.Base.extend({
@@ -69,7 +70,8 @@ export namespace Field {
         max: z.number().optional(),
         step: z.number().optional(),
         slider: z.boolean().optional(),
-        isExpression: z.boolean().optional(),
+        isExpressionInitially: z.boolean().optional(),
+        only: z.enum(["static", "expression"]).optional(),
     })
 
     export const String = Field.Base.extend({
@@ -77,7 +79,8 @@ export namespace Field {
         initialValue: z.string(),
         multiline: z.boolean(),
         placeholder: z.string().optional(),
-        isExpression: z.boolean().optional(),
+        isExpressionInitially: z.boolean().optional(),
+        only: z.enum(["static", "expression"]).optional(),
     })
 
     export const UniqueString = Field.Base.extend({
@@ -86,7 +89,8 @@ export namespace Field {
         prefix: z.string().optional(),
         length: z.number().optional(),
         placeholder: z.string().optional(),
-        isExpression: z.boolean().optional(),
+        isExpressionInitially: z.boolean().optional(),
+        only: z.enum(["static", "expression"]).optional(),
     })
 
     export const Password = Field.Base.extend({
@@ -98,13 +102,15 @@ export namespace Field {
     export const Secret = Field.Base.extend({
         variant: configLiteral("Secret"),
         initialValue: z.string(),
-        isExpression: z.boolean().optional(),
+        isExpressionInitially: z.boolean().optional(),
+        only: z.enum(["static", "expression"]).optional(),
     })
 
     export const Boolean = Field.Base.extend({
         variant: configLiteral("Boolean"),
         initialValue: z.boolean(),
-        isExpression: z.boolean().optional(),
+        isExpressionInitially: z.boolean().optional(),
+        only: z.enum(["static", "expression"]).optional(),
     })
 
     export const MultiOption = Field.Base.extend({
@@ -119,14 +125,16 @@ export namespace Field {
             })
         ),
         kind: z.enum(["select", "tab"]).default("select"),
-        isExpression: z.boolean().optional(),
+        isExpressionInitially: z.boolean().optional(),
+        only: z.enum(["static", "expression"]).optional(),
     })
 
     export const File = Field.Base.extend({
         variant: configLiteral("File"),
         initialValue: z.string(),
         fileTypes: z.array(z.string()).optional(),
-        isExpression: z.boolean().optional(),
+        isExpressionInitially: z.boolean().optional(),
+        only: z.enum(["static", "expression"]).optional(),
     })
 
     export const Script = Field.Base.extend({
@@ -137,13 +145,15 @@ export namespace Field {
     export const Json = Field.Base.extend({
         variant: configLiteral("Json"),
         initialValue: z.json(),
-        isExpression: z.boolean().optional(),
+        isExpressionInitially: z.boolean().optional(),
+        only: z.enum(["static", "expression"]).optional(),
     })
 
     export const List = Field.Base.extend({
         variant: configLiteral("List"),
         initialValue: z.array(z.string()),
-        isExpression: z.boolean().optional(),
+        isExpressionInitially: z.boolean().optional(),
+        only: z.enum(["static", "expression"]).optional(),
     })
 
     export const Variadic = Field.Base.extend({
@@ -443,9 +453,26 @@ export namespace Field {
 
     export type Schema = z.infer<typeof Schema>;
 
-    /** Not every variant supports expressions — narrows before reading `field.isExpression`. */
-    export function isExpression(field: Field.Schema): boolean {
-        return "isExpression" in field && field.isExpression === true;
+    /**
+     * Whether a field's stored value is airlock source rather than a literal.
+     *
+     * Three inputs, in precedence order: the Expression variant is always source; otherwise the
+     * user's per-node choice wins if they made one (`Workflow.Data.fieldExpressions[nodeId][fieldId]`,
+     * passed in as `override`); otherwise the blueprint's declared starting mode.
+     *
+     * `override` is deliberately a plain boolean rather than the whole workflow data — Data imports
+     * Field, so reaching the other way would cycle.
+     */
+    export function usesExpression(field: Field.Schema, override?: boolean): boolean {
+        // `only` is a hard constraint from the blueprint author and outranks the user's choice —
+        // checked first so a stale override from an older workflow can't contradict it.
+        if ("only" in field && field.only)
+            return field.only === "expression";
+
+        if (typeof override === "boolean")
+            return override;
+
+        return "isExpressionInitially" in field && field.isExpressionInitially === true;
     }
 
 

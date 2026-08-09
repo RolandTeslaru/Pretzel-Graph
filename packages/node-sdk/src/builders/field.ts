@@ -43,9 +43,20 @@ export namespace FieldBuilder {
         } satisfies { id: T_Id & Field.Id } & OmitId<Field.Base>
     }
 
-    /** Only include `isExpression` in the built field when explicitly true — keeps it out of serialization otherwise. */
-    const buildIsExpression = (isExpression?: boolean) =>
-        isExpression ? { isExpression: true as const } : {}
+    /** Only include `isExpressionInitially` in the built field when explicitly true — keeps it out of serialization otherwise. */
+    const buildIsExpression = (isExpressionInitially?: boolean) =>
+        isExpressionInitially ? { isExpressionInitially: true as const } : {}
+
+    /**
+     * Locks a field to one mode, removing the editor's Static/Expression toggle.
+     *
+     *   "expression" — a literal would make the node meaningless (a router that can't branch,
+     *                  a filter that can't see $item). Coercion still comes from the variant.
+     *   "static"     — the value decides the graph's *shape* (derivative discriminants,
+     *                  exposed-port config), resolved before any airlock exists to evaluate it.
+     */
+    const buildOnly = (only?: "static" | "expression") =>
+        only ? { only } : {}
 
     /** Only include `itemScoped` when explicitly true — keeps it out of serialization otherwise. */
     const buildItemScoped = (itemScoped?: boolean) =>
@@ -58,7 +69,7 @@ export namespace FieldBuilder {
      *
      * Prefer the inline `itemScoped: true` option. This wrapper is useful when composing fields.
      *
-     * @example FieldBuilder.itemScoped(FieldBuilder.Boolean("condition", "Condition", { isExpression: true }))
+     * @example FieldBuilder.itemScoped(FieldBuilder.Boolean("condition", "Condition", { isExpressionInitially: true }))
      */
     export function itemScoped<F extends { id: string }>(field: F): F & { itemScoped: true } {
         return { ...field, itemScoped: true };
@@ -67,7 +78,7 @@ export namespace FieldBuilder {
     export function UniqueString<T_Id extends string, T_Required extends boolean = false, const T_ItemScoped extends boolean = false>(
         id:          T_Id,
         displayName: string,
-        options:     { prefix?: string; length?: number; placeholder?: string; isExpression?: boolean; } & BaseOptions<T_Required, T_ItemScoped> = {},
+        options:     { prefix?: string; length?: number; placeholder?: string; isExpressionInitially?: boolean; only?: "static" | "expression"; } & BaseOptions<T_Required, T_ItemScoped> = {},
     ): T_Return<T_Id, "UniqueString", Field.UniqueString, T_Required> & ItemScopedFlag<T_ItemScoped> {
         return {
             ...buildBase(id, displayName, options),
@@ -77,7 +88,8 @@ export namespace FieldBuilder {
             length: options.length,
             // Placeholder; real value is generated per-node at create time.
             initialValue: "",
-            ...buildIsExpression(options.isExpression),
+            ...buildIsExpression(options.isExpressionInitially),
+            ...buildOnly(options.only),
         } as T_Return<T_Id, "UniqueString", Field.UniqueString, T_Required> & ItemScopedFlag<T_ItemScoped>;
     }
 
@@ -88,7 +100,7 @@ export namespace FieldBuilder {
             initialValue?: string;
             multiline?: boolean;
             placeholder?: string;
-            isExpression?: boolean;
+            isExpressionInitially?: boolean; only?: "static" | "expression";
         } & BaseOptions<T_Required, T_ItemScoped> = {},
     ): T_Return<T_Id, "String", Field.String, T_Required> & ItemScopedFlag<T_ItemScoped> {
         return {
@@ -97,7 +109,8 @@ export namespace FieldBuilder {
             placeholder: options.placeholder ?? "",
             initialValue: options.initialValue ?? "",
             multiline: options.multiline ?? false,
-            ...buildIsExpression(options.isExpression),
+            ...buildIsExpression(options.isExpressionInitially),
+            ...buildOnly(options.only),
         } as T_Return<T_Id, "String", Field.String, T_Required> & ItemScopedFlag<T_ItemScoped>;
     }
 
@@ -111,7 +124,7 @@ export namespace FieldBuilder {
         max?: number;
         step?: number;
         slider?: boolean;
-        isExpression?: boolean;
+        isExpressionInitially?: boolean; only?: "static" | "expression";
     } & BaseOptions<T_Required, T_ItemScoped> = {},
     ): T_Return<T_Id, "Integer", Field.Integer, T_Required> & ItemScopedFlag<T_ItemScoped> {
         return {
@@ -122,7 +135,8 @@ export namespace FieldBuilder {
             max: options.max,
             step: options.step ?? 1,
             slider: options.slider,
-            ...buildIsExpression(options.isExpression),
+            ...buildIsExpression(options.isExpressionInitially),
+            ...buildOnly(options.only),
         } as T_Return<T_Id, "Integer", Field.Integer, T_Required> & ItemScopedFlag<T_ItemScoped>;
     }
 
@@ -136,7 +150,7 @@ export namespace FieldBuilder {
         max?: number;
         step?: number;
         slider?: boolean;
-        isExpression?: boolean;
+        isExpressionInitially?: boolean; only?: "static" | "expression";
     } & BaseOptions<T_Required, T_ItemScoped> = {},
     ): T_Return<T_Id, "Float", Field.Float, T_Required> & ItemScopedFlag<T_ItemScoped> {
         return {
@@ -147,7 +161,8 @@ export namespace FieldBuilder {
             max: options.max,
             step: options.step ?? 0.1,
             slider: options.slider,
-            ...buildIsExpression(options.isExpression),
+            ...buildIsExpression(options.isExpressionInitially),
+            ...buildOnly(options.only),
         } as T_Return<T_Id, "Float", Field.Float, T_Required> & ItemScopedFlag<T_ItemScoped>;
     }
 
@@ -156,14 +171,15 @@ export namespace FieldBuilder {
     export function Boolean<T_Id extends string, T_Required extends boolean = false, const T_ItemScoped extends boolean = false>(
         id: T_Id, displayName: string, options: {
         initialValue?: boolean;
-        isExpression?: boolean;
+        isExpressionInitially?: boolean; only?: "static" | "expression";
     } & BaseOptions<T_Required, T_ItemScoped> = {},
     ): T_Return<T_Id, "Boolean", Field.Boolean, T_Required> & ItemScopedFlag<T_ItemScoped> {
         return {
             ...buildBase(id, displayName, options),
             variant: "Boolean",
             initialValue: options.initialValue ?? false,
-            ...buildIsExpression(options.isExpression),
+            ...buildIsExpression(options.isExpressionInitially),
+            ...buildOnly(options.only),
         } as T_Return<T_Id, "Boolean", Field.Boolean, T_Required> & ItemScopedFlag<T_ItemScoped>;
     }
 
@@ -187,7 +203,7 @@ export namespace FieldBuilder {
         initialValue: TOptions[number]["value"];
         options: TOptions;
         variant?: "select" | "tab";
-        isExpression?: boolean;
+        isExpressionInitially?: boolean; only?: "static" | "expression";
     } & BaseOptions<T_Required, T_ItemScoped>
     ): T_Return<T_Id, "MultiOption", Field.MultiOption, T_Required> & ItemScopedFlag<T_ItemScoped> & {
         initialValue: TOptions[number]["value"];
@@ -199,7 +215,8 @@ export namespace FieldBuilder {
             initialValue: options.initialValue,
             options: options.options as unknown as Field.MultiOption["options"],
             kind: options.variant ?? "select",
-            ...buildIsExpression(options.isExpression),
+            ...buildIsExpression(options.isExpressionInitially),
+            ...buildOnly(options.only),
         } as unknown as T_Return<T_Id, "MultiOption", Field.MultiOption, T_Required> & ItemScopedFlag<T_ItemScoped> & {
             initialValue: TOptions[number]["value"];
             options: TOptions;
@@ -212,7 +229,7 @@ export namespace FieldBuilder {
         id: T_Id, displayName: string, options: {
         initialValue?: string;
         fileTypes?: string[];
-        isExpression?: boolean;
+        isExpressionInitially?: boolean; only?: "static" | "expression";
     } & BaseOptions<T_Required, T_ItemScoped> = {},
     ): T_Return<T_Id, "File", Field.File, T_Required> & ItemScopedFlag<T_ItemScoped> {
         return {
@@ -220,7 +237,8 @@ export namespace FieldBuilder {
             variant: "File",
             initialValue: options.initialValue ?? "",
             fileTypes: options.fileTypes,
-            ...buildIsExpression(options.isExpression),
+            ...buildIsExpression(options.isExpressionInitially),
+            ...buildOnly(options.only),
         } as T_Return<T_Id, "File", Field.File, T_Required> & ItemScopedFlag<T_ItemScoped>;
     }
 
@@ -229,14 +247,15 @@ export namespace FieldBuilder {
     export function List<T_Id extends string, T_Required extends boolean = false, const T_ItemScoped extends boolean = false>(
         id: T_Id, displayName: string, options: {
         initialValue?: string[];
-        isExpression?: boolean;
+        isExpressionInitially?: boolean; only?: "static" | "expression";
     } & BaseOptions<T_Required, T_ItemScoped> = {},
     ): T_Return<T_Id, "List", Field.List, T_Required> & ItemScopedFlag<T_ItemScoped> {
         return {
             ...buildBase(id, displayName, options),
             variant: "List",
             initialValue: options.initialValue ?? [],
-            ...buildIsExpression(options.isExpression),
+            ...buildIsExpression(options.isExpressionInitially),
+            ...buildOnly(options.only),
         } as T_Return<T_Id, "List", Field.List, T_Required> & ItemScopedFlag<T_ItemScoped>;
     }
 
@@ -245,14 +264,15 @@ export namespace FieldBuilder {
     export function Json<T_Id extends string, T_Required extends boolean = false, const T_ItemScoped extends boolean = false>(
         id: T_Id, displayName: string, options: {
         initialValue?: any;
-        isExpression?: boolean;
+        isExpressionInitially?: boolean; only?: "static" | "expression";
     } & BaseOptions<T_Required, T_ItemScoped> = {},
     ): T_Return<T_Id, "Json", Field.Json, T_Required> & ItemScopedFlag<T_ItemScoped> {
         return {
             ...buildBase(id, displayName, options),
             variant: "Json",
             initialValue: options.initialValue ?? {},
-            ...buildIsExpression(options.isExpression),
+            ...buildIsExpression(options.isExpressionInitially),
+            ...buildOnly(options.only),
         } as T_Return<T_Id, "Json", Field.Json, T_Required> & ItemScopedFlag<T_ItemScoped>;
     }
 
@@ -274,14 +294,15 @@ export namespace FieldBuilder {
     export function Secret<T_Id extends string, T_Required extends boolean = false, const T_ItemScoped extends boolean = false>(
         id: T_Id, displayName: string, options: {
         initialValue?: string;
-        isExpression?: boolean;
+        isExpressionInitially?: boolean; only?: "static" | "expression";
     } & BaseOptions<T_Required, T_ItemScoped> = {},
     ): T_Return<T_Id, "Secret", Field.Secret, T_Required> & ItemScopedFlag<T_ItemScoped> {
         return {
             ...buildBase(id, displayName, options),
             variant: "Secret",
             initialValue: options.initialValue ?? "",
-            ...buildIsExpression(options.isExpression),
+            ...buildIsExpression(options.isExpressionInitially),
+            ...buildOnly(options.only),
         } as T_Return<T_Id, "Secret", Field.Secret, T_Required> & ItemScopedFlag<T_ItemScoped>;
     }
 

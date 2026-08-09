@@ -81,6 +81,7 @@ export namespace Workflow {
             nodes:                 {},
             edges:                 [],
             staticValues:          {},
+            fieldExpressions:      {},
             credentialInstanceIds: {},
             dependencies:          { published: {}, draft: {} },
             ui: {

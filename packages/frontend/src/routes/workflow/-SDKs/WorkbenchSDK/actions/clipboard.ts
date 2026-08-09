@@ -22,6 +22,7 @@ const buildPayload = (
     const nodes: ClipboardPayload["nodes"] = [];
     const layout: ClipboardPayload["layout"] = {};
     const staticValues: ClipboardPayload["staticValues"] = {};
+    const fieldExpressions: ClipboardPayload["fieldExpressions"] = {};
     const credentialInstanceIds: ClipboardPayload["credentialInstanceIds"] = {};
 
     for (const nodeId of nodeIds) {
@@ -33,6 +34,7 @@ const buildPayload = (
         nodes.push(node);
         if (data.ui.layout[nodeId]) layout[nodeId] = data.ui.layout[nodeId];
         if (data.staticValues[nodeId]) staticValues[nodeId] = data.staticValues[nodeId] as any;
+        if (data.fieldExpressions[nodeId]) fieldExpressions[nodeId] = data.fieldExpressions[nodeId];
         if (data.credentialInstanceIds[nodeId]) credentialInstanceIds[nodeId] = data.credentialInstanceIds[nodeId];
     }
 
@@ -51,6 +53,7 @@ const buildPayload = (
         edges,
         layout,
         staticValues,
+        fieldExpressions,
         credentialInstanceIds,
     };
 };

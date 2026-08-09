@@ -71,6 +71,7 @@ export function createExecutionAPIs(
         getInputPort:  (nodeId, portId)            => ctxRef.current.workflowCache.resolvedShape[nodeId].inputs.find(p => p.id === portId),
         getFields:     (nodeId)                    => ctxRef.current.workflowCache.resolvedShape[nodeId].fields,
         getStaticValues: (nodeId)                  => ctxRef.current.workflowData.staticValues[nodeId] ?? {},
+        getExpressionTaggedFieldIds: (nodeId)              => ctxRef.current.workflowData.fieldExpressions?.[nodeId] ?? {},
         getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: T_Blueprint["id"]) =>
             Object.values(ctxRef.current.workflowData.nodes)
                 .filter(n => n.blueprintId === blueprintId)
