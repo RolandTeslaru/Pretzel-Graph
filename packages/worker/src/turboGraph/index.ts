@@ -223,7 +223,7 @@ export class TurboGraph {
     private async resolveDependencyNode(
         wfNode: Workflow.Node.Raw,
         workflowData: Workflow.Data,
-    ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Foundations.Blueprint | null }> {
+    ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Blueprint | null }> {
 
         if (!wfNode.dependencyRef)
             throw new AggexCompilerError(
@@ -242,8 +242,8 @@ export class TurboGraph {
                 { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId, missingDependencyId: dependencyRef?.workflowId } }
             );
 
-        const executeId   = "Core.SubWorkflow.Execute" as Foundations.Blueprint.Id;
-        const RuntimeNode = await CatalogueService.getNode(executeId);
+        const executeId   = "Core.SubWorkflow.Execute" as Blueprint.Id;
+        const RuntimeNode = await CatalogueService.getNodeConstructor(executeId);
 
         if (!RuntimeNode)
             throw new AggexCompilerError(
@@ -252,7 +252,7 @@ export class TurboGraph {
                 { data: { nodeId: wfNode.id, blueprintId: wfNode.blueprintId } }
             );
 
-        const blueprint = await CatalogueService.loadBlueprint(executeId);
+        const blueprint = await CatalogueService.loadBaseBlueprint(executeId);
 
         return { RuntimeNode, blueprint };
     }
@@ -262,18 +262,18 @@ export class TurboGraph {
     private async resolveBlueprint(
         wfNode: Workflow.Node.Raw,
         workflowData: Workflow.Data,
-    ): Promise<Foundations.Blueprint> {
+    ): Promise<Blueprint> {
 
         // A dependency node is absent from the catalogue by design — go straight to the
         // Core.SubWorkflow.Execute container instead of attempting the path-convention import.
-        let blueprint: Foundations.Blueprint | null = null;
+        let blueprint: Blueprint | null = null;
 
         if (wfNode.dependencyRef) {
             blueprint = (await this.resolveDependencyNode(wfNode, workflowData)).blueprint;
 
         } else {
             const staticValues = workflowData.staticValues[wfNode.id] ?? {};
-            const base         = await CatalogueService.loadBlueprint(wfNode.blueprintId);
+            const base         = await CatalogueService.loadBaseBlueprint(wfNode.blueprintId);
 
             if (base)
                 blueprint = await this.deriveNodeBlueprint(wfNode, base, staticValues);
@@ -298,9 +298,9 @@ export class TurboGraph {
     // persisted path is the authoritative identity for an existing node.
     private async deriveNodeBlueprint(
         wfNode:       Workflow.Node.Raw,
-        base:         Foundations.Blueprint,
-        staticValues: Record<Foundations.Field.Id, Foundations.Field.Value>,
-    ): Promise<Foundations.Blueprint | null> {
+        base:         Blueprint,
+        staticValues: Record<Field.Id, Field.Value>,
+    ): Promise<Blueprint | null> {
 
         if (!base._derivatives?.length)
             return base;
@@ -317,20 +317,20 @@ export class TurboGraph {
 
 
     private async resolveNode(
-        wfNode:             Workflow.Node.Raw,
-        engineExecutionCtx: AggexEngine.Execution.Context,
-    ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Foundations.Blueprint }> {
+        wfNode: Workflow.Node.Raw,
+        wfData: Workflow.Data,
+    ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Blueprint }> {
 
         // A dependency node has no class of its own — its cosmetic blueprintId resolves to nothing
         // in the catalogue, so skip the lookup and let resolveDependencyNode supply the container.
         let RuntimeNode = wfNode.dependencyRef
             ? null
-            : await CatalogueService.getNode(wfNode.blueprintId);
+            : await CatalogueService.getNodeConstructor(wfNode.blueprintId);
 
-        let blueprint: Foundations.Blueprint | null = await this.resolveBlueprint(wfNode, engineExecutionCtx.workflowData);
+        let blueprint: Blueprint | null = await this.resolveBlueprint(wfNode, wfData);
 
         if (!RuntimeNode)
-            ({ RuntimeNode, blueprint } = await this.resolveDependencyNode(wfNode, engineExecutionCtx.workflowData));
+            ({ RuntimeNode, blueprint } = await this.resolveDependencyNode(wfNode, wfData));
 
         if (!RuntimeNode || !blueprint)
             throw new AggexCompilerError(
@@ -348,7 +348,7 @@ export class TurboGraph {
     // through httpClientFactory would silently ignore an attached proxy.
     private assertProxySupported(
         wfNode:             Workflow.Node.Raw,
-        blueprint:          Foundations.Blueprint,
+        blueprint:          Blueprint,
         engineExecutionCtx: AggexEngine.Execution.Context,
     ): void {
 
@@ -377,9 +377,11 @@ export class TurboGraph {
 
         const { compiledGraph: graph } = engineExecutionCtx;
 
-        const staticValues = engineExecutionCtx.workflowData.staticValues[wfNode.id] ?? {};
+        const workflowData = engineExecutionCtx.workflowData
+        const staticValues = workflowData.staticValues[wfNode.id] ?? {};
 
-        const { RuntimeNode, blueprint } = await this.resolveNode(wfNode, engineExecutionCtx);
+        // const { RuntimeNode, blueprint } = await this.resolveNode(wfNode, engineExecutionCtx);
+        const { RuntimeNode, blueprint } = await CatalogueService.resolveWorkflowNode(wfNode, staticValues, workflowData);
 
         this.assertProxySupported(wfNode, blueprint, engineExecutionCtx);
 
@@ -398,7 +400,7 @@ export class TurboGraph {
         if (Object.hasOwn(fieldValues, "signalDependency"))
             graph.setVertexStrategy(
                 wfNode.id as unknown as Vertex.Id,
-                fieldValues["signalDependency" as Foundations.Field.Id] as Vertex.STRATEGY,
+                fieldValues["signalDependency" as Field.Id] as Vertex.STRATEGY,
             );
     }
 
