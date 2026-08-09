@@ -1,6 +1,6 @@
 {
-  "version": "1786218573304",
-  "generatedAt": "2026-08-08T19:49:33.304Z",
+  "version": "1786285268237",
+  "generatedAt": "2026-08-09T14:21:08.237Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -24,7 +24,7 @@
           "initialValue": "$igniter.chat_id",
           "multiline": false,
           "placeholder": "",
-          "isExpression": true
+          "isExpressionInitially": true
         },
         {
           "id": "signalDependency",
@@ -152,7 +152,7 @@
           "initialValue": "$igniter.chat_id",
           "multiline": false,
           "placeholder": "",
-          "isExpression": true
+          "isExpressionInitially": true
         },
         {
           "id": "write_to_session",
@@ -274,7 +274,7 @@
           "initialValue": "$igniter.chat_id",
           "multiline": false,
           "placeholder": "",
-          "isExpression": true
+          "isExpressionInitially": true
         },
         {
           "id": "write_to_session",
@@ -2358,7 +2358,7 @@
           "displayName": "Condition",
           "variant": "Boolean",
           "initialValue": true,
-          "isExpression": true
+          "only": "expression"
         },
         {
           "id": "signalDependency",
@@ -3597,7 +3597,8 @@
           "reconcile": false,
           "displayName": "Required",
           "variant": "Boolean",
-          "initialValue": false
+          "initialValue": false,
+          "only": "static"
         },
         {
           "id": "exposed_port_id",
@@ -3609,7 +3610,8 @@
           "initialValue": "",
           "prefix": "ExposedInputPort-",
           "length": 5,
-          "placeholder": ""
+          "placeholder": "",
+          "only": "static"
         },
         {
           "id": "signalDependency",
@@ -4043,7 +4045,7 @@
           "tooltip": "Evaluated once per item — use $item for the current element, $in for the node's inputs.",
           "variant": "Boolean",
           "initialValue": true,
-          "isExpression": true
+          "only": "expression"
         },
         {
           "id": "signalDependency",
@@ -4463,7 +4465,7 @@
           "initialValue": "",
           "multiline": true,
           "placeholder": "Message content",
-          "isExpression": true
+          "isExpressionInitially": true
         },
         {
           "id": "signalDependency",

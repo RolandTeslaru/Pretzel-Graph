@@ -189,18 +189,12 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
         const initialValue = 'initialValue' in field ? field.initialValue : undefined;
 
-        const [storeValue, issue, isReconciling, isExpression] = this.useStore(s => {
-            const isReconciling = s.reconcilingFields[nodeId]?.has(fieldId) ?? false
-            // @ts-expect-error
-            const isExpression = field.isExpression ?? false
-
-            return [
-                s.selectors.node.getStaticValue(s, nodeId, fieldId, initialValue) as T,
-                s.selectors.field.getIssue(s, nodeId, fieldId),
-                isReconciling,
-                isExpression
-            ] as const
-        });
+        const [storeValue, issue, isReconciling, isExpression] = this.useStore(s => [
+            s.selectors.node.getStaticValue(s, nodeId, fieldId, initialValue) as T,
+            s.selectors.field.getIssue(s, nodeId, fieldId),
+            s.selectors.field.isReconciling(s, nodeId, fieldId),
+            s.selectors.field.usesExpression(s, nodeId, field),
+        ] as const);
 
         const [localValue, setLocalValue] = useState<T>(storeValue as T);
         const localRef = useRef<T>(storeValue as T);

@@ -20,7 +20,7 @@ export const Blueprint = defineBlueprint({
             initialValue: "",
             multiline:    true,
             placeholder:  "Message content",
-            isExpression: true,
+            isExpressionInitially: true,
         }),
     ],
     inputs:  [],

@@ -17,6 +17,9 @@ interface Props {
     // Derivative condition fields drive structural resolution and can't become expressions —
     // suppress the static/expression toggle entirely for them.
     reconcile?: boolean
+    // A blueprint-declared lock to one mode. Either way there's no second mode to switch to,
+    // so the toggle is suppressed the same as for `reconcile`.
+    only?: "static" | "expression"
     // item-scoped field → expose $item / $itemIndex in the expression editor's autocomplete.
     itemScoped?: boolean
     className?: string
@@ -89,7 +92,7 @@ function ExpressionInput({ placeholder, className }: {
     )
 }
 
-export function WithExpression({ value, isExpression, onToggleExpression, onChange, onCommit, nodeId, displayName, reconcile, itemScoped, className, children, tabClassName }: Props) {
+export function WithExpression({ value, isExpression, onToggleExpression, onChange, onCommit, nodeId, displayName, reconcile, only, itemScoped, className, children, tabClassName }: Props) {
     const [isHovered, setIsHovered] = useState(false)
     const node = WorkbenchSDK.state.selectors.node.get(WorkbenchSDK.state, nodeId);
 
@@ -103,7 +106,7 @@ export function WithExpression({ value, isExpression, onToggleExpression, onChan
                 onMouseLeave={() => setIsHovered(false)}
                 className={className + " w-full nodrag cursor-auto flex flex-col gap-1 relative"}
             >
-                {(isHovered && !reconcile) && (
+                {(isHovered && !reconcile && !only) && (
                     <div className={ 'absolute -top-1 right-0 flex flex-row items-center gap-1 z-10 ' +  (!isExpression && tabClassName)}>
                         <Tabs.Root
                             value={isExpression ? 'expression' : 'static'}

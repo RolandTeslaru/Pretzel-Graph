@@ -43,6 +43,14 @@ export namespace Data {
                 z.union([z.string(), z.number(), z.boolean(), z.array(z.string()), z.json()])
             )
         ),
+        // Per-node override of a field's static/expression mode — the user's Static/Expression
+        // toggle. Absent means "no choice made": fall back to the blueprint's
+        // `isExpressionInitially`. Resolved through Field.usesExpression, never read directly.
+        fieldExpressions: z.record(
+            Node.Id,
+            z.record(Field.Id, z.boolean())
+        ).default({}),
+
         credentialInstanceIds: z.record(
             Node.Id,
             z.record(Vault.Credential.Template.Id, Vault.Credential.Instance.Id)
