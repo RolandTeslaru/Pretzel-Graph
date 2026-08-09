@@ -88,14 +88,14 @@ export class ExecutionService {
             // exposed ports derive from the embedded dependency at read time (resolveInputs/Outputs).
             // Mirrors the compiler's resolveDependencyNode.
             if (node.dependencyRef) {
-                const executeBp = await CatalogueService.loadBlueprint("Core.SubWorkflow.Execute" as Blueprint.Id);
+                const executeBp = await CatalogueService.loadBaseBlueprint("Core.SubWorkflow.Execute" as Blueprint.Id);
 
                 if (executeBp) blueprints[node.blueprintId] = executeBp;
 
                 continue;
             }
 
-            const base = await CatalogueService.loadBlueprint(node.blueprintId);
+            const base = await CatalogueService.loadBaseBlueprint(node.blueprintId);
 
             if (!base) continue;
 

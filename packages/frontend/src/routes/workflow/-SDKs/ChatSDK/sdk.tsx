@@ -70,10 +70,11 @@ ChatSDK.subscribe((state, prevState) => {
     if (state.currentChatId === prevState.currentChatId)
         return;
 
-    if (!state.currentChatId) {
-        ChatSDK.runtime.unsubscribeFromChatChannel?.();
+    ChatSDK.runtime.unsubscribeFromChatChannel?.();
+    ChatSDK.runtime.unsubscribeFromChatChannel = null;
+
+    if (!state.currentChatId)
         return;
-    }
 
     ChatSDK.runtime.unsubscribeFromChatChannel = RealtimeSDK.subscribeToChannel(
         Chat.Event.getChannel(state.currentChatId),
