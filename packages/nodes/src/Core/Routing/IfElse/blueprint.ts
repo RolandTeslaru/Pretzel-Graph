@@ -7,11 +7,12 @@ export const Blueprint = defineBlueprint({
     icon: "Split",
     accent: "group-routing",
     fields: [
-        // Single boolean expression — pre-evaluated by evaluateFieldValues() to a real
-        // boolean (coerced via the "Boolean" variant). Replaces the old condition tree.
+        // Single boolean expression — pre-evaluated by evaluateFieldValues() to a real boolean
+        // (coerced via the "Boolean" variant). Expression-only: a literal here would pin the
+        // router to one branch forever.
         FieldBuilder.Boolean("condition", "Condition", {
             initialValue: true,
-            isExpression: true
+            only: "expression"
         }),
     ],
     inputs: [

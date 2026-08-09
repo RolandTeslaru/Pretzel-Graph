@@ -83,6 +83,8 @@ export interface WorkflowQueryAPI {
     getOutputPort: (nodeId: Workflow.Node.Id, portId: Port.Output.Id) => Port.Output | undefined,
     getInputPort:  (nodeId: Workflow.Node.Id, portId: Port.Input.Id) => Port.Input | undefined,
     getStaticValues: (nodeId: Workflow.Node.Id) => Record<Foundations.Field.Id, Foundations.Field.Value>,
+    /** Per-node static/expression overrides. Absent key = no user choice; see Field.usesExpression. */
+    getExpressionTaggedFieldIds: (nodeId: Workflow.Node.Id) => Record<Foundations.Field.Id, boolean>,
 }
 
 // Low-level signal-graph control the S2Engine scheduler uses to fire nodes and manage the

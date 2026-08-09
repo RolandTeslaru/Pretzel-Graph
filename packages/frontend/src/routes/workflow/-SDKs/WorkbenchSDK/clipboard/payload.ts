@@ -21,6 +21,7 @@ export const ClipboardPayloadSchema = z.object({
     layout:  Workflow.Layout.Schema,
     // Snapshotted at copy time so later edits to the source node don't leak in.
     staticValues:          z.record(Workflow.Node.Id, StaticValuesSchema),
+    fieldExpressions:      z.record(Workflow.Node.Id, z.record(Foundations.Field.Id, z.boolean())).default({}),
     credentialInstanceIds: z.record(
         Workflow.Node.Id,
         z.record(Vault.Credential.Template.Id, Vault.Credential.Instance.Id)

@@ -18,6 +18,7 @@ export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nod
         nodeId,
         displayName: field.displayName,
         reconcile: field.reconcile,
+        only: field.only,
         itemScoped: field.itemScoped,
         className,
     }
