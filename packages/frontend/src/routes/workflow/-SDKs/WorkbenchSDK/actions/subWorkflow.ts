@@ -14,6 +14,24 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
     const sel = sdk.selectors;
 
     return {
+        /**
+         * Extracts a selection out of the currently-open workflow (the "master") into a new
+         * standalone workflow, and leaves a single Execute node behind in its place.
+         *
+         * 1. Start from a blank `Workflow.INITIAL` and inherit the master's folder.
+         * 2. Copy each selected node across, along with everything stored *beside* the node in
+         *    `data` and keyed by node id — `staticValues` and `fieldExpressions`. Layout is
+         *    re-centred on the selection's centroid so the subflow opens framed rather than
+         *    wherever the nodes happened to sit.
+         * 3. Copy only edges with both endpoints inside the selection; edges crossing the boundary
+         *    are dropped here and become the subflow's exposed ports instead.
+         * 4. POST the subflow — it must exist server-side before step 5 can reference its id.
+         * 5. Delete the extracted nodes/edges from the master and drop in one Execute node, its
+         *    ports derived from the subflow via `extractExposedPorts`.
+         *
+         * Steps 4 and 5 are deliberately ordered: the Execute node's `workflowId` field is the
+         * id the server hands back, so a failed create aborts before the master is touched.
+         */
         create: withAsyncCommit(async (nodeIds: Workflow.Node.Id[], edgeIds: Workflow.Edge.Id[], displayName: string) => {
             if (nodeIds.length === 0) {
                 toast.error("No nodes selected to create sub-workflow");
@@ -63,6 +81,7 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
                 subflow.data.nodes[nodeId] = node;
 
                 subflow.data.staticValues[nodeId] = masterData.staticValues[nodeId];
+                subflow.data.fieldExpressions[nodeId] = masterData.fieldExpressions[nodeId] ?? {};
                 const nodeOriginalPos = masterData.ui.layout[nodeId];
 
                 const pos = { x: 0, y: 0 };

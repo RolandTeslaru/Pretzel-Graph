@@ -23,6 +23,7 @@ export const BooleanField = memo<RendererProps<'Boolean'>>(({ field, nodeId, cla
         nodeId,
         displayName: field.displayName,
         reconcile: field.reconcile,
+        only: field.only,
         itemScoped: field.itemScoped,
         className,
     }

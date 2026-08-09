@@ -31,6 +31,7 @@ export const JsonField = memo<RendererProps<'Json'>>(({ field, nodeId, className
         nodeId,
         displayName: field.displayName,
         reconcile: field.reconcile,
+        only: field.only,
         itemScoped: field.itemScoped,
         className,
     }

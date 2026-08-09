@@ -45,6 +45,7 @@ export const clipboardReducers = {
 
             const newNode = s.reducers.node.duplicate(s, node, targetPos, {
                 staticValues:          payload.staticValues[node.id],
+                fieldExpressions:      payload.fieldExpressions?.[node.id],
                 credentialInstanceIds: payload.credentialInstanceIds[node.id],
             })
             newNodeIds.set(node.id, newNode.id)

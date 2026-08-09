@@ -121,6 +121,7 @@ export abstract class RuntimeNode<
         const inputs       = this.context.workflowQueryAPI.getInputs(this.nodeId);
         const fields       = this.context.workflowQueryAPI.getFields(this.nodeId);
         const staticValues = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
+        const expressionOverrides = this.context.workflowQueryAPI.getExpressionTaggedFieldIds(this.nodeId);
 
         const fieldValues = mapFieldValues<T_Blueprint>(fields, staticValues);
 
@@ -161,11 +162,11 @@ export abstract class RuntimeNode<
                         continue;
                     }
 
-                    if (!Foundations.Field.isExpression(field)) 
+                    if (!Foundations.Field.usesExpression(field, expressionOverrides[field.id]))
                         continue;
-                    
+
                     const raw = evaluated[field.id];
-                    if (typeof raw !== "string") 
+                    if (typeof raw !== "string")
                         continue;
 
                     evaluated[field.id] = evaluate(
@@ -208,8 +209,9 @@ export abstract class RuntimeNode<
 
         const fields       = this.context.workflowQueryAPI.getFields(this.nodeId);
         const staticValues = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
+        const expressionOverrides = this.context.workflowQueryAPI.getExpressionTaggedFieldIds(this.nodeId);
 
-        // Resolve raw value + isExpression once per field, reused across every iteration.
+        // Resolve raw value + expression mode once per field, reused across every iteration.
         const rawValues = mapFieldValues<T_Blueprint>(fields, staticValues);
         const meta      = new Map<Foundations.Field.Id, { raw: unknown, isExpression: boolean }>();
 
@@ -220,7 +222,7 @@ export abstract class RuntimeNode<
         for (const field of fields)
             meta.set(field.id, {
                 raw: rawByFieldId[field.id],
-                isExpression: Foundations.Field.isExpression(field)
+                isExpression: Foundations.Field.usesExpression(field, expressionOverrides[field.id])
             });
 
         return this.context.airlockAPI.executeSync(

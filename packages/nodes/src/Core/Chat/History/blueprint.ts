@@ -9,7 +9,7 @@ export const Blueprint = defineBlueprint({
     fields: [
         FieldBuilder.String("chat_id", "Chat ID", {
             initialValue: "$igniter.chat_id",
-            isExpression: true,
+            isExpressionInitially: true,
             tooltip: "The chat session to read and update."
         }),
     ],
