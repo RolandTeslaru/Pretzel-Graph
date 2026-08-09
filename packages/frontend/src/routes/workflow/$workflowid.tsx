@@ -73,6 +73,9 @@ export const Route = createFileRoute('/workflow/$workflowid')({
             queryFn: () => ChatSDK.actions.chat.listByWorkflow(workflowId),
         })
 
+        ChatSDK.actions.chat.new();
+        ChatSDK.actions.ui.setSidebarVisibility(false);
+
         ExecutionSDK.actions.clear();
 
         WorkbenchSDK.actions.workflow.load(workflowId, abortController.signal)
