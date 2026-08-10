@@ -25,7 +25,9 @@ import TimelineViewer from './-SDKs/ExecutionSDK/ui/Timeline'
 import UoWInspectorSidebar from './-SDKs/ExecutionSDK/ui/UoWInspector/sidebar'
 import { toast } from 'sonner'
 import { router } from '@/main'
-import { RequestStacker } from './-SDKs/HumanReviewSDK/ui/RequestStacker'
+import { InteractionSDK } from './-SDKs/InteractionSDK'
+// Registration side-effect: wires the review subscription + execution lifecycle binding.
+import './-SDKs/HumanReviewSDK/sdk'
 
 let isViteFullReloadPending = false
 let isBrowserUnloadPending = false
@@ -213,7 +215,7 @@ function WorkflowLayoutComponent() {
                     <SpotlightSearch />
                     <StackSDK.UIOverlay />
                     <BottomLeftPanel />
-                    <RequestStacker/>
+                    <InteractionSDK.UIOverlay/>
                 </div>
                 {/* Drawer — always mounted, height animates between 0 and open height */}
 
