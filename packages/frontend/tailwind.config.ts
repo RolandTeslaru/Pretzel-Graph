@@ -205,6 +205,7 @@ const config: Config = {
                 "slow-wiggle": "wiggle 500ms ease-in-out 1",
                 "border-beam": "border-beam calc(var(--duration)*1s) infinite linear",
                 "spin-slow": "spin-slow 1.5s linear infinite",
+                "sonar-sweep": "spin-slow calc(var(--sonar-duration, 4) * 1s) linear infinite",
             },
             colors: {
                 port: portColors,

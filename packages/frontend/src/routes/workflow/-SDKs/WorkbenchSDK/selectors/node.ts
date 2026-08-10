@@ -36,6 +36,8 @@ export interface NodeSelectors {
     getFields: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => readonly Foundations.Field[]
     getBlueprint: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Blueprint | null
     getUI: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => NodeUI
+    /** Nodes the run can elect as its entry point. Ids, not objects, so `shallow` holds. */
+    getIgniteableNodes: (state: WorkbenchSDK.State) => Workflow.Node.Id[]
 }
 
 export type NodeUI = {
@@ -181,6 +183,12 @@ export const nodeSelectors = {
             return null;
 
         return ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId] ?? null;
+    },
+    getIgniteableNodes: (s) => {
+        return Object.values(s.data.nodes)
+            .filter(node => !node.isDisabled)
+            .filter(node => s.selectors.node.getBlueprint(s, node.id)?.igniter === true)
+            .map(node => node.id);
     },
     getUI: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
