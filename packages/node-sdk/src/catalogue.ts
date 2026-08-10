@@ -161,7 +161,7 @@ class CatalogueServiceImpl {
         // Case without dependency
         if (!depedency) {
             const RuntimeNode = await this.getNodeConstructor(wfNode.blueprintId);
-            const blueprint= await this.resolveBlueprint(wfNode.blueprintId, staticValues)
+            const blueprint   = await this.resolveBlueprint(wfNode.blueprintId, staticValues)
 
             if(!RuntimeNode)
                 throw new Error(`Could not get the RuntimeNode constructor for ${wfNode.blueprintId}`) 

@@ -1,7 +1,12 @@
+import type { Workflow } from '@pretzel-graph/shared/domain'
 import { ExecutionSDK } from '../../sdk'
 
 export const handleRun = () => {
   ExecutionSDK.actions.run({ variant: "workbench_manual" });
+}
+
+export const handleRunWithIgniteableNode = (nodeId: Workflow.Node.Id) => {
+  ExecutionSDK.actions.runWithIgniteableNode(nodeId);
 }
 
 export const handlePause = () => {
