@@ -4,8 +4,7 @@ import { NodeId } from "./Workflow/ids";
 // Leaf modules only — the Execution barrel reaches Workflow, which imports this file.
 import { Signal as ExecutionSignal } from "./Execution/signal";
 import * as ExecutionEvent from "./Execution/event-base";
-
-const WorkflowId = z.uuid().brand("WorkflowId");
+import { Consultation as ConsultationModule } from "./Consultation";
 
 export namespace Webhook {
     export const Id = z.string().brand("WebhookId")
@@ -84,7 +83,7 @@ export namespace Webhook {
             })
 
             export const ReadyToReceive = Base.extend({
-                type: z.literal("ready_to_receive"),
+                type: z.literal("webhook-test:ready-to-receive"),
                 createdAt: z.number(),
                 timeout: z.number()
             })
@@ -111,6 +110,30 @@ export namespace Webhook {
             export const Schema = z.discriminatedUnion("type", [ResolvePayload])
         }
         export type Signal = z.infer<typeof Signal.Schema>
+
+
+        export namespace Consultation {
+
+            // Namespaced: ConsultationModule.Variant is an open registry shared with every
+            // other consulting node, so a bare tag would be free to collide. Pinned as a
+            // literal on both schemas so parse rejects a mismatched variant.
+            export const Variant = ConsultationModule.variant("webhook:payload")
+
+            export const Request = ConsultationModule.Request.extend({
+                variant: z.literal(Variant),
+                path:    Webhook.Path,
+                method:  Webhook.Method,
+            })
+            export type Request = z.infer<typeof Request>
+
+            // path/method aren't echoed back — they're already on the request, and the
+            // consultation id is what correlates the two.
+            export const Resolution = ConsultationModule.Resolution.extend({
+                variant: z.literal(Variant),
+                payload: Webhook.Payload.Schema,
+            })
+            export type Resolution = z.infer<typeof Resolution>
+        }
 
 
 

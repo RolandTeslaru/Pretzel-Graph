@@ -1,14 +1,14 @@
 import { HumanReview } from "@pretzel-graph/shared/domain";
 import { Button } from "@pretzel-graph/standard-ui/foundations";
-import { HumanReviewSDK } from "../../../sdk";
+import { ExecutionSDK } from "../../../../../ExecutionSDK/sdk";
 
-type ConfirmRequest = Extract<HumanReview.Request, { variant: "confirm" }>;
+type ConfirmRequest = Extract<HumanReview.Request, { variant: typeof HumanReview.Variant.Confirm }>;
 
 // Approve / Reject → drives the approved | rejected port split.
 export const ConfirmationCard = ({ request }: { request: ConfirmRequest }) => {
     
     const respond = (approved: boolean) =>
-        HumanReviewSDK.actions.respond(request.id, { variant: "confirm", approved });
+        ExecutionSDK.actions.pendingConsultations.respond(request.id, { requestId: request.id, variant: HumanReview.Variant.Confirm, approved });
 
     return (
         <div className="grid grid-cols-2 gap-2">

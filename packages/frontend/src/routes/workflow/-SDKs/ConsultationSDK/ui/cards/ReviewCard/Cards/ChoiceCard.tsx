@@ -2,9 +2,9 @@ import { HumanReview } from "@pretzel-graph/shared/domain";
 import { Button, Input, Spinner } from "@pretzel-graph/standard-ui/foundations";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 import { useState } from "react";
-import { HumanReviewSDK } from "../../../sdk";
+import { ExecutionSDK } from "../../../../../ExecutionSDK/sdk";
 
-type ChoiceRequest = Extract<HumanReview.Request, { variant: "choice" }>;
+type ChoiceRequest = Extract<HumanReview.Request, { variant: typeof HumanReview.Variant.Choice }>;
 
 // Pick one (or many) of the offered options → Data port.
 export const ChoiceCard = ({ request }: { request: ChoiceRequest }) => {
@@ -45,7 +45,7 @@ export const ChoiceCard = ({ request }: { request: ChoiceRequest }) => {
         // is then removed by Event.Resolved, so we don't reset `sending` on success.
         setSending(true);
         try {
-            await HumanReviewSDK.actions.respond(request.id, { variant: "choice", values });
+            await ExecutionSDK.actions.pendingConsultations.respond(request.id, { requestId: request.id, variant: HumanReview.Variant.Choice, values });
         } finally {
             setSending(false);
         }

@@ -1,1 +1,0 @@
-export { HumanReviewSDK } from "./sdk"

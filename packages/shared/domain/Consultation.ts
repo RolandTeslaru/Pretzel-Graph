@@ -19,7 +19,20 @@ export namespace Consultation {
     export const Variant = z.string().brand("Consultation.Variant")
     export type Variant = z.infer<typeof Variant>
 
-    export const Request = z.object({
+    /**
+     * Brands a variant tag while KEEPING its literal type. A plain `as Variant` widens the
+     * tag to the branded string, and an extending schema then can't discriminate its own
+     * union on it — every member narrows to `never`.
+     */
+    export const variant = <const T extends string>(tag: T) => tag as T & Variant
+    
+    /**
+     * Loose, not strict: this base travels as the declared type of `Signal.Responded.resolution`
+     * and `Session.pending_consultations`, so a strict object would silently strip whatever the
+     * extending domain added — the very fields that make the consultation meaningful. Extras
+     * survive the base-typed hop and are validated by the variant schema at each end.
+     */
+    export const Request = z.looseObject({
         id: Consultation.Id,
         variant: Variant,
         // Which node is asking — drives attribution in the workbench.
@@ -31,7 +44,8 @@ export namespace Consultation {
     })
     export type Request = z.infer<typeof Request>
 
-    export const Resolution = z.object({
+    /** Loose for the same reason as Request — see the note there. */
+    export const Resolution = z.looseObject({
         requestId: Consultation.Id,
         variant: Variant
     })
@@ -72,7 +86,7 @@ export namespace Consultation {
 
         export const Responded = Base.extend({
             type: z.literal("consultation:responded"),
-            consultationResolution: Consultation.Resolution
+            resolution: Consultation.Resolution
         })
         export type Responded = z.infer<typeof Responded>
 
