@@ -1,13 +1,17 @@
-import { All, Body, Controller, HttpCode, NotFoundException, Post, Param, Req } from '@nestjs/common';
+import { All, Body, Controller, HttpCode, NotFoundException, Post, Param, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
+import { BackendGuard } from '../../guards/backend.guard';
 import { WebhookTestService } from './webhook-test.service';
 
 @Controller('test')
 export class WebhookTestController {
     constructor(private readonly testService: WebhookTestService) {}
 
+    // Guarded per-route, not on the class: `receive` below is deliberately public —
+    // it is the URL the user curls.
     @Post('register')
+    @UseGuards(BackendGuard)
     @HttpCode(200)
     register(@Body() body: unknown) {
         const { workflowId, path, method } = Webhook.Test.API.Register.Request.parse(body);

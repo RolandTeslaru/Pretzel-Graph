@@ -26,6 +26,7 @@ import UoWInspectorSidebar from './-SDKs/ExecutionSDK/ui/UoWInspector/sidebar'
 import { toast } from 'sonner'
 import { router } from '@/main'
 import { InteractionSDK } from './-SDKs/InteractionSDK'
+import InteractionDebugPanel from './-SDKs/InteractionSDK/ui/InteractionDebugPanel'
 // Registration side-effect: wires the review subscription + execution lifecycle binding.
 import './-SDKs/HumanReviewSDK/sdk'
 
@@ -216,6 +217,7 @@ function WorkflowLayoutComponent() {
                     <StackSDK.UIOverlay />
                     <BottomLeftPanel />
                     <InteractionSDK.UIOverlay/>
+                    <InteractionDebugPanel />
                 </div>
                 {/* Drawer — always mounted, height animates between 0 and open height */}
 

@@ -4,6 +4,7 @@ import { Port } from "../Foundations/Port"
 import { Projection } from "../Foundations/Projection"
 import { SystemError } from "../SystemError"
 import { supabaseTimestamp } from "../zod-utils"
+import { Consultation } from "../Consultation"
 
 // ─── Session ──────────────────────────────────────────────────────────────
 // Embedded runtime-state blob. No separate id — identified by the execution's id.
@@ -38,12 +39,33 @@ export namespace Session {
         node_status: z.record(Workflow.Node.Id, NodeStatus.Schema).default({}),
         edge_state:  z.record(Workflow.Edge.Id, EdgeState.Schema).default({}),
         metadata:    z.record(z.string(), z.any()).default({}),
+        pending_consultations:   z.record(Consultation.Id, Consultation.Request).default({}),
         node_output_instances:   z.record(Workflow.Node.Id, z.any()).default({}),
         node_output_projections: z.record(Workflow.Node.Id, z.record(Port.Output.Id, Projection.Schema)).default({}),
     })
 
-    export const Update = Schema.partial()
-    export type Update = z.infer<typeof Update>
+    export const Partial = Schema.partial()
+    export type Partial = z.infer<typeof Partial>
+
+    // Key removals. Upserting merges (Object.assign) and so can never drop a key, which is
+    // why removals travel separately: { pending_consultations: { [id]: true } }.
+    export const Deletion = z.object({
+        node_status:             z.record(Workflow.Node.Id, z.literal(true)),
+        edge_state:              z.record(Workflow.Edge.Id, z.literal(true)),
+        metadata:                z.record(z.string(), z.literal(true)),
+        pending_consultations:   z.record(Consultation.Id, z.literal(true)),
+        node_output_instances:   z.record(Workflow.Node.Id, z.literal(true)),
+        node_output_projections: z.record(Workflow.Node.Id, z.literal(true)),
+    }).partial()
+    export type Deletion = z.infer<typeof Deletion>
+
+    // One partial change set. `upsert` merges keys in, `delete` drops them; a single patch
+    // may carry both, and `upsert` is applied first.
+    export const Patch = z.object({
+        upsert: Partial,
+        delete: Deletion,
+    }).partial()
+    export type Patch = z.infer<typeof Patch>
 
     export const createInitial = () => Schema.parse({})
 }

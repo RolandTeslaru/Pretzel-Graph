@@ -58,19 +58,34 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
             set: (s, execution) => {
                 s.currentExecution = execution;
             },
-            setSession: (s, session) => {
-                if (!s.currentExecution) return;
-                s.currentExecution.session = session;
-            },
-            applySessionUpdate: (s, update) => {
-                if (!update) return;
-                const session = s.currentExecution?.session;
-                if (!session) return;
+            session: {
+                set: (s, session) => {
+                    if (!s.currentExecution) return;
+                    s.currentExecution.session = session;
+                },
+                // One partial change set. Upserts merge in first, then removals drop keys —
+                // so a single patch can replace one entry and delete another.
+                applyPatch: (s, patch) => {
+                    if (!patch) return;
 
-                Object.entries(update).forEach(([key, value]) => {
-                    if (!value) return;
-                    Object.assign(session[key as keyof Execution.Session], value);
-                })
+                    const session = s.currentExecution?.session;
+                    if (!session) return;
+
+                    Object.entries(patch.upsert ?? {}).forEach(([key, value]) => {
+                        if (!value) return;
+
+                        Object.assign(session[key as keyof Execution.Session], value);
+                    })
+
+                    Object.entries(patch.delete ?? {}).forEach(([key, removals]) => {
+                        if (!removals) return;
+
+                        const slice = session[key as keyof Execution.Session] as Record<string, unknown>;
+                        if (!slice) return;
+
+                        Object.keys(removals).forEach(recordKey => { delete slice[recordKey] });
+                    })
+                },
             },
             setStatus: (s, status) => {
                 if (!s.currentExecution) return;
@@ -191,8 +206,10 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
 export interface _ExecutionSessionReducers {
     currentExecution: {
         set:                (state: State, execution: Execution) => void;
-        setSession:         (state: State, session: Execution.Session) => void;
-        applySessionUpdate: (state: State, update?: Execution.Session.Update) => void;
+        session: {
+            set:        (state: State, session: Execution.Session) => void;
+            applyPatch: (state: State, patch?: Execution.Session.Patch) => void;
+        };
         setStatus:          (state: State, status: Execution.Status) => void;
         setError:           (state: State, error: any) => void;
         recording: {

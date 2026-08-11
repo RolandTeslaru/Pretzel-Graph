@@ -1,7 +1,7 @@
 import { Job as BullJob, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants"
-import { Execution, Realtime } from '@pretzel-graph/shared/domain';
+import { Execution } from '@pretzel-graph/shared/domain';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { AggexEngine, AggexHooks } from 'src/engine';
 import { FlightRecorderService } from './engine/flight-recorder-service';
@@ -10,7 +10,7 @@ import { TurboGraph } from './turboGraph';
 import { createInternalClient } from './turboGraph/http';
 import { AirlockService } from './airlock';
 import { AxiosService } from './axios';
-import { RealtimeService } from './realtime';
+import { SharedRealtimeService } from './realtime';
 
 const LOCK_EXTEND_INTERVAL_MS = 15_000;
 const LOCK_EXTEND_DURATION_MS = 30_000;
@@ -25,21 +25,14 @@ export class AggexWorkerImpl {
 
     private runningEnginesMap           = new Map<Execution.Id, AggexEngine>();
     private runningExecutionContextsMap = new Map<Execution.Id, AggexEngine.Execution.Context>()
-    private signalHandlersMap           = new Map<Execution.Signal.Channel, (signal: Execution.Signal) => void>();
 
+    // Recording cache only — publishing goes through the realtime scope.
     private redisPub    = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
-    private redisSub    = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
     private redisWorker = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
 
-    private realtime    = new RealtimeService()
+    private realtime    = new SharedRealtimeService()
 
     public init() {
-        this.redisSub.on("message", (ch: Execution.Signal.Channel, msg: string) => {
-            const handler = this.signalHandlersMap.get(ch);
-            if (!handler) return;
-            const signal = JSON.parse(msg) as Execution.Signal;
-            handler(signal);
-        });
         this.worker.run()
     }
 
@@ -76,13 +69,23 @@ export class AggexWorkerImpl {
         const { workflowId, workflowData, execution, credentialInstances, executionToken } = bullJob.data;
         const executionId = execution.id;
         const { igniter } = execution;
+
+        // We hold no signing key, so this cannot prove the token is genuine — it only stops a
+        // forged queue item from pointing the run at one execution and the nodes at another.
+        const claims = Execution.Token.decodeUnverified(executionToken);
+
+        if (claims?.executionId !== executionId)
+            throw new SystemError(
+                SystemError.Code.INFRA_QUEUE_ERROR,
+                `Execution token does not match queued execution ${executionId}`
+            );
+
         console.log(`Processing job ${bullJob.id} for workflow ${workflowId} with execution id ${execution.id}`);
 
-        const eventChannel  = Execution.Event.getChannel(execution.id);
-        const signalChannel = Execution.Signal.getChannel(execution.id);
-
-        this.signalHandlersMap.set(signalChannel, (signal) => this.handleSignal(signal));
-        this.redisSub.subscribe(signalChannel);
+        // Subscribed for the whole job, so nothing can reply into a gap. Everything this
+        // execution emits or awaits goes through here.
+        const scope = this.realtime.scope(executionId, workflowId);
+        const unsubscribeFromLifecycleSignals = scope.onSignal(Execution.Signal.Schema, signal => this.handleSignal(signal));
 
         let lockExtendInterval: ReturnType<typeof setInterval> | null = null;
         let pauseTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -115,12 +118,7 @@ export class AggexWorkerImpl {
             this.pauseTimeoutResetters.delete(execution.id);
         };
 
-        this.emit<Execution.Event.Started>({
-            executionId: execution.id,
-            workflowId,
-            type: "started",
-            channel: eventChannel
-        });
+        scope.emit(Execution.Event.create("started"));
 
         let recorder: FlightRecorderService | null = null;
         // One Isolate per execution = the tenant/security boundary. Owned here (outermost),
@@ -143,23 +141,15 @@ export class AggexWorkerImpl {
                     startLockExtension();
                     startPauseTimeout(onPauseTimeout);
                     this.pauseTimeoutResetters.set(executionId, () => startPauseTimeout(onPauseTimeout));
-                    this.emit<Execution.Event.Paused>({
-                        executionId,
-                        workflowId,
-                        type: "paused",
-                        channel: eventChannel,
+                    scope.emit(Execution.Event.create("paused", {
                         session: executionCtx.session,
-                    });
+                    }));
                 },
                 onResume: () => {
                     stopLockExtension();
-                    this.emit<Execution.Event.Resumed>({
-                        executionId,
-                        workflowId,
-                        type: "resumed",
-                        channel: eventChannel,
+                    scope.emit(Execution.Event.create("resumed", {
                         session: executionCtx.session,
-                    });
+                    }));
                 },
             };
 
@@ -177,7 +167,7 @@ export class AggexWorkerImpl {
             const internalAPI = createInternalClient(executionToken);
 
             // Compile and register execution context
-            executionCtx = await this.compiler.compile(workflowId, workflowData, execution, this.realtime, engine, airlock, credentialInstances, internalAPI);
+            executionCtx = await this.compiler.compile(workflowId, workflowData, execution, scope, engine, airlock, credentialInstances, internalAPI);
             this.runningExecutionContextsMap.set(executionId, executionCtx);
 
             const result = await engine.run(executionCtx);
@@ -190,9 +180,9 @@ export class AggexWorkerImpl {
             await Execution.API.update(AxiosService.api, { executionId, status, duration, session, recording });
 
             if (status === 'terminated')
-                this.emit<Execution.Event.Terminated>({ executionId, workflowId, type: "terminated", channel: eventChannel });
+                scope.emit(Execution.Event.create("terminated"));
             else
-                this.emit<Execution.Event.Completed>({ executionId, workflowId, type: "completed", channel: eventChannel, session });
+                scope.emit(Execution.Event.create("completed", { session }));
 
             if (recording) {
                 await this.redisPub.set(
@@ -200,12 +190,7 @@ export class AggexWorkerImpl {
                     JSON.stringify(recording),
                     'EX', Execution.Recording.LIVE_TTL_SECONDS,
                 )
-                this.emit<Execution.Event.Recording.FullyUploaded>({
-                    channel:     Execution.Event.getChannel(executionId),
-                    executionId: executionId,
-                    workflowId,
-                    type:        "recording:fullyUploaded",
-                })
+                scope.emit(Execution.Event.create("recording:fullyUploaded"))
             }
 
             return { status };
@@ -222,14 +207,10 @@ export class AggexWorkerImpl {
 
             await Execution.API.update(AxiosService.api, { executionId: execution.id, status: 'failed', duration, session, recording }).catch(() => {});
 
-            this.emit<Execution.Event.Failed>({
-                executionId: execution.id,
-                workflowId,
-                type: "failed",
-                channel: eventChannel,
+            scope.emit(Execution.Event.create("failed", {
                 error: systemError.toJSON(),
                 session,
-            });
+            }));
 
             if (recording) {
                 await this.redisPub.set(
@@ -237,12 +218,7 @@ export class AggexWorkerImpl {
                     JSON.stringify(recording),
                     'EX', Execution.Recording.LIVE_TTL_SECONDS,
                 ).catch(redisErr => console.error('[Worker] Failed to cache recording:', redisErr));
-                this.emit<Execution.Event.Recording.FullyUploaded>({
-                    channel:     Execution.Event.getChannel(execution.id),
-                    executionId: execution.id,
-                    workflowId,
-                    type:        "recording:fullyUploaded",
-                })
+                scope.emit(Execution.Event.create("recording:fullyUploaded"))
             }
 
             return { status: 'failed', error: systemError.toJSON() };
@@ -254,18 +230,14 @@ export class AggexWorkerImpl {
             airlock.dispose();   // free the isolate + all its contexts/scripts
             this.runningEnginesMap.delete(execution.id);
             this.runningExecutionContextsMap.delete(execution.id);
-            this.signalHandlersMap.delete(signalChannel);
-            this.redisSub.unsubscribe(signalChannel);
+
+            // unsubscribeFromLifecycleSignals();
+            scope.close();   // unsubscribes and rejects anything still parked (including lifecycle signals)
         }
     }
 
     private worker = new Worker(Execution.Queue.ID, this.processQueueItem, { connection: this.redisWorker, autorun: false }
     )
-
-
-    public emit = <T_Event extends Realtime.Event>(event: T_Event) => {
-        this.redisPub.publish(event.channel, JSON.stringify(event));
-    }
 }
 
 export const AggexWorker = container.resolve(AggexWorkerImpl);

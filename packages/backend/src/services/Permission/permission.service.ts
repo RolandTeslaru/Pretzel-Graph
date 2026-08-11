@@ -12,7 +12,7 @@ export class PermissionService {
 
     private ownershipCache = new Map<Workflow.Id | Chat.Id | Execution.Id, { ownerId: Auth.User.Id, expiresAt: number }>();
 
-    private executionContextCache = new Map<Execution.Id, { ownerId: Auth.User.Id, igniter: Execution.Igniter, expiresAt: number }>();
+    private executionContextCache = new Map<Execution.Id, { ownerId: Auth.User.Id, workflowId: Workflow.Id, igniter: Execution.Igniter, expiresAt: number }>();
 
     // Cache the fact (resource → owner), never the miss. Compare against the requester live.
     private cacheOwner(id: Workflow.Id | Chat.Id | Execution.Id, ownerId: Auth.User.Id) {
@@ -109,6 +109,29 @@ export class PermissionService {
 
 
 
+    /**
+     * Scopes a delegate to its *own* workflow, not merely to one its owner happens to
+     * have. A running execution has exactly one workflow; anything it names that isn't
+     * that workflow is a claim it has no basis to make.
+     */
+    public async assertDelegateWorkflow(
+        delegate:   Principal.Delegate,
+        workflowId: Workflow.Id,
+    ) {
+        const context = await this.loadExecutionContext(delegate.executionId);
+
+        if (!context)
+            throw new SystemError(SystemError.Code.NOT_FOUND, 'Execution not found');
+
+        if (context.workflowId !== workflowId)
+            throw new SystemError(SystemError.Code.NOT_FOUND, 'Workflow not found');
+
+        return context.workflowId;
+    }
+
+
+
+
     public async loadWorkflowOwner(
         workflowId: Workflow.Id
     ): Promise<Auth.User.Id> {
@@ -142,12 +165,13 @@ export class PermissionService {
 
 
     /**
-     * Owner + igniter in one read — the two facts needed to mint a delegated
-     * principal. Both are immutable after insert, so caching them together is safe.
+     * Owner + workflow + igniter in one read — the facts needed to mint a delegated
+     * principal and scope it to its own workflow. All immutable after insert, so
+     * caching them together is safe.
      */
     public async loadExecutionContext(
         executionId: Execution.Id
-    ): Promise<{ ownerId: Auth.User.Id, igniter: Execution.Igniter } | null> {
+    ): Promise<{ ownerId: Auth.User.Id, workflowId: Workflow.Id, igniter: Execution.Igniter } | null> {
         const cached = this.executionContextCache.get(executionId);
         if (cached && cached.expiresAt > Date.now())
             return cached;
@@ -155,14 +179,14 @@ export class PermissionService {
         const row = await DB.asService('load execution context', (db) =>
             db
                 .selectFrom('executions')
-                .select(['user_id', 'igniter'])
+                .select(['user_id', 'workflow_id', 'igniter'])
                 .where('id', '=', executionId)
                 .executeTakeFirst(),
         );
         if (!row)
             return null;   // never cache the miss — preemptive subscribe relies on re-checking
 
-        const context = { ownerId: row.user_id, igniter: row.igniter };
+        const context = { ownerId: row.user_id, workflowId: row.workflow_id, igniter: row.igniter };
 
         this.executionContextCache.set(executionId, {
             ...context,

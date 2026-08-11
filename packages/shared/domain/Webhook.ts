@@ -1,11 +1,11 @@
 import z from "zod";
 import type { AxiosInstance } from "axios";
-import { Realtime } from "./Realtime";
+import { NodeId } from "./Workflow/ids";
+// Leaf modules only — the Execution barrel reaches Workflow, which imports this file.
+import { Signal as ExecutionSignal } from "./Execution/signal";
+import * as ExecutionEvent from "./Execution/event-base";
 
 const WorkflowId = z.uuid().brand("WorkflowId");
-
-const ExecutionId = z.uuid().brand("ExecutionId");
-type ExecutionId = z.infer<typeof ExecutionId>;
 
 export namespace Webhook {
     export const Id = z.string().brand("WebhookId")
@@ -13,6 +13,7 @@ export namespace Webhook {
 
     export const WorkflowId = z.uuid().brand("WorkflowId")
     export type WorkflowId = z.infer<typeof WorkflowId>
+
 
     export const Path = z.string().brand("WebhookPath")
     export type Path = z.infer<typeof Path>
@@ -23,11 +24,23 @@ export namespace Webhook {
     export const createId = (workflowId: WorkflowId, path: Path): RouteId =>
         `${workflowId}/${path}` as RouteId
 
+    /**
+     * Backend → webhook-server shared secret. The webhook server is internet-facing,
+     * so its control routes need a caller check; the backend is a trusted holder, so
+     * a shared secret is the right weight (unlike Execution.Token, which travels to
+     * the worker and is therefore signed).
+     *
+     * Node lowercases inbound header names — set and read with this exact value.
+     */
+    export const BACKEND_TOKEN_HEADER = "backend-service-token"
+
     export const Method = z.enum(["GET", "POST", "PUT", "DELETE", "PATCH"])
     export type Method = z.infer<typeof Method>
 
     export const ResponseMode = z.enum(["onReceived", "workflowCompletion", "manual"])
     export type ResponseMode = z.infer<typeof ResponseMode>
+
+
 
     export const Schema = z.object({
         id: Webhook.Id,
@@ -36,6 +49,8 @@ export namespace Webhook {
         responseMode: z.string(),
     })
 
+
+
     export const ResolvedSchema = z.object({
         id: Webhook.Id,
         method: Method,
@@ -43,6 +58,8 @@ export namespace Webhook {
         responseMode: ResponseMode,
     })
     export type Resolved = z.infer<typeof ResolvedSchema>
+
+
 
     export namespace Payload {
         export const Schema = z.object({
@@ -60,20 +77,42 @@ export namespace Webhook {
     // ─────────────────────────────────────────────────────────
     export namespace Test {
 
-        export namespace ResolveSignal {
-            export const Channel = Realtime.Channel.brand("WebhookTestResolveSignalChannel")
-            export type Channel = z.infer<typeof Channel>
+        export namespace Event {
 
-            export const getChannel = (executionId: ExecutionId): Channel =>
-                `webhook:test:resolve:${executionId}:signal` as Channel
-
-            export const Schema = Realtime.Signal.Base.extend({
-                executionId: ExecutionId,
-                type: z.literal("resolve"),
-                payload: Payload.Schema,
+            const Base = ExecutionEvent.Base.extend({
+                ignitedNodeId: NodeId
             })
+
+            export const ReadyToReceive = Base.extend({
+                type: z.literal("ready_to_receive"),
+                createdAt: z.number(),
+                timeout: z.number()
+            })
+
+            export const Schema = z.discriminatedUnion("type", [ReadyToReceive])
+
+            export const create = ExecutionEvent.defineEventFactory(Schema)
         }
-        export type Signal = z.infer<typeof ResolveSignal.Schema>
+        export type Event = z.infer<typeof Event.Schema>
+
+
+
+        export namespace Signal {
+
+            export const Base = ExecutionSignal.Base.extend({
+                ignitedNodeId: NodeId
+            })
+
+            export const ResolvePayload = Base.extend({
+                type: z.literal("resolve_payload"),
+                payload: Payload.Schema
+            })
+
+            export const Schema = z.discriminatedUnion("type", [ResolvePayload])
+        }
+        export type Signal = z.infer<typeof Signal.Schema>
+
+
 
         export namespace API {
             export namespace Register {

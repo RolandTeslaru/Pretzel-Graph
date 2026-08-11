@@ -41,6 +41,34 @@ export namespace Execution {
 
         /** Node lowercases inbound header names — set and read with this exact value. */
         export const HEADER = "execution-token"
+
+        export const Claims = z.object({
+            executionId: Execution.Id,
+            exp:         z.number(),
+        })
+        export type Claims = z.infer<typeof Claims>
+
+        /**
+         * Reads the payload without checking the signature — the signing key is backend-only,
+         * so this proves nothing about authenticity. For cross-checking a token against data
+         * that travelled beside it; never for authorisation.
+         */
+        export function decodeUnverified(token: Token): Claims | null {
+            const [encoded, signature] = token.split(".")
+
+            if (!encoded || !signature)
+                return null
+
+            try {
+                const json = atob(encoded.replace(/-/g, "+").replace(/_/g, "/"))
+                const parsed = Claims.safeParse(JSON.parse(json))
+
+                return parsed.success ? parsed.data : null
+            }
+            catch {
+                return null
+            }
+        }
     }
     export type Token = z.infer<typeof Token.Schema>
 
@@ -239,7 +267,8 @@ export namespace Execution {
                 executionId: Execution.Id,
                 status:      Status.optional(),
                 duration:    z.number().optional(),
-                session:     Session.Update.optional(),
+                // Replaces the whole session column — not merged. Send a complete session.
+                session:     Session.Schema.optional(),
                 recording:   Execution.Recording.Schema.nullable().optional(),
             })
             export type Request = z.infer<typeof Request>

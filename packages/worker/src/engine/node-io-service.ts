@@ -40,19 +40,17 @@ export class NodeIOService {
         d.node_output_projections[nodeId][outputId] = projection;
         });
 
-        ctx.realtimeAPI.emit<Execution.Event.SessionUpdate>({
-            executionId: ctx.executionId,
-            workflowId:  ctx.workflowId,
-            type:        "update",
-            channel:     this.engine.services.session.getEventChannel(ctx),
-            sessionUpdate: {
-                node_output_projections: {
-                    [nodeId]: {
-                        [outputId]: projection,
+        ctx.realtimeAPI.emit(Execution.Event.create("patch", {
+            sessionPatch: {
+                upsert: {
+                    node_output_projections: {
+                        [nodeId]: {
+                            [outputId]: projection,
+                        },
                     },
                 },
             },
-        });
+        }));
     }
 
     public readonly getIncomingData = (

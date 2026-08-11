@@ -2,27 +2,27 @@ import z from "zod"
 import { Workflow } from "../Workflow"
 import { Port } from "../Foundations/Port"
 import { SystemError } from "../SystemError"
-import { Realtime } from "../Realtime"
-import { ExecutionId } from "./ids"
 import { Session } from "./session"
 import { Recording as RecordingModule } from "./recording"
+import * as EventBase from "./event-base"
 
 // ─── Events ───────────────────────────────────────────────────────────────
 // Single channel per execution: execution:<executionId>
 // Carries both lifecycle events and per-node progress events.
+//
+// Other execution-scoped domains publish their own unions on the same channel by
+// extending Base — see Consultation.Event. This union stays Execution's own.
 
 export namespace Event {
-    export const Channel = Realtime.Channel.brand("ExecutionChannel")
-    export type Channel = z.infer<typeof Channel>
+    export const Channel = EventBase.Channel
+    export type Channel = EventBase.Channel
 
-    export const getChannel = (executionId: ExecutionId) =>
-        `execution:${executionId}` as Channel
+    export const getChannel = EventBase.getChannel
 
-    const Base = Realtime.Event.Base.extend({
-        executionId: ExecutionId,
-        workflowId:  Workflow.Id,
-        channel:     Channel,
-    })
+    export const Base = EventBase.Base
+    export type Base = EventBase.Base
+
+    export type Unstamped<T_Event extends Base = Base> = EventBase.Unstamped<T_Event>
 
     // Lifecycle
     export const Started    = Base.extend({ type: z.literal('started') })
@@ -34,33 +34,33 @@ export namespace Event {
     export const Terminated = Base.extend({ type: z.literal('terminated') })
 
     // Progress
-    export const SessionUpdate = Base.extend({
-        type:          z.literal('update'),
-        sessionUpdate: Session.Update,
+    export const SessionPatch = Base.extend({
+        type:         z.literal('patch'),
+        sessionPatch: Session.Patch,
     })
 
     export namespace Node {
         export const Started   = Base.extend({
             type:          z.literal('node:started'),
             nodeId:        Workflow.Node.Id,
-            sessionUpdate: Session.Update,
+            sessionPatch:  Session.Patch,
         })
         export const Completed = Base.extend({
             type:          z.literal('node:completed'),
             nodeId:        Workflow.Node.Id,
             output:        z.unknown(),
-            sessionUpdate: Session.Update,
+            sessionPatch:  Session.Patch,
         })
         export const Error     = Base.extend({
             type:          z.literal('node:error'),
             nodeId:        Workflow.Node.Id,
             error:         SystemError.Schema,
-            sessionUpdate: Session.Update,
+            sessionPatch:  Session.Patch,
         })
         export const Waiting   = Base.extend({
             type:          z.literal('node:waiting'),
             nodeId:        Workflow.Node.Id,
-            sessionUpdate: Session.Update,
+            sessionPatch:  Session.Patch,
         })
 
         export type Started   = z.infer<typeof Started>
@@ -76,7 +76,7 @@ export namespace Event {
     export type Terminated      = z.infer<typeof Terminated>
     export type Completed       = z.infer<typeof Completed>
     export type Failed          = z.infer<typeof Failed>
-    export type SessionUpdate   = z.infer<typeof SessionUpdate>
+    export type SessionPatch    = z.infer<typeof SessionPatch>
 
     // ─── Recording events ────────────────────────────────────────────────
     // Sent on the same execution channel. Frontend applies each as a
@@ -133,13 +133,18 @@ export namespace Event {
         export type FullyUploaded = z.infer<typeof FullyUploaded>
     }
 
+
     export const Schema = z.discriminatedUnion("type", [
         Started, Paused, Resumed, Suspended, Terminated, Completed, Failed,
-        SessionUpdate,
+        SessionPatch,
         Node.Started, Node.Completed, Node.Error, Node.Waiting,
         Recording.Unit.Started, Recording.Unit.Completed, Recording.Unit.Failed,
         Recording.Relation.Created, Recording.Relation.CreateBatch,
         Recording.Completed, Recording.FullyUploaded,
     ])
+
+    // Returns an unstamped member — realtimeAPI.emit writes channel/executionId/workflowId from the
+    // execution it is bound to, so a caller cannot address another one.
+    export const create = EventBase.defineEventFactory(Schema)
 }
 export type Event = z.infer<typeof Event.Schema>

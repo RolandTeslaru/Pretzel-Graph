@@ -4,7 +4,7 @@ import { TimeoutRing } from '@pretzel-graph/standard-ui/components/TimeoutRing'
 
 const WebhookRequestCard = () => {
     return (
-        <div className='relative bg-card/70 backdrop-blur-md border-border w-[400px] h-[250px] shadow-md shadow-black/10 rounded-2xl overflow-hidden'>
+        <div className='relative  overflow-hidden'>
             {/* Header */}
             <div className='absolute top-0 left-0 w-full px-4 pt-3'>
                 <p className='font-mono text-xs'>Node ready and awaiting data</p>

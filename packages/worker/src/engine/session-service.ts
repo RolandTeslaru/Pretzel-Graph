@@ -15,13 +15,9 @@ type NodeEntry = { wfNode: Workflow.Node.Raw; instance: RuntimeNode<Blueprint> }
  * The live-state projection of the execution lifecycle (parallel to FlightRecorderService,
  * which owns the recording projection). The engine's S2 hooks call the `onNodeX` methods,
  * which own every Execution.Session mutation + `node:*` event emit. `createEdgeStateUpdate`
- * and `getEventChannel` are shared primitives the other services emit through.
+ * is a shared primitive the other services emit through.
  */
 export class SessionService {
-
-    public getEventChannel(ctx: AggexEngine.Execution.Context): Execution.Event.Channel {
-        return Execution.Event.getChannel(ctx.executionId);
-    }
 
     /**
      * Mutates edge states in the session and returns the updated entries for event emission.
@@ -86,17 +82,15 @@ export class SessionService {
 
         ctx.updateSession(d => { Object.assign(d.node_status, nodeStatusUpdate); });
 
-        ctx.realtimeAPI.emit<Execution.Event.Node.Started>({
-            executionId:   ctx.executionId,
-            workflowId:    ctx.workflowId,
-            type:          "node:started",
-            nodeId:        entry.wfNode.id,
-            channel:       this.getEventChannel(ctx),
-            sessionUpdate: {
-                edge_state:  edgeStateUpdate,
-                node_status: nodeStatusUpdate,
+        ctx.realtimeAPI.emit(Execution.Event.create("node:started", {
+            nodeId:       entry.wfNode.id,
+            sessionPatch: {
+                upsert: {
+                    edge_state:  edgeStateUpdate,
+                    node_status: nodeStatusUpdate,
+                },
             },
-        });
+        }));
     }
 
 
@@ -164,21 +158,19 @@ export class SessionService {
             Object.assign(d.node_status, nodeStatusUpdate);
         });
 
-        ctx.realtimeAPI.emit<Execution.Event.Node.Completed>({
-            executionId:   ctx.executionId,
-            workflowId:    ctx.workflowId,
-            type:          "node:completed",
-            nodeId:        entry.wfNode.id,
-            channel:       this.getEventChannel(ctx),
-            output:        projectedOutput,
-            sessionUpdate: {
-                edge_state:  edgeStateUpdate,
-                node_status: nodeStatusUpdate,
-                node_output_projections: {
-                    [entry.wfNode.id]: projectedOutput,
+        ctx.realtimeAPI.emit(Execution.Event.create("node:completed", {
+            nodeId:       entry.wfNode.id,
+            output:       projectedOutput,
+            sessionPatch: {
+                upsert: {
+                    edge_state:  edgeStateUpdate,
+                    node_status: nodeStatusUpdate,
+                    node_output_projections: {
+                        [entry.wfNode.id]: projectedOutput,
+                    },
                 },
             },
-        });
+        }));
 
         System.log.info("node completed", {
             nodeId:      entry.wfNode.id,
@@ -198,16 +190,12 @@ export class SessionService {
 
         ctx.updateSession(d => { Object.assign(d.node_status, nodeStatusUpdate); });
 
-        ctx.realtimeAPI.emit<Execution.Event.Node.Waiting>({
-            executionId:   ctx.executionId,
-            workflowId:    ctx.workflowId,
-            type:          "node:waiting",
-            nodeId:        nodeId,
-            channel:       this.getEventChannel(ctx),
-            sessionUpdate: {
-                node_status: nodeStatusUpdate,
+        ctx.realtimeAPI.emit(Execution.Event.create("node:waiting", {
+            nodeId:       nodeId,
+            sessionPatch: {
+                upsert: { node_status: nodeStatusUpdate },
             },
-        });
+        }));
     }
 
 
@@ -228,16 +216,12 @@ export class SessionService {
 
         ctx.updateSession(d => { Object.assign(d.node_status, nodeStatusUpdate); });
 
-        ctx.realtimeAPI.emit<Execution.Event.Node.Error>({
-            executionId:   ctx.executionId,
-            workflowId:    ctx.workflowId,
-            type:          "node:error",
-            nodeId:        nodeId,
-            channel:       this.getEventChannel(ctx),
-            error:         error,
-            sessionUpdate: {
-                node_status: nodeStatusUpdate,
+        ctx.realtimeAPI.emit(Execution.Event.create("node:error", {
+            nodeId:       nodeId,
+            error:        error,
+            sessionPatch: {
+                upsert: { node_status: nodeStatusUpdate },
             },
-        });
+        }));
     }
 }
