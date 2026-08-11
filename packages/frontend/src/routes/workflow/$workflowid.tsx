@@ -25,10 +25,8 @@ import TimelineViewer from './-SDKs/ExecutionSDK/ui/Timeline'
 import UoWInspectorSidebar from './-SDKs/ExecutionSDK/ui/UoWInspector/sidebar'
 import { toast } from 'sonner'
 import { router } from '@/main'
-import { InteractionSDK } from './-SDKs/InteractionSDK'
-import InteractionDebugPanel from './-SDKs/InteractionSDK/ui/InteractionDebugPanel'
-// Registration side-effect: wires the review subscription + execution lifecycle binding.
-import './-SDKs/HumanReviewSDK/sdk'
+import { ConsultationSDK } from './-SDKs/ConsultationSDK'
+import ConsultationDebugPanel from './-SDKs/ConsultationSDK/ui/ConsultationDebugPanel'
 
 let isViteFullReloadPending = false
 let isBrowserUnloadPending = false
@@ -216,8 +214,8 @@ function WorkflowLayoutComponent() {
                     <SpotlightSearch />
                     <StackSDK.UIOverlay />
                     <BottomLeftPanel />
-                    <InteractionSDK.UIOverlay/>
-                    <InteractionDebugPanel />
+                    <ConsultationSDK.UIOverlay/>
+                    <ConsultationDebugPanel />
                 </div>
                 {/* Drawer — always mounted, height animates between 0 and open height */}
 

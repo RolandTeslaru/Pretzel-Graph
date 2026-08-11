@@ -4,12 +4,10 @@ import {
     RegisterNode,
     RuntimeNode,
 } from "@pretzel-graph/node-sdk";
+import z from "zod";
 import { HumanReview } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "./blueprint";
-
-/** consultationAPI stamps these two, so the request is parsed without them. */
-const STAMPED = { id: true, startedAt: true } as const;
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -34,14 +32,16 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         switch (fields.variant) {
 
             case "confirm": {
-                const request = HumanReview.Request.Confirm.omit(STAMPED).parse({
-                    ...base,
-                    variant:      HumanReview.Variant.Confirm,
-                    approveLabel: fields.approveLabel,
-                    rejectLabel:  fields.rejectLabel,
-                }) 
-
-                const resolution = await consult(HumanReview.Resolution.Confirm, request);
+                const resolution = await consult(
+                    HumanReview.Request.Confirm,
+                    {
+                        ...base,
+                        variant:      HumanReview.Variant.Confirm,
+                        approveLabel: fields.approveLabel,
+                        rejectLabel:  fields.rejectLabel,
+                    },
+                    HumanReview.Resolution.Confirm,
+                );
 
                 return (
                     resolution.approved
@@ -51,15 +51,18 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             }
 
             case "choice": {
-                const request = HumanReview.Request.Choice.omit(STAMPED).parse({
-                    ...base,
-                    variant:     HumanReview.Variant.Choice,
-                    options:     fields.options,
-                    multiple:    fields.multiple,
-                    allowCustom: fields.allowCustom,
-                })
-
-                const resolution = await consult(HumanReview.Resolution.Choice, request);
+                const resolution = await consult(
+                    HumanReview.Request.Choice,
+                    {
+                        ...base,
+                        variant:     HumanReview.Variant.Choice,
+                        // Json-backed blueprint field — consult parses it on the way in.
+                        options:     fields.options as z.input<typeof HumanReview.Request.Choice>["options"],
+                        multiple:    fields.multiple,
+                        allowCustom: fields.allowCustom,
+                    },
+                    HumanReview.Resolution.Choice,
+                );
 
                 return {
                     value: resolution.values,
@@ -67,13 +70,16 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             }
 
             case "form": {
-                const request = HumanReview.Request.Form.omit(STAMPED).parse({
-                    ...base,
-                    variant: HumanReview.Variant.Form,
-                    fields:  fields.formFields,
-                })
-
-                const resolution = await consult(HumanReview.Resolution.Form, request);
+                const resolution = await consult(
+                    HumanReview.Request.Form,
+                    {
+                        ...base,
+                        variant: HumanReview.Variant.Form,
+                        // Json-backed blueprint field — consult parses it on the way in.
+                        fields:  fields.formFields as z.input<typeof HumanReview.Request.Form>["fields"],
+                    },
+                    HumanReview.Resolution.Form,
+                );
 
                 return {
                     values: resolution.values,

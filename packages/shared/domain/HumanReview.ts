@@ -15,9 +15,9 @@ export namespace HumanReview {
     // Variant tags are namespaced: Consultation.Variant is an open registry shared with every
     // other consulting node, so a bare "confirm" would be free to collide.
     export const Variant = {
-        Confirm: "human-review:confirm" as Consultation.Variant,
-        Choice:  "human-review:choice"  as Consultation.Variant,
-        Form:    "human-review:form"    as Consultation.Variant,
+        Confirm: Consultation.variant("human-review:confirm"),
+        Choice:  Consultation.variant("human-review:choice"),
+        Form:    Consultation.variant("human-review:form"),
     } as const
 
     // ─── Request ────────────────────────────────────────────────────────────

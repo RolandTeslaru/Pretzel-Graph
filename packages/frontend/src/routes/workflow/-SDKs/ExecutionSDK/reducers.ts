@@ -1,5 +1,5 @@
 import { Execution } from "@pretzel-graph/shared/domain";
-import type { Workflow } from "@pretzel-graph/shared/domain";
+import type { Consultation, Workflow } from "@pretzel-graph/shared/domain";
 import type { ExecutionSDK, ExecutionSDKImpl } from "./sdk";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import {
@@ -86,6 +86,23 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
 
                         Object.keys(removals).forEach(recordKey => { delete slice[recordKey] });
                     })
+                },
+            },
+            // Consultations the run is currently parked on. The worker owns this — these
+            // exist for optimistic local edits (answering, expiry) between the POST and the
+            // patch that confirms it.
+            pendingConsultations: {
+                add: (s, request) => {
+                    if (!s.currentExecution) return;
+                    s.currentExecution.session.pending_consultations[request.id] = request;
+                },
+                remove: (s, consultationId) => {
+                    if (!s.currentExecution) return;
+                    delete s.currentExecution.session.pending_consultations[consultationId];
+                },
+                clear: (s) => {
+                    if (!s.currentExecution) return;
+                    s.currentExecution.session.pending_consultations = {};
                 },
             },
             setStatus: (s, status) => {
@@ -221,6 +238,11 @@ export interface _ExecutionSessionReducers {
         session: {
             set:        (state: State, session: Execution.Session) => void;
             applyPatch: (state: State, patch?: Execution.Session.Patch) => void;
+        };
+        pendingConsultations: {
+            add:    (state: State, request: Consultation.Request) => void;
+            remove: (state: State, consultationId: Consultation.Id) => void;
+            clear:  (state: State) => void;
         };
         setStatus:          (state: State, status: Execution.Status) => void;
         setError:           (state: State, error: any) => void;

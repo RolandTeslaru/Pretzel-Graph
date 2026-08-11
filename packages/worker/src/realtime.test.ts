@@ -38,7 +38,7 @@ const respondedTo = (consultationId: Consultation.Id) => JSON.stringify({
     type:           "consultation:responded",
     executionId:    EXECUTION_ID,
     consultationId,
-    consultationResolution: { requestId: consultationId, variant: "test" },
+    resolution:     { requestId: consultationId, variant: "test" },
 });
 
 const terminate = () => JSON.stringify({
