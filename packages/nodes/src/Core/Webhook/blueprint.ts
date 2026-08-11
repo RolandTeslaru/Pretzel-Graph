@@ -30,17 +30,27 @@ export const Blueprint = defineBlueprint({
 
             tooltip: "Method accepted by this webhook route."
         }),
-        FieldBuilder.MultiOption("responseMode", "Response Mode", {
-            initialValue: "onReceived",
-            variant: "select",
-
-            options: [
-                { value: "onReceived", displayName: "On Received" },
-                { value: "workflowCompletion", displayName: "When Workflow Completes" },
-                { value: "manual", displayName: "Manual" },
-            ],
-
-            tooltip: "Whether the webhook response should be sent immediately with an empty body, or delayed until the workflow finishes executing and includes a response payload."
+        // Hidden until the receiver honours it — it currently replies the same way regardless
+        // of the mode, so offering the choice would promise behaviour that doesn't exist.
+        // Re-enable together with the branch in webhook-igniter, and restore the expression
+        // in the `webhooks` entry below.
+        // FieldBuilder.MultiOption("responseMode", "Response Mode", {
+        //     initialValue: "onReceived",
+        //     variant: "select",
+        //
+        //     options: [
+        //         { value: "onReceived", displayName: "On Received" },
+        //         { value: "workflowCompletion", displayName: "When Workflow Completes" },
+        //         { value: "manual", displayName: "Manual" },
+        //     ],
+        //
+        //     tooltip: "Whether the webhook response should be sent immediately with an empty body, or delayed until the workflow finishes executing and includes a response payload."
+        // }),
+        FieldBuilder.Integer("testTimeoutMs", "Test Timeout (ms)", {
+            initialValue: 30_000,
+            min:          10_000,
+            max:          10 * 60_000,
+            tooltip:      "How long a test run waits for an inbound request before giving up. Live webhooks are unaffected."
         }),
     ],
     inputs: [],
@@ -49,7 +59,8 @@ export const Blueprint = defineBlueprint({
             id: "req" as Webhook.Id,
             path: '${{ @fields["path"] }}',
             method: '${{ @fields["method"] }}',
-            responseMode: '${{ @fields["responseMode"] }}',
+            // Pinned while the field above is hidden — the registration shape still requires it.
+            responseMode: 'onReceived',
         }
     ],
     outputs: [

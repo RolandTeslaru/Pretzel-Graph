@@ -8,7 +8,7 @@ type ConfirmRequest = Extract<HumanReview.Request, { variant: typeof HumanReview
 export const ConfirmationCard = ({ request }: { request: ConfirmRequest }) => {
     
     const respond = (approved: boolean) =>
-        ExecutionSDK.actions.pendingConsultations.respond(request.id, { requestId: request.id, variant: HumanReview.Variant.Confirm, approved });
+        ExecutionSDK.actions.pendingConsultations.answer(request.id, { requestId: request.id, variant: HumanReview.Variant.Confirm, approved });
 
     return (
         <div className="grid grid-cols-2 gap-2">

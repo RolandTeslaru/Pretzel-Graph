@@ -1,4 +1,5 @@
 import { Consultation, HumanReview } from '@pretzel-graph/shared/domain'
+import { Webhook } from '@pretzel-graph/shared/domain/Webhook'
 import { ExecutionSDK } from '../../ExecutionSDK/sdk'
 import { ConsultationSDK } from '../sdk'
 
@@ -42,6 +43,13 @@ const pushForm = () => push(HumanReview.Request.Form.parse({
     fields:  [],
 }))
 
+const pushWebhook = () => push(Webhook.Test.Consultation.Request.parse({
+    ...base(),
+    variant: Webhook.Test.Consultation.Variant,
+    path:    'incoming',
+    method:  'POST',
+}))
+
 // An unregistered variant — exercises the fallback card rather than crashing the stack.
 const pushUnknown = () => push(Consultation.Request.parse({
     ...base(),
@@ -68,6 +76,7 @@ const ConsultationDebugPanel = () => {
             </div>
 
             <div className='flex flex-row gap-1 flex-wrap'>
+                <button className='text-xs px-2 py-1 rounded bg-sky-500/20 text-sky-500 hover:bg-sky-500/30 cursor-pointer' onClick={pushWebhook}>Webhook</button>
                 <button className='text-xs px-2 py-1 rounded bg-sky-500/20 text-sky-500 hover:bg-sky-500/30 cursor-pointer' onClick={pushUnknown}>Unknown</button>
                 <button className='text-xs px-2 py-1 rounded bg-destructive/20 text-destructive hover:bg-destructive/30 cursor-pointer' onClick={() => ExecutionSDK.actions.pendingConsultations.clear()}>Clear</button>
             </div>
