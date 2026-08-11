@@ -2,7 +2,7 @@ import z from "zod"
 import { Workflow } from "../Workflow"
 import { Port } from "../Foundations/Port"
 import { SystemError } from "../SystemError"
-import { Session } from "./session"
+import { Session as SessionModule } from "./session"
 import { Recording as RecordingModule } from "./recording"
 import * as EventBase from "./event-base"
 
@@ -24,43 +24,63 @@ export namespace Event {
 
     export type Unstamped<T_Event extends Base = Base> = EventBase.Unstamped<T_Event>
 
-    // Lifecycle
-    export const Started    = Base.extend({ type: z.literal('started') })
-    export const Paused     = Base.extend({ type: z.literal('paused'), session: Session.Schema })
-    export const Resumed    = Base.extend({ type: z.literal('resumed'), session: Session.Schema })
-    export const Completed  = Base.extend({ type: z.literal('completed'), session: Session.Schema })
-    export const Failed     = Base.extend({ type: z.literal('failed'), session: Session.Schema, error: SystemError.Schema })
-    export const Suspended  = Base.extend({ type: z.literal('suspended'), session: Session.Schema })
-    export const Terminated = Base.extend({ type: z.literal('terminated') })
+    // ─── Lifecycle ───────────────────────────────────────────────────────
+    // The run's own state transitions. Mirrors of the lifecycle *signals* that
+    // request them — Execution.Signal.Pause asks, Lifecycle.Paused confirms.
 
-    // Progress
-    export const SessionPatch = Base.extend({
-        type:         z.literal('patch'),
-        sessionPatch: Session.Patch,
-    })
+    export namespace Lifecycle {
+        export const Started    = Base.extend({ type: z.literal('lifecycle:started') })
+        export const Paused     = Base.extend({ type: z.literal('lifecycle:paused'), session: SessionModule.Schema })
+        export const Resumed    = Base.extend({ type: z.literal('lifecycle:resumed'), session: SessionModule.Schema })
+        export const Completed  = Base.extend({ type: z.literal('lifecycle:completed'), session: SessionModule.Schema })
+        export const Failed     = Base.extend({ type: z.literal('lifecycle:failed'), session: SessionModule.Schema, error: SystemError.Schema })
+        export const Suspended  = Base.extend({ type: z.literal('lifecycle:suspended'), session: SessionModule.Schema })
+        export const Terminated = Base.extend({ type: z.literal('lifecycle:terminated') })
+
+        export type Started    = z.infer<typeof Started>
+        export type Paused     = z.infer<typeof Paused>
+        export type Resumed    = z.infer<typeof Resumed>
+        export type Completed  = z.infer<typeof Completed>
+        export type Failed     = z.infer<typeof Failed>
+        export type Suspended  = z.infer<typeof Suspended>
+        export type Terminated = z.infer<typeof Terminated>
+    }
+
+    // ─── Session ─────────────────────────────────────────────────────────
+    // A standalone change to the run's session state. Node events carry their own
+    // sessionPatch alongside what they report; this is the patch on its own, for
+    // changes no single node event owns.
+
+    export namespace Session {
+        export const Patch = Base.extend({
+            type:         z.literal('session:patch'),
+            sessionPatch: SessionModule.Patch,
+        })
+        export type Patch = z.infer<typeof Patch>
+    }
 
     export namespace Node {
         export const Started   = Base.extend({
             type:          z.literal('node:started'),
             nodeId:        Workflow.Node.Id,
-            sessionPatch:  Session.Patch,
+            sessionPatch:  SessionModule.Patch,
         })
         export const Completed = Base.extend({
             type:          z.literal('node:completed'),
             nodeId:        Workflow.Node.Id,
             output:        z.unknown(),
-            sessionPatch:  Session.Patch,
+            sessionPatch:  SessionModule.Patch,
         })
         export const Error     = Base.extend({
             type:          z.literal('node:error'),
             nodeId:        Workflow.Node.Id,
             error:         SystemError.Schema,
-            sessionPatch:  Session.Patch,
+            sessionPatch:  SessionModule.Patch,
         })
         export const Waiting   = Base.extend({
             type:          z.literal('node:waiting'),
             nodeId:        Workflow.Node.Id,
-            sessionPatch:  Session.Patch,
+            sessionPatch:  SessionModule.Patch,
         })
 
         export type Started   = z.infer<typeof Started>
@@ -68,15 +88,6 @@ export namespace Event {
         export type Error     = z.infer<typeof Error>
         export type Waiting   = z.infer<typeof Waiting>
     }
-
-    export type Started         = z.infer<typeof Started>
-    export type Paused          = z.infer<typeof Paused>
-    export type Resumed         = z.infer<typeof Resumed>
-    export type Suspended       = z.infer<typeof Suspended>
-    export type Terminated      = z.infer<typeof Terminated>
-    export type Completed       = z.infer<typeof Completed>
-    export type Failed          = z.infer<typeof Failed>
-    export type SessionPatch    = z.infer<typeof SessionPatch>
 
     // ─── Recording events ────────────────────────────────────────────────
     // Sent on the same execution channel. Frontend applies each as a
@@ -135,8 +146,9 @@ export namespace Event {
 
 
     export const Schema = z.discriminatedUnion("type", [
-        Started, Paused, Resumed, Suspended, Terminated, Completed, Failed,
-        SessionPatch,
+        Lifecycle.Started, Lifecycle.Paused, Lifecycle.Resumed, Lifecycle.Suspended,
+        Lifecycle.Terminated, Lifecycle.Completed, Lifecycle.Failed,
+        Session.Patch,
         Node.Started, Node.Completed, Node.Error, Node.Waiting,
         Recording.Unit.Started, Recording.Unit.Completed, Recording.Unit.Failed,
         Recording.Relation.Created, Recording.Relation.CreateBatch,

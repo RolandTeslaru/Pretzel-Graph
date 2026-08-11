@@ -264,7 +264,7 @@ export function createExecutionAPIs(
                             d.pending_consultations[pendingConsultation.id] = pendingConsultation;
                         });
 
-                        realtimeAPI.emit(Execution.Event.create("patch", {
+                        realtimeAPI.emit(Execution.Event.create("session:patch", {
                             sessionPatch: {
                                 upsert: {
                                     pending_consultations: { [pendingConsultation.id]: pendingConsultation },
@@ -288,7 +288,7 @@ export function createExecutionAPIs(
                     delete d.pending_consultations[pendingConsultation.id];
                 });
 
-                realtimeAPI.emit(Execution.Event.create("patch", {
+                realtimeAPI.emit(Execution.Event.create("session:patch", {
                     sessionPatch: {
                         delete: {
                             pending_consultations: { [pendingConsultation.id]: true },

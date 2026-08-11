@@ -27,7 +27,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
         // Generate the ID eagerly
         const executionId = Execution.createId();
-        sdk.subscribeToEvents(executionId);
+        sdk._subscribeToRealtimeChannel(executionId);
 
         igniter.record = sdk.state.igniterAttributes.record;
         igniter.debug = sdk.state.igniterAttributes.debug;
@@ -181,14 +181,10 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             })
         },
         addAwaitedConfirmation: (event) => {
-            sdk.setState(s => {
-                s.awaitedConfirmation.add(event)
-            })
+            sdk.setState(s => { sdk.reducers.awaitedConfirmation.add(s, event) })
         },
         removeAwaitedConfirmation: (event) => {
-            sdk.setState(s => {
-                s.awaitedConfirmation.delete(event)
-            })
+            sdk.setState(s => { sdk.reducers.awaitedConfirmation.remove(s, event) })
         },
         loadLiveRecording: async (executionId) => {
             try {

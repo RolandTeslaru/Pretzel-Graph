@@ -10,7 +10,7 @@ import { executionSDKSelectors, type ExecutionSDKSelectors, type TimelineLayout 
 import type { TimeScale, TimelineViewMode } from "./ui/Timeline/time-scale";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { api } from "@/SDKs/ApiInterceptorSDK";
-import { handleExecutionEvents } from "./handle-events";
+import { discardQueuedEvents, handleExecutionEvents } from "./handle-events";
 import { observeCurrentExecution, type CurrentExecutionObserver, type ObserveOptions as ObserveOptions_ } from "./observe";
 import type { ChatSDKImpl } from "../ChatSDK/sdk";
 
@@ -30,6 +30,7 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
                 debug: false
             },
             timeline: initialTimelineState(),
+            isTimelineGeometryDirty: false,
         })),
         shallow
     )
@@ -44,8 +45,16 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
     }
     
     public readonly runtime = {
-        unsubscribeFromEvents: null as (() => void) | null,
+        unsubscribeChannel:     null as (() => void) | null,
         subscribedExecutionId:  null as Execution.Id | null,
+        // Inbound event batching. Scoped to the SDK rather than the module so a
+        // pending flush can be dropped when we detach — see handle-events.
+        events: {
+            queue:     [] as Execution.Event.Base[],
+            timer:     null as ReturnType<typeof setTimeout> | null,
+            lastFlush: 0,
+            listeners: new Set<ExecutionSDK.Listener>(),
+        },
         // Plain ref objects (no useRef) so the timeline's DOM refs live on the
         // SDK and don't have to be drilled / contexted through the component tree.
         timeline: {
@@ -70,24 +79,48 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         if (scrollRef.current) scrollRef.current.scrollTop = lb.scrollTop;
     }
 
-    public subscribeToEvents(executionId: Execution.Id) {
+    // Channel plumbing, not a subscriber API — consumers wanting execution events
+    // register a listener instead. Bound to whichever execution is in view.
+    public _subscribeToExecutionChannel(executionId: Execution.Id) {
         if (this.runtime.subscribedExecutionId === executionId) return;
 
-        this.runtime.unsubscribeFromEvents?.();
+        this._unsubscribeFromExecutionChannel();
         this.runtime.subscribedExecutionId = executionId;
 
         console.log("Subscribing to execution events for executionId:", executionId)
 
-        this.runtime.unsubscribeFromEvents = RealtimeSDK.subscribeToChannel(
+        this.runtime.unsubscribeChannel = RealtimeSDK.subscribeToChannel(
             Execution.Event.getChannel(executionId),
-            this.handleOnEvent
+            (e: Execution.Event.Base) => handleExecutionEvents(this, e)
         )
     }
 
-    public unsubscribeFromEvents() {
-        this.runtime.unsubscribeFromEvents?.();
-        this.runtime.unsubscribeFromEvents = null;
+    public _unsubscribeFromExecutionChannel() {
+        this.runtime.unsubscribeChannel?.();
+        this.runtime.unsubscribeChannel = null;
         this.runtime.subscribedExecutionId = null;
+
+        discardQueuedEvents(this);
+    }
+
+    /**
+     * Listen to the execution channel. The listener receives one batch per flush — every
+     * event in it, so switch on `type` and ignore the rest — after this SDK has committed
+     * its own state and before its deferred effects run. Returns an unsubscribe.
+     *
+     * Wrapping the switch in your own `setState` is free when nothing matches: a producer
+     * that doesn't touch the draft returns the same reference and notifies no subscribers.
+     *
+     * Batches are `Execution.Event.Base`; narrow to your own union at the top of the
+     * listener. Registration outlives any single execution, so register once and use
+     * `observeCurrent({ onDetach })` if you need a per-execution reset.
+     */
+    public subscribeToEvents(listener: ExecutionSDK.Listener): () => void {
+        const { listeners } = this.runtime.events;
+
+        listeners.add(listener);
+
+        return () => { listeners.delete(listener) };
     }
 
     /**
@@ -98,7 +131,6 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         return observeCurrentExecution(this, observer, opts);
     }
 
-    public handleOnEvent = (e: Execution.Event) => { handleExecutionEvents(this, e) }
 
     public get chatSDK(): ChatSDKImpl { return SDK.get<ChatSDKImpl>("Chat") }
 }
@@ -110,8 +142,8 @@ export const ExecutionSDK = SDK.get<ExecutionSDKImpl>("Execution")
 
 // Subscribe to current execution events
 ExecutionSDK.observeCurrent({
-    onDetach: () => ExecutionSDK.unsubscribeFromEvents(),
-    onAttach: (execution) => ExecutionSDK.subscribeToEvents(execution.id),
+    onDetach: () => ExecutionSDK._unsubscribeFromExecutionChannel(),
+    onAttach: (execution) => ExecutionSDK._subscribeToExecutionChannel(execution.id),
 }, { immediate: true })
 
 
@@ -167,6 +199,9 @@ ExecutionSDK.observeCurrent({
 export namespace ExecutionSDK {
     export type AwaitedConfirmation = "started" | "paused" | "resumed" | "terminated" | "suspended" | "executed"
 
+    /** Receives one flush's worth of claimed events, in arrival order. See subscribeToEvents. */
+    export type Listener = (batch: Execution.Event.Base[]) => void
+
     export type State = {
         currentExecution?: Execution
         executionHistory: Execution.Meta[]
@@ -186,6 +221,11 @@ export namespace ExecutionSDK {
             totalDuration: number
             totalWidth:    number
         }
+        // Set by anything that changes unit durations; cleared by timeline.recompute.
+        // Lets a streaming flush skip the O(units) rescale when the batch was all
+        // lifecycle/session traffic — recompute always builds a fresh `scale` object,
+        // which would re-render every UoWBlock.
+        isTimelineGeometryDirty: boolean
     }
 
     export type Reducers = _ExecutionSessionReducers
