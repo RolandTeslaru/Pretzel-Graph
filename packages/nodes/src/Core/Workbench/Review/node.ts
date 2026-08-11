@@ -4,7 +4,7 @@ import {
     RegisterNode,
     RuntimeNode,
 } from "@pretzel-graph/node-sdk";
-import { Consultation, HumanReview } from "@pretzel-graph/shared/domain";
+import { HumanReview } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "./blueprint";
 
@@ -39,7 +39,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     variant:      HumanReview.Variant.Confirm,
                     approveLabel: fields.approveLabel,
                     rejectLabel:  fields.rejectLabel,
-                }) satisfies Consultation.UnstampedRequest;
+                }) 
 
                 const resolution = await consult(HumanReview.Resolution.Confirm, request);
 
@@ -57,7 +57,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     options:     fields.options,
                     multiple:    fields.multiple,
                     allowCustom: fields.allowCustom,
-                }) satisfies Consultation.UnstampedRequest;
+                })
 
                 const resolution = await consult(HumanReview.Resolution.Choice, request);
 
@@ -71,7 +71,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     ...base,
                     variant: HumanReview.Variant.Form,
                     fields:  fields.formFields,
-                }) satisfies Consultation.UnstampedRequest;
+                })
 
                 const resolution = await consult(HumanReview.Resolution.Form, request);
 

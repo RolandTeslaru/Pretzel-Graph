@@ -8,9 +8,10 @@ import { mapFieldValues } from "../utils/mapFieldValues";
 import { Synthesizer } from "../synthesizer";
 import type { ExecutionContext as ExecutionContextType } from "./context";
 import type {
-    AgentToolBinding as AgentToolBindingType,
-    RealtimeAPI      as RealtimeAPIType,
-    RealtimeScope    as RealtimeScopeType,
+    AgentToolBinding             as AgentToolBindingType,
+    RealtimeAPI                  as RealtimeAPIType,
+    RealtimeScope                as RealtimeScopeType,
+    UnstampedConsultationRequest as UnstampedConsultationRequestType,
 } from "./apis";
 import type { HTTP } from "../domain/http";
 
@@ -472,4 +473,5 @@ export namespace RuntimeNode {
     export type AgentToolBinding = AgentToolBindingType;
     export type RealtimeAPI      = RealtimeAPIType;
     export type RealtimeScope    = RealtimeScopeType;
+    export type UnstampedConsultationRequest = UnstampedConsultationRequestType;
 }
