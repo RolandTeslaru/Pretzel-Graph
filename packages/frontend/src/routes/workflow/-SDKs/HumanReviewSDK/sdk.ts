@@ -68,25 +68,25 @@ export class HumanReviewSDKImpl extends BaseSDK<HumanReviewSDK.State> {
 export const HumanReviewSDK = SDK.get<HumanReviewSDKImpl>("HumanReview")
 
 
-// Bind the review subscription to the execution currently in view. Owned here (not in
-// ExecutionSDK) so the dependency points feature → core, never the reverse.
-ExecutionSDK.observeCurrent({
-    onDetach: () => {
-        HumanReviewSDK.unsubscribeFromEvents();
-        HumanReviewSDK.actions.clearAll();
-    },
-    // A historical (already-settled) execution can never receive requests — start clean.
-    onAttach: (execution, { isLive }) => {
-        if (!isLive)
-            HumanReviewSDK.actions.clearAll();
+// // Bind the review subscription to the execution currently in view. Owned here (not in
+// // ExecutionSDK) so the dependency points feature → core, never the reverse.
+// ExecutionSDK.observeCurrent({
+//     onDetach: () => {
+//         HumanReviewSDK.unsubscribeFromEvents();
+//         HumanReviewSDK.actions.clearAll();
+//     },
+//     // A historical (already-settled) execution can never receive requests — start clean.
+//     onAttach: (execution, { isLive }) => {
+//         if (!isLive)
+//             HumanReviewSDK.actions.clearAll();
 
-        HumanReviewSDK.subscribeToEvents(execution.id);
-    },
+//         HumanReviewSDK.subscribeToEvents(execution.id);
+//     },
 
-    // The run left the live set, so drop any requests still parked in the UI.
-    onStop: () => HumanReviewSDK.actions.clearAll(),
+//     // The run left the live set, so drop any requests still parked in the UI.
+//     onStop: () => HumanReviewSDK.actions.clearAll(),
 
-}, { immediate: true })
+// }, { immediate: true })
 
 
 export namespace HumanReviewSDK {

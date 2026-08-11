@@ -143,8 +143,7 @@ export namespace Event {
         Recording.Completed, Recording.FullyUploaded,
     ])
 
-    // Returns an unstamped member — realtimeAPI.emit writes channel/executionId/workflowId from the
-    // execution it is bound to, so a caller cannot address another one.
+    // Returns a member without its addressing; the publisher derives that from the execution.
     export const create = EventBase.defineEventFactory(Schema)
 }
 export type Event = z.infer<typeof Event.Schema>
