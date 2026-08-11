@@ -1,4 +1,4 @@
-import type { Consultation, Execution } from "@pretzel-graph/shared/domain";
+import type { Execution } from "@pretzel-graph/shared/domain";
 import type { ExecutionSDK, ExecutionSDKImpl } from "./sdk";
 import { toast } from "sonner";
 
@@ -10,108 +10,135 @@ import { toast } from "sonner";
 // Terminal/end-state events flush immediately so the final state never feels laggy.
 const THROTTLE_MS = 120;
 
-const TERMINAL = new Set<(Execution.Event | Consultation.Event)["type"]>([
-    "completed",
-    "failed",
-    "terminated",
+const TERMINAL = new Set<string>([
+    "lifecycle:completed",
+    "lifecycle:failed",
+    "lifecycle:terminated",
     "recording:completed",
     "recording:fullyUploaded",
 ]);
 
-let queue: (Execution.Event | Consultation.Event)[] = [];
-let timer: ReturnType<typeof setTimeout> | null = null;
-let lastFlush = 0;
+// Queue state lives on sdk.runtime.events, not this module, so detaching from an
+// execution can drop its pending flush instead of applying it to the next one.
 
-// Applies an event's state mutation to the draft and  returns a deferred side-effect
-// (toast / action call) to run AFTER the batched setState, in arrival order — or null.
+// Applies an event's state mutation to the draft. Anything that isn't a draft write —
+// a toast, an async fetch — is returned as a thunk to run AFTER the batched setState,
+// in arrival order; cases with nothing to defer just break. Nothing here may touch `s`
+// once produce returns, so the thunks close over `sdk` and `e` only.
 const reduceEvent = (
-    sdk: ExecutionSDKImpl,
-    s: ExecutionSDK.State,
-    e: Execution.Event | Consultation.Event,
-): (() => void) | null => {
+    sdk:   ExecutionSDKImpl,
+    s:     ExecutionSDK.State,
+    event: Execution.Event.Base,
+): (() => void) | undefined => {
     const r = sdk.reducers.currentExecution;
+
+    // The channel is Base-typed so new domains don't have to be threaded through here.
+    // This SDK narrows to its own union; everything else belongs to a listener.
+    const e = event as Execution.Event;
+
     switch (e.type) {
         // Lifecycle
-        case "started":
+        case "lifecycle:started":
             r.setStatus(s, "running");
-            return null;
-        case "completed":
+            break;
+        case "lifecycle:completed":
             r.session.set(s, e.session);
             r.setStatus(s, "completed");
-            return () => sdk.actions.removeAwaitedConfirmation("started");
-        case "failed":
+            sdk.reducers.awaitedConfirmation.remove(s, "started");
+            break;
+        case "lifecycle:failed":
             r.session.set(s, e.session);
             r.setStatus(s, "failed");
             r.setError(s, e.error);
-            return () => {
-                sdk.actions.removeAwaitedConfirmation("started");
-                toast.error(`Execution failed: ${e.error.message}`);
-            };
-        case "terminated":
+            sdk.reducers.awaitedConfirmation.remove(s, "started");
+            return () => toast.error(`Execution failed: ${e.error.message}`);
+        case "lifecycle:terminated":
             r.setStatus(s, "terminated");
-            return () => sdk.actions.removeAwaitedConfirmation("terminated");
-        case "paused":
+            sdk.reducers.awaitedConfirmation.remove(s, "terminated");
+            break;
+        case "lifecycle:paused":
             r.session.set(s, e.session);
             r.setStatus(s, "paused");
-            return null;
-        case "resumed":
+            break;
+        case "lifecycle:resumed":
             r.session.set(s, e.session);
             r.setStatus(s, "running");
-            return null;
-        case "suspended":
+            break;
+        case "lifecycle:suspended":
             r.session.set(s, e.session);
             r.setStatus(s, "suspended");
-            return null;
+            break;
 
         // Session updates
         case "node:started":
         case "node:completed":
         case "node:waiting":
         case "node:error":
-        case "patch":
+        case "session:patch":
             r.session.applyPatch(s, e.sessionPatch);
-            return null;
-
-        // Backend-only acknowledgement — the card is already gone via the patch that
-        // cleared pending_consultations.
-        case "consultation:resolved":
-            return null;
+            break;
 
         // Recording
         case "unit:started":
             r.recording.unit.patchStarted(s, e.unit);
-            return null;
+            break;
         case "unit:completed":
             r.recording.unit.patchCompleted(s, e);
-            return null;
+            break;
         case "unit:failed":
             r.recording.unit.patchFailed(s, e);
-            return null;
+            break;
         case "relation:createBatch":
             r.recording.relation.patchCreateBatch(s, e);
-            return null;
+            break;
         case "recording:completed":
             // s.isCurrentExecutionRecording = false;
-            return null;
+            break;
         case "recording:fullyUploaded":
             // No state mutation — purely loads the finalized recording.
             return () => sdk.actions.loadLiveRecording(e.executionId);
 
+        // Not ours — another domain handles it through subscribeToEvents. Unrecognised
+        // types are visible in RealtimeSDK's message log rather than flagged here, since
+        // this SDK has no way to know which types other domains have claimed.
         default:
-            return () => toast.error(`Received unknown event: ${(e as Execution.Event | Consultation.Event).type}`);
+            break;
+    }
+};
+
+// Hands every listener the whole batch, in arrival order. Runs after this SDK has
+// committed and before its effects, so other domains' state lands first — see the phase
+// note on flush. Iterates a copy so a listener that subscribes or unsubscribes mid-
+// dispatch doesn't mutate the set we're walking.
+const dispatchToListeners = (sdk: ExecutionSDKImpl, batch: Execution.Event.Base[]) => {
+    const { listeners } = sdk.runtime.events;
+
+    if (listeners.size === 0) return;
+
+    for (const listener of [...listeners]) {
+        try {
+            listener(batch);
+        }
+        catch (err) {
+            console.error("ExecutionSDK: event listener threw", err);
+        }
     }
 };
 
 const flush = (sdk: ExecutionSDKImpl) => {
-    if (timer) {
-        clearTimeout(timer);
-        timer = null;
-    }
-    lastFlush = performance.now();
-    if (queue.length === 0) return;
+    const rt = sdk.runtime.events;
 
-    const batch = queue;
-    queue = [];
+    if (rt.timer) {
+        clearTimeout(rt.timer);
+        rt.timer = null;
+    }
+
+    rt.lastFlush = performance.now();
+
+    if (rt.queue.length === 0) return;
+
+    const batch = rt.queue;
+    rt.queue = [];
 
     const effects: Array<() => void> = [];
     sdk.setState(s => {
@@ -120,14 +147,23 @@ const flush = (sdk: ExecutionSDKImpl) => {
             if (fx) effects.push(fx);
         }
         // Layout is maintained incrementally per-event; recompute scale + sizes
-        // once for the whole batch (they depend on durations/totalDuration).
-        sdk.reducers.timeline.recompute(s);
+        // once for the whole batch (they depend on durations/totalDuration), and
+        // only if something in it actually moved a unit.
+        if (s.isTimelineGeometryDirty)
+            sdk.reducers.timeline.recompute(s);
     });
+
+    // Three phases, in order: our state (above), other domains' state, then all
+    // side effects. React batches the commits from the first two into one render.
+    dispatchToListeners(sdk, batch);
+
     for (const fx of effects) fx();
 };
 
-export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event | Consultation.Event) => {
-    queue.push(e);
+export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event.Base) => {
+    const rt = sdk.runtime.events;
+
+    rt.queue.push(e);
 
     // End-states flush right away — no point delaying the final render.
     if (TERMINAL.has(e.type)) {
@@ -136,10 +172,27 @@ export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event 
     }
 
     // Already scheduled — this event rides the pending flush.
-    if (timer) return;
+    if (rt.timer) return;
 
     // Throttle: at most one flush per THROTTLE_MS. The trailing timer also drains
     // the queue once the stream goes quiet, so nothing is stranded.
-    const wait = Math.max(0, THROTTLE_MS - (performance.now() - lastFlush));
-    timer = setTimeout(() => flush(sdk), wait);
+    const wait = Math.max(0, THROTTLE_MS - (performance.now() - rt.lastFlush));
+
+    rt.timer = setTimeout(() => flush(sdk), wait);
+};
+
+/**
+ * Drops whatever is queued for the execution being detached. Without this a pending
+ * flush would apply the old run's events to whichever execution is current when it fires.
+ */
+export const discardQueuedEvents = (sdk: ExecutionSDKImpl) => {
+    const rt = sdk.runtime.events;
+
+    if (rt.timer) {
+        clearTimeout(rt.timer);
+        rt.timer = null;
+    }
+
+    rt.queue     = [];
+    rt.lastFlush = 0;
 };

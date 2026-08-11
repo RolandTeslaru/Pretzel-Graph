@@ -40,7 +40,7 @@ export class NodeIOService {
         d.node_output_projections[nodeId][outputId] = projection;
         });
 
-        ctx.realtimeAPI.emit(Execution.Event.create("patch", {
+        ctx.realtimeAPI.emit(Execution.Event.create("session:patch", {
             sessionPatch: {
                 upsert: {
                     node_output_projections: {
