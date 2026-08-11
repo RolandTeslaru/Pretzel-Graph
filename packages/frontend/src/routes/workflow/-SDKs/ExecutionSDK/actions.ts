@@ -1,4 +1,4 @@
-import { Execution, Validation, Workflow } from "@pretzel-graph/shared/domain";
+import { Consultation, Execution, Validation, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { ExecutionSDK, type ExecutionSDKImpl } from "./sdk"
 import { toast } from "sonner";
@@ -27,7 +27,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
         // Generate the ID eagerly
         const executionId = Execution.createId();
-        sdk._subscribeToRealtimeChannel(executionId);
+        sdk._subscribeToExecutionChannel(executionId);
 
         igniter.record = sdk.state.igniterAttributes.record;
         igniter.debug = sdk.state.igniterAttributes.debug;
@@ -200,6 +200,38 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 });
             }
         },
+        pendingConsultations: {
+            add:    (request)        => { sdk.setState(s => { sdk.reducers.currentExecution.pendingConsultations.add(s, request) }) },
+            remove: (consultationId) => { sdk.setState(s => { sdk.reducers.currentExecution.pendingConsultations.remove(s, consultationId) }) },
+            clear:  ()               => { sdk.setState(s => { sdk.reducers.currentExecution.pendingConsultations.clear(s) }) },
+
+            // User → engine. The route only returns once the worker has consumed the answer
+            // and un-parked, so success means the card is genuinely done. Dropping it here is
+            // an optimistic head start on the patch that clears it anyway.
+            respond: async (consultationId, resolution) => {
+                const executionId = sdk.state.currentExecution?.id;
+
+                if (!executionId) return false;
+
+                try {
+                    const { success } = await Consultation.API.humanResponded(api, {
+                        executionId,
+                        consultationId,
+                        resolution,
+                    });
+
+                    if (success)
+                        sdk.actions.pendingConsultations.remove(consultationId);
+                    else
+                        toast.error("Response was not consumed by the engine");
+
+                    return success;
+                } catch {
+                    toast.error("Failed to submit response");
+                    return false;
+                }
+            },
+        },
         igniter: {
             setShouldRecord: (record) => { sdk.setState(s => { sdk.reducers.igniter.setShouldRecord(s, record) }) },
             setShouldDebug: (debug) => { sdk.setState(s => { sdk.reducers.igniter.setShouldDebug(s, debug) }) }
@@ -236,6 +268,13 @@ export type ExecutionSDKActions = {
     removeAwaitedConfirmation: (event: ExecutionSDK.AwaitedConfirmation) => void,
 
     loadLiveRecording: (executionId: Execution.Id) => Promise<void>,
+
+    pendingConsultations: {
+        add:     DropFirstArg<ExecutionSDK.Reducers["currentExecution"]["pendingConsultations"]["add"]>,
+        remove:  DropFirstArg<ExecutionSDK.Reducers["currentExecution"]["pendingConsultations"]["remove"]>,
+        clear:   DropFirstArg<ExecutionSDK.Reducers["currentExecution"]["pendingConsultations"]["clear"]>,
+        respond: <R extends Consultation.Resolution>(consultationId: Consultation.Id, resolution: R) => Promise<boolean>,
+    },
 
     igniter: {
         setShouldRecord: DropFirstArg<ExecutionSDK.Reducers["igniter"]["setShouldRecord"]>,

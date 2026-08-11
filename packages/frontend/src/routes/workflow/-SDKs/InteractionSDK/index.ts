@@ -1,1 +1,0 @@
-export { InteractionSDK } from "./sdk"

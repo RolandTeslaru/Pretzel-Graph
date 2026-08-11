@@ -1,7 +1,7 @@
 import { HumanReview } from "@pretzel-graph/shared/domain";
 import { Button } from "@pretzel-graph/standard-ui/foundations";
 
-type FormRequest = Extract<HumanReview.Request, { variant: "form" }>;
+type FormRequest = Extract<HumanReview.Request, { variant: typeof HumanReview.Variant.Form }>;
 
 // Collect field values → Data port. TODO: drive fields through FieldRenderer.
 export const FormCard = ({ request }: { request: FormRequest }) => (
