@@ -16,7 +16,7 @@ request. All of them use one mechanism.
   shared union; the browser resolves it to a card through a renderer registry.
 - **`session.pending_consultations`** — the authoritative list of what a run is currently parked on,
   embedded in the execution's session blob. Everything the browser shows is a projection of this.
-- **`Consultation.Resolution`** — the answer. Carries `requestId` and `variant`; domains extend it
+- **`Consultation.Answer`** — the answer. Carries `requestId` and `variant`; domains extend it
   with the payload their node consumes.
 
 Three message types are involved, and they travel on channels that already exist for the execution:
@@ -24,7 +24,7 @@ Three message types are involved, and they travel on channels that already exist
 | Direction | Type | Channel | Purpose |
 |---|---|---|---|
 | worker → browser | `Execution.Event` `session:patch` | `execution:{id}` | Mirror the request onto, then off, the session |
-| browser → worker | `Consultation.Signal.Responded` | `execution:{id}:signal` | Deliver the answer |
+| browser → worker | `Consultation.Signal.Answer` | `execution:{id}:signal` | Deliver the answer |
 | worker → backend | `Consultation.Event.Resolved` | `execution:{id}` | Acknowledge that the answer was consumed |
 
 ---
@@ -34,31 +34,41 @@ Three message types are involved, and they travel on channels that already exist
 ```mermaid
 sequenceDiagram
     autonumber
-    participant N as Node (worker)
+    participant N as RuntimeNode
+    participant C as consultationAPI
     participant S as Session
     participant R as Redis
-    participant B as Browser
     participant API as Backend route
+    participant E as ExecutionSDK
+    participant CS as ConsultationSDK
+    participant U as User
 
-    N->>N: consult with request and resolution schemas
-    Note over N: stamps id and startedAt, arms the waiter FIRST
-    N->>S: add request to pending_consultations
-    N->>R: Event session-patch upsert
-    R->>B: session patch
-    B->>B: reconcile, then render card by variant
-    Note over N,B: node is parked, the run continues around it
+    N->>C: consult with request and answer schemas
+    Note over C: stamps id and startedAt, arms the waiter FIRST
+    C->>S: add request to pending_consultations
+    C->>R: Event session-patch upsert
+    R->>E: session patch on the execution channel
+    E->>E: applyPatch merges the upsert
+    E->>CS: pending_consultations changed
+    CS->>CS: reconcile, resolve renderer by variant
+    CS->>U: card appears in the stack
+    Note over N,U: node is parked, the run continues around it
 
-    B->>API: POST /api/consultation/respond
+    U->>E: answers the card
+    E->>API: POST /api/consultation/answer
     API->>API: assertExecution for this user
-    API->>R: Signal consultation-responded
-    R->>N: matched in-process by consultationId
-    N->>N: parse answer with resolution schema
-    N->>R: Event consultation-resolved
+    API->>R: Signal consultation-answer
+    R->>C: matched in-process by consultationId
+    C->>C: parse answer with the answer schema
+    C->>R: Event consultation-resolved
     R->>API: acknowledgement, success true
-    API-->>B: 200
-    N->>S: remove request from pending_consultations
-    N->>R: Event session-patch delete
-    R->>B: session patch, card leaves the stack
+    API-->>E: 200
+    C->>S: remove request from pending_consultations
+    C->>R: Event session-patch delete
+    R->>E: session patch
+    E->>CS: pending_consultations changed
+    CS->>U: card leaves the stack
+    C-->>N: answer
     Note over N: onRun returns and the node fires its ports
 ```
 
@@ -69,10 +79,10 @@ sequenceDiagram
 ### 1. A node asks
 
 ```ts
-const resolution = await this.context.consultationAPI.consult(
+const answer = await this.context.consultationAPI.consult(
     HumanReview.Request.Confirm,   // request schema — parsed here
     { nodeId: this.nodeId, variant: HumanReview.Variant.Confirm, timeoutMs, ... },
-    HumanReview.Resolution.Confirm // resolution schema — the answer is validated against it
+    HumanReview.Answer.Confirm     // answer schema — the reply is validated against it
 );
 ```
 
@@ -105,10 +115,15 @@ than breaking the stack.
 
 ### 4. The user answers
 
-The card calls `ExecutionSDK.actions.pendingConsultations.respond(consultationId, resolution)`,
-which POSTs to `/api/consultation/respond`. The browser never publishes to Redis directly.
+The card calls `ExecutionSDK.actions.pendingConsultations.answer(consultationId, answer)` —
+`ConsultationSDK` renders the card but takes no part in answering it, so the write goes straight
+to the SDK that owns the session and the execution id. That asymmetry is the point:
+`ConsultationSDK` is a read-only projection, and the only way a consultation leaves the stack is
+by leaving `pending_consultations`.
 
-The route asserts execution ownership, then publishes `Consultation.Signal.Responded` onto
+That call POSTs to `/api/consultation/answer`. The browser never publishes to Redis directly.
+
+The route asserts execution ownership, then publishes `Consultation.Signal.Answer` onto
 `execution:{id}:signal` and waits — up to 5s — for a `consultation:resolved` event carrying the
 same `consultationId`.
 
@@ -117,7 +132,7 @@ same `consultationId`.
 One signal channel serves the whole execution, so several parked nodes may see the same message.
 Each waiter's `match` predicate narrows on `consultationId`, so exactly one resolves.
 
-The node parses the answer with the resolution schema it supplied, emits `consultation:resolved`
+The node parses the reply with the answer schema it supplied, emits `consultation:resolved`
 (the route's acknowledgement), and returns it to `onRun`.
 
 ### 6. Cleanup
@@ -157,7 +172,7 @@ not an ownership boundary, and a channel suffix authorizes nothing.
 
 1. Declare the tag with `Consultation.variant("domain:thing")` — this brands it while preserving the
    literal type, which is what lets an extending schema discriminate on it.
-2. Extend `Consultation.Request` and `Consultation.Resolution`, pinning `variant` as a literal on
+2. Extend `Consultation.Request` and `Consultation.Answer`, pinning `variant` as a literal on
    both so a mismatched tag fails at parse.
 3. Call `consultationAPI.consult` from the node with those two schemas.
 4. Register a card for the tag with `ConsultationSDK.register(variant, renderer)`.

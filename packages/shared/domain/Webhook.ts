@@ -128,11 +128,11 @@ export namespace Webhook {
 
             // path/method aren't echoed back — they're already on the request, and the
             // consultation id is what correlates the two.
-            export const Resolution = ConsultationModule.Resolution.extend({
+            export const Answer = ConsultationModule.Answer.extend({
                 variant: z.literal(Variant),
                 payload: Webhook.Payload.Schema,
             })
-            export type Resolution = z.infer<typeof Resolution>
+            export type Answer = z.infer<typeof Answer>
         }
 
 

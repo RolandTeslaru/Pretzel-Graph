@@ -233,10 +233,10 @@ export interface ConsultationAPI {
     consult: <
         RQ extends Consultation.Request,
         RQ_Input,
-        RS extends Consultation.Resolution,
+        A extends Consultation.Answer,
     >(
         requestSchema:    z.ZodType<RQ, RQ_Input>,
         request:          UnstampedConsultationRequest<RQ_Input>,
-        resolutionSchema: z.ZodType<RS>,
-    ) => Promise<RS>,
+        answerSchema:     z.ZodType<A>,
+    ) => Promise<A>,
 }

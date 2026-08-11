@@ -247,7 +247,7 @@ export function createExecutionAPIs(
     // be parked on one execution, so the match narrows by id: the type alone would resolve
     // whichever waiter the reply reached first.
     const consultationAPI = {
-        consult: async (requestSchema, props, resolutionSchema) => {
+        consult: async (requestSchema, props, answerSchema) => {
             // Stamped first, then parsed whole — the node never sees id/startedAt, and what
             // lands in pending_consultations is a validated request.
             const pendingConsultation = requestSchema.parse({
@@ -258,7 +258,7 @@ export function createExecutionAPIs(
 
             try {
                 const signalResponse = await realtimeAPI.awaitSignalAfter(
-                    Consultation.Signal.Responded,
+                    Consultation.Signal.Answer,
                     sig => sig.consultationId === pendingConsultation.id,
                     pendingConsultation.timeoutMs,
                     () => {
@@ -276,7 +276,7 @@ export function createExecutionAPIs(
                     },
                 );
 
-                const resolution = resolutionSchema.parse(signalResponse.resolution);
+                const answer = answerSchema.parse(signalResponse.answer);
 
                 // Acknowledgement for the respond route — it only reports success once the
                 // answer has actually been consumed here.
@@ -284,7 +284,7 @@ export function createExecutionAPIs(
                     consultationId: pendingConsultation.id,
                 }));
 
-                return resolution;
+                return answer;
             } finally {
                 updateSession(d => {
                     delete d.pending_consultations[pendingConsultation.id];

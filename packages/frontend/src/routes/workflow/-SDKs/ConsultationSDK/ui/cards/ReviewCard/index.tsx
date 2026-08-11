@@ -1,9 +1,9 @@
 import { HumanReview } from "@pretzel-graph/shared/domain";
 import { ExecutionSDK } from "../../../../ExecutionSDK/sdk";
 import { ConsultationSDK } from "../../../sdk";
-import { ConfirmationCard } from "./Cards/ConfirmationCard";
-import { ChoiceCard } from "./Cards/ChoiceCard";
-import { FormCard } from "./Cards/FormCard";
+import { ConfirmationCard } from "./variants/ConfirmationCard";
+import { ChoiceCard } from "./variants/ChoiceCard";
+import { FormCard } from "./variants/FormCard";
 
 type ConfirmRequest = Extract<HumanReview.Request, { variant: typeof HumanReview.Variant.Confirm }>
 type ChoiceRequest  = Extract<HumanReview.Request, { variant: typeof HumanReview.Variant.Choice }>

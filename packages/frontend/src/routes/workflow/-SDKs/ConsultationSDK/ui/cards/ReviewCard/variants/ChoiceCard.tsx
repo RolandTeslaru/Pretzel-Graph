@@ -45,7 +45,7 @@ export const ChoiceCard = ({ request }: { request: ChoiceRequest }) => {
         // is then removed by Event.Resolved, so we don't reset `sending` on success.
         setSending(true);
         try {
-            await ExecutionSDK.actions.pendingConsultations.respond(request.id, { requestId: request.id, variant: HumanReview.Variant.Choice, values });
+            await ExecutionSDK.actions.pendingConsultations.answer(request.id, { requestId: request.id, variant: HumanReview.Variant.Choice, values });
         } finally {
             setSending(false);
         }
