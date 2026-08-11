@@ -62,11 +62,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             {
                 nodeId:    this.nodeId,
                 variant:   Webhook.Test.Consultation.Variant,
-                timeoutMs: 30_000,
+                timeoutMs: this.fieldValues.testTimeoutMs,
                 path,
                 method
             },
-            Webhook.Test.Consultation.Resolution
+            Webhook.Test.Consultation.Answer
         )
 
         return res.payload;

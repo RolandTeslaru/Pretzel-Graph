@@ -2,10 +2,15 @@ import Dither from '@/components/Dither/Dither'
 import { ditherCtx } from '@/components/Dither/ditherCtx'
 import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 
 
 export const Route = createFileRoute('/')({
+    beforeLoad: ({ context }) => {
+        if (context.auth.isAuthenticated) {
+            throw redirect({ to: '/home' })
+        }
+    },
     component: Landing,
 })
 
@@ -20,10 +25,10 @@ function Landing() {
                 </div>
                 <p className="mt-2 text-sm opacity-70">Visual agent workflow editor.</p>
                 <Link
-                    to="/home"
+                    to="/auth"
                     className="inline-block mt-6 px-4 py-2 rounded border hover:bg-muted"
                 >
-                    Go to Home →
+                    Sign in →
                 </Link>
             </div>
             <div className="pointer-events-none w-full fixed inset-0 z-0">

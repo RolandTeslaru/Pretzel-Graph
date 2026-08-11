@@ -10,7 +10,7 @@ export const Route = createFileRoute('/auth/')({
     // If already authenticated, redirect to home
     beforeLoad: ({ context }) => {
         if (context.auth.isAuthenticated) {
-            throw redirect({ to: '/' })
+            throw redirect({ to: '/home' })
         }
     },
     component: AuthPage,

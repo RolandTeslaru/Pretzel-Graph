@@ -126,7 +126,7 @@ export class ConsultationSDKImpl extends BaseSDK<ConsultationSDK.State> {
             >
                 {timeout && (
                     <TimeoutRing
-                        className="absolute top-3 right-3 text-white dark:text-black"
+                        className="absolute top-3 right-3 text-dark dark:text-white"
                         createdAt={timeout.createdAt}
                         timeoutMs={timeout.timeoutMs}
                         onExpire={timeout.onExpire}

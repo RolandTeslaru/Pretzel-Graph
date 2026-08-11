@@ -22,14 +22,19 @@ export const Blueprint = defineBlueprint({
             tooltip:     "What the workbench dialog asks the human for.",
         }),
         FieldBuilder.String("title", "Title", {
-            placeholder: "Review required",
+            initialValue: "Review required",
+            placeholder:  "Review required",
+            required: true
         }),
         FieldBuilder.String("message", "Message", {
-            placeholder: "Approve this action?",
+            initialValue: "Approve this action?",
+            placeholder:  "Approve this action?",
+            required: true
         }),
         FieldBuilder.Integer("timeoutMs", "Timeout (ms)", {
-            initialValue: 24 * 60 * 60_000,
-            min:          0,
+            initialValue: 60_000,
+            min:          10_000,
+            max:          10 * 60_000,
             tooltip:     "How long to wait for a response before the node times out.",
         }),
     ],

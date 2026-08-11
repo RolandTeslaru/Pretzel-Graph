@@ -27,12 +27,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const consult = this.context.consultationAPI.consult;
 
-        // One branch per variant, each awaiting only the resolution it can use. A resolution
+        // One branch per variant, each awaiting only the answer it can use. An answer
         // of the wrong shape fails in consult's parse rather than reaching the ports.
         switch (fields.variant) {
 
             case "confirm": {
-                const resolution = await consult(
+                const answer = await consult(
                     HumanReview.Request.Confirm,
                     {
                         ...base,
@@ -40,18 +40,18 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                         approveLabel: fields.approveLabel,
                         rejectLabel:  fields.rejectLabel,
                     },
-                    HumanReview.Resolution.Confirm,
+                    HumanReview.Answer.Confirm,
                 );
 
                 return (
-                    resolution.approved
+                    answer.approved
                         ? { approved: incoming.input ?? null }
                         : { rejected: incoming.input ?? null }
                 ) satisfies Partial<InferOutputs<typeof Blueprint, typeof fields>>;
             }
 
             case "choice": {
-                const resolution = await consult(
+                const answer = await consult(
                     HumanReview.Request.Choice,
                     {
                         ...base,
@@ -61,16 +61,16 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                         multiple:    fields.multiple,
                         allowCustom: fields.allowCustom,
                     },
-                    HumanReview.Resolution.Choice,
+                    HumanReview.Answer.Choice,
                 );
 
                 return {
-                    value: resolution.values,
+                    value: answer.values,
                 } satisfies Partial<InferOutputs<typeof Blueprint, typeof fields>>;
             }
 
             case "form": {
-                const resolution = await consult(
+                const answer = await consult(
                     HumanReview.Request.Form,
                     {
                         ...base,
@@ -78,11 +78,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                         // Json-backed blueprint field — consult parses it on the way in.
                         fields:  fields.formFields as z.input<typeof HumanReview.Request.Form>["fields"],
                     },
-                    HumanReview.Resolution.Form,
+                    HumanReview.Answer.Form,
                 );
 
                 return {
-                    values: resolution.values,
+                    values: answer.values,
                 } satisfies Partial<InferOutputs<typeof Blueprint, typeof fields>>;
             }
         }

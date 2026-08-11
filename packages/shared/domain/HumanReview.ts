@@ -4,7 +4,7 @@ import { Consultation } from "./Consultation"
 
 // Human-in-the-loop gate, bolted onto Consultation. The node fires, consultationAPI parks it
 // and mirrors the request onto the session, the workbench renders a card, and the human's
-// Resolution travels back on Consultation.Signal.Responded to resume the run.
+// Answer travels back on Consultation.Signal.Answer to resume the run.
 //
 // No events, signals or API of its own — Consultation owns all three.
 export namespace HumanReview {
@@ -28,7 +28,7 @@ export namespace HumanReview {
             id:        Id,
             title:     z.string().optional(),
             message:   z.string().optional(),
-            timeoutMs: z.number().default(24 * 60 * 60_000),
+            timeoutMs: z.number().default(60_000),
         })
 
         // Approve / Reject → 2 ports (approved | rejected)
@@ -58,11 +58,11 @@ export namespace HumanReview {
     }
     export type Request = z.infer<typeof Request.Schema>
 
-    // ─── Resolution ─────────────────────────────────────────────────────────
+    // ─── Answer ─────────────────────────────────────────────────────────────
     // Human → node. Resumes the parked run.
-    export namespace Resolution {
+    export namespace Answer {
 
-        const Base = Consultation.Resolution.extend({
+        const Base = Consultation.Answer.extend({
             requestId: HumanReview.Id,
         })
 
@@ -86,5 +86,5 @@ export namespace HumanReview {
 
         export const Schema = z.discriminatedUnion("variant", [Confirm, Choice, Form])
     }
-    export type Resolution = z.infer<typeof Resolution.Schema>
+    export type Answer = z.infer<typeof Answer.Schema>
 }
