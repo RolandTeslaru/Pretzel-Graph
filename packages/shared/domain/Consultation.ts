@@ -31,13 +31,6 @@ export namespace Consultation {
     })
     export type Request = z.infer<typeof Request>
 
-    /** What a node hands to consultationAPI.consult — it stamps id and startedAt. Generic,
-     *  so a domain that extends Request keeps its own props on the way through; distributive,
-     *  so a domain whose Request is a union keeps each member's props rather than their
-     *  intersection. */
-    export type UnstampedRequest<T_Request extends Request = Request> =
-        T_Request extends unknown ? Omit<T_Request, "id" | "startedAt"> : never
-
     export const Resolution = z.object({
         requestId: Consultation.Id,
         variant: Variant
