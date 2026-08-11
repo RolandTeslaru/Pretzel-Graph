@@ -46,6 +46,12 @@ export class HumanReviewSDKImpl extends BaseSDK<HumanReviewSDK.State> {
         )
     }
 
+    public unsubscribeFromEvents() {
+        this.runtime.unsubscribeFromEvents?.();
+        this.runtime.unsubscribeFromEvents = null;
+        this.runtime.subscribedExecutionId = null;
+    }
+
     public handleOnEvent = (event: HumanReview.Event.Schema) => {
         switch (event.type) {
             case "human-review:sent":
@@ -62,55 +68,25 @@ export class HumanReviewSDKImpl extends BaseSDK<HumanReviewSDK.State> {
 export const HumanReviewSDK = SDK.get<HumanReviewSDKImpl>("HumanReview")
 
 
-// // ─── DUMMY DATA (remove) — seeds the stack so RequestStacker can be eyeballed ──────────────
-// function createDummyRequests(): HumanReviewSDK.State["requests"] {
-//     const base = (n: number) => ({
-//         nodeId:      `node-${n}` as Workflow.Node.Id,
-//         executionId: "dummy-exec" as Execution.Id,
-//         createdAt:   Date.now() - (5 - n) * 1000,   // staggered so order is visible
-//         timeoutMs:   60_000,
-//     })
-
-//     const requests: HumanReview.Request[] = [
-//         // { id: "dummy-1" as HumanReview.Request.Id, ...base(1), title: "Deploy to production?", message: "The agent wants to deploy build #4821.", variant: "confirm", approveLabel: "Deploy", rejectLabel: "Cancel" },
-//         // { id: "dummy-2" as HumanReview.Request.Id, ...base(1), title: "Approve Tool usage?", message: "The agent wants to deploy build #4821.", variant: "confirm", approveLabel: "Deploy", rejectLabel: "Cancel" },
-//         { id: "dummy-2" as HumanReview.Request.Id, ...base(2), title: "Pick an environment", message: "Where should this run?", variant: "choice", options: [{ label: "Staging", value: "staging" }, { label: "Production", value: "prod" }, { label: "Endtime", value: "das" }, { label: "sup", value: "sup"}, { label: "dasdas", value: "dasddd" }], multiple: true, allowCustom: true },
-//         // { id: "dummy-3" as HumanReview.Request.Id, ...base(3), title: "Refund details", message: "Confirm the refund amount and reason.", variant: "form", fields: [] },
-//         // { id: "dummy-4" as HumanReview.Request.Id, ...base(4), title: "Approve the summary?", message: "Review the generated report before sending.", variant: "confirm", approveLabel: "Send", rejectLabel: "Discard" },
-//     ]
-
-//     return new Map(requests.map(r => [r.id, r]))
-// }
-
-
 // Bind the review subscription to the execution currently in view. Owned here (not in
 // ExecutionSDK) so the dependency points feature → core, never the reverse.
-ExecutionSDK.subscribe((state, prev) => {
-
-    const sel = ExecutionSDK.selectors;
-
-    // running → not-running edge: the run stopped, so drop any requests still parked in the UI.
-    if (sel.currentExecution.isRunning(prev) && !sel.currentExecution.isRunning(state))
+ExecutionSDK.observeCurrent({
+    onDetach: () => {
+        HumanReviewSDK.unsubscribeFromEvents();
         HumanReviewSDK.actions.clearAll();
+    },
+    // A historical (already-settled) execution can never receive requests — start clean.
+    onAttach: (execution, { isLive }) => {
+        if (!isLive)
+            HumanReviewSDK.actions.clearAll();
 
-    if (state.currentExecution?.id === prev.currentExecution?.id)
-        return
+        HumanReviewSDK.subscribeToEvents(execution.id);
+    },
 
-    if (!state.currentExecution) {
-        HumanReviewSDK.runtime.unsubscribeFromEvents?.();
-        HumanReviewSDK.runtime.unsubscribeFromEvents = null;
-        HumanReviewSDK.runtime.subscribedExecutionId = null;
+    // The run left the live set, so drop any requests still parked in the UI.
+    onStop: () => HumanReviewSDK.actions.clearAll(),
 
-
-        HumanReviewSDK.actions.clearAll();
-        return
-    }
-
-    if(sel.currentExecution.isRunning(state) === false)
-        HumanReviewSDK.actions.clearAll();
-
-    HumanReviewSDK.subscribeToEvents(state.currentExecution.id)
-})
+}, { immediate: true })
 
 
 export namespace HumanReviewSDK {

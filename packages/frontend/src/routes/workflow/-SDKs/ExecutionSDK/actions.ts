@@ -90,7 +90,11 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
     const actions = {
         run,
-        pause: async (executionId) => {
+        pause: async () => {
+            const executionId = sdk.state.currentExecution?.id;
+            if (!executionId)
+                return false;
+
             const confirmEvent = sdk.useAwaitConfirmation("paused")
 
             const { success } = await Execution.API.pause(api, { executionId });
@@ -104,7 +108,11 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             confirmEvent()
             return success;
         },
-        terminate: async (executionId) => {
+        terminate: async () => {
+            const executionId = sdk.state.currentExecution?.id;
+            if (!executionId)
+                return false;
+
             const confirmEvent = sdk.useAwaitConfirmation("terminated")
             const { success } = await Execution.API.terminate(api, { executionId });
             if (success) {
@@ -116,7 +124,11 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             confirmEvent()
             return success;
         },
-        resume: async (executionId: Execution.Id) => {
+        resume: async () => {
+            const executionId = sdk.state.currentExecution?.id;
+            if (!executionId)
+                return false;
+
             const confirmEvent = sdk.useAwaitConfirmation("resumed")
 
             const { success } = await Execution.API.resume(api, { executionId });
@@ -130,7 +142,11 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             confirmEvent()
             return success;
         },
-        suspend: async (executionId: Execution.Id) => {
+        suspend: async () => {
+            const executionId = sdk.state.currentExecution?.id;
+            if (!executionId)
+                return false;
+
             const confirmEvent = sdk.useAwaitConfirmation("suspended")
 
             const { success } = await Execution.API.suspend(api, { executionId });
@@ -200,7 +216,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             selectUoW:      (id)   => { sdk.setState(s => { sdk.reducers.timeline.selectUoW(s, id) }) },
         },
         runStep: (targetNodeId: Workflow.Node.Id) => run({ variant: "workbench_step", targetNodeId, record: false }),
-        runWithIgniteableNode: (nodeId: Workflow.Node.Id) => run({ variant: "workbench_igniter", nodeId }),
+        runFromIgniteableNode: (nodeId: Workflow.Node.Id) => run({ variant: "workbench_igniter", nodeId }),
     } satisfies ExecutionSDKActions
 
     return actions;
@@ -210,14 +226,15 @@ export type ExecutionSDKActions = {
 
     run: (igniter: Execution.Igniter) => Promise<Execution.Id | null>,
     runStep: (targetNodeId: Workflow.Node.Id) => Promise<Execution.Id | null>,
-    runWithIgniteableNode: (nodeId: Workflow.Node.Id) => Promise<Execution.Id | null>,
+    runFromIgniteableNode: (nodeId: Workflow.Node.Id) => Promise<Execution.Id | null>,
     setCurrentExecution: (execution: Execution) => void,
     loadHistory: (workflowId: Workflow.Id) => Promise<Execution.Meta[]>,
     clear: () => void,
-    pause: (executionId: Execution.Id) => Promise<boolean>,
-    terminate: (executionId: Execution.Id) => Promise<boolean>,
-    resume: (executionId: Execution.Id) => Promise<boolean>,
-    suspend: (executionId: Execution.Id) => Promise<boolean>,
+    // Act on the current execution, read at call time — there is never another one to target.
+    pause: () => Promise<boolean>,
+    terminate: () => Promise<boolean>,
+    resume: () => Promise<boolean>,
+    suspend: () => Promise<boolean>,
 
     addAwaitedConfirmation: (event: ExecutionSDK.AwaitedConfirmation) => void,
     removeAwaitedConfirmation: (event: ExecutionSDK.AwaitedConfirmation) => void,

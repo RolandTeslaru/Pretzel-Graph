@@ -4,9 +4,12 @@ import {
     RegisterNode,
     RuntimeNode,
 } from "@pretzel-graph/node-sdk";
-import { HumanReview } from "@pretzel-graph/shared/domain";
+import { Consultation, HumanReview } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "./blueprint";
+
+/** consultationAPI stamps these two, so the request is parsed without them. */
+const STAMPED = { id: true, startedAt: true } as const;
 
 @RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -15,90 +18,67 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         incoming: InferIncoming<typeof Blueprint>,
     ) {
         const fields = this.fieldValues;
-        const baseRequest = {
-            id:          crypto.randomUUID() as HumanReview.Request.Id,
-            nodeId:      this.nodeId,
-            executionId: this.context.executionId,
-            title:       fields.title || undefined,
-            message:     fields.message || undefined,
-            createdAt:   Date.now(),
-            timeoutMs:   fields.timeoutMs,
+
+        // consultationAPI stamps id and startedAt, so the node builds everything else.
+        const base = {
+            nodeId:    this.nodeId,
+            title:     fields.title || undefined,
+            message:   fields.message || undefined,
+            timeoutMs: fields.timeoutMs,
         };
 
-        const request = HumanReview.Request.Schema.parse(
-            fields.variant === "confirm"
-                ? {
-                    ...baseRequest,
-                    variant:      fields.variant,
+        const consult = this.context.consultationAPI.consult;
+
+        // One branch per variant, each awaiting only the resolution it can use. A resolution
+        // of the wrong shape fails in consult's parse rather than reaching the ports.
+        switch (fields.variant) {
+
+            case "confirm": {
+                const request = HumanReview.Request.Confirm.omit(STAMPED).parse({
+                    ...base,
+                    variant:      HumanReview.Variant.Confirm,
                     approveLabel: fields.approveLabel,
                     rejectLabel:  fields.rejectLabel,
-                }
-                : fields.variant === "choice"
-                    ? {
-                        ...baseRequest,
-                        variant:     fields.variant,
-                        options:     fields.options,
-                        multiple:    fields.multiple,
-                        allowCustom: fields.allowCustom,
-                    }
-                    : {
-                        ...baseRequest,
-                        variant: fields.variant,
-                        fields:  fields.formFields,
-                    },
-        );
+                }) satisfies Consultation.UnstampedRequest;
 
-        const execId = this.context.executionId;
-
-        // Surface the dialog, then park until the human responds or the wait times out.
-        const { resolution } = await this.context.realtimeAPI.emitAndAwaitSignal(
-            HumanReview.Event.Sent.Schema.parse({
-                channel: HumanReview.Event.getChannel(execId),
-                type:    "human-review:sent",
-                request,
-            }),
-            HumanReview.Signal.HumanResponded.getChannel(execId, request.id),
-            HumanReview.Signal.HumanResponded.Schema,
-            request.timeoutMs,
-        );
-
-        this.context.realtimeAPI.emit(HumanReview.Event.Resolved.Schema.parse({
-            channel:   HumanReview.Event.getChannel(execId),
-            type:      "human-review:resolved",
-            requestId: request.id,
-            resolution,
-        }));
-
-        const mismatchedVariant = () => new Error(
-            `Workbench Review: expected a ${fields.variant} resolution, received ${resolution.variant}.`,
-        );
-
-        switch (resolution.variant) {
-            case "confirm":
-                if (fields.variant !== "confirm")
-                    throw mismatchedVariant();
+                const resolution = await consult(HumanReview.Resolution.Confirm, request);
 
                 return (
                     resolution.approved
                         ? { approved: incoming.input ?? null }
                         : { rejected: incoming.input ?? null }
                 ) satisfies Partial<InferOutputs<typeof Blueprint, typeof fields>>;
+            }
 
-            case "choice":
-                if (fields.variant !== "choice")
-                    throw mismatchedVariant();
+            case "choice": {
+                const request = HumanReview.Request.Choice.omit(STAMPED).parse({
+                    ...base,
+                    variant:     HumanReview.Variant.Choice,
+                    options:     fields.options,
+                    multiple:    fields.multiple,
+                    allowCustom: fields.allowCustom,
+                }) satisfies Consultation.UnstampedRequest;
+
+                const resolution = await consult(HumanReview.Resolution.Choice, request);
 
                 return {
                     value: resolution.values,
                 } satisfies Partial<InferOutputs<typeof Blueprint, typeof fields>>;
+            }
 
-            case "form":
-                if (fields.variant !== "form")
-                    throw mismatchedVariant();
+            case "form": {
+                const request = HumanReview.Request.Form.omit(STAMPED).parse({
+                    ...base,
+                    variant: HumanReview.Variant.Form,
+                    fields:  fields.formFields,
+                }) satisfies Consultation.UnstampedRequest;
+
+                const resolution = await consult(HumanReview.Resolution.Form, request);
 
                 return {
                     values: resolution.values,
                 } satisfies Partial<InferOutputs<typeof Blueprint, typeof fields>>;
+            }
         }
     }
 }

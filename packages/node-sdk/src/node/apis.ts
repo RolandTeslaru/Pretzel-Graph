@@ -1,4 +1,5 @@
-import { Execution, Foundations, Realtime, Vault, Workflow } from "@pretzel-graph/shared/domain";
+import type { z } from "zod";
+import { Consultation, Execution, Foundations, Vault, Workflow } from "@pretzel-graph/shared/domain";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import type { CompilationContext } from "../compiler-context";
@@ -6,22 +7,70 @@ import type { InferCredentialValues, InferFieldValues } from "../types";
 import type { RuntimeNode } from "./index";
 import type { LC } from "../langchain";
 
-// Publishes execution events over the websocket, and lets a node emit-then-block until a
-// matching signal event comes back (e.g. human review, external webhook confirmation).
-export interface RealtimeAPI {
-    emit: <T_Event extends Realtime.Event>(event: T_Event) => void,
-    awaitSignal: <S>(
-        channel: Realtime.Channel,
-        schema:  { parse: (data: unknown) => S },
+
+
+/**
+ * One execution's whole realtime surface, held by the runtime host. Events go out on that
+ * execution's channel; signals come in on its signal channel, routed by schema and
+ * correlation predicate.
+ *
+ * No method takes an id, a channel, or an abort signal — the binding supplies all three,
+ * which is what makes it impossible to address another execution by accident.
+ */
+export interface RealtimeScope {
+    /** Build it with the owning namespace's `create`; emit stamps the addressing. */
+    emit: (event: Execution.Event.Unstamped) => void,
+
+    /** Permanent handler. Returns its own unregister. */
+    onSignal: <S extends Execution.Signal.Base>(
+        schema:  z.ZodType<S>,
+        handler: (signal: S) => void,
+    ) => () => void,
+
+    /**
+     * Park until a signal passes both filters, or reject on timeout / terminate / suspend.
+     *
+     * `match` is required: schema alone cannot separate two nodes parked on the same kind
+     * of signal, so without it the first reply would resolve both.
+     */
+    awaitSignal: <S extends Execution.Signal.Base>(
+        schema:  z.ZodType<S>,
+        match:   (signal: S) => boolean,
         timeout: number,
     ) => Promise<S>,
-    emitAndAwaitSignal: <E extends Realtime.Event, S>(
-        event:         E,
-        signalChannel: Realtime.Channel,
-        signalSchema:  { parse: (data: unknown) => S },
-        timeout:       number,
+
+    /**
+     * awaitSignal, with the waiter registered BEFORE `action` runs — for anything that
+     * invites the reply it is about to wait for. An instant responder cannot slip into the
+     * gap between triggering and waiting, because there is none.
+     */
+    awaitSignalAfter: <S extends Execution.Signal.Base>(
+        schema:  z.ZodType<S>,
+        match:   (signal: S) => boolean,
+        timeout: number,
+        action:  () => void | Promise<void>,
     ) => Promise<S>,
+
+    /** A view whose parks also reject when `abortSignal` fires (terminate/suspend). */
+    withAbort: (abortSignal: AbortSignal) => RealtimeAPI,
+
+    /** Unsubscribes and rejects whatever is still parked. Withheld from nodes. */
+    close: () => void,
 }
+
+/**
+ * What a node holds: the scope minus the lifecycle controls only the host should reach.
+ * Picked from the scope so the two can never drift — a capability added to the scope is
+ * withheld by default, and sharing it is an explicit edit here.
+ */
+export type RealtimeAPI = Pick<
+    RealtimeScope,
+    | "emit"
+    | "onSignal"
+    | "awaitSignal"
+    | "awaitSignalAfter"
+>;
+
 
 // Resolves each node's derivative blueprint from the catalogue cache (warmed by the
 // compiler). Read sites join against this instead of the slim workflow node.
@@ -150,4 +199,22 @@ export interface AgentToolBridgeAPI {
         tools: readonly LC.Tool[],
         options?: { timeoutMs?: number },
     ) => Promise<AgentToolBinding>,
+}
+
+
+
+
+/**
+ * Ask the human something and park until they answer. Mirrors the request onto the session
+ * so a client joining mid-run rebuilds the card, and rejects on timeout, terminate, or
+ * suspend.
+ *
+ * `resolutionSchema` is the specific variant expected, not the domain's whole union — an
+ * answer of the wrong shape then fails here instead of downstream.
+ */
+export interface ConsultationAPI {
+    consult: <RS extends Consultation.Resolution>(
+        resolutionSchema: z.ZodType<RS>,
+        request:          Consultation.UnstampedRequest,
+    ) => Promise<RS>,
 }

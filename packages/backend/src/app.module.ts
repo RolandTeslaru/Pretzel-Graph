@@ -16,7 +16,7 @@ import { WebhookTestModule } from './services/WebhookTest/webhook-test.module';
 import { PermissionModule } from './services/Permission/permission.module';
 import { ApiKeysModule } from './services/ApiKeys/api-keys.module';
 import { VaultModule } from './services/Vault/vault.module';
-import { HumanReviewModule } from './services/HumanReview/human-review.module';
+import { ConsultationModule } from './services/Consultation/consultation.module';
 
 @Module({
     imports: [
@@ -46,7 +46,7 @@ import { HumanReviewModule } from './services/HumanReview/human-review.module';
         PermissionModule,
         ApiKeysModule,
         VaultModule,
-        HumanReviewModule,
+        ConsultationModule,
     ],
     controllers: [],
     providers: [
