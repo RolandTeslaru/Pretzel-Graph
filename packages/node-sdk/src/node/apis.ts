@@ -214,7 +214,7 @@ export interface AgentToolBridgeAPI {
  * than collapsing to their intersection.
  */
 export type UnstampedConsultationRequest<
-    T_Request extends Consultation.Request = Consultation.Request,
+    T_Request = Consultation.Request,
 > = T_Request extends unknown ? Omit<T_Request, "id" | "startedAt"> : never;
 
 /**
@@ -222,12 +222,21 @@ export type UnstampedConsultationRequest<
  * so a client joining mid-run rebuilds the card, and rejects on timeout, terminate, or
  * suspend.
  *
- * `resolutionSchema` is the specific variant expected, not the domain's whole union — an
- * answer of the wrong shape then fails here instead of downstream.
+ * Both schemas are the specific variant, not the domain's whole union: `requestSchema`
+ * types the request argument and validates it once stamped, `resolutionSchema` fails an
+ * answer of the wrong shape here rather than downstream.
+ *
+ * The request argument is typed off the schema's *input*, so fields carrying a
+ * `.default()` are optional to pass — the parse fills them.
  */
 export interface ConsultationAPI {
-    consult: <RS extends Consultation.Resolution>(
+    consult: <
+        RQ extends Consultation.Request,
+        RQ_Input,
+        RS extends Consultation.Resolution,
+    >(
+        requestSchema:    z.ZodType<RQ, RQ_Input>,
+        request:          UnstampedConsultationRequest<RQ_Input>,
         resolutionSchema: z.ZodType<RS>,
-        request:          UnstampedConsultationRequest,
     ) => Promise<RS>,
 }

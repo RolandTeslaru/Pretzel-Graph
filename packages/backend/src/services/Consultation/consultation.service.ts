@@ -30,7 +30,7 @@ export class ConsultationService {
             type:           'consultation:responded',
             executionId,
             consultationId,
-            consultationResolution: resolution,
+            resolution,
         });
 
         const success = await this.realtime.signalAndAwaitEvent(

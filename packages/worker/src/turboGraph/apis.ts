@@ -247,12 +247,14 @@ export function createExecutionAPIs(
     // be parked on one execution, so the match narrows by id: the type alone would resolve
     // whichever waiter the reply reached first.
     const consultationAPI = {
-        consult: async (resolutionSchema, props) => {
-            const pendingConsultation: Consultation.Request = {
+        consult: async (requestSchema, props, resolutionSchema) => {
+            // Stamped first, then parsed whole — the node never sees id/startedAt, and what
+            // lands in pending_consultations is a validated request.
+            const pendingConsultation = requestSchema.parse({
                 ...props,
-                id:        crypto.randomUUID() as Consultation.Id,
+                id:        crypto.randomUUID(),
                 startedAt: Date.now(),
-            };
+            });
 
             try {
                 const signalResponse = await realtimeAPI.awaitSignalAfter(
@@ -274,7 +276,7 @@ export function createExecutionAPIs(
                     },
                 );
 
-                const resolution = resolutionSchema.parse(signalResponse.consultationResolution);
+                const resolution = resolutionSchema.parse(signalResponse.resolution);
 
                 // Acknowledgement for the respond route — it only reports success once the
                 // answer has actually been consumed here.

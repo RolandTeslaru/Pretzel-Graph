@@ -17,7 +17,14 @@ import type { ChatSDKImpl } from "../ChatSDK/sdk";
 @SDK("Execution")
 export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
 
-    constructor() { super() }
+    constructor() { 
+        super() 
+        
+        this.observeCurrent({
+            onDetach: () => this.unsubscribeFromExecutionChannel(),
+            onAttach: (execution) => this._subscribeToExecutionChannel(execution.id),
+        }, { immediate: true })
+    }
 
     public readonly useStore: BaseSDK.Store<ExecutionSDK.State> = createWithEqualityFn(
         immer<ExecutionSDK.State>(() => ({
@@ -84,7 +91,7 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
     public _subscribeToExecutionChannel(executionId: Execution.Id) {
         if (this.runtime.subscribedExecutionId === executionId) return;
 
-        this._unsubscribeFromExecutionChannel();
+        this.unsubscribeFromExecutionChannel();
         this.runtime.subscribedExecutionId = executionId;
 
         console.log("Subscribing to execution events for executionId:", executionId)
@@ -95,7 +102,7 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         )
     }
 
-    public _unsubscribeFromExecutionChannel() {
+    private unsubscribeFromExecutionChannel() {
         this.runtime.unsubscribeChannel?.();
         this.runtime.unsubscribeChannel = null;
         this.runtime.subscribedExecutionId = null;
@@ -136,15 +143,6 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
 }
 
 export const ExecutionSDK = SDK.get<ExecutionSDKImpl>("Execution")
-
-
-
-
-// Subscribe to current execution events
-ExecutionSDK.observeCurrent({
-    onDetach: () => ExecutionSDK._unsubscribeFromExecutionChannel(),
-    onAttach: (execution) => ExecutionSDK._subscribeToExecutionChannel(execution.id),
-}, { immediate: true })
 
 
 

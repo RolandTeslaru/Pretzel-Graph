@@ -5,6 +5,7 @@ import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Webhook } from "@pretzel-graph/shared/domain/Webhook";
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
 import Redis from "ioredis";
+import z from "zod";
 
 type AnyRecord = Record<string, unknown>;
 
@@ -52,27 +53,22 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     // signal from reg.workflowId, and its registry holds no executionId to address a parked
     // node with. See SPECS/execution-signal-router.md, Out of Scope.
     private async waitForTestPayload(): Promise<Webhook.Payload> {
-        const { workflowId } = this.context;
-
         const path   = this.fieldValues.path   as Webhook.Path;
         const method = this.fieldValues.method as Webhook.Method;
 
-        const signal = await this.context.realtimeAPI.awaitSignalAfter(
-            Webhook.Test.Signal.ResolvePayload,
-            resolvePayload => resolvePayload.ignitedNodeId === this.nodeId,
-            TEST_WAIT_MS,
-            async () => {
-                await Webhook.Test.API.register(this.context.internalAPI.raw, { workflowId, path, method });
 
-                this.context.realtimeAPI.emit(Webhook.Test.Event.create("ready_to_receive", {
-                    ignitedNodeId: this.nodeId,
-                    timeout:       TEST_WAIT_MS,
-                    createdAt:     Date.now(),
-                }));
+        const res = await this.context.consultationAPI.consult(
+            Webhook.Test.Consultation.Request,
+            {
+                nodeId:    this.nodeId,
+                variant:   Webhook.Test.Consultation.Variant,
+                timeoutMs: 30_000,
+                path,
+                method
             },
+            Webhook.Test.Consultation.Resolution
         )
 
-        console.log(`[WebhookNode] Received test payload`);
-        return signal.payload;
+        return res.payload;
     }
 }
