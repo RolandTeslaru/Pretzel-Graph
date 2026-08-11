@@ -16,7 +16,6 @@ import { isUUID } from "../utils";
 
 import { AggexEngine } from "src/engine";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
-import { RealtimeService } from "../realtime";
 import { createContexts } from "./contexts";
 
 
@@ -46,7 +45,7 @@ export class TurboGraph {
         workflowId:          Workflow.Id,
         workflowData:        Workflow.Data,
         execution:           Execution,
-        realtime:            RealtimeService,
+        realtime:            RuntimeNode.RealtimeScope,
         engine:              AggexEngine,
         airlock:             AirlockService,
         credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,

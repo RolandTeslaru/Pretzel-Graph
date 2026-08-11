@@ -23,18 +23,20 @@ const metaSelection = [
     sql<boolean>`recording is not null`.as('has_recording'),
 ] as const;
 
-type Patch = {
+type RowPatch = {
     executionId: Execution.Id;
     status?: Execution.Status;
     duration?: number;
     error?: string;
-    session?: Execution.Session.Update;
+    session?: Execution.Session;
     recording?: Execution.Recording | null;
 };
 
-// Shared by updateProgress and finalise — the columns are the same, only who may
-// write them differs. Module-level so @DatabaseClass doesn't treat it as a method.
-async function applyPatch(trx: DB.Transaction<DB.Role>, props: Patch): Promise<void> {
+// Column-granularity write shared by updateProgress and finalise — the columns are the
+// same, only who may write them differs. Distinct from Session.Patch, which is a
+// key-granularity delta: `session` here replaces the whole blob. Module-level so
+// @DatabaseClass doesn't treat it as a method.
+async function applyRowPatch(trx: DB.Transaction<DB.Role>, props: RowPatch): Promise<void> {
     await trx
         .updateTable('executions')
         .set({
@@ -145,9 +147,9 @@ export class ExecutionDatabase {
     @AllowedDatabaseRoles("user", "delegate")
     async updateProgress(
         trx: DB.Transaction<'user' | 'delegate'>,
-        props: Omit<Patch, 'error'>,
+        props: Omit<RowPatch, 'error'>,
     ): Promise<void> {
-        await applyPatch(trx, props);
+        await applyRowPatch(trx, props);
     }
 
     /**
@@ -158,9 +160,9 @@ export class ExecutionDatabase {
     @AllowedDatabaseRoles("service")
     async finalise(
         trx: DB.Transaction<'service'>,
-        props: Patch,
+        props: RowPatch,
     ): Promise<void> {
-        await applyPatch(trx, props);
+        await applyRowPatch(trx, props);
     }
 
     @AllowedDatabaseRoles("user")

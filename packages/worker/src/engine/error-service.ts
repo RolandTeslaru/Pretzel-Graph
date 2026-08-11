@@ -183,13 +183,9 @@ export class ErrorService {
             ctx, edgeIdMap, "waiting", s => { s.runCount += 1; },
         );
 
-        ctx.realtimeAPI.emit<Execution.Event.SessionUpdate>({
-            executionId:   ctx.executionId,
-            workflowId:    ctx.workflowId,
-            type:          "update",
-            channel:       this.engine.services.session.getEventChannel(ctx),
-            sessionUpdate: { edge_state: edgeStateUpdate },
-        });
+        ctx.realtimeAPI.emit(Execution.Event.create("patch", {
+            sessionPatch: { upsert: { edge_state: edgeStateUpdate } },
+        }));
 
         return targets;   // fireVertexDependents fires only these
     }

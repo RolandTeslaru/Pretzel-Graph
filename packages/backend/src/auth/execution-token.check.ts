@@ -2,7 +2,8 @@ import '@/load-env';
 import { ExecutionToken } from './execution-token';
 import { Execution } from '@pretzel-graph/shared/domain';
 
-const id = '11111111-2222-3333-4444-555555555555' as Execution.Id;
+// A real uuid — Execution.Id is z.uuid(), and Token.Claims parses it on decode.
+const id = '11111111-2222-4333-8444-555555555555' as Execution.Id;
 let pass = 0, fail = 0;
 const check = (name: string, ok: boolean) => { ok ? pass++ : fail++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`); };
 const throws = (name: string, fn: () => unknown, expect: string) => {
@@ -33,7 +34,11 @@ throws('signed with another key', () => ExecutionToken.verify(foreign), 'Bad exe
 
 process.env.EXECUTION_TOKEN_SIGNING_KEY = '';
 throws('missing key refuses to sign', () => ExecutionToken.sign(id), 'not set');
+check('decodeUnverified needs no key', Execution.Token.decodeUnverified(token)?.executionId === id);
 process.env.EXECUTION_TOKEN_SIGNING_KEY = real;
+
+check('decodeUnverified rejects a truncated token', Execution.Token.decodeUnverified(payload as Execution.Token) === null);
+check('decodeUnverified rejects a non-json payload', Execution.Token.decodeUnverified('bm90LWpzb24.sig' as Execution.Token) === null);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

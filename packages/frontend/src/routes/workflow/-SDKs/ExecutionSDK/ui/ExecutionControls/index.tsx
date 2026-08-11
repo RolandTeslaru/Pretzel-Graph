@@ -4,15 +4,6 @@ import type { Workflow } from "@pretzel-graph/shared/domain";
 import { ExecutionSDK } from "../../sdk";
 import { WorkbenchSDK } from "../../../WorkbenchSDK/sdk";
 import Tipped from "@/components/Tipped";
-import {
-  handlePause,
-  handleResume,
-  handleRun,
-  handleRunWithIgniteableNode,
-  handleSuspend,
-  handleTerminate,
-  handleClear,
-} from "./utils";
 import { AnimatePresence, motion } from "motion/react";
 import { ControlButton } from "./control-button";
 import {
@@ -26,6 +17,10 @@ import ExecutionHistoryPanel from "../ExecutionHistoryPanel";
 import { ButtonGroup } from "@pretzel-graph/standard-ui/foundations/button-group";
 
 const spring = { type: "spring", stiffness: 500, damping: 28 } as const;
+
+const handleRun = () => {
+  ExecutionSDK.actions.run({ variant: "workbench_manual" });
+};
 
 interface Props {
   canRun: boolean;
@@ -162,7 +157,7 @@ const ExecutionControls = ({ canRun }: Props) => {
                   size="icon-sm"
                   iconClassName="scale-80"
                   variant="ghost-warning"
-                  onClick={handlePause}
+                  onClick={ExecutionSDK.actions.pause}
                 />
               </Tipped>
               <Tipped label="Terminate">
@@ -172,7 +167,7 @@ const ExecutionControls = ({ canRun }: Props) => {
                   size="icon-sm"
                   iconClassName="scale-80"
                   variant="ghost-destructive"
-                  onClick={handleTerminate}
+                  onClick={ExecutionSDK.actions.terminate}
                 />
               </Tipped>
             </>
@@ -184,7 +179,7 @@ const ExecutionControls = ({ canRun }: Props) => {
                 icon={SystemIcons.Play}
                 variant="ghost-success"
                 size="icon-sm"
-                onClick={handleResume}
+                onClick={ExecutionSDK.actions.resume}
               />
               <Tipped label="Suspend">
                 <ControlButton
@@ -193,7 +188,7 @@ const ExecutionControls = ({ canRun }: Props) => {
                   size="icon-sm"
                   iconClassName="scale-80"
                   variant="ghost-warning"
-                  onClick={handleSuspend}
+                  onClick={ExecutionSDK.actions.suspend}
                 />
               </Tipped>
               <Tipped label="Terminate">
@@ -203,7 +198,7 @@ const ExecutionControls = ({ canRun }: Props) => {
                   size="icon-sm"
                   iconClassName="scale-80"
                   variant="ghost-destructive"
-                  onClick={handleTerminate}
+                  onClick={ExecutionSDK.actions.terminate}
                 />
               </Tipped>
             </>
@@ -217,7 +212,7 @@ const ExecutionControls = ({ canRun }: Props) => {
                   <Button
                     size="icon-sm"
                     variant="ghost-destructive"
-                    onClick={handleClear}
+                    onClick={ExecutionSDK.actions.clear}
                   >
                     <SystemIcons.Trash2 className="scale-80" />
                   </Button>
@@ -242,7 +237,7 @@ const IgniterRunItem = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
   const ui = WorkbenchSDK.useStore((s) => s.selectors.node.getUI(s, nodeId));
 
   return (
-    <DropdownMenu.Item onSelect={() => handleRunWithIgniteableNode(nodeId)}>
+    <DropdownMenu.Item onSelect={() => ExecutionSDK.actions.runFromIgniteableNode(nodeId)}>
       <LazyIcon name={ui.icon ?? ""} className="mr-2" />
       Run via {ui.displayName}
     </DropdownMenu.Item>

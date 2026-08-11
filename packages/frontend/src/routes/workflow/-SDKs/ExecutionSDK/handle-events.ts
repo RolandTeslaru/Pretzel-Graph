@@ -1,4 +1,4 @@
-import type { Execution } from "@pretzel-graph/shared/domain";
+import type { Consultation, Execution } from "@pretzel-graph/shared/domain";
 import type { ExecutionSDK, ExecutionSDKImpl } from "./sdk";
 import { toast } from "sonner";
 
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 // Terminal/end-state events flush immediately so the final state never feels laggy.
 const THROTTLE_MS = 120;
 
-const TERMINAL = new Set<Execution.Event["type"]>([
+const TERMINAL = new Set<(Execution.Event | Consultation.Event)["type"]>([
     "completed",
     "failed",
     "terminated",
@@ -18,7 +18,7 @@ const TERMINAL = new Set<Execution.Event["type"]>([
     "recording:fullyUploaded",
 ]);
 
-let queue: Execution.Event[] = [];
+let queue: (Execution.Event | Consultation.Event)[] = [];
 let timer: ReturnType<typeof setTimeout> | null = null;
 let lastFlush = 0;
 
@@ -27,7 +27,7 @@ let lastFlush = 0;
 const reduceEvent = (
     sdk: ExecutionSDKImpl,
     s: ExecutionSDK.State,
-    e: Execution.Event,
+    e: Execution.Event | Consultation.Event,
 ): (() => void) | null => {
     const r = sdk.reducers.currentExecution;
     switch (e.type) {
@@ -36,11 +36,11 @@ const reduceEvent = (
             r.setStatus(s, "running");
             return null;
         case "completed":
-            r.setSession(s, e.session);
+            r.session.set(s, e.session);
             r.setStatus(s, "completed");
             return () => sdk.actions.removeAwaitedConfirmation("started");
         case "failed":
-            r.setSession(s, e.session);
+            r.session.set(s, e.session);
             r.setStatus(s, "failed");
             r.setError(s, e.error);
             return () => {
@@ -51,15 +51,15 @@ const reduceEvent = (
             r.setStatus(s, "terminated");
             return () => sdk.actions.removeAwaitedConfirmation("terminated");
         case "paused":
-            r.setSession(s, e.session);
+            r.session.set(s, e.session);
             r.setStatus(s, "paused");
             return null;
         case "resumed":
-            r.setSession(s, e.session);
+            r.session.set(s, e.session);
             r.setStatus(s, "running");
             return null;
         case "suspended":
-            r.setSession(s, e.session);
+            r.session.set(s, e.session);
             r.setStatus(s, "suspended");
             return null;
 
@@ -68,8 +68,13 @@ const reduceEvent = (
         case "node:completed":
         case "node:waiting":
         case "node:error":
-        case "update":
-            r.applySessionUpdate(s, e.sessionUpdate);
+        case "patch":
+            r.session.applyPatch(s, e.sessionPatch);
+            return null;
+
+        // Backend-only acknowledgement — the card is already gone via the patch that
+        // cleared pending_consultations.
+        case "consultation:resolved":
             return null;
 
         // Recording
@@ -93,7 +98,7 @@ const reduceEvent = (
             return () => sdk.actions.loadLiveRecording(e.executionId);
 
         default:
-            return () => toast.error(`Received unknown event: ${(e as Execution.Event).type}`);
+            return () => toast.error(`Received unknown event: ${(e as Execution.Event | Consultation.Event).type}`);
     }
 };
 
@@ -121,7 +126,7 @@ const flush = (sdk: ExecutionSDKImpl) => {
     for (const fx of effects) fx();
 };
 
-export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event) => {
+export const handleExecutionEvents = (sdk: ExecutionSDKImpl, e: Execution.Event | Consultation.Event) => {
     queue.push(e);
 
     // End-states flush right away — no point delaying the final render.

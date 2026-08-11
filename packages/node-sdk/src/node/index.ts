@@ -7,7 +7,11 @@ import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { mapFieldValues } from "../utils/mapFieldValues";
 import { Synthesizer } from "../synthesizer";
 import type { ExecutionContext as ExecutionContextType } from "./context";
-import type { AgentToolBinding as AgentToolBindingType } from "./apis";
+import type {
+    AgentToolBinding as AgentToolBindingType,
+    RealtimeAPI      as RealtimeAPIType,
+    RealtimeScope    as RealtimeScopeType,
+} from "./apis";
 import type { HTTP } from "../domain/http";
 
 export abstract class RuntimeNode<
@@ -466,4 +470,6 @@ export namespace RuntimeNode {
 
     export type ExecutionContext = ExecutionContextType;
     export type AgentToolBinding = AgentToolBindingType;
+    export type RealtimeAPI      = RealtimeAPIType;
+    export type RealtimeScope    = RealtimeScopeType;
 }

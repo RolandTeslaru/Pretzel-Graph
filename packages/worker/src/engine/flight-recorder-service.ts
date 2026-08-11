@@ -86,13 +86,7 @@ export class FlightRecorderService {
 
         const inputHandles = ctx.workflowCache.inputHandlesMap[nodeId] ?? {}
 
-        ctx.realtimeAPI.emit<Execution.Event.Recording.Unit.Started>({
-            channel:     Execution.Event.getChannel(this.executionId),
-            workflowId:  this.workflowId,
-            executionId: this.executionId,
-            type:        "unit:started",
-            unit,
-        })
+        ctx.realtimeAPI.emit(Execution.Event.create("unit:started", { unit }))
 
         const incomingRelations: Execution.Recording.Relation[] = []
 
@@ -130,13 +124,9 @@ export class FlightRecorderService {
         }
 
         if (incomingRelations.length > 0)
-            ctx.realtimeAPI.emit<Execution.Event.Recording.Relation.CreateBatch>({
-                channel:     Execution.Event.getChannel(this.executionId),
-                workflowId:  this.workflowId,
-                executionId: this.executionId,
-                type:        "relation:createBatch",
-                relations:   incomingRelations,
-            })
+            ctx.realtimeAPI.emit(Execution.Event.create("relation:createBatch", {
+                relations: incomingRelations,
+            }))
     }
 
 
@@ -173,16 +163,12 @@ export class FlightRecorderService {
         const metrics = this.collectMetrics(nodeId, unitId, "completed", unit.duration!, ctx)
         if (metrics) unit.metrics = metrics
 
-        ctx.realtimeAPI.emit<Execution.Event.Recording.Unit.Completed>({
-            channel:        Execution.Event.getChannel(this.executionId),
-            workflowId:     this.workflowId,
-            executionId:    this.executionId,
-            type:           "unit:completed",
+        ctx.realtimeAPI.emit(Execution.Event.create("unit:completed", {
             unitId:         unit.id,
             duration:       unit.duration!,
             outputSnapshot: unit.outputSnapshot,
             metrics,
-        })
+        }))
 
         this.uowInputs.delete(unitId)
     }
@@ -207,15 +193,11 @@ export class FlightRecorderService {
         const metrics = this.collectMetrics(nodeId, unitId, "failed", unit.duration!, ctx)
         if (metrics) unit.metrics = metrics
 
-        ctx.realtimeAPI.emit<Execution.Event.Recording.Unit.Failed>({
-            channel:     Execution.Event.getChannel(this.executionId),
-            workflowId:  this.workflowId,
-            executionId: this.executionId,
-            type:        "unit:failed",
-            unitId:      unit.id,
-            duration:    unit.duration!,
+        ctx.realtimeAPI.emit(Execution.Event.create("unit:failed", {
+            unitId:   unit.id,
+            duration: unit.duration!,
             metrics,
-        })
+        }))
 
         this.uowInputs.delete(unitId)
     }

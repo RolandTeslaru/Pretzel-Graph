@@ -149,11 +149,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         // resolve to the owning resource rather than slipping through as not_found.
         const [prefix, id] = channel.split(':');
 
-        // Channel prefix → ownership domain. Several prefixes may map to the same domain:
-        // human-review channels carry an executionId and authorize via execution ownership.
+        // Channel prefix → ownership domain. Consultation channels are execution-prefixed
+        // with the executionId second, so they authorize through the execution entry.
         const loaders = {
             execution:      this.ownership.loadExecutionOwner,
-            'human-review': this.ownership.loadExecutionOwner,
             chat:           this.ownership.loadChatOwner,
         } as const;
 

@@ -35,15 +35,11 @@ export class PropagationService {
         for (const edge of edges)
             this.engine.services.scheduler.signalNode(ctx, edge.target.nodeId, nodeId);
 
-        ctx.realtimeAPI.emit<Execution.Event.SessionUpdate>({
-            executionId: ctx.executionId,
-            workflowId:  ctx.workflowId,
-            type:        "update",
-            channel:     this.engine.services.session.getEventChannel(ctx),
-            sessionUpdate: {
-                edge_state: edgeStateUpdate,
+        ctx.realtimeAPI.emit(Execution.Event.create("patch", {
+            sessionPatch: {
+                upsert: { edge_state: edgeStateUpdate },
             },
-        });
+        }));
     }
 
     public readonly emitNode = (
@@ -75,14 +71,10 @@ export class PropagationService {
             this.engine.services.scheduler.signalNode(ctx, edge.target.nodeId, nodeId);
         }
 
-        ctx.realtimeAPI.emit<Execution.Event.SessionUpdate>({
-            executionId: ctx.executionId,
-            workflowId:  ctx.workflowId,
-            type:        "update",
-            channel:     this.engine.services.session.getEventChannel(ctx),
-            sessionUpdate: {
-                edge_state: edgeStateUpdate,
+        ctx.realtimeAPI.emit(Execution.Event.create("patch", {
+            sessionPatch: {
+                upsert: { edge_state: edgeStateUpdate },
             },
-        });
+        }));
     }
 }

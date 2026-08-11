@@ -4,7 +4,6 @@ import { HTTP, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { AggexEngine } from "src/engine";
 
 import { AirlockService } from "../airlock";
-import { RealtimeService } from "../realtime";
 import { S2Graph } from "../S2/graph";
 import { createExecutionAPIs } from "./apis";
 
@@ -19,7 +18,7 @@ export function createContexts(params: {
     workflowCache:       Workflow.Cache,
     graph:               S2Graph,
     credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
-    realtime:            RealtimeService,
+    realtime:            RuntimeNode.RealtimeScope,
     internalAPI:         HTTP.Client,
     enclosingNodeAPI?:   RuntimeNode.ExecutionContext["enclosingNodeAPI"],
 }): { nodeExecutionCtx: RuntimeNode.ExecutionContext; engineExecutionCtx: AggexEngine.Execution.Context } {

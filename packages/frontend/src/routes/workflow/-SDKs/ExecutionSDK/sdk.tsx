@@ -11,6 +11,7 @@ import type { TimeScale, TimelineViewMode } from "./ui/Timeline/time-scale";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { handleExecutionEvents } from "./handle-events";
+import { observeCurrentExecution, type CurrentExecutionObserver, type ObserveOptions as ObserveOptions_ } from "./observe";
 import type { ChatSDKImpl } from "../ChatSDK/sdk";
 
 @SDK("Execution")
@@ -83,6 +84,20 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         )
     }
 
+    public unsubscribeFromEvents() {
+        this.runtime.unsubscribeFromEvents?.();
+        this.runtime.unsubscribeFromEvents = null;
+        this.runtime.subscribedExecutionId = null;
+    }
+
+    /**
+     * Watch the execution currently in view. Returns an unsubscribe.
+     * See ./observe.ts for the transition → callback mapping.
+     */
+    public observeCurrent(observer: ExecutionSDK.Observer, opts?: ExecutionSDK.ObserveOptions) {
+        return observeCurrentExecution(this, observer, opts);
+    }
+
     public handleOnEvent = (e: Execution.Event) => { handleExecutionEvents(this, e) }
 
     public get chatSDK(): ChatSDKImpl { return SDK.get<ChatSDKImpl>("Chat") }
@@ -94,17 +109,10 @@ export const ExecutionSDK = SDK.get<ExecutionSDKImpl>("Execution")
 
 
 // Subscribe to current execution events
-ExecutionSDK.subscribe((state, prev) => {
-    if(state.currentExecution?.id === prev.currentExecution?.id)
-        return
-
-    if(!state.currentExecution) {
-        ExecutionSDK.runtime.unsubscribeFromEvents?.();
-        return
-    }
-
-    ExecutionSDK.subscribeToEvents(state.currentExecution!.id)
-})
+ExecutionSDK.observeCurrent({
+    onDetach: () => ExecutionSDK.unsubscribeFromEvents(),
+    onAttach: (execution) => ExecutionSDK.subscribeToEvents(execution.id),
+}, { immediate: true })
 
 
 
@@ -136,15 +144,20 @@ function stopHeartbeat() {
     }
 }
 
-ExecutionSDK.subscribe((state, prev) => {
-    if(state.currentExecution?.status === prev.currentExecution?.status)
-        return
+ExecutionSDK.observeCurrent({
+    onPause:  (execution) => startHeartbeat(execution.id),
+    onDetach: () => stopHeartbeat(),
 
-    if(state.currentExecution?.status === "paused")
-        startHeartbeat(state.currentExecution.id)
-    else
-        stopHeartbeat()
-})
+    onStatusChange: (_, from) => {
+        if (from === "paused")
+            stopHeartbeat();
+    },
+
+    onAttach: (execution) => {
+        if (execution.status === "paused")
+            startHeartbeat(execution.id);
+    },
+}, { immediate: true })
 
 
 
@@ -178,4 +191,6 @@ export namespace ExecutionSDK {
     export type Reducers = _ExecutionSessionReducers
     export type Actions = ExecutionSDKActions;
     export type Selectors = ExecutionSDKSelectors
+    export type Observer = CurrentExecutionObserver
+    export type ObserveOptions = ObserveOptions_
 }
