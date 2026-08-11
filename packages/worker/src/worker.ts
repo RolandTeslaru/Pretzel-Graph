@@ -118,7 +118,7 @@ export class AggexWorkerImpl {
             this.pauseTimeoutResetters.delete(execution.id);
         };
 
-        scope.emit(Execution.Event.create("started"));
+        scope.emit(Execution.Event.create("lifecycle:started"));
 
         let recorder: FlightRecorderService | null = null;
         // One Isolate per execution = the tenant/security boundary. Owned here (outermost),
@@ -141,13 +141,13 @@ export class AggexWorkerImpl {
                     startLockExtension();
                     startPauseTimeout(onPauseTimeout);
                     this.pauseTimeoutResetters.set(executionId, () => startPauseTimeout(onPauseTimeout));
-                    scope.emit(Execution.Event.create("paused", {
+                    scope.emit(Execution.Event.create("lifecycle:paused", {
                         session: executionCtx.session,
                     }));
                 },
                 onResume: () => {
                     stopLockExtension();
-                    scope.emit(Execution.Event.create("resumed", {
+                    scope.emit(Execution.Event.create("lifecycle:resumed", {
                         session: executionCtx.session,
                     }));
                 },
@@ -180,9 +180,9 @@ export class AggexWorkerImpl {
             await Execution.API.update(AxiosService.api, { executionId, status, duration, session, recording });
 
             if (status === 'terminated')
-                scope.emit(Execution.Event.create("terminated"));
+                scope.emit(Execution.Event.create("lifecycle:terminated"));
             else
-                scope.emit(Execution.Event.create("completed", { session }));
+                scope.emit(Execution.Event.create("lifecycle:completed", { session }));
 
             if (recording) {
                 await this.redisPub.set(
@@ -207,7 +207,7 @@ export class AggexWorkerImpl {
 
             await Execution.API.update(AxiosService.api, { executionId: execution.id, status: 'failed', duration, session, recording }).catch(() => {});
 
-            scope.emit(Execution.Event.create("failed", {
+            scope.emit(Execution.Event.create("lifecycle:failed", {
                 error: systemError.toJSON(),
                 session,
             }));

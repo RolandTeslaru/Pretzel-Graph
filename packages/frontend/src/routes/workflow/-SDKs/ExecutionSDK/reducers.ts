@@ -36,6 +36,7 @@ const recomputeGeometry = (s: State) => {
     t.scale         = makeTimeScale(t.viewMode, t.zoom, rec, t.totalDuration);
     const scaleW    = t.viewMode === "linear" ? t.totalDuration * t.zoom : t.scale.totalWidth;
     t.totalWidth    = Math.max(scaleW + 80, 400);
+    s.isTimelineGeometryDirty = false;
 };
 
 const ensureRecording = (s: State): Execution.Recording => {
@@ -98,12 +99,14 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
             recording: {
                 set: (s, recording) => {
                     if (s.currentExecution) s.currentExecution.recording = recording;
+                    s.isTimelineGeometryDirty = true;
                 },
                 ensure: ensureRecording,
                 unit: {
                     patchStarted: (s, unit) => {
                         const rec = _sdk.reducers.currentExecution.recording.ensure(s);
                         rec.units[unit.id] = unit;
+                        s.isTimelineGeometryDirty = true;
 
                         const track = rec.tracks[unit.trackId];
                         if (track) {
@@ -124,6 +127,8 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
                         unit.duration       = event.duration;
                         unit.outputSnapshot = event.outputSnapshot;
 
+                        s.isTimelineGeometryDirty = true;
+
                         if (event.metrics)
                             unit.metrics = event.metrics;
                     },
@@ -135,6 +140,8 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
 
                         unit.status   = "failed";
                         unit.duration = event.duration;
+
+                        s.isTimelineGeometryDirty = true;
 
                         if (event.metrics)
                             unit.metrics = event.metrics;
@@ -152,6 +159,11 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
         igniter: {
             setShouldRecord: (s, record) => { s.igniterAttributes.record = record; },
             setShouldDebug: (s, debug) => { s.igniterAttributes.debug = debug; }
+        },
+
+        awaitedConfirmation: {
+            add:    (s, event) => { s.awaitedConfirmation.add(event); },
+            remove: (s, event) => { s.awaitedConfirmation.delete(event); },
         },
 
         timeline: {
@@ -228,6 +240,10 @@ export interface _ExecutionSessionReducers {
     igniter: {
         setShouldRecord: (state: State, record: boolean) => void;
         setShouldDebug: (state: State, debug: boolean) => void;
+    },
+    awaitedConfirmation: {
+        add:    (state: State, event: ExecutionSDK.AwaitedConfirmation) => void;
+        remove: (state: State, event: ExecutionSDK.AwaitedConfirmation) => void;
     },
     timeline: {
         setZoom:        (state: State, zoom: number) => void;
