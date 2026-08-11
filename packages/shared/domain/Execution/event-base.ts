@@ -25,18 +25,22 @@ export const Base = Realtime.Event.Base.extend({
 })
 export type Base = z.infer<typeof Base>
 
-/** Written by realtimeAPI.emit from the execution it is bound to, never by the caller. */
+/**
+ * Addressing: which execution a member belongs to and where it travels. Wholly determined
+ * by that execution, so it is never a construction argument — whatever publishes the member
+ * derives all three and writes them.
+ */
 type Stamped = "channel" | "executionId" | "workflowId"
 
-/** What a factory returns: a member minus the fields emit stamps. */
+/** A member as constructed, before its addressing is filled in. */
 export type Unstamped<T_Event extends Base = Base> = Omit<T_Event, Stamped>
 
 /**
  * Builds a namespace's `create` from its union, so each domain owns a typed factory
  * without a hand-written copy of the OfType/Rest/RestArg block.
  *
- * The schema is the inference source only — nothing is parsed. The result is incomplete
- * by construction (emit supplies the rest), so there is nothing here to validate.
+ * The schema is the inference source only — nothing is parsed. The result is addressless
+ * by construction, so there is no complete member here to validate.
  */
 export function defineEventFactory<T_Schema extends z.ZodType<Base>>(_schema: T_Schema) {
 

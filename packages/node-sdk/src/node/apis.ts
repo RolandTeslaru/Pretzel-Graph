@@ -205,6 +205,19 @@ export interface AgentToolBridgeAPI {
 
 
 /**
+ * What a node hands to `consult`, which stamps `id` and `startedAt` itself. Lives here
+ * rather than in the domain because those two fields are only absent in transit to this
+ * one call — a stored `Consultation.Request` always has them.
+ *
+ * Generic, so a domain extending `Request` keeps its own props on the way through;
+ * distributive, so a domain whose `Request` is a union keeps each member's props rather
+ * than collapsing to their intersection.
+ */
+export type UnstampedConsultationRequest<
+    T_Request extends Consultation.Request = Consultation.Request,
+> = T_Request extends unknown ? Omit<T_Request, "id" | "startedAt"> : never;
+
+/**
  * Ask the human something and park until they answer. Mirrors the request onto the session
  * so a client joining mid-run rebuilds the card, and rejects on timeout, terminate, or
  * suspend.
@@ -215,6 +228,6 @@ export interface AgentToolBridgeAPI {
 export interface ConsultationAPI {
     consult: <RS extends Consultation.Resolution>(
         resolutionSchema: z.ZodType<RS>,
-        request:          Consultation.UnstampedRequest,
+        request:          UnstampedConsultationRequest,
     ) => Promise<RS>,
 }
