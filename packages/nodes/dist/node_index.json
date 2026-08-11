@@ -1,6 +1,6 @@
 {
-  "version": "1786293184690",
-  "generatedAt": "2026-08-09T16:33:04.690Z",
+  "version": "1786395324921",
+  "generatedAt": "2026-08-10T20:55:24.921Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -17875,6 +17875,141 @@
         }
       ]
     },
+    "Core.Agent": {
+      "id": "Core.Agent",
+      "flags": {
+        "SHOW_DEPENDENCY_SELECTOR": false
+      },
+      "credentials": [],
+      "ui": {
+        "displayName": "Agent",
+        "description": "Runs a ReAct agent loop over a language model and its tools.",
+        "icon": "Bot",
+        "accent": "port-LanguageModel"
+      },
+      "fields": [
+        {
+          "id": "signalDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Signal Dependency",
+          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
+          "variant": "MultiOption",
+          "initialValue": "OR",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "(AND) All signals required",
+              "description": "Fire only once every upstream signal has arrived."
+            },
+            {
+              "value": "OR",
+              "displayName": "(OR) At least one signal required",
+              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
+            },
+            {
+              "value": "XOR",
+              "displayName": "(XOR) Exactly one signal required",
+              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "dataDependency",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "Data Dependency",
+          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
+          "variant": "MultiOption",
+          "initialValue": "AND",
+          "options": [
+            {
+              "value": "AND",
+              "displayName": "Wait & Join",
+              "description": "Wait until every wired input port has resolved, then read all of them."
+            },
+            {
+              "value": "OR",
+              "displayName": "Follow Trigger",
+              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "onErrorStrategy",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "displayName": "On Error",
+          "tooltip": "What happens when this node's execution throws.",
+          "variant": "MultiOption",
+          "initialValue": "propagate",
+          "options": [
+            {
+              "value": "terminate",
+              "displayName": "Terminate workflow",
+              "description": "Fail the whole run."
+            },
+            {
+              "value": "propagate",
+              "displayName": "Propagate error",
+              "description": "Forward the error along outgoing edges."
+            },
+            {
+              "value": "do_nothing",
+              "displayName": "Do nothing",
+              "description": "Swallow the error — no signal, no termination. Downstream stalls."
+            }
+          ],
+          "kind": "select"
+        },
+        {
+          "id": "output_all_messages",
+          "variant": "Boolean",
+          "advanced": false,
+          "required": false,
+          "reconcile": false,
+          "description": "",
+          "displayName": "Output All Messages",
+          "initialValue": false
+        }
+      ],
+      "inputs": [
+        {
+          "id": "language_model",
+          "displayName": "Language Model",
+          "variant": "LanguageModel",
+          "required": true
+        },
+        {
+          "id": "tools",
+          "displayName": "Tools",
+          "variant": "ToolList",
+          "required": false
+        },
+        {
+          "id": "input_message",
+          "displayName": "Messages",
+          "variant": "MessageList",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "Core.SubWorkflow.ExposeOutputPort-cfa4s",
+          "displayName": "Output",
+          "variant": "MessageList"
+        }
+      ],
+      "dependencyRef": {
+        "workflowId": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0",
+        "mode": "publication"
+      }
+    },
     "Core.Utils.Compactor": {
       "id": "Core.Utils.Compactor",
       "flags": {
@@ -18028,141 +18163,6 @@
       ],
       "dependencyRef": {
         "workflowId": "ac147960-ed28-44ed-8808-1e4348a6dda8",
-        "mode": "publication"
-      }
-    },
-    "Core.Agent": {
-      "id": "Core.Agent",
-      "flags": {
-        "SHOW_DEPENDENCY_SELECTOR": false
-      },
-      "credentials": [],
-      "ui": {
-        "displayName": "Agent",
-        "description": "Runs a ReAct agent loop over a language model and its tools.",
-        "icon": "Bot",
-        "accent": "port-LanguageModel"
-      },
-      "fields": [
-        {
-          "id": "signalDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Signal Dependency",
-          "tooltip": "Determines how incoming signals are evaluated to trigger node execution.",
-          "variant": "MultiOption",
-          "initialValue": "OR",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "(AND) All signals required",
-              "description": "Fire only once every upstream signal has arrived."
-            },
-            {
-              "value": "OR",
-              "displayName": "(OR) At least one signal required",
-              "description": "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)."
-            },
-            {
-              "value": "XOR",
-              "displayName": "(XOR) Exactly one signal required",
-              "description": "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "dataDependency",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "Data Dependency",
-          "tooltip": "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
-          "variant": "MultiOption",
-          "initialValue": "AND",
-          "options": [
-            {
-              "value": "AND",
-              "displayName": "Wait & Join",
-              "description": "Wait until every wired input port has resolved, then read all of them."
-            },
-            {
-              "value": "OR",
-              "displayName": "Follow Trigger",
-              "description": "Don't wait — read only the input port(s) that propagated the triggering signal."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "onErrorStrategy",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "displayName": "On Error",
-          "tooltip": "What happens when this node's execution throws.",
-          "variant": "MultiOption",
-          "initialValue": "propagate",
-          "options": [
-            {
-              "value": "terminate",
-              "displayName": "Terminate workflow",
-              "description": "Fail the whole run."
-            },
-            {
-              "value": "propagate",
-              "displayName": "Propagate error",
-              "description": "Forward the error along outgoing edges."
-            },
-            {
-              "value": "do_nothing",
-              "displayName": "Do nothing",
-              "description": "Swallow the error — no signal, no termination. Downstream stalls."
-            }
-          ],
-          "kind": "select"
-        },
-        {
-          "id": "output_all_messages",
-          "variant": "Boolean",
-          "advanced": false,
-          "required": false,
-          "reconcile": false,
-          "description": "",
-          "displayName": "Output All Messages",
-          "initialValue": false
-        }
-      ],
-      "inputs": [
-        {
-          "id": "language_model",
-          "displayName": "Language Model",
-          "variant": "LanguageModel",
-          "required": true
-        },
-        {
-          "id": "tools",
-          "displayName": "Tools",
-          "variant": "ToolList",
-          "required": false
-        },
-        {
-          "id": "input_message",
-          "displayName": "Messages",
-          "variant": "MessageList",
-          "required": true
-        }
-      ],
-      "outputs": [
-        {
-          "id": "Core.SubWorkflow.ExposeOutputPort-cfa4s",
-          "displayName": "Output",
-          "variant": "MessageList"
-        }
-      ],
-      "dependencyRef": {
-        "workflowId": "b993f175-a07e-4d6e-bbdc-700ffb6b83a0",
         "mode": "publication"
       }
     }
