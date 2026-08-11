@@ -190,7 +190,7 @@ export class ExecutionService {
 
         const started = await this.realtime.awaitEvent(
             Execution.Event.getChannel(executionId),
-            'started',
+            'lifecycle:started',
             10_000
         );
 
@@ -233,7 +233,7 @@ export class ExecutionService {
         const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Pause>(
             { channel: Execution.Signal.getChannel(executionId), type: 'pause', executionId },
             Execution.Event.getChannel(executionId),
-            'paused',
+            'lifecycle:paused',
         );
 
         if (success) await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'paused' }));
@@ -254,7 +254,7 @@ export class ExecutionService {
         const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Resume>(
             { channel: Execution.Signal.getChannel(executionId), type: 'resume', executionId },
             Execution.Event.getChannel(executionId),
-            'resumed',
+            'lifecycle:resumed',
         );
 
         if (success) await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'running' }));
@@ -296,7 +296,7 @@ export class ExecutionService {
         const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Suspend>(
             { channel: Execution.Signal.getChannel(executionId), type: 'suspend', executionId },
             Execution.Event.getChannel(executionId),
-            'suspended',
+            'lifecycle:suspended',
         );
 
         if (success) await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'suspended' }));
@@ -317,7 +317,7 @@ export class ExecutionService {
         const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Terminate>(
             { channel: Execution.Signal.getChannel(executionId), type: 'terminate', executionId },
             Execution.Event.getChannel(executionId),
-            'terminated',
+            'lifecycle:terminated',
         );
 
         if (success) await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'terminated' }));

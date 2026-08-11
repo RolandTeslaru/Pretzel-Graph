@@ -35,7 +35,7 @@ export class PropagationService {
         for (const edge of edges)
             this.engine.services.scheduler.signalNode(ctx, edge.target.nodeId, nodeId);
 
-        ctx.realtimeAPI.emit(Execution.Event.create("patch", {
+        ctx.realtimeAPI.emit(Execution.Event.create("session:patch", {
             sessionPatch: {
                 upsert: { edge_state: edgeStateUpdate },
             },
@@ -71,7 +71,7 @@ export class PropagationService {
             this.engine.services.scheduler.signalNode(ctx, edge.target.nodeId, nodeId);
         }
 
-        ctx.realtimeAPI.emit(Execution.Event.create("patch", {
+        ctx.realtimeAPI.emit(Execution.Event.create("session:patch", {
             sessionPatch: {
                 upsert: { edge_state: edgeStateUpdate },
             },

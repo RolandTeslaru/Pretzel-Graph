@@ -183,7 +183,7 @@ export class ErrorService {
             ctx, edgeIdMap, "waiting", s => { s.runCount += 1; },
         );
 
-        ctx.realtimeAPI.emit(Execution.Event.create("patch", {
+        ctx.realtimeAPI.emit(Execution.Event.create("session:patch", {
             sessionPatch: { upsert: { edge_state: edgeStateUpdate } },
         }));
 
