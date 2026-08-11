@@ -69,6 +69,9 @@ export class ChatService {
         payload: Chat.API.Erase.Request
     ): Promise<Chat.API.Erase.Response> {
         await DB.asUser(principal, (trx) => this.database.chat.erase(trx, principal.userId, payload.chatId));
+
+        this.ownership.invalidate(payload.chatId);
+
         return {};
     }
 

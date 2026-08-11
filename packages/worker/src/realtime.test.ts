@@ -33,12 +33,12 @@ const createScope = () => {
     return { scope, published, isClosed: () => closed };
 };
 
-const respondedTo = (consultationId: Consultation.Id) => JSON.stringify({
+const answerFor = (consultationId: Consultation.Id) => JSON.stringify({
     channel:        SIGNAL_CHANNEL,
-    type:           "consultation:responded",
+    type:           "consultation:answer",
     executionId:    EXECUTION_ID,
     consultationId,
-    resolution:     { requestId: consultationId, variant: "test" },
+    answer:         { requestId: consultationId, variant: "test" },
 });
 
 const terminate = () => JSON.stringify({
@@ -61,7 +61,7 @@ test("a signal for another domain leaves a parked waiter alone", async () => {
     const { scope } = createScope();
 
     const parked = scope.awaitSignal(
-        Consultation.Signal.Responded,
+        Consultation.Signal.Answer,
         signal => signal.consultationId === CONSULTATION_A,
         60_000,
     );
@@ -74,7 +74,7 @@ test("a signal for another domain leaves a parked waiter alone", async () => {
     // both failed the node and tore down the subscription the real reply needed.
     assert.equal(state(), "pending");
 
-    scope.dispatch(respondedTo(CONSULTATION_A));
+    scope.dispatch(answerFor(CONSULTATION_A));
 
     const signal = await parked;
     assert.equal(signal.consultationId, CONSULTATION_A);
@@ -85,19 +85,19 @@ test("a same-type signal for another consultation does not resolve the waiter", 
     const { scope } = createScope();
 
     const parked = scope.awaitSignal(
-        Consultation.Signal.Responded,
+        Consultation.Signal.Answer,
         signal => signal.consultationId === CONSULTATION_A,
         60_000,
     );
     const state = settled(parked);
 
-    scope.dispatch(respondedTo(CONSULTATION_B));
+    scope.dispatch(answerFor(CONSULTATION_B));
     await flush();
 
     // Previously: the type matched, nothing compared the id, and B's answer resumed A.
     assert.equal(state(), "pending");
 
-    scope.dispatch(respondedTo(CONSULTATION_A));
+    scope.dispatch(answerFor(CONSULTATION_A));
     assert.equal((await parked).consultationId, CONSULTATION_A);
 });
 
@@ -105,10 +105,10 @@ test("a same-type signal for another consultation does not resolve the waiter", 
 test("a matching signal resolves every waiter that matches it", async () => {
     const { scope } = createScope();
 
-    const first  = scope.awaitSignal(Consultation.Signal.Responded, s => s.consultationId === CONSULTATION_A, 60_000);
-    const second = scope.awaitSignal(Consultation.Signal.Responded, s => s.consultationId === CONSULTATION_A, 60_000);
+    const first  = scope.awaitSignal(Consultation.Signal.Answer, s => s.consultationId === CONSULTATION_A, 60_000);
+    const second = scope.awaitSignal(Consultation.Signal.Answer, s => s.consultationId === CONSULTATION_A, 60_000);
 
-    scope.dispatch(respondedTo(CONSULTATION_A));
+    scope.dispatch(answerFor(CONSULTATION_A));
 
     assert.equal((await first).consultationId,  CONSULTATION_A);
     assert.equal((await second).consultationId, CONSULTATION_A);
@@ -122,7 +122,7 @@ test("onSignal receives the lifecycle union and nothing else", async () => {
     const off = scope.onSignal(Execution.Signal.Schema, signal => { seen.push(signal.type) });
 
     scope.dispatch(terminate());
-    scope.dispatch(respondedTo(CONSULTATION_A));
+    scope.dispatch(answerFor(CONSULTATION_A));
 
     assert.deepEqual(seen, ["terminate"]);
 
@@ -136,15 +136,15 @@ test("onSignal receives the lifecycle union and nothing else", async () => {
 test("a signal addressed to another execution is ignored", async () => {
     const { scope } = createScope();
 
-    const parked = scope.awaitSignal(Consultation.Signal.Responded, () => true, 60_000);
+    const parked = scope.awaitSignal(Consultation.Signal.Answer, () => true, 60_000);
     const state = settled(parked);
 
     scope.dispatch(JSON.stringify({
         channel:        SIGNAL_CHANNEL,
-        type:           "consultation:responded",
+        type:           "consultation:answer",
         executionId:    "55555555-5555-4555-8555-555555555555",
         consultationId: CONSULTATION_A,
-        consultationResolution: { requestId: CONSULTATION_A, variant: "test" },
+        answer:                 { requestId: CONSULTATION_A, variant: "test" },
     }));
     await flush();
 
@@ -157,10 +157,10 @@ test("awaitSignalAfter registers before the action runs", async () => {
 
     // An action that answers instantly — the case a plain emit-then-await would lose.
     const parked = scope.awaitSignalAfter(
-        Consultation.Signal.Responded,
+        Consultation.Signal.Answer,
         signal => signal.consultationId === CONSULTATION_A,
         60_000,
-        () => { scope.dispatch(respondedTo(CONSULTATION_A)) },
+        () => { scope.dispatch(answerFor(CONSULTATION_A)) },
     );
 
     assert.equal((await parked).consultationId, CONSULTATION_A);
@@ -173,12 +173,12 @@ test("awaitSignalAfter unregisters when the action throws", async () => {
     const failure = new Error("register failed");
 
     await assert.rejects(
-        scope.awaitSignalAfter(Consultation.Signal.Responded, () => true, 60_000, () => { throw failure }),
+        scope.awaitSignalAfter(Consultation.Signal.Answer, () => true, 60_000, () => { throw failure }),
         (error: unknown) => error === failure,
     );
 
     // The failed park must not still be listening, or a later reply resolves a dead waiter.
-    scope.dispatch(respondedTo(CONSULTATION_A));
+    scope.dispatch(answerFor(CONSULTATION_A));
 });
 
 
@@ -202,14 +202,14 @@ test("emit stamps the addressing fields from the bound execution", () => {
 test("close rejects whatever is still parked and unsubscribes once", async () => {
     const { scope, isClosed } = createScope();
 
-    const parked = scope.awaitSignal(Consultation.Signal.Responded, () => true, 60_000);
+    const parked = scope.awaitSignal(Consultation.Signal.Answer, () => true, 60_000);
 
     scope.close();
 
     await assert.rejects(parked);
     assert.ok(isClosed());
 
-    await assert.rejects(scope.awaitSignal(Consultation.Signal.Responded, () => true, 60_000));
+    await assert.rejects(scope.awaitSignal(Consultation.Signal.Answer, () => true, 60_000));
 });
 
 
@@ -219,12 +219,12 @@ test("withAbort rejects parks bound to a signal that fires", async () => {
     const controller = new AbortController();
     const api = scope.withAbort(controller.signal);
 
-    const parked = api.awaitSignal(Consultation.Signal.Responded, () => true, 60_000);
+    const parked = api.awaitSignal(Consultation.Signal.Answer, () => true, 60_000);
 
     controller.abort(new Error("terminated"));
 
     await assert.rejects(parked);
 
     // The abort must have cleaned the registration up, not just settled the promise.
-    scope.dispatch(respondedTo(CONSULTATION_A));
+    scope.dispatch(answerFor(CONSULTATION_A));
 });

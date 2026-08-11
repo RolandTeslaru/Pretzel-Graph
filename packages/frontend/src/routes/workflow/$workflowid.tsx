@@ -215,7 +215,6 @@ function WorkflowLayoutComponent() {
                     <StackSDK.UIOverlay />
                     <BottomLeftPanel />
                     <ConsultationSDK.UIOverlay/>
-                    <ConsultationDebugPanel />
                 </div>
                 {/* Drawer — always mounted, height animates between 0 and open height */}
 

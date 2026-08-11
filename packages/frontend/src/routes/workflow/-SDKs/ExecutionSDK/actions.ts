@@ -208,16 +208,15 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             // User → engine. The route only returns once the worker has consumed the answer
             // and un-parked, so success means the card is genuinely done. Dropping it here is
             // an optimistic head start on the patch that clears it anyway.
-            respond: async (consultationId, resolution) => {
+            answer: async (consultationId, answer) => {
                 const executionId = sdk.state.currentExecution?.id;
 
                 if (!executionId) return false;
 
                 try {
-                    const { success } = await Consultation.API.humanResponded(api, {
-                        executionId,
+                    const { success } = await Consultation.API.answer(api, executionId, {
                         consultationId,
-                        resolution,
+                        answer,
                     });
 
                     if (success)
@@ -273,7 +272,7 @@ export type ExecutionSDKActions = {
         add:     DropFirstArg<ExecutionSDK.Reducers["currentExecution"]["pendingConsultations"]["add"]>,
         remove:  DropFirstArg<ExecutionSDK.Reducers["currentExecution"]["pendingConsultations"]["remove"]>,
         clear:   DropFirstArg<ExecutionSDK.Reducers["currentExecution"]["pendingConsultations"]["clear"]>,
-        respond: <R extends Consultation.Resolution>(consultationId: Consultation.Id, resolution: R) => Promise<boolean>,
+        answer: <A extends Consultation.Answer>(consultationId: Consultation.Id, answer: A) => Promise<boolean>,
     },
 
     igniter: {

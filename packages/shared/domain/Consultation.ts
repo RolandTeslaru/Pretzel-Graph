@@ -27,7 +27,7 @@ export namespace Consultation {
     export const variant = <const T extends string>(tag: T) => tag as T & Variant
     
     /**
-     * Loose, not strict: this base travels as the declared type of `Signal.Responded.resolution`
+     * Loose, not strict: this base travels as the declared type of `Signal.Answer.answer`
      * and `Session.pending_consultations`, so a strict object would silently strip whatever the
      * extending domain added — the very fields that make the consultation meaningful. Extras
      * survive the base-typed hop and are validated by the variant schema at each end.
@@ -44,12 +44,13 @@ export namespace Consultation {
     })
     export type Request = z.infer<typeof Request>
 
-    /** Loose for the same reason as Request — see the note there. */
-    export const Resolution = z.looseObject({
+    /** The message a human or external caller sends back. Loose for the same reason as
+     *  Request — see the note there. */
+    export const Answer = z.looseObject({
         requestId: Consultation.Id,
         variant: Variant
     })
-    export type Resolution = z.infer<typeof Resolution>
+    export type Answer = z.infer<typeof Answer>
 
 
 
@@ -58,8 +59,9 @@ export namespace Consultation {
     // the channel is shared. See Execution/event-base.
     export namespace Event {
 
-        // Engine consumed an answer and un-parked. Purely an acknowledgement — the card is
-        // already gone via the session patch that clears pending_consultations.
+        // The consultation reached its terminal state: the answer parsed, the node un-parked.
+        // Purely an acknowledgement — the card is already gone via the session patch that
+        // clears pending_consultations.
         export const Resolved = ExecutionEvent.Base.extend({
             type:           z.literal("consultation:resolved"),
             consultationId: Consultation.Id,
@@ -84,13 +86,13 @@ export namespace Consultation {
             consultationId: Consultation.Id
         })
 
-        export const Responded = Base.extend({
-            type: z.literal("consultation:responded"),
-            resolution: Consultation.Resolution
+        export const Answer = Base.extend({
+            type: z.literal("consultation:answer"),
+            answer: Consultation.Answer
         })
-        export type Responded = z.infer<typeof Responded>
+        export type Answer = z.infer<typeof Answer>
 
-        export const Schema = z.discriminatedUnion("type", [Responded])
+        export const Schema = z.discriminatedUnion("type", [Answer])
     }
     export type Signal = z.infer<typeof Signal.Schema>
 
@@ -98,16 +100,18 @@ export namespace Consultation {
 
     // ─── API ────────────────────────────────────────────────────────────────
     // Frontend → backend HTTP. The browser never touches Redis; the authed route below
-    // verifies execution ownership then publishes the HumanResponded signal upstream.
+    // verifies execution ownership then publishes the Answer signal upstream.
     export namespace API {
 
-        // Named HumanResponded (the upstream user→engine action), NOT Resolved — Event.Resolved
-        // is the DOWNSTREAM confirmation the worker emits after it consumes this signal.
-        export namespace HumanResponded {
-            export const Request = z.object({
-                executionId:    ExecutionId,
+        // The upstream user→engine message. Event.Resolved is the DOWNSTREAM confirmation the
+        // worker emits once it has consumed this and un-parked.
+        // executionId is the authorization boundary, so it travels in the path and the route's
+        // scope guard proves ownership before the handler runs. Strict so a stale client still
+        // sending it in the body is rejected outright rather than silently stripped.
+        export namespace Answer {
+            export const Request = z.strictObject({
                 consultationId: Consultation.Id,
-                resolution:     Consultation.Resolution,
+                answer:         Consultation.Answer,
             })
             export type Request = z.infer<typeof Request>
 
@@ -115,8 +119,12 @@ export namespace Consultation {
             export type Response = z.infer<typeof Response>
         }
 
-        export async function humanResponded(api: AxiosInstance, req: HumanResponded.Request): Promise<HumanResponded.Response> {
-            const { data } = await api.post<HumanResponded.Response>('/api/consultation/respond', req)
+        export async function answer(
+            api:         AxiosInstance,
+            executionId: ExecutionId,
+            req:         Answer.Request,
+        ): Promise<Answer.Response> {
+            const { data } = await api.post<Answer.Response>(`/api/consultation/${executionId}/answer`, req)
             return data
         }
     }
