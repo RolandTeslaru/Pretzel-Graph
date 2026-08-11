@@ -37,17 +37,20 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     }
 
 
+    // Registering the route is what invites the reply, so it runs inside awaitSignalAfter —
+    // the waiter is already in place when the first message can arrive.
     private async waitForMessage(){
         const { workflowId } = this.context;
 
-        await Webhook.Test.API.register(this.context.internalAPI.raw, { workflowId, path: Node.WEBHOOK_PATH, method: "POST" });
-
-        const signal = await this.context.realtimeAPI.awaitSignal(
-            // @ts-expect-error TODO: Chat.Signal not defined yet
-            Chat.Signal.MessageSent.getChannel(this.context.executionId),
+        const signal = await this.context.realtimeAPI.awaitSignalAfter(
             // @ts-expect-error TODO: Chat.Signal not defined yet
             Chat.Signal.MessageSent.Schema,
-            Node.WEBHOOK_TIMEOUT
+            () => true,
+            Node.WEBHOOK_TIMEOUT,
+            () => Webhook.Test.API.register(
+                this.context.internalAPI.raw,
+                { workflowId, path: Node.WEBHOOK_PATH, method: "POST" },
+            ).then(() => {}),
         )
 
         return new HumanMessage({

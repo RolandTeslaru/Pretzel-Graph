@@ -33,14 +33,21 @@ export class RealtimeService implements OnModuleDestroy {
     public awaitEvent(
         eventChannel: Realtime.Channel,
         eventType: string,
-        timeoutMs: number = 5000
+        timeoutMs: number = 5000,
+        match?: (event: Realtime.Event) => boolean,
     ): Promise<boolean> {
-        
+
         return new Promise<boolean>((resolve) => {
-            
+
             const waiter = (event: Realtime.Event) => {
-                if (event.type !== eventType) 
+                if (event.type !== eventType)
                     return;
+
+                // Type alone isn't always enough to identify the reply — e.g. session patches
+                // all share one type, so the caller narrows by payload.
+                if (match && !match(event))
+                    return;
+
                 clearTimeout(timeout);
                 cleanup();
                 resolve(true);
@@ -81,13 +88,14 @@ export class RealtimeService implements OnModuleDestroy {
     // Send a signal then await the worker's confirmation event. Registers the waiter BEFORE
     // emitting so a fast reply can't land before we're listening. Resolves true if confirmed,
     // false on timeout. Mirror of the worker's emitAndAwaitSignal.
-    public signalAndAwaitEvent<Sig extends Realtime.Signal>(
-        signal:       Sig,
+    public signalAndAwaitEvent<S extends Realtime.Signal>(
+        signal:       S,
         eventChannel: Realtime.Channel,
         eventType:    string,
         timeoutMs:    number = 5000,
+        match?:       (event: Realtime.Event) => boolean,
     ): Promise<boolean> {
-        const confirmation = this.awaitEvent(eventChannel, eventType, timeoutMs);
+        const confirmation = this.awaitEvent(eventChannel, eventType, timeoutMs, match);
         this.emitSignal(signal);
         return confirmation;
     }

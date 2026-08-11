@@ -4,6 +4,10 @@ import { ExecutionId } from "./ids"
 
 // ─── Signals ──────────────────────────────────────────────────────────────
 // Single signal channel per execution: execution:<executionId>:signal
+//
+// Every execution-scoped domain extends Base and travels on this one channel —
+// see Consultation.Signal. This union stays Execution's own lifecycle signals.
+// Already a leaf, so the domains extending it need no split.
 
 export namespace Signal {
     export const Channel = Realtime.Channel.brand("Execution.Signal.Channel")
@@ -12,7 +16,11 @@ export namespace Signal {
     export const getChannel = (executionId: ExecutionId) =>
         `execution:${executionId}:signal` as Channel
 
-    const Base = Realtime.Signal.Base.extend({ executionId: ExecutionId })
+    export const Base = Realtime.Signal.Base.extend({
+        channel:     Channel,
+        executionId: ExecutionId,
+    })
+    export type Base = z.infer<typeof Base>
 
     export const Terminate = Base.extend({ type: z.literal("terminate") })
     export const Pause     = Base.extend({ type: z.literal("pause") })

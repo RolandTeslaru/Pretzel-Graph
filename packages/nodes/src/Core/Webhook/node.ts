@@ -45,21 +45,32 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         };
     }
 
+    // Registering the route and announcing readiness both invite the payload, so they run
+    // inside awaitSignalAfter — the waiter exists before either can be answered.
+    //
+    // This wait cannot currently be satisfied: the webhook server publishes its resolve
+    // signal from reg.workflowId, and its registry holds no executionId to address a parked
+    // node with. See SPECS/execution-signal-router.md, Out of Scope.
     private async waitForTestPayload(): Promise<Webhook.Payload> {
         const { workflowId } = this.context;
 
         const path   = this.fieldValues.path   as Webhook.Path;
         const method = this.fieldValues.method as Webhook.Method;
 
-        console.log(`[WebhookNode] Registering test webhook [${method}] /${workflowId}/${path}`);
-        await Webhook.Test.API.register(this.context.internalAPI.raw, { workflowId, path, method });
-        console.log(`[WebhookNode] Waiting for test payload on channel=${Webhook.Test.ResolveSignal.getChannel(this.context.executionId)}`);
+        const signal = await this.context.realtimeAPI.awaitSignalAfter(
+            Webhook.Test.Signal.ResolvePayload,
+            resolvePayload => resolvePayload.ignitedNodeId === this.nodeId,
+            TEST_WAIT_MS,
+            async () => {
+                await Webhook.Test.API.register(this.context.internalAPI.raw, { workflowId, path, method });
 
-        const signal = await this.context.realtimeAPI.awaitSignal(
-            Webhook.Test.ResolveSignal.getChannel(this.context.executionId),
-            Webhook.Test.ResolveSignal.Schema,
-            TEST_WAIT_MS
-        );
+                this.context.realtimeAPI.emit(Webhook.Test.Event.create("ready_to_receive", {
+                    ignitedNodeId: this.nodeId,
+                    timeout:       TEST_WAIT_MS,
+                    createdAt:     Date.now(),
+                }));
+            },
+        )
 
         console.log(`[WebhookNode] Received test payload`);
         return signal.payload;
