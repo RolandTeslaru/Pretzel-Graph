@@ -36,7 +36,7 @@ sequenceDiagram
     autonumber
     participant N as RuntimeNode
     participant C as consultationAPI
-    participant S as Session
+    participant S as Worker session
     participant R as Redis
     participant API as Backend route
     participant E as ExecutionSDK
@@ -79,16 +79,22 @@ sequenceDiagram
 ### 1. A node asks
 
 ```ts
-const answer = await this.context.consultationAPI.consult(
-    HumanReview.Request.Confirm,   // request schema — parsed here
-    { nodeId: this.nodeId, variant: HumanReview.Variant.Confirm, timeoutMs, ... },
-    HumanReview.Answer.Confirm     // answer schema — the reply is validated against it
-);
+const answer = await this.context.consultationAPI.consult({
+    requestSchema: HumanReview.Request.Confirm,  // parses the stamped request
+    answerSchema:  HumanReview.Answer.Confirm,   // validates the reply
+    request: { nodeId: this.nodeId, variant: HumanReview.Variant.Confirm, timeoutMs, ... },
+    onOpen: request => { /* optional — see below */ },
+});
 ```
 
 `consult` stamps `id` and `startedAt` itself, so the node passes neither
-(`UnstampedConsultationRequest` omits them from the argument type). The request schema is a
-parameter rather than a fixed type, so each domain keeps its own fields all the way through.
+(`UnstampedConsultationRequest` omits them from the argument type). The schemas are parameters
+rather than fixed types, so each domain keeps its own fields all the way through.
+
+`onOpen` runs inside the armed window with the stamped request in hand. Anything that *invites*
+the answer belongs there rather than before the call — registering an inbound route, pinging an
+external system — so it cannot be satisfied before there is somewhere for the reply to land.
+`webhook-test-flow.md` is the worked example.
 
 ### 2. The waiter is armed before the request is announced
 
@@ -102,6 +108,14 @@ The `action` does two things:
 2. emits `Execution.Event.create("session:patch", { sessionPatch: { upsert: { pending_consultations: { [id]: request } } } })`
 
 The session write is what makes the consultation durable; the event is what makes it immediate.
+
+Worth being precise about which session that is. `updateSession` is an immer produce over an object
+held **in memory by the running worker**, per execution. The browser keeps its own copy, rebuilt
+from patches — two copies kept in step by a message, not one state with two readers. And the
+worker's copy only reaches the database at run end (`worker.ts:177` and `:205`, the terminal and
+failure paths), so mid-run it is the sole authoritative version: the browser's is a projection and
+the stored row is stale. That is why a mid-run reload rebuilds the stack from what the event stream
+already delivered rather than fetching it.
 
 ### 3. The browser projects it
 

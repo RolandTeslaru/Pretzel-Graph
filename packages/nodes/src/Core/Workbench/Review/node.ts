@@ -32,16 +32,16 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         switch (fields.variant) {
 
             case "confirm": {
-                const answer = await consult(
-                    HumanReview.Request.Confirm,
-                    {
+                const answer = await consult({
+                    requestSchema: HumanReview.Request.Confirm,
+                    answerSchema:  HumanReview.Answer.Confirm,
+                    request: {
                         ...base,
                         variant:      HumanReview.Variant.Confirm,
                         approveLabel: fields.approveLabel,
                         rejectLabel:  fields.rejectLabel,
                     },
-                    HumanReview.Answer.Confirm,
-                );
+                });
 
                 return (
                     answer.approved
@@ -51,9 +51,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             }
 
             case "choice": {
-                const answer = await consult(
-                    HumanReview.Request.Choice,
-                    {
+                const answer = await consult({
+                    requestSchema: HumanReview.Request.Choice,
+                    answerSchema:  HumanReview.Answer.Choice,
+                    request: {
                         ...base,
                         variant:     HumanReview.Variant.Choice,
                         // Json-backed blueprint field — consult parses it on the way in.
@@ -61,8 +62,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                         multiple:    fields.multiple,
                         allowCustom: fields.allowCustom,
                     },
-                    HumanReview.Answer.Choice,
-                );
+                });
 
                 return {
                     value: answer.values,
@@ -70,16 +70,16 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             }
 
             case "form": {
-                const answer = await consult(
-                    HumanReview.Request.Form,
-                    {
+                const answer = await consult({
+                    requestSchema: HumanReview.Request.Form,
+                    answerSchema:  HumanReview.Answer.Form,
+                    request: {
                         ...base,
                         variant: HumanReview.Variant.Form,
                         // Json-backed blueprint field — consult parses it on the way in.
                         fields:  fields.formFields as z.input<typeof HumanReview.Request.Form>["fields"],
                     },
-                    HumanReview.Answer.Form,
-                );
+                });
 
                 return {
                     values: answer.values,

@@ -6,7 +6,7 @@ import { Scoped } from '../../auth/scoped.decorator';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { ChatIdParam, WorkflowIdParam } from '@/decorators/scope';
 import { Principal } from '@/domain/Principal';
-import { ZodBody } from '../../pipes/zod.pipe';
+import { ZodBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 
 @Controller('chat')
 @UseGuards(UserAuthGuard)

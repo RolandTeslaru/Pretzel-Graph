@@ -49,7 +49,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             Node.WEBHOOK_TIMEOUT,
             () => Webhook.Test.API.register(
                 this.context.internalAPI.raw,
-                { workflowId, path: Node.WEBHOOK_PATH, method: "POST" },
+                { workflowId, path: Node.WEBHOOK_PATH, method: "POST", timeoutMs: Node.WEBHOOK_TIMEOUT },
             ).then(() => {}),
         )
 

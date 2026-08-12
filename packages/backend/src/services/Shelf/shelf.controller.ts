@@ -2,7 +2,7 @@ import { Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
 import { ShelfService } from './shelf.service';
 import { Shelf } from '@pretzel-graph/shared/domain';
 import { UserAuthGuard } from '../../auth/user-auth.guard';
-import { ZodBody } from '../../pipes/zod.pipe';
+import { ZodBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 
 @Controller('shelf')
 @UseGuards(UserAuthGuard)

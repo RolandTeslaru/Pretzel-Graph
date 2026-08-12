@@ -5,7 +5,7 @@ import { AuthenticatedDelegate } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
 import { ChatDatabase } from './chat.database';
-import { ZodBody } from '../../pipes/zod.pipe';
+import { ZodBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 import { PermissionService } from '../Permission/permission.service';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { z } from 'zod';
