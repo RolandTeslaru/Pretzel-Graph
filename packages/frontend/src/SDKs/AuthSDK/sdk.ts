@@ -72,6 +72,8 @@ export namespace AuthSDK {
     logout: () => Promise<boolean>
     signup: (props: { email: string, password: string, username: string, displayName: string }) => Promise<boolean>
     syncUser: (userId: Auth.User.Id) => Promise<void>
+    // Throws on failure so callers can map a 409 onto the offending form field.
+    updateMe: (props: Auth.API.Me.Update.Request) => Promise<Auth.User>
   }
 }
 
