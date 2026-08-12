@@ -8,23 +8,14 @@ import { Auth, Chat, Execution } from "@pretzel-graph/shared/domain";
 import { createAuthenticatedClient, getUserId } from '../../utils/supabase';
 import { PermissionService } from '../Permission/permission.service';
 
-const OWNERSHIP_CACHE_TTL_MS = 30_000;
-
 interface SocketIdentity {
     userId: Auth.User.Id;
-}
-
-interface CacheEntry {
-    allowed: boolean;
-    expiresAt: number;
 }
 
 @WebSocketGateway()
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 
-    // Cache key: "userId:channel" -> allowed/denied + TTL
-    private ownershipCache = new Map<string, CacheEntry>();
     private wsSubscriptions = new Map<Realtime.Channel, Set<WebSocket>>();
     private socketIdentities = new WeakMap<WebSocket, SocketIdentity>();
 
@@ -114,23 +105,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         });
     }
 
+    /**
+     * No cache here. PermissionService caches resource → owner, and the owned/denied verdict
+     * is derived from that live — so a denial is a cache hit too, and the entries are shared
+     * with the HTTP routes instead of being duplicated per (user, channel) pair.
+     */
     private async verifyChannelOwnership(userId: Auth.User.Id, channel: Realtime.Channel): Promise<boolean> {
-        const cacheKey = `${userId}:${channel}`;
-        const cached = this.ownershipCache.get(cacheKey);
-        if (cached && cached.expiresAt > Date.now()) {
-            return cached.allowed;
-        }
-
         const result = await this.queryOwnership(userId, channel);
-        // Only cache when the resource was found (owned or denied).
-        // Don't cache not-found — frontend subscribes preemptively before resource creation.
-        if (result !== 'not_found') {
-            const cacheEntry: CacheEntry = {
-                allowed: result === 'owned',
-                expiresAt: Date.now() + OWNERSHIP_CACHE_TTL_MS
-            }
-            this.ownershipCache.set(cacheKey, cacheEntry);
-        }
         return result !== 'denied';
     }
 

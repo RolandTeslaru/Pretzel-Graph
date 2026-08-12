@@ -165,7 +165,7 @@ function ExecutionsRoute() {
 function ExecutionsTable({ workflowId }: { workflowId: Workflow.Id }) {
     const { data, isPending, isError } = QuerySDK.useQuery(
         ['executions', 'meta', workflowId],
-        () => Execution.API.Meta.list(api, { workflowId }),
+        () => Execution.API.Meta.list(api, workflowId),
     )
 
     const executions = useMemo(() => data?.executions ?? [], [data])

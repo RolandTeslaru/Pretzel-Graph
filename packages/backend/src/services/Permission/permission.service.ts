@@ -2,53 +2,58 @@ import { DB } from '@/db';
 import { Injectable } from "@nestjs/common";
 import { Auth, Chat, Execution, SystemError, Workflow } from "@pretzel-graph/shared/domain";
 import { Principal } from "@/domain/Principal";
+import { TtlCache } from "./ttl-cache";
 
 
-const OWNERSHIP_CACHE_TTL_MS = 5 * 60_000   // 5 min — ownership rarely changes in a single-owner model
-const OWNERSHIP_CACHE_MAX = 10_000
+const MINUTE = 60_000
+const HOUR   = 60 * MINUTE
+
+/**
+ * Ownership is immutable in a single-owner model, so a TTL is not guarding against the owner
+ * changing — it is a backstop for a row that disappeared without `invalidate` being called
+ * (an RLS-direct delete from the client, say). Deletes routed through the backend evict
+ * explicitly, so these can be generous.
+ *
+ * They differ by how long the resource itself stays interesting. A workflow is edited and
+ * run over days; an execution or a chat is addressed heavily for a few minutes and then
+ * effectively never again, so a long TTL there buys nothing and holds memory.
+ */
+const WORKFLOW_TTL_MS  = 24 * HOUR
+const EXECUTION_TTL_MS = 20 * MINUTE
+const CHAT_TTL_MS      = 20 * MINUTE
+
+const WORKFLOW_CACHE_MAX  = 5_000
+const EXECUTION_CACHE_MAX = 5_000   // lower: each entry carries an igniter, whose size is whatever ignited the run
+const CHAT_CACHE_MAX      = 10_000
+
+type WorkflowScope  = { ownerId: Auth.User.Id }
+type ChatScope      = { ownerId: Auth.User.Id, workflow_id: Workflow.Id }
+type ExecutionScope = { ownerId: Auth.User.Id, workflowId: Workflow.Id, igniter: Execution.Igniter }
 
 @Injectable()
 export class PermissionService {
 
-    private ownershipCache = new Map<Workflow.Id | Chat.Id | Execution.Id, { ownerId: Auth.User.Id, expiresAt: number }>();
+    // One map per kind. Cache the fact (resource → owner), never the miss: a preemptive
+    // subscribe asks about an execution before its row exists, and must keep re-checking.
+    readonly #cache = {
+        workflows:  new TtlCache<Workflow.Id,  WorkflowScope> (WORKFLOW_TTL_MS,  WORKFLOW_CACHE_MAX),
+        chats:      new TtlCache<Chat.Id,      ChatScope>     (CHAT_TTL_MS,      CHAT_CACHE_MAX),
+        executions: new TtlCache<Execution.Id, ExecutionScope>(EXECUTION_TTL_MS, EXECUTION_CACHE_MAX),
+    };
 
-    private executionContextCache = new Map<Execution.Id, { ownerId: Auth.User.Id, workflowId: Workflow.Id, igniter: Execution.Igniter, expiresAt: number }>();
-
-    // Cache the fact (resource → owner), never the miss. Compare against the requester live.
-    private cacheOwner(id: Workflow.Id | Chat.Id | Execution.Id, ownerId: Auth.User.Id) {
-        if (this.ownershipCache.size >= OWNERSHIP_CACHE_MAX)
-            this.pruneExpired();
-        
-        this.ownershipCache.set(id, { 
-            ownerId, 
-            expiresAt: Date.now() + OWNERSHIP_CACHE_TTL_MS 
-        });
-    }
-
-    private getCachedOwner(id: Workflow.Id | Chat.Id | Execution.Id): Auth.User.Id | undefined {
-        const hit = this.ownershipCache.get(id);
-        if (!hit)
-            return undefined;
-
-        if (hit.expiresAt <= Date.now()) {
-            this.ownershipCache.delete(id);
-            return undefined;
-        }
-
-        return hit.ownerId;
-    }
-
-    private pruneExpired() {
-        const now = Date.now();
-
-        for (const [key, entry] of this.ownershipCache)
-            if (entry.expiresAt <= now)
-                this.ownershipCache.delete(key);
-
-        for (const [key, entry] of this.executionContextCache)
-            if (entry.expiresAt <= now)
-                this.executionContextCache.delete(key);
-    }
+    /**
+     * Drop a resource the backend just deleted. Call it after the delete commits — the cached
+     * owner is otherwise correct until the TTL, and would keep authorizing routes for a row
+     * that no longer exists.
+     *
+     * Keyed by kind rather than taking a bare id: the three id types are all branded uuids,
+     * so a single entry point cannot tell which map a caller meant.
+     */
+    public readonly invalidate = {
+        workflow:  (id: Workflow.Id)  => this.#cache.workflows.delete(id),
+        chat:      (id: Chat.Id)      => this.#cache.chats.delete(id),
+        execution: (id: Execution.Id) => this.#cache.executions.delete(id),
+    };
 
 
     public async assertWorkflow(
@@ -136,9 +141,9 @@ export class PermissionService {
         workflowId: Workflow.Id
     ): Promise<Auth.User.Id> {
 
-        const cached = this.getCachedOwner(workflowId);
+        const cached = this.#cache.workflows.get(workflowId);
         if (cached)
-            return cached;
+            return cached.ownerId;
 
         const row = await DB.asService('load workflow owner', (db) =>
             db
@@ -150,9 +155,36 @@ export class PermissionService {
         if (!row)
             throw new SystemError(SystemError.Code.NOT_FOUND, 'Workflow not found');
 
-        const ownerId = row.user_id;
-        this.cacheOwner(workflowId, ownerId);
-        return ownerId;
+        this.#cache.workflows.set(workflowId, { ownerId: row.user_id });
+        return row.user_id;
+    }
+
+
+    /**
+     * Owner as a scope payload. Distinct from loadWorkflowOwner, which throws on a miss —
+     * ScopedGuard needs the miss and the ownership mismatch to fail identically.
+     */
+    public async loadWorkflowScope(
+        workflowId: Workflow.Id
+    ): Promise<{ ownerId: Auth.User.Id } | null> {
+
+        const cached = this.#cache.workflows.get(workflowId);
+        if (cached)
+            return cached;
+
+        const row = await DB.asService('load workflow scope', (db) =>
+            db
+                .selectFrom('workflows')
+                .select('user_id')
+                .where('id', '=', workflowId)
+                .executeTakeFirst(),
+        );
+        if (!row)
+            return null;
+
+        const scope = { ownerId: row.user_id };
+        this.#cache.workflows.set(workflowId, scope);
+        return scope;
     }
 
 
@@ -172,8 +204,8 @@ export class PermissionService {
     public async loadExecutionContext(
         executionId: Execution.Id
     ): Promise<{ ownerId: Auth.User.Id, workflowId: Workflow.Id, igniter: Execution.Igniter } | null> {
-        const cached = this.executionContextCache.get(executionId);
-        if (cached && cached.expiresAt > Date.now())
+        const cached = this.#cache.executions.get(executionId);
+        if (cached)
             return cached;
 
         const row = await DB.asService('load execution context', (db) =>
@@ -188,11 +220,7 @@ export class PermissionService {
 
         const context = { ownerId: row.user_id, workflowId: row.workflow_id, igniter: row.igniter };
 
-        this.executionContextCache.set(executionId, {
-            ...context,
-            expiresAt: Date.now() + OWNERSHIP_CACHE_TTL_MS,
-        });
-        this.cacheOwner(executionId, context.ownerId);
+        this.#cache.executions.set(executionId, context);
 
         return context;
     }
@@ -221,26 +249,38 @@ export class PermissionService {
     }
 
 
-    public async loadChatOwner(
+    /**
+     * Owner plus the workflow the chat hangs off — the second field is what lets a route
+     * naming both ids verify the chat actually belongs to that workflow.
+     */
+    public async loadChatScope(
         chatId: Chat.Id
-    ): Promise<Auth.User.Id | null> {
-        const cached = this.getCachedOwner(chatId);
+    ): Promise<ChatScope | null> {
+        const cached = this.#cache.chats.get(chatId);
         if (cached)
             return cached;
 
-        const row = await DB.asService('load chat owner', (db) =>
+        const row = await DB.asService('load chat scope', (db) =>
             db
                 .selectFrom('chats')
-                .select('user_id')
+                .select(['user_id', 'workflow_id'])
                 .where('id', '=', chatId)
                 .executeTakeFirst(),
         );
         if (!row)
-            return null;   // never cache the miss
+            return null;
 
-        const ownerId = row.user_id;
-        this.cacheOwner(chatId, ownerId);
-        return ownerId;
+        const scope = { ownerId: row.user_id, workflow_id: row.workflow_id };
+        this.#cache.chats.set(chatId, scope);
+        return scope;
+    }
+
+
+    public async loadChatOwner(
+        chatId: Chat.Id
+    ): Promise<Auth.User.Id | null> {
+        const scope = await this.loadChatScope(chatId);
+        return scope?.ownerId ?? null;
     }
 
 

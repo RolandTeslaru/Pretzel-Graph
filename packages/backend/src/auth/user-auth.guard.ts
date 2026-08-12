@@ -17,6 +17,13 @@ export interface AuthenticatedRequest extends Request {
 export class UserAuthGuard implements CanActivate {
     async canActivate(context: NestExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+
+        // Already authenticated by an outer guard (a controller-level mount, or @Scoped
+        // applying this alongside ScopedGuard). Re-validating means a second network call
+        // to Supabase for the same token.
+        if (request.principal?.type === 'user')
+            return true;
+
         const token = this.extractTokenFromHeader(request);
 
         if (!token) {

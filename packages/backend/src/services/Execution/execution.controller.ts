@@ -1,26 +1,20 @@
 import { Controller, Post, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { ExecutionService } from './execution.service';
-import { Execution } from '@pretzel-graph/shared/domain';
+import { Execution, Workflow } from '@pretzel-graph/shared/domain';
 import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { InternalAuthGuard, InternalAuthenticatedRequest } from '../../auth/internal-auth.guard';
+import { Scoped } from '../../auth/scoped.decorator';
 import { AuthenticatedUser } from '@/decorators/principal';
+import { ExecutionIdParam, WorkflowIdParam } from '@/decorators/scope';
 import { Principal } from '@/domain/Principal';
-import { ZodBody } from '../../pipes/zod.pipe';
+import { ZodBody, ZodParam } from '../../pipes/zod.pipe';
 
 @Controller('execution')
 export class ExecutionController {
     constructor(private readonly executionService: ExecutionService) {}
 
-    @Post('run')
-    @UseGuards(UserAuthGuard)
-    @HttpCode(200)
-    async run(
-        @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Execution.API.Run.Request) body: Execution.API.Run.Request,
-    ) {
-        return this.executionService.runFromUser(principal, body);
-    }
-
+    // Declared before :workflowId/run, which also matches "internal/run" with
+    // workflowId = "internal". Routes resolve in declaration order.
     @Post('internal/run')
     @UseGuards(InternalAuthGuard)
     @HttpCode(200)
@@ -31,54 +25,65 @@ export class ExecutionController {
         return this.executionService.runFromService(body, req.internal.service);
     }
 
-    @Post('pause')
-    @UseGuards(UserAuthGuard)
+    @Post(':workflowId/run')
+    @Scoped('workflow')
+    @HttpCode(200)
+    async run(
+        @AuthenticatedUser() principal: Principal.User,
+        @WorkflowIdParam() workflowId: Workflow.Id,
+        @ZodBody(Execution.API.Run.Request) body: Execution.API.Run.Request,
+    ) {
+        return this.executionService.runFromUser(principal, workflowId, body);
+    }
+
+    @Post(':executionId/pause')
+    @Scoped('execution')
     @HttpCode(200)
     async pause(
         @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Execution.API.Pause.Request) body: Execution.API.Pause.Request,
+        @ExecutionIdParam() executionId: Execution.Id,
     ) {
-        return this.executionService.pause(principal, body);
+        return this.executionService.pause(principal, executionId);
     }
 
-    @Post('resume')
-    @UseGuards(UserAuthGuard)
+    @Post(':executionId/resume')
+    @Scoped('execution')
     @HttpCode(200)
     async resume(
         @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Execution.API.Resume.Request) body: Execution.API.Resume.Request,
+        @ExecutionIdParam() executionId: Execution.Id,
     ) {
-        return this.executionService.resume(principal, body);
+        return this.executionService.resume(principal, executionId);
     }
 
-    @Post('heartbeat')
-    @UseGuards(UserAuthGuard)
+    @Post(':executionId/heartbeat')
+    @Scoped('execution')
     @HttpCode(200)
     async heartbeat(
         @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Execution.API.Heartbeat.Request) body: Execution.API.Heartbeat.Request,
+        @ExecutionIdParam() executionId: Execution.Id,
     ) {
-        return this.executionService.heartbeat(principal, body);
+        return this.executionService.heartbeat(principal, executionId);
     }
 
-    @Post('suspend')
-    @UseGuards(UserAuthGuard)
+    @Post(':executionId/suspend')
+    @Scoped('execution')
     @HttpCode(200)
     async suspend(
         @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Execution.API.Suspend.Request) body: Execution.API.Suspend.Request,
+        @ExecutionIdParam() executionId: Execution.Id,
     ) {
-        return this.executionService.suspend(principal, body);
+        return this.executionService.suspend(principal, executionId);
     }
 
-    @Post('terminate')
-    @UseGuards(UserAuthGuard)
+    @Post(':executionId/terminate')
+    @Scoped('execution')
     @HttpCode(200)
     async terminate(
         @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Execution.API.Terminate.Request) body: Execution.API.Terminate.Request,
+        @ExecutionIdParam() executionId: Execution.Id,
     ) {
-        return this.executionService.terminate(principal, body);
+        return this.executionService.terminate(principal, executionId);
     }
 
     @Post('terminate-all')
@@ -97,16 +102,6 @@ export class ExecutionController {
         return this.executionService.finalise(body);
     }
 
-    @Post('get')
-    @UseGuards(UserAuthGuard)
-    @HttpCode(200)
-    async get(
-        @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Execution.API.Get.Request) body: Execution.API.Get.Request,
-    ) {
-        return this.executionService.get(principal, body);
-    }
-
     @Post('update')
     @UseGuards(InternalAuthGuard)
     @HttpCode(200)
@@ -116,24 +111,25 @@ export class ExecutionController {
         return this.executionService.update(body);
     }
 
-    @Post('meta/list')
-    @UseGuards(UserAuthGuard)
+    @Post(':workflowId/meta/list')
+    @Scoped('workflow')
     @HttpCode(200)
     async metaList(
         @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Execution.API.Meta.List.Request) body: Execution.API.Meta.List.Request,
+        @WorkflowIdParam() workflowId: Workflow.Id,
     ) {
-        return this.executionService.meta.list(principal, body);
+        return this.executionService.meta.list(principal, workflowId);
     }
 
-    @Post('meta/get')
+    // Unscoped by design, like :executionId/get — an RLS-covered read.
+    @Post(':executionId/meta/get')
     @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async metaGet(
         @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Execution.API.Meta.Get.Request) body: Execution.API.Meta.Get.Request,
+        @ZodParam('executionId', Execution.Id) executionId: Execution.Id,
     ) {
-        return this.executionService.meta.get(principal, body);
+        return this.executionService.meta.get(principal, executionId);
     }
 
     @Post('meta/list-active')
@@ -141,6 +137,18 @@ export class ExecutionController {
     @HttpCode(200)
     async metaListActive(@AuthenticatedUser() principal: Principal.User) {
         return this.executionService.meta.listActive(principal);
+    }
+
+    // Unscoped by design: the read runs through RLS, which already confines it to the
+    // caller's own executions.
+    @Post(':executionId/get')
+    @UseGuards(UserAuthGuard)
+    @HttpCode(200)
+    async get(
+        @AuthenticatedUser() principal: Principal.User,
+        @ZodParam('executionId', Execution.Id) executionId: Execution.Id,
+    ) {
+        return this.executionService.get(principal, executionId);
     }
 
     // REMOVED — there is no sdk/run route and no runFromSdk. Rebuild, don't restore.
@@ -161,13 +169,12 @@ export class ExecutionController {
     // Execution.API.SdkRun still exists in shared as the wire contract.
     // See SPECS/delegated-execution-principal.md, "Open Questions".
 
-    @Post('recording/get-live')
-    @UseGuards(UserAuthGuard)
+    @Post(':executionId/recording/get-live')
+    @Scoped('execution')
     @HttpCode(200)
     async recordingGetLive(
-        @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Execution.API.Recording.GetLive.Request) body: Execution.API.Recording.GetLive.Request,
+        @ExecutionIdParam() executionId: Execution.Id,
     ) {
-        return this.executionService.recording.getLive(principal, body);
+        return this.executionService.recording.getLive(executionId);
     }
 }

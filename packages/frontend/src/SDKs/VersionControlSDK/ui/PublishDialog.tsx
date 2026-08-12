@@ -30,8 +30,7 @@ function PublishDialogContent() {
 
         setIsLoading(true)
         try {
-            await VersionControlSDK.actions.publish({
-                workflowId,
+            await VersionControlSDK.actions.publish(workflowId, {
                 name: name.trim(),
                 description: description.trim() || null,
                 workflowData,
