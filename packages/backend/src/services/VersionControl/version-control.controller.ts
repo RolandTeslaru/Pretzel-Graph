@@ -1,32 +1,35 @@
-import { Controller, Post, Get, Delete, Param, UseGuards, HttpCode } from '@nestjs/common';
-import { VersionControl } from '@pretzel-graph/shared/domain';
+import { Controller, Post, Get, Delete, UseGuards, HttpCode } from '@nestjs/common';
+import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { VersionControlService } from './version-control.service';
 import { UserAuthGuard } from '../../auth/user-auth.guard';
+import { Scoped } from '../../auth/scoped.decorator';
 import { AuthenticatedUser } from '@/decorators/principal';
+import { WorkflowIdParam } from '@/decorators/scope';
 import { Principal } from '@/domain/Principal';
-import { ZodBody } from '../../pipes/zod.pipe';
+import { ZodBody, ZodParam } from '../../pipes/zod.pipe';
 
 @Controller('version-control')
 @UseGuards(UserAuthGuard)
 export class VersionControlController {
     constructor(private readonly service: VersionControlService) {}
 
-    @Post('publish')
+    @Post(':workflowId/publish')
+    @Scoped('workflow')
     @HttpCode(200)
     async publish(
         @AuthenticatedUser() principal: Principal.User,
+        @WorkflowIdParam() workflowId: Workflow.Id,
         @ZodBody(VersionControl.API.Publish.Request) body: VersionControl.API.Publish.Request,
     ) {
-        return this.service.publish(principal, body);
+        return this.service.publish(principal, workflowId, body);
     }
 
     @Get('list/:workflowId')
     async list(
         @AuthenticatedUser() principal: Principal.User,
-        @Param('workflowId') workflowId: string,
+        @ZodParam('workflowId', Workflow.Id) workflowId: Workflow.Id,
     ) {
-        const payload = VersionControl.API.List.Request.parse({ workflowId });
-        return this.service.list(principal, payload);
+        return this.service.list(principal, workflowId);
     }
 
     @Get('active')
@@ -37,47 +40,47 @@ export class VersionControlController {
     @Get('active/:workflowId')
     async getActiveByWorkflow(
         @AuthenticatedUser() principal: Principal.User,
-        @Param('workflowId') workflowId: string,
+        @ZodParam('workflowId', Workflow.Id) workflowId: Workflow.Id,
     ) {
-        const payload = VersionControl.API.GetActiveByWorkflow.Request.parse({ workflowId });
-        return this.service.getActiveByWorkflow(principal, payload);
+        return this.service.getActiveByWorkflow(principal, workflowId);
     }
 
     @Get(':publicationId')
     async get(
         @AuthenticatedUser() principal: Principal.User,
-        @Param('publicationId') publicationId: string,
+        @ZodParam('publicationId', VersionControl.Publication.Id) publicationId: VersionControl.Publication.Id,
     ) {
-        const payload = VersionControl.API.Get.Request.parse({ publicationId });
-        return this.service.get(principal, payload);
+        return this.service.get(principal, publicationId);
     }
 
-    @Post(':publicationId/activate')
+    // Scoped to the workflow, not the publication: owning the workflow is the boundary that
+    // matters, and the publication write itself resolves through RLS.
+    @Post(':workflowId/:publicationId/activate')
+    @Scoped('workflow')
     @HttpCode(200)
     async activate(
         @AuthenticatedUser() principal: Principal.User,
-        @Param('publicationId') publicationId: string,
+        @ZodParam('publicationId', VersionControl.Publication.Id) publicationId: VersionControl.Publication.Id,
     ) {
-        const payload = VersionControl.API.Activate.Request.parse({ publicationId });
-        return this.service.activate(principal, payload);
+        return this.service.activate(principal, publicationId);
     }
 
-    @Post(':publicationId/deactivate')
+    @Post(':workflowId/:publicationId/deactivate')
+    @Scoped('workflow')
     @HttpCode(200)
     async deactivate(
         @AuthenticatedUser() principal: Principal.User,
-        @Param('publicationId') publicationId: string,
+        @ZodParam('publicationId', VersionControl.Publication.Id) publicationId: VersionControl.Publication.Id,
     ) {
-        const payload = VersionControl.API.Deactivate.Request.parse({ publicationId });
-        return this.service.deactivate(principal, payload);
+        return this.service.deactivate(principal, publicationId);
     }
 
-    @Delete(':publicationId')
+    @Delete(':workflowId/:publicationId')
+    @Scoped('workflow')
     async remove(
         @AuthenticatedUser() principal: Principal.User,
-        @Param('publicationId') publicationId: string,
+        @ZodParam('publicationId', VersionControl.Publication.Id) publicationId: VersionControl.Publication.Id,
     ) {
-        const payload = VersionControl.API.Remove.Request.parse({ publicationId });
-        return this.service.remove(principal, payload);
+        return this.service.remove(principal, publicationId);
     }
 }

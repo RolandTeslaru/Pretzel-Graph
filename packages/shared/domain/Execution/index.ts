@@ -115,15 +115,22 @@ export namespace Execution {
     export namespace API {
 
         export namespace Run {
-            export const Request = z.object({
-                workflowId:   Workflow.Id,
+            // executionId stays in the body because it is a proposal: the client mints it and
+            // subscribes to its channel before the row exists, so there is nothing to authorize
+            // against. workflowId is the authorization boundary and travels in the path.
+            export const Request = z.strictObject({
                 workflowData: Workflow.Data.Schema,
                 executionId:  Execution.Id.optional(),
                 igniter:      Igniter.Schema,
             })
             export type Request = z.infer<typeof Request>
 
-            export const InternalRequest = Request
+            // Service-to-service, authenticated as a service rather than a user. It has no user
+            // principal to scope against — runFromService derives the owner from the workflow —
+            // so the id stays in the body here.
+            export const InternalRequest = Request.extend({
+                workflowId: Workflow.Id,
+            })
             export type InternalRequest = z.infer<typeof InternalRequest>
 
             export const Response = z.object({
@@ -148,8 +155,8 @@ export namespace Execution {
             export type Response = z.infer<typeof Response>
         }
 
-        export async function run(api: AxiosInstance, req: Run.Request): Promise<Run.Response> {
-            const { data } = await api.post<Run.Response>('/api/execution/run', req)
+        export async function run(api: AxiosInstance, workflowId: Workflow.Id, req: Run.Request): Promise<Run.Response> {
+            const { data } = await api.post<Run.Response>(`/api/execution/${workflowId}/run`, req)
             return data
         }
 
@@ -163,63 +170,58 @@ export namespace Execution {
             return data
         }
 
+        // The execution is the whole request, and it is now the whole path.
         export namespace Pause {
-            export const Request = z.object({ executionId: Execution.Id })
-            export type Request = z.infer<typeof Request>
             export const Response = z.object({ success: z.boolean() })
             export type Response = z.infer<typeof Response>
         }
 
-        export async function pause(api: AxiosInstance, req: Pause.Request): Promise<Pause.Response> {
-            const { data } = await api.post<Pause.Response>('/api/execution/pause', req)
+        export async function pause(api: AxiosInstance, executionId: Execution.Id): Promise<Pause.Response> {
+            const { data } = await api.post<Pause.Response>(`/api/execution/${executionId}/pause`, {})
             return data
         }
 
+        // The execution is the whole request, and it is now the whole path.
         export namespace Resume {
-            export const Request = z.object({ executionId: Execution.Id })
-            export type Request = z.infer<typeof Request>
             export const Response = z.object({ success: z.boolean() })
             export type Response = z.infer<typeof Response>
         }
 
-        export async function resume(api: AxiosInstance, req: Resume.Request): Promise<Resume.Response> {
-            const { data } = await api.post<Resume.Response>('/api/execution/resume', req)
+        export async function resume(api: AxiosInstance, executionId: Execution.Id): Promise<Resume.Response> {
+            const { data } = await api.post<Resume.Response>(`/api/execution/${executionId}/resume`, {})
             return data
         }
 
+        // The execution is the whole request, and it is now the whole path.
         export namespace Suspend {
-            export const Request = z.object({ executionId: Execution.Id })
-            export type Request = z.infer<typeof Request>
             export const Response = z.object({ success: z.boolean() })
             export type Response = z.infer<typeof Response>
         }
 
-        export async function suspend(api: AxiosInstance, req: Suspend.Request): Promise<Suspend.Response> {
-            const { data } = await api.post<Suspend.Response>('/api/execution/suspend', req)
+        export async function suspend(api: AxiosInstance, executionId: Execution.Id): Promise<Suspend.Response> {
+            const { data } = await api.post<Suspend.Response>(`/api/execution/${executionId}/suspend`, {})
             return data
         }
 
+        // The execution is the whole request, and it is now the whole path.
         export namespace Terminate {
-            export const Request = z.object({ executionId: Execution.Id })
-            export type Request = z.infer<typeof Request>
             export const Response = z.object({ success: z.boolean() })
             export type Response = z.infer<typeof Response>
         }
 
-        export async function terminate(api: AxiosInstance, req: Terminate.Request): Promise<Terminate.Response> {
-            const { data } = await api.post<Terminate.Response>('/api/execution/terminate', req)
+        export async function terminate(api: AxiosInstance, executionId: Execution.Id): Promise<Terminate.Response> {
+            const { data } = await api.post<Terminate.Response>(`/api/execution/${executionId}/terminate`, {})
             return data
         }
 
+        // The execution is the whole request, and it is now the whole path.
         export namespace Heartbeat {
-            export const Request = z.object({ executionId: Execution.Id })
-            export type Request = z.infer<typeof Request>
             export const Response = z.object({})
             export type Response = z.infer<typeof Response>
         }
 
-        export async function heartbeat(api: AxiosInstance, req: Heartbeat.Request): Promise<Heartbeat.Response> {
-            const { data } = await api.post<Heartbeat.Response>('/api/execution/heartbeat', req)
+        export async function heartbeat(api: AxiosInstance, executionId: Execution.Id): Promise<Heartbeat.Response> {
+            const { data } = await api.post<Heartbeat.Response>(`/api/execution/${executionId}/heartbeat`, {})
             return data
         }
 
@@ -250,15 +252,14 @@ export namespace Execution {
             return data
         }
 
+        // The execution is the whole request, and it is now the whole path.
         export namespace Get {
-            export const Request = z.object({ executionId: Execution.Id })
-            export type Request = z.infer<typeof Request>
             export const Response = z.object({ execution: Execution.Schema })
             export type Response = z.infer<typeof Response>
         }
 
-        export async function get(api: AxiosInstance, req: Get.Request): Promise<Get.Response> {
-            const { data } = await api.post<Get.Response>('/api/execution/get', req)
+        export async function get(api: AxiosInstance, executionId: Execution.Id): Promise<Get.Response> {
+            const { data } = await api.post<Get.Response>(`/api/execution/${executionId}/get`, {})
             return data
         }
 
@@ -287,37 +288,34 @@ export namespace Execution {
         // beyond the TTL window — fall back to Execution.API.get for old runs.
         export namespace Recording {
             export namespace GetLive {
-                export const Request  = z.object({ executionId: Execution.Id })
                 export const Response = z.object({ recording: Execution.Recording.Schema })
                 export type Request   = z.infer<typeof Request>
                 export type Response  = z.infer<typeof Response>
             }
-            export async function getLive(api: AxiosInstance, req: GetLive.Request): Promise<GetLive.Response> {
-                const { data } = await api.post<GetLive.Response>('/api/execution/recording/get-live', req)
+            export async function getLive(api: AxiosInstance, executionId: Execution.Id): Promise<GetLive.Response> {
+                const { data } = await api.post<GetLive.Response>(`/api/execution/${executionId}/recording/get-live`, {})
                 return data
             }
         }
 
         export namespace Meta {
+            // The workflow was the entire request, and it is now the entire path.
             export namespace List {
-                export const Request = z.object({ workflowId: Workflow.Id })
-                export type Request = z.infer<typeof Request>
                 export const Response = z.object({ executions: z.array(Execution.Meta) })
                 export type Response = z.infer<typeof Response>
             }
-            export async function list(api: AxiosInstance, req: List.Request): Promise<List.Response> {
-                const { data } = await api.post<List.Response>('/api/execution/meta/list', req)
+            export async function list(api: AxiosInstance, workflowId: Workflow.Id): Promise<List.Response> {
+                const { data } = await api.post<List.Response>(`/api/execution/${workflowId}/meta/list`, {})
                 return data
             }
 
+            // The execution is the whole request, and it is now the whole path.
             export namespace Get {
-                export const Request = z.object({ executionId: Execution.Id })
-                export type Request = z.infer<typeof Request>
                 export const Response = z.object({ execution: Execution.Meta })
                 export type Response = z.infer<typeof Response>
             }
-            export async function get(api: AxiosInstance, req: Get.Request): Promise<Get.Response> {
-                const { data } = await api.post<Get.Response>('/api/execution/meta/get', req)
+            export async function get(api: AxiosInstance, executionId: Execution.Id): Promise<Get.Response> {
+                const { data } = await api.post<Get.Response>(`/api/execution/${executionId}/meta/get`, {})
                 return data
             }
 

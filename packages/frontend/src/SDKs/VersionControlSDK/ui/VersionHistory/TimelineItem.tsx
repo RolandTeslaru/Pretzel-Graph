@@ -30,7 +30,7 @@ function PublicationActions({
 
         setIsPending(true);
         try {
-            await VersionControlSDK.actions.activate(publication.id);
+            await VersionControlSDK.actions.activate(publication.workflow_id, publication.id);
             toast.success(`${getPublicationLabel(publication)} is now active`);
         } catch {
             toast.error("Could not activate version");
@@ -45,7 +45,7 @@ function PublicationActions({
         openDeactivatePublicationDialog(publication, async () => {
             setIsPending(true);
             try {
-                await VersionControlSDK.actions.deactivate(publication.id);
+                await VersionControlSDK.actions.deactivate(publication.workflow_id, publication.id);
             } finally {
                 setIsPending(false);
             }
@@ -58,7 +58,7 @@ function PublicationActions({
         openDeletePublicationDialog(publication, async () => {
             setIsPending(true);
             try {
-                await VersionControlSDK.actions.remove(publication.id);
+                await VersionControlSDK.actions.remove(publication.workflow_id, publication.id);
             } finally {
                 setIsPending(false);
             }

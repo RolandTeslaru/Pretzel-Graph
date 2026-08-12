@@ -14,7 +14,7 @@ export class VersionControlDatabase {
 
     @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Schema)
-    async publish(trx: DB.UserTransaction, userId: Auth.User.Id, { workflowId, name, description, workflowData }: VersionControl.API.Publish.Request): Promise<VersionControl.Publication> {
+    async publish(trx: DB.UserTransaction, userId: Auth.User.Id, workflowId: Workflow.Id, { name, description, workflowData }: VersionControl.API.Publish.Request): Promise<VersionControl.Publication> {
         // Named-arg notation picks the 5-arg overload; there is a 3-arg one too.
         const { rows } = await sql<DB.VersionControl.Row>`
             select * from publish_workflow(
@@ -31,7 +31,7 @@ export class VersionControlDatabase {
 
     @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Meta.Schema.array())
-    async list(trx: DB.UserTransaction, { workflowId }: VersionControl.API.List.Request): Promise<VersionControl.Publication.Meta[]> {
+    async list(trx: DB.UserTransaction, workflowId: Workflow.Id): Promise<VersionControl.Publication.Meta[]> {
         // No user_id filter: the SELECT policy also exposes active publications
         // of public workflows, which this endpoint relies on.
         const rows = await trx
@@ -62,7 +62,7 @@ export class VersionControlDatabase {
 
     @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Meta.Schema.nullable())
-    async getActiveByWorkflow(trx: DB.UserTransaction, userId: Auth.User.Id, { workflowId }: VersionControl.API.GetActiveByWorkflow.Request): Promise<VersionControl.Publication.Meta | null> {
+    async getActiveByWorkflow(trx: DB.UserTransaction, userId: Auth.User.Id, workflowId: Workflow.Id): Promise<VersionControl.Publication.Meta | null> {
         const row = await trx
             .selectFrom('version_control')
             .select(META_COLUMNS)
@@ -76,7 +76,7 @@ export class VersionControlDatabase {
 
     @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Schema)
-    async get(trx: DB.UserTransaction, { publicationId }: VersionControl.API.Get.Request): Promise<VersionControl.Publication> {
+    async get(trx: DB.UserTransaction, publicationId: VersionControl.Publication.Id): Promise<VersionControl.Publication> {
         const row = await trx
             .selectFrom('version_control')
             .selectAll()
@@ -88,7 +88,7 @@ export class VersionControlDatabase {
 
     @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Schema)
-    async activate(trx: DB.UserTransaction, { publicationId }: VersionControl.API.Activate.Request): Promise<VersionControl.Publication> {
+    async activate(trx: DB.UserTransaction, publicationId: VersionControl.Publication.Id): Promise<VersionControl.Publication> {
         // SECURITY INVOKER — resolves through RLS, so it only works inside a scope.
         const { rows } = await sql<DB.VersionControl.Row>`
             select * from activate_publication(${publicationId}::uuid)
@@ -99,7 +99,7 @@ export class VersionControlDatabase {
 
     @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Schema)
-    async deactivate(trx: DB.UserTransaction, { publicationId }: VersionControl.API.Deactivate.Request): Promise<VersionControl.Publication> {
+    async deactivate(trx: DB.UserTransaction, publicationId: VersionControl.Publication.Id): Promise<VersionControl.Publication> {
         const row = await trx
             .updateTable('version_control')
             .set({ is_active: false })
@@ -112,7 +112,7 @@ export class VersionControlDatabase {
 
     @AllowedDatabaseRoles("user")
     @ZodReturn(z.object({ workflowId: Workflow.Id, wasActive: z.boolean() }))
-    async remove(trx: DB.UserTransaction, { publicationId }: VersionControl.API.Remove.Request): Promise<{ workflowId: Workflow.Id; wasActive: boolean }> {
+    async remove(trx: DB.UserTransaction, publicationId: VersionControl.Publication.Id): Promise<{ workflowId: Workflow.Id; wasActive: boolean }> {
         const row = await trx
             .deleteFrom('version_control')
             .where('id', '=', publicationId)

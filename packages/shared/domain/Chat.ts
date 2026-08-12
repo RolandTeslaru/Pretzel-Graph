@@ -199,8 +199,7 @@ export namespace Chat {
     export namespace API {
         export namespace Message {
             export namespace Add {
-                export const Request = z.lazy(() => z.object({
-                    chatId:   Chat.Id,
+                export const Request = z.lazy(() => z.strictObject({
                     messages: z.array(Chat.Message.Schema),
                 }))
                 export type Request = z.infer<typeof Request>
@@ -208,9 +207,9 @@ export namespace Chat {
                 export const Response = z.object({})
                 export type Response = z.infer<typeof Response>
             }
-            export async function add(api: AxiosInstance, req: Add.Request): Promise<Add.Response> {
+            export async function add(api: AxiosInstance, chatId: Chat.Id, req: Add.Request): Promise<Add.Response> {
                 const { data } = await api.post<Add.Response>(
-                    "/api/chat/message/add", req
+                    `/api/chat/${chatId}/message/add`, req
                 )
                 return data
             }
@@ -300,25 +299,22 @@ export namespace Chat {
             }
         }
 
+        // The chat was the entire request, and it is now the entire path.
         export namespace Erase {
-            export const Request = z.object({
-                chatId: Chat.Id,
-            })
-            export type Request = z.infer<typeof Request>
-
             export const Response = z.object({})
             export type Response = z.infer<typeof Response>
         }
-        export async function erase(api: AxiosInstance, req: Erase.Request): Promise<Erase.Response> {
+        export async function erase(api: AxiosInstance, chatId: Chat.Id): Promise<Erase.Response> {
             const { data } = await api.post<Erase.Response>(
-                "/api/chat/erase", req
+                `/api/chat/${chatId}/erase`, {}
             )
             return data
         }
 
+        // The workflow the chat hangs off is the authorization boundary, so it travels in the
+        // path and the route's scope guard proves ownership before the handler runs.
         export namespace Create {
-            export const Request = z.object({
-                workflow_id: Workflow.Id,
+            export const Request = z.strictObject({
                 name: z.string().optional(),
             })
             export type Request = z.infer<typeof Request>
@@ -328,17 +324,23 @@ export namespace Chat {
             })
             export type Response = z.infer<typeof Response>
         }
-        export async function create(api: AxiosInstance, req: Create.Request): Promise<Create.Response> {
+        export async function create(
+            api:         AxiosInstance,
+            workflow_id: Workflow.Id,
+            req:         Create.Request,
+        ): Promise<Create.Response> {
             const { data } = await api.post<Create.Response>(
-                "/api/chat/create", req
+                `/api/chat/${workflow_id}/create`, req
             )
             return data
         }
 
+        // chatId stays in the body because it is a proposal, not a claim: the row may not exist
+        // yet, so there is nothing to authorize against. The workflow it hangs off is the
+        // authorization boundary and travels in the path.
         export namespace Ensure {
-            export const Request = z.object({
+            export const Request = z.strictObject({
                 chatId: Chat.Id,
-                workflow_id: Workflow.Id,
                 name: z.string().optional(),
             })
             export type Request = z.infer<typeof Request>
@@ -348,16 +350,19 @@ export namespace Chat {
             })
             export type Response = z.infer<typeof Response>
         }
-        export async function ensure(api: AxiosInstance, req: Ensure.Request): Promise<Ensure.Response> {
+        export async function ensure(
+            api:         AxiosInstance,
+            workflow_id: Workflow.Id,
+            req:         Ensure.Request,
+        ): Promise<Ensure.Response> {
             const { data } = await api.post<Ensure.Response>(
-                "/api/chat/ensure", req
+                `/api/chat/${workflow_id}/ensure`, req
             )
             return data
         }
 
         export namespace Get {
-            export const Request = z.object({
-                chatId: Chat.Id,
+            export const Request = z.strictObject({
                 cursor: Chat.Message.Id.optional(),
                 limit: z.number().int().positive().default(50).optional(),
             })
@@ -369,9 +374,9 @@ export namespace Chat {
             })
             export type Response = z.infer<typeof Response>
         }
-        export async function get(api: AxiosInstance, req: Get.Request): Promise<Get.Response> {
+        export async function get(api: AxiosInstance, chatId: Chat.Id, req: Get.Request = {}): Promise<Get.Response> {
             const { data } = await api.post<Get.Response>(
-                "/api/chat/get", req
+                `/api/chat/${chatId}/get`, req
             )
             return data
         }
@@ -393,20 +398,20 @@ export namespace Chat {
             return data
         }
 
+        // The workflow was the entire request, and it is now the entire path — so there is no
+        // body left to describe.
         export namespace ListByWorkflow {
-            export const Request = z.object({
-                workflow_id: Workflow.Id,
-            })
-            export type Request = z.infer<typeof Request>
-
             export const Response = z.object({
                 chats: z.array(Chat.Schema),
             })
             export type Response = z.infer<typeof Response>
         }
-        export async function listByWorkflow(api: AxiosInstance, req: ListByWorkflow.Request): Promise<ListByWorkflow.Response> {
+        export async function listByWorkflow(
+            api:         AxiosInstance,
+            workflow_id: Workflow.Id,
+        ): Promise<ListByWorkflow.Response> {
             const { data } = await api.post<ListByWorkflow.Response>(
-                "/api/chat/list-by-workflow", req
+                `/api/chat/${workflow_id}/list`, {}
             )
             return data
         }

@@ -38,7 +38,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                 // Ensures we have a chat
                 if (!currentChat) {
                     try {
-                        const { chat } = await Chat.API.create(api, { workflow_id, name: deriveChatName(content) })
+                        const { chat } = await Chat.API.create(api, workflow_id, { name: deriveChatName(content) })
 
                         currentChat = chat;
                         currentChatId = chat.id;
@@ -89,7 +89,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
         chat: {
             listByWorkflow: async (workflowId: Workflow.Id) => {
                 try {
-                    const { chats } = await Chat.API.listByWorkflow(api, { workflow_id: workflowId });
+                    const { chats } = await Chat.API.listByWorkflow(api, workflowId);
 
                     sdk.setState(s => {
                         s.chats = {};
@@ -119,7 +119,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                 })
 
                 try {
-                    const { chat, messages } = await Chat.API.get(api, { chatId });
+                    const { chat, messages } = await Chat.API.get(api, chatId, {});
 
                     sdk.useStore.setState(s => {
                         s.currentChatId = chatId;
@@ -177,7 +177,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
             },
             erase: async (chatId: Chat.Id) => {
                 try {
-                    await Chat.API.erase(api, { chatId });
+                    await Chat.API.erase(api, chatId);
 
                     sdk.setState(s => {
                         delete s.chats[chatId];

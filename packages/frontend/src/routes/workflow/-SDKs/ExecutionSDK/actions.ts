@@ -52,8 +52,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             sdk.reducers.timeline.reset(s);
         });
 
-        const executionCreationPromise = Execution.API.run(api, {
-            workflowId: WorkbenchSDK.state.workflowId,
+        const executionCreationPromise = Execution.API.run(api, WorkbenchSDK.state.workflowId, {
             workflowData: WorkbenchSDK.state.data,
             executionId,
             igniter,
@@ -97,7 +96,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
             const confirmEvent = sdk.useAwaitConfirmation("paused")
 
-            const { success } = await Execution.API.pause(api, { executionId });
+            const { success } = await Execution.API.pause(api, executionId);
             if (success) {
                 sdk.setState(s => { s.currentExecution!.status = "paused" })
                 toast.info('Workflow execution paused')
@@ -114,7 +113,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 return false;
 
             const confirmEvent = sdk.useAwaitConfirmation("terminated")
-            const { success } = await Execution.API.terminate(api, { executionId });
+            const { success } = await Execution.API.terminate(api, executionId);
             if (success) {
                 sdk.setState(s => { sdk.reducers.currentExecution.setStatus(s, "terminated") })
                 toast.info('Workflow execution terminated')
@@ -131,7 +130,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
             const confirmEvent = sdk.useAwaitConfirmation("resumed")
 
-            const { success } = await Execution.API.resume(api, { executionId });
+            const { success } = await Execution.API.resume(api, executionId);
             if (success) {
                 sdk.setState(s => { s.currentExecution!.status = "running" })
                 toast.info('Workflow execution resumed')
@@ -149,7 +148,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
             const confirmEvent = sdk.useAwaitConfirmation("suspended")
 
-            const { success } = await Execution.API.suspend(api, { executionId });
+            const { success } = await Execution.API.suspend(api, executionId);
             if (!success)
                 toast.error("Failed to suspend workflow")
 
@@ -168,7 +167,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             });
         },
         loadHistory: async (workflowId: Workflow.Id) => {
-            const { executions } = await Execution.API.Meta.list(api, { workflowId });
+            const { executions } = await Execution.API.Meta.list(api, workflowId);
             sdk.setState(s => { s.executionHistory = executions });
             return executions;
         },
@@ -188,7 +187,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
         },
         loadLiveRecording: async (executionId) => {
             try {
-                const { recording } = await Execution.API.Recording.getLive(api, { executionId });
+                const { recording } = await Execution.API.Recording.getLive(api, executionId);
                 sdk.setState(s => {
                     sdk.reducers.currentExecution.recording.set(s, recording);
                     sdk.reducers.timeline.rebuild(s);
