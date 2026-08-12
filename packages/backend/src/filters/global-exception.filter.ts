@@ -2,6 +2,7 @@ import { ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger } from '@n
 import { Response } from 'express';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { ZodError } from 'zod';
+import { NoResultError } from 'kysely';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -36,6 +37,16 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                     "Something went wrong",
                     { detail: exception.message }
                 ).toJSON(),
+            };
+        }
+
+        // executeTakeFirstOrThrow found nothing. Under DB.asUser that means the row either
+        // does not exist or is not visible to this caller through RLS — indistinguishable by
+        // design, and both are a 404 rather than a server fault.
+        if (exception instanceof NoResultError) {
+            return {
+                status: 404,
+                error: new SystemError(SystemError.Code.NOT_FOUND, "Not found").toJSON(),
             };
         }
 

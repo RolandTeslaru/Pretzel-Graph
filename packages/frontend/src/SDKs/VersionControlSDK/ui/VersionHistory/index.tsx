@@ -70,7 +70,7 @@ function VersionHistory({ className, hideHeader }: { className?: string; hideHea
                             if (!activePublication) return;
                             openDeactivatePublicationDialog(
                                 activePublication,
-                                () => VersionControlSDK.actions.deactivate(activePublication.id),
+                                () => VersionControlSDK.actions.deactivate(activePublication.workflow_id, activePublication.id),
                             );
                         }}
                     >

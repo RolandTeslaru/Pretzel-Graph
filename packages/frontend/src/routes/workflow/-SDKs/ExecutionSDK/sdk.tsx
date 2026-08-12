@@ -161,7 +161,7 @@ function startHeartbeat(executionId: Execution.Id) {
         const now = Date.now();
         if (now - lastSent < HEARTBEAT_INTERVAL_MS) return;
         lastSent = now;
-        Execution.API.heartbeat(api, { executionId }).catch(() => {});
+        Execution.API.heartbeat(api, executionId).catch(() => {});
     };
 
     document.addEventListener("mousemove", heartbeatListener);

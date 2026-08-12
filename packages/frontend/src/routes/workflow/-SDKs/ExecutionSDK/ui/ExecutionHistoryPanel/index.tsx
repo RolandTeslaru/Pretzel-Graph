@@ -88,7 +88,7 @@ const ExecutionHistoryPanel = () => {
                         <div key={meta.id} className='p-2  relative cursor-pointer hover:bg-accent/50'
                             onClick={async () =>{
                                 try {
-                                    const data = await Execution.API.get(api, { executionId: meta.id})
+                                    const data = await Execution.API.get(api, meta.id)
                                     if (data.execution) {
                                         ExecutionSDK.actions.setCurrentExecution(data.execution)
                                     }
