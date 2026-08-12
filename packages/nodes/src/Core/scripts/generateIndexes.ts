@@ -7,7 +7,7 @@ config({ path: path.resolve(__dirname, "../../../../../.env") });
 
 import { Foundations, Shelf, Workflow } from "@pretzel-graph/shared/domain"
 import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow"
-import { createClient } from "@supabase/supabase-js";
+import { Pool } from "pg";
 import { cloneDeep } from "lodash";
 import { PUBLIC_WORKFLOW_BLUEPRINTS, PUBLIC_WORKFLOW_BLUEPRINTS_REVERSE } from "@pretzel-graph/shared/constants/publicWorkflows";
 
@@ -71,15 +71,24 @@ export async function generateIndex(includeDbBlueprints = false) {
     }
 
     if (includeDbBlueprints) {
-        const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+        // Direct pg rather than PostgREST — the Supabase Data API is disabled. The APP
+        // connection (RLS-constrained, not the owner) is deliberate: these workflows are
+        // is_public, and the workflows SELECT policy's `OR is_public = true` branch makes them
+        // readable without any owner bypass. Reading public data needs no elevated role.
+        const pool = new Pool({ connectionString: process.env.DATABASE_URL_APP });
+        let data: Array<{ id: string, display_name: string, description: string | null, icon: string | null, accent: string | null, data: unknown }>;
 
-        const { data, error } = await supabase
-            .from("workflows")
-            .select("id, display_name, description, icon, accent, data")
-            .eq("user_id", DEV_USER_ID)
-            .eq("is_public", true)
-
-        if (error) throw error;
+        try {
+            const result = await pool.query(
+                `select id, display_name, description, icon, accent, data
+                 from workflows where user_id = $1 and is_public = true`,
+                [DEV_USER_ID],
+            );
+            data = result.rows;
+        }
+        finally {
+            await pool.end();
+        }
 
         const baseBlueprint = cloneDeep(blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]);
 
