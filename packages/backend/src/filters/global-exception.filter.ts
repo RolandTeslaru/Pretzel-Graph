@@ -4,6 +4,14 @@ import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { ZodError } from 'zod';
 import { NoResultError } from 'kysely';
 
+const PG_INSUFFICIENT_PRIVILEGE = '42501';
+
+/** pg surfaces the server's error fields on DatabaseError — see pg-protocol messages.d.ts. */
+type PostgresError = Error & { code?: string, table?: string, column?: string };
+
+const isPostgresError = (e: unknown): e is PostgresError =>
+    e instanceof Error && typeof (e as PostgresError).code === 'string';
+
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
     private readonly logger = new Logger(GlobalExceptionFilter.name);
@@ -40,9 +48,29 @@ export class GlobalExceptionFilter implements ExceptionFilter {
             };
         }
 
-        // executeTakeFirstOrThrow found nothing. Under DB.asUser that means the row either
-        // does not exist or is not visible to this caller through RLS — indistinguishable by
-        // design, and both are a 404 rather than a server fault.
+        // These two branches are a FALLBACK. Queries through @DatabaseClass are already
+        // classified by catchDatabaseErrors (decorators/database-roles.ts) — 42501 → FORBIDDEN,
+        // NoResultError → NOT_FOUND — and arrive here as a SystemError, handled above. Only
+        // inline queries that skip the decorator (e.g. AuthService.getMe) reach this raw, and
+        // they must land on the same codes so the two paths agree.
+
+        // Postgres insufficient_privilege: a column grant refused the write, or an RLS WITH
+        // CHECK rejected the resulting row. Neither hides existence — the caller acted on its
+        // own or new data — so this is FORBIDDEN, not NOT_FOUND. The offending table/column is
+        // logged but never returned.
+        if (isPostgresError(exception) && exception.code === PG_INSUFFICIENT_PRIVILEGE) {
+            this.logger.error(
+                `42501 insufficient_privilege on ${exception.table ?? '?'}.${exception.column ?? '?'} — ${exception.message}`,
+            );
+
+            return {
+                status: this.httpStatusFromCode(SystemError.Code.FORBIDDEN),
+                error: new SystemError(SystemError.Code.FORBIDDEN, "Forbidden").toJSON(),
+            };
+        }
+
+        // executeTakeFirstOrThrow found nothing. Under an RLS-scoped handle that means the row
+        // does not exist or is not visible to this caller — both a 404, not a server fault.
         if (exception instanceof NoResultError) {
             return {
                 status: 404,
@@ -71,7 +99,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     private httpStatusFromCode(code: SystemError.Code): number {
-        if (code === SystemError.Code.NOT_FOUND) return 404;
+        // Codes below 1000 are literal HTTP statuses (BAD_REQUEST 400, FORBIDDEN 403,
+        // NOT_FOUND 404). The prefix scheme below only applies to the 1000+ domain codes.
+        if (code < 1000) return code;
 
         const prefix = Math.floor(code / 1000)
         switch (prefix) {
