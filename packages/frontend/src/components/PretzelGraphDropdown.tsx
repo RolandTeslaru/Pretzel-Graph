@@ -1,9 +1,33 @@
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
+import { DropdownMenu, AlertDialog } from '@pretzel-graph/standard-ui/foundations'
 import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
+import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
+import { DialogSDK } from '@/SDKs/DialogSDK'
+
+const LOGOUT_DIALOG_ID = 'logout'
 
 export function PretzelGraphDropdown() {
     const theme = SystemSDK.useStore(s => s.theme)
+
+    const handleLogout = () => {
+        DialogSDK.actions.push(LOGOUT_DIALOG_ID, props => (
+            <DialogSDK.AlertTemplate
+                {...props}
+                type='warning'
+                approveLabel='Log out'
+                onApprove={async () => {
+                    await AuthSDK.actions.logout()
+                    DialogSDK.actions.pop(LOGOUT_DIALOG_ID)
+                }}
+                onCancel={() => DialogSDK.actions.pop(LOGOUT_DIALOG_ID)}
+            >
+                <AlertDialog.Title>Log out?</AlertDialog.Title>
+                <AlertDialog.Description>
+                    You will need to sign in again to access your workflows.
+                </AlertDialog.Description>
+            </DialogSDK.AlertTemplate>
+        ))
+    }
 
     return (
         <DropdownMenu.Root>
@@ -47,6 +71,11 @@ export function PretzelGraphDropdown() {
                         System
                     </DropdownMenu.RadioItem>
                 </DropdownMenu.RadioGroup>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item variant="destructive" onSelect={handleLogout}>
+                    <SystemIcons.Logout />
+                    Log out
+                </DropdownMenu.Item>
             </DropdownMenu.Content>
         </DropdownMenu.Root>
     )
