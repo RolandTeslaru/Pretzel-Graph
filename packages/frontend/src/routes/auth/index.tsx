@@ -36,7 +36,7 @@ function AuthPage() {
                     waveSpeed={0.05}
                 />
             </div>
-            <div className="absolute left-0 top-0 z-10 flex h-full xl:w-[500px] w-full  bg-background/70 backdrop-blur-lg r">
+            <div className="absolute p-10 left-0 top-10 bottom-10 z-10 flex xl:w-[900px] w-full  bg-background/70 backdrop-blur-lg rounded-r-2xl">
                 <div className='max-w-md min-w-md h-auto m-auto'>
                     <Pretzel className="mx-auto mb-4 text-primary" size={80} />
                     <AuthenticationPanel />

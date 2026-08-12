@@ -6,6 +6,7 @@ import { SDK } from "../SDKManager";
 import { Auth } from "@pretzel-graph/shared/domain";
 import { _createAuthActions_ } from "./actions";
 import { SystemSDK } from "../SystemSDK";
+import { router } from "@/main";
 
 @SDK("Auth")
 export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
@@ -44,12 +45,14 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
           setTimeout(() => {                                                                                                                                                                                                    
               this.actions.syncUser(session.user.id as Auth.User.Id)                                                                                                                                                            
           }, 0)
-      } else if (event === 'SIGNED_OUT') {                                                                                                                                                                                      
-          this.setState(s => {                                                                                                                                                                                                  
+      } else if (event === 'SIGNED_OUT') {
+          this.setState(s => {
               s.user = null
-              s.isAuthenticated = false                                                                                                                                                                                         
-              s.isLoading = false                                                                                                                                                                                             
+              s.isAuthenticated = false
+              s.isLoading = false
           })
+
+          router.navigate({ to: '/auth' })
       }
   })
   }
