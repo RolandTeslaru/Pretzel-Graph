@@ -1,4 +1,5 @@
 import { DB } from '@/db';
+import { NoResultError } from 'kysely';
 import { SystemError, DatabaseError } from '@pretzel-graph/shared/domain';
 
 // Which roles each method declared, keyed by method name, stored on the
@@ -77,6 +78,12 @@ function catchDatabaseErrors(fn: (...args: unknown[]) => unknown, operation: str
         catch (err) {
             if (err instanceof SystemError)
                 throw err;
+
+            // executeTakeFirstOrThrow found nothing. Under an RLS-scoped handle that means the
+            // row does not exist or is not visible to this caller — a NOT_FOUND, not a server
+            // fault. It carries no SQLSTATE, so it would otherwise fall through to a 500.
+            if (err instanceof NoResultError)
+                throw new SystemError(SystemError.Code.NOT_FOUND, 'Not found', { detail: `[${operation}] no result` });
 
             const sqlstate = (err as { code?: string }).code ?? '';
             const detail = err instanceof Error ? err.message : String(err);
