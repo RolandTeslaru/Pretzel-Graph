@@ -31,7 +31,7 @@ export const VersionControlSettings = () => {
                         if (!activePublication) return;
                         openDeactivatePublicationDialog(
                             activePublication,
-                            () => VersionControlSDK.actions.deactivate(activePublication.id),
+                            () => VersionControlSDK.actions.deactivate(activePublication.workflow_id, activePublication.id),
                         );
                     }}
                 >

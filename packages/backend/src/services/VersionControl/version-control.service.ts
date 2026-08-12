@@ -1,28 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
-import { VersionControl } from '@pretzel-graph/shared/domain';
+import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { VersionControlDatabase } from './version-control.database';
-import { PermissionService } from '../Permission/permission.service';
 
 @Injectable()
 export class VersionControlService {
     constructor(
         private readonly realtime: RealtimeService,
         private readonly database: VersionControlDatabase,
-        private readonly ownership: PermissionService,
     ) {}
 
+    // publish_workflow is SECURITY DEFINER and does not resolve through RLS, so the route's
+    // workflow scope is the only thing confining this to the caller's own workflow.
     async publish(
-        principal: Principal.User,
-        payload: VersionControl.API.Publish.Request,
+        principal:  Principal.User,
+        workflowId: Workflow.Id,
+        payload:    VersionControl.API.Publish.Request,
     ): Promise<VersionControl.API.Publish.Response> {
-        // publish_workflow is SECURITY DEFINER until the snippet below is applied, so it does
-        // not resolve through RLS. This assert is the only thing scoping it to the caller.
-        await this.ownership.assertWorkflow(payload.workflowId, principal.userId);
 
-        const publication = await DB.asUser(principal, (trx) => this.database.publish(trx, principal.userId, payload));
+        const publication = await DB.asUser(principal, 
+            (trx) => this.database.publish(trx, principal.userId, workflowId, payload)
+        );
+        
         publication.is_active = true;
         this.realtime.emitSignal<VersionControl.Signal.Published>({
             channel: VersionControl.Signal.getChannel(publication.workflow_id, 'published'),
@@ -36,40 +37,46 @@ export class VersionControlService {
 
     async list(
         principal: Principal.User,
-        payload: VersionControl.API.List.Request,
+        workflowId: Workflow.Id,
     ): Promise<VersionControl.API.List.Response> {
-        const publications = await DB.asUser(principal, (trx) => this.database.list(trx, payload));
+        const publications = await DB.asUser(principal, 
+            (trx) => this.database.list(trx, workflowId)
+        );
+
         return { publications };
     }
 
     async listActiveWorkflows(
         principal: Principal.User,
     ): Promise<VersionControl.API.ListActiveWorkflows.Response> {
-        const activeWorkflows = await DB.asUser(principal, (trx) => this.database.listActiveWorkflows(trx, principal.userId));
+        const activeWorkflows = await DB.asUser(principal, 
+            (trx) => this.database.listActiveWorkflows(trx, principal.userId)
+        );
+        
         return { activeWorkflows };
     }
 
     async getActiveByWorkflow(
         principal: Principal.User,
-        payload: VersionControl.API.GetActiveByWorkflow.Request,
+        workflowId: Workflow.Id,
     ): Promise<VersionControl.API.GetActiveByWorkflow.Response> {
-        const publication = await DB.asUser(principal, (trx) => this.database.getActiveByWorkflow(trx, principal.userId, payload));
+        const publication = await DB.asUser(principal, (trx) => this.database.getActiveByWorkflow(trx, principal.userId, workflowId));
         return { publication };
     }
 
     async get(
         principal: Principal.User,
-        payload: VersionControl.API.Get.Request,
+        publicationId: VersionControl.Publication.Id,
     ): Promise<VersionControl.API.Get.Response> {
-        const publication = await DB.asUser(principal, (trx) => this.database.get(trx, payload));
+        const publication = await DB.asUser(principal, (trx) => this.database.get(trx, publicationId));
         return { publication };
     }
 
     async activate(
         principal: Principal.User,
-        payload: VersionControl.API.Activate.Request,
+        publicationId: VersionControl.Publication.Id,
     ): Promise<VersionControl.API.Activate.Response> {
-        const publication = await DB.asUser(principal, (trx) => this.database.activate(trx, payload));
+        const publication = await DB.asUser(principal, (trx) => this.database.activate(trx, publicationId));
         this.realtime.emitSignal<VersionControl.Signal.Activated>({
             channel: VersionControl.Signal.getChannel(publication.workflow_id, 'activated'),
             type: 'activated',
@@ -82,9 +89,9 @@ export class VersionControlService {
 
     async deactivate(
         principal: Principal.User,
-        payload: VersionControl.API.Deactivate.Request,
+        publicationId: VersionControl.Publication.Id,
     ): Promise<VersionControl.API.Deactivate.Response> {
-        const publication = await DB.asUser(principal, (trx) => this.database.deactivate(trx, payload));
+        const publication = await DB.asUser(principal, (trx) => this.database.deactivate(trx, publicationId));
         this.realtime.emitSignal<VersionControl.Signal.Deactivated>({
             channel: VersionControl.Signal.getChannel(publication.workflow_id, 'deactivated'),
             type: 'deactivated',
@@ -96,14 +103,14 @@ export class VersionControlService {
 
     async remove(
         principal: Principal.User,
-        payload: VersionControl.API.Remove.Request,
+        publicationId: VersionControl.Publication.Id,
     ): Promise<VersionControl.API.Remove.Response> {
-        const { workflowId } = await DB.asUser(principal, (trx) => this.database.remove(trx, payload));
+        const { workflowId } = await DB.asUser(principal, (trx) => this.database.remove(trx, publicationId));
         this.realtime.emitSignal<VersionControl.Signal.Removed>({
             channel: VersionControl.Signal.getChannel(workflowId, 'removed'),
             type: 'removed',
             workflowId,
-            publicationId: payload.publicationId,
+            publicationId,
         });
         return { success: true, workflowId };
     }

@@ -45,12 +45,14 @@ export class ExecutionService {
 
 
 
+    // workflowId arrives already authorized, from the route's workflow scope. The caller is
+    // the owner by construction, so the run acts as principal.userId.
     public async runFromUser(
-        principal: Principal.User,
-        payload:   Execution.API.Run.Request,
+        principal:  Principal.User,
+        workflowId: Workflow.Id,
+        payload:    Execution.API.Run.Request,
     ): Promise<Execution.API.Run.Response> {
-        const ownerId = await this.ownership.assertWorkflow(payload.workflowId, principal.userId);
-        return this.runCore(ownerId, payload, payload.igniter);
+        return this.runCore(principal.userId, workflowId, payload, payload.igniter);
     }
 
 
@@ -70,7 +72,7 @@ export class ExecutionService {
 
         const ownerId = await this.ownership.loadWorkflowOwner(payload.workflowId);
 
-        return this.runCore(ownerId, payload, payload.igniter);
+        return this.runCore(ownerId, payload.workflowId, payload, payload.igniter);
     }
 
 
@@ -117,18 +119,18 @@ export class ExecutionService {
 
     /**
      * Every run acts as the workflow's owner, whoever triggered it — a user clicking Run
-     * is the owner (assertWorkflow enforces it), and a webhook fires because that owner
+     * is the owner (the route's workflow scope enforces it), and a webhook fires because that owner
      * published the workflow. So setup binds one identity here rather than taking it from
      * the caller. RLS then scopes credential resolution on both paths.
      */
     private async runCore(
-        userId:   Auth.User.Id,
-        payload:  Execution.API.Run.Request,
-        igniter:  Execution.Igniter,
+        userId:     Auth.User.Id,
+        workflowId: Workflow.Id,
+        payload:    Execution.API.Run.Request,
+        igniter:    Execution.Igniter,
     ): Promise<Execution.API.Run.Response> {
         const withDatabase = <T>(fn: (trx: DB.UserTransaction) => Promise<T>) => DB.asUser({ userId }, fn);
 
-        const { workflowId } = payload;
         const chatId = igniter.chat_id;
         const workflowData = payload.workflowData;
 
@@ -136,8 +138,8 @@ export class ExecutionService {
         const wfCache = Workflow.createCache(workflowData, blueprints);
         // Validation
         const arcsMap = Workflow.deriveArcs(wfCache);
-        const sccs   = Algorithms.Tarjan.deriveSCCs(workflowData.nodes, arcsMap)[3];
-        const cycles = Algorithms.Johnson.getAllCycles(arcsMap, sccs);
+        const sccs    = Algorithms.Tarjan.deriveSCCs(workflowData.nodes, arcsMap)[3];
+        const cycles  = Algorithms.Johnson.getAllCycles(arcsMap, sccs);
         
         const issues = Validation.Issue.checkWorkflow(workflowData, cycles, wfCache);
 
@@ -223,12 +225,9 @@ export class ExecutionService {
 
 
     public async pause(
-        principal: Principal.User,
-        payload:   Execution.API.Pause.Request,
+        principal:   Principal.User,
+        executionId: Execution.Id,
     ): Promise<Execution.API.Pause.Response> {
-        const { executionId } = payload;
-
-        await this.ownership.assertExecution(executionId, principal.userId);
 
         const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Pause>(
             { channel: Execution.Signal.getChannel(executionId), type: 'pause', executionId },
@@ -236,7 +235,9 @@ export class ExecutionService {
             'lifecycle:paused',
         );
 
-        if (success) await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'paused' }));
+        if (success) 
+            await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'paused' }));
+       
         return { success };
     }
 
@@ -244,12 +245,9 @@ export class ExecutionService {
 
 
     public async resume(
-        principal: Principal.User,
-        payload:   Execution.API.Resume.Request,
+        principal:   Principal.User,
+        executionId: Execution.Id,
     ): Promise<Execution.API.Resume.Response> {
-        const { executionId } = payload;
-
-        await this.ownership.assertExecution(executionId, principal.userId);
 
         const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Resume>(
             { channel: Execution.Signal.getChannel(executionId), type: 'resume', executionId },
@@ -257,7 +255,9 @@ export class ExecutionService {
             'lifecycle:resumed',
         );
 
-        if (success) await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'running' }));
+        if (success) 
+            await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'running' }));
+        
         return { success };
     }
 
@@ -265,12 +265,9 @@ export class ExecutionService {
 
 
     public async heartbeat(
-        principal: Principal.User,
-        payload:   Execution.API.Heartbeat.Request,
+        principal:   Principal.User,
+        executionId: Execution.Id,
     ): Promise<Execution.API.Heartbeat.Response> {
-        const { executionId } = payload;
-
-        await this.ownership.assertExecution(executionId, principal.userId);
 
         const channel = Execution.Signal.getChannel(executionId)
 
@@ -286,12 +283,9 @@ export class ExecutionService {
 
 
     public async suspend(
-        principal: Principal.User,
-        payload:   Execution.API.Suspend.Request,
+        principal:   Principal.User,
+        executionId: Execution.Id,
     ): Promise<Execution.API.Suspend.Response> {
-        const { executionId } = payload;
-
-        await this.ownership.assertExecution(executionId, principal.userId);
 
         const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Suspend>(
             { channel: Execution.Signal.getChannel(executionId), type: 'suspend', executionId },
@@ -307,12 +301,9 @@ export class ExecutionService {
 
 
     public async terminate(
-        principal: Principal.User,
-        payload:   Execution.API.Terminate.Request,
+        principal:   Principal.User,
+        executionId: Execution.Id,
     ): Promise<Execution.API.Terminate.Response> {
-        const { executionId } = payload;
-
-        await this.ownership.assertExecution(executionId, principal.userId);
 
         const success = await this.realtime.signalAndAwaitEvent<Execution.Signal.Terminate>(
             { channel: Execution.Signal.getChannel(executionId), type: 'terminate', executionId },
@@ -320,7 +311,9 @@ export class ExecutionService {
             'lifecycle:terminated',
         );
 
-        if (success) await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'terminated' }));
+        if (success) 
+            await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'terminated' }));
+        
         return { success };
     }
 
@@ -366,13 +359,13 @@ export class ExecutionService {
 
 
 
+    // No ownership assert: the read runs through RLS, which confines it to the caller's own
+    // executions. A row that is not theirs is not visible, and the resulting no-row throw
+    // surfaces as the same 404 the assert used to produce.
     public async get(
-        principal: Principal.User,
-        payload:   Execution.API.Get.Request
+        principal:   Principal.User,
+        executionId: Execution.Id,
     ): Promise<Execution.API.Get.Response> {
-        const { executionId } = payload;
-
-        await this.ownership.assertExecution(executionId, principal.userId);
 
         const execution = await DB.asUser(principal, (db) => this.database.get(db, executionId));
 
@@ -397,14 +390,17 @@ export class ExecutionService {
 
     public readonly recording = {
 
+        // Reads Redis, which RLS does not reach — the route's execution scope is the only
+        // thing confining this to the caller's own run.
         getLive: async (
-            principal: Principal.User,
-            payload:   Execution.API.Recording.GetLive.Request,
+            executionId: Execution.Id,
         ): Promise<Execution.API.Recording.GetLive.Response> => {
-            await this.ownership.assertExecution(payload.executionId, principal.userId);
-            const key = Execution.Event.getChannel(payload.executionId);
+            const key = Execution.Event.getChannel(executionId);
             const raw = await this.redis.get(key);
-            if (!raw) throw new SystemError(SystemError.Code.NOT_FOUND, 'Live recording not found or expired');
+
+            if (!raw) 
+                throw new SystemError(SystemError.Code.NOT_FOUND, 'Live recording not found or expired');
+
             const recording = Execution.Recording.Schema.parse(JSON.parse(raw));
             return { recording };
         },
@@ -414,12 +410,9 @@ export class ExecutionService {
     public meta = {
 
         get: async (
-            principal: Principal.User,
-            payload:   Execution.API.Meta.Get.Request
+            principal:   Principal.User,
+            executionId: Execution.Id,
         ): Promise<Execution.API.Meta.Get.Response> => {
-            const { executionId } = payload;
-
-            await this.ownership.assertExecution(executionId, principal.userId);
 
             const meta = await DB.asUser(principal, (db) => this.database.meta.get(db, executionId));
 
@@ -428,10 +421,9 @@ export class ExecutionService {
 
 
         list: async (
-            principal: Principal.User,
-            payload:   Execution.API.Meta.List.Request
+            principal:  Principal.User,
+            workflowId: Workflow.Id,
         ): Promise<Execution.API.Meta.List.Response> => {
-            const { workflowId } = payload;
 
             const metaList = await DB.asUser(principal, (db) => this.database.meta.list(db, workflowId));
 

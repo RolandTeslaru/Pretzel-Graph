@@ -1,6 +1,6 @@
 {
-  "version": "1786467122497",
-  "generatedAt": "2026-08-11T16:52:02.497Z",
+  "version": "1786481718190",
+  "generatedAt": "2026-08-11T20:55:18.190Z",
   "drawers": {},
   "blueprints": {
     "Core.Chat.History": {
@@ -5129,29 +5129,17 @@
           "kind": "select"
         },
         {
-          "id": "responseMode",
+          "id": "testTimeoutMs",
           "advanced": false,
           "required": false,
           "reconcile": false,
-          "displayName": "Response Mode",
-          "tooltip": "Whether the webhook response should be sent immediately with an empty body, or delayed until the workflow finishes executing and includes a response payload.",
-          "variant": "MultiOption",
-          "initialValue": "onReceived",
-          "options": [
-            {
-              "value": "onReceived",
-              "displayName": "On Received"
-            },
-            {
-              "value": "workflowCompletion",
-              "displayName": "When Workflow Completes"
-            },
-            {
-              "value": "manual",
-              "displayName": "Manual"
-            }
-          ],
-          "kind": "select"
+          "displayName": "Test Timeout (ms)",
+          "tooltip": "How long a test run waits for an inbound request before giving up. Live webhooks are unaffected.",
+          "variant": "Integer",
+          "initialValue": 30000,
+          "min": 10000,
+          "max": 600000,
+          "step": 1
         },
         {
           "id": "signalDependency",
@@ -5247,7 +5235,7 @@
           "id": "req",
           "method": "${{ @fields[\"method\"] }}",
           "path": "${{ @fields[\"path\"] }}",
-          "responseMode": "${{ @fields[\"responseMode\"] }}"
+          "responseMode": "onReceived"
         }
       ]
     },
@@ -5289,22 +5277,22 @@
         {
           "id": "title",
           "advanced": false,
-          "required": false,
+          "required": true,
           "reconcile": false,
           "displayName": "Title",
           "variant": "String",
-          "initialValue": "",
+          "initialValue": "Review required",
           "multiline": false,
           "placeholder": "Review required"
         },
         {
           "id": "message",
           "advanced": false,
-          "required": false,
+          "required": true,
           "reconcile": false,
           "displayName": "Message",
           "variant": "String",
-          "initialValue": "",
+          "initialValue": "Approve this action?",
           "multiline": false,
           "placeholder": "Approve this action?"
         },
@@ -5316,8 +5304,9 @@
           "displayName": "Timeout (ms)",
           "tooltip": "How long to wait for a response before the node times out.",
           "variant": "Integer",
-          "initialValue": 86400000,
-          "min": 0,
+          "initialValue": 60000,
+          "min": 10000,
+          "max": 600000,
           "step": 1
         },
         {

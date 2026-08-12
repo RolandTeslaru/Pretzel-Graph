@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
-import { Chat } from '@pretzel-graph/shared/domain';
+import { Chat, Workflow } from '@pretzel-graph/shared/domain';
 import { ChatDatabase } from './chat.database';
 import { PermissionService } from '../Permission/permission.service';
 
@@ -12,37 +12,40 @@ export class ChatService {
         private readonly ownership: PermissionService,
     ) {}
 
+    // workflow_id arrives already authorized, from the route's workflow scope — so a chat
+    // cannot be attached to a workflow the user doesn't own.
     async create(
-        principal: Principal.User,
-        payload: Chat.API.Create.Request
+        principal:   Principal.User,
+        workflow_id: Workflow.Id,
+        payload:     Chat.API.Create.Request
     ): Promise<Chat.API.Create.Response> {
-        const { workflow_id, name } = payload;
-
-        // Don't let a chat be attached to a workflow the user doesn't own.
-        await this.ownership.assertWorkflow(workflow_id, principal.userId);
+        const { name } = payload;
 
         const chat = await DB.asUser(principal, (trx) => this.database.chat.create(trx, principal.userId, workflow_id, name));
 
         return { chat };
     }
 
+    // chatId is a proposed id — the row may not exist yet, so it authorizes nothing. workflow_id
+    // arrives already authorized, from the route's workflow scope.
     async ensure(
-        principal: Principal.User,
-        payload: Chat.API.Ensure.Request
+        principal:   Principal.User,
+        workflow_id: Workflow.Id,
+        payload:     Chat.API.Ensure.Request
     ): Promise<Chat.API.Ensure.Response> {
-        const { chatId, workflow_id, name } = payload;
-
-        await this.ownership.assertWorkflow(workflow_id, principal.userId);
+        const { chatId, name } = payload;
 
         const chat = await DB.asUser(principal, (trx) => this.database.chat.ensure(trx, principal.userId, chatId, workflow_id, name));
         return { chat };
     }
 
+    // chatId arrives already authorized, from the route's chat scope. Get.Request's cursor
+    // and limit are declared but unread — the query below does not paginate.
     async get(
         principal: Principal.User,
-        payload: Chat.API.Get.Request
+        chatId:    Chat.Id,
     ): Promise<Chat.API.Get.Response> {
-        return DB.asUser(principal, (trx) => this.database.chat.get(trx, principal.userId, payload.chatId));
+        return DB.asUser(principal, (trx) => this.database.chat.get(trx, principal.userId, chatId));
     }
 
     async list(
@@ -53,12 +56,9 @@ export class ChatService {
     }
 
     async listByWorkflow(
-        principal: Principal.User,
-        payload: Chat.API.ListByWorkflow.Request
+        principal:   Principal.User,
+        workflow_id: Workflow.Id,
     ): Promise<Chat.API.ListByWorkflow.Response> {
-        const { workflow_id } = payload;
-
-        await this.ownership.assertWorkflow(workflow_id, principal.userId);
 
         const chats = await DB.asUser(principal, (trx) => this.database.chat.listByWorkflow(trx, principal.userId, workflow_id));
         return { chats };
@@ -66,11 +66,11 @@ export class ChatService {
 
     async erase(
         principal: Principal.User,
-        payload: Chat.API.Erase.Request
+        chatId:    Chat.Id,
     ): Promise<Chat.API.Erase.Response> {
-        await DB.asUser(principal, (trx) => this.database.chat.erase(trx, principal.userId, payload.chatId));
+        await DB.asUser(principal, (trx) => this.database.chat.erase(trx, principal.userId, chatId));
 
-        this.ownership.invalidate(payload.chatId);
+        this.ownership.invalidate.chat(chatId);
 
         return {};
     }
@@ -78,9 +78,10 @@ export class ChatService {
     public readonly message = {
         add: async (
             principal: Principal.User,
-            payload: Chat.API.Message.Add.Request
+            chatId:    Chat.Id,
+            payload:   Chat.API.Message.Add.Request
         ): Promise<Chat.API.Message.Add.Response> => {
-            const { chatId, messages } = payload;
+            const { messages } = payload;
             await DB.asUser(principal, (trx) => this.database.message.add(trx, chatId, messages));
             return {};
         },

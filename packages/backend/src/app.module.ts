@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, DiscoveryModule } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
@@ -20,6 +20,7 @@ import { ConsultationModule } from './services/Consultation/consultation.module'
 
 @Module({
     imports: [
+        DiscoveryModule,
         // Rate limiting: max 100 requests per 60 seconds per IP
         ThrottlerModule.forRoot({
             throttlers: [{ ttl: 60000, limit: 100 }],
