@@ -128,7 +128,7 @@ const ExecutionControls = ({ canRun }: Props) => {
                           }}
                         />
                       </DropdownMenu.StaticItem>
-                      <DropdownMenu.StaticItem>
+                      {/* <DropdownMenu.StaticItem>
                         <SystemIcons.SearchCode className="mr-2" />
                         Debug
                         <Switch
@@ -141,7 +141,7 @@ const ExecutionControls = ({ canRun }: Props) => {
                             );
                           }}
                         />
-                      </DropdownMenu.StaticItem>
+                      </DropdownMenu.StaticItem> */}
                     </DropdownMenu.Group>
                   </DropdownMenu.Content>
                 </DropdownMenu.Root>

@@ -44,7 +44,7 @@ const WebhookRenderer: React.FC<Props> = memo(({ webhook, nodeId }) => {
     }, [tab, workflowId, parsedWebhook.path])
 
     return (
-        <div className='flex flex-col relative gap-1'>
+        <div className='flex flex-col relative gap-2'>
             <div className='flex flex-row w-full'>
                 <div className='bg-muted-foreground/50 h-auto py-0.5 px-2 rounded-md  my-auto'>
                     <p className='font-bold text-[11px] text-white'>{parsedWebhook.method}</p>
@@ -60,12 +60,12 @@ const WebhookRenderer: React.FC<Props> = memo(({ webhook, nodeId }) => {
                     </Tabs.List>
                 </Tabs.Root>
             </div>
-            <div className='flex flex-row'>
-                <div>
-                    <p className='text-[11px] text-muted-foreground [overflow-wrap:anywhere]'>{webhookUrl}</p>
+            <div className='flex flex-row gap-1'>
+                <div className='min-w-0 flex-1 my-auto'>
+                    <p className='text-[11px] text-muted-foreground truncate'>{webhookUrl}</p>
                 </div>
-                <Button size='icon-xs' variant='ghost' className='ml-auto my-auto' onClick={() => { navigator.clipboard.writeText(webhookUrl); toast.success('Copied to clipboard'); }}>
-                    <SystemIcons.Clipboard/>
+                <Button size='icon-xxs' variant='ghost' className='my-auto' onClick={() => { navigator.clipboard.writeText(webhookUrl); toast.success('Copied to clipboard'); }}>
+                    <SystemIcons.Copy/>
                 </Button>
             </div>
         </div>
