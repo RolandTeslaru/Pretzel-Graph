@@ -4,7 +4,7 @@ import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { resolveWebhook } from '@pretzel-graph/shared/utils';
 import Redis from 'ioredis';
-import { createServiceClient } from '@/utils/supabase';
+import { db, closeDb } from '@/utils/db';
 
 @Injectable()
 export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
@@ -15,8 +15,10 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
     private readonly publicationsMap = new Map<Workflow.Id, VersionControl.Publication>();
 
     private toPublication(row: unknown): VersionControl.Publication {
-        const parsed = VersionControl.Publication.Database.Row.Schema.parse(row);
-        return VersionControl.Publication.Schema.parse(parsed);
+        // A raw version_control row parses straight into the domain schema — same as the
+        // backend's DB.VersionControl.toDomain. (Previously referenced Publication.Database.Row,
+        // a namespace removed in an earlier refactor, which left this uncompilable.)
+        return VersionControl.Publication.Schema.parse(row);
     }
 
     // ─────────────────────────────────────────────────────────
@@ -32,15 +34,18 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
     // ─────────────────────────────────────────────────────────
 
     public async initializeCache() {
-        const supabase = createServiceClient();
-        const { data, error } = await supabase.rpc('get_active_webhook_publications');
+        let rows: unknown[];
 
-        if (error) {
-            this.logger.error(`Failed to hydrate registry: ${error.message}`);
+        try {
+            const result = await db().query('select * from get_active_webhook_publications()');
+            rows = result.rows;
+        }
+        catch (error) {
+            this.logger.error(`Failed to hydrate registry: ${(error as Error).message}`);
             return;
         }
 
-        const publications = (data ?? []).map((row: unknown) =>
+        const publications = rows.map((row: unknown) =>
             this.toPublication(row),
         );
 
@@ -141,5 +146,6 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
 
     async onModuleDestroy() {
         this.redisSub.disconnect();
+        await closeDb();
     }
 }
