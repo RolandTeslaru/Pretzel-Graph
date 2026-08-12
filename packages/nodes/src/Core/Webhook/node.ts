@@ -46,28 +46,34 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         };
     }
 
-    // Registering the route and announcing readiness both invite the payload, so they run
-    // inside awaitSignalAfter — the waiter exists before either can be answered.
-    //
-    // This wait cannot currently be satisfied: the webhook server publishes its resolve
-    // signal from reg.workflowId, and its registry holds no executionId to address a parked
-    // node with. See SPECS/execution-signal-router.md, Out of Scope.
+    // Registering the route is what invites the payload, so it runs in `onOpen` — inside the
+    // armed window, once the waiter exists and the card is on the session. The registration
+    // carries the execution and consultation ids so the webhook server, which addresses routes
+    // only by workflow and path, can hand the payload back to this exact parked node.
     private async waitForTestPayload(): Promise<Webhook.Payload> {
         const path   = this.fieldValues.path   as Webhook.Path;
         const method = this.fieldValues.method as Webhook.Method;
 
-
-        const res = await this.context.consultationAPI.consult(
-            Webhook.Test.Consultation.Request,
-            {
+        const res = await this.context.consultationAPI.consult({
+            requestSchema: Webhook.Test.Consultation.Request,
+            answerSchema:  Webhook.Test.Consultation.Answer,
+            request: {
                 nodeId:    this.nodeId,
                 variant:   Webhook.Test.Consultation.Variant,
                 timeoutMs: this.fieldValues.testTimeoutMs,
                 path,
                 method
             },
-            Webhook.Test.Consultation.Answer
-        )
+            onOpen: request => Webhook.Test.API.register(this.context.internalAPI.raw, {
+                workflowId:     this.context.workflowId,
+                path,
+                method,
+                // Doubles as the route's TTL, so it expires exactly when this wait does.
+                timeoutMs:      this.fieldValues.testTimeoutMs,
+                executionId:    this.context.executionId,
+                consultationId: request.id,
+            }).then(() => {}),
+        })
 
         return res.payload;
     }
