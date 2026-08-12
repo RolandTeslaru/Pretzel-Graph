@@ -26,11 +26,14 @@
     "@pretzel-graph/node-sdk": "*",
     "@pretzel-graph/shared": "*",
     "@pretzel-graph/worker": "*",
-    "@supabase/supabase-js": "^2.105.4",
     "axios": "*",
     "kalshi-typescript": "3.26.0",
     "lodash": "^4.17.23",
+    "pg": "^8.22.0",
     "viem": "^2.47.12",
     "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.21.0"
   }
 }
