@@ -229,14 +229,33 @@ export type UnstampedConsultationRequest<
  * The request argument is typed off the schema's *input*, so fields carrying a
  * `.default()` are optional to pass — the parse fills them.
  */
+export interface ConsultationProps<
+    RQ extends Consultation.Request,
+    RQ_Input,
+    A extends Consultation.Answer,
+> {
+    /** Parses the stamped request. Keeps the domain's own fields all the way through. */
+    requestSchema: z.ZodType<RQ, RQ_Input>,
+    /** Everything but `id` and `startedAt` — consult stamps those. */
+    request:       UnstampedConsultationRequest<RQ_Input>,
+    /** Validates the reply before the node sees it. */
+    answerSchema:  z.ZodType<A>,
+    /**
+     * Runs once the waiter is armed and the request is on the session, with the stamped
+     * request in hand. Anything that *invites* the answer belongs here — registering an
+     * inbound route, pinging an external system — so it cannot be satisfied before there
+     * is somewhere for the reply to land. Throwing unregisters the waiter rather than
+     * leaving the node parked until timeout.
+     */
+    onOpen?:       (request: RQ) => void | Promise<void>,
+}
+
 export interface ConsultationAPI {
     consult: <
         RQ extends Consultation.Request,
         RQ_Input,
         A extends Consultation.Answer,
     >(
-        requestSchema:    z.ZodType<RQ, RQ_Input>,
-        request:          UnstampedConsultationRequest<RQ_Input>,
-        answerSchema:     z.ZodType<A>,
+        props: ConsultationProps<RQ, RQ_Input, A>,
     ) => Promise<A>,
 }

@@ -4,7 +4,7 @@ import { Consultation, Execution } from '@pretzel-graph/shared/domain';
 import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { Scoped } from '../../auth/scoped.decorator';
 import { ExecutionIdParam } from '@/decorators/scope';
-import { ZodBody } from '../../pipes/zod.pipe';
+import { ZodBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 
 @Controller('consultation')
 @UseGuards(UserAuthGuard)

@@ -30,6 +30,21 @@ const RLS_COVERED_ROUTES = new Set([
 const UNMIGRATED_ROUTES = new Set<string>([]);
 
 /**
+ * Authorized, but not by ScopedGuard. These run under DelegateAuthGuard — the caller is a
+ * running execution, not a user — and assert ownership in the handler through
+ * PermissionService. ScopedGuard cannot cover them: it demands a user principal and
+ * compares the resource owner to the requester's userId, so it would reject every
+ * legitimate call.
+ *
+ * TODO: make @Scoped work under delegate auth, so these stop being hand-checked. A scope
+ * would resolve the same way but authorize the delegate's execution against the resource
+ * instead of a userId, and this set would empty out.
+ */
+const DELEGATE_AUTHORIZED_ROUTES = new Set([
+    'WebhookTestController.register',
+]);
+
+/**
  * The fail-closed param decorator only fires on handlers that actually read an id, so a
  * scoped route needing none would keep the hole it was meant to close. This walks every
  * route at bootstrap and aborts on a mismatch — a missing guard becomes a crash at boot
@@ -67,7 +82,9 @@ export function auditScopedRoutes(app: INestApplication) {
             const where    = `${controller.name}.${method} (${fullPath})`;
 
             const route  = `${controller.name}.${method}`;
-            const exempt = RLS_COVERED_ROUTES.has(route) || UNMIGRATED_ROUTES.has(route);
+            const exempt = RLS_COVERED_ROUTES.has(route)
+                || UNMIGRATED_ROUTES.has(route)
+                || DELEGATE_AUTHORIZED_ROUTES.has(route);
 
             for (const [name, definition] of Object.entries(SCOPES)) {
                 const inPath = fullPath.split('/').includes(`:${definition.param}`);

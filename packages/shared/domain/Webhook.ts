@@ -3,6 +3,7 @@ import type { AxiosInstance } from "axios";
 import { NodeId } from "./Workflow/ids";
 // Leaf modules only — the Execution barrel reaches Workflow, which imports this file.
 import { Signal as ExecutionSignal } from "./Execution/signal";
+import { ExecutionId } from "./Execution/ids";
 import * as ExecutionEvent from "./Execution/event-base";
 import { Consultation as ConsultationModule } from "./Consultation";
 
@@ -96,22 +97,6 @@ export namespace Webhook {
 
 
 
-        export namespace Signal {
-
-            export const Base = ExecutionSignal.Base.extend({
-                ignitedNodeId: NodeId
-            })
-
-            export const ResolvePayload = Base.extend({
-                type: z.literal("resolve_payload"),
-                payload: Payload.Schema
-            })
-
-            export const Schema = z.discriminatedUnion("type", [ResolvePayload])
-        }
-        export type Signal = z.infer<typeof Signal.Schema>
-
-
         export namespace Consultation {
 
             // Namespaced: ConsultationModule.Variant is an open registry shared with every
@@ -139,10 +124,29 @@ export namespace Webhook {
 
         export namespace API {
             export namespace Register {
-                export const Request = z.object({
-                    workflowId: WorkflowId,
+                // Sent by the caller; workflowId rides the URL, not the body.
+                export const Body = z.object({
                     path: Path,
                     method: Method,
+                    // Doubles as the registration's TTL, so the route and the node's wait
+                    // expire together instead of the route outliving or undercutting it.
+                    timeoutMs: z.number(),
+                    // Opaque to this server — stored at registration and echoed back on the
+                    // answer so it reaches the parked node. The URL stays workflow-scoped;
+                    // only the forwarding address knows about executions.
+                    //
+                    // Optional because Core.Chat.Input registers a route while parking on its
+                    // own signal rather than a consultation. Such a route is registered but
+                    // unanswerable — dispatch logs and drops it.
+                    executionId: ExecutionId.optional(),
+                    consultationId: ConsultationModule.Id.optional(),
+                })
+                export type Body = z.infer<typeof Body>
+
+                // Full internal contract — the backend rejoins the URL's workflowId before
+                // forwarding to the webhook server.
+                export const Request = Body.extend({
+                    workflowId: WorkflowId,
                 })
                 export type Request = z.infer<typeof Request>
 
@@ -154,7 +158,8 @@ export namespace Webhook {
                 api: AxiosInstance,
                 req: Register.Request,
             ): Promise<Register.Response> {
-                const { data } = await api.post<Register.Response>('/api/webhook/test/register', req);
+                const { workflowId, ...body } = req;
+                const { data } = await api.post<Register.Response>(`/api/webhook/test/${workflowId}/register`, body);
                 return data;
             }
         }
