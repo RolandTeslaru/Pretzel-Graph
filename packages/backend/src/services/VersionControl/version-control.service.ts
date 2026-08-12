@@ -12,8 +12,9 @@ export class VersionControlService {
         private readonly database: VersionControlDatabase,
     ) {}
 
-    // publish_workflow is SECURITY DEFINER and does not resolve through RLS, so the route's
-    // workflow scope is the only thing confining this to the caller's own workflow.
+    // publish_workflow is SECURITY INVOKER, so its INSERT does resolve through RLS — the
+    // route's workflow scope is defence in depth rather than the only gate. (An earlier
+    // comment here claimed DEFINER; the function was converted and the comment went stale.)
     async publish(
         principal:  Principal.User,
         workflowId: Workflow.Id,
