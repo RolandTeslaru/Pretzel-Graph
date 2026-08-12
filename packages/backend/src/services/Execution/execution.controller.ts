@@ -7,7 +7,7 @@ import { Scoped } from '../../auth/scoped.decorator';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { ExecutionIdParam, WorkflowIdParam } from '@/decorators/scope';
 import { Principal } from '@/domain/Principal';
-import { ZodBody, ZodParam } from '../../pipes/zod.pipe';
+import { ZodBody, ZodParam } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 
 @Controller('execution')
 export class ExecutionController {

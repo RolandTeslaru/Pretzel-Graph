@@ -4,7 +4,7 @@ import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { Auth } from '@pretzel-graph/shared/domain';
-import { ZodBody } from '@/pipes/zod.pipe';
+import { ZodBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 
 @Controller('auth')
 @UseGuards(UserAuthGuard)
