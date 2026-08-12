@@ -46,13 +46,14 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
             return true
         },
         signup: async (props) => {
-            const { email, password, username } = props
+            const { email, password, username, displayName } = props
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
                     data: {
                         username: username,  // This goes into raw_user_meta_data
+                        display_name: displayName,
                     }
                 }
             });
@@ -90,6 +91,14 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
                 console.error("Failed to fetch user profile", error)
                 sdk.setState(s => { s.isLoading = false });
             }
+        },
+        updateMe: async (props) => {
+            const { user } = await Auth.API.Me.update(api, props)
+
+            sdk.setState(s => {
+                s.user = user;
+            })
+            return user;
         }
     }
 }

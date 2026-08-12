@@ -3,10 +3,15 @@ import { DropdownMenu, AlertDialog } from '@pretzel-graph/standard-ui/foundation
 import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { DialogSDK } from '@/SDKs/DialogSDK'
+import { openAccountDialog } from '@/SDKs/AuthSDK/ui/AccountDialog'
 
 const LOGOUT_DIALOG_ID = 'logout'
 
-export function PretzelGraphDropdown() {
+type Props = {
+    compact?: boolean
+}
+
+export function PretzelGraphDropdown({ compact = false }: Props) {
     const theme = SystemSDK.useStore(s => s.theme)
 
     const handleLogout = () => {
@@ -32,27 +37,31 @@ export function PretzelGraphDropdown() {
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <button
-                    type="button"
-                    className="flex items-center gap-2 rounded-md px-1 py-1 -ml-1 hover:bg-muted/60 transition-colors"
-                >
-                    <SystemIcons.Pretzel size={30} className="fill-primary" />
-                    <span className="font-semibold tracking-tight">PretzelGraph</span>
-                    <SystemIcons.ChevronDown size={14} className="text-muted-foreground" />
-                </button>
+                {compact ? (
+                    <SystemIcons.Pretzel size={30} className="text-primary cursor-pointer" />
+                ) : (
+                    <button
+                        type="button"
+                        className="flex items-center gap-2 rounded-md px-1 py-1 -ml-1 hover:bg-muted/60 transition-colors"
+                    >
+                        <SystemIcons.Pretzel size={30} className="fill-primary" />
+                        <span className="font-semibold tracking-tight">PretzelGraph</span>
+                        <SystemIcons.ChevronDown size={14} className="text-muted-foreground" />
+                    </button>
+                )}
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="start">
                 <h4 className="px-2 py-1 text-md font-medium text-primary">
                     PretzelGraph.ai
                 </h4>
-                <DropdownMenu.Item>
+                <DropdownMenu.Item onSelect={() => openAccountDialog()}>
                     <SystemIcons.User />
                     Account
                 </DropdownMenu.Item>
-                <DropdownMenu.Item>
+                {/* <DropdownMenu.Item>
                     <SystemIcons.Settings />
                     Settings
-                </DropdownMenu.Item>
+                </DropdownMenu.Item> */}
                 <DropdownMenu.Separator />
                 <DropdownMenu.RadioGroup value={theme} onValueChange={(value) => SystemSDK.actions.setTheme(value as 'light' | 'dark' | 'system')}>
                     <p className="px-2 py-1 text-sm text-muted-foreground">

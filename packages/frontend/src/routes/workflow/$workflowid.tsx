@@ -17,7 +17,7 @@ import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK/sdk'
 import { ExecutionSDK } from './-SDKs/ExecutionSDK/sdk'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { BottomPanel } from './-panels/BottomPanel'
-import { PathPanel } from './-panels/PathPanel'
+import { TopLeftPanel } from './-panels/TopLeftPanel'
 import { TopRightPanel } from './-panels/TopRightPanel'
 import BottomLeftPanel from './-panels/BottomLeftPanel'
 import { DrawerSDK } from './-SDKs/DrawerSDK/sdk'
@@ -209,7 +209,7 @@ function WorkflowLayoutComponent() {
                     <AssistantSidebar />
                     <NodeSidebar />
                     <UoWInspectorSidebar />
-                    <PathPanel />
+                    <TopLeftPanel />
                     <TopRightPanel />
                     <SpotlightSearch />
                     <StackSDK.UIOverlay />
