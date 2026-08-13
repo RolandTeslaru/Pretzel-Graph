@@ -6,6 +6,7 @@ import { Signal as ExecutionSignal } from "./Execution/signal";
 import { ExecutionId } from "./Execution/ids";
 import * as ExecutionEvent from "./Execution/event-base";
 import { Consultation as ConsultationModule } from "./Consultation";
+import { Vault } from "./Vault";
 
 export namespace Webhook {
     export const Id = z.string().brand("WebhookId")
@@ -47,6 +48,10 @@ export namespace Webhook {
         method: z.string(),
         path: z.string(),
         responseMode: z.string(),
+        // Signing-secret credential for verifying inbound requests. Optional — most webhooks
+        // are unauthenticated; the template rides along so the registry/editor can resolve
+        // the bound instance.
+        credential: Vault.Credential.Template.Schema.optional(),
     })
 
 

@@ -1,11 +1,11 @@
 import { All, Controller, Param, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
-import { WebhookIgniterService } from './webhook-igniter.service';
+import { IgniterService } from './igniter.service';
 
 @Controller()
-export class WebhookIgniterController {
-    constructor(private readonly igniterService: WebhookIgniterService) {}
+export class IgniterController {
+    constructor(private readonly igniterService: IgniterService) {}
 
     @All(':workflowId/:path')
     async receive(
