@@ -1,4 +1,4 @@
-import { RegisterNode, Synthesizer } from "@pretzel-graph/node-sdk";
+import { Synthesizer } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint"
 import { Workflow } from "@pretzel-graph/shared/domain";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
@@ -7,7 +7,6 @@ import { InferFieldValues, InferIncoming, InferOutputs } from "@pretzel-graph/no
 import { Chat } from "@pretzel-graph/shared/domain";
 import { InternalChatAPI } from "../internal-api";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);

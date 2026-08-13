@@ -1,15 +1,10 @@
-import {
-    InferOutputs,
-    RegisterNode,
-    RuntimeNode,
-} from "@pretzel-graph/node-sdk";
+import { InferOutputs, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
 import { tool } from "@langchain/core/tools";
 import { Workflow } from "@pretzel-graph/shared/domain";
 import { z } from "zod/v3";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     private retriever: TavilySearchAPIRetriever;

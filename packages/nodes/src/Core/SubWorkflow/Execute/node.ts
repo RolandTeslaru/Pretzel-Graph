@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
+import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Airlock, Execution, Workflow } from "@pretzel-graph/shared/domain";
@@ -6,7 +6,6 @@ import { AggexEngine, TurboGraph } from "@pretzel-graph/worker";
 import { System } from "@pretzel-graph/shared/system";
 import { Node as ExposeInputPortNode } from "../ExposeInputPort/node";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     /** ExposeOutputPort nodes propagate parent outputs directly via enclosingNodeAPI

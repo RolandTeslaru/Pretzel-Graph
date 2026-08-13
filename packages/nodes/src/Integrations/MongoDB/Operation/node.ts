@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs, mongo, toMongoCreds } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferIncoming, InferOutputs, mongo, toMongoCreds } from "@pretzel-graph/node-sdk";
 import { ObjectId, type Document, type Filter } from "mongodb";
 import { Blueprint } from "./blueprint";
 
@@ -25,7 +25,6 @@ function withObjectId(filter: Document): Filter<Document> {
 /** Deep-normalize BSON (ObjectId / Date instances) to plain JSON for the output port + transport. */
 const plain = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(
