@@ -31,7 +31,6 @@ export class VersionControlService {
             type: 'published',
             workflowId: publication.workflow_id,
             publicationId: publication.id,
-            publication,
         });
         return { publication };
     }
@@ -83,7 +82,6 @@ export class VersionControlService {
             type: 'activated',
             workflowId: publication.workflow_id,
             publicationId: publication.id,
-            publication,
         });
         return { publication };
     }

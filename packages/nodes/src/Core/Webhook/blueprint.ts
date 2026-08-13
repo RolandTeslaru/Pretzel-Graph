@@ -1,6 +1,5 @@
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
-import { Webhook } from "@pretzel-graph/shared/domain/Webhook";
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineWebhook, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Webhook",
@@ -55,13 +54,11 @@ export const Blueprint = defineBlueprint({
     ],
     inputs: [],
     webhooks: [
-        {
-            id: "req" as Webhook.Id,
+        defineWebhook({
+            id: "req",
             path: '${{ @fields["path"] }}',
             method: '${{ @fields["method"] }}',
-            // Pinned while the field above is hidden — the registration shape still requires it.
-            responseMode: 'onReceived',
-        }
+        }),
     ],
     outputs: [
         OutputBuilder.Data("payload", "Payload", {

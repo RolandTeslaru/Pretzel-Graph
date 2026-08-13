@@ -82,10 +82,19 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
                     switch (signal.type) {
                         case "published":
                         case "activated":
-                            sdk.setState(s => {
-                                sdk.reducers.currentWorkflow.upsert(s, signal.publication);
-                                sdk.reducers.activeWorkflows.upsert(s, signal.publication);
-                            });
+                            // The signal carries no publication — it is only a nudge. Re-read the
+                            // now-active publication and upsert the fresh copy, rather than trusting
+                            // the wire. Invalidate the list query so deactivated siblings refresh too.
+                            VersionControl.API.getActiveByWorkflow(api, signal.workflowId)
+                                .then(({ publication }) => {
+                                    if (!publication) return;
+                                    sdk.setState(s => {
+                                        sdk.reducers.currentWorkflow.upsert(s, publication);
+                                        sdk.reducers.activeWorkflows.upsert(s, publication);
+                                    });
+                                    QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications", signal.workflowId] });
+                                })
+                                .catch(() => {});
                             break;
                         case "deactivated":
                             sdk.setState(s => {
