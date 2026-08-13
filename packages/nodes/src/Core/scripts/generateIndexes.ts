@@ -95,6 +95,8 @@ export async function generateIndex(includeDbBlueprints = false) {
         for (const row of data ?? []) {
             const workflowData = row.data as Workflow.Data;
             const dependencyFields = workflowData.fields ?? [];
+            // pg returns id as a plain string; brand it once for the keyed lookups below.
+            const workflowId = row.id as Workflow.Id;
 
             let inputs: Foundations.Port.Input[] = [];
             let outputs: Foundations.Port.Output[] = [];
@@ -108,14 +110,14 @@ export async function generateIndex(includeDbBlueprints = false) {
             }
 
             
-            const blueprintId = PUBLIC_WORKFLOW_BLUEPRINTS_REVERSE[row.id];
+            const blueprintId = PUBLIC_WORKFLOW_BLUEPRINTS_REVERSE[workflowId];
 
             const bp: Foundations.Blueprint = {
                 ...baseBlueprint,
                 id: blueprintId,
                 ui: {
                     displayName: row.display_name,
-                    description: row.description,
+                    description: row.description ?? undefined,
                     icon: row.icon ?? baseBlueprint.ui.icon,
                     accent: row.accent ?? baseBlueprint.ui.accent,
                     iconColor: baseBlueprint.ui.iconColor,
@@ -126,7 +128,7 @@ export async function generateIndex(includeDbBlueprints = false) {
                 flags: {
                     SHOW_DEPENDENCY_SELECTOR: false
                 },
-                dependencyRef: { workflowId: row.id, mode: "publication" as const },
+                dependencyRef: { workflowId, mode: "publication" as const },
             };
             console.log(`Processing public workflow: ${bp.id} (${bp.dependencyRef?.workflowId}) with ${inputs.length} inputs, ${outputs.length} outputs, and ${dependencyFields.length} dependency fields`)
             

@@ -7,8 +7,8 @@ import Redis from 'ioredis';
 import { db, closeDb } from '@/utils/db';
 
 @Injectable()
-export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
-    private readonly logger = new Logger(WorkflowRegistryService.name);
+export class RegistrationService implements OnModuleInit, OnModuleDestroy {
+    private readonly logger = new Logger(RegistrationService.name);
     private redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 
     // workflowId maps to active publication
@@ -58,6 +58,23 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
         );
     }
 
+    // The active publication for one workflow — boot's read, narrowed. Runs on the service
+    // connection (owner, RLS bypassed) because active publications are public infrastructure
+    // and this server routes for every tenant; there is no user to scope to.
+    private async fetchActivePublication(workflowId: Workflow.Id): Promise<VersionControl.Publication | null> {
+        const result = await db().query(
+            `select id, workflow_id, version, name, description, workflow_data, is_active, published_at
+             from version_control
+             where workflow_id = $1 and is_active = true
+             order by published_at desc
+             limit 1`,
+            [workflowId],
+        );
+
+        const row = result.rows[0];
+        return row ? this.toPublication(row) : null;
+    }
+
     // ─────────────────────────────────────────────────────────
     // Signal handling
     // ─────────────────────────────────────────────────────────
@@ -69,23 +86,32 @@ export class WorkflowRegistryService implements OnModuleInit, OnModuleDestroy {
         });
 
         this.redisSub.on('pmessage', (_pattern, _channel, raw) => {
+            let signal: VersionControl.Signal;
             try {
-                const signal = VersionControl.Signal.Schema.parse(JSON.parse(raw));
-                this.handleSignal(signal);
+                signal = VersionControl.Signal.Schema.parse(JSON.parse(raw));
             } catch (e) {
                 this.logger.warn(`Ignored malformed signal: ${(e as Error).message}`);
+                return;
             }
+            this.handleSignal(signal).catch(e =>
+                this.logger.error(`Failed to handle signal for workflow ${signal.workflowId}: ${(e as Error).message}`),
+            );
         });
     }
 
-    private handleSignal(signal: VersionControl.Signal) {
+    private async handleSignal(signal: VersionControl.Signal) {
         switch (signal.type) {
             case 'published':
-            case 'activated':
-                // New active publication — replace any prior entries for this workflow.
+            case 'activated': {
+                // The signal is only a nudge — re-read the authoritative row rather than trust
+                // the wire. Replace any prior entry regardless; a re-read that finds nothing
+                // (e.g. deactivated in the same instant) correctly leaves the workflow unregistered.
                 this.removePublication(signal.workflowId);
-                this.addPublication(signal.publication);
+                const publication = await this.fetchActivePublication(signal.workflowId);
+                if (publication)
+                    this.addPublication(publication);
                 break;
+            }
             case 'deactivated':
             case 'removed':
                 this.removePublication(signal.workflowId);

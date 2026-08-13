@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException, MethodNotAllowedException } from
 import { Execution, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { resolveWebhook } from '@pretzel-graph/shared/utils';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
-import { WorkflowRegistryService } from '../WorkflowRegistry/workflow-registry.service';
+import { RegistrationService } from '../Registration/registration.service';
 import { ApiService } from '../Api/api.service';
 
 export interface InboundRequest {
@@ -15,11 +15,11 @@ export interface InboundRequest {
 }
 
 @Injectable()
-export class WebhookIgniterService {
-    private readonly logger = new Logger(WebhookIgniterService.name);
+export class IgniterService {
+    private readonly logger = new Logger(IgniterService.name);
 
     constructor(
-        private readonly registry: WorkflowRegistryService,
+        private readonly registry: RegistrationService,
         private readonly api: ApiService,
     ) {}
 
