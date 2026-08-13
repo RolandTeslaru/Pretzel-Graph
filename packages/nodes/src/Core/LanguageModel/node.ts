@@ -1,4 +1,3 @@
-import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferFieldValues, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
@@ -9,7 +8,6 @@ import { computeCost } from "./pricing";
 type Inputs = InferIncoming<typeof Blueprint>
 type Outputs = InferOutputs<typeof Blueprint>
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;

@@ -1,8 +1,7 @@
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     public injectedData: unknown = undefined;

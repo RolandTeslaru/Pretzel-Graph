@@ -49,12 +49,21 @@ class CatalogueServiceImpl {
         const fullPath = `${this.nodesRoot}/${relativePath}/node`;
 
         try {
-            await import(fullPath);
+            const module = await import(fullPath);
 
+            // An explicit @RegisterNode wins; otherwise fall back to the exported Node class,
+            // mirroring how loadBaseBlueprint reads the sibling module's Blueprint export.
             if (this.__registry.has(blueprintId))
                 return this.__registry.get(blueprintId);
 
-            throw new Error(`Module loaded from ${relativePath} but did not register '${blueprintId}'. Check the @RegisterNode decorator.`);
+            const NodeClass = (module.Node ?? null) as NodeConstructor | null;
+
+            if (!NodeClass)
+                throw new Error(`Module loaded from ${relativePath} does not export a 'Node' class.`);
+
+            CatalogueServiceImpl.register(blueprintId, NodeClass);
+
+            return NodeClass;
 
         } catch (error) {
             console.error(`[CatalogueService] Failed to load node '${blueprintId}':`, error);

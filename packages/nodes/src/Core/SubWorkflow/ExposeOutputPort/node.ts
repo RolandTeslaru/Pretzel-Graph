@@ -1,10 +1,8 @@
-import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(

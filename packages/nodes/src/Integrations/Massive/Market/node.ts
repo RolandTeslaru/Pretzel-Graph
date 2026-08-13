@@ -1,7 +1,7 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { InferOutputs, RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
+import { InferOutputs, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "./blueprint";
@@ -23,7 +23,6 @@ import {
     summarizeAggs,
 } from "./fetch";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     private readonly client: ReturnType<typeof createMassiveClient>;

@@ -1,12 +1,7 @@
-import {
-    RegisterNode,
-    RuntimeNode,
-    type InferOutputs,
-} from "@pretzel-graph/node-sdk";
+import { RuntimeNode, type InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { buildTools, executeHttpRequest } from "./tools";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     private readonly client = this.httpClientFactory.create({

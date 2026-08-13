@@ -1,9 +1,8 @@
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Workflow } from "@pretzel-graph/shared/domain";
 import { ChatAnthropic } from "@langchain/anthropic";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;

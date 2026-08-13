@@ -1,4 +1,4 @@
-import { RegisterNode, RuntimeNode, InferFieldValues, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferFieldValues, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Workflow } from "@pretzel-graph/shared/domain";
 import { ChatOpenRouter } from "@langchain/openrouter";
@@ -16,7 +16,6 @@ function selectedModel(fields: InferFieldValues<typeof Blueprint>): string {
     }
 }
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;

@@ -14,7 +14,7 @@ import { mainnet, polygon, arbitrum, base, optimism, avalanche, celo } from "vie
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
-import { HTTP, RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import { HTTP, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "./blueprint";
@@ -70,7 +70,6 @@ const buildClients = (fields: {
     };
 };
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     private clients!: UniswapClients;

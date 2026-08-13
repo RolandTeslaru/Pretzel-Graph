@@ -1,8 +1,7 @@
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(
