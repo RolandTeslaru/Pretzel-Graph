@@ -1,6 +1,6 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Airlock } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "./blueprint";
@@ -42,7 +42,6 @@ function jsonSchemaToZod(schema: any): z.ZodTypeAny {
     }
 }
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(

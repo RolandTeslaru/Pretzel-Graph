@@ -33,10 +33,9 @@ export const Blueprint = defineBlueprint({
 
 ```ts
 // packages/nodes/src/Integrations/Acme/Hello/node.ts
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
     public readonly Blueprint = Blueprint;
 
@@ -287,7 +286,7 @@ Each process (backend for loaders, worker for execution) holds its own manager s
 ## Checklist for a new node
 
 1. `blueprint.ts` + `node.ts` under the path matching the blueprint id; declare conditional shapes as inline derivatives.
-2. Decorate the class with `@RegisterNode(Blueprint.id)` and set `public readonly Blueprint = Blueprint`.
+2. Export the class as `export class Node` — the catalogue resolves it by path convention off that export name. Set `public readonly Blueprint = Blueprint`.
 3. Credential (if any): define under `Credentials/`, re-export from `Credentials/index.ts`.
 4. Register the blueprint id in the right drawer in `packages/shared/constants/drawers.ts`.
 5. `npm run generate-indexes` in `packages/nodes` (refreshes `node_index.json` for dist + backend shelf).

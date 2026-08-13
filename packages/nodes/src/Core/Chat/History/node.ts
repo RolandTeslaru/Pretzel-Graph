@@ -1,11 +1,10 @@
-import { RegisterNode, Synthesizer } from "@pretzel-graph/node-sdk";
+import { Synthesizer } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Chat } from "@pretzel-graph/shared/domain";
 import { InternalChatAPI } from "../internal-api";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static readonly Blueprint = Blueprint;

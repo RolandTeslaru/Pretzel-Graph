@@ -1,9 +1,8 @@
-import { RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
+import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Airlock } from "@pretzel-graph/shared/domain";
 import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(

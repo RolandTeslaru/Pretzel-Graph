@@ -1,8 +1,7 @@
-import { RegisterNode, RuntimeNode, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { HumanMessage } from "@langchain/core/messages";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(): Promise<InferOutputs<typeof Blueprint>> {

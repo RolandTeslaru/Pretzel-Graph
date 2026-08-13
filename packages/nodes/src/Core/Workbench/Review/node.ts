@@ -1,15 +1,9 @@
-import {
-    InferIncoming,
-    InferOutputs,
-    RegisterNode,
-    RuntimeNode,
-} from "@pretzel-graph/node-sdk";
+import { InferIncoming, InferOutputs, RuntimeNode } from "@pretzel-graph/node-sdk";
 import z from "zod";
 import { HumanReview } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "./blueprint";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(

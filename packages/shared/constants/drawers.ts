@@ -36,7 +36,6 @@ export const CORE_DRAWERS = {
     icon: "Terminal",
     blueprintIds: [
       "Core.Developer.AllBuilders",
-      "Core.Developer.Eval",
       "Core.Developer.ConsoleLog",
       "Core.Developer.ErrorThrower",
       "Core.Developer.ResourceLoaderTest",
