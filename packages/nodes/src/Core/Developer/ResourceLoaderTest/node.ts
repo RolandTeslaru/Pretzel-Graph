@@ -1,7 +1,6 @@
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs, defineLoaders, Loader } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferIncoming, InferOutputs, defineLoaders, Loader } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     // ── Mock loaders — replace with real DB calls when Postgres node is built ──

@@ -1,7 +1,6 @@
-import { RegisterNode, RuntimeNode, InferIncoming, InferOutputs, postgres, toPgCreds } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferIncoming, InferOutputs, postgres, toPgCreds } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Document } from "@langchain/core/documents";
 import { tool } from "@langchain/core/tools";
-import { RegisterNode, RuntimeNode, InferOutputs } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferOutputs } from "@pretzel-graph/node-sdk";
 import { z } from "zod/v3";
 
 import { Blueprint } from "./blueprint";
@@ -63,7 +63,6 @@ function itemToDocument(item: GoogleCustomSearchItem, index: number, query: stri
     });
 }
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     private async search(query: string) {

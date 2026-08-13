@@ -1,4 +1,3 @@
-import { RegisterNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
@@ -17,7 +16,6 @@ function toRecord(value: unknown): AnyRecord {
         : {};
 }
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     private payload: Webhook.Payload | null = null;

@@ -1,4 +1,4 @@
-import { InferIncoming, InferOutputs, RegisterNode, RuntimeNode } from "@pretzel-graph/node-sdk";
+import { InferIncoming, InferOutputs, RuntimeNode } from "@pretzel-graph/node-sdk";
 
 import {
     createAgentMessage,
@@ -12,7 +12,6 @@ import { Blueprint } from "./blueprint";
 
 const MCP_TOKEN_ENV = "PRETZEL_AGENT_MCP_TOKEN";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
     protected override async onRun(
         incoming: InferIncoming<typeof Blueprint>,

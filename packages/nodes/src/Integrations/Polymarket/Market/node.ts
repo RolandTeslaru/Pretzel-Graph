@@ -1,8 +1,4 @@
-import {
-    RegisterNode,
-    RuntimeNode,
-    type InferOutputs,
-} from "@pretzel-graph/node-sdk";
+import { RuntimeNode, type InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
 
 import { PolymarketGammaClient } from "../client";
@@ -12,7 +8,6 @@ import { Blueprint } from "./blueprint";
 import { buildTools } from "./tools";
 
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(): Promise<Partial<InferOutputs<typeof Blueprint>>> {

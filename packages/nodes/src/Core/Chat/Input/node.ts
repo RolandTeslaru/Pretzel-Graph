@@ -1,4 +1,3 @@
-import { RegisterNode } from "@pretzel-graph/node-sdk"
 import { Blueprint } from "./blueprint"
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferOutputs } from "@pretzel-graph/node-sdk";
@@ -6,7 +5,6 @@ import { HumanMessage } from "@langchain/core/messages";
 import { Chat, Execution, Webhook } from "@pretzel-graph/shared/domain";
 import { InternalChatAPI } from "../internal-api";
 
-@RegisterNode(Blueprint.id)
 export class Node extends RuntimeNode<typeof Blueprint> {
 
     public static WEBHOOK_PATH = "chat" as Webhook.Path;
