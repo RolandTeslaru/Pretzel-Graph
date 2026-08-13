@@ -1,4 +1,5 @@
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk'
+import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import { WorkbenchSDK } from '../../../sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Button } from '@pretzel-graph/standard-ui/foundations'
@@ -15,6 +16,12 @@ const IncomingPanel = ({ nodeId }: Props) => {
   // Resolved here rather than passed in — this panel is mounted from a pushed closure,
   // which would freeze the ports it captured until the panel is torn down.
   const inputs = WorkbenchSDK.useInputs(nodeId)
+
+  const blueprintId = WorkbenchSDK.useStore(s => {
+    const node = s.data.nodes[nodeId]
+    return node?.reconciledBlueprintId ?? node?.blueprintId
+  })
+  const isIgniter = ShelfSDK.useStore(s => blueprintId ? s.blueprints[blueprintId]?.igniter ?? false : false)
 
   const nodeOutputProjections = ExecutionSDK.useStore(s => s.currentExecution?.session.node_output_projections)
 
@@ -41,7 +48,7 @@ const IncomingPanel = ({ nodeId }: Props) => {
       }
 
 
-      <Button variant="ghost" className="absolute bottom-2 left-2 right-2" onClick={openAddInputPortDialog}>
+      <Button variant="ghost" className="absolute bottom-2 left-2 right-2" onClick={openAddInputPortDialog} disabled={isIgniter}>
         <p>+ Add Input Port</p>
       </Button>
     </div>

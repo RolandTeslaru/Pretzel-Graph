@@ -52,10 +52,12 @@ export namespace VersionControl {
             publicationId: Publication.Id,
         })
 
+        // No publication payload — the signal is only a nudge naming the workflow. A subscriber
+        // re-reads the active publication from the DB (the authoritative source), so a signal can
+        // neither be trusted nor forged into registering arbitrary routes.
         export namespace Published {
             export const Schema = Base.extend({
                 type: z.literal("published"),
-                publication: Publication.Schema,
             })
         }
         export type Published = z.infer<typeof Published.Schema>
@@ -63,7 +65,6 @@ export namespace VersionControl {
         export namespace Activated {
             export const Schema = Base.extend({
                 type: z.literal("activated"),
-                publication: Publication.Schema,
             })
         }
         export type Activated = z.infer<typeof Activated.Schema>

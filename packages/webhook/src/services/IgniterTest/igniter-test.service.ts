@@ -15,8 +15,8 @@ interface TestRegistration {
 }
 
 @Injectable()
-export class WebhookTestService {
-    private readonly logger = new Logger(WebhookTestService.name);
+export class IgniterTestService {
+    private readonly logger = new Logger(IgniterTestService.name);
     private readonly redisPub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
     private readonly registrations = new Map<Webhook.RouteId, TestRegistration>();
 

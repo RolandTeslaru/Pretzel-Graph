@@ -4,6 +4,9 @@ How a Webhook node is exercised from the editor without publishing the workflow 
 a temporary public route is registered for it, and the first request to that route becomes the
 node's payload.
 
+How a route's `path`/`method` reach the server — and how the test path differs from a published one —
+is covered in [webhook-registration-flow.md](./webhook-registration-flow.md).
+
 This builds on the general mechanism in [consultation-flow.md](./consultation-flow.md). The parts
 that are identical — arming the waiter, mirroring onto `session.pending_consultations`, rendering
 the card, the `finally` that cleans up — are described there and only referenced here. What follows
