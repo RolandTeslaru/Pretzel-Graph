@@ -12,6 +12,7 @@ import {
     Execution      as ExecutionD,
     VersionControl as VersionControlD,
     Workflow       as WorkflowD,
+    Workspace      as WorkspaceD,
 } from '@pretzel-graph/shared/domain';
 import { supabaseTimestamp } from '@pretzel-graph/shared/domain/zod-utils';
 import { Principal } from '@/domain/Principal';
@@ -78,7 +79,7 @@ export namespace DB {
     export namespace Workflow {
         export const Row = z.object({
             id:           WorkflowD.Id,
-            user_id:      Auth.User.Id,
+            created_by:   Auth.User.Id.nullable(),
             folder_id:    Library.Folder.Id,
             display_name: z.string(),
             description:  z.string().nullable(),
@@ -87,7 +88,6 @@ export namespace DB {
             icon_color:   z.string().nullable(),
             locked:       z.boolean(),
             mcp_enabled:  z.boolean().nullable(),
-            is_public:    z.boolean().default(false),
             data:         WorkflowD.Data.Schema,
             created_at:   z.coerce.date(),
             updated_at:   z.coerce.date(),
@@ -100,7 +100,7 @@ export namespace DB {
     export namespace Folder {
         export const Row = z.object({
             id:               Library.Folder.Id,
-            user_id:          Auth.User.Id,
+            created_by:       Auth.User.Id.nullable(),
             parent_folder_id: Library.Folder.Id.nullable(),
             display_name:     z.string(),
             description:      z.string().nullable(),
@@ -116,7 +116,7 @@ export namespace DB {
     export namespace Execution {
         export const Row = z.object({
             id:          ExecutionD.Id,
-            user_id:     Auth.User.Id,
+            created_by:  Auth.User.Id.nullable(),
             workflow_id: WorkflowD.Id,
             chat_id:     ChatD.Id.nullable(),
             status:      ExecutionD.Status,
@@ -136,7 +136,7 @@ export namespace DB {
     export namespace Chat {
         export const Row = z.object({
             id:          ChatD.Id,
-            user_id:     Auth.User.Id,
+            created_by:  Auth.User.Id.nullable(),
             workflow_id: WorkflowD.Id,
             name:        z.string(),
             attachments: z.unknown().nullable(),
@@ -160,7 +160,7 @@ export namespace DB {
     export namespace VersionControl {
         export const Row = z.object({
             id:            VersionControlD.Publication.Id,
-            user_id:       Auth.User.Id,
+            created_by:    Auth.User.Id.nullable(),
             workflow_id:   WorkflowD.Id,
             workflow_data: WorkflowD.Data.Schema,
             version:       z.number().default(1),
@@ -171,8 +171,8 @@ export namespace DB {
         });
         export type Row = z.infer<typeof Row>;
 
-        /** Row shape a Meta query selects — no user_id, no workflow_data. */
-        export type MetaRow = Omit<Row, 'user_id' | 'workflow_data'>;
+        /** Row shape a Meta query selects — no created_by, no workflow_data. */
+        export type MetaRow = Omit<Row, 'created_by' | 'workflow_data'>;
 
         export const toDomain = (row: Row) => VersionControlD.Publication.Schema.parse(row);
         export const toMeta   = (row: MetaRow) => VersionControlD.Publication.Meta.Schema.parse(row);
@@ -181,7 +181,7 @@ export namespace DB {
     export namespace CredentialInstance {
         export const Row = z.object({
             id:          Vault.Credential.Instance.Id,
-            user_id:     Auth.User.Id,
+            created_by:  Auth.User.Id.nullable(),
             template_id: Vault.Credential.Template.Id,
             name:        z.string(),
             blob:        z.string().brand('EncryptedBlob'),
@@ -210,6 +210,18 @@ export namespace DB {
         export const toDomain = (row: Row) => ApiKeyD.Schema.parse(row);
     }
 
+    export namespace Member {
+        export const Row = z.object({
+            user_id:    Auth.User.Id,
+            role:       WorkspaceD.Role,
+            created_at: supabaseTimestamp,
+            updated_at: supabaseTimestamp,
+        });
+        export type Row = z.infer<typeof Row>;
+
+        export const toDomain = (row: Row) => WorkspaceD.Member.Schema.parse(row);
+    }
+
     export namespace User {
         export const Row = z.object({
             id:           Auth.User.Id,
@@ -217,7 +229,6 @@ export namespace DB {
             username:     z.string(),
             display_name: z.string(),
             avatar_url:   z.string().nullable(),
-            is_admin:     z.boolean(),
             created_at:   z.string(),
             updated_at:   z.string(),
         });
@@ -243,6 +254,7 @@ export namespace DB {
 
     export interface Tables {
         users:               Table<typeof User.Row, Stamps>;
+        members:             Table<typeof Member.Row, Stamps>;
         folders:             Table<typeof Folder.Row, 'id' | Stamps>;
         workflows:           Table<typeof Workflow.Row, 'id' | Stamps>;
         executions:          Table<typeof Execution.Row, 'id' | Stamps>;
@@ -288,12 +300,11 @@ export namespace DB {
     export const roleOf = (handle: unknown): Role | undefined =>
         (handle as Record<symbol, Role> | null | undefined)?.[ROLE];
 
-    // Only what the wrapper needs, so a future ApiKey principal satisfies it.
-    type ActingUser = Pick<Principal.User, 'userId'>;
+    type ActingUser = { userId: Auth.User.Id | null };
 
-    /** Opens an RLS-bound transaction as `userId` and tags it with `role`. */
+    /** Opens a transaction as `userId` and tags it with `role`. Null acts as nobody. */
     async function enter<R extends Role, T>(
-        userId: Auth.User.Id,
+        userId: Auth.User.Id | null,
         role: R,
         fn: (trx: Transaction<R>) => Promise<T>,
     ): Promise<T> {
@@ -304,11 +315,12 @@ export namespace DB {
             // claims would have to be interpolated. The `true` scopes both to
             // this transaction — with `false` the identity outlives it on a
             // pooled connection and leaks to the next request.
-            await sql`
-                select
-                    set_config('role', 'authenticated', true),
-                    set_config('request.jwt.claims', ${claims}, true)
-            `.execute(trx);
+            if (userId)
+                await sql`
+                    select
+                        set_config('role', 'authenticated', true),
+                        set_config('request.jwt.claims', ${claims}, true)
+                `.execute(trx);
 
             return fn(tag(trx, role));
         });
@@ -322,16 +334,12 @@ export namespace DB {
         return enter(principal.userId, Role.User, fn);
     }
 
-    /**
-     * Runs `fn` as the user a running execution acts for. Same Postgres identity as
-     * asUser — the separate tag is what keeps workflow-reachable methods opt-in.
-     * The principal is derived from the execution row, never sent by the worker.
-     */
+    /** Runs `fn` on behalf of a running execution. */
     export async function asDelegate<T>(
         principal: Principal.Delegate,
         fn: (trx: DelegateTransaction) => Promise<T>,
     ): Promise<T> {
-        return enter(principal.actingAsUserId, Role.Delegate, fn);
+        return enter(principal.createdBy, Role.Delegate, fn);
     }
 
     /** Runs `fn` with RLS bypassed. `reason` is mandatory so every bypass is greppable. */

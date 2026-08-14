@@ -173,7 +173,7 @@ export namespace Assistant {
     export namespace Database {
         export namespace Row {
             export const Assistant = Schema.extend({
-                user_id: Auth.User.Id,
+                created_by: Auth.User.Id.nullable(),
             })
         }
     }

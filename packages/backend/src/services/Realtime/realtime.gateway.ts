@@ -6,7 +6,6 @@ import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
 import { Realtime } from "@pretzel-graph/shared/domain/Realtime";
 import { Auth, Chat, Execution } from "@pretzel-graph/shared/domain";
 import { createAuthenticatedClient, getUserId } from '../../utils/supabase';
-import { PermissionService } from '../Permission/permission.service';
 
 interface SocketIdentity {
     userId: Auth.User.Id;
@@ -19,7 +18,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private wsSubscriptions = new Map<Realtime.Channel, Set<WebSocket>>();
     private socketIdentities = new WeakMap<WebSocket, SocketIdentity>();
 
-    constructor(private readonly ownership: PermissionService) {
+    constructor() {
 
         this.redisSub.on('message', (channel: Realtime.Channel, serializedEvent: string) => {
 
@@ -105,62 +104,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         });
     }
 
-    /**
-     * No cache here. PermissionService caches resource → owner, and the owned/denied verdict
-     * is derived from that live — so a denial is a cache hit too, and the entries are shared
-     * with the HTTP routes instead of being duplicated per (user, channel) pair.
-     */
-    private async verifyChannelOwnership(userId: Auth.User.Id, channel: Realtime.Channel): Promise<boolean> {
-        const result = await this.queryOwnership(userId, channel);
-        return result !== 'denied';
-    }
-
-
-    /**
-     * - 'owned': resource exists and belongs to this user (cacheable)
-     * - 'denied': resource exists but belongs to another user (cacheable)
-     * - 'not_found': resource doesn't exist yet — allow preemptive subscribe (not cached)
-     */
-    private async queryOwnership(
-        userId: Auth.User.Id, 
-        channel: Realtime.Channel
-    ): Promise<'owned' | 'denied' | 'not_found'> {
-        // Channel grammar: <prefix>:<resourceId>[:<sub>...]. The resourceId is always the
-        // second segment, so any trailing qualifiers (e.g. :signal:resolved:<reqId>) still
-        // resolve to the owning resource rather than slipping through as not_found.
-        const [prefix, id] = channel.split(':');
-
-        // Channel prefix → ownership domain. Consultation channels are execution-prefixed
-        // with the executionId second, so they authorize through the execution entry.
-        const loaders = {
-            execution:      this.ownership.loadExecutionOwner,
-            chat:           this.ownership.loadChatOwner,
-        } as const;
-
-        const loader = loaders[prefix as keyof typeof loaders];
-        if (!loader) return 'denied'; // unknown channel prefix
-
-        const ownerId = await loader.call(this.ownership, id as any);
-        if (!ownerId) return 'not_found';
-        return ownerId === userId ? 'owned' : 'denied';
-    }
-
-
     private async subscribe(ws: WebSocket, channel: Realtime.Channel) {
         const identity = this.socketIdentities.get(ws);
         if (!identity) {
             ws.send(JSON.stringify({ error: 'unauthorized', channel }));
-            return;
-        }
-
-        const authorized = await this.verifyChannelOwnership(identity.userId, channel);
-        if (!authorized) {
-            ws.send(JSON.stringify(
-                {
-                    channel,
-                    type: "forbidden",
-                    message: "You are not authorized to subscribe to this channel"
-                } as Realtime.Event.Forbidden));
             return;
         }
 

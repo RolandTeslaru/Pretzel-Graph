@@ -1,43 +1,28 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { Scope, ScopeName } from '@/auth/scopes';
-import { ScopedRequest } from '@/auth/scoped.guard';
+import { Request } from 'express';
+import { ZodType } from 'zod';
+import { Chat, Execution, SystemError, Workflow } from '@pretzel-graph/shared/domain';
 
-/**
- * Reads a resolved scope off the request — never `request.params`. An id exists here only
- * because ScopedGuard vouched for it, so a route that declares the param without the guard
- * fails on its first request instead of quietly serving unauthorized data.
- */
-const readScope = <K extends ScopeName>(context: ExecutionContext, name: K): Scope<K> => {
-    const { scopes } = context.switchToHttp().getRequest<ScopedRequest>();
+/** Reads a resource id off the path. A malformed id is a not-found, like a missing row. */
+const readParam = <T>(context: ExecutionContext, param: string, schema: ZodType<T>, notFound: string): T => {
+    const request = context.switchToHttp().getRequest<Request>();
 
-    const scope = scopes?.[name];
+    const parsed = schema.safeParse(request.params[param]);
 
-    if (!scope)
-        throw new Error(`Scope '${name}' requested without @Scoped('${name}') on the route`);
+    if (!parsed.success)
+        throw new SystemError(SystemError.Code.NOT_FOUND, notFound);
 
-    return scope as Scope<K>;
+    return parsed.data;
 };
 
 export const WorkflowIdParam = createParamDecorator(
-    (_: unknown, context: ExecutionContext) => readScope(context, 'workflow').id,
+    (_: unknown, context: ExecutionContext) => readParam(context, 'workflowId', Workflow.Id, 'Workflow not found'),
 );
 
 export const ExecutionIdParam = createParamDecorator(
-    (_: unknown, context: ExecutionContext) => readScope(context, 'execution').id,
+    (_: unknown, context: ExecutionContext) => readParam(context, 'executionId', Execution.Id, 'Execution not found'),
 );
 
 export const ChatIdParam = createParamDecorator(
-    (_: unknown, context: ExecutionContext) => readScope(context, 'chat').id,
-);
-
-export const ChatScope = createParamDecorator(
-    (_: unknown, context: ExecutionContext) => readScope(context, 'chat'),
-);
-
-export const WorkflowScope = createParamDecorator(
-    (_: unknown, context: ExecutionContext) => readScope(context, 'workflow'),
-);
-
-export const ExecutionScope = createParamDecorator(
-    (_: unknown, context: ExecutionContext) => readScope(context, 'execution'),
+    (_: unknown, context: ExecutionContext) => readParam(context, 'chatId', Chat.Id, 'Chat not found'),
 );

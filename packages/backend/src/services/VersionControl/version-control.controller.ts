@@ -2,7 +2,6 @@ import { Controller, Post, Get, Delete, UseGuards, HttpCode } from '@nestjs/comm
 import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { VersionControlService } from './version-control.service';
 import { UserAuthGuard } from '../../auth/user-auth.guard';
-import { Scoped } from '../../auth/scoped.decorator';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { WorkflowIdParam } from '@/decorators/scope';
 import { Principal } from '@/domain/Principal';
@@ -14,7 +13,6 @@ export class VersionControlController {
     constructor(private readonly service: VersionControlService) {}
 
     @Post(':workflowId/publish')
-    @Scoped('workflow')
     @HttpCode(200)
     async publish(
         @AuthenticatedUser() principal: Principal.User,
@@ -56,7 +54,6 @@ export class VersionControlController {
     // Scoped to the workflow, not the publication: owning the workflow is the boundary that
     // matters, and the publication write itself resolves through RLS.
     @Post(':workflowId/:publicationId/activate')
-    @Scoped('workflow')
     @HttpCode(200)
     async activate(
         @AuthenticatedUser() principal: Principal.User,
@@ -66,7 +63,6 @@ export class VersionControlController {
     }
 
     @Post(':workflowId/:publicationId/deactivate')
-    @Scoped('workflow')
     @HttpCode(200)
     async deactivate(
         @AuthenticatedUser() principal: Principal.User,
@@ -76,7 +72,6 @@ export class VersionControlController {
     }
 
     @Delete(':workflowId/:publicationId')
-    @Scoped('workflow')
     async remove(
         @AuthenticatedUser() principal: Principal.User,
         @ZodParam('publicationId', VersionControl.Publication.Id) publicationId: VersionControl.Publication.Id,

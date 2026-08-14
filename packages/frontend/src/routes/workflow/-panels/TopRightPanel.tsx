@@ -11,48 +11,13 @@ import { Workflow } from '@pretzel-graph/shared/domain'
 import Tipped from '@/components/Tipped'
 import { openWorkflowSettingsDialog } from '../-SDKs/WorkbenchSDK/ui/WorkflowSettings'
 
-function openVisibilityDialog(workflowId: Workflow.Id, isPublic: boolean) {
-    const DIALOG_ID = "workflow-visibility"
-
-    DialogSDK.actions.push(DIALOG_ID, (props) => (
-        <DialogSDK.AlertTemplate
-            {...props}
-            type={isPublic ? "warning" : "default"}
-            onApprove={async () => {
-                await LibrarySDK.actions.workflow.setVisibility(workflowId, !isPublic)
-                DialogSDK.actions.pop(DIALOG_ID)
-            }}
-            onCancel={() => DialogSDK.actions.pop(DIALOG_ID)}
-        >
-            {isPublic ? (
-                <>
-                    <p className="font-semibold text-base">Make workflow private?</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        This workflow is currently public. Making it private means other users will no longer be able to read it or execute it as a sub-workflow. Any workflows that depend on it as a sub-workflow will fail to run.
-                    </p>
-                </>
-            ) : (
-                <>
-                    <p className="font-semibold text-base">Make workflow public?</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        Making this workflow public allows any user to read it and use it as a sub-workflow in their own workflows. They cannot edit or execute it directly — only embed it as a dependency.
-                    </p>
-                </>
-            )}
-        </DialogSDK.AlertTemplate>
-    ))
-}
-
 export const TopRightPanel = () => {
     const workflowId = WorkbenchSDK.useStore(s => s.workflowId);
     const [hasPublications, hasActivePublication] = VersionControlSDK.useStore(s => [
         s.currentWorkflowPublications.length > 0,
         s.currentWorkflowPublications.some(p => p.is_active),
     ]);
-    const [isPublic, isLocked] = LibrarySDK.useStore(s => {
-        const meta = s.workflowMetas[workflowId]
-        return [meta?.is_public ?? false, meta?.locked ?? false] as const
-    });
+    const isLocked = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.locked ?? false);
     const [isLockPending, setIsLockPending] = useState(false);
 
     const handleLockToggle = async () => {
@@ -89,14 +54,6 @@ export const TopRightPanel = () => {
                 </Popover.Root>
             </div>
             <div className='p-0.5 z-10 flex flex-row gap-1 rounded-xl bg-card backdrop-blur-sm border border-border shadow-md shadow-black/10'>
-                <Tipped label="Visibility">
-                    <Button variant="ghost" size="icon-sm" onClick={() => openVisibilityDialog(workflowId, isPublic)}>
-                        {isPublic ?
-                            <SystemIcons.Globe strokeWidth={2} className='size-4 text-sky-500'/> :
-                            <SystemIcons.GlobeOff strokeWidth={2} className='size-4 text-red-600'/>
-                        }
-                    </Button>
-                </Tipped>
                 <Tipped label="Lock">
                     <Button variant="ghost" size="icon-sm" onClick={handleLockToggle} disabled={isLockPending}>
                         {isLockPending ?

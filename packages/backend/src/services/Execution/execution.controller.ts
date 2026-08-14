@@ -3,7 +3,6 @@ import { ExecutionService } from './execution.service';
 import { Execution, Workflow } from '@pretzel-graph/shared/domain';
 import { UserAuthGuard } from '../../auth/user-auth.guard';
 import { InternalAuthGuard, InternalAuthenticatedRequest } from '../../auth/internal-auth.guard';
-import { Scoped } from '../../auth/scoped.decorator';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { ExecutionIdParam, WorkflowIdParam } from '@/decorators/scope';
 import { Principal } from '@/domain/Principal';
@@ -26,7 +25,7 @@ export class ExecutionController {
     }
 
     @Post(':workflowId/run')
-    @Scoped('workflow')
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async run(
         @AuthenticatedUser() principal: Principal.User,
@@ -37,7 +36,7 @@ export class ExecutionController {
     }
 
     @Post(':executionId/pause')
-    @Scoped('execution')
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async pause(
         @AuthenticatedUser() principal: Principal.User,
@@ -47,7 +46,7 @@ export class ExecutionController {
     }
 
     @Post(':executionId/resume')
-    @Scoped('execution')
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async resume(
         @AuthenticatedUser() principal: Principal.User,
@@ -57,7 +56,7 @@ export class ExecutionController {
     }
 
     @Post(':executionId/heartbeat')
-    @Scoped('execution')
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async heartbeat(
         @AuthenticatedUser() principal: Principal.User,
@@ -67,7 +66,7 @@ export class ExecutionController {
     }
 
     @Post(':executionId/suspend')
-    @Scoped('execution')
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async suspend(
         @AuthenticatedUser() principal: Principal.User,
@@ -77,7 +76,7 @@ export class ExecutionController {
     }
 
     @Post(':executionId/terminate')
-    @Scoped('execution')
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async terminate(
         @AuthenticatedUser() principal: Principal.User,
@@ -112,7 +111,7 @@ export class ExecutionController {
     }
 
     @Post(':workflowId/meta/list')
-    @Scoped('workflow')
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async metaList(
         @AuthenticatedUser() principal: Principal.User,
@@ -170,7 +169,7 @@ export class ExecutionController {
     // See SPECS/delegated-execution-principal.md, "Open Questions".
 
     @Post(':executionId/recording/get-live')
-    @Scoped('execution')
+    @UseGuards(UserAuthGuard)
     @HttpCode(200)
     async recordingGetLive(
         @ExecutionIdParam() executionId: Execution.Id,

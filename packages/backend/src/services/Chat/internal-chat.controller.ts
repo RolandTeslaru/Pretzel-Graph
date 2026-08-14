@@ -6,7 +6,6 @@ import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
 import { ChatDatabase } from './chat.database';
 import { ZodBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
-import { PermissionService } from '../Permission/permission.service';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { z } from 'zod';
 
@@ -36,20 +35,17 @@ const overwriteMessagesRequest = accessRequest.extend({
 export class InternalChatController {
     constructor(
         private readonly database: ChatDatabase,
-        private readonly ownership: PermissionService,
         private readonly realtime: RealtimeService,
     ) {}
 
 
-    // The chat id arrives from a user-editable node field, so the broadcast lives here —
-    // behind the chat assert — rather than in the worker, which cannot check ownership.
+    // The chat id comes from a node field, so the broadcast lives here, not in the worker.
     @Post('message/add')
     @HttpCode(200)
     async addMessage(
         @AuthenticatedDelegate() delegate: Principal.Delegate,
         @ZodBody(addMessageRequest) body: z.infer<typeof addMessageRequest>,
     ) {
-        await this.ownership.assertDelegateChat(delegate, body.chatId);
 
         if (body.persist)
             await DB.asDelegate(delegate, (trx) => this.database.message.add(trx, body.chatId, body.messages));
@@ -71,7 +67,6 @@ export class InternalChatController {
         @AuthenticatedDelegate() delegate: Principal.Delegate,
         @ZodBody(updateMessageRequest) body: z.infer<typeof updateMessageRequest>,
     ) {
-        await this.ownership.assertDelegateChat(delegate, body.chatId);
 
         await DB.asDelegate(delegate, (trx) => this.database.message.updateInChat(trx, body.chatId, body.messageId, body.content));
         return {};
@@ -83,7 +78,6 @@ export class InternalChatController {
         @AuthenticatedDelegate() delegate: Principal.Delegate,
         @ZodBody(accessRequest) body: z.infer<typeof accessRequest>,
     ) {
-        await this.ownership.assertDelegateChat(delegate, body.chatId);
 
         const messages = await DB.asDelegate(delegate, (trx) => this.database.message.list(trx, body.chatId));
         return { messages };
@@ -95,7 +89,6 @@ export class InternalChatController {
         @AuthenticatedDelegate() delegate: Principal.Delegate,
         @ZodBody(overwriteMessagesRequest) body: z.infer<typeof overwriteMessagesRequest>,
     ) {
-        await this.ownership.assertDelegateChat(delegate, body.chatId);
 
         await DB.asDelegate(delegate, (trx) => this.database.message.overwrite(trx, body.chatId, body.messages));
         return {};

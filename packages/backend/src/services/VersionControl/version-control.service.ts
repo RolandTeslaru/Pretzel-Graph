@@ -12,9 +12,6 @@ export class VersionControlService {
         private readonly database: VersionControlDatabase,
     ) {}
 
-    // publish_workflow is SECURITY INVOKER, so its INSERT does resolve through RLS — the
-    // route's workflow scope is defence in depth rather than the only gate. (An earlier
-    // comment here claimed DEFINER; the function was converted and the comment went stale.)
     async publish(
         principal:  Principal.User,
         workflowId: Workflow.Id,
@@ -50,7 +47,7 @@ export class VersionControlService {
         principal: Principal.User,
     ): Promise<VersionControl.API.ListActiveWorkflows.Response> {
         const activeWorkflows = await DB.asUser(principal, 
-            (trx) => this.database.listActiveWorkflows(trx, principal.userId)
+            (trx) => this.database.listActiveWorkflows(trx)
         );
         
         return { activeWorkflows };
@@ -60,7 +57,7 @@ export class VersionControlService {
         principal: Principal.User,
         workflowId: Workflow.Id,
     ): Promise<VersionControl.API.GetActiveByWorkflow.Response> {
-        const publication = await DB.asUser(principal, (trx) => this.database.getActiveByWorkflow(trx, principal.userId, workflowId));
+        const publication = await DB.asUser(principal, (trx) => this.database.getActiveByWorkflow(trx, workflowId));
         return { publication };
     }
 

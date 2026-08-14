@@ -37,7 +37,17 @@ export class RegistrationService implements OnModuleInit, OnModuleDestroy {
         let rows: unknown[];
 
         try {
-            const result = await db().query('select * from get_active_webhook_publications()');
+            // Active publications carrying at least one webhook node.
+            const result = await db().query(
+                `select * from version_control
+                 where is_active = true
+                   and exists (
+                       select 1
+                       from jsonb_each(workflow_data->'nodes') as n
+                       where jsonb_typeof(n.value->'webhooks') = 'array'
+                         and jsonb_array_length(n.value->'webhooks') > 0
+                   )`,
+            );
             rows = result.rows;
         }
         catch (error) {

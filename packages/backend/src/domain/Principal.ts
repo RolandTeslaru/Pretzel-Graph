@@ -18,23 +18,13 @@ export namespace Principal {
     }
     export type Service = z.infer<typeof Service.Schema>
 
-    /**
-     * A running execution acting for the user who owns it. Built on the backend
-     * from the execution row — never sent by the worker, which knows only its
-     * own execution id.
-     *
-     * `actingAsUserId` is the privilege axis: it becomes auth.uid(). That is a
-     * different question from who triggered the run, and the two come apart for
-     * SDK invocation. A provenance name would force the wrong answer there —
-     * see SPECS/delegated-execution-principal.md.
-     */
+    /** A live execution. Built from the execution row, never sent by the worker. */
     export namespace Delegate {
         export const Schema = z.object({
             type: z.literal('delegate'),
-            actingAsUserId: Auth.User.Id,
+            createdBy: Auth.User.Id.nullable(),
             executionId: Execution.Id,
-            // Derived from the igniter union so it can't drift. Audit only —
-            // never an access-control input.
+            // Audit only, never an access-control input.
             via: z.custom<Execution.Igniter['variant']>(),
         })
     }

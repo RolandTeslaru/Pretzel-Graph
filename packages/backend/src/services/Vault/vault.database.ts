@@ -23,13 +23,13 @@ class CredentialInstanceMethods {
     @ZodReturn(Vault.Credential.Instance.Schema)
     async create(
         trx: DB.UserTransaction,
-        userId: Auth.User.Id,
+        createdBy: Auth.User.Id | null,
         insert: Vault.Database.Insert.CredentialInstance,
     ): Promise<Vault.Credential.Instance> {
         const row = await trx
             .insertInto('credential_instance')
             .values({
-                user_id: userId,
+                created_by: createdBy,
                 name: insert.name,
                 template_id: insert.templateId,
                 blob: insert.blob,
