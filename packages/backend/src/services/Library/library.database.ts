@@ -14,7 +14,6 @@ const WORKFLOW_META_COLUMNS = [
     'accent',
     'icon_color',
     'locked',
-    'is_public',
     'mcp_enabled',
     'created_at',
     'updated_at',
@@ -67,14 +66,14 @@ class ProjectMethods {
     @ZodReturn(Library.Folder.Schema)
     async create(
         trx: DB.UserTransaction,
-        userId: Auth.User.Id,
+        createdBy: Auth.User.Id | null,
         payload: Library.API.Project.Create.Request,
     ): Promise<Library.Folder> {
         const row = await trx
             .insertInto('folders')
             .values({
                 ...payload,
-                user_id: userId,
+                created_by: createdBy,
                 is_root: true,
                 parent_folder_id: null,
             })
@@ -126,14 +125,14 @@ class FolderMethods {
     @ZodReturn(Library.Folder.Schema)
     async create(
         trx: DB.UserTransaction,
-        userId: Auth.User.Id,
+        createdBy: Auth.User.Id | null,
         payload: Library.API.Folder.Create.Request,
     ): Promise<Library.Folder> {
         const row = await trx
             .insertInto('folders')
             .values({
                 ...payload,
-                user_id: userId,
+                created_by: createdBy,
                 is_root: false,
             })
             .returningAll()
@@ -212,14 +211,14 @@ class WorkflowMethods {
     @ZodReturn(Workflow.Schema)
     async create(
         trx: DB.UserTransaction,
-        userId: Auth.User.Id,
+        createdBy: Auth.User.Id | null,
         payload: Library.API.Workflow.Create.Request,
     ): Promise<Workflow> {
         const row = await trx
             .insertInto('workflows')
             .values({
                 ...payload,
-                user_id: userId,
+                created_by: createdBy,
                 locked: false,
                 data: Workflow.INITIAL.data,
             })
@@ -248,9 +247,6 @@ class WorkflowMethods {
                 ...(payload.accent !== undefined && { accent: payload.accent }),
                 ...(payload.icon_color !== undefined && {
                     icon_color: payload.icon_color,
-                }),
-                ...(payload.is_public !== undefined && {
-                    is_public: payload.is_public,
                 }),
                 ...(payload.locked !== undefined && { locked: payload.locked }),
             })
@@ -288,7 +284,7 @@ class WorkflowMethods {
     @ZodReturn(Workflow.Schema)
     async duplicate(
         trx: DB.UserTransaction,
-        userId: Auth.User.Id,
+        createdBy: Auth.User.Id | null,
         id: Workflow.Id,
     ): Promise<Workflow> {
         const source = await trx
@@ -307,9 +303,8 @@ class WorkflowMethods {
                 accent: source.accent,
                 icon_color: source.icon_color,
                 data: source.data,
-                user_id: userId,
+                created_by: createdBy,
                 locked: false,
-                is_public: false,
                 mcp_enabled: source.mcp_enabled,
             })
             .returningAll()

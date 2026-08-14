@@ -49,7 +49,6 @@ export namespace Workflow {
         id:           WorkflowId,
         display_name: z.string(),
         locked:       z.boolean(),
-        is_public:    z.boolean().default(false),
         description:  z.string().optional().nullable(),
         icon:         z.string().nullable().optional(),
         accent:       z.string().nullable().optional(),
@@ -66,7 +65,6 @@ export namespace Workflow {
     export const INITIAL = {
         id:             "" as Workflow.Id,
         locked:         false,
-        is_public:      false,
         display_name:   "",
         description:    "",
         icon:           null,

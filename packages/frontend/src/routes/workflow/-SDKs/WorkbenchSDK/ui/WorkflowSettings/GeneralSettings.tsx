@@ -15,7 +15,6 @@ const Schema = z.object({
     icon: z.string().trim().optional(),
     accent: z.string().trim().optional(),
     icon_color: z.string().trim().optional(),
-    is_public: z.boolean(),
 })
 type Values = z.infer<typeof Schema>
 
@@ -31,7 +30,6 @@ export const GeneralSettings = () => {
             icon: meta?.icon ?? '',
             accent: meta?.accent ?? '',
             icon_color: meta?.icon_color ?? '',
-            is_public: meta?.is_public ?? false,
         },
     })
 
@@ -69,7 +67,6 @@ export const GeneralSettings = () => {
                 icon: values.icon || null,
                 accent: values.accent || null,
                 icon_color: values.icon_color || null,
-                is_public: values.is_public,
             })
             toast.success('Workflow updated')
         } catch {
@@ -128,20 +125,6 @@ export const GeneralSettings = () => {
                             <Form.Control><Input size='sm' {...field} placeholder={form.watch('accent')?.trim() || Workflow.DEFAULT_ACCENT} /></Form.Control>
                         </FieldRow>
                         <Form.Message />
-                    </Form.Item>
-                )} />
-
-                <Form.Field control={form.control} name='is_public' render={({ field }) => (
-                    <Form.Item>
-                        <div className='rounded-md border border-border/50 bg-card/50 p-3 flex items-center justify-between'>
-                            <div className='flex flex-col gap-0.5'>
-                                <Form.Label>Public</Form.Label>
-                                <span className='text-xs text-muted-foreground'>Anyone can view and use this workflow</span>
-                            </div>
-                            <Form.Control>
-                                <Switch checked={field.value} onCheckedChange={field.onChange} />
-                            </Form.Control>
-                        </div>
                     </Form.Item>
                 )} />
 

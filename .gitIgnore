@@ -6,3 +6,5 @@ SPECS/
 packages/nodes/globalPretzelWorkflows.json
 tool-samples/
 conversations/
+TASKS.md
+FEATURES.md

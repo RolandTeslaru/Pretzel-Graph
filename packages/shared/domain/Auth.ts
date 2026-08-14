@@ -9,7 +9,6 @@ export namespace Auth {
             id: User.Id,
             username: z.string(),
             display_name: z.string(),
-            is_admin: z.boolean(),
 
             email: z.string().nullable(),
             avatar_url: z.string().nullable(),
@@ -18,8 +17,9 @@ export namespace Auth {
             updated_at: z.string(),
         })
 
-        // Editable profile fields. Deliberately excludes is_admin (privilege escalation)
-        // and email (owned by supabase auth, changing it needs a confirmation round trip).
+        // Editable profile fields. Deliberately excludes email — owned by the identity
+        // issuer (GoTrue), changing it needs a confirmation round trip. Privilege lives
+        // in Workspace.Member.role, never on the user.
         export const Username = z.string().trim()
             .min(3, 'Username must be at least 3 characters')
             .max(32, 'Username must be at most 32 characters')

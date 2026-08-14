@@ -21,7 +21,9 @@ export const AdminJobsPanel = () => {
     const [loading, setLoading] = useState(false)
     const [terminating, setTerminating] = useState(false)
 
-    if (!user?.is_admin) return null
+    // Hidden until the client knows the member's role.
+    void user
+    return null
 
     const fetchJobs = useCallback(async () => {
         setLoading(true)

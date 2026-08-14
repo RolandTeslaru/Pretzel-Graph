@@ -92,16 +92,6 @@ NestJS server on port 3001 (configurable via `.env` `PORT`). Routes:
 ### Styling
 Tailwind CSS 4 with an extensive CSS variable system. Port types have dedicated colors (`--port-message`, `--port-str`, etc.) defined as CSS variables. Dark/light theme is class-based. Custom animations (`neonPulse`, `border-beam`, accordion transitions) are defined in `tailwind.config.ts`.
 
-## Feature Planning Workflow
-
-Ideas and features are managed in a three-stage pipeline:
-
-1. **`FEATURES.md`** — raw idea backlog. Anything goes here, no structure needed.
-2. **`SPECS/`** — when a feature is ready to plan, a detailed spec is created here (`SPECS/feature-name.md`) covering motivation, affected files, implementation steps, and open questions.
-3. **`TASKS.md`** — actionable tasks broken out from the spec, slotted into the right bucket.
-
-When the user says "let's spec out [feature]", read the relevant codebase and produce a full spec in `SPECS/feature-name.md`, then surface the resulting tasks for `TASKS.md`.
-
 ## Conventions
 
 - **Dialogs/Confirmations**: Always use `DialogSDK.actions.push()` with `DialogSDK.Template` or `DialogSDK.AlertTemplate` to open dialogs. Do not use inline `AlertDialog.Root`/`Trigger`/`Content` patterns. See `VaultSDK/ui/VaultPanel.tsx` for examples.

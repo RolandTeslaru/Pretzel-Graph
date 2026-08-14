@@ -3,13 +3,11 @@ import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
 import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { LibraryDatabase } from './library.database';
-import { PermissionService } from '../Permission/permission.service';
 
 @Injectable()
 export class LibraryService {
     constructor(
         private readonly database:   LibraryDatabase,
-        private readonly permission: PermissionService,
     ) {}
 
     public readonly bootstrap = {
@@ -103,7 +101,6 @@ export class LibraryService {
 
             // After the commit — the cached owner is still correct until the TTL, and would
             // keep authorizing routes against a row that no longer exists.
-            this.permission.invalidate.workflow(id);
 
             return { ok: true };
         },

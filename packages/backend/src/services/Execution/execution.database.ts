@@ -113,7 +113,7 @@ export class ExecutionDatabase {
         trx: DB.UserTransaction,
         props: {
             workflowId: Workflow.Id;
-            userId: Auth.User.Id;
+            createdBy: Auth.User.Id | null;
             igniter: Execution.Igniter;
             session: Execution.Session;
             executionId?: Execution.Id;
@@ -127,7 +127,7 @@ export class ExecutionDatabase {
             .values({
                 id: executionId,
                 workflow_id: props.workflowId,
-                user_id: props.userId,
+                created_by: props.createdBy,
                 igniter: props.igniter,
                 status: 'pending',
                 duration: 0,
