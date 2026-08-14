@@ -76,18 +76,6 @@ export function WorkflowCard({ workflow, size = 'default', onClick }: WorkflowCa
                             Active
                         </Badge>
                     ) : null}
-                    {workflow.is_public &&
-                        <>
-                            <Tooltip.Root>
-                                <Tooltip.Trigger className='absolute top-1 left-1 '>
-                                    <SystemIcons.Globe className='text-blue-400'/>
-                                </Tooltip.Trigger>
-                                <Tooltip.Content>
-                                    This workflow is public and visible to others
-                                </Tooltip.Content>
-                            </Tooltip.Root>
-                        </>
-                    }
                     {/* {workflow.description && (
                         <p className="text-xs opacity-60 truncate max-w-30 mt-0.5">{workflow.description}</p>
                     )} */}

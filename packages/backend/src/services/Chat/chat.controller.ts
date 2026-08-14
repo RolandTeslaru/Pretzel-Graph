@@ -2,7 +2,6 @@ import { Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { Chat, Workflow } from '@pretzel-graph/shared/domain';
 import { UserAuthGuard } from '../../auth/user-auth.guard';
-import { Scoped } from '../../auth/scoped.decorator';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { ChatIdParam, WorkflowIdParam } from '@/decorators/scope';
 import { Principal } from '@/domain/Principal';
@@ -49,7 +48,6 @@ export class ChatController {
 
 
     @Post(':workflowId/create')
-    @Scoped('workflow')
     @HttpCode(200)
     async create(
         @AuthenticatedUser() principal: Principal.User,
@@ -61,7 +59,6 @@ export class ChatController {
 
 
     @Post(':workflowId/ensure')
-    @Scoped('workflow')
     @HttpCode(200)
     async ensure(
         @AuthenticatedUser() principal: Principal.User,
@@ -73,7 +70,6 @@ export class ChatController {
 
 
     @Post(':workflowId/list')
-    @Scoped('workflow')
     @HttpCode(200)
     async listByWorkflow(
         @AuthenticatedUser() principal: Principal.User,
@@ -84,7 +80,6 @@ export class ChatController {
 
 
     @Post(':chatId/get')
-    @Scoped('chat')
     @HttpCode(200)
     async get(
         @AuthenticatedUser() principal: Principal.User,
@@ -96,7 +91,6 @@ export class ChatController {
 
 
     @Post(':chatId/erase')
-    @Scoped('chat')
     @HttpCode(200)
     async erase(
         @AuthenticatedUser() principal: Principal.User,
@@ -107,7 +101,6 @@ export class ChatController {
 
 
     @Post(':chatId/message/add')
-    @Scoped('chat')
     @HttpCode(200)
     async addMessage(
         @AuthenticatedUser() principal: Principal.User,

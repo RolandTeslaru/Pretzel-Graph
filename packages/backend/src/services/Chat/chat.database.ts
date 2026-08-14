@@ -12,14 +12,14 @@ class ChatMethods {
     @ZodReturn(Chat.Schema)
     async create(
         trx: DB.UserTransaction,
-        userId: Auth.User.Id,
+        createdBy: Auth.User.Id | null,
         workflowId: Workflow.Id,
         name = 'New Chat',
     ): Promise<Chat> {
         const row = await trx
             .insertInto('chats')
             .values({
-                user_id: userId,
+                created_by: createdBy,
                 workflow_id: workflowId,
                 name,
             })
@@ -33,14 +33,12 @@ class ChatMethods {
     @ZodReturn(z.object({ chat: Chat.Schema, messages: Chat.Message.Schema.array() }))
     async get(
         trx: DB.UserTransaction,
-        userId: Auth.User.Id,
         chatId: Chat.Id,
     ): Promise<{ chat: Chat; messages: Chat.Message[] }> {
         const chat = await trx
             .selectFrom('chats')
             .selectAll()
             .where('id', '=', chatId)
-            .where('user_id', '=', userId)
             .executeTakeFirstOrThrow();
 
         const rows = await trx
@@ -58,11 +56,10 @@ class ChatMethods {
 
     @AllowedDatabaseRoles("user")
     @ZodReturn(Chat.Schema.array())
-    async list(trx: DB.UserTransaction, userId: Auth.User.Id): Promise<Chat[]> {
+    async list(trx: DB.UserTransaction): Promise<Chat[]> {
         const rows = await trx
             .selectFrom('chats')
             .selectAll()
-            .where('user_id', '=', userId)
             .orderBy('updated_at', 'desc')
             .execute();
 
@@ -73,13 +70,11 @@ class ChatMethods {
     @ZodReturn(Chat.Schema.array())
     async listByWorkflow(
         trx: DB.UserTransaction,
-        userId: Auth.User.Id,
         workflowId: Workflow.Id,
     ): Promise<Chat[]> {
         const rows = await trx
             .selectFrom('chats')
             .selectAll()
-            .where('user_id', '=', userId)
             .where('workflow_id', '=', workflowId)
             .orderBy('updated_at', 'desc')
             .execute();
@@ -91,7 +86,7 @@ class ChatMethods {
     @ZodReturn(Chat.Schema)
     async ensure(
         trx: DB.UserTransaction,
-        userId: Auth.User.Id,
+        createdBy: Auth.User.Id | null,
         chatId: Chat.Id,
         workflowId: Workflow.Id,
         name = 'New Chat',
@@ -100,7 +95,6 @@ class ChatMethods {
             .selectFrom('chats')
             .selectAll()
             .where('id', '=', chatId)
-            .where('user_id', '=', userId)
             .executeTakeFirst();
 
         if (existing)
@@ -110,7 +104,7 @@ class ChatMethods {
             .insertInto('chats')
             .values({
                 id: chatId,
-                user_id: userId,
+                created_by: createdBy,
                 workflow_id: workflowId,
                 name,
             })
@@ -123,7 +117,6 @@ class ChatMethods {
     @AllowedDatabaseRoles("user")
     async erase(
         trx: DB.UserTransaction,
-        userId: Auth.User.Id,
         chatId: Chat.Id,
     ): Promise<void> {
         await trx
@@ -134,7 +127,6 @@ class ChatMethods {
         await trx
             .deleteFrom('chats')
             .where('id', '=', chatId)
-            .where('user_id', '=', userId)
             .execute();
     }
 }

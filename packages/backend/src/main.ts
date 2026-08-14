@@ -8,7 +8,6 @@ import * as express from 'express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import path from 'path';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
-import { auditScopedRoutes } from './auth/scope-audit';
 
 CatalogueService.setNodesRoot(path.resolve(__dirname, '../../nodes/src'));
 
@@ -38,7 +37,6 @@ async function bootstrap() {
     app.useWebSocketAdapter(new WsAdapter(app));
 
     // Fails the boot rather than serving a route whose path names a resource it never checks.
-    auditScopedRoutes(app);
 
     await app.listen(PORT);
     console.log(`NestJS server is running on http://localhost:${PORT}`);

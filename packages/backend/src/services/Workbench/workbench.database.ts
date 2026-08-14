@@ -12,7 +12,7 @@ class WorkflowMethods {
     @ZodReturn(Workflow.Id)
     async create(
         trx: DB.UserTransaction,
-        userId: Auth.User.Id,
+        createdBy: Auth.User.Id | null,
         payload: Workbench.API.Workflow.Create.Request,
     ): Promise<Workflow.Id> {
         const { workflow } = payload;
@@ -28,7 +28,7 @@ class WorkflowMethods {
                 locked: workflow.locked,
                 mcp_enabled: false,
                 data: workflow.data,
-                user_id: userId,
+                created_by: createdBy,
             })
             .returning('id')
             .executeTakeFirstOrThrow();

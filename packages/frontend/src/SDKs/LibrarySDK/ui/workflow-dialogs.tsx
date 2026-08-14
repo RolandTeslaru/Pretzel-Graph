@@ -19,11 +19,6 @@ const Schema = z.object({
 })
 type Values = z.infer<typeof Schema>
 
-const EditSchema = Schema.extend({
-    is_public: z.boolean(),
-})
-type EditValues = z.infer<typeof EditSchema>
-
 export function openCreateWorkflowDialog(args: { folder_id: Library.Folder.Id }) {
     const id = `create-workflow-${args.folder_id}`
     DialogSDK.actions.push(id, (props) => (
@@ -104,18 +99,17 @@ function CreateWorkflowContent({ dialogId, folder_id }: { dialogId: string; fold
 }
 
 function EditWorkflowContent({ dialogId, workflow }: { dialogId: string; workflow: Library.WorkflowMeta }) {
-    const form = useForm<EditValues>({
-        resolver: zodResolver(EditSchema),
+    const form = useForm<Values>({
+        resolver: zodResolver(Schema),
         defaultValues: {
             display_name: workflow.display_name || '',
             description: workflow.description || '',
             icon: workflow.icon || '',
             accent: workflow.accent || '',
-            is_public: workflow.is_public ?? false,
         },
     })
 
-    const onSubmit = async (values: EditValues) => {
+    const onSubmit = async (values: Values) => {
         try {
             await LibrarySDK.actions.workflow.update({
                 id: workflow.id,
@@ -123,7 +117,6 @@ function EditWorkflowContent({ dialogId, workflow }: { dialogId: string; workflo
                 description: values.description || null,
                 icon: values.icon || null,
                 accent: values.accent || null,
-                is_public: values.is_public,
             })
             toast.success('Workflow updated')
             DialogSDK.actions.pop(dialogId)
@@ -176,19 +169,6 @@ function EditWorkflowContent({ dialogId, workflow }: { dialogId: string; workflo
                             </Form.Item>
                         )} />
                     </div>
-                    <Form.Field control={form.control} name="is_public" render={({ field }) => (
-                        <Form.Item>
-                            <div className="flex items-center justify-between">
-                                <div className="flex flex-col gap-0.5">
-                                    <Form.Label>Is Public?</Form.Label>
-                                    <span className="text-xs text-muted-foreground">Anyone can view and use this workflow</span>
-                                </div>
-                                <Form.Control>
-                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                                </Form.Control>
-                            </div>
-                        </Form.Item>
-                    )} />
                     <Dialog.Footer>
                         <Button type="button" variant="outline" onClick={() => DialogSDK.actions.pop(dialogId)}>Cancel</Button>
                         <Button type="submit" disabled={form.formState.isSubmitting}>

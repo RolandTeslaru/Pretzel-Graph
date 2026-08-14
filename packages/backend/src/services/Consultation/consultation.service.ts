@@ -12,10 +12,9 @@ export class ConsultationService {
     // for the engine's acknowledgement before returning — so the response only reports success
     // once the answer has actually been consumed and the node un-parked.
     //
-    // executionId arrives already authorized, from the route's execution scope. consultationId
-    // is a correlation key both directions narrow on in-process. Several consultations can be
-    // parked on one execution, so the type alone isn't enough to tell whose acknowledgement
-    // arrived.
+    // consultationId is a correlation key both directions narrow on in-process. Several
+    // consultations can be parked on one execution, so the type alone isn't enough to tell
+    // whose acknowledgement arrived.
     async answer(
         executionId: Execution.Id,
         { consultationId, answer }: Consultation.API.Answer.Request,

@@ -45,8 +45,7 @@ export class ExecutionService {
 
 
 
-    // workflowId arrives already authorized, from the route's workflow scope. The caller is
-    // the owner by construction, so the run acts as principal.userId.
+    // Attributed to whoever triggered it.
     public async runFromUser(
         principal:  Principal.User,
         workflowId: Workflow.Id,
@@ -59,20 +58,15 @@ export class ExecutionService {
 
 
 
-    /**
-     * A trigger with no user session behind it — today an inbound webhook. The run still
-     * belongs to someone: the webhook only exists because that user published the workflow,
-     * so it acts on their behalf and runs with their privileges.
-     */
+    /** A trigger with no user session behind it. */
     public async runFromService(
         payload: Execution.API.Run.InternalRequest,
         service: string,
     ): Promise<Execution.API.Run.Response> {
         void service;
 
-        const ownerId = await this.ownership.loadWorkflowOwner(payload.workflowId);
-
-        return this.runCore(ownerId, payload.workflowId, payload, payload.igniter);
+        // No human behind this run; `igniter` records what triggered it.
+        return this.runCore(null, payload.workflowId, payload, payload.igniter);
     }
 
 
@@ -117,14 +111,9 @@ export class ExecutionService {
         return blueprints;
     }
 
-    /**
-     * Every run acts as the workflow's owner, whoever triggered it — a user clicking Run
-     * is the owner (the route's workflow scope enforces it), and a webhook fires because that owner
-     * published the workflow. So setup binds one identity here rather than taking it from
-     * the caller. RLS then scopes credential resolution on both paths.
-     */
+    /** `userId` is attribution only — null when a machine triggered the run. */
     private async runCore(
-        userId:     Auth.User.Id,
+        userId:     Auth.User.Id | null,
         workflowId: Workflow.Id,
         payload:    Execution.API.Run.Request,
         igniter:    Execution.Igniter,
@@ -154,7 +143,7 @@ export class ExecutionService {
             await withDatabase((db) => this.chatDatabase.chat.ensure(db, userId, chatId, workflowId));
 
         const session = Execution.Session.createInitial();
-        const executionId = await withDatabase((db) => this.database.create(db, { workflowId, userId, igniter, session, executionId: payload.executionId, chatId }));
+        const executionId = await withDatabase((db) => this.database.create(db, { workflowId, createdBy: userId, igniter, session, executionId: payload.executionId, chatId }));
 
         const execution = {
             id: executionId,

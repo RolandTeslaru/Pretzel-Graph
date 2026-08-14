@@ -3,17 +3,14 @@ import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
 import { Chat, Workflow } from '@pretzel-graph/shared/domain';
 import { ChatDatabase } from './chat.database';
-import { PermissionService } from '../Permission/permission.service';
 
 @Injectable()
 export class ChatService {
     constructor(
         private readonly database: ChatDatabase,
-        private readonly ownership: PermissionService,
     ) {}
 
-    // workflow_id arrives already authorized, from the route's workflow scope — so a chat
-    // cannot be attached to a workflow the user doesn't own.
+    // The FK rejects a workflow that does not exist.
     async create(
         principal:   Principal.User,
         workflow_id: Workflow.Id,
@@ -26,8 +23,7 @@ export class ChatService {
         return { chat };
     }
 
-    // chatId is a proposed id — the row may not exist yet, so it authorizes nothing. workflow_id
-    // arrives already authorized, from the route's workflow scope.
+    // chatId is a proposed id — the row may not exist yet.
     async ensure(
         principal:   Principal.User,
         workflow_id: Workflow.Id,
@@ -39,19 +35,18 @@ export class ChatService {
         return { chat };
     }
 
-    // chatId arrives already authorized, from the route's chat scope. Get.Request's cursor
-    // and limit are declared but unread — the query below does not paginate.
+    // Get.Request's cursor and limit are declared but unread — the query does not paginate.
     async get(
         principal: Principal.User,
         chatId:    Chat.Id,
     ): Promise<Chat.API.Get.Response> {
-        return DB.asUser(principal, (trx) => this.database.chat.get(trx, principal.userId, chatId));
+        return DB.asUser(principal, (trx) => this.database.chat.get(trx, chatId));
     }
 
     async list(
         principal: Principal.User,
     ): Promise<Chat.API.List.Response> {
-        const chats = await DB.asUser(principal, (trx) => this.database.chat.list(trx, principal.userId));
+        const chats = await DB.asUser(principal, (trx) => this.database.chat.list(trx));
         return { chats };
     }
 
@@ -60,7 +55,7 @@ export class ChatService {
         workflow_id: Workflow.Id,
     ): Promise<Chat.API.ListByWorkflow.Response> {
 
-        const chats = await DB.asUser(principal, (trx) => this.database.chat.listByWorkflow(trx, principal.userId, workflow_id));
+        const chats = await DB.asUser(principal, (trx) => this.database.chat.listByWorkflow(trx, workflow_id));
         return { chats };
     }
 
@@ -68,9 +63,8 @@ export class ChatService {
         principal: Principal.User,
         chatId:    Chat.Id,
     ): Promise<Chat.API.Erase.Response> {
-        await DB.asUser(principal, (trx) => this.database.chat.erase(trx, principal.userId, chatId));
+        await DB.asUser(principal, (trx) => this.database.chat.erase(trx, chatId));
 
-        this.ownership.invalidate.chat(chatId);
 
         return {};
     }
