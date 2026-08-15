@@ -15,7 +15,7 @@ export const Route = createFileRoute('/')({
 })
 
 function Landing() {
-    const theme = SystemSDK.useStore(s => s.theme)
+    const theme = SystemSDK.useStore(s => s.resolvedTheme)
     return (
         <div className="min-h-screen flex items-center justify-center">
             <div className="text-center z-10">

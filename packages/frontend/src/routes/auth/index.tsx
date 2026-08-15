@@ -18,7 +18,7 @@ export const Route = createFileRoute('/auth/')({
 
 function AuthPage() {
 
-    const theme = SystemSDK.useStore(s => s.theme)
+    const theme = SystemSDK.useStore(s => s.resolvedTheme)
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
