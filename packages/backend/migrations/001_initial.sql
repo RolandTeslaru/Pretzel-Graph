@@ -28,6 +28,16 @@ create table members (
     constraint members_role_check check (role in ('owner', 'admin', 'member'))
 );
 
+-- One row, seeded below. Records that this deployment has an owner, so clearing
+-- `members` cannot hand ownership to the next caller.
+create table deployment (
+    id         boolean default true not null,
+    claimed_by uuid,
+    claimed_at timestamp with time zone,
+
+    constraint deployment_singleton check (id)
+);
+
 create table folders (
     id               uuid default gen_random_uuid() not null,
     display_name     text not null,
@@ -138,6 +148,7 @@ create table api_keys (
 
 alter table only users               add constraint users_pkey               primary key (id);
 alter table only members             add constraint members_pkey             primary key (user_id);
+alter table only deployment          add constraint deployment_pkey          primary key (id);
 alter table only folders             add constraint folders_pkey             primary key (id);
 alter table only workflows           add constraint workflows_pkey           primary key (id);
 alter table only version_control     add constraint version_control_pkey     primary key (id);
@@ -155,6 +166,9 @@ alter table only version_control
 
 alter table only members
     add constraint members_user_id_fkey foreign key (user_id) references users(id) on delete cascade;
+
+alter table only deployment
+    add constraint deployment_claimed_by_fkey foreign key (claimed_by) references users(id) on delete set null;
 
 -- Attribution FKs blank on delete; the rows outlive the user.
 alter table only folders
@@ -245,3 +259,5 @@ end;
 $$;
 
 create trigger api_keys_prevent_immutable before update on api_keys for each row execute function prevent_api_key_immutable_changes();
+
+insert into deployment (id) values (true);

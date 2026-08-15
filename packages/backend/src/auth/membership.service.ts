@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { sql } from 'kysely';
 import { Workspace } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
-import { VerifiedToken } from '@/utils/auth';
+import { VerifiedToken, subjectExistsAtIssuer } from '@/utils/auth';
 
 @Injectable()
 export class MembershipService {
+
+    private readonly logger = new Logger(MembershipService.name);
 
     /**
      * The caller's role, or null when they are not a member.
@@ -24,23 +27,40 @@ export class MembershipService {
         if (existing)
             return existing.role;
 
-        return this.admit(token);
+        return this.claim(token);
     }
 
     /**
-     * Materialises the app-side rows for a subject the issuer already knows. The
-     * first one to arrive owns the deployment; everyone after is refused until an
-     * owner invites them.
+     * Takes ownership of an unclaimed deployment. Happens once in its lifetime: the
+     * `deployment` row records the claim, so emptying `members` cannot hand ownership
+     * to whoever arrives next.
      */
-    private async admit(token: VerifiedToken): Promise<Workspace.Role | null> {
-        return DB.asService('admit first member', async (db) => {
-            const claimed = await db
-                .selectFrom('members')
-                .select('user_id')
-                .limit(1)
+    private async claim(token: VerifiedToken): Promise<Workspace.Role | null> {
+        const unclaimed = await DB.asService('read deployment claim', (db) =>
+            db
+                .selectFrom('deployment')
+                .select('claimed_at')
+                .executeTakeFirst(),
+        );
+
+        if (!unclaimed || unclaimed.claimed_at)
+            return null;
+
+        // Local verification cannot see a deleted account, and this is the one
+        // decision worth a round trip to be sure of.
+        if (!await subjectExistsAtIssuer(token))
+            return null;
+
+        return DB.asService('claim deployment', async (db) => {
+            // Stakes the claim first: a concurrent first request blocks here, then
+            // finds it taken. `claimed_by` follows once the user row it references exists.
+            const claim = await db
+                .updateTable('deployment')
+                .set({ claimed_at: sql<string>`now()` })
+                .where('claimed_at', 'is', null)
                 .executeTakeFirst();
 
-            if (claimed)
+            if (claim.numUpdatedRows === 0n)
                 return null;
 
             const fallback = token.email?.split('@')[0] ?? token.userId.slice(0, 8);
@@ -61,6 +81,13 @@ export class MembershipService {
                 .values({ user_id: token.userId, role: 'owner' })
                 .onConflict((oc) => oc.column('user_id').doNothing())
                 .execute();
+
+            await db
+                .updateTable('deployment')
+                .set({ claimed_by: token.userId })
+                .execute();
+
+            this.logger.log(`Deployment claimed by ${token.email ?? token.userId}`);
 
             return 'owner';
         });

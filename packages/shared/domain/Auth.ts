@@ -33,6 +33,19 @@ export namespace Auth {
     export type User = z.infer<typeof User.Schema>
 
     export namespace API {
+        export namespace Status {
+            export const Response = z.object({
+                claimed: z.boolean(),
+            })
+            export type Response = z.infer<typeof Response>
+
+            /** Unauthenticated: the sign-in screen asks before anyone has an account. */
+            export async function get(api: AxiosInstance): Promise<Response> {
+                const { data } = await api.get<Response>('/api/auth/status')
+                return data
+            }
+        }
+
         export namespace Me {
             export namespace Get {
                 export const Request = z.object({})
