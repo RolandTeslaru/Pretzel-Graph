@@ -3,7 +3,7 @@ import { Execution, VersionControl, Workflow } from '@pretzel-graph/shared/domai
 import { resolveWebhook } from '@pretzel-graph/shared/utils';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import { PublishedWorkflowCacheService } from '../PublishedWorkflowCache/published-workflow-cache.service';
-import { ApiService } from '../Api/api.service';
+import { ExecutionService } from '../../Execution/execution.service';
 
 export interface InboundRequest {
     workflowId: Webhook.WorkflowId;
@@ -20,7 +20,7 @@ export class IgniterService {
 
     constructor(
         private readonly publishedWorkflows: PublishedWorkflowCacheService,
-        private readonly api: ApiService,
+        private readonly executions: ExecutionService,
     ) {}
 
     async handle(req: InboundRequest): Promise<unknown> {
@@ -54,7 +54,7 @@ export class IgniterService {
             igniter,
         };
 
-        const { execution } = await Execution.API.runInternal(this.api.client, payload); 
+        const { execution } = await this.executions.runFromService(payload, 'webhook');
 
         this.logger.log(
             `Triggered workflow=${publication.workflow_id} publication=${publication.id} executionId=${execution.id}`,

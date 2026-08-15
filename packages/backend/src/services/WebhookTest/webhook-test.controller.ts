@@ -5,20 +5,18 @@ import { Principal } from '@/domain/Principal';
 import { PermissionService } from '@/services/Permission/permission.service';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import { ZodBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
-import axios from 'axios';
+import { IgniterTestService } from '../WebhookIgnition/IgniterTest/igniter-test.service';
 
-// Proxy for worker → webhook server registration.
-// The worker only knows the backend URL (API_URL), so it registers here
-// and we forward to the webhook server via WEBHOOK_SERVER_URL.
-@Controller('webhook/test')
+// Named outside the `webhook` and `webhook-test` namespaces: those are served at the
+// root, and this is an internal API route.
+@Controller('test-webhooks')
 @UseGuards(DelegateAuthGuard)
 export class WebhookTestController {
 
-    constructor(private readonly ownership: PermissionService) {}
-
-    private get webhookServerUrl() {
-        return process.env.WEBHOOK_SERVER_URL ?? 'http://localhost:3002';
-    }
+    constructor(
+        private readonly ownership: PermissionService,
+        private readonly testWebhooks: IgniterTestService,
+    ) {}
 
     @Post(':workflowId/register')
     @HttpCode(200)
@@ -40,10 +38,8 @@ export class WebhookTestController {
         if (body.executionId !== delegate.executionId)
             throw new ForbiddenException('Registration may only target the calling execution');
 
-        await axios.post(
-            `${this.webhookServerUrl}/webhooks/test/register`,
-            { workflowId, ...body },
-            { headers: { [Webhook.BACKEND_TOKEN_HEADER]: process.env.BACKEND_TO_WEBHOOK_TOKEN ?? '' } },
+        this.testWebhooks.register(
+            body.path, body.method, workflowId, body.timeoutMs, body.executionId, body.consultationId,
         );
 
         return { ok: true };

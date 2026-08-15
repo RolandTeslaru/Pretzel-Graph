@@ -7,7 +7,7 @@ import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { ApiModule } from './services/Api/api.module';
 import { IgniterModule } from './services/Igniter/igniter.module';
 import { IgniterTestModule } from './services/IgniterTest/igniter-test.module';
-import { RegistrationModule } from './services/Registration/registration.module';
+import { PublishedWorkflowCacheModule } from './services/PublishedWorkflowCache/published-workflow-cache.module';
 
 @Module({
     imports: [
@@ -26,7 +26,7 @@ import { RegistrationModule } from './services/Registration/registration.module'
         }),
         ApiModule,
         IgniterTestModule,
-        RegistrationModule,
+        PublishedWorkflowCacheModule,
         IgniterModule,
     ],
     providers: [
