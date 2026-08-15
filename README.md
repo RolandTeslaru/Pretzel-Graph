@@ -34,6 +34,10 @@ starts. Data lives in Docker volumes, so it survives restarts. To start over:
 docker compose down -v
 ```
 
+Clear the browser's site data as well. Sessions are stored client-side, and a
+token from the deleted database still verifies — the next page load will
+recreate rows under the old account.
+
 ### Bringing your own Postgres
 
 Point `DATABASE_URL` at it and skip the `postgres` container. The only
