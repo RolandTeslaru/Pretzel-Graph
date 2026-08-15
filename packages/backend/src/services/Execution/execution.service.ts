@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue, QueueEvents } from 'bullmq';
-import Redis from 'ioredis';
 import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
+import { createRedisClient, createRedisSubscriber } from '../../utils/redis';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { Auth, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
@@ -24,7 +24,7 @@ export class ExecutionService {
         connection: { host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null }
     });
 
-    private readonly redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+    private readonly redis = createRedisClient('execution.service');
 
     constructor(
         @InjectQueue(Execution.Queue.ID)

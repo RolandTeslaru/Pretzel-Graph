@@ -1,12 +1,12 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import Redis from 'ioredis';
+import { createRedisClient, createRedisSubscriber } from '../../utils/redis';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { Realtime } from '@pretzel-graph/shared/domain/Realtime';
 
 @Injectable()
 export class RealtimeService implements OnModuleDestroy {
-    private readonly redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
-    private readonly redisPub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+    private readonly redisSub = createRedisSubscriber('realtime.service');
+    private readonly redisPub = createRedisClient('realtime.service.pub');
 
     private readonly waiters = new Map<Realtime.Channel, Set<(event: Realtime.Event) => void>>();
 

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { createRedisClient, createRedisSubscriber } from '../../../utils/redis';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import { Consultation, Execution, Workflow } from '@pretzel-graph/shared/domain';
-import Redis from 'ioredis';
 
 interface TestRegistration {
     workflowId: Workflow.Id;
@@ -17,7 +17,7 @@ interface TestRegistration {
 @Injectable()
 export class IgniterTestService {
     private readonly logger = new Logger(IgniterTestService.name);
-    private readonly redisPub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+    private readonly redisPub = createRedisClient('igniter-test');
     private readonly registrations = new Map<Webhook.RouteId, TestRegistration>();
 
     // TTL comes from the caller: the node knows how long it is prepared to wait, and a

@@ -1,6 +1,8 @@
 node_modules/
 profiling/
 .env
+.env.*
+!.env.example
 packages/research/
 SPECS/
 packages/nodes/globalPretzelWorkflows.json

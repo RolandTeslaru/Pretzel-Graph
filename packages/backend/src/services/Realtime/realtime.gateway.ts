@@ -1,7 +1,7 @@
 import { WebSocketGateway, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { WebSocket } from 'ws';
 import { IncomingMessage } from 'http';
-import Redis from 'ioredis';
+import { createRedisClient, createRedisSubscriber } from '../../utils/redis';
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
 import { Realtime } from "@pretzel-graph/shared/domain/Realtime";
 import { Auth, Chat, Execution } from "@pretzel-graph/shared/domain";
@@ -13,7 +13,7 @@ interface SocketIdentity {
 
 @WebSocketGateway()
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
-    private redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+    private redisSub = createRedisSubscriber('realtime.gateway');
 
     private wsSubscriptions = new Map<Realtime.Channel, Set<WebSocket>>();
     private socketIdentities = new WeakMap<WebSocket, SocketIdentity>();
