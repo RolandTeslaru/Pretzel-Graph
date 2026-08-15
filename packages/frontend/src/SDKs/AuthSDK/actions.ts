@@ -1,4 +1,3 @@
-import { supabase } from "@/libs/supabase";
 import { toast } from "sonner";
 import { Auth } from "@pretzel-graph/shared/domain";
 import { AuthSDK, AuthSDKImpl } from "./sdk";
@@ -7,7 +6,7 @@ import { api } from '@/SDKs/ApiInterceptorSDK';
 export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
     return {
         login: async (props) => {
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await sdk.client.signInWithPassword({
                 email: props.email,
                 password: props.password,
             })
@@ -32,7 +31,7 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
             return true;
         },
         logout: async () => {
-            const { error } = await supabase.auth.signOut();
+            const { error } = await sdk.client.signOut();
 
             if (error) {
                 toast.error(`AuthSDK: Could not logout: ${error.message}`)
@@ -47,7 +46,7 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
         },
         signup: async (props) => {
             const { email, password, username, displayName } = props
-            const { data, error } = await supabase.auth.signUp({
+            const { data, error } = await sdk.client.signUp({
                 email,
                 password,
                 options: {

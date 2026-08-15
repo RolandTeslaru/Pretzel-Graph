@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext as NestExecutionContext, Injectable, Unau
 import { Request } from 'express';
 import { Token } from '@/domain/Token';
 import { Principal } from '@/domain/Principal';
-import { createAuthenticatedClient, getUserId } from '../utils/supabase';
+import { getUserId } from '../utils/auth';
 import { Auth } from '@pretzel-graph/shared/domain';
 
 export interface AuthenticatedRequest extends Request {
@@ -31,8 +31,7 @@ export class UserAuthGuard implements CanActivate {
         }
 
         try {
-            const supabase = createAuthenticatedClient(token);
-            const userId = await getUserId(supabase);
+            const userId = await getUserId(token);
 
             if (!userId) {
                 throw new UnauthorizedException('Invalid token');

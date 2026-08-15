@@ -75,7 +75,7 @@ export async function generateIndex(includeDbBlueprints = false) {
         // connection (RLS-constrained, not the owner) is deliberate: these workflows are
         // is_public, and the workflows SELECT policy's `OR is_public = true` branch makes them
         // readable without any owner bypass. Reading public data needs no elevated role.
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL_APP });
+        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
         let data: Array<{ id: string, display_name: string, description: string | null, icon: string | null, accent: string | null, data: unknown }>;
 
         try {

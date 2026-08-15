@@ -1,0 +1,76 @@
+# Stateful services. Run these in containers and the packages on the host:
+#
+#   docker compose up -d
+#   cp .env.example .env
+#   npm run dev          # in each package
+#
+# `docker compose down -v` deletes the volumes, so the next start rebuilds
+# everything from nothing.
+
+services:
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pretzel}
+      POSTGRES_DB: ${POSTGRES_DB:-pretzel}
+      GOTRUE_DB_NAME: ${GOTRUE_DB_NAME:-gotrue}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-pretzel}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  gotrue:
+    image: supabase/auth:v2.177.0
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      PORT: 9999
+      API_EXTERNAL_URL: ${GOTRUE_EXTERNAL_URL:-http://localhost:9999}
+
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-pretzel}@postgres:5432/${GOTRUE_DB_NAME:-gotrue}?sslmode=disable&search_path=auth
+
+      GOTRUE_SITE_URL: ${GOTRUE_SITE_URL:-http://localhost:5173}
+      GOTRUE_URI_ALLOW_LIST: ${GOTRUE_URI_ALLOW_LIST:-http://localhost:5173}
+      GOTRUE_DISABLE_SIGNUP: "false"
+
+      GOTRUE_JWT_SECRET: ${GOTRUE_JWT_SECRET:?set GOTRUE_JWT_SECRET in .env}
+      GOTRUE_JWT_EXP: "3600"
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+
+      # No mail server in development: accounts are usable immediately.
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+    ports:
+      - "${GOTRUE_PORT:-9999}:9999"
+
+volumes:
+  postgres-data:
+  redis-data:
