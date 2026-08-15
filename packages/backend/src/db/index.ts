@@ -351,6 +351,11 @@ export namespace DB {
         return service().transaction().execute((trx) => fn(tag(trx, Role.Service)));
     }
 
+    /** Owner-level handle for the boot migration runner. */
+    export function forMigrations(): Kysely<Tables> {
+        return service();
+    }
+
     export async function destroyPools(): Promise<void> {
         await Promise.all([rlsDb?.destroy(), serviceDb?.destroy()]);
         rlsDb = undefined;
