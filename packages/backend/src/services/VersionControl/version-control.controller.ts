@@ -1,14 +1,14 @@
 import { Controller, Post, Get, Delete, UseGuards, HttpCode } from '@nestjs/common';
 import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { VersionControlService } from './version-control.service';
-import { UserAuthGuard } from '../../auth/user-auth.guard';
+import { MemberAuthGuard } from '../../auth/member-auth.guard';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { WorkflowIdParam } from '@/decorators/scope';
 import { Principal } from '@/domain/Principal';
 import { ZodBody, ZodParam } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 
 @Controller('version-control')
-@UseGuards(UserAuthGuard)
+@UseGuards(MemberAuthGuard)
 export class VersionControlController {
     constructor(private readonly service: VersionControlService) {}
 

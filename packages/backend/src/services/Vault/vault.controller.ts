@@ -1,13 +1,13 @@
 import { Controller, Get, Post, Delete, Patch, Param, UseGuards, HttpCode } from '@nestjs/common';
 import { VaultService } from './vault.service';
 import { Vault } from '@pretzel-graph/shared/domain';
-import { UserAuthGuard } from '../../auth/user-auth.guard';
+import { MemberAuthGuard } from '../../auth/member-auth.guard';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { ZodBody, ZodStringBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 
 @Controller('vault')
-@UseGuards(UserAuthGuard)
+@UseGuards(MemberAuthGuard)
 export class VaultController {
     constructor(private readonly vaultService: VaultService) {}
 

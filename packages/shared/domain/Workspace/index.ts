@@ -1,11 +1,12 @@
 import z from "zod";
 import { Auth } from "../Auth";
+import { Role as RoleSchema } from "./role";
 
 // Who may act in this deployment, and with what rank.
 export namespace Workspace {
 
-    export const Role = z.enum(["owner", "admin", "member"]);
-    export type  Role = z.infer<typeof Role>;
+    export const Role = RoleSchema;
+    export type  Role = z.infer<typeof RoleSchema>;
 
     export namespace Member {
         export const Schema = z.object({
