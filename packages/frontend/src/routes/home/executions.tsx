@@ -12,9 +12,12 @@ import {
     tableFeatures,
     useTable,
 } from '@tanstack/react-table'
-import { Badge, Button, DropdownMenu, ScrollArea, Table } from '@pretzel-graph/standard-ui/foundations'
+import JsonView from 'react18-json-view'
+import 'react18-json-view/src/style.css'
+import 'react18-json-view/src/dark.css'
+import { Badge, Button, DropdownMenu, Popover, ScrollArea, Table } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { Execution, type Workflow } from '@pretzel-graph/shared/domain'
+import { Execution, SystemError, type Workflow } from '@pretzel-graph/shared/domain'
 import { api } from '@/SDKs/ApiInterceptorSDK/sdk'
 import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import WorkflowPicker from '@/SDKs/LibrarySDK/ui/WorkflowPicker'
@@ -122,7 +125,58 @@ const columns: ColumnDef<typeof features, Execution.Meta, any>[] = [
             getValue() ? <SystemIcons.Activity size={14} className='opacity-60' /> : null
         ),
     }),
+
+    columnHelper.accessor(row => row.error ?? null, {
+        id: 'error',
+        header: 'Error',
+        enableSorting: false,
+        enableColumnFilter: false,
+        cell: ({ getValue }) => <ErrorCell error={getValue()} />,
+    }),
 ]
+
+
+function ErrorCell({ error }: { error: SystemError.Serialized | null }) {
+    if (!error)
+        return null
+
+    return (
+        <Popover.Root>
+            <Popover.Trigger
+                aria-label='Show error'
+                className='mx-auto flex size-7 items-center justify-center rounded-md text-destructive opacity-80 transition-colors hover:bg-destructive/10 hover:opacity-100'
+            >
+                <SystemIcons.AlertTriangleFill size={18} />
+            </Popover.Trigger>
+
+            <Popover.Content align='end' className='w-[420px] p-0'>
+                <div className='flex flex-col gap-1 px-3 py-2'>
+                    <p className='text-xs font-semibold text-foreground break-words'>
+                        {error.message}
+                    </p>
+
+                    <p className='text-xs text-muted-foreground'>
+                        Code <span className='text-destructive font-medium'>{codeLabel(error.code)}</span>
+                    </p>
+                </div>
+
+                <div className='border-t border-border' />
+
+                <ScrollArea.Root className='max-h-[360px] px-3 py-2 text-[11px] leading-relaxed'>
+                    <JsonView
+                        src={error}
+                        collapsed={2}
+                        theme='default'
+                    />
+                </ScrollArea.Root>
+            </Popover.Content>
+        </Popover.Root>
+    )
+}
+
+
+// Numeric enums reverse-map, so the wire code renders as its name.
+const codeLabel = (code: SystemError.Code) => `${SystemError.Code[code] ?? 'UNKNOWN'} (${code})`
 
 
 function ExecutionsRoute() {
@@ -308,6 +362,7 @@ const HEAD_WIDTH: Record<string, string> = {
     created_at: 'w-[180px]',
     duration: 'w-[100px]',
     has_recording: 'w-[90px]',
+    error: 'w-[70px] text-center',
 }
 
 

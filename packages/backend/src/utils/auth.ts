@@ -1,8 +1,10 @@
 import { jwtVerify } from 'jose';
+import { GoTrueClient } from '@supabase/auth-js';
 import { Auth } from '@pretzel-graph/shared/domain';
 
 /** What a verified access token tells us about its subject. */
 export type VerifiedToken = {
+    raw: string;
     userId: Auth.User.Id;
     email: string | null;
     username: string | null;
@@ -52,6 +54,7 @@ export async function verifyToken(token: string): Promise<VerifiedToken | null> 
         const metadata = (payload.user_metadata ?? {}) as Record<string, unknown>;
 
         return {
+            raw: token,
             userId: parsed.data,
             email: asString(payload.email),
             username: asString(metadata.username),
@@ -61,4 +64,23 @@ export async function verifyToken(token: string): Promise<VerifiedToken | null> 
     catch {
         return null;
     }
+}
+
+let issuer: GoTrueClient | undefined;
+
+/**
+ * Asks the issuer whether the subject still exists. Reserved for decisions that
+ * a signature alone should not settle — a token outlives the account it names.
+ */
+export async function subjectExistsAtIssuer(token: VerifiedToken): Promise<boolean> {
+    const url = process.env.AUTH_URL;
+
+    if (!url)
+        return false;
+
+    issuer ??= new GoTrueClient({ url, persistSession: false, autoRefreshToken: false });
+
+    const { data, error } = await issuer.getUser(token.raw);
+
+    return !error && data.user?.id === token.userId;
 }

@@ -215,6 +215,15 @@ export namespace DB {
         export const toDomain = (row: Row) => WorkspaceD.Member.Schema.parse(row);
     }
 
+    export namespace Deployment {
+        export const Row = z.object({
+            id:         z.literal(true),
+            claimed_by: Auth.User.Id.nullable(),
+            claimed_at: supabaseTimestamp.nullable(),
+        });
+        export type Row = z.infer<typeof Row>;
+    }
+
     export namespace User {
         export const Row = z.object({
             id:           Auth.User.Id,
@@ -248,6 +257,7 @@ export namespace DB {
     export interface Tables {
         users:               Table<typeof User.Row, Stamps>;
         members:             Table<typeof Member.Row, Stamps>;
+        deployment:          Table<typeof Deployment.Row, 'id'>;
         folders:             Table<typeof Folder.Row, 'id' | Stamps>;
         workflows:           Table<typeof Workflow.Row, 'id' | Stamps>;
         executions:          Table<typeof Execution.Row, 'id' | Stamps>;

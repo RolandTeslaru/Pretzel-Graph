@@ -19,13 +19,24 @@ const signUpSchema = z.object({
     displayName: z.string()
 })
 
-const AuthenticationPanel = () => {
+const AuthenticationPanel = ({ claimed }: { claimed: boolean }) => {
 
     const [variant, setVariant] = useState<"login" | "signup">("login")
 
+    // Nobody owns this instance yet, so there is nothing to log in to.
+    if (!claimed)
+        return (
+            <div className="flex flex-col gap-2 p-2">
+                <div className="text-center">
+                    <p className="font-semibold">Create the owner account</p>
+                    <p className="text-xs text-muted-foreground">The first account owns this instance.</p>
+                </div>
+                <SignUpPanel/>
+            </div>
+        )
+
     return (
         <div className="flex flex-col gap-2 p-2">
-            {variant}
             <Tabs.Root 
                 defaultValue={variant}
                 onValueChange={(val) => {
@@ -33,8 +44,8 @@ const AuthenticationPanel = () => {
                 }}
             >
                 <Tabs.List>
-                    <Tabs.Trigger className='w-full' value='signup'>Sign Up</Tabs.Trigger>
                     <Tabs.Trigger className='w-full' value='login'>Login</Tabs.Trigger>
+                    <Tabs.Trigger className='w-full' value='signup'>Sign Up</Tabs.Trigger>
                 </Tabs.List>
             </Tabs.Root>
             {variant === "login"
