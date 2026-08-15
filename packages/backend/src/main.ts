@@ -16,7 +16,8 @@ async function bootstrap() {
     // Before the modules load: some of them read the database on init.
     await runMigrations();
 
-    const app = await NestFactory.create(AppModule);
+    // rawBody: kept for signature verification, which needs the original bytes.
+    const app = await NestFactory.create(AppModule, { rawBody: true });
 
     const PORT = process.env.PORT || 3001;
 
@@ -32,7 +33,8 @@ async function bootstrap() {
     });
 
     // Mount all routes under /api
-    app.setGlobalPrefix('api');
+    // The webhook roots are URLs third parties hold, so they sit outside the prefix.
+    app.setGlobalPrefix('api', { exclude: ['webhook/{*rest}', 'webhook-test/{*rest}'] });
 
     app.use(express.json({ limit: '50mb' }));
     app.use(express.urlencoded({ limit: '50mb', extended: true }));

@@ -15,6 +15,7 @@ import { VersionControlModule } from './services/VersionControl/version-control.
 import { WebhookTestModule } from './services/WebhookTest/webhook-test.module';
 import { PermissionModule } from './services/Permission/permission.module';
 import { MembershipModule } from './auth/membership.module';
+import { WebhookIgnitionModule } from './services/WebhookIgnition/webhook-ignition.module';
 import { ApiKeysModule } from './services/ApiKeys/api-keys.module';
 import { VaultModule } from './services/Vault/vault.module';
 import { ConsultationModule } from './services/Consultation/consultation.module';
@@ -47,6 +48,7 @@ import { ConsultationModule } from './services/Consultation/consultation.module'
         WebhookTestModule,
         PermissionModule,
         MembershipModule,
+        WebhookIgnitionModule,
         ApiKeysModule,
         VaultModule,
         ConsultationModule,
