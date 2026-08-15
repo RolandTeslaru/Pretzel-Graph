@@ -52,7 +52,7 @@ const NAV_BOTTOM: NavEntry[] = [
 
 
 function HomeLayout() {
-    const theme = SystemSDK.useStore(s => s.theme)
+    const theme = SystemSDK.useStore(s => s.resolvedTheme)
     const pathname = useRouterState({ select: (s) => s.location.pathname })
     const currentNav =  useMemo(() => {
         return NAV_TOP.find(e => pathname === e.to || pathname.startsWith(e.to + '/'))

@@ -100,7 +100,7 @@ const MonacoMount = ({ theme, height, defaultLanguage, defaultValue, onChange, b
 
 export const MonacoEditor = (props: MonacoEditorProps) => {
     const [mounted, setMounted] = useState(false)
-    const theme = SystemSDK.useStore(s => s.theme)
+    const theme = SystemSDK.useStore(s => s.resolvedTheme)
 
     useEffect(() => {
         const timer = setTimeout(() => setMounted(true), 300)

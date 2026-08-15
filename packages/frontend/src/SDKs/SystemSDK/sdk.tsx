@@ -2,7 +2,7 @@ import { immer } from "zustand/middleware/immer";
 import { create } from "zustand";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { getInitialPreferedTheme } from "./utils";
+import { getInitialPreferedTheme, resolveTheme } from "./utils";
 
 @SDK("System")
 class SystemSDKImpl extends BaseSDK<SystemSDK.State> {
@@ -10,20 +10,24 @@ class SystemSDKImpl extends BaseSDK<SystemSDK.State> {
 
     public readonly useStore: BaseSDK.Store<SystemSDK.State> = create(
         immer<SystemSDK.State>(() => ({
-            theme: getInitialPreferedTheme()
+            theme: getInitialPreferedTheme(),
+            resolvedTheme: resolveTheme(getInitialPreferedTheme())
         }))
     )
 
     public readonly actions: SystemSDK.actions = {
         setTheme: (newTheme) => {
             this.setState(s => {
+                const resolved = resolveTheme(newTheme)
+
                 s.theme = newTheme
+                s.resolvedTheme = resolved
+
                 const root = document.documentElement;
-                const resolved = newTheme === "system"
-                    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
-                    : newTheme
+
                 root.classList.remove("dark", "light")
                 root.classList.add(resolved)
+
                 localStorage.setItem("theme", newTheme)
             })
         }
@@ -48,6 +52,7 @@ export namespace SystemSDK {
 
     export type State = {
         theme: Theme
+        resolvedTheme: Exclude<Theme, "system">
     }
 
     export type actions = {

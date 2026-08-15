@@ -1,16 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnModuleDestroy, OnModuleInit } from '@nestjs/common/interfaces';
+import { createRedisClient, createRedisSubscriber } from '../../../utils/redis';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { resolveWebhook } from '@pretzel-graph/shared/utils';
-import Redis from 'ioredis';
 import { sql } from 'kysely';
 import { DB } from '@/db';
 
 @Injectable()
 export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(PublishedWorkflowCacheService.name);
-    private redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+    private redisSub = createRedisSubscriber('published-workflow-cache');
 
     // workflowId maps to active publication
     private readonly publicationsMap = new Map<Workflow.Id, VersionControl.Publication>();

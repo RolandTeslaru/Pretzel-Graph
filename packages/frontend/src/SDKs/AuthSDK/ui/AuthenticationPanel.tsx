@@ -65,6 +65,9 @@ const SignUpPanel = () => {
         setDisabled(true);
         const success = await AuthSDK.actions.signup(values)
         setDisabled(false);
+        if (success) {
+            router.navigate({ to: "/home" })
+        }
     }
 
 
