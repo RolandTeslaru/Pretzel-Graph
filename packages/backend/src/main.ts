@@ -4,6 +4,7 @@ import './load-env';
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { runMigrations } from './db/migrator';
 import * as express from 'express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import path from 'path';
@@ -12,6 +13,9 @@ import { CatalogueService } from '@pretzel-graph/node-sdk';
 CatalogueService.setNodesRoot(path.resolve(__dirname, '../../nodes/src'));
 
 async function bootstrap() {
+    // Before the modules load: some of them read the database on init.
+    await runMigrations();
+
     const app = await NestFactory.create(AppModule);
 
     const PORT = process.env.PORT || 3001;
@@ -43,4 +47,7 @@ async function bootstrap() {
     console.log(`WebSocket server initialized`);
 }
 
-bootstrap();
+bootstrap().catch((error: unknown) => {
+    console.error('Boot failed:', error instanceof Error ? error.message : error);
+    process.exit(1);
+});

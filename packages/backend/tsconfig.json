@@ -7,6 +7,9 @@
             "@/*": [
                 "./src/*"
             ],
+            "kysely/migration": [
+                "../../node_modules/kysely/dist/migration"
+            ],
             "@pretzel-graph/shared": [
                 "../shared/index.ts"
             ],
