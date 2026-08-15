@@ -16,14 +16,10 @@ const statusColor = (status: string) => {
 }
 
 export const AdminJobsPanel = () => {
-    const user = AuthSDK.useStore(s => s.user)
+    const role = AuthSDK.useStore(s => s.role)
     const [jobs, setJobs] = useState<ActiveJob[]>([])
     const [loading, setLoading] = useState(false)
     const [terminating, setTerminating] = useState(false)
-
-    // Hidden until the client knows the member's role.
-    void user
-    return null
 
     const fetchJobs = useCallback(async () => {
         setLoading(true)
@@ -38,6 +34,10 @@ export const AdminJobsPanel = () => {
     }, [])
 
     useEffect(() => { fetchJobs() }, [fetchJobs])
+
+    // After the hooks: the role arrives asynchronously, so returning earlier would
+    // change the hook count between renders.
+    if (role !== 'owner' && role !== 'admin') return null
 
     const handleTerminateAll = async () => {
         setTerminating(true)

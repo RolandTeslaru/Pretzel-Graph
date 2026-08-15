@@ -1,13 +1,13 @@
 import { Controller, Post, Get, UseGuards, HttpCode } from '@nestjs/common';
 import { ApiKeysService } from './api-keys.service';
 import { ApiKey } from '@pretzel-graph/shared/domain';
-import { UserAuthGuard } from '../../auth/user-auth.guard';
+import { MemberAuthGuard } from '../../auth/member-auth.guard';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { ZodBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 
 @Controller('api-keys')
-@UseGuards(UserAuthGuard)
+@UseGuards(MemberAuthGuard)
 export class ApiKeysController {
     constructor(private readonly apiKeysService: ApiKeysService) {}
 

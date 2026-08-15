@@ -3,7 +3,7 @@ import { BaseSDK } from "../Base";
 import { immer } from "zustand/middleware/immer";
 import { GoTrueClient } from "@supabase/auth-js";
 import { SDK } from "../SDKManager";
-import { Auth } from "@pretzel-graph/shared/domain";
+import { Auth, Workspace } from "@pretzel-graph/shared/domain";
 import { _createAuthActions_ } from "./actions";
 import { SystemSDK } from "../SystemSDK";
 import { router } from "@/main";
@@ -36,6 +36,7 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
     immer<AuthSDK.State>(() => ({
       isAuthenticated: false,
       user: null,
+      role: null,
       isLoading: true,
     }))
   )
@@ -68,6 +69,7 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
       } else if (event === 'SIGNED_OUT') {
           this.setState(s => {
               s.user = null
+              s.role = null
               s.isAuthenticated = false
               s.isLoading = false
           })
@@ -84,6 +86,7 @@ export namespace AuthSDK {
   export type State = {
     isAuthenticated: boolean;
     user: null | Auth.User;
+    role: null | Workspace.Role;
     isLoading: boolean;
   }
 

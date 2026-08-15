@@ -1,12 +1,12 @@
 import { Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
 import { ConsultationService } from './consultation.service';
 import { Consultation, Execution } from '@pretzel-graph/shared/domain';
-import { UserAuthGuard } from '../../auth/user-auth.guard';
+import { MemberAuthGuard } from '../../auth/member-auth.guard';
 import { ExecutionIdParam } from '@/decorators/scope';
 import { ZodBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 
 @Controller('consultation')
-@UseGuards(UserAuthGuard)
+@UseGuards(MemberAuthGuard)
 export class ConsultationController {
     constructor(private readonly consultationService: ConsultationService) {}
 
