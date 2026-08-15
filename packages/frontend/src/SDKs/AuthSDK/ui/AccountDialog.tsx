@@ -142,7 +142,7 @@ function EditView({ user, onDone }: { user: Auth.User; onDone: () => void }) {
     )
 }
 
-// Not editable in either mode — email is owned by supabase auth.
+// Not editable in either mode — email is owned by the auth service.
 function StaticRows({ user }: { user: Auth.User }) {
     const memberSince = new Date(user.created_at).toLocaleDateString(undefined, {
         year: 'numeric',

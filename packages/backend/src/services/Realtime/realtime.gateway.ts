@@ -5,7 +5,7 @@ import Redis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
 import { Realtime } from "@pretzel-graph/shared/domain/Realtime";
 import { Auth, Chat, Execution } from "@pretzel-graph/shared/domain";
-import { createAuthenticatedClient, getUserId } from '../../utils/supabase';
+import { getUserId } from '../../utils/auth';
 
 interface SocketIdentity {
     userId: Auth.User.Id;
@@ -60,8 +60,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         }
 
         try {
-            const supabase = createAuthenticatedClient(token);
-            const userId = await getUserId(supabase);
+            const userId = await getUserId(token);
 
             if (!userId) {
                 ws.close(1008, 'Invalid authentication token');

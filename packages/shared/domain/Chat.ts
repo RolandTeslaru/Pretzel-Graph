@@ -2,7 +2,7 @@ import { z } from "zod"
 import { v7 as uuidv7 } from "uuid"
 import { Workflow } from "./Workflow"
 import { type AxiosInstance } from "axios"
-import { type SupabaseClient } from "@supabase/supabase-js";
+import { type GoTrueClient } from "@supabase/auth-js";
 import { Realtime } from "./Realtime";
 import { supabaseTimestamp } from "./zod-utils";
 import { SystemError } from "./SystemError";
@@ -256,8 +256,8 @@ export namespace Chat {
                 })
                 export type Request = z.infer<typeof Request>
             }
-            export async function streamOutput(supabase: SupabaseClient, api_base_url: string, req: StreamOutput.Request): Promise<Response> {
-                const { data } = await supabase.auth.getSession();
+            export async function streamOutput(auth: GoTrueClient, api_base_url: string, req: StreamOutput.Request): Promise<Response> {
+                const { data } = await auth.getSession();
                 const token = data.session?.access_token;
                 if (!token)
                     throw new Error("No token found");
@@ -280,8 +280,8 @@ export namespace Chat {
                 })
                 export type Request = z.infer<typeof Request>
             }
-            export async function streamResponse(supabase: SupabaseClient, api_base_url: string, req: StreamResponse.Request): Promise<Response> {
-                const { data } = await supabase.auth.getSession();
+            export async function streamResponse(auth: GoTrueClient, api_base_url: string, req: StreamResponse.Request): Promise<Response> {
+                const { data } = await auth.getSession();
                 const token = data.session?.access_token;
                 if (!token)
                     throw new Error("No token found");

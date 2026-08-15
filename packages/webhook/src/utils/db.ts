@@ -1,23 +1,16 @@
 import { Pool } from 'pg';
 
-/**
- * Direct Postgres connection for the webhook server, as the service role. Replaces the
- * PostgREST (`supabase.rpc`) path so the Data API can be disabled — nothing here depends on
- * `/rest/v1` any more.
- *
- * DATABASE_URL_SERVICE logs in as the table owner, which bypasses RLS. That matches the old
- * service-role key: registry hydration needs every active publication regardless of owner.
- */
+/** Direct Postgres connection for the webhook server. */
 let pool: Pool | undefined;
 
 export function db(): Pool {
     if (pool)
         return pool;
 
-    const connectionString = process.env.DATABASE_URL_SERVICE;
+    const connectionString = process.env.DATABASE_URL;
 
     if (!connectionString)
-        throw new Error('Missing DATABASE_URL_SERVICE environment variable.');
+        throw new Error('Missing DATABASE_URL environment variable.');
 
     pool = new Pool({ connectionString });
     return pool;

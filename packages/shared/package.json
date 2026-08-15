@@ -1,19 +1,20 @@
 {
-  "name": "@pretzel-graph/shared",
-  "version": "1.0.0",
-  "main": "index.ts",
-  "dependencies": {
-    "@langchain/core": "^1.1.32",
-    "axios": "^1.13.5",
-    "uuid": "^13.0.0",
-    "zod": "^4.3.6"
-  },
-  "peerDependencies": {
-    "@nestjs/common": "^11.0.0"
-  },
-  "peerDependenciesMeta": {
-    "@nestjs/common": {
-      "optional": true
+    "name": "@pretzel-graph/shared",
+    "version": "1.0.0",
+    "main": "index.ts",
+    "dependencies": {
+        "@langchain/core": "^1.1.32",
+        "@supabase/auth-js": "^2.105.4",
+        "axios": "^1.13.5",
+        "uuid": "^13.0.0",
+        "zod": "^4.3.6"
+    },
+    "peerDependencies": {
+        "@nestjs/common": "^11.0.0"
+    },
+    "peerDependenciesMeta": {
+        "@nestjs/common": {
+            "optional": true
+        }
     }
-  }
 }

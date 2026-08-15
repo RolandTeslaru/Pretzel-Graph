@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { BaseSDK } from "../Base";
 import { immer } from "zustand/middleware/immer";
-import { supabase } from "@/libs/supabase";
+import { GoTrueClient } from "@supabase/auth-js";
 import { SDK } from "../SDKManager";
 import { Auth } from "@pretzel-graph/shared/domain";
 import { _createAuthActions_ } from "./actions";
@@ -11,6 +11,26 @@ import { router } from "@/main";
 @SDK("Auth")
 export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
   constructor() { super() }
+
+  /** The auth server client. Everything that needs a token goes through here. */
+  public readonly client = new GoTrueClient({
+    url: import.meta.env.VITE_AUTH_URL || "http://localhost:9999",
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  })
+
+  /** The current access token, or null when signed out. */
+  public async getToken(): Promise<string | null> {
+    const { data } = await this.client.getSession()
+    return data.session?.access_token ?? null
+  }
+
+  /** The signed-in user's id, or null when signed out. */
+  public async getUserId(): Promise<Auth.User.Id | null> {
+    const { data } = await this.client.getSession()
+    return (data.session?.user.id as Auth.User.Id) ?? null
+  }
 
   public readonly useStore: BaseSDK.Store<AuthSDK.State> = create(
     immer<AuthSDK.State>(() => ({
@@ -26,7 +46,7 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
    */
   public async init() {
     // Check active session
-    const { data: { session }, error } = await supabase.auth.getSession()
+    const { data: { session }, error } = await this.client.getSession()
     if (error) {
       console.error("Error fetching session", error)
     }
@@ -40,7 +60,7 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
 
       
     // Listen for changes
-    supabase.auth.onAuthStateChange((event, session) => {                                                                                                                                                                         
+    this.client.onAuthStateChange((event, session) => {                                                                                                                                                                         
       if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(() => {                                                                                                                                                                                                    
               this.actions.syncUser(session.user.id as Auth.User.Id)                                                                                                                                                            
