@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance } from "axios";
-import { supabase } from "@/libs/supabase";
+import { SDK } from "../SDKManager";
+import type { AuthSDKImpl } from "../AuthSDK/sdk";
 
 const g = globalThis as unknown as { __api?: AxiosInstance };
 
@@ -9,8 +10,8 @@ export const api: AxiosInstance = (g.__api ??= (() => {
     });
 
     instance.interceptors.request.use(async (config) => {
-        const { data } = await supabase.auth.getSession();
-        const token = data.session?.access_token;
+        // Resolved per request, not at module load: AuthSDK reaches back into this file.
+        const token = await SDK.get<AuthSDKImpl>("Auth").getToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

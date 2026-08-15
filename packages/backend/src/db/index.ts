@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Kysely, PostgresDialect, Transaction as KyselyTransaction, sql } from 'kysely';
+import { Kysely, PostgresDialect, Transaction as KyselyTransaction } from 'kysely';
 import type { ColumnType, Generated } from 'kysely';
 import { Pool, types as pgTypes, type CustomTypesConfig } from 'pg';
 import {
@@ -53,16 +53,9 @@ function connect(urlEnvVar: string): Kysely<DB.Tables> {
 
 // Lazy so importing this module can't crash a backend that hasn't been
 // configured for it yet, and so env is read after load-env has run.
-let rlsDb: Kysely<DB.Tables> | undefined;
-let serviceDb: Kysely<DB.Tables> | undefined;
+let database: Kysely<DB.Tables> | undefined;
 
-// DATABASE_URL_APP must log in as a role that is NOT the table owner and has NO
-// BYPASSRLS — see supabase/snippets/kysely-app-role.sql. A forgotten scope then
-// runs with auth.uid() null, so it sees only what a policy grants unconditionally
-// (public rows), never another user's.
-const rls = () => (rlsDb ??= connect('DATABASE_URL_APP'));
-
-const service = () => (serviceDb ??= connect('DATABASE_URL_SERVICE'));
+const db = () => (database ??= connect('DATABASE_URL'));
 
 // The persistence truth: one schema per table, column for column. Domain types
 // are referenced only for branded ids and for the contents of jsonb columns —
@@ -302,36 +295,21 @@ export namespace DB {
 
     type ActingUser = { userId: Auth.User.Id | null };
 
-    /** Opens a transaction as `userId` and tags it with `role`. Null acts as nobody. */
+    /** Opens a transaction and tags it with `role`. */
     async function enter<R extends Role, T>(
-        userId: Auth.User.Id | null,
         role: R,
         fn: (trx: Transaction<R>) => Promise<T>,
     ): Promise<T> {
-        const claims = JSON.stringify({ sub: userId, role: 'authenticated' });
-
-        return rls().transaction().execute(async (trx) => {
-            // set_config, not SET LOCAL: SET takes no bind parameters, so the
-            // claims would have to be interpolated. The `true` scopes both to
-            // this transaction — with `false` the identity outlives it on a
-            // pooled connection and leaks to the next request.
-            if (userId)
-                await sql`
-                    select
-                        set_config('role', 'authenticated', true),
-                        set_config('request.jwt.claims', ${claims}, true)
-                `.execute(trx);
-
-            return fn(tag(trx, role));
-        });
+        return db().transaction().execute((trx) => fn(tag(trx, role)));
     }
 
-    /** Runs `fn` inside a transaction acting as `principal`, with RLS enforced. */
+    /** Runs `fn` inside a transaction on behalf of `principal`. */
     export async function asUser<T>(
         principal: ActingUser,
         fn: (trx: UserTransaction) => Promise<T>,
     ): Promise<T> {
-        return enter(principal.userId, Role.User, fn);
+        void principal;
+        return enter(Role.User, fn);
     }
 
     /** Runs `fn` on behalf of a running execution. */
@@ -339,26 +317,26 @@ export namespace DB {
         principal: Principal.Delegate,
         fn: (trx: DelegateTransaction) => Promise<T>,
     ): Promise<T> {
-        return enter(principal.createdBy, Role.Delegate, fn);
+        void principal;
+        return enter(Role.Delegate, fn);
     }
 
-    /** Runs `fn` with RLS bypassed. `reason` is mandatory so every bypass is greppable. */
+    /** Runs `fn` with no acting user. `reason` is mandatory so every use is greppable. */
     export async function asService<T>(
         reason: string,
         fn: (trx: Transaction<typeof Role.Service>) => Promise<T>,
     ): Promise<T> {
         void reason;
-        return service().transaction().execute((trx) => fn(tag(trx, Role.Service)));
+        return enter(Role.Service, fn);
     }
 
-    /** Owner-level handle for the boot migration runner. */
+    /** Handle for the boot migration runner. */
     export function forMigrations(): Kysely<Tables> {
-        return service();
+        return db();
     }
 
     export async function destroyPools(): Promise<void> {
-        await Promise.all([rlsDb?.destroy(), serviceDb?.destroy()]);
-        rlsDb = undefined;
-        serviceDb = undefined;
+        await database?.destroy();
+        database = undefined;
     }
 }

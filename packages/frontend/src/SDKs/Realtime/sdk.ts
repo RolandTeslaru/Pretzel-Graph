@@ -3,7 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
 import { Realtime } from "@pretzel-graph/shared/domain";
-import { supabase } from "@/libs/supabase";
+import type { AuthSDKImpl } from "../AuthSDK/sdk";
 
 @SDK("Realtime")
 export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
@@ -109,8 +109,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
         }
 
         // Attach auth token to WebSocket URL for server-side verification
-        const { data } = await supabase.auth.getSession();
-        const token = data.session?.access_token;
+        const token = await SDK.get<AuthSDKImpl>("Auth").getToken();
         const separator = url.includes('?') ? '&' : '?';
         const authenticatedUrl = token ? `${url}${separator}token=${token}` : url;
 
