@@ -4,11 +4,12 @@ import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { resolveWebhook } from '@pretzel-graph/shared/utils';
 import Redis from 'ioredis';
-import { db, closeDb } from '@/utils/db';
+import { sql } from 'kysely';
+import { DB } from '@/db';
 
 @Injectable()
-export class RegistrationService implements OnModuleInit, OnModuleDestroy {
-    private readonly logger = new Logger(RegistrationService.name);
+export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDestroy {
+    private readonly logger = new Logger(PublishedWorkflowCacheService.name);
     private redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 
     // workflowId maps to active publication
@@ -38,20 +39,22 @@ export class RegistrationService implements OnModuleInit, OnModuleDestroy {
 
         try {
             // Active publications carrying at least one webhook node.
-            const result = await db().query(
-                `select * from version_control
-                 where is_active = true
-                   and exists (
-                       select 1
-                       from jsonb_each(workflow_data->'nodes') as n
-                       where jsonb_typeof(n.value->'webhooks') = 'array'
-                         and jsonb_array_length(n.value->'webhooks') > 0
-                   )`,
+            rows = await DB.asService('load published workflows', (trx) =>
+                trx
+                    .selectFrom('version_control')
+                    .selectAll()
+                    .where('is_active', '=', true)
+                    .where(sql<boolean>`exists (
+                        select 1
+                        from jsonb_each(workflow_data->'nodes') as n
+                        where jsonb_typeof(n.value->'webhooks') = 'array'
+                          and jsonb_array_length(n.value->'webhooks') > 0
+                    )`)
+                    .execute(),
             );
-            rows = result.rows;
         }
         catch (error) {
-            this.logger.error(`Failed to hydrate registry: ${(error as Error).message}`);
+            this.logger.error(`Failed to load published workflows: ${(error as Error).message}`);
             return;
         }
 
@@ -64,24 +67,24 @@ export class RegistrationService implements OnModuleInit, OnModuleDestroy {
         }
 
         this.logger.log(
-            `Hydrated registry — ${publications.length} publications`,
+            `Cached ${publications.length} published workflows`,
         );
     }
 
-    // The active publication for one workflow — boot's read, narrowed. Runs on the service
-    // connection (owner, RLS bypassed) because active publications are public infrastructure
-    // and this server routes for every tenant; there is no user to scope to.
+    // The active publication for one workflow — boot's read, narrowed. No acting user:
+    // an inbound webhook has no session behind it.
     private async fetchActivePublication(workflowId: Workflow.Id): Promise<VersionControl.Publication | null> {
-        const result = await db().query(
-            `select id, workflow_id, version, name, description, workflow_data, is_active, published_at
-             from version_control
-             where workflow_id = $1 and is_active = true
-             order by published_at desc
-             limit 1`,
-            [workflowId],
+        const row = await DB.asService('load active publication', (trx) =>
+            trx
+                .selectFrom('version_control')
+                .select(['id', 'workflow_id', 'version', 'name', 'description', 'workflow_data', 'is_active', 'published_at'])
+                .where('workflow_id', '=', workflowId)
+                .where('is_active', '=', true)
+                .orderBy('published_at', 'desc')
+                .limit(1)
+                .executeTakeFirst(),
         );
 
-        const row = result.rows[0];
         return row ? this.toPublication(row) : null;
     }
 
@@ -158,7 +161,7 @@ export class RegistrationService implements OnModuleInit, OnModuleDestroy {
         }
 
         this.logger.log(
-            `Registered publication "${publication.name}" v${publication.version} (workflow: ${publication.workflow_id})\n` +
+            `Cached publication "${publication.name}" v${publication.version} (workflow: ${publication.workflow_id})\n` +
             (registeredPaths.length
                 ? registeredPaths.map(p => `  → ${p}`).join('\n')
                 : '  → (no webhook nodes)'),
@@ -168,7 +171,7 @@ export class RegistrationService implements OnModuleInit, OnModuleDestroy {
     private removePublication(workflowId: Workflow.Id) {
         if (!this.publicationsMap.has(workflowId)) return;
         this.publicationsMap.delete(workflowId);
-        this.logger.log(`Removed publication for workflow ${workflowId}`);
+        this.logger.log(`Dropped publication for workflow ${workflowId}`);
     }
 
     // ─────────────────────────────────────────────────────────
@@ -182,6 +185,5 @@ export class RegistrationService implements OnModuleInit, OnModuleDestroy {
 
     async onModuleDestroy() {
         this.redisSub.disconnect();
-        await closeDb();
     }
 }

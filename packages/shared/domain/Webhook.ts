@@ -164,7 +164,7 @@ export namespace Webhook {
                 req: Register.Request,
             ): Promise<Register.Response> {
                 const { workflowId, ...body } = req;
-                const { data } = await api.post<Register.Response>(`/api/webhook/test/${workflowId}/register`, body);
+                const { data } = await api.post<Register.Response>(`/api/test-webhooks/${workflowId}/register`, body);
                 return data;
             }
         }

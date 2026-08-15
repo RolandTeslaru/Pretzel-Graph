@@ -15,5 +15,6 @@ import { RealtimeModule } from '../Realtime/realtime.module';
     ],
     controllers: [ExecutionController],
     providers: [ExecutionService, ExecutionDatabase, ChatDatabase, VaultDatabase],
+    exports: [ExecutionService],
 })
 export class ExecutionModule {}

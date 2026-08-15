@@ -38,7 +38,6 @@
         "@types/pg": "^8.21.0",
         "@types/ws": "^8.18.1",
         "nodemon": "^3.1.14",
-        "supabase": "^2.74.5",
         "ts-node": "^10.9.2",
         "tsc-watch": "^7.2.0",
         "tsconfig-paths": "^4.2.0"
