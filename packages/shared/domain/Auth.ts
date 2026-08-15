@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { AxiosInstance } from "axios"
+import { Role } from "./Workspace/role"
 
 export namespace Auth {
     export namespace User {
@@ -38,6 +39,7 @@ export namespace Auth {
                 export type Request = z.infer<typeof Request>
                 export const Response = z.object({
                     user: User.Schema,
+                    role: Role,
                 })
                 export type Response = z.infer<typeof Response>
             }

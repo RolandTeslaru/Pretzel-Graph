@@ -1,11 +1,12 @@
 import { z } from 'zod';
-import { Auth, Execution } from '@pretzel-graph/shared/domain';
+import { Auth, Execution, Workspace } from '@pretzel-graph/shared/domain';
 
 export namespace Principal {
     export namespace User {
         export const Schema = z.object({
             type: z.literal('user'),
             userId: Auth.User.Id,
+            role: Workspace.Role,
         })
     }
     export type User = z.infer<typeof User.Schema>

@@ -10,7 +10,7 @@ export class AuthService {
 
     public async getMe(principal: Principal.User): Promise<Auth.API.Me.Get.Response> {
         const user = await DB.asUser(principal, (trx) => this.database.getMe(trx, principal.userId));
-        return { user };
+        return { user, role: principal.role };
     }
 
     public async updateMe(

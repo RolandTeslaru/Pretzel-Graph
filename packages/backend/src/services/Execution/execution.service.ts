@@ -321,8 +321,6 @@ export class ExecutionService {
     public async terminateAll(
         principal: Principal.User,
     ): Promise<Execution.API.TerminateAll.Response> {
-        await this.ownership.assertUserAdmin(principal.userId);
-
         const activeExecutionIds = await DB.asService('list active executions for termination', (db) => this.database.listActiveIds(db));
         if (activeExecutionIds.length === 0) return { terminatedCount: 0 };
 
@@ -424,8 +422,6 @@ export class ExecutionService {
         listActive: async (
             principal: Principal.User,
         ): Promise<Execution.API.Meta.ListActive.Response> => {
-            await this.ownership.assertUserAdmin(principal.userId);
-
             const executions = await DB.asUser(principal, (db) => this.database.meta.listActive(db));
 
             return { executions: executions };

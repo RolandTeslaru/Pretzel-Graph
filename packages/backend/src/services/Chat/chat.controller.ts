@@ -1,14 +1,14 @@
 import { Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { Chat, Workflow } from '@pretzel-graph/shared/domain';
-import { UserAuthGuard } from '../../auth/user-auth.guard';
+import { MemberAuthGuard } from '../../auth/member-auth.guard';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { ChatIdParam, WorkflowIdParam } from '@/decorators/scope';
 import { Principal } from '@/domain/Principal';
 import { ZodBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 
 @Controller('chat')
-@UseGuards(UserAuthGuard)
+@UseGuards(MemberAuthGuard)
 export class ChatController {
     constructor(private readonly chatService: ChatService) { }
 

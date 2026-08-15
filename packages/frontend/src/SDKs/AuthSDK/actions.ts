@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { Auth } from "@pretzel-graph/shared/domain";
+import { Auth, Workspace } from "@pretzel-graph/shared/domain";
 import { AuthSDK, AuthSDKImpl } from "./sdk";
 import { api } from '@/SDKs/ApiInterceptorSDK';
 
@@ -16,8 +16,9 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
             }
 
             let user: Auth.User
+            let role: Workspace.Role
             try {
-                ({ user } = await Auth.API.Me.get(api))
+                ({ user, role } = await Auth.API.Me.get(api))
             } catch (error) {
                 toast.error(`AuthSDK: Could not fetch user: ${error instanceof Error ? error.message : String(error)}`)
                 return false
@@ -25,6 +26,7 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
 
             sdk.setState(s => {
                 s.user = user;
+                s.role = role;
                 s.isAuthenticated = true;
             })
             toast.info("Logged In!")
@@ -39,8 +41,9 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
             }
 
             sdk.setState(s => {
-                s.user = null,
-                    s.isAuthenticated = false
+                s.user = null
+                s.role = null
+                s.isAuthenticated = false
             })
             return true
         },
@@ -63,8 +66,9 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
             }
 
             let user: Auth.User
+            let role: Workspace.Role
             try {
-                ({ user } = await Auth.API.Me.get(api))
+                ({ user, role } = await Auth.API.Me.get(api))
             } catch (error) {
                 toast.error(error instanceof Error ? error.message : String(error))
                 return false
@@ -72,6 +76,7 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
 
             sdk.setState(s => {
                 s.user = user;
+                s.role = role;
                 s.isAuthenticated = true;
             })
             toast.info("Logged In!")
@@ -79,10 +84,11 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
         },
         syncUser: async (_userId) => {
             try {
-                const { user } = await Auth.API.Me.get(api)
+                const { user, role } = await Auth.API.Me.get(api)
 
                 sdk.setState(s => {
                     s.user = user;
+                    s.role = role;
                     s.isAuthenticated = true;
                     s.isLoading = false;
                 })
