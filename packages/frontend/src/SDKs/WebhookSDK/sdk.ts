@@ -12,7 +12,7 @@ export class WebhookSDKImpl extends BaseSDK<WebhookSDK.State> {
     public readonly useStore: BaseSDK.Store<WebhookSDK.State> = create(
         immer<WebhookSDK.State>(() => ({
             entries: [],
-            baseUrl: import.meta.env.VITE_WEBHOOK_URL,
+            baseUrl: window.location.origin,
         }))
     )
 
