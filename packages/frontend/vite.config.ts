@@ -26,12 +26,16 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': backendProxy,
+      '/webhook': backendProxy,
+      '/webhook-test': backendProxy,
       '/socket': { ...backendProxy, ws: true },
     },
   },
   preview: {
     proxy: {
       '/api': backendProxy,
+      '/webhook': backendProxy,
+      '/webhook-test': backendProxy,
       '/socket': { ...backendProxy, ws: true },
     },
   },

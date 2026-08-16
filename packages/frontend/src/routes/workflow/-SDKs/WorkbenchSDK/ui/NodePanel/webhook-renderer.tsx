@@ -37,7 +37,7 @@ const WebhookRenderer: React.FC<Props> = memo(({ webhook, nodeId }) => {
     const [tab, setTab] = useState<'test' | 'production'>('test');
 
     const webhookUrl = useMemo(() => {
-        const baseUrl = import.meta.env.VITE_WEBHOOK_URL as string;
+        const baseUrl = window.location.origin;
         return tab === 'test'
             ? `${baseUrl}/webhook-test/${workflowId}/${parsedWebhook.path}`
             : `${baseUrl}/webhook/${workflowId}/${parsedWebhook.path}`;
