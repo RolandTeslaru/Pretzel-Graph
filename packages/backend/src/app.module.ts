@@ -19,6 +19,7 @@ import { WebhookIgnitionModule } from './services/WebhookIgnition/webhook-igniti
 import { ApiKeysModule } from './services/ApiKeys/api-keys.module';
 import { VaultModule } from './services/Vault/vault.module';
 import { ConsultationModule } from './services/Consultation/consultation.module';
+import { HealthModule } from './services/Health/health.module';
 
 @Module({
     imports: [
@@ -52,6 +53,7 @@ import { ConsultationModule } from './services/Consultation/consultation.module'
         ApiKeysModule,
         VaultModule,
         ConsultationModule,
+        HealthModule,
     ],
     controllers: [],
     providers: [
