@@ -17,7 +17,6 @@ COPY packages ./packages
 
 # Baked in at build time: everything is served from one origin, so these are paths.
 ENV VITE_API_URL=/
-ENV VITE_WEBHOOK_URL=""
 ARG VITE_AUTH_URL=http://localhost:9999
 ENV VITE_AUTH_URL=$VITE_AUTH_URL
 RUN npx vite build --config packages/frontend/vite.config.ts packages/frontend
