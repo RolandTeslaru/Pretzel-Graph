@@ -1,0 +1,13 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        // CommonJS so the output runs under plain node: the ESM emit uses
+        // extensionless specifiers, which Node's ESM resolver rejects. Matches
+        // what the ts-node block does in development.
+        "module": "CommonJS",
+        "moduleResolution": "Node10",
+        // tsc-alias rewrites the path aliases in the emitted JS, and needs this
+        // to resolve them.
+        "baseUrl": "."
+    }
+}

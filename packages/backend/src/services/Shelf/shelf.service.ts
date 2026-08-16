@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 function loadIndex(): Shelf.Index {
-    const raw = fs.readFileSync(path.join(__dirname, 'node_index.json'), 'utf-8');
+    const raw = fs.readFileSync(path.join(__dirname, '../../../assets/blueprint_index.json'), 'utf-8');
     return JSON.parse(raw) as Shelf.Index;
 }
 

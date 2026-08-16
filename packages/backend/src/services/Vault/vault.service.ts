@@ -9,7 +9,7 @@ import { VaultDatabase } from './vault.database';
 import { encryptCredentialBlob, decryptCredentialBlob } from './vault.encryption';
 
 function loadCredentialTemplates(): Record<Vault.Credential.Template.Id, Vault.Credential.Template> {
-    const raw = fs.readFileSync(path.join(__dirname, '../Shelf/node_index.json'), 'utf-8');
+    const raw = fs.readFileSync(path.join(__dirname, '../../../assets/blueprint_index.json'), 'utf-8');
     const { blueprints } = JSON.parse(raw) as { blueprints: Record<string, Blueprint> };
 
     const templates: Record<Vault.Credential.Template.Id, Vault.Credential.Template> = {};

@@ -2,26 +2,28 @@
     "extends": "./tsconfig.json",
     "compilerOptions": {
         "noEmit": false,
-        "declaration": true,
-        // CommonJS so the output runs under plain node: the ESM emit uses
-        // extensionless specifiers, which Node's ESM resolver rejects.
+        // CommonJS so the catalogue's dynamic import downlevels to require(),
+        // which resolves the extensionless node/blueprint paths.
         "module": "CommonJS",
         "moduleResolution": "Node10",
-        // `..` so the workspace packages it imports compile alongside it; `./src`
-        // would put them outside rootDir. Output mirrors that: dist/worker/src.
+        // `..` so the workspace packages it imports compile alongside it.
         "rootDir": "..",
         "outDir": "./dist",
-        // tsc-alias rewrites the path aliases in the emitted JS, and needs this.
         "baseUrl": ".",
+        // These publish types only through an `exports` map, which Node10
+        // resolution cannot read.
         "paths": {
-            "src/*": ["./src/*"],
             "@pretzel-graph/node-sdk": ["../node-sdk/src/index.ts"],
             "@pretzel-graph/node-sdk/*": ["../node-sdk/src/*"],
             "@pretzel-graph/shared/*": ["../shared/*"],
-            "@pretzel-graph/nodes/*": ["../nodes/src/*"],
+            "@pretzel-graph/nodes/*": ["./src/*"],
+            "@pretzel-graph/worker": ["../worker/src/index.ts"],
+            "@pretzel-graph/worker/*": ["../worker/src/*"],
+            "src/*": ["../worker/src/*"],
             "http-proxy-agent": ["../../node_modules/http-proxy-agent/dist"],
             "https-proxy-agent": ["../../node_modules/https-proxy-agent/dist"],
             "socks-proxy-agent": ["../../node_modules/socks-proxy-agent/dist"]
         }
-    }
+    },
+    "exclude": ["node_modules", "dist", "**/*.test.ts", "**/tests/**", "scripts/**"]
 }

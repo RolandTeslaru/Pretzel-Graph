@@ -11,7 +11,7 @@ interface SocketIdentity {
     userId: Auth.User.Id;
 }
 
-@WebSocketGateway()
+@WebSocketGateway({ path: '/socket' })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private redisSub = createRedisSubscriber('realtime.gateway');
 
