@@ -196,7 +196,9 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
 
 export const RealtimeSDK = SDK.get<RealtimeSDKImpl>("Realtime")
 
-RealtimeSDK.connect("ws://localhost:3001");
+// Same origin as the page: the dev server and nginx both proxy /socket to the backend.
+const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+RealtimeSDK.connect(`${wsProtocol}//${window.location.host}/socket`);
 
 export namespace RealtimeSDK {
 

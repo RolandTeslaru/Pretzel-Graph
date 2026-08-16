@@ -38,6 +38,24 @@ Clear the browser's site data as well. Sessions are stored client-side, and a
 token from the deleted database still verifies — the next page load will
 recreate rows under the old account.
 
+### Running the whole thing in containers
+
+```bash
+docker compose --profile full up -d     # http://localhost:8080
+```
+
+The frontend is served by nginx, which proxies the API and websocket, so the
+backend is not published. Pass `--profile full` when stopping it too —
+`docker compose down` on its own leaves those containers running, and the
+network cannot be removed while they hold it:
+
+```bash
+docker compose --profile full down -v
+```
+
+Both modes share the same volumes, so switching between them does not switch
+databases.
+
 ### Bringing your own Postgres
 
 Point `DATABASE_URL` at it and skip the `postgres` container. The only

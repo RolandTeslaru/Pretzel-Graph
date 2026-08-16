@@ -10,7 +10,11 @@ import { WsAdapter } from '@nestjs/platform-ws';
 import path from 'path';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
 
-CatalogueService.setNodesRoot(path.resolve(__dirname, '../../nodes/src'));
+// Compiled runs point NODES_ROOT at the built nodes; the default is the sources
+// ts-node reads in development.
+CatalogueService.setNodesRoot(
+    process.env.NODES_ROOT ?? path.resolve(__dirname, '../../nodes/src'),
+);
 
 async function bootstrap() {
     // Before the modules load: some of them read the database on init.

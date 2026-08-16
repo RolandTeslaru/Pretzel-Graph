@@ -1,0 +1,36 @@
+# Built from the repo root: the workspace packages compile together.
+FROM node:22-alpine AS build
+WORKDIR /repo
+
+COPY package.json package-lock.json ./
+COPY patches ./patches
+COPY packages/backend/package.json    ./packages/backend/
+COPY packages/frontend/package.json   ./packages/frontend/
+COPY packages/nodes/package.json      ./packages/nodes/
+COPY packages/node-sdk/package.json   ./packages/node-sdk/
+COPY packages/shared/package.json     ./packages/shared/
+COPY packages/standard-ui/package.json ./packages/standard-ui/
+COPY packages/webhook/package.json    ./packages/webhook/
+COPY packages/worker/package.json     ./packages/worker/
+RUN npm ci
+
+COPY packages ./packages
+RUN npm run build --workspace=packages/worker \
+ && npm run build --workspace=packages/nodes
+
+FROM node:22-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY package.json package-lock.json ./
+COPY patches ./patches
+COPY --from=build /repo/packages/worker/package.json ./packages/worker/
+COPY --from=build /repo/packages/nodes/package.json  ./packages/nodes/
+RUN npm ci --omit=dev --workspace=packages/worker --workspace=packages/nodes --ignore-scripts
+
+COPY --from=build /repo/packages/worker/dist ./packages/worker/dist
+COPY --from=build /repo/packages/nodes/dist  ./packages/nodes/dist
+
+# The catalogue resolves node and blueprint modules under this directory.
+ENV NODES_ROOT=/app/packages/nodes/dist/nodes/src
+CMD ["node", "packages/worker/dist/worker/src/server.js"]

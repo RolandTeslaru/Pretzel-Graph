@@ -12,12 +12,10 @@ import { cloneDeep } from "lodash";
 import { PUBLIC_WORKFLOW_BLUEPRINTS, PUBLIC_WORKFLOW_BLUEPRINTS_REVERSE } from "@pretzel-graph/shared/constants/publicWorkflows";
 
 const NODES_ROOT = path.resolve(__dirname, "../../..");
-const OUTPUT_PATH = path.resolve(__dirname, "../../../dist/node_index.json")
-const BACKEND_TARGET = path.resolve(__dirname, "../../../../backend/src/services/Shelf/node_index.json");
+const BACKEND_TARGET = path.resolve(__dirname, "../../../../backend/assets/blueprint_index.json");
 const BACKEND_SERVICE_FILE = path.resolve(__dirname, "../../../../backend/src/services/Shelf/service.ts");
 const GLOBAL_WORKFLOWS_CACHE = path.resolve(__dirname, "../../../globalPretzelWorkflows.json");
 
-const DEV_USER_ID = "9a0a1560-ac61-4ce8-a468-3f717588d838";
 
 function mergeFieldsById(
     baseFields: readonly Foundations.Field[],
@@ -71,18 +69,15 @@ export async function generateIndex(includeDbBlueprints = false) {
     }
 
     if (includeDbBlueprints) {
-        // Direct pg rather than PostgREST — the Supabase Data API is disabled. The APP
-        // connection (RLS-constrained, not the owner) is deliberate: these workflows are
-        // is_public, and the workflows SELECT policy's `OR is_public = true` branch makes them
-        // readable without any owner bypass. Reading public data needs no elevated role.
+        // Fetched by id: PUBLIC_WORKFLOW_BLUEPRINTS already names them.
         const pool = new Pool({ connectionString: process.env.DATABASE_URL });
         let data: Array<{ id: string, display_name: string, description: string | null, icon: string | null, accent: string | null, data: unknown }>;
 
         try {
             const result = await pool.query(
                 `select id, display_name, description, icon, accent, data
-                 from workflows where user_id = $1 and is_public = true`,
-                [DEV_USER_ID],
+                 from workflows where id = any($1)`,
+                [Object.values(PUBLIC_WORKFLOW_BLUEPRINTS)],
             );
             data = result.rows;
         }
@@ -140,21 +135,29 @@ export async function generateIndex(includeDbBlueprints = false) {
             ...db_pretzel_blueprints,
         }
         console.log(`Fetched ${Object.keys(db_pretzel_blueprints).length} public blueprints from DB`)
-        fs.writeFileSync(GLOBAL_WORKFLOWS_CACHE, JSON.stringify(db_pretzel_blueprints, null, 2))
-        console.log(`Cached global workflow blueprints to ${GLOBAL_WORKFLOWS_CACHE}`)
+
+        // Only when the database had them: a database without these workflows must not
+        // empty the cache that stands in for them.
+        if (Object.keys(db_pretzel_blueprints).length > 0) {
+            fs.writeFileSync(GLOBAL_WORKFLOWS_CACHE, JSON.stringify(db_pretzel_blueprints, null, 2))
+            console.log(`Cached global workflow blueprints to ${GLOBAL_WORKFLOWS_CACHE}`)
+        }
+        else if (fs.existsSync(GLOBAL_WORKFLOWS_CACHE)) {
+            const cached = JSON.parse(fs.readFileSync(GLOBAL_WORKFLOWS_CACHE, 'utf-8')) as Record<string, Foundations.Blueprint>
+            index.blueprints = { ...index.blueprints, ...cached }
+            console.log(`Kept ${Object.keys(cached).length} cached global workflow blueprints`)
+        }
     } else if (fs.existsSync(GLOBAL_WORKFLOWS_CACHE)) {
         const cached = JSON.parse(fs.readFileSync(GLOBAL_WORKFLOWS_CACHE, 'utf-8')) as Record<string, Foundations.Blueprint>
         index.blueprints = { ...index.blueprints, ...cached }
         console.log(`Merged ${Object.keys(cached).length} cached global workflow blueprints`)
     }
 
-    fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true })
-    fs.writeFileSync(OUTPUT_PATH, JSON.stringify(index, null, 2))
     console.log(`Successfully indexed ${Object.keys(blueprints).length} nodes in ${Object.keys(drawers).length} drawers`)
 
     if (fs.existsSync(path.dirname(BACKEND_TARGET))) {
-        fs.copyFileSync(OUTPUT_PATH, BACKEND_TARGET);
-        console.log(`Synced index to backend at ${BACKEND_TARGET}`);
+        fs.writeFileSync(BACKEND_TARGET, JSON.stringify(index, null, 2));
+        console.log(`Wrote index to ${BACKEND_TARGET}`);
 
         if (fs.existsSync(BACKEND_SERVICE_FILE)) {
             const time = new Date();
