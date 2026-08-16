@@ -38,7 +38,7 @@ async function bootstrap() {
 
     // Mount all routes under /api
     // The webhook roots are URLs third parties hold, so they sit outside the prefix.
-    app.setGlobalPrefix('api', { exclude: ['webhook/{*rest}', 'webhook-test/{*rest}'] });
+    app.setGlobalPrefix('api', { exclude: ['webhook/{*rest}', 'webhook-test/{*rest}', 'health'] });
 
     app.use(express.json({ limit: '50mb' }));
     app.use(express.urlencoded({ limit: '50mb', extended: true }));
