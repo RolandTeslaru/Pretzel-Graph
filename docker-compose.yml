@@ -1,11 +1,11 @@
-# Stateful services. Run these in containers and the packages on the host:
+# Two ways to run this:
 #
-#   docker compose up -d
-#   cp .env.example .env
-#   npm run dev          # in each package
+#   docker compose up -d                  stateful services only; run the
+#                                         packages on the host with npm run dev
+#   docker compose --profile full up -d   everything, served at localhost:8080
 #
-# `docker compose down -v` deletes the volumes, so the next start rebuilds
-# everything from nothing.
+# `down -v` deletes the volumes, so the next start rebuilds from nothing. With
+# the app services running, `down` needs the same --profile full.
 
 services:
 
@@ -70,6 +70,58 @@ services:
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
     ports:
       - "${GOTRUE_PORT:-9999}:9999"
+
+  backend:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-pretzel}@postgres:5432/${POSTGRES_DB:-pretzel}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      AUTH_URL: http://gotrue:9999
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?set AUTH_JWT_SECRET in .env}
+      PRETZEL_ENCRYPTION_KEY: ${PRETZEL_ENCRYPTION_KEY:?set PRETZEL_ENCRYPTION_KEY in .env}
+      EXECUTION_TOKEN_SIGNING_KEY: ${EXECUTION_TOKEN_SIGNING_KEY:?set EXECUTION_TOKEN_SIGNING_KEY in .env}
+      WORKER_SERVICE_INTERNAL_TOKEN: ${WORKER_SERVICE_INTERNAL_TOKEN:-dev-worker-service-internal-token}
+      CORS_ORIGIN: ${APP_URL:-http://localhost:8080}
+      PORT: 3001
+
+  worker:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      API_URL: http://backend:3001
+      PRETZEL_ENCRYPTION_KEY: ${PRETZEL_ENCRYPTION_KEY:?set PRETZEL_ENCRYPTION_KEY in .env}
+      WORKER_SERVICE_INTERNAL_TOKEN: ${WORKER_SERVICE_INTERNAL_TOKEN:-dev-worker-service-internal-token}
+
+  frontend:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_AUTH_URL: ${GOTRUE_EXTERNAL_URL:-http://localhost:9999}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${APP_PORT:-8080}:80"
 
 volumes:
   postgres-data:
