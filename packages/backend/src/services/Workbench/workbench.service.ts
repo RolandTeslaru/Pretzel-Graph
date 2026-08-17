@@ -4,7 +4,7 @@ import { DB } from '@/db';
 import { Workflow, Workbench, Vault, Foundations } from '@pretzel-graph/shared/domain';
 import { WorkbenchDatabase } from './workbench.database';
 import { VaultDatabase } from '../Vault/vault.database';
-import { decryptCredentialBlob } from '../Vault/vault.encryption';
+import { Encryption } from '@pretzel-graph/shared/server/vault/encryption';
 import { CatalogueService, Loader } from '@pretzel-graph/node-sdk';
 import { ShelfService } from '../Shelf/shelf.service';
 
@@ -159,7 +159,7 @@ export class WorkbenchService {
                 // credentialsAPI — identical surface to the worker's ExecutionContext.credentialsAPI.
                 const credentialsAPI: Loader.Context['credentialsAPI'] = {
                     getInstance: (id) => byId.get(id),
-                    getDecryptedValue: (blob) => decryptCredentialBlob(blob) as any,
+                    getDecryptedValue: (blob) => Encryption.decryptBlob(blob) as any,
                 };
 
                 // The backend operates without compile-time blueprint knowledge, so the

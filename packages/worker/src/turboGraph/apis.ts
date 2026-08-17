@@ -4,7 +4,7 @@ import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { CatalogueService, HTTP, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
-import { decryptCredentialBlob } from "src/credentials";
+import { Encryption } from "@pretzel-graph/shared/server/vault/encryption";
 import { AggexEngine } from "src/engine";
 
 import { AggexCompilerError } from "../errors";
@@ -195,7 +195,7 @@ export function createExecutionAPIs(
 
     const credentialsAPI: RuntimeNode.ExecutionContext["credentialsAPI"] = {
         getInstance:       (instanceId) => credentialInstances[instanceId],
-        getDecryptedValue: (blob)       => decryptCredentialBlob(blob) as any,
+        getDecryptedValue: (blob)       => Encryption.decryptBlob(blob) as any,
     };
 
 
