@@ -4,7 +4,7 @@ import { SocksProxyAgent } from "socks-proxy-agent";
 import { NetworkProxy } from "@pretzel-graph/node-sdk";
 import { Foundations, Vault, Workflow } from "@pretzel-graph/shared/domain";
 import { System } from "@pretzel-graph/shared/system";
-import { decryptCredentialBlob } from "src/credentials";
+import { Encryption } from "@pretzel-graph/shared/server/vault/encryption";
 
 // Connect timeout to the proxy itself. Axios's `timeout` only covers the response, so a dead
 // proxy would otherwise hang past it.
@@ -92,7 +92,7 @@ export function createProxyAPI(
 
         try {
             const instance = credentialInstances[instanceId];
-            const config   = instance && toConfig(decryptCredentialBlob(instance.blob));
+            const config   = instance && toConfig(Encryption.decryptBlob(instance.blob));
 
             if (config)
                 agent = buildAgent(config);

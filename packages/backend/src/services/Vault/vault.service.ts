@@ -6,7 +6,7 @@ import { DB } from '@/db';
 import { Vault } from '@pretzel-graph/shared/domain';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { VaultDatabase } from './vault.database';
-import { encryptCredentialBlob, decryptCredentialBlob } from './vault.encryption';
+import { Encryption } from '@pretzel-graph/shared/server/vault/encryption';
 
 function loadCredentialTemplates(): Record<Vault.Credential.Template.Id, Vault.Credential.Template> {
     const raw = fs.readFileSync(path.join(__dirname, '../../../assets/blueprint_index.json'), 'utf-8');
@@ -57,7 +57,7 @@ export class VaultService {
             principal: Principal.User,
             req: Vault.API.CredentialInstance.Create.Request,
         ): Promise<Vault.API.CredentialInstance.Create.Response> => {
-            const blob     = encryptCredentialBlob(req.fieldValues);
+            const blob     = Encryption.encryptValues(req.fieldValues);
             const instance = await DB.asUser(principal, (trx) => this.database.credentialInstance.create(trx, principal.userId, {
                 name:       req.name,
                 templateId: req.templateId,
@@ -79,7 +79,7 @@ export class VaultService {
             id: Vault.Credential.Instance.Id,
         ): Promise<Vault.API.CredentialInstance.Reveal.Response> => {
             const blob = await DB.asUser(principal, (trx) => this.database.credentialInstance.fetchBlob(trx, id));
-            const fieldValues = decryptCredentialBlob(blob);
+            const fieldValues = Encryption.decryptBlob(blob);
             return { fieldValues };
         },
 
@@ -95,7 +95,7 @@ export class VaultService {
             principal: Principal.User,
             req: Vault.API.CredentialInstance.Update.Request,
         ): Promise<Vault.API.CredentialInstance.Update.Response> => {
-            const blob     = encryptCredentialBlob(req.fieldValues);
+            const blob     = Encryption.encryptValues(req.fieldValues);
             const instance = await DB.asUser(principal, (trx) => this.database.credentialInstance.update(trx, req.id, req.name, blob));
             return { instance };
         },
