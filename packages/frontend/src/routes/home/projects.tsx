@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useNavigate, useParams } from '@tanstack/react-router'
-import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { FileSystemTree } from '@/SDKs/LibrarySDK/ui/FileSystemTree'

@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useRouterState } from '@tansta
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { useMemo, type ComponentType } from 'react'
 import type { BaseIconProps } from '@pretzel-graph/standard-ui/icons/baseIcon'
-import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { PretzelGraphDropdown } from '@/components/PretzelGraphDropdown'
 import { Dither, ditherCtx } from '@pretzel-graph/standard-ui/components/Dither'

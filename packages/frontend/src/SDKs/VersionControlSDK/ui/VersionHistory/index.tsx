@@ -1,5 +1,5 @@
 import { cn } from "@/utils/styleUtils";
-import { QuerySDK } from "@/SDKs/QuerySDK/sdk";
+import { QuerySDK } from "@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { WorkbenchSDK } from "@/routes/workflow/-SDKs/WorkbenchSDK/sdk";
 import { Badge, Button, ScrollArea, Spinner } from "@pretzel-graph/standard-ui/foundations";
