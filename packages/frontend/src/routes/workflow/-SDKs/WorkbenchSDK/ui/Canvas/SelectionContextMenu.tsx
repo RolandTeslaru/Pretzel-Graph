@@ -6,7 +6,7 @@ import { WorkbenchSDK } from '../../sdk'
 import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Button, Dialog, Form, Input } from '@pretzel-graph/standard-ui/foundations'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { Workflow } from '@pretzel-graph/shared/domain'
 
 const NameSchema = z.object({

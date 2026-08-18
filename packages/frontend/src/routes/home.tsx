@@ -6,7 +6,7 @@ import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { PretzelGraphDropdown } from '@/components/PretzelGraphDropdown'
 import { Dither, ditherCtx } from '@pretzel-graph/standard-ui/components/Dither'
-import { SystemSDK } from '@/SDKs/SystemSDK'
+import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK'
 // import { Preview } from 'shaders/react'
 
 const HOME_STALE_TIME = 60_000

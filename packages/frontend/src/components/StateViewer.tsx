@@ -10,7 +10,7 @@ import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK/sdk'
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { Execution } from '@pretzel-graph/shared/domain'
 
 const SDK_OPTIONS = ['WorkbenchSDK', 'ExecutionSDK', 'ChatSDK', 'LibrarySDK', 'ShelfSDK', 'VersionControlSDK', 'DialogSDK'] as const

@@ -2,7 +2,7 @@ import { Input, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import React, { useMemo, memo, useEffect, useState, useRef } from 'react'
 import { WorkbenchSDK } from '../../sdk'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
 import { Accordion } from '@pretzel-graph/standard-ui/foundations/accordion';
 import { FieldRenderer } from '../FieldsRenderer';

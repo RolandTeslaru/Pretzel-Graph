@@ -2,7 +2,7 @@ import { memo } from 'react'
 import { FieldLabel, type RendererProps } from './FieldLabel';
 import { Button } from '@pretzel-graph/standard-ui/foundations';
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk';
-import { DialogSDK } from '@/SDKs/DialogSDK';
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK';
 import { CodeEditorContent } from '../CodeEditor';
 
 export const ScriptField = memo(({ field, nodeId, className }: RendererProps<'Script'>) => {

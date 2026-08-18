@@ -90,9 +90,9 @@ import {
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
 import { Field } from "@pretzel-graph/standard-ui/foundations/fieldLayout"
 import { ButtonGroup } from "@pretzel-graph/standard-ui/foundations/button-group"
-import { DialogSDK } from "@/SDKs/DialogSDK"
-import { SystemSDK } from "@/SDKs/SystemSDK"
-import ThemeSelector from "@/SDKs/SystemSDK/ui/ThemeSelector"
+import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK"
+import { SystemSDK } from "@pretzel-graph/standard-ui/SDKs/SystemSDK"
+import ThemeSelector from "@pretzel-graph/standard-ui/SDKs/SystemSDK/ui/ThemeSelector"
 import { NotificationSDKTestPanel } from "@/SDKs/NotificationSDK/components/testPanel"
 
 export default function CoverExample() {

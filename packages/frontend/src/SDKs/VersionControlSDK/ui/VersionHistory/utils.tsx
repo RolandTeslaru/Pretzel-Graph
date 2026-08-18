@@ -1,4 +1,4 @@
-import { DialogSDK } from "@/SDKs/DialogSDK";
+import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
 import type { VersionControl } from "@pretzel-graph/shared/domain";
 import { toast } from "sonner";
 

@@ -10,7 +10,7 @@ import { createToolActions, type ToolActions } from './tool';
 import { createWorkflowActions, type WorkflowActions } from './workflow';
 import { createDependencyActions, type DependencyActions } from './dependency';
 import { clipboardActions } from './clipboard';
-import { DialogSDK } from '@/SDKs/DialogSDK';
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK';
 import React from 'react';
 import { ShelfSDK } from '../../ShelfSDK/sdk';
 

@@ -1,7 +1,7 @@
 import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Workflow } from '@pretzel-graph/shared/domain'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { WorkbenchSDK } from '../../../sdk'
 import { CredentialForm } from '@/SDKs/VaultSDK/ui/CredentialForm'
 import { PROXY_TEMPLATE_ID } from '../proxy'

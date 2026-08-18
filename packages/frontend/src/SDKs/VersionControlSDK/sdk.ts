@@ -1,6 +1,6 @@
 import { immer } from "zustand/middleware/immer";
-import { BaseSDK } from "../Base";
-import { SDK } from "../SDKManager";
+import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
+import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { VersionControl, Workflow } from "@pretzel-graph/shared/domain";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";

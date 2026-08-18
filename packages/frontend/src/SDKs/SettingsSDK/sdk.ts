@@ -1,5 +1,5 @@
 import { immer } from "zustand/middleware/immer";
-import { BaseSDK } from "../Base";
+import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { create } from "zustand";
 
 export class _SettingsSDK_ extends BaseSDK<SettingsSDK.State> {

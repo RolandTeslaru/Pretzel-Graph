@@ -4,10 +4,10 @@ import { immer } from "zustand/middleware/immer"
 import React from "react";
 import { enableMapSet } from 'immer';
 import { BaseSDK } from "../Base";
-import { AlertDialog, Dialog } from "@pretzel-graph/standard-ui/foundations";
-import { SDK } from "@/SDKs/SDKManager";
+import { SDK } from "../SDKManager";
+import { AlertDialog, Dialog } from "../../foundations";
 import { type _DialogSDKActions_, createDialogSDKActions } from "./actions";
-import { AlertTriangle } from "@pretzel-graph/standard-ui/icons/system";
+import { AlertTriangle } from "../../icons/system";
 import { dialogSelectors, type DialogSDKSelectors } from "./selectors";
 
 enableMapSet()

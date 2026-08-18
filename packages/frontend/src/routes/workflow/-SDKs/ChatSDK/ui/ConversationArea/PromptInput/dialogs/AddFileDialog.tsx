@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { Dialog, Button } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import type { DialogSDK } from '@/SDKs/DialogSDK'
+import type { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 
 interface Props extends DialogSDK.TemplateProps {}
 

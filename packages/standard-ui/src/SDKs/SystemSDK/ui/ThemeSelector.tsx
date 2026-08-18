@@ -1,5 +1,5 @@
-import { Tabs } from '@pretzel-graph/standard-ui/foundations'
-import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
+import { Tabs } from '../../../foundations'
+import { SystemIcons } from '../../../icons'
 import { SystemSDK } from '../sdk'
 
 const ThemeSelector = () => {
