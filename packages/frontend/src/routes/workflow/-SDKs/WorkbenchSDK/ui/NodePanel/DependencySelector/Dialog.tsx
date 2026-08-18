@@ -3,7 +3,7 @@ import { Badge, Button, Dialog, Input, ScrollArea, Select, Spinner, Tabs } from 
 import { Library, Workflow } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { FileSystemTree } from '@/SDKs/LibrarySDK/ui/FileSystemTree'
 import FolderView from '@/SDKs/LibrarySDK/ui/FolderView'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'

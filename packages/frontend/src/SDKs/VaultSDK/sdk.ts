@@ -1,8 +1,8 @@
 import { immer } from "zustand/middleware/immer";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
-import { BaseSDK } from "../Base";
-import { SDK } from "../SDKManager";
+import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
+import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { Vault } from "@pretzel-graph/shared/domain";
 import { _createVaultActions_, type _VaultSDKActions } from "./actions";
 import { _vaultSelectors_, type _VaultSDKSelectors } from "./selectors";

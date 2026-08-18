@@ -5,7 +5,7 @@ import { AlertDialog, Button, Form, Input, Spinner, Switch } from '@pretzel-grap
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { WorkbenchSDK } from '../../sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { toast } from 'sonner'
 

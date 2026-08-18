@@ -1,4 +1,4 @@
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { NotificationSDK } from '@/SDKs/NotificationSDK'

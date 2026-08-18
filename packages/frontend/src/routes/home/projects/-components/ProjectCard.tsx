@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
-import { DialogSDK } from '@/SDKs/DialogSDK/sdk'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { AlertDialog, ContextMenu } from '@pretzel-graph/standard-ui/foundations'

@@ -1,4 +1,4 @@
-import { SystemSDK } from '@/SDKs/SystemSDK'
+import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK'
 import { Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import React, { memo } from 'react'

@@ -3,7 +3,7 @@ import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import type { ChatSDKImpl } from "./sdk";
 import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
-import { DialogSDK } from "@/SDKs/DialogSDK";
+import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
 import FullscreenChat from "./ui/FullscreenChat";
 
 function deriveChatName(content: string, maxLength = 50): string {

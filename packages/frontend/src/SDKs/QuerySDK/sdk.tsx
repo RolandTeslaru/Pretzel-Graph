@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider, useMutation, useQuery } from "@tanstack/react-query";
 import type { UseMutationOptions, UseMutationResult, UseQueryOptions, UseQueryResult } from "@tanstack/react-query"
 import type { ReactNode } from "react";
-import { SDK } from "../SDKManager";
+import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 
 @SDK("Query")
 export class QuerySDKImpl {

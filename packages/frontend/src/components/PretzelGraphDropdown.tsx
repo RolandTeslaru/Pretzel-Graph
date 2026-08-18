@@ -1,8 +1,8 @@
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DropdownMenu, AlertDialog } from '@pretzel-graph/standard-ui/foundations'
-import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
+import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK/sdk'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { openAccountDialog } from '@/SDKs/AuthSDK/ui/AccountDialog'
 
 const LOGOUT_DIALOG_ID = 'logout'

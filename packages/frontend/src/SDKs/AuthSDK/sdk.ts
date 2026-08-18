@@ -1,11 +1,11 @@
 import { create } from "zustand";
-import { BaseSDK } from "../Base";
+import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { immer } from "zustand/middleware/immer";
 import { GoTrueClient } from "@supabase/auth-js";
-import { SDK } from "../SDKManager";
+import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { Auth, Workspace } from "@pretzel-graph/shared/domain";
 import { _createAuthActions_ } from "./actions";
-import { SystemSDK } from "../SystemSDK";
+import { SystemSDK } from "@pretzel-graph/standard-ui/SDKs/SystemSDK";
 import { router } from "@/main";
 
 @SDK("Auth")

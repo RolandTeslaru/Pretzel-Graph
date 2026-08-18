@@ -1,4 +1,4 @@
-import { DialogSDK } from "@/SDKs/DialogSDK"
+import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK"
 import { ShelfSDK } from "../../ShelfSDK/sdk"
 import { AlertDialog } from "@pretzel-graph/standard-ui/foundations"
 import { Workflow } from "@pretzel-graph/shared/domain"

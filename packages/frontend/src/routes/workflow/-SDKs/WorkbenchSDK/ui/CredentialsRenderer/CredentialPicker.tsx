@@ -2,7 +2,7 @@ import { memo, useEffect } from "react";
 import { Select } from "@pretzel-graph/standard-ui/foundations/select";
 import { Button, Dialog } from "@pretzel-graph/standard-ui/foundations";
 import { VaultSDK } from "@/SDKs/VaultSDK/sdk";
-import { DialogSDK } from "@/SDKs/DialogSDK";
+import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
 import { WorkbenchSDK } from "../../sdk";
 import { CredentialForm } from "@/SDKs/VaultSDK/ui/CredentialForm";
 import type { Vault, Workflow } from "@pretzel-graph/shared/domain";

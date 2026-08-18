@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import type { Workflow } from '@pretzel-graph/shared/domain'
 import { Button, Input, Tabs, Textarea } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { WorkbenchSDK } from '../../sdk'
 import { ExpressionEditor } from '../ExpressionEditor'
 

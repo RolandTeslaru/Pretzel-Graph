@@ -4,7 +4,7 @@ import { projectionsToDummyTree } from '@/components/Tree/toTree'
 import type { Tree as TreeType } from '@/components/Tree/domain'
 import type { Execution, Foundations } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { Button } from '@pretzel-graph/standard-ui/foundations'
 import { toast } from 'sonner'
 

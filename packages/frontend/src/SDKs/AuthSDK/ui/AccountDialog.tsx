@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { Badge, Button, Dialog, Form, Input, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Auth } from '@pretzel-graph/shared/domain'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { AuthSDK } from '../sdk'
 
 const DIALOG_ID = 'account'

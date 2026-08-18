@@ -1,5 +1,5 @@
 import { Dither, ditherCtx } from '@pretzel-graph/standard-ui/components/Dither'
-import { SystemSDK } from '@/SDKs/SystemSDK/sdk'
+import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 

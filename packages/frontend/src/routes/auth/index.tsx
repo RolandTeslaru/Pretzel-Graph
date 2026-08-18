@@ -4,7 +4,7 @@ import { api } from '@/SDKs/ApiInterceptorSDK'
 import AuthenticationPanel from '@/SDKs/AuthSDK/ui/AuthenticationPanel'
 import { Dither, ditherCtx } from '@pretzel-graph/standard-ui/components/Dither'
 import { Pretzel } from '@pretzel-graph/standard-ui/icons/system'
-import { SystemSDK } from '@/SDKs/SystemSDK'
+import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK'
 
 
 export const Route = createFileRoute('/auth/')({
