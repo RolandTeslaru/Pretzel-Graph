@@ -2,8 +2,8 @@ import { create, } from "zustand"
 import { immer } from "zustand/middleware/immer"
 import UILayer from "./components/uiLayer";
 import { toast } from 'sonner';
-import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
-import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
+import { SDK } from "../SDKManager";
+import { BaseSDK } from "../Base";
 
 @SDK("Notification")
 class NotificationSDKImpl extends BaseSDK<NotificationSDK.State>{

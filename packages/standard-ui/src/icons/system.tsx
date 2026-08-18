@@ -63,6 +63,14 @@ export const ArrowDown: React.FC<BaseIconProps> = (props) => (
     <BaseIcon {...props}><path d="M12 5v14M19 12l-7 7-7-7"></path></BaseIcon>
 )
 ArrowDown.displayName = "ArrowDown"
+export const ArrowDownWideNarrow: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}><path d="m3 16 4 4 4-4"></path><path d="M7 20V4"></path><path d="M11 4h10"></path><path d="M11 8h7"></path><path d="M11 12h4"></path></BaseIcon>
+)
+ArrowDownWideNarrow.displayName = "ArrowDownWideNarrow"
+export const ArrowUpNarrowWide: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}><path d="m3 8 4-4 4 4"></path><path d="M7 4v16"></path><path d="M11 12h4"></path><path d="M11 16h7"></path><path d="M11 20h10"></path></BaseIcon>
+)
+ArrowUpNarrowWide.displayName = "ArrowUpNarrowWide"
 export const ChevronLeft: React.FC<BaseIconProps> = (props) => (
     <BaseIcon {...props}><path d="M15 18l-6-6 6-6"></path></BaseIcon>
 )
@@ -1271,3 +1279,12 @@ export const SearchCode: React.FC<BaseIconProps> = (props) => (
     </BaseIcon>
 )
 SearchCode.displayName = "SearchCode"
+export const Server: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <rect width="20" height="8" x="2" y="2" rx="2" ry="2"/>
+        <rect width="20" height="8" x="2" y="14" rx="2" ry="2"/>
+        <line x1="6" x2="6.01" y1="6" y2="6"/>
+        <line x1="6" x2="6.01" y1="18" y2="18"/>
+    </BaseIcon>
+)
+Server.displayName = "Server"
