@@ -6,7 +6,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
 import DrawerItem from './DrawerItem';
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon';
-import { QuerySDK } from '@/SDKs/QuerySDK/sdk';
+import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk';
 
 
 export const Drawers = () => {

@@ -1,4 +1,4 @@
-import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import ShelfSidebar from '@/routes/workflow/-SDKs/ShelfSDK/ui/ShelfSidebar'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'

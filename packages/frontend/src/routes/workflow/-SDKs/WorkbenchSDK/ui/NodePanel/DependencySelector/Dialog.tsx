@@ -7,7 +7,7 @@ import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { FileSystemTree } from '@/SDKs/LibrarySDK/ui/FileSystemTree'
 import FolderView from '@/SDKs/LibrarySDK/ui/FolderView'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 
 interface Props {

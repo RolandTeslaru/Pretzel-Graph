@@ -19,7 +19,7 @@ import { Badge, Button, DropdownMenu, Popover, ScrollArea, Table } from '@pretze
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Execution, SystemError, type Workflow } from '@pretzel-graph/shared/domain'
 import { api } from '@/SDKs/ApiInterceptorSDK/sdk'
-import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import WorkflowPicker from '@/SDKs/LibrarySDK/ui/WorkflowPicker'
 import { WorkflowGlyph } from '@pretzel-graph/standard-ui/brands/workflowGlyph'
 
