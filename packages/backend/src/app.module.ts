@@ -10,11 +10,11 @@ import { ShelfModule } from './services/Shelf/shelf.module';
 import { WorkbenchModule } from './services/Workbench/workbench.module';
 import { RealtimeModule } from './services/Realtime/realtime.module';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
-import { AuthModule } from './services/Auth/auth.module';
+import { UserModule } from './services/User/user.module';
 import { VersionControlModule } from './services/VersionControl/version-control.module';
 import { WebhookTestModule } from './services/WebhookTest/webhook-test.module';
 import { PermissionModule } from './services/Permission/permission.module';
-import { MembershipModule } from './auth/membership.module';
+import { MemberModule } from './services/Member/member.module';
 import { WebhookIgnitionModule } from './services/WebhookIgnition/webhook-ignition.module';
 import { ApiKeysModule } from './services/ApiKeys/api-keys.module';
 import { VaultModule } from './services/Vault/vault.module';
@@ -44,11 +44,11 @@ import { HealthModule } from './services/Health/health.module';
         ShelfModule,
         WorkbenchModule,
         RealtimeModule,
-        AuthModule,
+        UserModule,
         VersionControlModule,
         WebhookTestModule,
         PermissionModule,
-        MembershipModule,
+        MemberModule,
         WebhookIgnitionModule,
         ApiKeysModule,
         VaultModule,

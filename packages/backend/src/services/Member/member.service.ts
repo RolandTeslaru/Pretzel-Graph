@@ -1,13 +1,29 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { sql } from 'kysely';
-import { Workspace } from '@pretzel-graph/shared/domain';
+import { Auth, Workspace } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
 import { VerifiedToken, subjectExistsAtIssuer } from '@/utils/auth';
 
-@Injectable()
-export class MembershipService {
+/** The account named as owner at deploy time, when one is configured. */
+function configuredOwner(): Auth.User.Id | null {
+    const value = process.env.WORKSPACE_OWNER_ID;
 
-    private readonly logger = new Logger(MembershipService.name);
+    if (!value)
+        return null;
+
+    const parsed = Auth.User.Id.safeParse(value);
+
+    // Fails loudly: a malformed id matches nobody and would lock everyone out.
+    if (!parsed.success)
+        throw new Error('WORKSPACE_OWNER_ID is not a valid user id');
+
+    return parsed.data;
+}
+
+@Injectable()
+export class MemberService {
+
+    private readonly logger = new Logger(MemberService.name);
 
     /**
      * The caller's role, or null when they are not a member.
@@ -34,8 +50,16 @@ export class MembershipService {
      * Takes ownership of an unclaimed deployment. Happens once in its lifetime: the
      * `deployment` row records the claim, so emptying `members` cannot hand ownership
      * to whoever arrives next.
+     *
+     * When the deployment names an owner, only that account may claim it. Without
+     * one, the first account to arrive does.
      */
     private async claim(token: VerifiedToken): Promise<Workspace.Role | null> {
+        const owner = configuredOwner();
+
+        if (owner && token.userId !== owner)
+            return null;
+
         const unclaimed = await DB.asService('read deployment claim', (db) =>
             db
                 .selectFrom('deployment')
