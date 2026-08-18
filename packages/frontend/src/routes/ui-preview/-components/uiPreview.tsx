@@ -93,7 +93,7 @@ import { ButtonGroup } from "@pretzel-graph/standard-ui/foundations/button-group
 import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK"
 import { SystemSDK } from "@pretzel-graph/standard-ui/SDKs/SystemSDK"
 import ThemeSelector from "@pretzel-graph/standard-ui/SDKs/SystemSDK/ui/ThemeSelector"
-import { NotificationSDKTestPanel } from "@/SDKs/NotificationSDK/components/testPanel"
+import { NotificationSDKTestPanel } from "@pretzel-graph/standard-ui/SDKs/NotificationSDK/components/testPanel"
 
 export default function CoverExample() {
     return (

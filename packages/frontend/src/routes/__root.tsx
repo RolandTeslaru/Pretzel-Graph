@@ -1,7 +1,7 @@
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
-import { NotificationSDK } from '@/SDKs/NotificationSDK'
+import { NotificationSDK } from '@pretzel-graph/standard-ui/SDKs/NotificationSDK'
 import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import VexrLabsWatermark from '@pretzel-graph/standard-ui/brands/vexrWatermark'
 import { useState } from 'react'
