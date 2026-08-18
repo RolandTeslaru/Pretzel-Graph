@@ -1,6 +1,6 @@
 import { VersionControl, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "../ApiInterceptorSDK";
-import { QuerySDK } from "../QuerySDK/sdk";
+import { QuerySDK } from "@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk";
 import { RealtimeSDK } from "../Realtime/sdk";
 import type { VersionControlSDKImpl } from "./sdk";
 

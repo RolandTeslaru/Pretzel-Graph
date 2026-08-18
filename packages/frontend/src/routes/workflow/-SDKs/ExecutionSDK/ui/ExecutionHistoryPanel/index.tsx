@@ -1,4 +1,4 @@
-import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import React, { useState } from 'react'
 import { ExecutionSDK } from '../../sdk'
 import { WorkbenchSDK } from '../../../WorkbenchSDK/sdk'

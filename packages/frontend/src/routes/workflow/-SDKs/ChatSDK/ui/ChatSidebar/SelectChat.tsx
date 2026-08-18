@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { DropdownMenu, Input } from '@pretzel-graph/standard-ui/foundations'
 import { ChatSDK } from '../../sdk'
-import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { useParams } from '@tanstack/react-router'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 

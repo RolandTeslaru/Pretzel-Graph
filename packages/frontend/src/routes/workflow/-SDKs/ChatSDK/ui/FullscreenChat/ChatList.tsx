@@ -3,7 +3,7 @@ import { Input } from '@pretzel-graph/standard-ui/foundations/input'
 import { ContextMenu, Separator } from '@pretzel-graph/standard-ui/foundations'
 import type { Chat, Workflow } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { QuerySDK } from '@/SDKs/QuerySDK/sdk'
+import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { useParams } from '@tanstack/react-router'
 
 function formatChatDate(iso: string): string {
