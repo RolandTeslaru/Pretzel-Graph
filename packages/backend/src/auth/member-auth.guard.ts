@@ -5,7 +5,7 @@ import { Workspace } from '@pretzel-graph/shared/domain';
 import { Token } from '@/domain/Token';
 import { Principal } from '@/domain/Principal';
 import { verifyToken } from '@/utils/auth';
-import { MembershipService } from './membership.service';
+import { MemberService } from '@/services/Member/member.service';
 import { MIN_ROLE_METADATA, RANK } from './min-role.decorator';
 
 export interface AuthenticatedRequest extends Request {
@@ -20,7 +20,7 @@ export interface AuthenticatedRequest extends Request {
 export class MemberAuthGuard implements CanActivate {
 
     constructor(
-        @Inject(MembershipService) private readonly membership: MembershipService,
+        @Inject(MemberService) private readonly membership: MemberService,
         @Inject(Reflector)         private readonly reflector:  Reflector,
     ) {}
 

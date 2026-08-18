@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { Auth } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
-import { AuthDatabase } from './auth.database';
+import { UserDatabase } from './user.database';
 
 @Injectable()
-export class AuthService {
-    constructor(private readonly database: AuthDatabase) {}
+export class UserService {
+    constructor(private readonly database: UserDatabase) {}
 
     /** Whether anyone owns this deployment yet. Public — it gates the first-run screen. */
     public async getStatus(): Promise<Auth.API.Status.Response> {

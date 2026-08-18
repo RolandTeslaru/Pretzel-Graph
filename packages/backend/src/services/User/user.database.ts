@@ -6,7 +6,7 @@ import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-r
 
 @Injectable()
 @DatabaseClass
-export class AuthDatabase {
+export class UserDatabase {
 
     @AllowedDatabaseRoles("user")
     @ZodReturn(Auth.User.Schema)
