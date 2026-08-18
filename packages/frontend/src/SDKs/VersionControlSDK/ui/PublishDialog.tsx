@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Button, Dialog, Input, Label, Spinner, Textarea } from "@pretzel-graph/standard-ui/foundations"
-import { DialogSDK } from "@/SDKs/DialogSDK"
+import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK"
 import { VersionControlSDK } from "../sdk"
 import { WorkbenchSDK } from "@/routes/workflow/-SDKs/WorkbenchSDK/sdk"
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"

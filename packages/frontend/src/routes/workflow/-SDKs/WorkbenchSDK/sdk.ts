@@ -8,8 +8,8 @@ import { useState, useRef, useEffect, useCallback, useMemo, createRef } from "re
 import { Foundations, Validation, Vault, Workflow, Workbench } from "@pretzel-graph/shared/domain"
 import { temporal } from 'zundo';
 import { cloneDeep } from "lodash";
-import { BaseSDK } from "@/SDKs/Base";
-import { SDK } from "@/SDKs/SDKManager";
+import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
+import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { workbenchReducers } from "./reducers";
 import { createDrivers, reconcileNodeDrivers, reconcileEdgeDrivers } from "./utils/createDrivers";

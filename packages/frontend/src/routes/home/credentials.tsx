@@ -4,7 +4,7 @@ import { Button, Dialog, AlertDialog, ScrollArea } from '@pretzel-graph/standard
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { VaultSDK } from '@/SDKs/VaultSDK/sdk'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { CredentialForm } from '@/SDKs/VaultSDK/ui/CredentialForm'
 import type { Vault } from '@pretzel-graph/shared/domain'
 

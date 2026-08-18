@@ -1,4 +1,4 @@
-import { BaseSDK } from "@/SDKs/Base";
+import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { Foundations, Shelf } from "@pretzel-graph/shared/domain";
@@ -6,7 +6,7 @@ import { _createShelfActions_, type _ShelfActions } from "./actions";
 import { _createShelfSelectors_, type _ShelfSelectors } from "./selectors";
 import { _createShelfReducers_, type _ShelfReducers } from "./reducers";
 import { enableMapSet } from "immer";
-import { SDK } from "@/SDKs/SDKManager";
+import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 enableMapSet();
 
 @SDK("Shelf")

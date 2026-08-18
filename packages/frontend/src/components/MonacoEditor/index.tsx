@@ -2,7 +2,7 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import type { BeforeMount, EditorProps } from '@monaco-editor/react'
 import { Spinner } from '@pretzel-graph/standard-ui/foundations'
-import { SystemSDK } from '@/SDKs/SystemSDK'
+import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK'
 
 const LazyEditor = lazy(() => import('@monaco-editor/react'))
 

@@ -1,5 +1,5 @@
 import { Assistant } from "@pretzel-graph/shared/domain";
-import { DialogSDK } from "@/SDKs/DialogSDK";
+import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
 import type { AssistantSDKImpl } from "./sdk";
 import FullscreenAssistant from "./ui/Fullscreen";
 

@@ -9,7 +9,7 @@ import Tipped from '@/components/Tipped'
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 import { PROXY_TEMPLATE_ID } from '../../../NodePanel/proxy'
 import { CredentialPicker } from '../../../CredentialsRenderer/CredentialPicker'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 
 interface Props {
     hyNode: Workflow.Node.Hydrated

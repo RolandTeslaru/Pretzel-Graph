@@ -1,11 +1,11 @@
 import { immer } from "zustand/middleware/immer";
-import { BaseSDK } from "@/SDKs/Base";
-import { SDK } from "@/SDKs/SDKManager";
+import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
+import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { Chat } from "@pretzel-graph/shared/domain";
 import { createChatSDKActions, type ChatSDKActions } from "./actions";
 import { createChatSDKReducers, type ChatSDKReducers } from "./reducers";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
-import { DialogSDK } from "@/SDKs/DialogSDK";
+import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
 import type { ExecutionSDKImpl } from "../ExecutionSDK/sdk";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";

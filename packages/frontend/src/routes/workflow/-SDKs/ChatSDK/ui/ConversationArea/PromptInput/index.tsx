@@ -4,7 +4,7 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } fro
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { ChatSDK } from '../../../sdk'
 import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import AddImageDialogContent from './dialogs/AddImageDialog'
 import AddFileDialogContent from './dialogs/AddFileDialog'
 import { WorkbenchSDK } from '../../../../WorkbenchSDK/sdk'

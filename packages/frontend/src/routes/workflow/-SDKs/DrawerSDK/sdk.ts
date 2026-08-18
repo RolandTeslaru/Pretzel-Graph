@@ -1,7 +1,7 @@
-import { BaseSDK } from "@/SDKs/Base";
+import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { SDK } from "@/SDKs/SDKManager";
+import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { createDrawerSDKActions, type _DrawerSDKActions_ } from "./actions";
 
 @SDK("Drawer")

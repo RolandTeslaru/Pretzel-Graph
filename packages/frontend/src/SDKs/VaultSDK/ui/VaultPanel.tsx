@@ -6,7 +6,7 @@ import {
     AlertDialog,
 } from '@pretzel-graph/standard-ui/foundations'
 import { Vault } from '@pretzel-graph/shared/domain'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { VaultGlyph } from '@pretzel-graph/standard-ui/brands/vaultGlyph'
 

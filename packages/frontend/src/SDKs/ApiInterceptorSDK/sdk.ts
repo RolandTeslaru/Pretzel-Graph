@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance } from "axios";
-import { SDK } from "../SDKManager";
+import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import type { AuthSDKImpl } from "../AuthSDK/sdk";
 
 const g = globalThis as unknown as { __api?: AxiosInstance };

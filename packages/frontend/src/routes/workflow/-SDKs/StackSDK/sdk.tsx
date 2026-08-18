@@ -3,8 +3,8 @@ import { create } from "zustand"
 import { immer } from "zustand/middleware/immer"
 import React from "react";
 import { enableMapSet } from 'immer';
-import { BaseSDK } from "@/SDKs/Base";
-import { SDK } from "@/SDKs/SDKManager";
+import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
+import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { _createStackActions_, type _StackSDKActions_ } from "./actions";
 import { stackReducers } from "./reducers";
 import { AnimatePresence, motion } from "motion/react";

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { openPublishDialog } from '@/SDKs/VersionControlSDK/ui/PublishDialog'
 import VersionHistory from '@/SDKs/VersionControlSDK/ui/VersionHistory'

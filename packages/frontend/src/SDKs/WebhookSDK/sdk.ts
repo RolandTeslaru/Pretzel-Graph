@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { BaseSDK } from "../Base";
-import { SDK } from "../SDKManager";
+import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
+import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { Webhook } from "@pretzel-graph/shared/domain/Webhook";
 import { createWebhookSDKActions, type WebhookSDKActions } from "./actions";
 

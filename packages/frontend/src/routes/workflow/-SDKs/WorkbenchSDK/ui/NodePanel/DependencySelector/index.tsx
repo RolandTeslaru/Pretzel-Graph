@@ -4,7 +4,7 @@ import { cn } from '@pretzel-graph/standard-ui/utils/cn'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../sdk'
-import { DialogSDK } from '@/SDKs/DialogSDK'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { DependencySelectorDialogContent } from './Dialog'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
