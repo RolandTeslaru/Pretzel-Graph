@@ -1288,3 +1288,24 @@ export const Server: React.FC<BaseIconProps> = (props) => (
     </BaseIcon>
 )
 Server.displayName = "Server"
+
+export const ChartNoAxesCombined: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="M12 16v5"/>
+        <path d="M16 14.639V21"/>
+        <path d="M20 10.656V21"/>
+        <path d="m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15"/>
+        <path d="M4 18.463V21"/>
+        <path d="M8 14.656V21"/>
+    </BaseIcon>
+)
+ChartNoAxesCombined.displayName = "ChartNoAxesCombined"
+
+export const Receipt: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="M12 17V7"/>
+        <path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8"/>
+        <path d="M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z"/>
+    </BaseIcon>
+)
+Receipt.displayName = "Receipt"
