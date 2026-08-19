@@ -5,21 +5,23 @@ import type { LibrarySDK, LibrarySDKImpl } from './sdk';
 export function _createLibrarySelectors_(sdk: LibrarySDKImpl) {
     return {
 
-        // Immediate child folders of a folder.
-        childFoldersOf: (folderId: Library.Folder.Id): Library.Folder[] => {
+        // Immediate child folders of a folder. null is the root.
+        childFoldersOf: (folderId: Library.Folder.Id | null): Library.Folder[] => {
             const s = sdk.useStore.getState();
             return Object.values(s.folders).filter((f) => f.parent_folder_id === folderId);
         },
 
-        // Workflows living directly inside a folder.
-        workflowsInFolder: (folderId: Library.Folder.Id): Library.WorkflowMeta[] => {
+        // Workflows living directly inside a folder. null is the root.
+        workflowsInFolder: (folderId: Library.Folder.Id | null): Library.WorkflowMeta[] => {
             const s = sdk.useStore.getState();
             return Object.values(s.workflowMetas).filter((w) => w.folder_id === folderId);
         },
-        getBreadcrumbs: (s: LibrarySDK.State, currentFolderId: Library.Folder.Id, addProjectRoot: boolean = false) => {
-            let curFolder = s.folders[currentFolderId] as Library.Folder | undefined;
+
+        // Root first, current folder last. The root crumb carries an empty key.
+        getBreadcrumbs: (s: LibrarySDK.State, currentFolderId: Library.Folder.Id | null | undefined) => {
+            let curFolder = currentFolderId ? s.folders[currentFolderId] as Library.Folder | undefined : undefined
             const cwd: {
-                key: Library.Folder.Id,
+                key: string,
                 name: string
             }[] = []
 
@@ -35,10 +37,7 @@ export function _createLibrarySelectors_(sdk: LibrarySDKImpl) {
                     curFolder = undefined
             }
 
-            if (addProjectRoot) {
-                // @ts-expect-error
-                cwd.push({ key: "", name: "Projects" })
-            }
+            cwd.push({ key: "", name: "Library" })
 
             cwd.reverse();
             return cwd;

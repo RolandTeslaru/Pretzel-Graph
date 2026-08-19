@@ -25,20 +25,12 @@ const toWorkflowMeta = (row: unknown) => Library.WorkflowMeta.Schema.parse(row);
 class BootstrapMethods {
 
     @ZodReturn(z.object({
-        projects: Library.Folder.Schema.array(),
         folders: Library.Folder.Schema.array(),
         workflow_metas: Library.WorkflowMeta.Schema.array(),
     }))
     @AllowedDatabaseRoles("user")
     async get(trx: DB.UserTransaction): Promise<Library.API.Bootstrap.Get.Response> {
-        const [projects, folders, workflowMetas] = await Promise.all([
-            trx
-                .selectFrom('folders')
-                .selectAll()
-                .where('is_root', '=', true)
-                .where('parent_folder_id', 'is', null)
-                .orderBy('created_at', 'desc')
-                .execute(),
+        const [folders, workflowMetas] = await Promise.all([
             trx
                 .selectFrom('folders')
                 .selectAll()
@@ -52,69 +44,9 @@ class BootstrapMethods {
         ]);
 
         return {
-            projects: projects.map(DB.Folder.toDomain),
             folders: folders.map(DB.Folder.toDomain),
             workflow_metas: workflowMetas.map(toWorkflowMeta),
         };
-    }
-}
-
-@DatabaseClass
-class ProjectMethods {
-
-    @AllowedDatabaseRoles("user")
-    @ZodReturn(Library.Folder.Schema)
-    async create(
-        trx: DB.UserTransaction,
-        createdBy: Auth.User.Id | null,
-        payload: Library.API.Project.Create.Request,
-    ): Promise<Library.Folder> {
-        const row = await trx
-            .insertInto('folders')
-            .values({
-                ...payload,
-                created_by: createdBy,
-                is_root: true,
-                parent_folder_id: null,
-            })
-            .returningAll()
-            .executeTakeFirstOrThrow();
-
-        return DB.Folder.toDomain(row);
-    }
-
-    @AllowedDatabaseRoles("user")
-    @ZodReturn(Library.Folder.Schema)
-    async update(
-        trx: DB.UserTransaction,
-        payload: Library.API.Project.Update.Request,
-    ): Promise<Library.Folder> {
-        const row = await trx
-            .updateTable('folders')
-            .set({
-                display_name: payload.display_name,
-                description: payload.description ?? null,
-            })
-            .where('id', '=', payload.id)
-            .where('is_root', '=', true)
-            .returningAll()
-            .executeTakeFirstOrThrow();
-
-        return DB.Folder.toDomain(row);
-    }
-
-    @AllowedDatabaseRoles("user")
-    @ZodReturn(Library.Folder.Schema.array())
-    async list(trx: DB.UserTransaction): Promise<Library.Folder[]> {
-        const rows = await trx
-            .selectFrom('folders')
-            .selectAll()
-            .where('is_root', '=', true)
-            .where('parent_folder_id', 'is', null)
-            .orderBy('created_at', 'desc')
-            .execute();
-
-        return rows.map(DB.Folder.toDomain);
     }
 }
 
@@ -133,7 +65,6 @@ class FolderMethods {
             .values({
                 ...payload,
                 created_by: createdBy,
-                is_root: false,
             })
             .returningAll()
             .executeTakeFirstOrThrow();
@@ -318,7 +249,6 @@ class WorkflowMethods {
 @DatabaseClass
 export class LibraryDatabase {
     public readonly bootstrap = new BootstrapMethods();
-    public readonly project = new ProjectMethods();
     public readonly folder = new FolderMethods();
     public readonly workflow = new WorkflowMethods();
 }

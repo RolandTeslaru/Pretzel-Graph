@@ -17,32 +17,6 @@ export class LibraryController {
         return await this.libraryService.bootstrap.get(principal);
     }
 
-    // ── Projects ──────────────────────────────────────────
-    @Post('projects')
-    @HttpCode(200)
-    async createProject(
-        @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Library.API.Project.Create.Request) body: Library.API.Project.Create.Request,
-    ) {
-        return await this.libraryService.project.create(principal, body);
-    }
-
-    @Get('projects')
-    async listProjects(@AuthenticatedUser() principal: Principal.User) {
-        return await this.libraryService.project.list(principal);
-    }
-
-    @Patch('projects/:id')
-    async updateProject(
-        @AuthenticatedUser() principal: Principal.User,
-        @Param('id') id: Library.Folder.Id,
-        @Body() body: Omit<Library.API.Project.Update.Request, 'id'>
-    ) {
-        const payload = Library.API.Project.Update.Request.parse({ ...body, id });
-        return await this.libraryService.project.update(principal, payload);
-    }
-
-
     // ── Folders ───────────────────────────────────────────
     @Post('folders')
     @HttpCode(200)

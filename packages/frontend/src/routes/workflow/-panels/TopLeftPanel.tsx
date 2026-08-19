@@ -1,7 +1,7 @@
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { PretzelGraphDropdown } from '@/components/PretzelGraphDropdown'
-import Breadcrumbs from '@/routes/home/projects/-components/Breadcrumbs'
+import Breadcrumbs from '@/routes/home/library/-components/Breadcrumbs'
 
 export const TopLeftPanel = () => {
     const workflowId = WorkbenchSDK.useStore(s => s.workflowId)

@@ -117,6 +117,7 @@ services:
       dockerfile: Dockerfile.frontend
       args:
         VITE_AUTH_URL: ${GOTRUE_EXTERNAL_URL:-http://localhost:9999}
+        VITE_CLOUD_URL: ${VITE_CLOUD_URL:-}
     restart: unless-stopped
     depends_on:
       - backend
