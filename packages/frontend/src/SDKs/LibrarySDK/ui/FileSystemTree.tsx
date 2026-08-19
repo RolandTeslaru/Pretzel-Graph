@@ -6,10 +6,9 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { LibrarySDK } from '../sdk'
 import type { FileSystemNodeData } from '../actions'
 import type { Library, Workflow } from '@pretzel-graph/shared/domain'
-import { openEditFolderDialog, openEditProjectDialog, openEditWorkflowDialog } from './create-dialogs'
-import { openDeleteFolderDialog } from '@/routes/home/projects/-components/FolderCard'
-import { openDeleteProjectDialog } from '@/routes/home/projects/-components/ProjectCard'
-import { openDeleteWorkflowDialog } from '@/routes/home/projects/-components/WorkflowCard'
+import { openEditFolderDialog, openEditWorkflowDialog } from './create-dialogs'
+import { openDeleteFolderDialog } from './FolderView/folder-card'
+import { openDeleteWorkflowDialog } from './FolderView/workflow-card'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import classNames from 'classnames';
 
@@ -18,7 +17,7 @@ type FileSystemTreeSize = 'default' | 'sm'
 type FileSystemTreeProps = {
     className?: string
     size?: FileSystemTreeSize
-    cwd?: Library.Folder.Id
+    cwd?: Library.Folder.Id | null
     selectedWorkflowId?: Workflow.Id
     onFolderClick?: (folderId: Library.Folder.Id) => void
     onWorkflowClick?: (workflowId: Workflow.Id) => void
@@ -94,7 +93,7 @@ export function FileSystemTree({ className, size = 'default', cwd, selectedWorkf
     const selectedFolderKey = cwd ? `folder:${cwd}` : undefined
     const selectedWorkflowKey = selectedWorkflowId ? `workflow:${selectedWorkflowId}` : undefined
 
-    const hasFolders = treeData.childBranches && Object.keys(treeData.childBranches).length > 0
+    const hasContents = treeData.childBranches && Object.keys(treeData.childBranches).length > 0
     const hasResults = displayTree.childBranches && Object.keys(displayTree.childBranches).length > 0
 
     return (
@@ -106,8 +105,8 @@ export function FileSystemTree({ className, size = 'default', cwd, selectedWorkf
                     onSearch={(value) => setQuery(value.trim().toLowerCase())}
                 />
             </div>
-            {!hasFolders ? (
-                <div className='text-sm opacity-60 px-2 py-1'>No folders yet.</div>
+            {!hasContents ? (
+                <div className='text-sm opacity-60 px-2 py-1'>Nothing here yet.</div>
             ) : !hasResults ? (
                 <div className='text-sm opacity-60 px-2 py-1'>No matches.</div>
             ) : (
@@ -184,8 +183,7 @@ function FileSystemTreeItem({
             const folderId = key.slice('folder:'.length) as Library.Folder.Id
             const folder = s.folders[folderId]
             if (!folder) return
-            if (folder.is_root) openEditProjectDialog({ project: folder })
-            else openEditFolderDialog({ folder })
+            openEditFolderDialog({ folder })
             return
         }
         if (workflowId) {
@@ -201,8 +199,7 @@ function FileSystemTreeItem({
             const folderId = key.slice('folder:'.length) as Library.Folder.Id
             const folder = s.folders[folderId]
             if (!folder) return
-            if (folder.is_root) openDeleteProjectDialog(folder)
-            else openDeleteFolderDialog(folder)
+            openDeleteFolderDialog(folder)
             return
         }
         if (workflowId) {

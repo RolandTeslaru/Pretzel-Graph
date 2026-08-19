@@ -20,13 +20,13 @@ const Breadcrumbs = ({ cwd, finalFileName, className }: Props) => {
             <Breadcrumb.Item>
               {item.key ? (
                 <Breadcrumb.Link asChild>
-                  <Link to="/home/projects/$folderId" params={{ folderId: item.key }}>
+                  <Link to="/home/library/$folderId" params={{ folderId: item.key }}>
                     {item.name}
                   </Link>
                 </Breadcrumb.Link>
               ) : (
                 <Breadcrumb.Link asChild>
-                  <Link to="/home/projects">
+                  <Link to="/home/library">
                     {item.name}
                   </Link>
                 </Breadcrumb.Link>

@@ -8,7 +8,7 @@ import type { Library } from '@pretzel-graph/shared/domain'
 
 const BOOTSTRAP_STALE_TIME = 60_000
 
-export const Route = createFileRoute('/home/projects')({
+export const Route = createFileRoute('/home/library')({
     loader: async () => {
         await Promise.all([
             QuerySDK.client.fetchQuery({
@@ -25,10 +25,10 @@ export const Route = createFileRoute('/home/projects')({
 
         return null
     },
-    component: ProjectsLayout,
+    component: LibraryLayout,
 })
 
-function ProjectsLayout() {
+function LibraryLayout() {
     const navigate = useNavigate()
     const { folderId } = useParams({ strict: false })
     const cwd = folderId as Library.Folder.Id | undefined
@@ -50,7 +50,7 @@ function ProjectsLayout() {
                 <FileSystemTree
                     className="overflow-auto"
                     cwd={cwd}
-                    onFolderClick={(folderId) => navigate({ to: '/home/projects/$folderId', params: { folderId } })}
+                    onFolderClick={(folderId) => navigate({ to: '/home/library/$folderId', params: { folderId } })}
                     onWorkflowClick={(workflowid) => navigate({ to: '/workflow/$workflowid', params: { workflowid } })}
                 />
             </ScrollArea.Root>

@@ -19,11 +19,11 @@ import { Route as WorkflowWorkflowidRouteImport } from './routes/workflow/$workf
 import { Route as HomeUsageRouteImport } from './routes/home/usage'
 import { Route as HomeTemplatesRouteImport } from './routes/home/templates'
 import { Route as HomeSettingsRouteImport } from './routes/home/settings'
-import { Route as HomeProjectsRouteImport } from './routes/home/projects'
+import { Route as HomeLibraryRouteImport } from './routes/home/library'
 import { Route as HomeExecutionsRouteImport } from './routes/home/executions'
 import { Route as HomeCredentialsRouteImport } from './routes/home/credentials'
-import { Route as HomeProjectsIndexRouteImport } from './routes/home/projects/index'
-import { Route as HomeProjectsFolderIdRouteImport } from './routes/home/projects/$folderId'
+import { Route as HomeLibraryIndexRouteImport } from './routes/home/library/index'
+import { Route as HomeLibraryFolderIdRouteImport } from './routes/home/library/$folderId'
 
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
@@ -75,9 +75,9 @@ const HomeSettingsRoute = HomeSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => HomeRoute,
 } as any)
-const HomeProjectsRoute = HomeProjectsRouteImport.update({
-  id: '/projects',
-  path: '/projects',
+const HomeLibraryRoute = HomeLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
   getParentRoute: () => HomeRoute,
 } as any)
 const HomeExecutionsRoute = HomeExecutionsRouteImport.update({
@@ -90,15 +90,15 @@ const HomeCredentialsRoute = HomeCredentialsRouteImport.update({
   path: '/credentials',
   getParentRoute: () => HomeRoute,
 } as any)
-const HomeProjectsIndexRoute = HomeProjectsIndexRouteImport.update({
+const HomeLibraryIndexRoute = HomeLibraryIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => HomeProjectsRoute,
+  getParentRoute: () => HomeLibraryRoute,
 } as any)
-const HomeProjectsFolderIdRoute = HomeProjectsFolderIdRouteImport.update({
+const HomeLibraryFolderIdRoute = HomeLibraryFolderIdRouteImport.update({
   id: '/$folderId',
   path: '/$folderId',
-  getParentRoute: () => HomeProjectsRoute,
+  getParentRoute: () => HomeLibraryRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -106,7 +106,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRouteWithChildren
   '/home/credentials': typeof HomeCredentialsRoute
   '/home/executions': typeof HomeExecutionsRoute
-  '/home/projects': typeof HomeProjectsRouteWithChildren
+  '/home/library': typeof HomeLibraryRouteWithChildren
   '/home/settings': typeof HomeSettingsRoute
   '/home/templates': typeof HomeTemplatesRoute
   '/home/usage': typeof HomeUsageRoute
@@ -115,8 +115,8 @@ export interface FileRoutesByFullPath {
   '/home/': typeof HomeIndexRoute
   '/icons-preview/': typeof IconsPreviewIndexRoute
   '/ui-preview/': typeof UiPreviewIndexRoute
-  '/home/projects/$folderId': typeof HomeProjectsFolderIdRoute
-  '/home/projects/': typeof HomeProjectsIndexRoute
+  '/home/library/$folderId': typeof HomeLibraryFolderIdRoute
+  '/home/library/': typeof HomeLibraryIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -130,8 +130,8 @@ export interface FileRoutesByTo {
   '/home': typeof HomeIndexRoute
   '/icons-preview': typeof IconsPreviewIndexRoute
   '/ui-preview': typeof UiPreviewIndexRoute
-  '/home/projects/$folderId': typeof HomeProjectsFolderIdRoute
-  '/home/projects': typeof HomeProjectsIndexRoute
+  '/home/library/$folderId': typeof HomeLibraryFolderIdRoute
+  '/home/library': typeof HomeLibraryIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -139,7 +139,7 @@ export interface FileRoutesById {
   '/home': typeof HomeRouteWithChildren
   '/home/credentials': typeof HomeCredentialsRoute
   '/home/executions': typeof HomeExecutionsRoute
-  '/home/projects': typeof HomeProjectsRouteWithChildren
+  '/home/library': typeof HomeLibraryRouteWithChildren
   '/home/settings': typeof HomeSettingsRoute
   '/home/templates': typeof HomeTemplatesRoute
   '/home/usage': typeof HomeUsageRoute
@@ -148,8 +148,8 @@ export interface FileRoutesById {
   '/home/': typeof HomeIndexRoute
   '/icons-preview/': typeof IconsPreviewIndexRoute
   '/ui-preview/': typeof UiPreviewIndexRoute
-  '/home/projects/$folderId': typeof HomeProjectsFolderIdRoute
-  '/home/projects/': typeof HomeProjectsIndexRoute
+  '/home/library/$folderId': typeof HomeLibraryFolderIdRoute
+  '/home/library/': typeof HomeLibraryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -158,7 +158,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/home/credentials'
     | '/home/executions'
-    | '/home/projects'
+    | '/home/library'
     | '/home/settings'
     | '/home/templates'
     | '/home/usage'
@@ -167,8 +167,8 @@ export interface FileRouteTypes {
     | '/home/'
     | '/icons-preview/'
     | '/ui-preview/'
-    | '/home/projects/$folderId'
-    | '/home/projects/'
+    | '/home/library/$folderId'
+    | '/home/library/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -182,15 +182,15 @@ export interface FileRouteTypes {
     | '/home'
     | '/icons-preview'
     | '/ui-preview'
-    | '/home/projects/$folderId'
-    | '/home/projects'
+    | '/home/library/$folderId'
+    | '/home/library'
   id:
     | '__root__'
     | '/'
     | '/home'
     | '/home/credentials'
     | '/home/executions'
-    | '/home/projects'
+    | '/home/library'
     | '/home/settings'
     | '/home/templates'
     | '/home/usage'
@@ -199,8 +199,8 @@ export interface FileRouteTypes {
     | '/home/'
     | '/icons-preview/'
     | '/ui-preview/'
-    | '/home/projects/$folderId'
-    | '/home/projects/'
+    | '/home/library/$folderId'
+    | '/home/library/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -284,11 +284,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeSettingsRouteImport
       parentRoute: typeof HomeRoute
     }
-    '/home/projects': {
-      id: '/home/projects'
-      path: '/projects'
-      fullPath: '/home/projects'
-      preLoaderRoute: typeof HomeProjectsRouteImport
+    '/home/library': {
+      id: '/home/library'
+      path: '/library'
+      fullPath: '/home/library'
+      preLoaderRoute: typeof HomeLibraryRouteImport
       parentRoute: typeof HomeRoute
     }
     '/home/executions': {
@@ -305,41 +305,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeCredentialsRouteImport
       parentRoute: typeof HomeRoute
     }
-    '/home/projects/': {
-      id: '/home/projects/'
+    '/home/library/': {
+      id: '/home/library/'
       path: '/'
-      fullPath: '/home/projects/'
-      preLoaderRoute: typeof HomeProjectsIndexRouteImport
-      parentRoute: typeof HomeProjectsRoute
+      fullPath: '/home/library/'
+      preLoaderRoute: typeof HomeLibraryIndexRouteImport
+      parentRoute: typeof HomeLibraryRoute
     }
-    '/home/projects/$folderId': {
-      id: '/home/projects/$folderId'
+    '/home/library/$folderId': {
+      id: '/home/library/$folderId'
       path: '/$folderId'
-      fullPath: '/home/projects/$folderId'
-      preLoaderRoute: typeof HomeProjectsFolderIdRouteImport
-      parentRoute: typeof HomeProjectsRoute
+      fullPath: '/home/library/$folderId'
+      preLoaderRoute: typeof HomeLibraryFolderIdRouteImport
+      parentRoute: typeof HomeLibraryRoute
     }
   }
 }
 
-interface HomeProjectsRouteChildren {
-  HomeProjectsFolderIdRoute: typeof HomeProjectsFolderIdRoute
-  HomeProjectsIndexRoute: typeof HomeProjectsIndexRoute
+interface HomeLibraryRouteChildren {
+  HomeLibraryFolderIdRoute: typeof HomeLibraryFolderIdRoute
+  HomeLibraryIndexRoute: typeof HomeLibraryIndexRoute
 }
 
-const HomeProjectsRouteChildren: HomeProjectsRouteChildren = {
-  HomeProjectsFolderIdRoute: HomeProjectsFolderIdRoute,
-  HomeProjectsIndexRoute: HomeProjectsIndexRoute,
+const HomeLibraryRouteChildren: HomeLibraryRouteChildren = {
+  HomeLibraryFolderIdRoute: HomeLibraryFolderIdRoute,
+  HomeLibraryIndexRoute: HomeLibraryIndexRoute,
 }
 
-const HomeProjectsRouteWithChildren = HomeProjectsRoute._addFileChildren(
-  HomeProjectsRouteChildren,
+const HomeLibraryRouteWithChildren = HomeLibraryRoute._addFileChildren(
+  HomeLibraryRouteChildren,
 )
 
 interface HomeRouteChildren {
   HomeCredentialsRoute: typeof HomeCredentialsRoute
   HomeExecutionsRoute: typeof HomeExecutionsRoute
-  HomeProjectsRoute: typeof HomeProjectsRouteWithChildren
+  HomeLibraryRoute: typeof HomeLibraryRouteWithChildren
   HomeSettingsRoute: typeof HomeSettingsRoute
   HomeTemplatesRoute: typeof HomeTemplatesRoute
   HomeUsageRoute: typeof HomeUsageRoute
@@ -349,7 +349,7 @@ interface HomeRouteChildren {
 const HomeRouteChildren: HomeRouteChildren = {
   HomeCredentialsRoute: HomeCredentialsRoute,
   HomeExecutionsRoute: HomeExecutionsRoute,
-  HomeProjectsRoute: HomeProjectsRouteWithChildren,
+  HomeLibraryRoute: HomeLibraryRouteWithChildren,
   HomeSettingsRoute: HomeSettingsRoute,
   HomeTemplatesRoute: HomeTemplatesRoute,
   HomeUsageRoute: HomeUsageRoute,

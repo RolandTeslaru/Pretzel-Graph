@@ -19,8 +19,8 @@ const Schema = z.object({
 })
 type Values = z.infer<typeof Schema>
 
-export function openCreateWorkflowDialog(args: { folder_id: Library.Folder.Id }) {
-    const id = `create-workflow-${args.folder_id}`
+export function openCreateWorkflowDialog(args: { folder_id: Library.Folder.Id | null }) {
+    const id = `create-workflow-${args.folder_id ?? 'root'}`
     DialogSDK.actions.push(id, (props) => (
         <DialogSDK.Template {...props} className={DIALOG_CLASSNAME}>
             <CreateWorkflowContent dialogId={id} {...args} />
@@ -37,7 +37,7 @@ export function openEditWorkflowDialog(args: { workflow: Library.WorkflowMeta })
     ))
 }
 
-function CreateWorkflowContent({ dialogId, folder_id }: { dialogId: string; folder_id: Library.Folder.Id }) {
+function CreateWorkflowContent({ dialogId, folder_id }: { dialogId: string; folder_id: Library.Folder.Id | null }) {
     const form = useForm<Values>({
         resolver: zodResolver(Schema),
         defaultValues: { display_name: '', description: '' },
@@ -66,7 +66,7 @@ function CreateWorkflowContent({ dialogId, folder_id }: { dialogId: string; fold
                     New workflow
                 </Dialog.Title>
                 <Dialog.Description className="text-muted-foreground">
-                    Start a new workflow in this folder.
+                    Start a new workflow here.
                 </Dialog.Description>
             </Dialog.Header>
             <Form.Root {...form}>
