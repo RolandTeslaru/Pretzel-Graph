@@ -24,6 +24,9 @@ const backendProxy = {
 export default defineConfig({
   envDir: '../../',
   server: {
+    // The page is served through the fleet router on another origin, so the
+    // reload socket is told where the dev server actually is.
+    hmr: { host: 'localhost', port: 5173, protocol: 'ws' },
     proxy: {
       '/api': backendProxy,
       '/webhook': backendProxy,

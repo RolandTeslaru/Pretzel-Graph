@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { immer } from "zustand/middleware/immer";
 import { GoTrueClient } from "@supabase/auth-js";
+import { cookieStorage, PRETZEL_STORAGE_KEY } from "@pretzel-graph/standard-ui/utils/cookieStorage";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { Auth, Workspace } from "@pretzel-graph/shared/domain";
 import { _createAuthActions_ } from "./actions";
@@ -18,6 +19,9 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    // Left unset the session stays on this host, as it always has.
+    storageKey: PRETZEL_STORAGE_KEY,
+    storage: cookieStorage({ domain: import.meta.env.VITE_SESSION_COOKIE_DOMAIN }),
   })
 
   /** The current access token, or null when signed out. */
