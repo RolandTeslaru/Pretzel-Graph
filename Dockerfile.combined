@@ -47,6 +47,8 @@ ENV NODES_ROOT=/app/packages/nodes/dist/nodes/src
 # Redis runs beside the app, on the loopback interface.
 ENV REDIS_HOST=127.0.0.1
 ENV REDIS_PORT=6379
+# The worker reaches the backend over loopback, in this same container.
+ENV API_URL=http://127.0.0.1:3001
 EXPOSE 3001
 
 # Reports serving, not merely started. start-period covers boot migrations.

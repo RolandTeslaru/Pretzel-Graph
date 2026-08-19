@@ -14,6 +14,7 @@ function Root({
       className={cn(`
         ring-foreground/15 bg-card/80 text-card-foreground gap-4 overflow-hidden 
         rounded-lg py-4 text-sm ring-1 
+        shadow-md shadow-black/10
         has-data-[slot=card-footer]:pb-0 
         has-[>img:first-child]:pt-0 
         data-[size=sm]:gap-3 
