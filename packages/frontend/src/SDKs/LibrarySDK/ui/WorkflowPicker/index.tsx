@@ -16,7 +16,7 @@ const WorkflowPicker: React.FC<Props> = ({ selectWorkflow, selectedWorkflowId, t
 
     const [open, setOpen] = useState(false)
 
-    const [cwd, setCwd] = useState<Library.Folder.Id>()
+    const [cwd, setCwd] = useState<Library.Folder.Id | null>(null)
 
     const [childFolders, childWorkflows] = LibrarySDK.useStore(s => [
         Object.values(s.folders).filter((f) => f.parent_folder_id === cwd),

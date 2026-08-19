@@ -11,7 +11,6 @@ export namespace Library {
         export const Schema = z.object({
             id: Folder.Id,
             parent_folder_id: Folder.Id.nullable(),
-            is_root: z.boolean(),
             display_name: z.string(),
             description: z.string().nullable(),
             created_at: z.string(),
@@ -39,7 +38,6 @@ export namespace Library {
                 export const Request = z.object({});
                 export type Request = z.infer<typeof Request>;
                 export const Response = z.object({
-                    projects: z.array(Library.Folder.Schema),
                     folders: z.array(Library.Folder.Schema),
                     workflow_metas: z.array(Library.WorkflowMeta.Schema),
                 });
@@ -57,81 +55,11 @@ export namespace Library {
             }
         }
 
-        // ── Projects ──────────────────────────────────────────
-        export namespace Project {
-            export namespace Create {
-                export const Request = z.object({
-                    display_name: z.string().min(1),
-                    description: z.string().nullable().optional(),
-                })
-                export type Request = z.infer<typeof Request>;
-                export type Response = Library.Folder;
-            }
-
-            export namespace Update {
-                export const Request = z.object({
-                    id: Library.Folder.Id,
-                    display_name: z.string().min(1),
-                    description: z.string().nullable().optional(),
-                });
-                export type Request = z.infer<typeof Request>;
-                export type Response = Library.Folder;
-            }
-
-            export namespace List {
-                export const Request = z.object({});
-                export type Request = z.infer<typeof Request>;
-                export const Response = z.array(Library.Folder.Schema);
-                export type Response = z.infer<typeof Response>;
-            }
-
-            export async function create(
-                api: AxiosInstance,
-                req: Create.Request,
-            ): Promise<Create.Response> {
-                const { data } = await api.post<Create.Response>("/api/library/projects", req);
-                return data;
-            }
-
-            export async function list(
-                api: AxiosInstance,
-                req: List.Request = {},
-            ): Promise<List.Response> {
-                const { data } = await api.get<List.Response>("/api/library/projects", {
-                    params: req,
-                });
-                return data;
-            }
-
-            export async function update(
-                api: AxiosInstance,
-                req: Update.Request,
-            ): Promise<Update.Response> {
-                const { id, ...payload } = req;
-                const { data } = await api.patch<Update.Response>(`/api/library/projects/${id}`, payload);
-                return data;
-            }
-
-            export namespace Remove {
-                export const Request = z.object({ id: Library.Folder.Id });
-                export type Request = z.infer<typeof Request>;
-                export const Response = z.object({ ok: z.literal(true) });
-                export type Response = z.infer<typeof Response>;
-            }
-            export async function remove(
-                api: AxiosInstance,
-                req: Remove.Request,
-            ): Promise<Remove.Response> {
-                const { data } = await api.delete<Remove.Response>(`/api/library/projects/${req.id}`);
-                return data;
-            }
-        }
-
         // ── Folders ───────────────────────────────────────────
         export namespace Folder {
             export namespace Create {
                 export const Request = z.object({
-                    parent_folder_id: Library.Folder.Id,
+                    parent_folder_id: Library.Folder.Id.nullable(),
                     display_name: z.string().min(1),
                     description: z.string().nullable().optional(),
                 })
@@ -204,7 +132,7 @@ export namespace Library {
         export namespace Workflow {
             export namespace Create {
                 export const Request = z.object({
-                    folder_id: Library.Folder.Id,
+                    folder_id: Library.Folder.Id.nullable(),
                     display_name: z.string().min(1),
                     description: z.string().nullable().optional(),
                 });

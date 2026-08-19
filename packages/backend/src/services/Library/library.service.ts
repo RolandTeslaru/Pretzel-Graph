@@ -18,28 +18,6 @@ export class LibraryService {
         },
     };
 
-    public readonly project = {
-        create: async (
-            principal: Principal.User,
-            payload: Library.API.Project.Create.Request,
-        ): Promise<Library.API.Project.Create.Response> => {
-            return DB.asUser(principal, (trx) => this.database.project.create(trx, principal.userId, payload));
-        },
-
-        update: async (
-            principal: Principal.User,
-            payload: Library.API.Project.Update.Request,
-        ): Promise<Library.API.Project.Update.Response> => {
-            return DB.asUser(principal, (trx) => this.database.project.update(trx, payload));
-        },
-
-        list: async (
-            principal: Principal.User,
-        ): Promise<Library.API.Project.List.Response> => {
-            return DB.asUser(principal, (trx) => this.database.project.list(trx));
-        }
-    };
-
     public readonly folder = {
         create: async (
             principal: Principal.User,

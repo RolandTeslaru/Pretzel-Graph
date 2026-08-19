@@ -9,9 +9,10 @@ const LOGOUT_DIALOG_ID = 'logout'
 
 type Props = {
     compact?: boolean
+    title?: string
 }
 
-export function PretzelGraphDropdown({ compact = false }: Props) {
+export function PretzelGraphDropdown({ compact = false, title = 'PretzelGraph' }: Props) {
     const theme = SystemSDK.useStore(s => s.theme)
 
     const handleLogout = () => {
@@ -45,14 +46,14 @@ export function PretzelGraphDropdown({ compact = false }: Props) {
                         className="flex items-center gap-2 rounded-md px-1 py-1 -ml-1 hover:bg-muted/60 transition-colors"
                     >
                         <SystemIcons.Pretzel size={30} className="fill-primary" />
-                        <span className="font-semibold tracking-tight">PretzelGraph</span>
+                        <span className="font-semibold tracking-tight">{title}</span>
                         <SystemIcons.ChevronDown size={14} className="text-muted-foreground" />
                     </button>
                 )}
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="start">
                 <h4 className="px-2 py-1 text-md font-medium text-primary">
-                    PretzelGraph.ai
+                    {title}.ai
                 </h4>
                 <DropdownMenu.Item onSelect={() => openAccountDialog()}>
                     <SystemIcons.User />

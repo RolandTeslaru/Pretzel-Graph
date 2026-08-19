@@ -88,8 +88,8 @@ export const Route = createFileRoute('/workflow/$workflowid')({
                 const folderId = LibrarySDK.state.workflowMetas[workflowId]?.folder_id
                 router.navigate(
                     folderId
-                        ? { to: '/home/projects/$folderId', params: { folderId } }
-                        : { to: '/home/projects' }
+                        ? { to: '/home/library/$folderId', params: { folderId } }
+                        : { to: '/home/library' }
                 )
             })
 

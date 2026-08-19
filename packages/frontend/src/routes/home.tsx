@@ -38,7 +38,7 @@ type NavEntry = {
 }
 
 const NAV_TOP: NavEntry[] = [
-    { id: 'projects',    label: 'Projects',    to: '/home/projects',    icon: SystemIcons.Folder },
+    { id: 'library',     label: 'Library',     to: '/home/library',     icon: SystemIcons.Folder },
     { id: 'credentials', label: 'Credentials', to: '/home/credentials', icon: SystemIcons.KeyRound },
     { id: 'executions',  label: 'Executions',  to: '/home/executions',  icon: SystemIcons.Activity },
     { id: 'usage',       label: 'Usage',       to: '/home/usage',       icon: SystemIcons.Layers },
@@ -48,6 +48,12 @@ const NAV_TOP: NavEntry[] = [
 const NAV_BOTTOM: NavEntry[] = [
     { id: 'settings', label: 'Settings', to: '/home/settings', icon: SystemIcons.Settings },
 ]
+
+// Optional. The sidebar link is left out entirely when it is unset.
+const CLOUD_URL = import.meta.env.VITE_CLOUD_URL
+
+// The origin is configured; the path is not.
+const WORKSPACES_URL = CLOUD_URL && `${CLOUD_URL.replace(/\/$/, '')}/workspaces`
 
 
 function HomeLayout() {
@@ -104,9 +110,23 @@ function Sidebar() {
             </nav>
 
             <div className="p-2 flex flex-col gap-0.5">
+                {WORKSPACES_URL && <ExternalNavItem href={WORKSPACES_URL} label="Admin panel" />}
                 {NAV_BOTTOM.map((e) => <NavItem key={e.id} entry={e} />)}
             </div>
         </aside>
+    )
+}
+
+// Another origin, so a plain anchor rather than a router link.
+function ExternalNavItem({ href, label }: { href: string; label: string }) {
+    return (
+        <a
+            href={href}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors hover:bg-muted/50 opacity-80 hover:opacity-100"
+        >
+            <SystemIcons.ArrowLeft size={16} />
+            <span>{label}</span>
+        </a>
     )
 }
 

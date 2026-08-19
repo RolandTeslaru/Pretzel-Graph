@@ -7,6 +7,9 @@ import type { Tree as TreeDomain } from '@/components/Tree/domain';
 export type FileSystemNodeData = { name: string }
 type FileNode = TreeDomain.Dummy.Branch<FileSystemNodeData>
 
+// Folders and workflows with no parent are grouped under this key.
+const ROOT_KEY = ''
+
 export type _LibrarySDKActions = {
     rebuildTree: () => void;
     preferences: {
@@ -14,11 +17,6 @@ export type _LibrarySDKActions = {
     };
     bootstrap: {
         get: () => Promise<Library.API.Bootstrap.Get.Response>;
-    };
-    project: {
-        list: () => Promise<Library.API.Project.List.Response>;
-        create: (payload: Library.API.Project.Create.Request) => Promise<Library.API.Project.Create.Response>;
-        update: (payload: Library.API.Project.Update.Request) => Promise<Library.API.Project.Update.Response>;
     };
     folder: {
         getContents: (id: Library.Folder.Id) => Promise<Library.API.Folder.GetContents.Response>;
@@ -44,17 +42,17 @@ function buildTreeData(s: LibrarySDK.State): FileNode {
     const workflowsByFolder = new Map<string, Library.WorkflowMeta[]>()
 
     for (const folder of Object.values(folders)) {
-        if (folder.parent_folder_id) {
-            const list = childFoldersByParent.get(folder.parent_folder_id) ?? []
-            list.push(folder)
-            childFoldersByParent.set(folder.parent_folder_id, list)
-        }
+        const parentKey = folder.parent_folder_id ?? ROOT_KEY
+        const list = childFoldersByParent.get(parentKey) ?? []
+        list.push(folder)
+        childFoldersByParent.set(parentKey, list)
     }
 
     for (const workflow of Object.values(workflowMetas)) {
-        const list = workflowsByFolder.get(workflow.folder_id) ?? []
+        const folderKey = workflow.folder_id ?? ROOT_KEY
+        const list = workflowsByFolder.get(folderKey) ?? []
         list.push(workflow)
-        workflowsByFolder.set(workflow.folder_id, list)
+        workflowsByFolder.set(folderKey, list)
     }
 
     for (const list of childFoldersByParent.values()) {
@@ -78,12 +76,11 @@ function buildTreeData(s: LibrarySDK.State): FileNode {
         }
     }
 
-    const roots = Object.values(folders)
-        .filter((f) => f.is_root)
-        .sort((a, b) => a.display_name.localeCompare(b.display_name))
-
     const childBranches: Record<string, FileNode> = {}
-    for (const root of roots) childBranches[`folder:${root.id}`] = buildFolderBranch(root)
+    for (const folder of childFoldersByParent.get(ROOT_KEY) ?? [])
+        childBranches[`folder:${folder.id}`] = buildFolderBranch(folder)
+    for (const workflow of workflowsByFolder.get(ROOT_KEY) ?? [])
+        childBranches[`workflow:${workflow.id}`] = { data: { name: workflow.display_name } }
 
     return { childBranches: childBranches as FileNode['childBranches'] }
 }
@@ -116,33 +113,6 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
                     s.folders = Object.fromEntries(data.folders.map((f) => [f.id, f])) as typeof s.folders;
                     s.workflowMetas = Object.fromEntries(data.workflow_metas.map((w) => [w.id, w])) as typeof s.workflowMetas;
                 });
-                rebuildTree();
-                return data;
-            },
-        },
-
-        project: {
-            list: async () => {
-                const data = await Library.API.Project.list(api);
-                setState((s) => {
-                    for (const p of data) {
-                        s.folders[p.id] = p;
-                    }
-                });
-                rebuildTree();
-                return data;
-            },
-
-            create: async (payload) => {
-                const data = await Library.API.Project.create(api, payload);
-                setState((s) => { s.folders[data.id] = data; });
-                rebuildTree();
-                return data;
-            },
-
-            update: async (payload) => {
-                const data = await Library.API.Project.update(api, payload);
-                setState((s) => { s.folders[data.id] = data; });
                 rebuildTree();
                 return data;
             },

@@ -18,7 +18,7 @@ interface Props {
 export const DependencySelectorDialogContent = memo<Props>(({ nodeId, dialogId }) => {
     const depRef = WorkbenchSDK.useStore(s => s.selectors.node.getDependencyRef(s, nodeId))
 
-    const [cwd, setCwd] = useState<Library.Folder.Id>()
+    const [cwd, setCwd] = useState<Library.Folder.Id | null>(null)
 
     const [childFolders, childWorkflows] = LibrarySDK.useStore(s => [
         Object.values(s.folders).filter((f) => f.parent_folder_id === cwd),

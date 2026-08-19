@@ -7,7 +7,7 @@ import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { LibrarySDK } from '../sdk'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { toast } from 'sonner'
-import { FolderIcon } from '@/routes/home/projects/-components/FolderIcon'
+import { FolderIcon } from './FolderView/folder-icon'
 
 const DIALOG_CLASSNAME = 'sm:max-w-[480px] w-full'
 
@@ -17,8 +17,8 @@ const Schema = z.object({
 })
 type Values = z.infer<typeof Schema>
 
-export function openCreateFolderDialog(args: { parent_folder_id: Library.Folder.Id }) {
-    const id = `create-folder-${args.parent_folder_id}`
+export function openCreateFolderDialog(args: { parent_folder_id: Library.Folder.Id | null }) {
+    const id = `create-folder-${args.parent_folder_id ?? 'root'}`
     DialogSDK.actions.push(id, (props) => (
         <DialogSDK.Template {...props} className={DIALOG_CLASSNAME}>
             <CreateFolderContent dialogId={id} {...args} />
@@ -35,7 +35,7 @@ export function openEditFolderDialog(args: { folder: Library.Folder }) {
     ))
 }
 
-function CreateFolderContent({ dialogId, parent_folder_id }: { dialogId: string; parent_folder_id: Library.Folder.Id }) {
+function CreateFolderContent({ dialogId, parent_folder_id }: { dialogId: string; parent_folder_id: Library.Folder.Id | null }) {
     const form = useForm<Values>({
         resolver: zodResolver(Schema),
         defaultValues: { display_name: '', description: '' },
@@ -63,7 +63,7 @@ function CreateFolderContent({ dialogId, parent_folder_id }: { dialogId: string;
                     New folder
                 </Dialog.Title>
                 <Dialog.Description className="text-muted-foreground">
-                    Create a subfolder inside the current folder.
+                    Folders hold workflows and other folders.
                 </Dialog.Description>
             </Dialog.Header>
             <Form.Root {...form}>

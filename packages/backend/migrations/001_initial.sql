@@ -45,11 +45,7 @@ create table folders (
     parent_folder_id uuid,
     created_at       timestamp with time zone default timezone('utc'::text, now()) not null,
     updated_at       timestamp with time zone default timezone('utc'::text, now()) not null,
-    is_root          boolean default false not null,
-    created_by       uuid,
-
-    -- A root folder is exactly the one with no parent.
-    constraint folders_root_check check (((is_root = true) and (parent_folder_id is null)) or ((is_root = false) and (parent_folder_id is not null)))
+    created_by       uuid
 );
 
 create table workflows (
@@ -61,7 +57,7 @@ create table workflows (
     data         jsonb default '{}'::jsonb not null,
     created_at   timestamp with time zone default timezone('utc'::text, now()) not null,
     updated_at   timestamp with time zone default timezone('utc'::text, now()) not null,
-    folder_id    uuid not null,
+    folder_id    uuid,
     created_by   uuid,
     icon         text,
     accent       text,

@@ -19,6 +19,8 @@ COPY packages ./packages
 ENV VITE_API_URL=/
 ARG VITE_AUTH_URL=http://localhost:9999
 ENV VITE_AUTH_URL=$VITE_AUTH_URL
+ARG VITE_CLOUD_URL=
+ENV VITE_CLOUD_URL=$VITE_CLOUD_URL
 RUN npx vite build --config packages/frontend/vite.config.ts packages/frontend
 
 FROM nginx:alpine AS runtime
