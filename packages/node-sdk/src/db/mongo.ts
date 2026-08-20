@@ -21,7 +21,8 @@ function composeUri(c: MongoCreds): string {
 
 class MongoConnectionManager extends ConnectionManager<MongoCreds, MongoClient> {
     protected createClient(c: MongoCreds): Promise<MongoClient> {
-        return MongoClient.connect(composeUri(c));
+        // Bounded: the ceiling on a customer's server is processes × this.
+        return MongoClient.connect(composeUri(c), { maxPoolSize: 4 });
     }
     protected disposeClient(client: MongoClient): Promise<void> { return client.close(); }
 }
