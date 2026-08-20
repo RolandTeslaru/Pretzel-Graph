@@ -9,6 +9,7 @@ import * as express from 'express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import path from 'path';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
+import { trustedProxyMiddleware } from './auth/trusted-proxy';
 
 // Compiled runs point NODES_ROOT at the built nodes; the default is the sources
 // ts-node reads in development.
@@ -22,6 +23,11 @@ async function bootstrap() {
 
     // rawBody: kept for signature verification, which needs the original bytes.
     const app = await NestFactory.create(AppModule, { rawBody: true });
+
+    // First, so unstamped traffic is refused before anything else runs.
+    const trustedProxy = trustedProxyMiddleware();
+    if (trustedProxy)
+        app.use(trustedProxy);
 
     const PORT = process.env.PORT || 3001;
 
