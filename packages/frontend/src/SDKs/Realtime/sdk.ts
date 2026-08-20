@@ -4,6 +4,7 @@ import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { Realtime } from "@pretzel-graph/shared/domain";
 import type { AuthSDKImpl } from "../AuthSDK/sdk";
+import { getRequestToken } from "../ApiInterceptorSDK/workspaceToken";
 
 @SDK("Realtime")
 export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
@@ -109,7 +110,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
         }
 
         // Attach auth token to WebSocket URL for server-side verification
-        const token = await SDK.get<AuthSDKImpl>("Auth").getToken();
+        const token = await getRequestToken();
         const separator = url.includes('?') ? '&' : '?';
         const authenticatedUrl = token ? `${url}${separator}token=${token}` : url;
 

@@ -21,7 +21,7 @@ import { Execution, SystemError, type Workflow } from '@pretzel-graph/shared/dom
 import { api } from '@/SDKs/ApiInterceptorSDK/sdk'
 import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import WorkflowPicker from '@/SDKs/LibrarySDK/ui/WorkflowPicker'
-import { WorkflowGlyph } from '@pretzel-graph/standard-ui/brands/workflowGlyph'
+import { WorkflowIllustration } from '@pretzel-graph/standard-ui/icons/illustrations'
 
 
 export const Route = createFileRoute('/home/executions')({
@@ -203,7 +203,7 @@ function ExecutionsRoute() {
                                 
                             </div>
                             <div className='absolute top-1/2 left-1/2 -translate-1/2'>
-                                <WorkflowGlyph className='size-20 text-primary mx-auto opacity-20'/>
+                                <WorkflowIllustration className='size-20 text-primary mx-auto opacity-20'/>
                                 <p className='text-muted-foreground'>Select a Workflow</p>
                             </div>
                         </>

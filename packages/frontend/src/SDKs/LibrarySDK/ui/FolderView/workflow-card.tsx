@@ -7,7 +7,7 @@ import { Workbench } from '@pretzel-graph/shared/domain'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { openEditWorkflowDialog } from '@/SDKs/LibrarySDK/ui/create-dialogs'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
-import { WorkflowGlyph } from '@pretzel-graph/standard-ui/brands/workflowGlyph'
+import { WorkflowIllustration } from '@pretzel-graph/standard-ui/icons/illustrations'
 import { api } from '@/SDKs/ApiInterceptorSDK'
 import { toast } from 'sonner'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
@@ -61,7 +61,7 @@ export function WorkflowCard({ workflow, size = 'default', onClick }: WorkflowCa
                         style={{ color: iconColor(workflow) }}
                     />
                 ) : (
-                    <WorkflowGlyph
+                    <WorkflowIllustration
                         width={styles.glyph}
                         height={styles.glyph}
                         className="shrink-0 m-auto"

@@ -8,6 +8,7 @@ import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { LibrarySDK } from '../sdk'
 import { Workflow, type Library } from '@pretzel-graph/shared/domain'
 import { toast } from 'sonner'
+import { WorkflowIllustration } from '@pretzel-graph/standard-ui/icons/illustrations'
 
 const DIALOG_CLASSNAME = 'sm:max-w-[480px] w-full'
 
@@ -62,7 +63,9 @@ function CreateWorkflowContent({ dialogId, folder_id }: { dialogId: string; fold
         <div className="p-3 flex flex-col gap-4">
             <Dialog.Header className="my-1">
                 <Dialog.Title className="flex items-center gap-2">
-                    <SystemIcons.Graph />
+                    <WorkflowIllustration
+                        color="var(--primary)" className="size-8 shrink-0" 
+                    />
                     New workflow
                 </Dialog.Title>
                 <Dialog.Description className="text-muted-foreground">
@@ -130,7 +133,9 @@ function EditWorkflowContent({ dialogId, workflow }: { dialogId: string; workflo
         <div className="p-3 flex flex-col gap-4">
             <Dialog.Header className="my-1">
                 <Dialog.Title className="flex items-center gap-2">
-                    <SystemIcons.Graph />
+                    <WorkflowIllustration
+                        color="var(--primary)" className="size-8 shrink-0" 
+                    />
                     Edit workflow
                 </Dialog.Title>
                 <Dialog.Description className="text-muted-foreground">
