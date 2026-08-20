@@ -1,0 +1,718 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SECTIONS = exports.ALL_DRAWERS = exports.BUNDLE_DRAWERS = exports.CORE_DRAWERS = void 0;
+exports.CORE_DRAWERS = {
+    input_output: {
+        displayName: "Input & Output",
+        id: "input_output",
+        icon: "Cable",
+        blueprintIds: [
+            "Core.Webhook",
+            "Core.Chat.Input",
+            "Core.Chat.Output",
+            "Core.Text.Input",
+            "Core.Text.Output",
+            "Core.Chat.History",
+        ],
+    },
+    routing: {
+        displayName: "Routing & Flow",
+        id: "routing",
+        icon: "ChevronsLeftRightEllipsis",
+        blueprintIds: [
+            "Core.Routing.IfElse",
+            "Core.Routing.Switch",
+            "Core.Routing.Router",
+            "Core.Routing.Merge",
+            "Core.Routing.Passthrough",
+            "Core.Routing.CatchError",
+            "Core.Routing.Portal",
+            "Core.Routing.Terminate",
+            "Core.Routing.Sleep",
+        ],
+    },
+    developer: {
+        displayName: "DEVELOPER",
+        id: "developer",
+        icon: "Terminal",
+        blueprintIds: [
+            "Core.Developer.AllBuilders",
+            "Core.Developer.ConsoleLog",
+            "Core.Developer.ErrorThrower",
+            "Core.Developer.ResourceLoaderTest",
+            "Core.Developer.DerivativeTest"
+        ],
+    },
+    data_source: {
+        displayName: "Data Sources",
+        id: "data_source",
+        icon: "Database",
+        blueprintIds: [],
+    },
+    models_and_agents: {
+        displayName: "AI & Agents",
+        id: "models_and_agents",
+        icon: "Bot",
+        blueprintIds: [
+            "Core.Agent",
+            "Core.LanguageModel"
+        ],
+    },
+    llm_operations: {
+        displayName: "LLM Utilities",
+        id: "llm_operations",
+        icon: "MessageSquareCode",
+        blueprintIds: [
+            "Core.Utils.Message.Compose",
+            "Core.Utils.Compactor",
+        ],
+    },
+    files_and_knowledge: {
+        displayName: "Files & Knowledge",
+        id: "files_and_knowledge",
+        icon: "Layers",
+        blueprintIds: [],
+    },
+    data_manipulation: {
+        displayName: "Data Manipulation",
+        id: "data_manipulation",
+        icon: "PencilRuler",
+        blueprintIds: [
+            "Core.Routing.Accumulator",
+            "Core.Utils.JsonInjector",
+            "Core.Utils.List.Select",
+            "Core.Utils.List.Slice",
+            "Core.Utils.List.Filter",
+        ],
+    },
+    utilities: {
+        displayName: "Utilities",
+        id: "utilities",
+        icon: "DraftingCompass",
+        blueprintIds: [
+            "Core.Utils.RunCode",
+            "Core.Developer.HttpRequest"
+        ],
+    },
+    sub_workflow: {
+        displayName: "Sub-Workflow",
+        id: "sub_workflow",
+        icon: "Graph",
+        blueprintIds: [
+            "Core.SubWorkflow.Execute",
+            "Core.SubWorkflow.ExposeInputPort",
+            "Core.SubWorkflow.ExposeOutputPort"
+        ],
+    },
+    prototypes: {
+        displayName: "Prototypes",
+        id: "prototypes",
+        icon: "FlaskConical",
+        blueprintIds: [],
+    },
+    toolbox: {
+        displayName: "Toolbox",
+        id: "toolbox",
+        icon: "Toolbox",
+        blueprintIds: [
+            "Core.Utils.Tool.Runner",
+            "Core.Utils.Tool.Catalog",
+            "Core.Utils.Tool.Custom",
+        ],
+    },
+    human_review: {
+        displayName: "Human Review",
+        id: "human_review",
+        icon: "ShieldUser",
+        blueprintIds: [
+            "Core.Workbench.Review",
+        ],
+    },
+};
+exports.BUNDLE_DRAWERS = {
+    aiml: {
+        displayName: "AI/ML API",
+        id: "aiml",
+        icon: "AIML",
+        blueprintIds: []
+    },
+    agentql: {
+        displayName: "AgentQL",
+        id: "agentql",
+        icon: "AgentQL",
+        blueprintIds: []
+    },
+    altk: {
+        displayName: "ALTK",
+        id: "altk",
+        icon: "Zap",
+        blueprintIds: []
+    },
+    languagemodels: {
+        displayName: "Language Models",
+        id: "languagemodels",
+        icon: "BrainCircuit",
+        blueprintIds: []
+    },
+    embeddings: {
+        displayName: "Embeddings",
+        id: "embeddings",
+        icon: "Binary",
+        blueprintIds: []
+    },
+    amazon: {
+        displayName: "Amazon",
+        id: "amazon",
+        icon: "Amazon",
+        blueprintIds: []
+    },
+    alpaca: {
+        displayName: "Alpaca",
+        id: "alpaca",
+        icon: "Alpaca",
+        blueprintIds: [
+            "Integrations.Alpaca.Market",
+            "Integrations.Alpaca.Account",
+            "Integrations.Alpaca.Trading"
+        ]
+    },
+    anthropic: {
+        displayName: "Anthropic",
+        id: "anthropic",
+        icon: "Anthropic",
+        blueprintIds: [
+            "Integrations.Anthropic.Chat",
+            "Integrations.Anthropic.ClaudeCode"
+        ]
+    },
+    apify: {
+        displayName: "Apify",
+        id: "apify",
+        icon: "Apify",
+        blueprintIds: []
+    },
+    arxiv: {
+        displayName: "arXiv",
+        id: "arxiv",
+        icon: "arXiv",
+        blueprintIds: []
+    },
+    assemblyai: {
+        displayName: "AssemblyAI",
+        id: "assemblyai",
+        icon: "AssemblyAI",
+        blueprintIds: []
+    },
+    azure: {
+        displayName: "Azure",
+        id: "azure",
+        icon: "Azure",
+        blueprintIds: []
+    },
+    baidu: {
+        displayName: "Baidu",
+        id: "baidu",
+        icon: "BaiduQianfan",
+        blueprintIds: []
+    },
+    bing: {
+        displayName: "Bing",
+        id: "bing",
+        icon: "Bing",
+        blueprintIds: []
+    },
+    cassandra: {
+        displayName: "Cassandra",
+        id: "cassandra",
+        icon: "Cassandra",
+        blueprintIds: []
+    },
+    chroma: {
+        displayName: "Chroma",
+        id: "chroma",
+        icon: "Chroma",
+        blueprintIds: []
+    },
+    clickhouse: {
+        displayName: "ClickHouse",
+        id: "clickhouse",
+        icon: "Clickhouse",
+        blueprintIds: []
+    },
+    cleanlab: {
+        displayName: "Cleanlab",
+        id: "cleanlab",
+        icon: "Cleanlab",
+        blueprintIds: []
+    },
+    cloudflare: {
+        displayName: "Cloudflare",
+        id: "cloudflare",
+        icon: "Cloudflare",
+        blueprintIds: []
+    },
+    cohere: {
+        displayName: "Cohere",
+        id: "cohere",
+        icon: "Cohere",
+        blueprintIds: []
+    },
+    cometapi: {
+        displayName: "CometAPI",
+        id: "cometapi",
+        icon: "CometAPI",
+        blueprintIds: []
+    },
+    composio: {
+        displayName: "Composio",
+        id: "composio",
+        icon: "Composio",
+        blueprintIds: []
+    },
+    confluence: {
+        displayName: "Confluence",
+        id: "confluence",
+        icon: "Confluence",
+        blueprintIds: []
+    },
+    couchbase: {
+        displayName: "Couchbase",
+        id: "couchbase",
+        icon: "Couchbase",
+        blueprintIds: []
+    },
+    crewai: {
+        displayName: "CrewAI",
+        id: "crewai",
+        icon: "CrewAI",
+        blueprintIds: []
+    },
+    cuga: {
+        displayName: "CUGA",
+        id: "cuga",
+        icon: "Bot",
+        blueprintIds: []
+    },
+    datastax: {
+        displayName: "DataStax",
+        id: "datastax",
+        icon: "AstraDB",
+        blueprintIds: []
+    },
+    deepseek: {
+        displayName: "DeepSeek",
+        id: "deepseek",
+        icon: "DeepSeek",
+        blueprintIds: []
+    },
+    docling: {
+        displayName: "Docling",
+        id: "docling",
+        icon: "Docling",
+        blueprintIds: []
+    },
+    duckduckgo: {
+        displayName: "DuckDuckGo",
+        id: "duckduckgo",
+        icon: "DuckDuckGo",
+        blueprintIds: []
+    },
+    elastic: {
+        displayName: "Elastic",
+        id: "elastic",
+        icon: "ElasticsearchStore",
+        blueprintIds: []
+    },
+    exa: {
+        displayName: "Exa",
+        id: "exa",
+        icon: "Exa",
+        blueprintIds: []
+    },
+    FAISS: {
+        displayName: "FAISS",
+        id: "FAISS",
+        icon: "FAISS",
+        blueprintIds: []
+    },
+    firecrawl: {
+        displayName: "Firecrawl",
+        id: "firecrawl",
+        icon: "FirecrawlCrawlApi",
+        blueprintIds: []
+    },
+    git: {
+        displayName: "Git",
+        id: "git",
+        icon: "GitLoader",
+        blueprintIds: []
+    },
+    glean: {
+        displayName: "Glean",
+        id: "glean",
+        icon: "Glean",
+        blueprintIds: []
+    },
+    gmail: {
+        displayName: "Gmail",
+        id: "gmail",
+        icon: "Gmail",
+        blueprintIds: []
+    },
+    google: {
+        displayName: "Google",
+        id: "google",
+        icon: "Google",
+        blueprintIds: ["Integrations.Google.Gemini", "Integrations.Google.Search"]
+    },
+    groq: {
+        displayName: "Groq",
+        id: "groq",
+        icon: "Groq",
+        blueprintIds: []
+    },
+    homeassistant: {
+        displayName: "Home Assistant",
+        id: "homeassistant",
+        icon: "HomeAssistant",
+        blueprintIds: []
+    },
+    huggingface: {
+        displayName: "Hugging Face",
+        id: "huggingface",
+        icon: "HuggingFace",
+        blueprintIds: []
+    },
+    hyperliquid: {
+        displayName: "HyperLiquid",
+        id: "hyperliquid",
+        icon: "HyperLiquid",
+        blueprintIds: ["Integrations.HyperLiquid.Market", "Integrations.HyperLiquid.Account"]
+    },
+    ibm: {
+        displayName: "IBM",
+        id: "ibm",
+        icon: "WatsonxAI",
+        blueprintIds: []
+    },
+    icosacomputing: {
+        displayName: "Icosa Computing",
+        id: "icosacomputing",
+        icon: "Icosa",
+        blueprintIds: []
+    },
+    jigsawstack: {
+        displayName: "JigsawStack",
+        id: "jigsawstack",
+        icon: "JigsawStack",
+        blueprintIds: []
+    },
+    kalshi: {
+        displayName: "Kalshi",
+        id: "kalshi",
+        icon: "Kalshi",
+        blueprintIds: ["Integrations.Kalshi.Market"]
+    },
+    langchain_utils: {
+        displayName: "LangChain",
+        id: "langchain_utils",
+        icon: "LangChain",
+        blueprintIds: []
+    },
+    langwatch: {
+        displayName: "LangWatch",
+        id: "langwatch",
+        icon: "Langwatch",
+        blueprintIds: []
+    },
+    lmstudio: {
+        displayName: "LMStudio",
+        id: "lmstudio",
+        icon: "LMStudio",
+        blueprintIds: []
+    },
+    maritalk: {
+        displayName: "MariTalk",
+        id: "maritalk",
+        icon: "Maritalk",
+        blueprintIds: []
+    },
+    massive: {
+        displayName: "Massive",
+        id: "massive",
+        icon: "Massive",
+        blueprintIds: ["Integrations.Massive.Market"]
+    },
+    mem0: {
+        displayName: "Mem0",
+        id: "mem0",
+        icon: "Mem0",
+        blueprintIds: []
+    },
+    memories: {
+        displayName: "Memories",
+        id: "memories",
+        icon: "Cpu",
+        blueprintIds: []
+    },
+    milvus: {
+        displayName: "Milvus",
+        id: "milvus",
+        icon: "Milvus",
+        blueprintIds: []
+    },
+    mistral: {
+        displayName: "MistralAI",
+        id: "mistral",
+        icon: "MistralAI",
+        blueprintIds: []
+    },
+    mongodb: {
+        displayName: "MongoDB",
+        id: "mongodb",
+        icon: "MongoDB",
+        blueprintIds: ["Integrations.MongoDB.Operation"]
+    },
+    mysql: {
+        displayName: "MySQL",
+        id: "mysql",
+        icon: "MySQL",
+        blueprintIds: ["Integrations.MySQL.Query"]
+    },
+    needle: {
+        displayName: "Needle",
+        id: "needle",
+        icon: "Needle",
+        blueprintIds: []
+    },
+    notdiamond: {
+        displayName: "Not Diamond",
+        id: "notdiamond",
+        icon: "NotDiamond",
+        blueprintIds: []
+    },
+    notion: {
+        displayName: "Notion",
+        id: "Notion",
+        icon: "Notion",
+        blueprintIds: []
+    },
+    novita: {
+        displayName: "Novita",
+        id: "novita",
+        icon: "Novita",
+        blueprintIds: []
+    },
+    nvidia: {
+        displayName: "NVIDIA",
+        id: "nvidia",
+        icon: "NVIDIA",
+        blueprintIds: []
+    },
+    olivya: {
+        displayName: "Olivya",
+        id: "olivya",
+        icon: "Olivya",
+        blueprintIds: []
+    },
+    ollama: {
+        displayName: "Ollama",
+        id: "ollama",
+        icon: "Ollama",
+        blueprintIds: []
+    },
+    openai: {
+        displayName: "OpenAI",
+        id: "openai",
+        icon: "OpenAI",
+        blueprintIds: [
+            "Integrations.OpenAI.Chat",
+            "Integrations.OpenAI.Codex"
+        ]
+    },
+    openrouter: {
+        displayName: "OpenRouter",
+        id: "openrouter",
+        icon: "OpenRouter",
+        blueprintIds: ["Integrations.OpenRouter.Chat"]
+    },
+    perplexity: {
+        displayName: "Perplexity",
+        id: "perplexity",
+        icon: "Perplexity",
+        blueprintIds: []
+    },
+    pgvector: {
+        displayName: "pgvector",
+        id: "pgvector",
+        icon: "cpu",
+        blueprintIds: []
+    },
+    pinecone: {
+        displayName: "Pinecone",
+        id: "pinecone",
+        icon: "Pinecone",
+        blueprintIds: []
+    },
+    polymarket: {
+        displayName: "Polymarket",
+        id: "polymarket",
+        icon: "Polymarket",
+        blueprintIds: ["Integrations.Polymarket.Market", "Integrations.Polymarket.Profile", "Integrations.Polymarket.Account"]
+    },
+    postgres: {
+        displayName: "Postgres",
+        id: "postgres",
+        icon: "Postgres",
+        blueprintIds: ["Integrations.Postgres.Query"]
+    },
+    qdrant: {
+        displayName: "Qdrant",
+        id: "qdrant",
+        icon: "Qdrant",
+        blueprintIds: []
+    },
+    redis: {
+        displayName: "Redis",
+        id: "redis",
+        icon: "Redis",
+        blueprintIds: ["Integrations.Redis.Database"]
+    },
+    sambanova: {
+        displayName: "SambaNova",
+        id: "sambanova",
+        icon: "SambaNova",
+        blueprintIds: []
+    },
+    scrapegraph: {
+        displayName: "ScrapeGraph AI",
+        id: "scrapegraph",
+        icon: "ScrapeGraph",
+        blueprintIds: []
+    },
+    searchapi: {
+        displayName: "SearchApi",
+        id: "searchapi",
+        icon: "SearchAPI",
+        blueprintIds: []
+    },
+    serpapi: {
+        displayName: "SerpApi",
+        id: "serpapi",
+        icon: "SerpSearch",
+        blueprintIds: []
+    },
+    serper: {
+        displayName: "Serper",
+        id: "serper",
+        icon: "Serper",
+        blueprintIds: []
+    },
+    supabase: {
+        displayName: "Supabase",
+        id: "supabase",
+        icon: "Supabase",
+        blueprintIds: []
+    },
+    tavily: {
+        displayName: "Tavily",
+        id: "tavily",
+        icon: "Tavily",
+        blueprintIds: ["Integrations.Tavily.Retriever", "Integrations.Tavily.Search"]
+    },
+    twelvelabs: {
+        displayName: "TwelveLabs",
+        id: "twelvelabs",
+        icon: "TwelveLabs",
+        blueprintIds: []
+    },
+    uniswap: {
+        displayName: "Uniswap",
+        id: "uniswap",
+        icon: "Uniswap",
+        blueprintIds: ["Integrations.Uniswap.Swap"]
+    },
+    unstructured: {
+        displayName: "Unstructured",
+        id: "unstructured",
+        icon: "Unstructured",
+        blueprintIds: []
+    },
+    upstash: {
+        displayName: "Upstash",
+        id: "upstash",
+        icon: "Upstash",
+        blueprintIds: []
+    },
+    vlmrun: {
+        displayName: "VLM Run",
+        id: "vlmrun",
+        icon: "VLMRun",
+        blueprintIds: []
+    },
+    vectara: {
+        displayName: "Vectara",
+        id: "vectara",
+        icon: "Vectara",
+        blueprintIds: []
+    },
+    vectorstores: {
+        displayName: "Vector Stores",
+        id: "vectorstores",
+        icon: "Layers",
+        blueprintIds: []
+    },
+    weaviate: {
+        displayName: "Weaviate",
+        id: "weaviate",
+        icon: "Weaviate",
+        blueprintIds: []
+    },
+    vertexai: {
+        displayName: "Vertex AI",
+        id: "vertexai",
+        icon: "VertexAI",
+        blueprintIds: []
+    },
+    wikipedia: {
+        displayName: "Wikipedia",
+        id: "wikipedia",
+        icon: "Wikipedia",
+        blueprintIds: []
+    },
+    wolframalpha: {
+        displayName: "WolframAlpha",
+        id: "wolframalpha",
+        icon: "WolframAlphaAPI",
+        blueprintIds: []
+    },
+    xai: {
+        displayName: "xAI",
+        id: "xai",
+        icon: "xAI",
+        blueprintIds: ["Integrations.xAI.Chat"]
+    },
+    yahoosearch: {
+        displayName: "Yahoo! Finance",
+        id: "yahoosearch",
+        icon: "trending-up",
+        blueprintIds: []
+    },
+    youtube: {
+        displayName: "YouTube",
+        id: "youtube",
+        icon: "YouTube",
+        blueprintIds: []
+    },
+    zep: {
+        displayName: "Zep",
+        id: "zep",
+        icon: "ZepMemory",
+        blueprintIds: []
+    },
+};
+exports.ALL_DRAWERS = { ...exports.CORE_DRAWERS, ...exports.BUNDLE_DRAWERS };
+exports.SECTIONS = {
+    core: Object.keys(exports.CORE_DRAWERS),
+    bundle: Object.keys(exports.BUNDLE_DRAWERS),
+};
