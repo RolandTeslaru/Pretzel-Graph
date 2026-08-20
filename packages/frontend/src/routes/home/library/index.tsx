@@ -1,12 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { FolderBrowser } from './-components/FolderBrowser'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { Library } from '@pretzel-graph/shared/domain'
 
 
 export const Route = createFileRoute('/home/library/')({
-    component: LibraryRoute,
+    beforeLoad: () => {
+        throw redirect({ to: '/home/library/$folderId', params: { folderId: Library.Folder.ROOT_ID } })
+    },
 })
-
-
-function LibraryRoute() {
-    return <FolderBrowser folderId={null} />
-}

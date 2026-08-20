@@ -5,23 +5,23 @@ import type { LibrarySDK, LibrarySDKImpl } from './sdk';
 export function _createLibrarySelectors_(sdk: LibrarySDKImpl) {
     return {
 
-        // Immediate child folders of a folder. null is the root.
-        childFoldersOf: (folderId: Library.Folder.Id | null): Library.Folder[] => {
+        // Immediate child folders of a folder.
+        childFoldersOf: (folderId: Library.Folder.Id): Library.Folder[] => {
             const s = sdk.useStore.getState();
             return Object.values(s.folders).filter((f) => f.parent_folder_id === folderId);
         },
 
-        // Workflows living directly inside a folder. null is the root.
-        workflowsInFolder: (folderId: Library.Folder.Id | null): Library.WorkflowMeta[] => {
+        // Workflows living directly inside a folder.
+        workflowsInFolder: (folderId: Library.Folder.Id): Library.WorkflowMeta[] => {
             const s = sdk.useStore.getState();
             return Object.values(s.workflowMetas).filter((w) => w.folder_id === folderId);
         },
 
-        // Root first, current folder last. The root crumb carries an empty key.
-        getBreadcrumbs: (s: LibrarySDK.State, currentFolderId: Library.Folder.Id | null | undefined) => {
+        // Root folder first, current folder last.
+        getBreadcrumbs: (s: LibrarySDK.State, currentFolderId: Library.Folder.Id | undefined) => {
             let curFolder = currentFolderId ? s.folders[currentFolderId] as Library.Folder | undefined : undefined
             const cwd: {
-                key: string,
+                key: Library.Folder.Id,
                 name: string
             }[] = []
 
@@ -36,8 +36,6 @@ export function _createLibrarySelectors_(sdk: LibrarySDKImpl) {
                 else
                     curFolder = undefined
             }
-
-            cwd.push({ key: "", name: "Library" })
 
             cwd.reverse();
             return cwd;

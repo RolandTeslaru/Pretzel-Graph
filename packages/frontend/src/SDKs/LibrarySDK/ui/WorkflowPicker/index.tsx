@@ -1,4 +1,5 @@
-import type { Library, Workflow } from '@pretzel-graph/shared/domain'
+import { Library } from '@pretzel-graph/shared/domain'
+import type { Workflow } from '@pretzel-graph/shared/domain'
 import { Button, DropdownMenu, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import React, { useState } from 'react'
 import { FileSystemTree } from '../FileSystemTree'
@@ -16,7 +17,7 @@ const WorkflowPicker: React.FC<Props> = ({ selectWorkflow, selectedWorkflowId, t
 
     const [open, setOpen] = useState(false)
 
-    const [cwd, setCwd] = useState<Library.Folder.Id | null>(null)
+    const [cwd, setCwd] = useState<Library.Folder.Id>(Library.Folder.ROOT_ID)
 
     const [childFolders, childWorkflows] = LibrarySDK.useStore(s => [
         Object.values(s.folders).filter((f) => f.parent_folder_id === cwd),

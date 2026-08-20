@@ -57,7 +57,7 @@ export namespace Workflow {
         created_at: z.coerce.date(),
         updated_at: z.coerce.date(),
 
-        folder_id: FolderId.nullable(),
+        folder_id: FolderId,
 
         data: Data.Schema
     });
@@ -70,7 +70,7 @@ export namespace Workflow {
         icon:           null,
         accent:         null,
         icon_color:     null,
-        folder_id:      null,
+        folder_id:      "" as Workflow["folder_id"],
         created_at:     new Date(),
         updated_at:     new Date(),
         data: {
