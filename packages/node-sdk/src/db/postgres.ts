@@ -1,4 +1,4 @@
-import { Pool, type PoolClient } from "pg";
+import type { Pool, PoolClient } from "pg";
 import { SqlConnectionManager } from "./sql-connection-manager";
 
 export type PostgresCreds = {
@@ -11,7 +11,10 @@ export type PostgresCreds = {
 };
 
 class PostgresConnectionManager extends SqlConnectionManager<PostgresCreds, Pool, PoolClient> {
-    protected createClient(c: PostgresCreds): Pool {
+    protected async createClient(c: PostgresCreds): Promise<Pool> {
+        // Loaded on first use — most deployments never touch this driver.
+        const { Pool } = await import("pg");
+
         return new Pool({
             host: c.host,
             port: c.port,
