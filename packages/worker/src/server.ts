@@ -15,3 +15,8 @@ CatalogueService.setNodesRoot(
 );
 
 AggexWorker.init();
+
+// The stop sequence delivers TERM and waits; unhandled, the process would die
+// holding job locks and open customer-database connections.
+process.once("SIGTERM", () => void AggexWorker.shutdown());
+process.once("SIGINT",  () => void AggexWorker.shutdown());

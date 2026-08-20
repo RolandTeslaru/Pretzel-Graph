@@ -16,10 +16,20 @@ type Registration<TClient> = { client: TClient; lastUsed: number };
 export abstract class ConnectionManager<TCreds, TClient> {
     private map = new Map<string, Registration<TClient>>();
 
+    // Every manager, so shutdown can purge them without knowing the drivers.
+    private static instances: ConnectionManager<unknown, unknown>[] = [];
+
     constructor() {
         const timer = setInterval(() => this.reap(), SWEEP);
         // Don't keep the event loop alive just for the reaper.
         (timer as { unref?: () => void }).unref?.();
+
+        ConnectionManager.instances.push(this as ConnectionManager<unknown, unknown>);
+    }
+
+    /** Closes every cached client of every manager. Awaits the disposals. */
+    static async purgeAll(): Promise<void> {
+        await Promise.allSettled(ConnectionManager.instances.map((m) => m.purge()));
     }
 
     /** Build the underlying client/pool from decrypted credentials. */
@@ -27,6 +37,15 @@ export abstract class ConnectionManager<TCreds, TClient> {
 
     /** Tear it down (pool.end / client.close / ...). */
     protected abstract disposeClient(client: TClient): Promise<void> | void;
+
+    /**
+     * Whether the client can be disposed right now. Drivers that can tell
+     * report in-flight work; the default says yes, which is the pre-existing
+     * behaviour for drivers that cannot.
+     */
+    protected isIdle(_client: TClient): boolean {
+        return true;
+    }
 
     /**
      * sha1 of the decrypted creds — NOT the credential id. Hashed so decrypted secrets
@@ -51,16 +70,25 @@ export abstract class ConnectionManager<TCreds, TClient> {
         const now = Date.now();
         for (const [k, reg] of this.map) {
             if (now - reg.lastUsed > TTL) {
+                // A query outliving the TTL keeps its pool: disposing under it
+                // would kill the connection mid-flight. Rechecked next sweep.
+                if (!this.isIdle(reg.client))
+                    continue;
+
                 this.map.delete(k);
                 void this.disposeClient(reg.client);
             }
         }
     }
 
-    purge(): void {
+    async purge(): Promise<void> {
+        const disposals: (Promise<void> | void)[] = [];
+
         for (const [k, reg] of this.map) {
             this.map.delete(k);
-            void this.disposeClient(reg.client);
+            disposals.push(this.disposeClient(reg.client));
         }
+
+        await Promise.allSettled(disposals);
     }
 }

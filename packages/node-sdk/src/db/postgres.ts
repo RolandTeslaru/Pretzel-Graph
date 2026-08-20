@@ -27,6 +27,8 @@ class PostgresConnectionManager extends SqlConnectionManager<PostgresCreds, Pool
         });
     }
     protected disposeClient(p: Pool): Promise<void> { return p.end(); }
+    // Idle when no connection is checked out and nobody is waiting for one.
+    protected override isIdle(p: Pool): boolean { return p.totalCount === p.idleCount && p.waitingCount === 0; }
     protected acquire(p: Pool): Promise<PoolClient> { return p.connect(); }
     protected async reset(conn: PoolClient): Promise<void> { await conn.query("DISCARD ALL"); }
     protected release(conn: PoolClient): void { conn.release(); }

@@ -4,6 +4,7 @@ import type { CompilationContext } from "../compiler-context";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
+import { Field } from "@pretzel-graph/shared/domain/Foundations/Field"
 import { mapFieldValues } from "../utils/mapFieldValues";
 import { Synthesizer } from "../synthesizer";
 import type { ExecutionContext as ExecutionContextType } from "./context";
@@ -126,7 +127,7 @@ export abstract class RuntimeNode<
 
         const fieldValues = mapFieldValues<T_Blueprint>(fields, staticValues);
 
-        const evaluated: Record<Foundations.Field.Id, unknown> = { ...fieldValues };
+        const evaluated: Record<Field.Id, unknown> = { ...fieldValues };
 
         // Project each port value to its plain-object form before injecting as @in —
         // raw LC instances (BaseChatModel, BaseRetriever, etc.) contain functions that
@@ -163,7 +164,7 @@ export abstract class RuntimeNode<
                         continue;
                     }
 
-                    if (!Foundations.Field.usesExpression(field, expressionOverrides[field.id]))
+                    if (!Field.usesExpression(field, expressionOverrides[field.id]))
                         continue;
 
                     const raw = evaluated[field.id];
@@ -214,16 +215,16 @@ export abstract class RuntimeNode<
 
         // Resolve raw value + expression mode once per field, reused across every iteration.
         const rawValues = mapFieldValues<T_Blueprint>(fields, staticValues);
-        const meta      = new Map<Foundations.Field.Id, { raw: unknown, isExpression: boolean }>();
+        const meta      = new Map<Field.Id, { raw: unknown, isExpression: boolean }>();
 
         // Indexed dynamically by field id: InferFieldValues is a union once a blueprint has
         // derivatives, and only the resolved arm has any given key.
-        const rawByFieldId = rawValues as Record<Foundations.Field.Id, unknown>;
+        const rawByFieldId = rawValues as Record<Field.Id, unknown>;
 
         for (const field of fields)
             meta.set(field.id, {
                 raw: rawByFieldId[field.id],
-                isExpression: Foundations.Field.usesExpression(field, expressionOverrides[field.id])
+                isExpression: Field.usesExpression(field, expressionOverrides[field.id])
             });
 
         return this.context.airlockAPI.executeSync(
@@ -236,7 +237,7 @@ export abstract class RuntimeNode<
                     fieldId: K,
                     coerceTo?: Airlock.CoerceTo,
                 ) => {
-                    const m = meta.get(fieldId as Foundations.Field.Id);
+                    const m = meta.get(fieldId as Field.Id);
                     // Static field → its resolved value as-is; expression → evaluated against $item.
                     if (!m || !m.isExpression || typeof m.raw !== "string")
                         return m?.raw as InferItemFields<T_Blueprint>[K];
