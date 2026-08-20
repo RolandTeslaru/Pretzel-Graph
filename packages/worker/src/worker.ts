@@ -2,6 +2,7 @@ import { Job as BullJob, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants"
 import { Execution } from '@pretzel-graph/shared/domain';
+import { ConnectionManager } from '@pretzel-graph/node-sdk';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { AggexEngine, AggexHooks } from 'src/engine';
 import { FlightRecorderService } from './engine/flight-recorder-service';
@@ -236,8 +237,52 @@ export class AggexWorkerImpl {
         }
     }
 
-    private worker = new Worker(Execution.Queue.ID, this.processQueueItem, { connection: this.redisWorker, autorun: false }
-    )
+    private shuttingDown = false;
+
+    /**
+     * The TERM window is the platform's grace period, so every step is bounded.
+     * An active job that cannot finish in time goes back locked and surfaces as
+     * failed when the lease expires — never silently re-run.
+     */
+    public async shutdown(): Promise<void> {
+        if (this.shuttingDown)
+            return;
+
+        this.shuttingDown = true;
+
+        console.log('[Worker] Shutting down: closing queue, pools, redis');
+
+        const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), 4_000));
+        const closed  = await Promise.race([this.worker.close().then(() => 'closed' as const), timeout]);
+
+        if (closed === 'timeout')
+            await this.worker.close(true).catch(() => {});
+
+        // Customer-database pools flush and disconnect, so the servers on the
+        // other end see a close instead of a vanished peer.
+        await ConnectionManager.purgeAll();
+
+        await Promise.allSettled([this.redisPub.quit(), this.redisWorker.quit()]);
+
+        // Flushed, not console.log: stdout to a pipe is async and exit() would
+        // drop whatever is still buffered.
+        await new Promise<void>((resolve) => process.stdout.write('[Worker] Shutdown complete\n', () => resolve()));
+
+        process.exit(0);
+    }
+
+    private worker = new Worker(Execution.Queue.ID, this.processQueueItem, {
+        connection: this.redisWorker,
+        autorun: false,
+        // Synchronous expression evaluation can hold the event loop for minutes,
+        // starving lock renewal. The lease must outlast the longest legal stretch,
+        // or a running job is declared stalled and handed out again mid-run.
+        lockDuration:    5 * 60_000,
+        stalledInterval: 5 * 60_000,
+        // A stalled job may have already produced side effects. Fail it visibly
+        // rather than re-running it; a re-run is the caller's decision.
+        maxStalledCount: 0,
+    })
 }
 
 export const AggexWorker = container.resolve(AggexWorkerImpl);
