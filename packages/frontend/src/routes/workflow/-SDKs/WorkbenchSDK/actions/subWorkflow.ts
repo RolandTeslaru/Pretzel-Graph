@@ -2,7 +2,7 @@ import type { WorkbenchSDKImpl } from "../sdk"
 import { withAsyncCommit, withCyclesRecompute } from "../utils/actions"
 import { toast } from "sonner";
 import { ShelfSDK } from "../../ShelfSDK/sdk";
-import { Foundations, Workbench, Workflow } from "@pretzel-graph/shared/domain";
+import { Foundations, Library, Workbench, Workflow } from "@pretzel-graph/shared/domain";
 import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow";
 import { cloneDeep } from 'lodash';
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
@@ -62,7 +62,7 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
             const subflow = cloneDeep(Workflow.INITIAL) as Workflow;
 
             subflow.display_name = displayName;
-            subflow.folder_id = LibrarySDK.useStore.getState().workflowMetas[state.workflowId]?.folder_id ?? subflow.folder_id;
+            subflow.folder_id = LibrarySDK.useStore.getState().workflowMetas[state.workflowId]?.folder_id ?? Library.Folder.ROOT_ID;
 
             const groupNodePos = { x: 0, y: 0 };
             const offsetPos = { x: 0, y: 0 };

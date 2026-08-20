@@ -1,12 +1,22 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
+import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { FolderBrowser } from './-components/FolderBrowser'
 
+const BOOTSTRAP_STALE_TIME = 60_000
+
 export const Route = createFileRoute('/home/library/$folderId')({
     loader: async ({ params }) => {
         const folderId = params.folderId as Library.Folder.Id
+
+        // The check below reads store state, so the fetch has to settle first.
+        await QuerySDK.client.fetchQuery({
+            queryKey: ['library', 'bootstrap'],
+            queryFn: () => LibrarySDK.actions.bootstrap.get(),
+            staleTime: BOOTSTRAP_STALE_TIME,
+        })
 
         const folders = LibrarySDK.state.folders;
 

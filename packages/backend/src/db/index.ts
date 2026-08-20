@@ -73,7 +73,7 @@ export namespace DB {
         export const Row = z.object({
             id:           WorkflowD.Id,
             created_by:   Auth.User.Id.nullable(),
-            folder_id:    Library.Folder.Id.nullable(),
+            folder_id:    Library.Folder.Id,
             display_name: z.string(),
             description:  z.string().nullable(),
             icon:         z.string().nullable(),

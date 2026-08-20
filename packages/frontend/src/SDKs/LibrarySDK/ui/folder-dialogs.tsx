@@ -17,8 +17,8 @@ const Schema = z.object({
 })
 type Values = z.infer<typeof Schema>
 
-export function openCreateFolderDialog(args: { parent_folder_id: Library.Folder.Id | null }) {
-    const id = `create-folder-${args.parent_folder_id ?? 'root'}`
+export function openCreateFolderDialog(args: { parent_folder_id: Library.Folder.Id }) {
+    const id = `create-folder-${args.parent_folder_id}`
     DialogSDK.actions.push(id, (props) => (
         <DialogSDK.Template {...props} className={DIALOG_CLASSNAME}>
             <CreateFolderContent dialogId={id} {...args} />
@@ -35,7 +35,7 @@ export function openEditFolderDialog(args: { folder: Library.Folder }) {
     ))
 }
 
-function CreateFolderContent({ dialogId, parent_folder_id }: { dialogId: string; parent_folder_id: Library.Folder.Id | null }) {
+function CreateFolderContent({ dialogId, parent_folder_id }: { dialogId: string; parent_folder_id: Library.Folder.Id }) {
     const form = useForm<Values>({
         resolver: zodResolver(Schema),
         defaultValues: { display_name: '', description: '' },
