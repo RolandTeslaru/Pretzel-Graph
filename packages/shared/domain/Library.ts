@@ -8,6 +8,9 @@ export namespace Library {
         export const Id = z.uuid().brand("FolderId")
         export type Id = z.infer<typeof Folder.Id>
 
+        // Seeded at install. Every other folder and workflow descends from it.
+        export const ROOT_ID = Folder.Id.parse("00000000-0000-4000-8000-000000000001")
+
         export const Schema = z.object({
             id: Folder.Id,
             parent_folder_id: Folder.Id.nullable(),
@@ -59,7 +62,7 @@ export namespace Library {
         export namespace Folder {
             export namespace Create {
                 export const Request = z.object({
-                    parent_folder_id: Library.Folder.Id.nullable(),
+                    parent_folder_id: Library.Folder.Id,
                     display_name: z.string().min(1),
                     description: z.string().nullable().optional(),
                 })
@@ -132,7 +135,7 @@ export namespace Library {
         export namespace Workflow {
             export namespace Create {
                 export const Request = z.object({
-                    folder_id: Library.Folder.Id.nullable(),
+                    folder_id: Library.Folder.Id,
                     display_name: z.string().min(1),
                     description: z.string().nullable().optional(),
                 });

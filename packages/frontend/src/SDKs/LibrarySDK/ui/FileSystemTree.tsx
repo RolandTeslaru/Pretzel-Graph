@@ -5,7 +5,8 @@ import { ContextMenu, SearchInput } from '@pretzel-graph/standard-ui/foundations
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { LibrarySDK } from '../sdk'
 import type { FileSystemNodeData } from '../actions'
-import type { Library, Workflow } from '@pretzel-graph/shared/domain'
+import { Library } from '@pretzel-graph/shared/domain'
+import type { Workflow } from '@pretzel-graph/shared/domain'
 import { openEditFolderDialog, openEditWorkflowDialog } from './create-dialogs'
 import { openDeleteFolderDialog } from './FolderView/folder-card'
 import { openDeleteWorkflowDialog } from './FolderView/workflow-card'
@@ -17,7 +18,7 @@ type FileSystemTreeSize = 'default' | 'sm'
 type FileSystemTreeProps = {
     className?: string
     size?: FileSystemTreeSize
-    cwd?: Library.Folder.Id | null
+    cwd?: Library.Folder.Id
     selectedWorkflowId?: Workflow.Id
     onFolderClick?: (folderId: Library.Folder.Id) => void
     onWorkflowClick?: (workflowId: Workflow.Id) => void
@@ -155,6 +156,8 @@ function FileSystemTreeItem({
         ? (key.slice('workflow:'.length) as Workflow.Id)
         : undefined
 
+    const isRootFolder = folderId === Library.Folder.ROOT_ID
+
     const handleClick = () => {
         if (folderId) return onFolderClick?.(folderId)
         if (workflowId) return onWorkflowClick?.(workflowId)
@@ -265,13 +268,15 @@ function FileSystemTreeItem({
                 >
                     Edit
                 </ContextMenu.Item>
-                <ContextMenu.Item
-                    variant='destructive'
-                    icon={<SystemIcons.Trash2 className='size-4' />}
-                    onClick={handleDelete}
-                >
-                    Delete
-                </ContextMenu.Item>
+                {!isRootFolder && (
+                    <ContextMenu.Item
+                        variant='destructive'
+                        icon={<SystemIcons.Trash2 className='size-4' />}
+                        onClick={handleDelete}
+                    >
+                        Delete
+                    </ContextMenu.Item>
+                )}
             </ContextMenu.Content>
         </ContextMenu.Root>
     )

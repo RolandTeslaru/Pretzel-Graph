@@ -7,9 +7,6 @@ import type { Tree as TreeDomain } from '@/components/Tree/domain';
 export type FileSystemNodeData = { name: string }
 type FileNode = TreeDomain.Dummy.Branch<FileSystemNodeData>
 
-// Folders and workflows with no parent are grouped under this key.
-const ROOT_KEY = ''
-
 export type _LibrarySDKActions = {
     rebuildTree: () => void;
     preferences: {
@@ -42,17 +39,17 @@ function buildTreeData(s: LibrarySDK.State): FileNode {
     const workflowsByFolder = new Map<string, Library.WorkflowMeta[]>()
 
     for (const folder of Object.values(folders)) {
-        const parentKey = folder.parent_folder_id ?? ROOT_KEY
-        const list = childFoldersByParent.get(parentKey) ?? []
+        if (!folder.parent_folder_id) continue
+
+        const list = childFoldersByParent.get(folder.parent_folder_id) ?? []
         list.push(folder)
-        childFoldersByParent.set(parentKey, list)
+        childFoldersByParent.set(folder.parent_folder_id, list)
     }
 
     for (const workflow of Object.values(workflowMetas)) {
-        const folderKey = workflow.folder_id ?? ROOT_KEY
-        const list = workflowsByFolder.get(folderKey) ?? []
+        const list = workflowsByFolder.get(workflow.folder_id) ?? []
         list.push(workflow)
-        workflowsByFolder.set(folderKey, list)
+        workflowsByFolder.set(workflow.folder_id, list)
     }
 
     for (const list of childFoldersByParent.values()) {
@@ -76,11 +73,13 @@ function buildTreeData(s: LibrarySDK.State): FileNode {
         }
     }
 
-    const childBranches: Record<string, FileNode> = {}
-    for (const folder of childFoldersByParent.get(ROOT_KEY) ?? [])
-        childBranches[`folder:${folder.id}`] = buildFolderBranch(folder)
-    for (const workflow of workflowsByFolder.get(ROOT_KEY) ?? [])
-        childBranches[`workflow:${workflow.id}`] = { data: { name: workflow.display_name } }
+    const root = folders[Library.Folder.ROOT_ID]
+
+    if (!root) return {}
+
+    const childBranches: Record<string, FileNode> = {
+        [`folder:${root.id}`]: buildFolderBranch(root),
+    }
 
     return { childBranches: childBranches as FileNode['childBranches'] }
 }

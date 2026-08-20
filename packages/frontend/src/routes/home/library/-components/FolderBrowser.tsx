@@ -9,8 +9,7 @@ import Breadcrumbs from './Breadcrumbs'
 import FolderView from '@/SDKs/LibrarySDK/ui/FolderView'
 
 interface Props {
-    // null browses the library root.
-    folderId: Library.Folder.Id | null
+    folderId: Library.Folder.Id
 }
 
 export function FolderBrowser({ folderId }: Props) {

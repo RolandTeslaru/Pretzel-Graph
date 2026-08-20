@@ -45,7 +45,10 @@ create table folders (
     parent_folder_id uuid,
     created_at       timestamp with time zone default timezone('utc'::text, now()) not null,
     updated_at       timestamp with time zone default timezone('utc'::text, now()) not null,
-    created_by       uuid
+    created_by       uuid,
+
+    -- Only the seeded root folder has no parent.
+    constraint folders_root_check check ((parent_folder_id is not null) or (id = '00000000-0000-4000-8000-000000000001'))
 );
 
 create table workflows (
@@ -57,7 +60,7 @@ create table workflows (
     data         jsonb default '{}'::jsonb not null,
     created_at   timestamp with time zone default timezone('utc'::text, now()) not null,
     updated_at   timestamp with time zone default timezone('utc'::text, now()) not null,
-    folder_id    uuid,
+    folder_id    uuid not null,
     created_by   uuid,
     icon         text,
     accent       text,
@@ -256,4 +259,16 @@ $$;
 
 create trigger api_keys_prevent_immutable before update on api_keys for each row execute function prevent_api_key_immutable_changes();
 
+create function prevent_root_folder_delete() returns trigger
+    language plpgsql
+    as $$
+begin
+    raise exception 'folders: the root folder cannot be deleted';
+end;
+$$;
+
+create trigger folders_prevent_root_delete before delete on folders for each row when (old.id = '00000000-0000-4000-8000-000000000001') execute function prevent_root_folder_delete();
+
 insert into deployment (id) values (true);
+
+insert into folders (id, display_name) values ('00000000-0000-4000-8000-000000000001', 'Home');

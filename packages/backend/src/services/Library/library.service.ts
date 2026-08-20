@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
 import { Library, Workflow } from '@pretzel-graph/shared/domain';
@@ -37,7 +37,11 @@ export class LibraryService {
             principal: Principal.User,
             id: Library.Folder.Id,
         ): Promise<Library.API.Folder.Remove.Response> => {
+            if (id === Library.Folder.ROOT_ID)
+                throw new BadRequestException('The root folder cannot be deleted');
+
             await DB.asUser(principal, (trx) => this.database.folder.delete(trx, id));
+
             return { ok: true };
         },
 
