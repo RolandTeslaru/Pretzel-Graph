@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+import type { MongoClient } from "mongodb";
 import { ConnectionManager } from "./connection-manager";
 
 export type MongoCreds = {
@@ -20,9 +20,12 @@ function composeUri(c: MongoCreds): string {
 }
 
 class MongoConnectionManager extends ConnectionManager<MongoCreds, MongoClient> {
-    protected createClient(c: MongoCreds): Promise<MongoClient> {
+    protected async createClient(c: MongoCreds): Promise<MongoClient> {
+        // Loaded on first use — most deployments never touch this driver.
+        const { MongoClient: Client } = await import("mongodb");
+
         // Bounded: the ceiling on a customer's server is processes × this.
-        return MongoClient.connect(composeUri(c), { maxPoolSize: 4 });
+        return Client.connect(composeUri(c), { maxPoolSize: 4 });
     }
     protected disposeClient(client: MongoClient): Promise<void> { return client.close(); }
 }
