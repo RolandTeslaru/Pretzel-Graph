@@ -6,6 +6,7 @@ import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
 import { Realtime } from "@pretzel-graph/shared/domain/Realtime";
 import { Auth, Chat, Execution } from "@pretzel-graph/shared/domain";
 import { verifyToken } from '../../utils/auth';
+import { isFromTrustedProxy } from '../../auth/trusted-proxy';
 
 interface SocketIdentity {
     userId: Auth.User.Id;
@@ -34,6 +35,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     public async handleConnection(ws: WebSocket, req: IncomingMessage) {
+        // Upgrades bypass HTTP middleware, so the proxy stamp is checked here.
+        if (!isFromTrustedProxy(req.headers)) {
+            ws.close(1008, 'Forbidden');
+            return;
+        }
+
         // Buffer messages that arrive during async auth
         const pendingMessages: string[] = [];
         let authenticated = false;
