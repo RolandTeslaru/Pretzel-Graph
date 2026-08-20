@@ -60,7 +60,9 @@ export class IgniterService {
             `Triggered workflow=${publication.workflow_id} publication=${publication.id} executionId=${execution.id}`,
         );
 
-        return { execution };
+        // The sender gets an acknowledgement and an id to quote, nothing more —
+        // the execution's contents are not the caller's to see.
+        return { executionId: execution.id };
     }
 
     private findWebhookNode(
