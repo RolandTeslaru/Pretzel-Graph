@@ -1,4 +1,4 @@
-import { createPool, type Pool, type PoolConnection } from "mysql2/promise";
+import type { Pool, PoolConnection } from "mysql2/promise";
 import { SqlConnectionManager } from "./sql-connection-manager";
 
 export type MySqlCreds = {
@@ -11,7 +11,10 @@ export type MySqlCreds = {
 };
 
 class MySqlConnectionManager extends SqlConnectionManager<MySqlCreds, Pool, PoolConnection> {
-    protected createClient(c: MySqlCreds): Pool {
+    protected async createClient(c: MySqlCreds): Promise<Pool> {
+        // Loaded on first use — most deployments never touch this driver.
+        const { createPool } = await import("mysql2/promise");
+
         return createPool({
             host: c.host,
             port: c.port,

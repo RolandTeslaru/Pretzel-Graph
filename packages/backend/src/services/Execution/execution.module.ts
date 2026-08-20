@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ExecutionController } from './execution.controller';
 import { ExecutionService } from './execution.service';
+import { ExecutionReconciler } from './execution.reconciler';
 import { ExecutionDatabase } from './execution.database';
 import { ChatDatabase } from '../Chat/chat.database';
 import { VaultDatabase } from '../Vault/vault.database';
@@ -14,7 +15,7 @@ import { RealtimeModule } from '../Realtime/realtime.module';
         RealtimeModule,
     ],
     controllers: [ExecutionController],
-    providers: [ExecutionService, ExecutionDatabase, ChatDatabase, VaultDatabase],
+    providers: [ExecutionService, ExecutionReconciler, ExecutionDatabase, ChatDatabase, VaultDatabase],
     exports: [ExecutionService],
 })
 export class ExecutionModule {}

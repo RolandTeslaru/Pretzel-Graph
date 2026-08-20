@@ -89,6 +89,21 @@ class MetaMethods {
         return rows.map((row) => Execution.Meta.parse(row));
     }
 
+    /** Non-terminal rows old enough that a live run would have a live job. */
+    @AllowedDatabaseRoles("service")
+    async listStaleNonTerminal(trx: DB.Transaction<'service'>, olderThanMs: number): Promise<{ id: Execution.Id }[]> {
+        const cutoff = new Date(Date.now() - olderThanMs).toISOString();
+
+        const rows = await trx
+            .selectFrom('executions')
+            .select('id')
+            .where('status', 'in', ['pending', 'running'])
+            .where('created_at', '<', cutoff)
+            .execute();
+
+        return rows as { id: Execution.Id }[];
+    }
+
     @AllowedDatabaseRoles("user")
     @ZodReturn(Execution.Meta.array())
     async listActive(trx: DB.UserTransaction): Promise<Execution.Meta[]> {
