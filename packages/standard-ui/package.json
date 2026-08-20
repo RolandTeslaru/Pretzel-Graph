@@ -12,6 +12,7 @@
         "./foundations": "./src/foundations/index.ts",
         "./icons": "./src/icons/index.ts",
         "./icons/extended": "./src/icons/extended/index.tsx",
+        "./icons/illustrations": "./src/icons/illustrations/index.ts",
         "./components/Dither": "./src/components/Dither/index.ts",
         "./components/CollapsiblePanel": "./src/components/CollapsiblePanel/index.ts",
         "./SDKs/SystemSDK": "./src/SDKs/SystemSDK/index.ts",

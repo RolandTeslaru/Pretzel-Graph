@@ -5,7 +5,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { AlertDialog, ContextMenu } from '@pretzel-graph/standard-ui/foundations'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { openEditFolderDialog } from '@/SDKs/LibrarySDK/ui/create-dialogs'
-import { FolderIcon } from './folder-icon'
+import { FolderIllustration } from '@pretzel-graph/standard-ui/icons/illustrations'
 import type { FolderViewSize } from './size'
 import classNames from 'classnames'
 
@@ -44,7 +44,7 @@ export function FolderCard({ folder, size = 'default', onClick }: FolderCardProp
                 onClick={onClick}
                 className={classNames('flex flex-col gap-1 hover:bg-accent/30 rounded-md relative m-auto cursor-pointer select-none', styles.card)}
             >
-                <FolderIcon color="var(--primary)" className={classNames('shrink-0 mx-auto', styles.icon)} />
+                <FolderIllustration color="var(--primary)" className={classNames('shrink-0 mx-auto', styles.icon)} />
                 <div className="min-w-0 flex-1">
                     <p className={classNames('font-medium text-center truncate', styles.name)}>{folder.display_name}</p>
                     <div className={classNames('opacity-50 flex items-center justify-center gap-3', styles.meta)}>

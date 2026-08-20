@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { Button, DropdownMenu, SearchInput } from '@pretzel-graph/standard-ui/foundations'
+import { Button, DropdownMenu, SearchInput, Tabs } from '@pretzel-graph/standard-ui/foundations'
 import { openCreateFolderDialog, openCreateWorkflowDialog } from '@/SDKs/LibrarySDK/ui/create-dialogs'
 import type { Library } from '@pretzel-graph/shared/domain'
 import Breadcrumbs from './Breadcrumbs'
@@ -45,6 +45,7 @@ export function FolderBrowser({ folderId }: Props) {
                         className='rounded-full!'
                         onSearch={setSearch}
                     />
+                  
                     <DropdownMenu.Root>
                         <DropdownMenu.Trigger asChild>
                             <Button>
