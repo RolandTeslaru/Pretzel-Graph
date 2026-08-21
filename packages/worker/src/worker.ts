@@ -17,6 +17,19 @@ const LOCK_EXTEND_INTERVAL_MS = 15_000;
 const LOCK_EXTEND_DURATION_MS = 30_000;
 const MAX_PAUSE_DURATION_MS = 5 * 60_000;
 
+// Together at most 10s, inside the grace period a stop signal allows.
+const CLOSE_TIMEOUT_MS = 4_000;
+const FORCE_TIMEOUT_MS = 2_000;
+const PURGE_TIMEOUT_MS = 3_000;
+const QUIT_TIMEOUT_MS  = 1_000;
+
+/** Settles either way once the budget is spent. */
+const bounded = <T>(work: Promise<T>, ms: number): Promise<T | 'timeout'> => {
+    const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), ms));
+
+    return Promise.race([work, timeout]);
+};
+
 
 @singleton()
 export class AggexWorkerImpl {
@@ -252,17 +265,21 @@ export class AggexWorkerImpl {
 
         console.log('[Worker] Shutting down: closing queue, pools, redis');
 
-        const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), 4_000));
-        const closed  = await Promise.race([this.worker.close().then(() => 'closed' as const), timeout]);
+        const closed = await bounded(this.worker.close().then(() => 'closed' as const), CLOSE_TIMEOUT_MS);
 
         if (closed === 'timeout')
-            await this.worker.close(true).catch(() => {});
+            await bounded(this.worker.close(true).catch(() => {}), FORCE_TIMEOUT_MS);
 
         // Customer-database pools flush and disconnect, so the servers on the
         // other end see a close instead of a vanished peer.
-        await ConnectionManager.purgeAll();
+        await bounded(ConnectionManager.purgeAll(), PURGE_TIMEOUT_MS);
 
-        await Promise.allSettled([this.redisPub.quit(), this.redisWorker.quit()]);
+        // quit waits for a reply, which never comes from a server that is gone.
+        await bounded(Promise.allSettled([this.redisPub.quit(), this.redisWorker.quit()]), QUIT_TIMEOUT_MS);
+
+        // Drops the sockets whether or not the quits were answered.
+        this.redisPub.disconnect();
+        this.redisWorker.disconnect();
 
         // Flushed, not console.log: stdout to a pipe is async and exit() would
         // drop whatever is still buffered.
