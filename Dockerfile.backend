@@ -22,6 +22,9 @@ FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
+# The queue lives on this machine; the worker connects to it over the network.
+RUN apk add --no-cache redis
+
 COPY package.json package-lock.json ./
 COPY patches ./patches
 COPY --from=build /repo/packages/backend/package.json ./packages/backend/
@@ -34,5 +37,17 @@ COPY --from=build /repo/packages/nodes/dist   ./packages/nodes/dist
 
 # The catalogue resolves node and blueprint modules under this directory.
 ENV NODES_ROOT=/app/packages/nodes/dist/nodes/src
+COPY docker/backend/entrypoint.sh ./entrypoint.sh
+
+# Redis is this machine's, on the workspace network.
+ENV REDIS_HOST=127.0.0.1
+ENV REDIS_PORT=6379
+# The worker reaches the backend over the network; the backend reaches itself.
+ENV API_URL=http://127.0.0.1:3001
 EXPOSE 3001
-CMD ["node", "packages/backend/dist/backend/src/main.js"]
+
+# Reports serving, not merely started. start-period covers boot migrations.
+HEALTHCHECK --interval=5s --timeout=3s --start-period=45s --retries=3 \
+    CMD wget -q -O /dev/null http://127.0.0.1:3001/health || exit 1
+
+CMD ["./entrypoint.sh"]
