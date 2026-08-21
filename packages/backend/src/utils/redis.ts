@@ -1,12 +1,12 @@
 import { Logger } from '@nestjs/common';
 import Redis, { RedisOptions } from 'ioredis';
-import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
+import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from '@pretzel-graph/shared/constants';
 
 const logger = new Logger('Redis');
 
 /** ioredis prints the full stack for an error nobody listens to, so every client gets a handler. */
 export function createRedisClient(name: string, options: RedisOptions = {}): Redis {
-    const client = new Redis({ host: REDIS_HOST, port: REDIS_PORT, ...options });
+    const client = new Redis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD, ...options });
 
     client.on('error', (error: Error) => logger.warn(`${name}: ${error.message}`));
 

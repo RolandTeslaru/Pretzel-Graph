@@ -1,6 +1,6 @@
 import type { z } from "zod";
 import Redis from "ioredis";
-import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
+import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from "@pretzel-graph/shared/constants";
 import { Execution } from "@pretzel-graph/shared/domain";
 import type { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import type { RuntimeNode } from "@pretzel-graph/node-sdk";
@@ -231,8 +231,8 @@ export class RealtimeScopeImpl implements RuntimeNode.RealtimeScope {
 
 export class SharedRealtimeService {
 
-    private readonly pub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
-    private readonly sub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+    private readonly pub = new Redis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD });
+    private readonly sub = new Redis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD });
 
     private readonly scopes = new Map<Execution.Signal.Channel, RealtimeScopeImpl>();
 

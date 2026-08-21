@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, DiscoveryModule } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants";
+import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from "@pretzel-graph/shared/constants";
 import { ExecutionModule } from './services/Execution/execution.module';
 import { ChatModule } from './services/Chat/chat.module';
 import { LibraryModule } from './services/Library/library.module';
@@ -32,6 +32,7 @@ import { HealthModule } from './services/Health/health.module';
             connection: {
                 host: REDIS_HOST,
                 port: REDIS_PORT,
+                password: REDIS_PASSWORD,
             },
             defaultJobOptions: {
                 removeOnComplete: { count: 20 },
