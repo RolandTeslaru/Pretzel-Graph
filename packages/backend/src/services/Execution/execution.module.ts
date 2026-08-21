@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ExecutionController } from './execution.controller';
 import { ExecutionService } from './execution.service';
-import { WorkerWakeService } from './worker-wake.service';
+import { WorkerLifecycleService } from './worker-lifecycle.service';
 import { ExecutionReconciler } from './execution.reconciler';
 import { ExecutionDatabase } from './execution.database';
 import { ChatDatabase } from '../Chat/chat.database';
@@ -16,7 +16,7 @@ import { RealtimeModule } from '../Realtime/realtime.module';
         RealtimeModule,
     ],
     controllers: [ExecutionController],
-    providers: [ExecutionService, WorkerWakeService, ExecutionReconciler, ExecutionDatabase, ChatDatabase, VaultDatabase],
+    providers: [ExecutionService, WorkerLifecycleService, ExecutionReconciler, ExecutionDatabase, ChatDatabase, VaultDatabase],
     exports: [ExecutionService],
 })
 export class ExecutionModule {}

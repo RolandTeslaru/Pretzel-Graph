@@ -16,7 +16,7 @@ import { ChatDatabase } from '../Chat/chat.database';
 import { VaultDatabase } from '../Vault/vault.database';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { ExecutionToken } from '@/auth/execution-token';
-import { WorkerWakeService } from './worker-wake.service';
+import { WorkerLifecycleService } from './worker-lifecycle.service';
 
 @Injectable()
 export class ExecutionService {
@@ -35,13 +35,17 @@ export class ExecutionService {
         private readonly database:       ExecutionDatabase,
         private readonly chatDatabase:   ChatDatabase,
         private readonly vaultDatabase:  VaultDatabase,
-        private readonly workerWake:     WorkerWakeService,
+        private readonly workerLifecycle: WorkerLifecycleService,
     ) {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
             console.error(`[Execution] ${jobId} failed:`, failedReason);
             const status = failedReason === 'terminated' ? 'terminated' : 'failed';
             await DB.asService('mark failed BullMQ execution', (db) => this.database.finalise(db, { executionId: jobId as Execution.Id, status, error: failedReason }));
         });
+
+        // The idle window runs from the last job to end, whichever way it ended.
+        this.queueEvents.on('failed',    () => this.workerLifecycle.noteJobEnded());
+        this.queueEvents.on('completed', () => this.workerLifecycle.noteJobEnded());
     }
 
 
@@ -175,7 +179,7 @@ export class ExecutionService {
 
             // Before the add: a sleeping worker is not watching the queue, so
             // the job would sit there until something else woke it.
-            await this.workerWake.ensure();
+            await this.workerLifecycle.ensureAwake();
 
             await this.executionQueue.add('run', queueItem, { jobId: executionId });
 
