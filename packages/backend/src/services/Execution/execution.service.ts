@@ -4,7 +4,7 @@ import { Queue, QueueEvents } from 'bullmq';
 import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
 import { createRedisClient, createRedisSubscriber } from '../../utils/redis';
-import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
+import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from '@pretzel-graph/shared/constants';
 import { Auth, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
@@ -16,12 +16,13 @@ import { ChatDatabase } from '../Chat/chat.database';
 import { VaultDatabase } from '../Vault/vault.database';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { ExecutionToken } from '@/auth/execution-token';
+import { WorkerWakeService } from './worker-wake.service';
 
 @Injectable()
 export class ExecutionService {
 
     private readonly queueEvents = new QueueEvents(Execution.Queue.ID, {
-        connection: { host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null }
+        connection: { host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD, maxRetriesPerRequest: null }
     });
 
     private readonly redis = createRedisClient('execution.service');
@@ -34,6 +35,7 @@ export class ExecutionService {
         private readonly database:       ExecutionDatabase,
         private readonly chatDatabase:   ChatDatabase,
         private readonly vaultDatabase:  VaultDatabase,
+        private readonly workerWake:     WorkerWakeService,
     ) {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
             console.error(`[Execution] ${jobId} failed:`, failedReason);
@@ -170,6 +172,10 @@ export class ExecutionService {
                 credentialInstances,
                 executionToken: ExecutionToken.sign(executionId),
             };
+
+            // Before the add: a sleeping worker is not watching the queue, so
+            // the job would sit there until something else woke it.
+            await this.workerWake.ensure();
 
             await this.executionQueue.add('run', queueItem, { jobId: executionId });
 

@@ -1,6 +1,6 @@
 import { Job as BullJob, Worker } from 'bullmq';
 import IORedis from 'ioredis';
-import { REDIS_HOST, REDIS_PORT } from "@pretzel-graph/shared/constants"
+import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from "@pretzel-graph/shared/constants"
 import { Execution } from '@pretzel-graph/shared/domain';
 import { ConnectionManager } from '@pretzel-graph/node-sdk';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
@@ -28,8 +28,8 @@ export class AggexWorkerImpl {
     private runningExecutionContextsMap = new Map<Execution.Id, AggexEngine.Execution.Context>()
 
     // Recording cache only — publishing goes through the realtime scope.
-    private redisPub    = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
-    private redisWorker = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, maxRetriesPerRequest: null })
+    private redisPub    = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD, maxRetriesPerRequest: null })
+    private redisWorker = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD, maxRetriesPerRequest: null })
 
     private realtime    = new SharedRealtimeService()
 
