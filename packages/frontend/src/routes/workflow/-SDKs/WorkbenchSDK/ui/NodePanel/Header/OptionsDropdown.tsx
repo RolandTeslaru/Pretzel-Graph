@@ -28,12 +28,14 @@ export const OptionsDropdown = ({ hyNode, onEdit }: Props) => {
         const dialogId = `add-credentialTemplate-${proxyTemplate.id}`
 
         DialogSDK.actions.push(dialogId, props => (
-            <DialogSDK.Template {...props}>
+            <DialogSDK.UnstyledTemplate {...props}>
                 <CredentialForm
+                    surfaceStyle={props.surfaceStyle}
+                    blockTransparency={props.blockTransparency}
                     credentialTemplate={proxyTemplate}
                     onCreated={instanceId => setProxyInstance(instanceId)}
                 />
-            </DialogSDK.Template>
+            </DialogSDK.UnstyledTemplate>
         ))
     }
 

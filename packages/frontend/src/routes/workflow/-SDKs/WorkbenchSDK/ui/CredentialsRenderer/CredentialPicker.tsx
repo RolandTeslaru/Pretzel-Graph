@@ -34,7 +34,7 @@ export const CredentialPicker = memo(
         const openAddDialog = () => {
             const dialogId = `add-credentialTemplate-${credentialTemplate.id}`;
             DialogSDK.actions.push(dialogId, (props) => (
-                <DialogSDK.Template {...props}>
+                <DialogSDK.UnstyledTemplate {...props}>
                     <Dialog.Title className="text-sm font-semibold hidden">
                         Add Credential
                     </Dialog.Title>
@@ -42,20 +42,22 @@ export const CredentialPicker = memo(
                         Add a new credential for this node
                     </Dialog.Description>
                     <CredentialForm
+                    surfaceStyle={props.surfaceStyle}
+                    blockTransparency={props.blockTransparency}
                         credentialTemplate={credentialTemplate}
                         onCreated={(instanceId) => {
                             setInstance(instanceId);
                             DialogSDK.actions.pop(dialogId);
                         }}
                     />
-                </DialogSDK.Template>
+                </DialogSDK.UnstyledTemplate>
             ));
         };
 
         const openEditDialog = (editInstanceId: Vault.Credential.Instance.Id) => {
             const dialogId = `edit-credentialInstance-${editInstanceId}`;
             DialogSDK.actions.push(dialogId, (props) => (
-                <DialogSDK.Template {...props}>
+                <DialogSDK.UnstyledTemplate {...props}>
                     <Dialog.Title className="text-sm font-semibold hidden">
                         Edit Credential
                     </Dialog.Title>
@@ -63,6 +65,8 @@ export const CredentialPicker = memo(
                         Edit this credential
                     </Dialog.Description>
                     <CredentialForm
+                    surfaceStyle={props.surfaceStyle}
+                    blockTransparency={props.blockTransparency}
                         credentialTemplate={credentialTemplate}
                         updateProps={{
                             instanceId: editInstanceId,
@@ -73,7 +77,7 @@ export const CredentialPicker = memo(
                             },
                         }}
                     />
-                </DialogSDK.Template>
+                </DialogSDK.UnstyledTemplate>
             ));
         };
 

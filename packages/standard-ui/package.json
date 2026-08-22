@@ -15,6 +15,7 @@
         "./icons/illustrations": "./src/icons/illustrations/index.ts",
         "./components/Dither": "./src/components/Dither/index.ts",
         "./components/CollapsiblePanel": "./src/components/CollapsiblePanel/index.ts",
+        "./components/SidebarTabs": "./src/components/SidebarTabs/index.ts",
         "./SDKs/SystemSDK": "./src/SDKs/SystemSDK/index.ts",
         "./SDKs/DialogSDK": "./src/SDKs/DialogSDK/index.ts",
         "./SDKs/SDKManager": "./src/SDKs/SDKManager.ts",

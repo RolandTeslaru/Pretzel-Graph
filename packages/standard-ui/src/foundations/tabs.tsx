@@ -17,6 +17,7 @@ const listVars = cva(
       variant: {
         primary: "bg-input/30 border-border text-foreground",
         accent: "bg-accent/30 border-border text-foreground",
+        sidebar: "flex flex-col items-stretch justify-start w-full border-0 bg-transparent shadow-none rounded-none text-foreground",
       },
       size: {
         xxs: "p-0 gap-0",
@@ -43,10 +44,16 @@ const triggerVars = cva(
         sm: "rounded-sm px-2 py-0.5 text-xs",
         default: "rounded-md px-3 py-1.5 text-sm",
         lg: "rounded-lg px-4 py-2 text-base"
+      },
+      variant: {
+        primary: "",
+        accent: "",
+        sidebar: "w-full justify-start gap-2 rounded-md px-2 py-1 text-sm font-normal hover:bg-accent/30 data-[state=active]:bg-card/30 dark: data-[state=active]:bg-card",
       }
     },
     defaultVariants: {
-      size: "default"
+      size: "default",
+      variant: "primary"
     }
   }
 )
@@ -88,7 +95,10 @@ function Root({
 }
 
 type TabsSize = "xxs" | "xs" | "sm" | "default" | "lg"
+type TabsVariant = "primary" | "accent" | "sidebar"
+
 const TabsSizeContext = React.createContext<TabsSize>("default")
+const TabsVariantContext = React.createContext<TabsVariant>("primary")
 
 const List = ({
   className,
@@ -97,7 +107,7 @@ const List = ({
   size = "default",
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.List> & {
-  variant?: "accent" | "primary"
+  variant?: TabsVariant
   size?: TabsSize
 }) => {
   const indicatorRef = useRef<null | HTMLDivElement>(null);
@@ -142,6 +152,7 @@ const List = ({
 
   return (
     <TabsSizeContext.Provider value={size}>
+      <TabsVariantContext.Provider value={variant}>
       <TabsPrimitive.List
         ref={listRef}
         data-slot="tabs-list"
@@ -150,12 +161,15 @@ const List = ({
         {...props}
       >
         {children}
-        {/* Animated indicator */}
-        <div
-          ref={indicatorRef}
-          className={cn(indicatorVars({ variant, size }))}
-        />
+        {/* Animated indicator — the sidebar highlights the row in place instead. */}
+        {variant !== "sidebar" && (
+          <div
+            ref={indicatorRef}
+            className={cn(indicatorVars({ variant, size }))}
+          />
+        )}
       </TabsPrimitive.List>
+      </TabsVariantContext.Provider>
     </TabsSizeContext.Provider>
   )
 }
@@ -164,17 +178,22 @@ List.displayName = TabsPrimitive.List.displayName
 function Trigger({
   className,
   size,
+  variant,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Trigger> & {
   size?: TabsSize
+  variant?: TabsVariant
 }) {
   const contextSize = React.useContext(TabsSizeContext)
+  const contextVariant = React.useContext(TabsVariantContext)
+
   const resolvedSize = size ?? contextSize
+  const resolvedVariant = variant ?? contextVariant
 
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
-      className={cn(triggerVars({ size: resolvedSize }), className)}
+      className={cn(triggerVars({ size: resolvedSize, variant: resolvedVariant }), className)}
       {...props}
     />
   )

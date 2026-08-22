@@ -316,6 +316,10 @@ const preset: Config = {
                     DEFAULT: "var(--destructive)",
                     foreground: "var(--destructive-foreground)",
                 },
+                active: {
+                    DEFAULT: "var(--active)",
+                    foreground: "var(--active-foreground)",
+                },
                 muted: {
                     DEFAULT: "var(--muted)",
                     foreground: "var(--muted-foreground)",

@@ -78,14 +78,16 @@ function TemplateGroup({ group }: { group: Group }) {
 
         const dialogId = `add-credential-${templateId}`
         DialogSDK.actions.push(dialogId, props => (
-            <DialogSDK.Template {...props}>
+            <DialogSDK.UnstyledTemplate {...props}>
                 <Dialog.Title className='hidden'>Add Credential</Dialog.Title>
                 <Dialog.Description className='hidden'>Add a new {template.displayName} credential</Dialog.Description>
                 <CredentialForm
+                    surfaceStyle={props.surfaceStyle}
+                    blockTransparency={props.blockTransparency}
                     credentialTemplate={template}
                     onCreated={() => DialogSDK.actions.pop(dialogId)}
                 />
-            </DialogSDK.Template>
+            </DialogSDK.UnstyledTemplate>
         ))
     }
 
@@ -124,10 +126,12 @@ function CredentialRow({ instance, template }: { instance: Vault.Credential.Inst
 
         const dialogId = `edit-credential-${instance.id}`
         DialogSDK.actions.push(dialogId, props => (
-            <DialogSDK.Template {...props}>
+            <DialogSDK.UnstyledTemplate {...props}>
                 <Dialog.Title className='hidden'>Edit Credential</Dialog.Title>
                 <Dialog.Description className='hidden'>Edit this credential</Dialog.Description>
                 <CredentialForm
+                    surfaceStyle={props.surfaceStyle}
+                    blockTransparency={props.blockTransparency}
                     credentialTemplate={template}
                     updateProps={{
                         instanceId: instance.id,
@@ -135,7 +139,7 @@ function CredentialRow({ instance, template }: { instance: Vault.Credential.Inst
                         onRemoved: () => DialogSDK.actions.pop(dialogId),
                     }}
                 />
-            </DialogSDK.Template>
+            </DialogSDK.UnstyledTemplate>
         ))
     }
 

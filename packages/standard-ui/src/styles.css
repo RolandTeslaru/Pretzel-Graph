@@ -68,6 +68,9 @@ code {
   --accent: theme(--color-neutral-300);
   --accent-foreground: theme(--color-neutral-700);
 
+  --active: color-mix(in oklch, theme(--color-sky-400) 20%, transparent);
+  --active-foreground: theme(--color-sky-700);
+
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
   --border: oklch(86.9% 0.005 56.366);
@@ -267,6 +270,9 @@ code {
   --muted-foreground: theme(--color-neutral-400);
   --accent: theme(--color-neutral-700);
   --accent-foreground: theme(--color-white);
+
+  --active: color-mix(in oklch, theme(--color-sky-700) 30%, transparent);
+  --active-foreground: theme(--color-sky-300);
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
   --border: rgb(50, 50, 50);
