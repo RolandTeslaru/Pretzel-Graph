@@ -1,21 +1,16 @@
 # Commercial Licensing
 
-PretzelGraph is distributed under the [PolyForm Noncommercial License 1.0.0](./LICENSE).
-That license lets you use, modify, and share PretzelGraph for **noncommercial**
-purposes free of charge — personal projects, research, education, and use by
-nonprofit or government organizations.
+PretzelGraph is distributed under the [Elastic License 2.0](./LICENSE). That
+license lets you use, modify, and self-host PretzelGraph free of charge —
+including inside a business, for your own operations — with two limitations:
 
-**It does not permit commercial use**, including (but not limited to):
+- You may not offer PretzelGraph, or a service built on it, to third parties as a
+  **hosted or managed service** (SaaS, managed hosting, or similar).
+- You may not circumvent or remove any **license-key-gated functionality**.
 
-- Using PretzelGraph in or for the operations of a for-profit business,
-  even internally.
-- Offering PretzelGraph, or a service built on it, to third parties (hosted,
-  managed, or SaaS).
-- Selling, reselling, or bundling PretzelGraph into a paid product.
-
-If you want to use PretzelGraph for any commercial purpose, you need a
-separate commercial license. These are available directly from the copyright
-holder.
+If you want to do either of those — host PretzelGraph for others, embed it in a
+commercial offering, or unlock enterprise features — you need a separate
+commercial license. These are available directly from the copyright holder.
 
 **Contact:** Roland Teslaru — rolandteslaru@gmail.com
 
