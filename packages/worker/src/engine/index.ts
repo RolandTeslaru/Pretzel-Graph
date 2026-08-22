@@ -1,7 +1,6 @@
 /*
  * PretzelGraph — https://github.com/RolandTeslaru/Pretzel-Graph
- * PolyForm Noncommercial License 1.0.0. Commercial use requires a separate license.
- * PZG-src::9f3a1c
+ * Elastic License 2.0. See LICENSE.
  */
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { S2Engine } from "../S2/engine";

@@ -72,19 +72,18 @@ backend creates everything inside it.
 ## License
 
 PretzelGraph is **source-available**, not open source. It is licensed under the
-[PolyForm Noncommercial License 1.0.0](./LICENSE).
+[Elastic License 2.0](./LICENSE).
 
-- ✅ Free for **noncommercial** use — personal projects, research, education,
-  and use by nonprofit or government organizations.
-- ✅ You may modify and share it, as long as it stays noncommercial and under
-  the same license.
-- ❌ **No commercial use** — including for-profit internal use, hosting it as a
-  service for others, or selling it.
+- ✅ Free to use, modify, and **self-host** — personal projects, research,
+  education, and inside any company for its own operations.
+- ❌ You may not offer it to others as a **hosted or managed service**.
+- ❌ You may not circumvent license-key-gated functionality.
 
-For commercial or enterprise use, a separate license is required. See
+For hosting PretzelGraph as a service, embedding it in a commercial offering, or
+enterprise features, a separate license is required. See
 [COMMERCIAL-LICENSE.md](./COMMERCIAL-LICENSE.md).
 
 ## Contributing
 
-Contributions are welcome under the [Contributor License Agreement](./CLA.md),
-which lets the project maintain its dual-licensing model.
+External pull requests are not open yet — contribution terms are still being settled.
+Issues and discussions are welcome.

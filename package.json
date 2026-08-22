@@ -2,7 +2,7 @@
   "name": "pretzel-graph",
   "version": "0.0.1",
   "private": true,
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "Elastic-2.0",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "patch-package",
