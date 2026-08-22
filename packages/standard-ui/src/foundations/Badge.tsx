@@ -17,6 +17,7 @@ const badgeVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         success: "bg-emerald-400/20 text-emerald-700 dark:bg-emerald-700/30 dark:text-emerald-300",
         active: "bg-sky-400/20 text-sky-700 [a]:hover:bg-sky-400/30 dark:bg-sky-700/30 dark:text-sky-300",
+        nightly: "bg-violet-400/20 text-violet-700 [a]:hover:bg-violet-400/30 dark:bg-violet-700/30 dark:text-violet-300",
       },
       size: {
         default: "h-5 px-2 py-0.5 text-xs [&>svg]:size-3!",

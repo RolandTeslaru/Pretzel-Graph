@@ -1,4 +1,4 @@
-import { type WheelEvent, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, type WheelEvent, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,6 +9,7 @@ import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import type { Vault } from '@pretzel-graph/shared/domain'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { VaultGlyph } from '@pretzel-graph/standard-ui/brands/vaultGlyph'
+import { SidebarTabs } from '@pretzel-graph/standard-ui/components/SidebarTabs'
 
 interface UpdateProps {
     instanceId: Vault.Credential.Instance.Id
@@ -20,6 +21,9 @@ interface Props {
     credentialTemplate: Vault.Credential.Template
     onCreated?: (instanceId: Vault.Credential.Instance.Id) => void
     updateProps?: UpdateProps
+    // From DialogSDK.UnstyledTemplate — the surfaces below apply them themselves.
+    surfaceStyle?: CSSProperties
+    blockTransparency?: boolean
 }
 
 type CredentialField = Vault.Credential.Template['fields'][number]
@@ -70,7 +74,7 @@ const getFieldDefaultValue = (field: CredentialField) => {
     }
 }
 
-export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: Props) => {
+export const CredentialForm = ({ credentialTemplate, onCreated, updateProps, surfaceStyle, blockTransparency }: Props) => {
     // ScrollArea.Root forwards its ref to the underlying viewport.
     const viewportRef = useRef<HTMLDivElement>(null)
 
@@ -189,126 +193,134 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
         viewport.scrollTop += event.deltaY
     }
 
+    // No tabs: the shell is here for its surfaces and layout, and both halves are drawn below.
     return (
-        <div className='flex flex-row w-[600px] h-[500px] overflow-hidden rounded-2xl'>
-            {/* Left sidebar */}
-            <div className='w-[180px] flex flex-col gap-2 shrink-0 py-4 pl-4'>
-                <div className='flex flex-row items-center gap-2'>
-                    <VaultGlyph className='size-10 shrink-0' />
-                    <p className='text-lg font-semibold text-foreground'>Vault</p>
+        <SidebarTabs
+            surfaceStyle={surfaceStyle}
+            blockTransparency={blockTransparency}
+            className='w-[600px] h-[500px] min-h-[500px]'
+            sidebarClassName='w-[180px] py-4 pl-4'
+            contentClassName='max-h-[500px] px-0'
+
+            sidebarRenderer={() => (
+                <div className='flex flex-col gap-2'>
+                    <div className='flex flex-row items-center gap-2'>
+                        <VaultGlyph className='size-10 shrink-0' />
+                        <p className='text-lg font-semibold text-foreground'>Vault</p>
+                    </div>
+
+                    <p className='text-xs text-muted-foreground'>Stores and manages credentials securely.</p>
                 </div>
-                <p className='text-xs text-muted-foreground'>Stores and manages credentials securely.</p>
-            </div>
+            )}
 
-            <div className='h-full bg-border w-[1px]' />
+            contentRenderer={() => (
+                <div className='flex flex-col h-full relative' onWheelCapture={onWheel}>
+                    {/* Header */}
+                    <div className='pointer-events-none absolute top-0 left-0 z-90 flex flex-row gap-2 items-center px-4 pt-6 pb-4'>
+                        <LazyIcon name={credentialTemplate.icon ?? ""} className='size-5' />
+                        <p className='text-sm font-semibold text-foreground'>
+                            {updateProps ? 'Edit' : 'Add'} {credentialTemplate.displayName} Credentials
+                        </p>
+                    </div>
+                    {/* Content */}
+                    <ScrollArea.Root ref={viewportRef} className="h-full [mask-image:linear-gradient(to_bottom,transparent_0,transparent_40px,black_80px,black_calc(100%-80px),transparent_calc(100%-40px),transparent_100%)]">
+                        <Form.Root {...form}>
+                            <form id={formId} onSubmit={form.handleSubmit(onSubmit)} className='relative min-h-full pt-16 pb-20 flex flex-col gap-3 px-4' autoComplete='off'>
 
-            {/* Right column */}
-            <div className='flex flex-col flex-1 h-full relative' onWheelCapture={onWheel}>
-                {/* Header */}
-                <div className='pointer-events-none absolute top-0 left-0 z-90 flex flex-row gap-2 items-center px-4 pt-6 pb-4'>
-                    <LazyIcon name={credentialTemplate.icon ?? ""} className='size-5' />
-                    <p className='text-sm font-semibold text-foreground'>
-                        {updateProps ? 'Edit' : 'Add'} {credentialTemplate.displayName} Credentials
-                    </p>
-                </div>
-                {/* Content */}
-                <ScrollArea.Root ref={viewportRef} className="h-full [mask-image:linear-gradient(to_bottom,transparent_0,transparent_40px,black_80px,black_calc(100%-80px),transparent_calc(100%-40px),transparent_100%)]">
-                    <Form.Root {...form}>
-                        <form id={formId} onSubmit={form.handleSubmit(onSubmit)} className='relative min-h-full pt-16 pb-20 flex flex-col gap-3 px-4' autoComplete='off'>
-
-                            <Form.Field control={form.control} name='name' render={({ field }) => (
-                                <Form.Item>
-                                    <Form.Label>Name</Form.Label>
-                                    <Form.Control>
-                                        <Input
-                                            {...field}
-                                            placeholder={`e.g. ${credentialTemplate.displayName} credentials`}
-                                            autoFocus
-                                            autoComplete='off'
-                                        />
-                                    </Form.Control>
-                                    <Form.Message />
-                                </Form.Item>
-                            )} />
-
-                            {credentialTemplate.fields.map(f => (
-                                <Form.Field key={f.id} control={form.control} name={`fields.${f.id}`} render={({ field }) => (
+                                <Form.Field control={form.control} name='name' render={({ field }) => (
                                     <Form.Item>
-                                        <Form.Label>
-                                            {f.displayName}
-                                            {f.required && <span className='ml-1 text-destructive'>*</span>}
-                                        </Form.Label>
+                                        <Form.Label>Name</Form.Label>
                                         <Form.Control>
-                                            {f.variant === 'Boolean' ? (
-                                                <Switch
-                                                    checked={Boolean(field.value)}
-                                                    onCheckedChange={field.onChange}
-                                                />
-                                            ) : (f.variant === 'Integer' || f.variant === 'Float') ? (
-                                                <Input
-                                                    type='number'
-                                                    value={(field.value ?? '') as number | ''}
-                                                    onChange={e => field.onChange(e.target.value === '' ? '' : e.target.valueAsNumber)}
-                                                    onBlur={field.onBlur}
-                                                    name={field.name}
-                                                    ref={field.ref}
-                                                    placeholder={'placeholder' in f ? (f.placeholder as string) : undefined}
-                                                />
-                                            ) : f.variant === 'MultiOption' ? (
-                                                <Select.Root
-                                                    value={field.value as string}
-                                                    onValueChange={field.onChange}
-                                                >
-                                                    <Select.Trigger aria-invalid={Boolean(form.formState.errors.fields?.[f.id])}>
-                                                        <Select.Value placeholder={f.placeholder ?? `Select ${f.displayName}`} />
-                                                    </Select.Trigger>
-                                                    <Select.Content size='sm'>
-                                                        {f.options.map(option => (
-                                                            <Select.Item
-                                                                key={option.value}
-                                                                value={option.value}
-                                                                description={option.description}
-                                                            >
-                                                                {option.displayName ?? option.value}
-                                                            </Select.Item>
-                                                        ))}
-                                                    </Select.Content>
-                                                </Select.Root>
-                                            ) : (
-                                                <Input
-                                                    {...field}
-                                                    value={field.value as string}
-                                                    type={f.variant === 'Password' ? 'password' : 'text'}
-                                                    placeholder={'placeholder' in f ? (f.placeholder as string) : undefined}
-                                                    autoComplete='new-password'
-                                                />
-                                            )}
+                                            <Input
+                                                {...field}
+                                                placeholder={`e.g. ${credentialTemplate.displayName} credentials`}
+                                                autoFocus
+                                                autoComplete='off'
+                                            />
                                         </Form.Control>
                                         <Form.Message />
                                     </Form.Item>
                                 )} />
-                            ))}
 
-                        </form>
-                    </Form.Root>
-                </ScrollArea.Root>
+                                {credentialTemplate.fields.map(f => (
+                                    <Form.Field key={f.id} control={form.control} name={`fields.${f.id}`} render={({ field }) => (
+                                        <Form.Item>
+                                            <Form.Label>
+                                                {f.displayName}
+                                                {f.required && <span className='ml-1 text-destructive'>*</span>}
+                                            </Form.Label>
+                                            <Form.Control>
+                                                {f.variant === 'Boolean' ? (
+                                                    <Switch
+                                                        checked={Boolean(field.value)}
+                                                        onCheckedChange={field.onChange}
+                                                    />
+                                                ) : (f.variant === 'Integer' || f.variant === 'Float') ? (
+                                                    <Input
+                                                        type='number'
+                                                        value={(field.value ?? '') as number | ''}
+                                                        onChange={e => field.onChange(e.target.value === '' ? '' : e.target.valueAsNumber)}
+                                                        onBlur={field.onBlur}
+                                                        name={field.name}
+                                                        ref={field.ref}
+                                                        placeholder={'placeholder' in f ? (f.placeholder as string) : undefined}
+                                                    />
+                                                ) : f.variant === 'MultiOption' ? (
+                                                    <Select.Root
+                                                        value={field.value as string}
+                                                        onValueChange={field.onChange}
+                                                    >
+                                                        <Select.Trigger aria-invalid={Boolean(form.formState.errors.fields?.[f.id])}>
+                                                            <Select.Value placeholder={f.placeholder ?? `Select ${f.displayName}`} />
+                                                        </Select.Trigger>
+                                                        <Select.Content size='sm'>
+                                                            {f.options.map(option => (
+                                                                <Select.Item
+                                                                    key={option.value}
+                                                                    value={option.value}
+                                                                    description={option.description}
+                                                                >
+                                                                    {option.displayName ?? option.value}
+                                                                </Select.Item>
+                                                            ))}
+                                                        </Select.Content>
+                                                    </Select.Root>
+                                                ) : (
+                                                    <Input
+                                                        {...field}
+                                                        value={field.value as string}
+                                                        type={f.variant === 'Password' ? 'password' : 'text'}
+                                                        placeholder={'placeholder' in f ? (f.placeholder as string) : undefined}
+                                                        autoComplete='new-password'
+                                                    />
+                                                )}
+                                            </Form.Control>
+                                            <Form.Message />
+                                        </Form.Item>
+                                    )} />
+                                ))}
 
-                {/* Footer */}
-                <div className='pointer-events-none absolute bottom-0 left-0 right-0 pt-2 px-4 pb-4 pt-2 mt-auto w-full flex'>
-                    <div className='ml-auto gap-2 flex'>
-                        {updateProps ? (
-                            <Button type='button' variant='ghost-destructive' className='pointer-events-auto rounded-full' onClick={onRemove} disabled={isRemoving || form.formState.isSubmitting}>
-                                {isRemoving && <Spinner className='mr-2 h-4 w-4' />}
-                                Remove
+                            </form>
+                        </Form.Root>
+                    </ScrollArea.Root>
+
+                    {/* Footer */}
+                    <div className='pointer-events-none absolute bottom-0 left-0 right-0 pt-2 px-4 pb-4 pt-2 mt-auto w-full flex'>
+                        <div className='ml-auto gap-2 flex'>
+                            {updateProps ? (
+                                <Button type='button' variant='ghost-destructive' className='pointer-events-auto rounded-full' onClick={onRemove} disabled={isRemoving || form.formState.isSubmitting}>
+                                    {isRemoving && <Spinner className='mr-2 h-4 w-4' />}
+                                    Remove
+                                </Button>
+                            ) : <div />}
+                            <Button type='submit' form={formId} className='pointer-events-auto rounded-full' disabled={form.formState.isSubmitting || isLoadingValues || isRemoving}>
+                                {form.formState.isSubmitting && <Spinner className='mr-2 h-4 w-4' />}
+                                Save
                             </Button>
-                        ) : <div />}
-                        <Button type='submit' form={formId} className='pointer-events-auto rounded-full' disabled={form.formState.isSubmitting || isLoadingValues || isRemoving}>
-                            {form.formState.isSubmitting && <Spinner className='mr-2 h-4 w-4' />}
-                            Save
-                        </Button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            )}
+        />
     )
 }

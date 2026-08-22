@@ -183,6 +183,43 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
         )
     }
 
+    
+    // public readonly TabsDialog: DialogSDK.Template = ({ children, entry, dialogsSize, index, blockTransparency, className, dismissible = true }) => {
+    //     const delayStyle = useAnimationDelay();
+    //     const scale_offset = (index - (dialogsSize - 1)) * 8;
+    //     const y_offset = (index - (dialogsSize - 1)) * 40;
+    //     const finalScale = 1 + scale_offset / 100;
+
+    //     const blockDismiss = dismissible ? undefined : (e: Event) => e.preventDefault();
+
+    //     return (
+    //         <Dialog.Root
+    //             open={entry.isOpen}
+    //             onOpenChange={() => { if (dismissible) DialogSDK.actions.pop(entry.dialogId) }}
+    //         >
+    //             <Dialog.Content
+    //                 style={{
+    //                     ...delayStyle,
+    //                     transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
+    //                 }}
+    //                 darkenBackground={index === 0}
+    //                 blockTransparency={blockTransparency}
+    //                 className={className}
+    //                 onInteractOutside={blockDismiss}
+    //                 onEscapeKeyDown={blockDismiss}
+    //             >
+    //                 <div className="bg-card/50 backdrop-blur-lg">
+
+    //                 </div>
+    //                 <div className="bg-card/80 backdrop-blur-lg">
+
+    //                 </div>
+    //             </Dialog.Content>
+    //         </Dialog.Root>
+    //     )
+    // }
+
+
     // Chrome-less stacking shell. Applies the stack transform + entry animation but NOT the
     // brightness `filter` — a `filter` on this wrapper would form a backdrop root and trap
     // descendant `backdrop-filter`s. Instead the brightness is handed to children via
