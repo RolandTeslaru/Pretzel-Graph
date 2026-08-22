@@ -1,18 +1,42 @@
+import type { ReactNode } from 'react'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DropdownMenu, AlertDialog } from '@pretzel-graph/standard-ui/foundations'
 import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK/sdk'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-import { openAccountDialog } from '@/SDKs/AuthSDK/ui/AccountDialog'
 
 const LOGOUT_DIALOG_ID = 'logout'
+
+// Optional. Everything pointing at it is left out entirely when it is unset.
+const CLOUD_URL = import.meta.env.VITE_CLOUD_URL
+
+// The origin is configured; the path is not.
+export const WORKSPACES_URL = CLOUD_URL && `${CLOUD_URL.replace(/\/$/, '')}/workspaces`
+
+/** Renders nothing without a cloud origin, so no call site needs a condition. */
+export function AdminPanelItem() {
+    if (!WORKSPACES_URL)
+        return null
+
+    return (
+        <DropdownMenu.Item asChild>
+            {/* Another origin, so a plain anchor rather than a router link. */}
+            <a href={WORKSPACES_URL}>
+                <SystemIcons.ArrowLeft />
+                Admin panel
+            </a>
+        </DropdownMenu.Item>
+    )
+}
 
 type Props = {
     compact?: boolean
     title?: string
+    /** Entries for this screen, placed above the theme group. */
+    children?: ReactNode
 }
 
-export function PretzelGraphDropdown({ compact = false, title = 'PretzelGraph' }: Props) {
+export function PretzelGraphDropdown({ compact = false, title = 'PretzelGraph', children }: Props) {
     const theme = SystemSDK.useStore(s => s.theme)
 
     const handleLogout = () => {
@@ -55,10 +79,7 @@ export function PretzelGraphDropdown({ compact = false, title = 'PretzelGraph' }
                 <h4 className="px-2 py-1 text-md font-medium text-primary">
                     {title}.ai
                 </h4>
-                <DropdownMenu.Item onSelect={() => openAccountDialog()}>
-                    <SystemIcons.User />
-                    Account
-                </DropdownMenu.Item>
+                {children}
                 {/* <DropdownMenu.Item>
                     <SystemIcons.Settings />
                     Settings
@@ -81,11 +102,16 @@ export function PretzelGraphDropdown({ compact = false, title = 'PretzelGraph' }
                         System
                     </DropdownMenu.RadioItem>
                 </DropdownMenu.RadioGroup>
-                <DropdownMenu.Separator />
-                <DropdownMenu.Item variant="destructive" onSelect={handleLogout}>
-                    <SystemIcons.Logout />
-                    Log out
-                </DropdownMenu.Item>
+                {/* Self-hosted only: with a cloud origin the session is managed there. */}
+                {!WORKSPACES_URL && (
+                    <>
+                        <DropdownMenu.Separator />
+                        <DropdownMenu.Item variant="destructive" onSelect={handleLogout}>
+                            <SystemIcons.Logout />
+                            Log out
+                        </DropdownMenu.Item>
+                    </>
+                )}
             </DropdownMenu.Content>
         </DropdownMenu.Root>
     )

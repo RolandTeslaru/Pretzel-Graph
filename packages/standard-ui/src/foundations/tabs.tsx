@@ -48,7 +48,7 @@ const triggerVars = cva(
       variant: {
         primary: "",
         accent: "",
-        sidebar: "w-full justify-start gap-2 rounded-md px-2 py-1 text-sm font-normal hover:bg-accent/30 data-[state=active]:bg-card/30 dark: data-[state=active]:bg-card",
+        sidebar: "w-full justify-start gap-2 rounded-md px-2 py-1 text-sm font-normal hover:bg-accent/30  data-[state=active]:bg-input",
       }
     },
     defaultVariants: {

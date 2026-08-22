@@ -214,9 +214,16 @@ export function createHTTPClientAPI(executionSignal: AbortSignal): HTTP.ClientAP
  */
 export function createInternalClient(executionToken: Execution.Token): HTTP.Client {
 
+    const internalToken = process.env.WORKER_SERVICE_INTERNAL_TOKEN;
+
     return createHTTPClientAPI(new AbortController().signal).create({
         vendor:  "Pretzel backend",
         baseURL: process.env.API_URL,
-        headers: { [Execution.Token.HEADER]: executionToken },
+        headers: {
+            [Execution.Token.HEADER]: executionToken,
+            // This call does not pass through any fronting proxy, so it carries
+            // the service token that says so. Absent when nothing fronts it.
+            ...(internalToken ? { "internal-service-token": internalToken } : {}),
+        },
     });
 }

@@ -1,6 +1,6 @@
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { PretzelGraphDropdown } from '@/components/PretzelGraphDropdown'
+import { AdminPanelItem, PretzelGraphDropdown } from '@/components/PretzelGraphDropdown'
 import Breadcrumbs from '@/routes/home/library/-components/Breadcrumbs'
 
 export const TopLeftPanel = () => {
@@ -15,7 +15,9 @@ export const TopLeftPanel = () => {
 
     return (
         <div className='fixed top-5 left-5 flex gap-3 text-sm font-medium'>
-            <PretzelGraphDropdown compact />
+            <PretzelGraphDropdown compact>
+                <AdminPanelItem />
+            </PretzelGraphDropdown>
             <Breadcrumbs className='my-auto' cwd={breadCrumbs} finalFileName={display_name} />
         </div>
     )
