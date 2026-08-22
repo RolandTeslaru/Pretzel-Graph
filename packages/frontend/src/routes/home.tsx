@@ -4,7 +4,7 @@ import { useMemo, type ComponentType } from 'react'
 import type { BaseIconProps } from '@pretzel-graph/standard-ui/icons/baseIcon'
 import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { PretzelGraphDropdown } from '@/components/PretzelGraphDropdown'
+import { AdminPanelItem, PretzelGraphDropdown, WORKSPACES_URL } from '@/components/PretzelGraphDropdown'
 import { Dither, ditherCtx } from '@pretzel-graph/standard-ui/components/Dither'
 import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK'
 // import { Preview } from 'shaders/react'
@@ -49,11 +49,6 @@ const NAV_BOTTOM: NavEntry[] = [
     { id: 'settings', label: 'Settings', to: '/home/settings', icon: SystemIcons.Settings },
 ]
 
-// Optional. The sidebar link is left out entirely when it is unset.
-const CLOUD_URL = import.meta.env.VITE_CLOUD_URL
-
-// The origin is configured; the path is not.
-const WORKSPACES_URL = CLOUD_URL && `${CLOUD_URL.replace(/\/$/, '')}/workspaces`
 
 
 function HomeLayout() {
@@ -102,7 +97,9 @@ function Sidebar() {
     return (
         <aside className="w-56 shrink-0 flex flex-col">
             <div className="h-14 px-4 flex items-center">
-                <PretzelGraphDropdown />
+                <PretzelGraphDropdown>
+                    <AdminPanelItem />
+                </PretzelGraphDropdown>
             </div>
 
             <nav className="flex-1 p-2 flex flex-col gap-0.5">
