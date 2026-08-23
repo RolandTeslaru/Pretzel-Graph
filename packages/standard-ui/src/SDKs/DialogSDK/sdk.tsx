@@ -121,7 +121,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
     }
 
 
-    public readonly AlertTemplate: DialogSDK.AlertTemplate = ({ children, entry, dialogsSize, index, blockTransparency, className, onCancel, onApprove, cancelLabel = "Cancel", approveLabel = "Approve", type = "warning", dismissible = true }) => {
+    public readonly AlertTemplate: DialogSDK.AlertTemplate = ({ children, entry, dialogsSize, index, blockTransparency, className, onCancel, onApprove, cancelLabel = "Cancel", approveLabel = "Approve", approveDisabled = false, type = "warning", dismissible = true }) => {
         const delayStyle = useAnimationDelay();
         const scale_offset = (index - (dialogsSize - 1)) * 8;
         const y_offset = (index - (dialogsSize - 1)) * 40;
@@ -173,6 +173,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                             <AlertDialog.Action
                                 onClick={(event) => onApprove?.(event, entry, dialogsSize, index)}
                                 variant={type === "danger" ? "destructive" : type}
+                                disabled={approveDisabled}
                             >
                                 {approveLabel}
                             </AlertDialog.Action>
@@ -183,42 +184,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
         )
     }
 
-    
-    // public readonly TabsDialog: DialogSDK.Template = ({ children, entry, dialogsSize, index, blockTransparency, className, dismissible = true }) => {
-    //     const delayStyle = useAnimationDelay();
-    //     const scale_offset = (index - (dialogsSize - 1)) * 8;
-    //     const y_offset = (index - (dialogsSize - 1)) * 40;
-    //     const finalScale = 1 + scale_offset / 100;
-
-    //     const blockDismiss = dismissible ? undefined : (e: Event) => e.preventDefault();
-
-    //     return (
-    //         <Dialog.Root
-    //             open={entry.isOpen}
-    //             onOpenChange={() => { if (dismissible) DialogSDK.actions.pop(entry.dialogId) }}
-    //         >
-    //             <Dialog.Content
-    //                 style={{
-    //                     ...delayStyle,
-    //                     transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
-    //                 }}
-    //                 darkenBackground={index === 0}
-    //                 blockTransparency={blockTransparency}
-    //                 className={className}
-    //                 onInteractOutside={blockDismiss}
-    //                 onEscapeKeyDown={blockDismiss}
-    //             >
-    //                 <div className="bg-card/50 backdrop-blur-lg">
-
-    //                 </div>
-    //                 <div className="bg-card/80 backdrop-blur-lg">
-
-    //                 </div>
-    //             </Dialog.Content>
-    //         </Dialog.Root>
-    //     )
-    // }
-
+  
 
     // Chrome-less stacking shell. Applies the stack transform + entry animation but NOT the
     // brightness `filter` — a `filter` on this wrapper would form a backdrop root and trap
@@ -281,6 +247,8 @@ export namespace DialogSDK {
         type?: "default" | "warning" | "danger" | "accent"
         cancelLabel?: React.ReactNode
         approveLabel?: React.ReactNode
+        // Holds the action until whatever the body asks for has been done.
+        approveDisabled?: boolean
     }
 
     export interface TemplateProps {
