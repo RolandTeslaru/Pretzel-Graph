@@ -7,7 +7,11 @@ import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { Auth, Workspace } from "@pretzel-graph/shared/domain";
 import { _createAuthActions_ } from "./actions";
 import { SystemSDK } from "@pretzel-graph/standard-ui/SDKs/SystemSDK";
+import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
+import { AlertDialog } from "@pretzel-graph/standard-ui/foundations";
 import { router } from "@/main";
+
+const LOGOUT_DIALOG_ID = 'logout'
 
 @SDK("Auth")
 export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
@@ -81,6 +85,27 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
           router.navigate({ to: '/auth' })
       }
   })
+  }
+
+  /** Confirms first: signing out is one click from anywhere the menu opens. */
+  public openLogOutDialog = () => {
+    DialogSDK.actions.push(LOGOUT_DIALOG_ID, props => (
+      <DialogSDK.AlertTemplate
+        {...props}
+        type='warning'
+        approveLabel='Log out'
+        onApprove={async () => {
+          await this.actions.logout()
+          DialogSDK.actions.pop(LOGOUT_DIALOG_ID)
+        }}
+        onCancel={() => DialogSDK.actions.pop(LOGOUT_DIALOG_ID)}
+      >
+        <AlertDialog.Title>Log out?</AlertDialog.Title>
+        <AlertDialog.Description>
+          You will need to sign in again to access your workflows.
+        </AlertDialog.Description>
+      </DialogSDK.AlertTemplate>
+    ))
   }
 
   public readonly actions: AuthSDK.Actions = _createAuthActions_(this);

@@ -1,11 +1,8 @@
 import type { ReactNode } from 'react'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { DropdownMenu, AlertDialog } from '@pretzel-graph/standard-ui/foundations'
+import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK/sdk'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
-import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-
-const LOGOUT_DIALOG_ID = 'logout'
 
 // Optional. Everything pointing at it is left out entirely when it is unset.
 const CLOUD_URL = import.meta.env.VITE_CLOUD_URL
@@ -38,26 +35,6 @@ type Props = {
 
 export function PretzelGraphDropdown({ compact = false, title = 'PretzelGraph', children }: Props) {
     const theme = SystemSDK.useStore(s => s.theme)
-
-    const handleLogout = () => {
-        DialogSDK.actions.push(LOGOUT_DIALOG_ID, props => (
-            <DialogSDK.AlertTemplate
-                {...props}
-                type='warning'
-                approveLabel='Log out'
-                onApprove={async () => {
-                    await AuthSDK.actions.logout()
-                    DialogSDK.actions.pop(LOGOUT_DIALOG_ID)
-                }}
-                onCancel={() => DialogSDK.actions.pop(LOGOUT_DIALOG_ID)}
-            >
-                <AlertDialog.Title>Log out?</AlertDialog.Title>
-                <AlertDialog.Description>
-                    You will need to sign in again to access your workflows.
-                </AlertDialog.Description>
-            </DialogSDK.AlertTemplate>
-        ))
-    }
 
     return (
         <DropdownMenu.Root>
@@ -106,7 +83,7 @@ export function PretzelGraphDropdown({ compact = false, title = 'PretzelGraph', 
                 {!WORKSPACES_URL && (
                     <>
                         <DropdownMenu.Separator />
-                        <DropdownMenu.Item variant="destructive" onSelect={handleLogout}>
+                        <DropdownMenu.Item variant="destructive" onSelect={() => AuthSDK.openLogOutDialog()}>
                             <SystemIcons.Logout />
                             Log out
                         </DropdownMenu.Item>
