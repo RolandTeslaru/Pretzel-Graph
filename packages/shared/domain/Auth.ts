@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { AxiosInstance } from "axios"
+import type { AxiosInstance, AxiosRequestConfig } from "axios"
 import { Role } from "./Workspace/role"
 
 export namespace Auth {
@@ -39,9 +39,13 @@ export namespace Auth {
             })
             export type Response = z.infer<typeof Response>
 
-            /** Unauthenticated: the sign-in screen asks before anyone has an account. */
+            /**
+             * Unauthenticated: the sign-in screen asks before anyone has an account.
+             * Never retried — it has a safe fallback, and waiting on it holds up
+             * the only page a signed-out visitor can use.
+             */
             export async function get(api: AxiosInstance): Promise<Response> {
-                const { data } = await api.get<Response>('/api/auth/status')
+                const { data } = await api.get<Response>('/api/auth/status', { noRetry: true } as AxiosRequestConfig)
                 return data
             }
         }

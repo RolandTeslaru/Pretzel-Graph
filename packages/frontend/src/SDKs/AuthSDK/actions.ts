@@ -1,3 +1,4 @@
+import axios from "axios";
 import { toast } from "sonner";
 import { Auth, Workspace } from "@pretzel-graph/shared/domain";
 import { AuthSDK, AuthSDKImpl } from "./sdk";
@@ -27,7 +28,8 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
             sdk.setState(s => {
                 s.user = user;
                 s.role = role;
-                s.isAuthenticated = true;
+                s.hasSession = true;
+                s.access = 'granted';
             })
             toast.info("Logged In!")
             return true;
@@ -43,7 +45,8 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
             sdk.setState(s => {
                 s.user = null
                 s.role = null
-                s.isAuthenticated = false
+                s.hasSession = false
+                s.access = 'denied'
             })
             return true
         },
@@ -77,7 +80,8 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
             sdk.setState(s => {
                 s.user = user;
                 s.role = role;
-                s.isAuthenticated = true;
+                s.hasSession = true;
+                s.access = 'granted';
             })
             toast.info("Logged In!")
             return true;
@@ -89,12 +93,19 @@ export function _createAuthActions_(sdk: AuthSDKImpl): AuthSDK.Actions {
                 sdk.setState(s => {
                     s.user = user;
                     s.role = role;
-                    s.isAuthenticated = true;
-                    s.isLoading = false;
+                    s.access = 'granted';
                 })
             } catch (error) {
-                console.error("Failed to fetch user profile", error)
-                sdk.setState(s => { s.isLoading = false });
+                const status = axios.isAxiosError(error) ? error.response?.status : undefined
+
+                // Refusing is an answer; anything else means the backend has
+                // not answered yet, which is not the same as being signed out.
+                const denied = status === 401 || status === 403
+
+                if (!denied)
+                    console.error("Could not reach the backend", error)
+
+                sdk.setState(s => { s.access = denied ? 'denied' : 'unreachable' });
             }
         },
         updateMe: async (props) => {

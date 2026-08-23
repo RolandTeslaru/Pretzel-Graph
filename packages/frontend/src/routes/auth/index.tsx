@@ -10,7 +10,7 @@ import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK'
 export const Route = createFileRoute('/auth/')({
     // If already authenticated, redirect to home
     beforeLoad: ({ context }) => {
-        if (context.auth.isAuthenticated) {
+        if (context.auth.hasSession && context.auth.access === 'granted') {
             throw redirect({ to: '/home' })
         }
     },

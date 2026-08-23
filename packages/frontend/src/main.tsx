@@ -29,15 +29,39 @@ declare module '@tanstack/react-router' {
   }
 }
 
+/** Held here rather than per route, so no loader runs before the backend answers. */
+function Waiting({ title, detail, onRetry }: { title: string, detail?: string, onRetry?: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen gap-3 px-6 text-center">
+      {!onRetry && <Spinner />}
+      <p className="text-sm font-medium">{title}</p>
+      {detail && <p className="text-xs opacity-60 max-w-xs">{detail}</p>}
+      {onRetry && (
+        <button className="mt-1 px-3 py-1.5 text-xs rounded border hover:bg-muted" onClick={onRetry}>
+          Try again
+        </button>
+      )}
+    </div>
+  )
+}
+
 function App() {
   const auth = AuthSDK.useStore()
 
-  if (auth.isLoading) {
-    return <div className="flex items-center justify-center min-h-screen gap-4">
-      <p>Authenticating...</p>
-      <Spinner/>
-    </div>
-  }
+  if (auth.hasSession === null)
+    return <Waiting title="Checking your session" />
+
+  if (auth.hasSession && auth.access === 'checking')
+    return <Waiting title="Connecting to your workspace" />
+
+  if (auth.hasSession && auth.access === 'unreachable')
+    return (
+      <Waiting
+        title="This workspace is not responding"
+        detail="It may still be starting up."
+        onRetry={() => window.location.reload()}
+      />
+    )
 
   return <RouterProvider router={router} context={{ auth }} />
 }

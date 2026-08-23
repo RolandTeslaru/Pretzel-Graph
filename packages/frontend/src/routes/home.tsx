@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect, Link, useRouterState } from '@tanstack/react-router'
+import { createFileRoute, Outlet, Link, useRouterState } from '@tanstack/react-router'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { useMemo, type ComponentType } from 'react'
 import type { BaseIconProps } from '@pretzel-graph/standard-ui/icons/baseIcon'
@@ -12,11 +12,6 @@ import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK'
 const HOME_STALE_TIME = 60_000
 
 export const Route = createFileRoute('/home')({
-    beforeLoad: ({ context }) => {
-        if (!context.auth.isAuthenticated) {
-            throw redirect({ to: '/auth' })
-        }
-    },
     loader: async () => {
         await QuerySDK.client.fetchQuery({
             queryKey: ['library', 'bootstrap'],
