@@ -1,5 +1,5 @@
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
+import { createRootRouteWithContext, Outlet, redirect } from '@tanstack/react-router'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { NotificationSDK } from '@pretzel-graph/standard-ui/SDKs/NotificationSDK'
 import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
@@ -36,7 +36,21 @@ function WebhookTester() {
     )
 }
 
+// Signing in happens here, so these cannot require being signed in.
+const PUBLIC_PATHS = ['/', '/auth', '/icons-preview', '/ui-preview']
+
+const isPublic = (pathname: string) =>
+    PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
+
 export const Route = createRootRouteWithContext<RouterContext>()({
+    // Declared once, at the top: a new page is private unless it says otherwise.
+    beforeLoad: ({ context, location }) => {
+        if (isPublic(location.pathname))
+            return
+
+        if (!context.auth.hasSession || context.auth.access === 'denied')
+            throw redirect({ to: '/auth' })
+    },
     component: () => (
         <>
             <QuerySDK.Provider>

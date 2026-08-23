@@ -3,7 +3,7 @@ import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import ShelfSidebar from '@/routes/workflow/-SDKs/ShelfSDK/ui/ShelfSidebar'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import WorkflowCanvas from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/Canvas'
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef, useCallback } from 'react'
 import { Spinner } from '@pretzel-graph/standard-ui/foundations'
 import NodeSidebar from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/NodePanel'
@@ -41,11 +41,6 @@ const isDevHmrFullReload = () => import.meta.env.DEV && isViteFullReloadPending
 const isDevBrowserUnload = () => import.meta.env.DEV && isBrowserUnloadPending
 
 export const Route = createFileRoute('/workflow/$workflowid')({
-    beforeLoad: ({ context }) => {
-        if (!context.auth.isAuthenticated) {
-            throw redirect({ to: '/auth' })
-        }
-    },
     loader: ({ params, abortController }) => {
         const workflowId = params.workflowid as Workflow.Id;
 

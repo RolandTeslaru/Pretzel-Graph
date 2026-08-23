@@ -42,10 +42,10 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
 
   public readonly useStore: BaseSDK.Store<AuthSDK.State> = create(
     immer<AuthSDK.State>(() => ({
-      isAuthenticated: false,
+      hasSession: null,
+      access: 'checking',
       user: null,
       role: null,
-      isLoading: true,
     }))
   )
 
@@ -60,11 +60,15 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
       console.error("Error fetching session", error)
     }
 
-    if (session?.user) {
-      await this.actions.syncUser(session.user.id as Auth.User.Id);
-    } else {
-      this.setState(s => { s.isLoading = false })
+    if (!session?.user) {
+      this.setState(s => { s.hasSession = false; s.access = 'denied' })
+
+      return
     }
+
+    this.setState(s => { s.hasSession = true })
+
+    await this.actions.syncUser(session.user.id as Auth.User.Id);
 
 
       
@@ -78,8 +82,8 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
           this.setState(s => {
               s.user = null
               s.role = null
-              s.isAuthenticated = false
-              s.isLoading = false
+              s.hasSession = false
+              s.access = 'denied'
           })
 
           router.navigate({ to: '/auth' })
@@ -112,11 +116,15 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
 }
 
 export namespace AuthSDK {
+  /** Whether the backend recognises this session here. */
+  export type Access = 'checking' | 'granted' | 'denied' | 'unreachable';
+
   export type State = {
-    isAuthenticated: boolean;
+    /** Whether a session exists at all. Null until the first read settles. */
+    hasSession: boolean | null;
+    access: Access;
     user: null | Auth.User;
     role: null | Workspace.Role;
-    isLoading: boolean;
   }
 
   export type Actions = {
