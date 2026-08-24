@@ -1,8 +1,14 @@
 // OpenAI model pricing in USD per 1M tokens.
 // Source: https://openai.com/api/pricing/
-// Last verified: May 2026
+// Last verified: August 2026 (5.x rows); May 2026 (older rows)
 
 export const PRICES: Record<string, { input: number; output: number }> = {
+    "gpt-5.6-sol":   { input:  5.00, output: 30.00 },
+    "gpt-5.6-terra": { input:  2.00, output: 12.00 },
+    "gpt-5.6-luna":  { input:  0.20, output:  1.20 },
+    "gpt-5.5":       { input:  5.00, output: 30.00 },
+    "gpt-5.4":       { input:  2.50, output: 15.00 },
+    "gpt-5.4-nano":  { input:  0.20, output:  1.25 },
     "gpt-4o":        { input:  2.50, output: 10.00 },
     "gpt-4o-mini":   { input:  0.15, output:  0.60 },
     "gpt-4.1":       { input:  2.00, output:  8.00 },

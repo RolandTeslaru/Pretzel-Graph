@@ -12,11 +12,15 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);
 
-        const { maxTokens, ...fieldValues } = this.fieldValues;
+        const { model, temperature, maxTokens } = this.fieldValues;
+
+        const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.xAiApi.blob);
 
         this.llm = new ChatXAI({
-            ...fieldValues,
+            model,
+            temperature,
             ...(typeof maxTokens === "number" ? { maxTokens } : {}),
+            apiKey,
         });
     }
 

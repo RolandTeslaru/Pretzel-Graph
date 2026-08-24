@@ -11,6 +11,7 @@ import { openEditFolderDialog, openEditWorkflowDialog } from './create-dialogs'
 import { openDeleteFolderDialog } from './FolderView/folder-card'
 import { openDeleteWorkflowDialog } from './FolderView/workflow-card'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
+import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import classNames from 'classnames';
 
 type FileSystemTreeSize = 'default' | 'sm'
@@ -262,6 +263,23 @@ function FileSystemTreeItem({
                 </div>
             </ContextMenu.Trigger>
             <ContextMenu.Content>
+                {workflowId && (
+                    <>
+                        <ContextMenu.Item
+                            icon={<SystemIcons.Graph className='size-4' />}
+                            onClick={() => onWorkflowClick?.(workflowId)}
+                        >
+                            Open here
+                        </ContextMenu.Item>
+                        <ContextMenu.Item
+                            icon={<SystemIcons.ExternalLink className='size-4' />}
+                            onClick={() => WorkbenchSDK.openWorkflowWindow(workflowId)}
+                        >
+                            Open in new tab
+                        </ContextMenu.Item>
+                        <ContextMenu.Separator />
+                    </>
+                )}
                 <ContextMenu.Item
                     icon={<SystemIcons.SquarePen className='size-4' />}
                     onClick={handleEdit}

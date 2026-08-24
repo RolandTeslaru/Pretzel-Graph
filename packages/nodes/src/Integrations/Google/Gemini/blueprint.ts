@@ -13,11 +13,11 @@ export const Blueprint = defineBlueprint({
         FieldBuilder.MultiOption("model", "Model", {
             options: [
                 { value: "gemini-3.1-pro-preview", displayName: "Gemini 3.1 Pro Preview" },
-                { value: "gemini-2.5-pro", displayName: "Gemini 2.5 Pro" },
-                { value: "gemini-3-flash-preview", displayName: "Gemini 3 Flash Preview" },
-                { value: "gemini-3.1-flash-lite-preview", displayName: "Gemini 3.1 Flash Lite Preview" },
-                { value: "gemini-2.5-flash", displayName: "Gemini 2.5 Flash" },
-                { value: "gemini-2.5-flash-lite", displayName: "Gemini 2.5 Flash Lite" },
+                { value: "gemini-3.7-flash", displayName: "Gemini 3.7 Flash" },
+                { value: "gemini-3.6-flash", displayName: "Gemini 3.6 Flash" },
+                { value: "gemini-3.5-flash", displayName: "Gemini 3.5 Flash" },
+                { value: "gemini-3.5-flash-lite", displayName: "Gemini 3.5 Flash Lite" },
+                { value: "gemini-3.1-flash-lite", displayName: "Gemini 3.1 Flash Lite" },
             ],
 
             initialValue: "gemini-3.1-pro-preview"

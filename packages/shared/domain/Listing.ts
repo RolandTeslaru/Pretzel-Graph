@@ -37,9 +37,9 @@ export namespace Listing {
             workflow_data:    listing.workflowData,
             published_at:     meta.published_at,
             publication_name: meta.name,
-            display_name:     meta.name,
-            icon:             null,
-            accent:           null,
+            display_name:     meta.workflow_meta.display_name,
+            icon:             meta.workflow_meta.icon ?? null,
+            accent:           meta.workflow_meta.accent ?? null,
         }
     }
 

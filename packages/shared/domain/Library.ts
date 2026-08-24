@@ -25,9 +25,9 @@ export namespace Library {
 
 
     export namespace WorkflowMeta {
-        export const Schema = DomainWorkflow.Schema.omit({ data: true })
+        export const Schema = DomainWorkflow.Meta.Schema
     }
-    export type WorkflowMeta = z.infer<typeof WorkflowMeta.Schema>
+    export type WorkflowMeta = DomainWorkflow.Meta
 
     // ─────────────────────────────────────────────────────────────
     // API request/response shapes

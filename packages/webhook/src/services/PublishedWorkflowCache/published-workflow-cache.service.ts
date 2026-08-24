@@ -15,9 +15,7 @@ export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDest
     private readonly publicationsMap = new Map<Workflow.Id, VersionControl.Publication>();
 
     private toPublication(row: unknown): VersionControl.Publication {
-        // A raw version_control row parses straight into the domain schema — same as the
-        // backend's DB.VersionControl.toDomain. (Previously referenced Publication.Database.Row,
-        // a namespace removed in an earlier refactor, which left this uncompilable.)
+        // A raw version_control row parses straight into the domain schema.
         return VersionControl.Publication.Schema.parse(row);
     }
 
@@ -73,7 +71,7 @@ export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDest
     // and this server routes for every tenant; there is no user to scope to.
     private async fetchActivePublication(workflowId: Workflow.Id): Promise<VersionControl.Publication | null> {
         const result = await db().query(
-            `select id, workflow_id, version, name, description, workflow_data, is_active, published_at
+            `select id, workflow_id, version, name, description, workflow_meta, workflow_data, is_active, published_at
              from version_control
              where workflow_id = $1 and is_active = true
              order by published_at desc

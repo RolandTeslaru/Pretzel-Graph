@@ -11,15 +11,15 @@ export const Blueprint = defineBlueprint({
     fields: [
         FieldBuilder.MultiOption("model", "Model", {
             options: [
+                { value: "grok-4.6", displayName: "Grok 4.6" },
+                { value: "grok-4.5", displayName: "Grok 4.5" },
                 { value: "grok-4.3", displayName: "Grok 4.3" },
                 { value: "grok-4.20-0309-reasoning", displayName: "Grok 4.20 Reasoning" },
                 { value: "grok-4.20-0309-non-reasoning", displayName: "Grok 4.20 Non-Reasoning" },
                 { value: "grok-4.20-multi-agent-0309", displayName: "Grok 4.20 Multi-Agent" },
-                { value: "grok-3", displayName: "Grok 3" },
-                { value: "grok-3-mini", displayName: "Grok 3 Mini" },
             ],
 
-            initialValue: "grok-4.3"
+            initialValue: "grok-4.6"
         }),
         FieldBuilder.Float("temperature", "Temperature", {
             initialValue: 0.7,
@@ -33,15 +33,6 @@ export const Blueprint = defineBlueprint({
             min: 1,
             step: 1,
             tooltip: "The maximum number of tokens to generate in the chat completion."
-        }),
-        FieldBuilder.Float("topP", "Top P", {
-            initialValue: 1.0,
-            min: 0,
-            max: 1,
-            step: 0.01,
-            slider: true,
-            tooltip: "Nucleus sampling: considers the tokens with top_p probability mass.",
-            advanced: true
         }),
     ],
     inputs: [],

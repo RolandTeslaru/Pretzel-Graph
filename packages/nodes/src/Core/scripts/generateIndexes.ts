@@ -5,30 +5,13 @@ import { config } from "dotenv";
 
 config({ path: path.resolve(__dirname, "../../../../../.env") });
 
-import { Foundations, Shelf, Workflow } from "@pretzel-graph/shared/domain"
-import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow"
-import { Pool } from "pg";
-import { cloneDeep } from "lodash";
-import { PUBLIC_WORKFLOW_BLUEPRINTS, PUBLIC_WORKFLOW_BLUEPRINTS_REVERSE } from "@pretzel-graph/shared/constants/publicWorkflows";
+import { Foundations, Shelf } from "@pretzel-graph/shared/domain"
 
 const NODES_ROOT = path.resolve(__dirname, "../../..");
 const BACKEND_TARGET = path.resolve(__dirname, "../../../../backend/assets/blueprint_index.json");
 const BACKEND_SERVICE_FILE = path.resolve(__dirname, "../../../../backend/src/services/Shelf/service.ts");
-const GLOBAL_WORKFLOWS_CACHE = path.resolve(__dirname, "../../../globalPretzelWorkflows.json");
 
 
-function mergeFieldsById(
-    baseFields: readonly Foundations.Field[],
-    dependencyFields: readonly Foundations.Field[],
-): Foundations.Field[] {
-    const fieldsById = new Map<Foundations.Field.Id, Foundations.Field>()
-    for (const field of baseFields)
-        fieldsById.set(field.id, field)
-    for (const field of dependencyFields)
-        if (!fieldsById.has(field.id))
-            fieldsById.set(field.id, field)
-    return [...fieldsById.values()]
-}
 
 async function traverseDir(dir: string, callback: (filePath: string) => Promise<void>) {
     const entries = fs.readdirSync(dir, { withFileTypes: true })
@@ -45,9 +28,7 @@ async function traverseDir(dir: string, callback: (filePath: string) => Promise<
 }
 
 
-const db_pretzel_blueprints: Record<string, Foundations.Blueprint> = {}
-
-export async function generateIndex(includeDbBlueprints = false) {
+export async function generateIndex() {
     const blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint> = {}
     const drawers: Record<Shelf.Drawer.Id, Shelf.Drawer> = {}
 
@@ -68,90 +49,6 @@ export async function generateIndex(includeDbBlueprints = false) {
         blueprints,
     }
 
-    if (includeDbBlueprints) {
-        // Fetched by id: PUBLIC_WORKFLOW_BLUEPRINTS already names them.
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-        let data: Array<{ id: string, display_name: string, description: string | null, icon: string | null, accent: string | null, data: unknown }>;
-
-        try {
-            const result = await pool.query(
-                `select id, display_name, description, icon, accent, data
-                 from workflows where id = any($1)`,
-                [Object.values(PUBLIC_WORKFLOW_BLUEPRINTS)],
-            );
-            data = result.rows;
-        }
-        finally {
-            await pool.end();
-        }
-
-        const baseBlueprint = cloneDeep(blueprints["Core.SubWorkflow.Execute" as Foundations.Blueprint.Id]);
-
-        for (const row of data ?? []) {
-            const workflowData = row.data as Workflow.Data;
-            const dependencyFields = workflowData.fields ?? [];
-            // pg returns id as a plain string; brand it once for the keyed lookups below.
-            const workflowId = row.id as Workflow.Id;
-
-            let inputs: Foundations.Port.Input[] = [];
-            let outputs: Foundations.Port.Output[] = [];
-
-            try {
-                ({ inputs, outputs } = extractExposedPorts(workflowData))
-
-            } catch (err) {
-                console.error(`Error processing public workflow ${row.display_name} ${row.id}:`, err);
-                continue;                
-            }
-
-            
-            const blueprintId = PUBLIC_WORKFLOW_BLUEPRINTS_REVERSE[workflowId];
-
-            const bp: Foundations.Blueprint = {
-                ...baseBlueprint,
-                id: blueprintId,
-                ui: {
-                    displayName: row.display_name,
-                    description: row.description ?? undefined,
-                    icon: row.icon ?? baseBlueprint.ui.icon,
-                    accent: row.accent ?? baseBlueprint.ui.accent,
-                    iconColor: baseBlueprint.ui.iconColor,
-                },
-                fields: mergeFieldsById(baseBlueprint.fields, dependencyFields),
-                inputs,
-                outputs,
-                flags: {
-                    SHOW_DEPENDENCY_SELECTOR: false
-                },
-                dependencyRef: { workflowId, mode: "publication" as const },
-            };
-            console.log(`Processing public workflow: ${bp.id} (${bp.dependencyRef?.workflowId}) with ${inputs.length} inputs, ${outputs.length} outputs, and ${dependencyFields.length} dependency fields`)
-            
-            db_pretzel_blueprints[blueprintId] = bp;
-        }
-
-        index.blueprints = {
-            ...index.blueprints,
-            ...db_pretzel_blueprints,
-        }
-        console.log(`Fetched ${Object.keys(db_pretzel_blueprints).length} public blueprints from DB`)
-
-        // Only when the database had them: a database without these workflows must not
-        // empty the cache that stands in for them.
-        if (Object.keys(db_pretzel_blueprints).length > 0) {
-            fs.writeFileSync(GLOBAL_WORKFLOWS_CACHE, JSON.stringify(db_pretzel_blueprints, null, 2))
-            console.log(`Cached global workflow blueprints to ${GLOBAL_WORKFLOWS_CACHE}`)
-        }
-        else if (fs.existsSync(GLOBAL_WORKFLOWS_CACHE)) {
-            const cached = JSON.parse(fs.readFileSync(GLOBAL_WORKFLOWS_CACHE, 'utf-8')) as Record<string, Foundations.Blueprint>
-            index.blueprints = { ...index.blueprints, ...cached }
-            console.log(`Kept ${Object.keys(cached).length} cached global workflow blueprints`)
-        }
-    } else if (fs.existsSync(GLOBAL_WORKFLOWS_CACHE)) {
-        const cached = JSON.parse(fs.readFileSync(GLOBAL_WORKFLOWS_CACHE, 'utf-8')) as Record<string, Foundations.Blueprint>
-        index.blueprints = { ...index.blueprints, ...cached }
-        console.log(`Merged ${Object.keys(cached).length} cached global workflow blueprints`)
-    }
 
     console.log(`Successfully indexed ${Object.keys(blueprints).length} nodes in ${Object.keys(drawers).length} drawers`)
 
@@ -168,7 +65,7 @@ export async function generateIndex(includeDbBlueprints = false) {
 }
 
 if (require.main === module) {
-    generateIndex(true).catch(err => {
+    generateIndex().catch(err => {
         console.error(err);
     })
 }

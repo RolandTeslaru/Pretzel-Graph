@@ -8,49 +8,45 @@ const model = <const T extends string>(value: T, displayName: string) => ({
 
 const MODELS = {
     Anthropic: [
-        model("anthropic/claude-opus-4.6", "Claude Opus 4.6"),
-        model("anthropic/claude-sonnet-4.6", "Claude Sonnet 4.6"),
+        model("anthropic/claude-opus-5", "Claude Opus 5"),
+        model("anthropic/claude-sonnet-5", "Claude Sonnet 5"),
     ],
     Google: [
         model("google/gemini-3.1-pro-preview", "Gemini 3.1 Pro Preview"),
-        model("google/gemini-3.1-flash-lite-preview", "Gemini 3.1 Flash Lite Preview"),
-        model("google/gemini-3-flash-preview", "Gemini 3 Flash Preview"),
+        model("google/gemini-3.7-flash", "Gemini 3.7 Flash"),
+        model("google/gemini-3.6-flash", "Gemini 3.6 Flash"),
+        model("google/gemini-3.5-flash", "Gemini 3.5 Flash"),
+        model("google/gemini-3.5-flash-lite", "Gemini 3.5 Flash Lite"),
+        model("google/gemini-3.1-flash-lite", "Gemini 3.1 Flash Lite"),
         model("google/gemma-4-31b-it", "Gemma 4 31B IT"),
     ],
     OpenAI: [
-        model("openai/gpt-5.4-pro", "GPT-5.4 Pro"),
-        model("openai/gpt-5.4", "GPT-5.4"),
-        model("openai/gpt-5.4-mini", "GPT-5.4 Mini"),
-        model("openai/gpt-5.4-nano", "GPT-5.4 Nano"),
-        model("openai/gpt-5.3-chat", "GPT-5.3 Chat"),
+        model("openai/gpt-5.6-sol-pro", "GPT-5.6 Sol Pro"),
+        model("openai/gpt-5.6-sol", "GPT-5.6 Sol"),
+        model("openai/gpt-5.6-terra", "GPT-5.6 Terra"),
+        model("openai/gpt-5.6-luna", "GPT-5.6 Luna"),
     ],
     Meta: [
-        model("meta-llama/llama-4-maverick-17b-128e-instruct", "Llama 4 Maverick 17B"),
-        model("meta-llama/llama-4-scout-17b-16e-instruct", "Llama 4 Scout 17B"),
-        model("meta-llama/llama-3.3-70b-instruct", "Llama 3.3 70B"),
-        model("meta-llama/llama-3.1-405b-instruct", "Llama 3.1 405B"),
-        model("meta-llama/llama-3.1-70b-instruct", "Llama 3.1 70B"),
+        model("meta-llama/llama-4-maverick", "Llama 4 Maverick"),
+        model("meta-llama/llama-4-scout", "Llama 4 Scout"),
     ],
     DeepSeek: [
-        model("deepseek/deepseek-v3.2-speciale-20251201", "DeepSeek V3.2 Speciale"),
-        model("deepseek/deepseek-v3.2-20251201", "DeepSeek V3.2"),
-        model("deepseek/deepseek-r1-0528", "DeepSeek R1 0528"),
-        model("deepseek/deepseek-r1", "DeepSeek R1"),
-        model("deepseek/deepseek-chat-v3-0324", "DeepSeek Chat V3"),
-        model("deepseek/deepseek-r1-distill-llama-70b", "DeepSeek R1 Distill Llama 70B"),
+        model("deepseek/deepseek-v4-pro", "DeepSeek V4 Pro"),
+        model("deepseek/deepseek-v4-flash", "DeepSeek V4 Flash"),
+        model("deepseek/deepseek-v3.2", "DeepSeek V3.2"),
     ],
     Mistral: [
+        model("mistralai/mistral-large-2512", "Mistral Large 2512"),
+        model("mistralai/mistral-medium-3.1", "Mistral Medium 3.1"),
         model("mistralai/mistral-small-2603", "Mistral Small 2603"),
-        model("mistralai/mistral-small-creative", "Mistral Small Creative"),
     ],
     Cohere: [
-        model("cohere/command-a-03-2025", "Command A 03-2025"),
         model("cohere/command-a", "Command A"),
-        model("cohere/command-r-plus-08-2024", "Command R+ 08-2024"),
-        model("cohere/command-r-08-2024", "Command R 08-2024"),
-        model("cohere/command-r7b-12-2024", "Command R7B 12-2024"),
     ],
     xAI: [
+        model("x-ai/grok-4.6", "Grok 4.6"),
+        model("x-ai/grok-4.5", "Grok 4.5"),
+        model("x-ai/grok-4.3", "Grok 4.3"),
         model("x-ai/grok-4.20", "Grok 4.20"),
         model("x-ai/grok-4.20-multi-agent", "Grok 4.20 Multi-Agent"),
     ],
@@ -110,7 +106,7 @@ export const Blueprint = defineBlueprint({
     "provider==Anthropic": {
         fields: [FieldBuilder.MultiOption("anthropicModel", "Model", {
             options: MODELS.Anthropic,
-            initialValue: "anthropic/claude-opus-4.6",
+            initialValue: "anthropic/claude-opus-5",
         })],
     },
     "provider==Google": {
@@ -122,19 +118,19 @@ export const Blueprint = defineBlueprint({
     "provider==OpenAI": {
         fields: [FieldBuilder.MultiOption("openAIModel", "Model", {
             options: MODELS.OpenAI,
-            initialValue: "openai/gpt-5.4-pro",
+            initialValue: "openai/gpt-5.6-terra",
         })],
     },
     "provider==Meta": {
         fields: [FieldBuilder.MultiOption("metaModel", "Model", {
             options: MODELS.Meta,
-            initialValue: "meta-llama/llama-4-maverick-17b-128e-instruct",
+            initialValue: "meta-llama/llama-4-maverick",
         })],
     },
     "provider==DeepSeek": {
         fields: [FieldBuilder.MultiOption("deepSeekModel", "Model", {
             options: MODELS.DeepSeek,
-            initialValue: "deepseek/deepseek-v3.2-speciale-20251201",
+            initialValue: "deepseek/deepseek-v4-pro",
         })],
     },
     "provider==Mistral": {
@@ -146,13 +142,13 @@ export const Blueprint = defineBlueprint({
     "provider==Cohere": {
         fields: [FieldBuilder.MultiOption("cohereModel", "Model", {
             options: MODELS.Cohere,
-            initialValue: "cohere/command-a-03-2025",
+            initialValue: "cohere/command-a",
         })],
     },
     "provider==xAI": {
         fields: [FieldBuilder.MultiOption("xaiModel", "Model", {
             options: MODELS.xAI,
-            initialValue: "x-ai/grok-4.20",
+            initialValue: "x-ai/grok-4.6",
         })],
     },
 });

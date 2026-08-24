@@ -19,6 +19,8 @@ export namespace VersionControl {
             version:       z.number(),
             name:          z.string(),
             description:   z.string().nullable(),
+            // The workflow's display row as it looked when this version was published.
+            get workflow_meta() { return Workflow.Meta.Schema; },
             get workflow_data() { return Workflow.Data.Schema; },
             is_active:     z.boolean(),
             published_at:  z.coerce.date(),

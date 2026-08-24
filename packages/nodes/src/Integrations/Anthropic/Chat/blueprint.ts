@@ -11,12 +11,9 @@ export const Blueprint = defineBlueprint({
     fields: [
         FieldBuilder.MultiOption("model", "Model", {
             options: [
-                { value: "claude-sonnet-5", displayName: "Claude Sonnet 5" },
                 { value: "claude-fable-5", displayName: "Claude Fable 5" },
-                { value: "claude-opus-4-8", displayName: "Claude Opus 4.8" },
-                { value: "claude-opus-4-7", displayName: "Claude Opus 4.7" },
-                { value: "claude-sonnet-4-6", displayName: "Claude Sonnet 4.6" },
-                { value: "claude-opus-4-6", displayName: "Claude Opus 4.6" },
+                { value: "claude-opus-5", displayName: "Claude Opus 5" },
+                { value: "claude-sonnet-5", displayName: "Claude Sonnet 5" },
                 { value: "claude-haiku-4-5", displayName: "Claude Haiku 4.5" },
             ],
 
