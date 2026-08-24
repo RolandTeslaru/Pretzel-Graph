@@ -63,6 +63,12 @@ export namespace Workflow {
         data: Data.Schema
     });
 
+    // The workflow row without its graph.
+    export namespace Meta {
+        export const Schema = Workflow.Schema.omit({ data: true })
+    }
+    export type Meta = z.infer<typeof Meta.Schema>
+
     export const INITIAL = {
         id:             "" as Workflow.Id,
         locked:         false,

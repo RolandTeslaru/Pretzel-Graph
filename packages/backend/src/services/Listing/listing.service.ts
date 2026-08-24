@@ -32,11 +32,11 @@ export class ListingService {
 
         return Workflow.Schema.parse({
             id:           listingId,
-            display_name: meta.name,
-            description:  meta.description,
-            icon:         null,
-            accent:       null,
-            icon_color:   null,
+            display_name: meta.workflow_meta.display_name,
+            description:  meta.workflow_meta.description,
+            icon:         meta.workflow_meta.icon,
+            accent:       meta.workflow_meta.accent,
+            icon_color:   meta.workflow_meta.icon_color,
             locked:       true,
             listing_id:   entry.id,
             folder_id:    ROOT_FOLDER_ID,

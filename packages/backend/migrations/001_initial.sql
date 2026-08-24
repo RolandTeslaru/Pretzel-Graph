@@ -73,6 +73,8 @@ create table version_control (
     workflow_id   uuid not null,
     published_at  timestamp with time zone default now() not null,
     created_by    uuid,
+    -- The workflow row as it looked at publish time, graph excluded.
+    workflow_meta jsonb not null,
     workflow_data jsonb not null,
     is_active     boolean default true not null,
     version       smallint default '1'::smallint not null,

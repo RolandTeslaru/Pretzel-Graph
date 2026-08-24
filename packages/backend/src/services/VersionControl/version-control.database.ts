@@ -5,7 +5,7 @@ import { DB } from '@/db';
 import { ZodReturn } from '../../decorators/database';
 import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
 
-const META_COLUMNS = ['id', 'workflow_id', 'version', 'name', 'description', 'is_active', 'published_at'] as const;
+const META_COLUMNS = ['id', 'workflow_id', 'version', 'name', 'description', 'workflow_meta', 'is_active', 'published_at'] as const;
 
 @Injectable()
 @DatabaseClass
@@ -27,6 +27,13 @@ export class VersionControlDatabase {
             .where('workflow_id', '=', workflowId)
             .executeTakeFirst();
 
+        // Snapshot of the workflow row at publish time, graph excluded.
+        const workflow = await trx
+            .selectFrom('workflows')
+            .selectAll()
+            .where('id', '=', workflowId)
+            .executeTakeFirstOrThrow();
+
         const row = await trx
             .insertInto('version_control')
             .values({
@@ -35,6 +42,7 @@ export class VersionControlDatabase {
                 version:       (latest?.version ?? 0) + 1,
                 name,
                 description:   description ?? null,
+                workflow_meta: Workflow.Meta.Schema.parse(workflow),
                 workflow_data: workflowData,
                 is_active:     true,
             })

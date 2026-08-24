@@ -53,7 +53,7 @@ export const CORE_DRAWERS = {
     id: "models_and_agents",
     icon: "Bot",
     blueprintIds: [
-      "Core.Agent",
+      "Pretzel.Agent",
       "Core.LanguageModel"
     ],
   },
@@ -63,7 +63,7 @@ export const CORE_DRAWERS = {
     icon: "MessageSquareCode",
     blueprintIds: [
       "Core.Utils.Message.Compose",
-      "Core.Utils.Compactor",
+      "Pretzel.Utils.Compactor",
     ],
   },
   files_and_knowledge: {

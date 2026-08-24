@@ -4,7 +4,6 @@ import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { RuntimeNode } from "./node";
 import type { Loader } from "./builders/loaders";
-import { PUBLIC_WORKFLOW_BLUEPRINTS } from "@pretzel-graph/shared/constants/publicWorkflows";
 
 export type NodeConstructor = {
     new(
@@ -122,11 +121,7 @@ class CatalogueServiceImpl {
     // Sync cache read for the hot path — the compiler warms the cache (loadBaseBlueprint/
     // resolveBlueprint) during prepareNode, so execution-time lookups never hit the async import.
     public getBlueprint(id: Blueprint.Id): Blueprint | undefined {
-        let bp = this.blueprintCache.get(id);
-        if(!bp && id in PUBLIC_WORKFLOW_BLUEPRINTS)
-            return this.blueprintCache.get("Core.SubWorkflow.Execute" as Blueprint.Id)
-
-        return bp
+        return this.blueprintCache.get(id);
     }
 
     // To be deleted
@@ -167,7 +162,7 @@ class CatalogueServiceImpl {
         
         const depedency = this.getNodeDependency(wfNode, wfData)
 
-        // Case without dependency
+        // if the node doesnt have a dependency, get its runtime and blueprint like normal
         if (!depedency) {
             const RuntimeNode = await this.getNodeConstructor(wfNode.blueprintId);
             const blueprint   = await this.resolveBlueprint(wfNode.blueprintId, staticValues)
@@ -180,6 +175,7 @@ class CatalogueServiceImpl {
             return { RuntimeNode, blueprint } 
         }
         
+        // If the node has a dpeendency, ignore the blueprint id which is proably fake and use the Subworkflow execution blueprint and runtime and use that
         const executeId   = "Core.SubWorkflow.Execute" as Blueprint.Id;
         const RuntimeNode = await this.getNodeConstructor(executeId); 
         const blueprint   = await this.loadBaseBlueprint(executeId);

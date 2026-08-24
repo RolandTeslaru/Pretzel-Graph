@@ -159,6 +159,7 @@ export namespace DB {
             version:       z.number().default(1),
             name:          z.string(),
             description:   z.string().nullable(),
+            workflow_meta: WorkflowD.Meta.Schema,
             is_active:     z.boolean().default(true),
             published_at:  z.string(),
         });

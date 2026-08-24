@@ -15,7 +15,9 @@ COPY packages/worker/package.json     ./packages/worker/
 RUN npm ci
 
 COPY packages ./packages
-RUN npm run build --workspace=packages/backend \
+# Regenerates the blueprint index before the backend build copies assets into dist.
+RUN npm run generate-indexes --workspace=packages/nodes \
+ && npm run build --workspace=packages/backend \
  && npm run build --workspace=packages/nodes
 
 FROM node:22-alpine AS runtime

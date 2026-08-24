@@ -16,9 +16,7 @@ export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDest
     private readonly publicationsMap = new Map<Workflow.Id, VersionControl.Publication>();
 
     private toPublication(row: unknown): VersionControl.Publication {
-        // A raw version_control row parses straight into the domain schema — same as the
-        // backend's DB.VersionControl.toDomain. (Previously referenced Publication.Database.Row,
-        // a namespace removed in an earlier refactor, which left this uncompilable.)
+        // A raw version_control row parses straight into the domain schema.
         return VersionControl.Publication.Schema.parse(row);
     }
 
@@ -71,13 +69,12 @@ export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDest
         );
     }
 
-    // The active publication for one workflow — boot's read, narrowed. No acting user:
-    // an inbound webhook has no session behind it.
+    // The active publication for one workflow; no acting user behind an inbound webhook.
     private async fetchActivePublication(workflowId: Workflow.Id): Promise<VersionControl.Publication | null> {
         const row = await DB.asService('load active publication', (trx) =>
             trx
                 .selectFrom('version_control')
-                .select(['id', 'workflow_id', 'version', 'name', 'description', 'workflow_data', 'is_active', 'published_at'])
+                .select(['id', 'workflow_id', 'version', 'name', 'description', 'workflow_meta', 'workflow_data', 'is_active', 'published_at'])
                 .where('workflow_id', '=', workflowId)
                 .where('is_active', '=', true)
                 .orderBy('published_at', 'desc')
