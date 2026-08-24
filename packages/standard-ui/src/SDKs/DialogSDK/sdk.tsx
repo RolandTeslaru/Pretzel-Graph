@@ -5,10 +5,11 @@ import React from "react";
 import { enableMapSet } from 'immer';
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { AlertDialog, Dialog } from "../../foundations";
+import { AlertDialog, Dialog, ScrollArea, Tabs } from "../../foundations";
 import { type _DialogSDKActions_, createDialogSDKActions } from "./actions";
 import { AlertTriangle } from "../../icons/system";
 import { dialogSelectors, type DialogSDKSelectors } from "./selectors";
+import { cn } from "@pretzel-graph/standard-ui/utils/cn";
 
 enableMapSet()
 
@@ -38,7 +39,7 @@ function useAnimationDelay(): React.CSSProperties {
             animationFillMode: 'both',
         };
     }
-    return {};
+    return {}
 }
 
 @SDK("Dialog")
@@ -64,19 +65,29 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
         return (<>
             {Array.from(dialogs).map(([dialogId, entry], index) => {
                 const dialogsSize = dialogs.size
+                const blockTransparency = dialogsSize - index > 1
                 return (
                     <React.Fragment key={dialogId}>
                         {entry.renderer({
                             entry,
                             dialogsSize,
                             index,
-                            blockTransparency: dialogsSize - index > 1,
-                            // Stack-darkening brightness for this depth (animated). UnstyledTemplate
-                            // callers apply this on their own surfaces (the styled Template applies it on
-                            // its wrapper instead).
+                            blockTransparency,
+                            // Stack-darkening brightness for this depth (animated), plus the surface's
+                            // own entry/exit fade — the wrapper only zooms, so each surface fades itself.
+                            // UnstyledTemplate callers apply this on their own surfaces (the styled
+                            // Template applies the brightness on its wrapper instead).
                             surfaceStyle: {
                                 filter: `brightness(${1 / (dialogsSize - index)})`,
                                 transition: "filter 400ms ease-in-out",
+                                animation: entry.isOpen
+                                    ? "dialog-fade-in 150ms ease-in-out 300ms both"
+                                    : "dialog-fade-out 150ms ease-in-out both",
+                                // Buried under another dialog: solid card, no blur worth paying for.
+                                ...(blockTransparency && {
+                                    backgroundColor: "var(--card)",
+                                    backdropFilter: "none",
+                                }),
                             },
                         })}
                     </React.Fragment>
@@ -220,6 +231,131 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
         )
     }
 
+    public readonly SplitTemplate: DialogSDK.SplitTemplate = ({ children, sidebarClassName, contentClassName, sidebarRenderer, surfaceStyle, entry, dialogsSize, index, className, dismissible = true }) => {
+        const delayStyle = useAnimationDelay();
+        const scale_offset = (index - (dialogsSize - 1)) * 8;
+        const y_offset = (index - (dialogsSize - 1)) * 40;
+        const finalScale = 1 + scale_offset / 100;
+
+        const blockDismiss = dismissible ? undefined : (e: Event) => e.preventDefault();
+
+        return (
+            <Dialog.Root
+                open={entry.isOpen}
+                onOpenChange={() => { if (dismissible) DialogSDK.actions.pop(entry.dialogId) }}
+            >
+                <Dialog.Content
+                    unstyled
+                    style={{
+                        ...delayStyle,
+                        transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
+                    }}
+                    darkenBackground={index === 0}
+                    className={"rounded-2xl shadow-2xl shadow-neutral-500/60 dark:shadow-black/60 !overflow-hidden flex flex-row " + className}
+                    onInteractOutside={blockDismiss}
+                    onEscapeKeyDown={blockDismiss}
+                >
+                    <div className={"bg-card/50 backdrop-blur-md min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                        {sidebarRenderer()}
+                    </div>
+                    <div className={"bg-card/80 backdrop-blur-md flex flex-col h-full gap-4 p-3 w-full  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                        {children}
+                    </div>
+                </Dialog.Content>
+            </Dialog.Root>
+        )
+    }
+
+
+
+    public readonly TabsTemplate: DialogSDK.TabsTemplate = ({ children, items, defaultValue, empty, sidebarClassName, contentClassName, header, surfaceStyle, entry, dialogsSize, index, className, dismissible = true }) => {
+        const delayStyle = useAnimationDelay();
+        const scale_offset = (index - (dialogsSize - 1)) * 8;
+        const y_offset = (index - (dialogsSize - 1)) * 40;
+        const finalScale = 1 + scale_offset / 100;
+
+        const blockDismiss = dismissible ? undefined : (e: Event) => e.preventDefault();
+
+        const [value, setValue] = useState(defaultValue ?? "")
+
+        const active = items.find((item) => item.id === value)
+
+        return (
+            <Dialog.Root
+                open={entry.isOpen}
+                onOpenChange={() => { if (dismissible) DialogSDK.actions.pop(entry.dialogId) }}
+            >
+                <Tabs.Root
+                    orientation="vertical"
+                    activationMode="manual"
+                    value={value}
+                    onValueChange={setValue}
+                >
+                <Dialog.Content
+                    unstyled
+                    style={{
+                        ...delayStyle,
+                        transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
+                    }}
+                    darkenBackground={index === 0}
+                    className={"rounded-2xl shadow-2xl shadow-neutral-500/60 dark:shadow-black/60 !overflow-hidden flex flex-row " + className}
+                    onInteractOutside={blockDismiss}
+                    onEscapeKeyDown={blockDismiss}
+                >
+                        <div className={"bg-card/50 backdrop-blur-md min-w-[200px] p-2 pt-3 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                            {header && (
+                                <div className="inline-flex items-center px-1">
+                                    <header.icon className="size-4 m-2" />
+                                    <p className="font-semibold w-35 text-sm text-ellipsis text-nowrap overflow-hidden">
+                                        {header.title}
+                                    </p>
+                                </div>
+                            )}
+
+                            <Tabs.List variant="sidebar" className="py-2 pt-4 px-1 gap-1">
+                                {items.map((item) => (
+                                    <Tabs.Trigger
+                                        key={item.id}
+                                        value={item.id}
+                                        className={cn(item.tone === "destructive" && "text-destructive data-[state=active]:bg-destructive/10")}
+                                    >
+                                        <item.icon className="size-4" />
+                                        {item.label}
+                                    </Tabs.Trigger>
+                                ))}
+                            </Tabs.List>
+
+                        </div>
+                        <ScrollArea.Root
+                            style={{ ...surfaceStyle, ...delayStyle }}
+                            className={"bg-card/80 backdrop-blur-md flex flex-col h-full gap-4 px-3 w-full  h-[600px]  " + contentClassName}
+                        >
+                            <div className="inline-flex z-100 items-center absolute w-full top-0 left-4 gap-2 h-9 mt-2 shrink-0">
+                                <p className="text-md font-semibold">{active?.label}</p>
+                            </div>
+                            {items.map((item) => (
+                                <Tabs.Content key={item.id} value={item.id}>
+                                    {/* Clears the header floating above the scroll area. */}
+                                    <div className="h-12" />
+                                    {item.panel}
+                                </Tabs.Content>
+                            ))}
+
+                            {!active && empty && (
+                                <div className="absolute top-1/2 -translate-1/2 left-1/2 w-[300px] flex flex-col gap-2 p-6 h-full justify-center items-center text-center">
+                                    {empty.icon}
+                                    <p className="text-sm font-medium">{empty.title}</p>
+                                    <p className="text-xs text-muted-foreground max-w-55">{empty.description}</p>
+                                </div>
+                            )}
+                        </ScrollArea.Root>
+                </Dialog.Content>
+                    </Tabs.Root>
+            </Dialog.Root>
+        )
+    }
+    
+
 }
 
 export const DialogSDK = SDK.get<DialogSDKImpl>("Dialog")
@@ -272,4 +408,38 @@ export namespace DialogSDK {
     export type Template = React.FC<TemplateProps>
     export type AlertTemplate = React.FC<AlertTemplateProps>
     export type UnstyledTemplate = React.FC<TemplateProps>
+    export type SplitTemplate = React.FC<TemplateProps & {
+        sidebarRenderer: () => React.ReactNode
+        sidebarClassName?: string
+        contentClassName?: string
+    }>
+
+    export namespace TabsTemplate {
+        export type IconComponent = React.FC<React.SVGProps<SVGSVGElement>>
+
+        export interface Item {
+            id:    string
+            label: string
+            icon:  IconComponent
+            /** `destructive` colours the row, for a tab that ends things. */
+            tone?: "default" | "destructive"
+            panel: React.ReactNode
+        }
+
+        /** Shown until a tab is picked. Omit it to open on an empty panel. */
+        export type Empty = {
+            icon?:       React.ReactNode
+            title:       string
+            description: string
+        }
+    }
+
+    export type TabsTemplate = React.FC<TemplateProps & {
+        sidebarClassName?: string
+        contentClassName?: string
+        defaultValue?: string
+        items: TabsTemplate.Item[]
+        empty?: TabsTemplate.Empty
+        header?:       { icon: TabsTemplate.IconComponent; title: string }
+    }>
 }

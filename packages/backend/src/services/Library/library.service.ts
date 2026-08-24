@@ -3,11 +3,13 @@ import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
 import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { LibraryDatabase } from './library.database';
+import { ListingService } from '../Listing/listing.service';
 
 @Injectable()
 export class LibraryService {
     constructor(
         private readonly database:   LibraryDatabase,
+        private readonly listings: ListingService,
     ) {}
 
     public readonly bootstrap = {
@@ -79,6 +81,7 @@ export class LibraryService {
             principal: Principal.User,
             id: Workflow.Id,
         ): Promise<Library.API.Workflow.Remove.Response> => {
+            await this.listings.unshareWorkflow(principal, id);
             await DB.asUser(principal, (trx) => this.database.workflow.delete(trx, id));
 
             // After the commit — the cached owner is still correct until the TTL, and would

@@ -336,7 +336,7 @@ export namespace WorkbenchSDK {
         cycles: Workflow.Node.Id[][]
         stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>,
         dependencyUpdates: {
-            published: Record<Workflow.Id, Workflow.Dependency.Publication.UpdateInfo>
+            published: Workflow.Dependency.Publication.UpdateMap
             draft:     Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>
         }
         selectors: WorkbenchSDKSelectors

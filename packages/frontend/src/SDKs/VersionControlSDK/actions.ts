@@ -2,6 +2,7 @@ import { VersionControl, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "../ApiInterceptorSDK";
 import { QuerySDK } from "@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk";
 import { RealtimeSDK } from "../Realtime/sdk";
+import { LibrarySDK } from "../LibrarySDK/sdk";
 import type { VersionControlSDKImpl } from "./sdk";
 
 export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
@@ -58,6 +59,7 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
                 sdk.reducers.currentWorkflow.upsert(s, data.publication);
                 sdk.reducers.activeWorkflows.removeByWorkflowId(s, data.publication.workflow_id);
             });
+            LibrarySDK.actions.workflow.__removeListingId(workflowId);
             QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
             return data;
         },
@@ -68,6 +70,8 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
                 sdk.reducers.currentWorkflow.remove(s, publicationId);
                 sdk.reducers.activeWorkflows.removeByWorkflowId(s, data.workflowId);
             });
+            if (!sdk.selectors.getActive(sdk.state))
+                LibrarySDK.actions.workflow.__removeListingId(workflowId);
             QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
             return data;
         },

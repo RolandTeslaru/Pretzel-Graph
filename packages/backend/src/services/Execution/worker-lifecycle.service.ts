@@ -42,11 +42,22 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
         this.disarm();
     }
 
+    /** Where the worker's start and stop routes live, or null when self-hosted. */
+    private getLifecycleBase(): string | null {
+        const cloud = process.env.PRETZEL_CLOUD_URL?.replace(/\/+$/, '');
+        const workspaceId = process.env.WORKSPACE_ID;
+
+        if (!cloud || !workspaceId)
+            return null;
+
+        return `${cloud}/api/workspaces/${workspaceId}/worker`;
+    }
+
     /** Called before enqueueing, the only moment anything knows work is coming. */
     async ensureAwake(): Promise<void> {
         this.arm();
 
-        const base = process.env.WORKER_LIFECYCLE_URL;
+        const base = this.getLifecycleBase();
 
         if (!base)
             return;
@@ -66,7 +77,7 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
     }
 
     private arm(): void {
-        if (!process.env.WORKER_LIFECYCLE_URL)
+        if (!this.getLifecycleBase())
             return;
 
         this.disarm();
@@ -85,7 +96,7 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
     }
 
     private async sleepIfQuiet(): Promise<void> {
-        const base = process.env.WORKER_LIFECYCLE_URL;
+        const base = this.getLifecycleBase();
 
         if (!base)
             return;
@@ -134,7 +145,7 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
     private async post(url: string): Promise<void> {
         const response = await fetch(url, {
             method:  'POST',
-            headers: { 'X-Workspace-Backend-Token': process.env.CONTROL_PLANE_TOKEN ?? '' },
+            headers: { 'X-Pretzel-Cloud-Token': process.env.PRETZEL_CLOUD_TOKEN ?? '' },
         });
 
         if (!response.ok)

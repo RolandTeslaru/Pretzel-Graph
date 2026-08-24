@@ -4,12 +4,14 @@ import { DB } from '@/db';
 import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { VersionControlDatabase } from './version-control.database';
+import { ListingService } from '../Listing/listing.service';
 
 @Injectable()
 export class VersionControlService {
     constructor(
         private readonly realtime: RealtimeService,
         private readonly database: VersionControlDatabase,
+        private readonly listings: ListingService,
     ) {}
 
     async publish(
@@ -23,6 +25,7 @@ export class VersionControlService {
         );
         
         publication.is_active = true;
+        await this.listings.syncActive(principal, workflowId);
         this.realtime.emitSignal<VersionControl.Signal.Published>({
             channel: VersionControl.Signal.getChannel(publication.workflow_id, 'published'),
             type: 'published',
@@ -74,6 +77,7 @@ export class VersionControlService {
         publicationId: VersionControl.Publication.Id,
     ): Promise<VersionControl.API.Activate.Response> {
         const publication = await DB.asUser(principal, (trx) => this.database.activate(trx, publicationId));
+        await this.listings.syncActive(principal, publication.workflow_id);
         this.realtime.emitSignal<VersionControl.Signal.Activated>({
             channel: VersionControl.Signal.getChannel(publication.workflow_id, 'activated'),
             type: 'activated',
@@ -88,6 +92,7 @@ export class VersionControlService {
         publicationId: VersionControl.Publication.Id,
     ): Promise<VersionControl.API.Deactivate.Response> {
         const publication = await DB.asUser(principal, (trx) => this.database.deactivate(trx, publicationId));
+        await this.listings.syncActive(principal, publication.workflow_id);
         this.realtime.emitSignal<VersionControl.Signal.Deactivated>({
             channel: VersionControl.Signal.getChannel(publication.workflow_id, 'deactivated'),
             type: 'deactivated',
@@ -101,7 +106,9 @@ export class VersionControlService {
         principal: Principal.User,
         publicationId: VersionControl.Publication.Id,
     ): Promise<VersionControl.API.Remove.Response> {
-        const { workflowId } = await DB.asUser(principal, (trx) => this.database.remove(trx, publicationId));
+        const { workflowId, wasActive } = await DB.asUser(principal, (trx) => this.database.remove(trx, publicationId));
+        if (wasActive)
+            await this.listings.syncActive(principal, workflowId);
         this.realtime.emitSignal<VersionControl.Signal.Removed>({
             channel: VersionControl.Signal.getChannel(workflowId, 'removed'),
             type: 'removed',

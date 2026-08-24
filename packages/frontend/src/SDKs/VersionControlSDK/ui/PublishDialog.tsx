@@ -10,9 +10,23 @@ const DIALOG_ID = "publish-workflow"
 
 export function openPublishDialog() {
     DialogSDK.actions.push(DIALOG_ID, (props) => (
-        <DialogSDK.Template {...props}>
+        <DialogSDK.SplitTemplate
+            {...props}
+            sidebarRenderer={() => (
+                <div className="flex flex-col gap-2 ">
+                    <div className="flex flex-row items-center gap-2">
+                        <SystemIcons.History className="size-5 shrink-0" />
+                        <p className="text-md font-semibold text-foreground">Version Control</p>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">
+                        Creates a versioned snapshot of the current workflow state.
+                    </p>
+                </div>
+            )}
+        >
             <PublishDialogContent />
-        </DialogSDK.Template>
+        </DialogSDK.SplitTemplate>
     ))
 }
 
@@ -45,14 +59,14 @@ function PublishDialogContent() {
     }
 
     return (
-        <div className="p-3 flex flex-col gap-4 min-w-[380px]">
+        <div className="p-1 flex flex-col gap-4">
             <Dialog.Header className="my-1">
-                <Dialog.Title className="flex items-center gap-2">
-                    <SystemIcons.CloudUpload className="size-6" />
+                <Dialog.Title className="flex flex-row gap-2">
+                    <SystemIcons.CloudUpload className="size-5 shrink-0 my-auto" />
                     Publish Workflow
                 </Dialog.Title>
-                <Dialog.Description className="text-muted-foreground">
-                    Create a versioned snapshot of the current workflow state.
+                <Dialog.Description className="text-sm text-muted-foreground">
+                    Name this version so you can find it later.
                 </Dialog.Description>
             </Dialog.Header>
 
@@ -84,14 +98,7 @@ function PublishDialogContent() {
                 </div>
 
                 <Dialog.Footer>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => DialogSDK.actions.pop(DIALOG_ID)}
-                    >
-                        Cancel
-                    </Button>
-                    <Button type="submit" disabled={isLoading || !name.trim()}>
+                    <Button type="submit" disabled={isLoading || !name.trim()} className="rounded-full">
                         {isLoading
                             ? <Spinner className="mr-2 h-4 w-4" />
                             : <SystemIcons.CloudUpload className="mr-2 size-4" />

@@ -7,7 +7,7 @@ import * as DataMod from "./data"
 import * as DepMod from "./dependency"
 import * as CacheMod from "./cache"
 import * as RepairMod from "./repair"
-import { WorkflowId, FolderId } from "./ids"
+import { WorkflowId, FolderId, ListingId } from "./ids"
 import { WORKFLOW_DATA_VERSION } from "./migrate"
 import { extractExposedInputs as _extractExposedInputs, extractExposedOutputs as _extractExposedOutputs } from "./resolvers"
 
@@ -53,6 +53,7 @@ export namespace Workflow {
         icon:         z.string().nullable().optional(),
         accent:       z.string().nullable().optional(),
         icon_color:   z.string().nullable().optional(),
+        listing_id: ListingId.nullable().optional(),
 
         created_at: z.coerce.date(),
         updated_at: z.coerce.date(),
@@ -70,6 +71,7 @@ export namespace Workflow {
         icon:           null,
         accent:         null,
         icon_color:     null,
+        listing_id: null,
         folder_id:      "" as Workflow["folder_id"],
         created_at:     new Date(),
         updated_at:     new Date(),

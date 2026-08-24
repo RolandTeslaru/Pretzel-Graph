@@ -385,6 +385,20 @@ code {
   80% { content: "\2841\2800\2888"; }
 }
 
+/* Dialog motion: the wrapper zooms without touching opacity, each surface fades itself in. */
+@keyframes dialog-zoom-in {
+  from { transform: translate(-50%, -48%) scale(0.7); box-shadow: 0 0 #0000; }
+}
+@keyframes dialog-zoom-out {
+  to { transform: translate(-50%, -48%) scale(0.7); box-shadow: 0 0 #0000; }
+}
+@keyframes dialog-fade-in {
+  from { opacity: 0; }
+}
+@keyframes dialog-fade-out {
+  to { opacity: 0; }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -64,22 +64,24 @@ const Content: DialogComponents.Content = ({
     <DialogPrimitive.Content
       className={classNames(
         `${theme || ""} fixed top-[50%] left-[50%] z-50 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0
-         transition-[opacity,transform,filter] duration-400 ease-in-out
-         data-[state=open]:animate-in
-         data-[state=closed]:animate-out
-         data-[state=closed]:fade-out-0
-         data-[state=open]:fade-in-0
-         data-[state=closed]:zoom-out-70
-         data-[state=open]:zoom-in-70
-         data-[state=closed]:slide-out-to-left-1/2
-         data-[state=closed]:slide-out-to-top-[48%]
-         data-[state=open]:slide-in-from-left-1/2
-         data-[state=open]:slide-in-from-top-[48%]
+         transition-[transform] duration-400 ease-in-out
          `,
-        // Chrome (surface, border, shadow) — skipped entirely when unstyled so the caller draws its own.
+        // Unstyled animates transform only: keyframes touching opacity would blank descendant backdrop blurs.
         unstyled
-          ? ''
+          ? `data-[state=open]:animate-[dialog-zoom-in_150ms_ease-in-out]
+             data-[state=closed]:animate-[dialog-zoom-out_150ms_ease-in-out_both]`
           : classNames(
+              `data-[state=open]:animate-in
+               data-[state=closed]:animate-out
+               data-[state=open]:fade-in-0
+               data-[state=closed]:fade-out-0
+               data-[state=closed]:zoom-out-70
+               data-[state=open]:zoom-in-70
+               data-[state=closed]:slide-out-to-left-1/2
+               data-[state=closed]:slide-out-to-top-[48%]
+               data-[state=open]:slide-in-from-left-1/2
+               data-[state=open]:slide-in-from-top-[48%]
+               `,
               'rounded-2xl border border-border shadow-2xl shadow-neutral-500/60 dark:shadow-black/60',
               blockTransparency ? 'bg-card! backdrop-blur-none!' : 'bg-card/80 backdrop-blur-sm',
             ),

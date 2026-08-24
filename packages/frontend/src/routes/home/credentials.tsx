@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Button, Dialog, AlertDialog, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
+import { Button, AlertDialog, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { VaultSDK } from '@/SDKs/VaultSDK/sdk'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-import { CredentialForm } from '@/SDKs/VaultSDK/ui/CredentialForm'
+import { CredentialFormDialog } from '@/SDKs/VaultSDK/ui/CredentialForm'
 import type { Vault } from '@pretzel-graph/shared/domain'
 
 
@@ -78,16 +78,11 @@ function TemplateGroup({ group }: { group: Group }) {
 
         const dialogId = `add-credential-${templateId}`
         DialogSDK.actions.push(dialogId, props => (
-            <DialogSDK.UnstyledTemplate {...props}>
-                <Dialog.Title className='hidden'>Add Credential</Dialog.Title>
-                <Dialog.Description className='hidden'>Add a new {template.displayName} credential</Dialog.Description>
-                <CredentialForm
-                    surfaceStyle={props.surfaceStyle}
-                    blockTransparency={props.blockTransparency}
-                    credentialTemplate={template}
-                    onCreated={() => DialogSDK.actions.pop(dialogId)}
-                />
-            </DialogSDK.UnstyledTemplate>
+            <CredentialFormDialog
+                {...props}
+                credentialTemplate={template}
+                onCreated={() => DialogSDK.actions.pop(dialogId)}
+            />
         ))
     }
 
@@ -126,20 +121,15 @@ function CredentialRow({ instance, template }: { instance: Vault.Credential.Inst
 
         const dialogId = `edit-credential-${instance.id}`
         DialogSDK.actions.push(dialogId, props => (
-            <DialogSDK.UnstyledTemplate {...props}>
-                <Dialog.Title className='hidden'>Edit Credential</Dialog.Title>
-                <Dialog.Description className='hidden'>Edit this credential</Dialog.Description>
-                <CredentialForm
-                    surfaceStyle={props.surfaceStyle}
-                    blockTransparency={props.blockTransparency}
-                    credentialTemplate={template}
-                    updateProps={{
-                        instanceId: instance.id,
-                        onUpdateComplete: () => DialogSDK.actions.pop(dialogId),
-                        onRemoved: () => DialogSDK.actions.pop(dialogId),
-                    }}
-                />
-            </DialogSDK.UnstyledTemplate>
+            <CredentialFormDialog
+                {...props}
+                credentialTemplate={template}
+                updateProps={{
+                    instanceId: instance.id,
+                    onUpdateComplete: () => DialogSDK.actions.pop(dialogId),
+                    onRemoved: () => DialogSDK.actions.pop(dialogId),
+                }}
+            />
         ))
     }
 

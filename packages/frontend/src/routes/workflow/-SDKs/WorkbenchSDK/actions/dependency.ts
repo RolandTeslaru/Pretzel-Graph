@@ -56,7 +56,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
             const [publishedResult, draftResult] = await Promise.allSettled([
                 publishedEntries.length > 0
                     ? Workbench.API.Dependency.Published.checkUpdates(api, { dependencies: publishedEntries })
-                    : Promise.resolve({ updates: {} as Record<Workflow.Id, Workflow.Dependency.Publication.UpdateInfo> }),
+                    : Promise.resolve({ updates: {} as Workflow.Dependency.Publication.UpdateMap }),
                 draftEntries.length > 0
                     ? Workbench.API.Dependency.Draft.checkUpdates(api, { dependencies: draftEntries })
                     : Promise.resolve({ updates: {} as Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo> }),

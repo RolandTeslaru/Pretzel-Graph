@@ -4,11 +4,8 @@ import { cn } from '@pretzel-graph/standard-ui/utils/cn'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../sdk'
-import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-import { DependencySelectorDialogContent } from './Dialog'
+import { openDependencySelectorDialog } from './Dialog'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-
-const DIALOG_ID = "dependency-selector"
 
 interface Props {
     nodeId: Workflow.Node.Id
@@ -16,28 +13,16 @@ interface Props {
 }
 
 export const DependencySelector = memo<Props>(({ nodeId, className }) => {
-    const depRef    = WorkbenchSDK.useStore(s => s.selectors.node.getDependencyRef(s, nodeId))
-    const dependency = WorkbenchSDK.useStore(s => {
-        if (!depRef?.workflowId) return null
-        return depRef.mode === "publication"
-            ? s.selectors.dependency.published.get(s, depRef.workflowId)
-            : s.selectors.dependency.draft.get(s, depRef.workflowId)
+
+    const [dependency, mode] = WorkbenchSDK.useStore(s => {
+        const depRef = s.selectors.node.getDependencyRef(s, nodeId)
+        if(!depRef?.workflowId)
+            return [null, null]
+
+        return [s.selectors.dependency.get(s, depRef.workflowId, depRef.mode), depRef.mode]
     })
 
-    const openDialog = () => {
-        DialogSDK.actions.push(DIALOG_ID, (props) => (
-            <DialogSDK.Template {...props}>
-                <DependencySelectorDialogContent
-                    nodeId={nodeId}
-                    dialogId={DIALOG_ID}
-                />
-            </DialogSDK.Template>
-        ))
-    }
-
-    const mode = depRef?.mode === "publication" ? "publication" : "draft"
-
-    const iconColor       = dependency?.accent ? `var(--${dependency.accent}-foreground)` : undefined
+    const iconColor = dependency?.accent ? `var(--${dependency.accent}-foreground)` : undefined
     const backgroundColor = dependency?.accent ? `color-mix(in srgb, var(--${dependency.accent}) 25%, transparent)` : 'var(--muted)'
 
     return (
@@ -47,7 +32,7 @@ export const DependencySelector = memo<Props>(({ nodeId, className }) => {
                 variant="outline"
                 size="sm"
                 className="h-auto bg-card/80! min-h-7 w-full px-2 py-1 text-left"
-                onClick={openDialog}
+                onClick={() => openDependencySelectorDialog(nodeId)}
             >
                 <span className="flex min-w-0 items-center gap-2 mr-auto">
                     <span
@@ -66,14 +51,14 @@ export const DependencySelector = memo<Props>(({ nodeId, className }) => {
                         </span>
                         <span className='flex text-[10px] font-normal text-muted-foreground'>
                             {
-                            // @ts-expect-error
-                            dependency?.publication_name
+                                // @ts-expect-error
+                                dependency?.publication_name
                             }
                         </span>
                     </span>
                 </span>
-                {mode === "publication" && <SystemIcons.ShieldCheck className='size-3 text-muted-foreground'/>}
-                {mode === "draft" && <SystemIcons.DraftingCompass className='size-3 text-muted-foreground'/>}
+                {mode === "publication" && <SystemIcons.ShieldCheck className='size-3 text-muted-foreground' />}
+                {mode === "draft" && <SystemIcons.DraftingCompass className='size-3 text-muted-foreground' />}
                 <SystemIcons.ChevronDown />
             </Button>
         </div>

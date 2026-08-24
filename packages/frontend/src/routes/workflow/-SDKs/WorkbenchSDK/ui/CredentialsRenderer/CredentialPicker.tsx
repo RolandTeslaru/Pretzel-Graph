@@ -1,10 +1,10 @@
 import { memo, useEffect } from "react";
 import { Select } from "@pretzel-graph/standard-ui/foundations/select";
-import { Button, Dialog } from "@pretzel-graph/standard-ui/foundations";
+import { Button } from "@pretzel-graph/standard-ui/foundations";
 import { VaultSDK } from "@/SDKs/VaultSDK/sdk";
 import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
 import { WorkbenchSDK } from "../../sdk";
-import { CredentialForm } from "@/SDKs/VaultSDK/ui/CredentialForm";
+import { CredentialFormDialog } from "@/SDKs/VaultSDK/ui/CredentialForm";
 import type { Vault, Workflow } from "@pretzel-graph/shared/domain";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 import FloatContainer from "@/components/FloatContainer";
@@ -34,50 +34,32 @@ export const CredentialPicker = memo(
         const openAddDialog = () => {
             const dialogId = `add-credentialTemplate-${credentialTemplate.id}`;
             DialogSDK.actions.push(dialogId, (props) => (
-                <DialogSDK.UnstyledTemplate {...props}>
-                    <Dialog.Title className="text-sm font-semibold hidden">
-                        Add Credential
-                    </Dialog.Title>
-                    <Dialog.Description className="text-xs text-muted-foreground hidden">
-                        Add a new credential for this node
-                    </Dialog.Description>
-                    <CredentialForm
-                    surfaceStyle={props.surfaceStyle}
-                    blockTransparency={props.blockTransparency}
-                        credentialTemplate={credentialTemplate}
-                        onCreated={(instanceId) => {
-                            setInstance(instanceId);
-                            DialogSDK.actions.pop(dialogId);
-                        }}
-                    />
-                </DialogSDK.UnstyledTemplate>
+                <CredentialFormDialog
+                    {...props}
+                    credentialTemplate={credentialTemplate}
+                    onCreated={(instanceId) => {
+                        setInstance(instanceId);
+                        DialogSDK.actions.pop(dialogId);
+                    }}
+                />
             ));
         };
 
         const openEditDialog = (editInstanceId: Vault.Credential.Instance.Id) => {
             const dialogId = `edit-credentialInstance-${editInstanceId}`;
             DialogSDK.actions.push(dialogId, (props) => (
-                <DialogSDK.UnstyledTemplate {...props}>
-                    <Dialog.Title className="text-sm font-semibold hidden">
-                        Edit Credential
-                    </Dialog.Title>
-                    <Dialog.Description className="text-xs text-muted-foreground hidden">
-                        Edit this credential
-                    </Dialog.Description>
-                    <CredentialForm
-                    surfaceStyle={props.surfaceStyle}
-                    blockTransparency={props.blockTransparency}
-                        credentialTemplate={credentialTemplate}
-                        updateProps={{
-                            instanceId: editInstanceId,
-                            onUpdateComplete: () => DialogSDK.actions.pop(dialogId),
-                            onRemoved: () => {
-                                setInstance(null);
-                                DialogSDK.actions.pop(dialogId);
-                            },
-                        }}
-                    />
-                </DialogSDK.UnstyledTemplate>
+                <CredentialFormDialog
+                    {...props}
+                    credentialTemplate={credentialTemplate}
+                    updateProps={{
+                        instanceId: editInstanceId,
+                        onUpdateComplete: () => DialogSDK.actions.pop(dialogId),
+                        onRemoved: () => {
+                            setInstance(null);
+                            DialogSDK.actions.pop(dialogId);
+                        },
+                    }}
+                />
             ));
         };
 

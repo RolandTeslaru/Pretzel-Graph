@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type { AxiosInstance } from "axios"
 import { Workflow as DomainWorkflow } from "./Workflow"
+import { Listing } from "./Listing"
 
 export namespace Library {
 
@@ -133,6 +134,38 @@ export namespace Library {
 
         // ── Workflows ─────────────────────────────────────────
         export namespace Workflow {
+            export namespace ListPublic {
+                export const Request = z.object({
+                    workflowId: DomainWorkflow.Id,
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({
+                    listingId: Listing.Id,
+                })
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function listPublicWorkflow(api: AxiosInstance, req: ListPublic.Request): Promise<ListPublic.Response> {
+                const { data } = await api.post<ListPublic.Response>(`/api/library/workflows/${req.workflowId}/list-public`, {})
+                return data
+            }
+
+            export namespace UnlistPublic {
+                export const Request = z.object({
+                    workflowId: DomainWorkflow.Id,
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({})
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function unlistPublicWorkflow(api: AxiosInstance, req: UnlistPublic.Request): Promise<UnlistPublic.Response> {
+                const { data } = await api.post<UnlistPublic.Response>(`/api/library/workflows/${req.workflowId}/unlist-public`, {})
+                return data
+            }
+
             export namespace Create {
                 export const Request = z.object({
                     folder_id: Library.Folder.Id,
