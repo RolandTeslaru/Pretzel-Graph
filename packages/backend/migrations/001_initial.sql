@@ -64,7 +64,9 @@ create table workflows (
     created_by   uuid,
     icon         text,
     accent       text,
-    icon_color   text
+    icon_color   text,
+    -- Set while the workflow is shared through the listing registry.
+    listing_id uuid
 );
 
 create table version_control (

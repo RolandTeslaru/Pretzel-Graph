@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
-import { Workflow, Workbench, Vault, Foundations } from '@pretzel-graph/shared/domain';
+import { Workflow, Workbench, Vault } from '@pretzel-graph/shared/domain';
 import { WorkbenchDatabase } from './workbench.database';
 import { VaultDatabase } from '../Vault/vault.database';
 import { Encryption } from '@pretzel-graph/shared/server/vault/encryption';
 import { CatalogueService, Loader } from '@pretzel-graph/node-sdk';
 import { ShelfService } from '../Shelf/shelf.service';
+import { ListingService } from '../Listing/listing.service';
+import { Listing, SystemError } from '@pretzel-graph/shared/domain';
 
 @Injectable()
 export class WorkbenchService {
@@ -14,6 +16,7 @@ export class WorkbenchService {
         private readonly database: WorkbenchDatabase,
         private readonly vaultDatabase: VaultDatabase,
         private readonly shelfService: ShelfService,
+        private readonly listings: ListingService,
     ) {}
 
     public readonly workflow = {
@@ -29,50 +32,21 @@ export class WorkbenchService {
             principal: Principal.User,
             workflowId: Workflow.Id,
         ): Promise<Workbench.API.Workflow.Get.Response> => {
-            const workflow = await DB.asUser(principal, (trx) => this.database.workflow.get(trx, workflowId));
+            let workflow: Workflow;
 
-            const blueprintIds = new Set<Foundations.Blueprint.Id>()
-            for (const node of Object.values(workflow.data.nodes)){
-                blueprintIds.add(node.blueprintId)
-                if(node.reconciledBlueprintId)
-                    blueprintIds.add(node.reconciledBlueprintId)
+            if (Listing.isListingId(workflowId)) {
+                const shared = await this.listings.getWorkflow(workflowId);
+
+                if (!shared)
+                    throw new SystemError(SystemError.Code.NOT_FOUND, 'Listing not found');
+
+                workflow = shared;
+            }
+            else {
+                workflow = await DB.asUser(principal, (trx) => this.database.workflow.get(trx, workflowId));
             }
 
-            const { blueprints, resolutionFailures } = await this.shelfService.getBatchBlueprints({
-                blueprintIds: [...blueprintIds],
-            });
-            const repairs: Workflow.Repair[] = [];
-
-            for (const failure of resolutionFailures) {
-                for (const node of Object.values(workflow.data.nodes)) {
-                    if (failure.code === "MISSING_BLUEPRINT") {
-                        // Dependency nodes may use a workflow-specific cosmetic blueprint id that
-                        // is absent from the catalogue by design. Their shape resolves from the
-                        // attached dependency, so this is not damage.
-                        if (node.dependencyRef || node.blueprintId !== failure.blueprintId)
-                            continue;
-
-                        repairs.push({
-                            code:        "MISSING_BLUEPRINT",
-                            nodeId:      node.id,
-                            blueprintId: failure.blueprintId,
-                            resolution:  "REMOVE_NODE",
-                        });
-                        continue;
-                    }
-
-                    if (node.reconciledBlueprintId !== failure.reconciledBlueprintId)
-                        continue;
-
-                    repairs.push({
-                        code:                          "MISSING_BLUEPRINT_DERIVATIVE",
-                        nodeId:                        node.id,
-                        blueprintId:                   failure.blueprintId,
-                        previousReconciledBlueprintId: failure.reconciledBlueprintId,
-                        resolution:                    "RESET_TO_BASE",
-                    });
-                }
-            }
+            const { blueprints, repairs } = await this.shelfService.collectWorkflowBlueprints(workflow.data);
 
             return { workflow, blueprints, repairs };
         },
@@ -92,7 +66,17 @@ export class WorkbenchService {
                 principal: Principal.User,
                 payload: Workbench.API.Dependency.Published.Load.Request,
             ): Promise<Workbench.API.Dependency.Published.Load.Response> => {
+                if (Listing.isListingId(payload.dependencyId)) {
+                    const shared = await this.listings.getPublication(payload.dependencyId);
+
+                    if (!shared)
+                        throw new SystemError(SystemError.Code.NOT_FOUND, 'Listing not found or no longer listed');
+
+                    return { dependency: shared };
+                }
+
                 const dependency = await DB.asUser(principal, (trx) => this.database.dependency.published.load(trx, payload.dependencyId));
+
                 return { dependency };
             },
 
@@ -100,8 +84,13 @@ export class WorkbenchService {
                 principal: Principal.User,
                 payload: Workbench.API.Dependency.Published.CheckUpdates.Request,
             ): Promise<Workbench.API.Dependency.Published.CheckUpdates.Response> => {
-                const updates = await DB.asUser(principal, (trx) => this.database.dependency.published.checkUpdates(trx, payload.dependencies));
-                return { updates };
+                const local  = payload.dependencies.filter((dependency) => !Listing.isListingId(dependency.workflowId));
+                const listed = payload.dependencies.filter((dependency) => Listing.isListingId(dependency.workflowId));
+
+                const own    = await DB.asUser(principal, (trx) => this.database.dependency.published.checkUpdates(trx, local));
+                const shared = await this.listings.checkUpdates(listed);
+
+                return { updates: { ...own, ...shared } };
             },
         },
 
@@ -174,4 +163,5 @@ export class WorkbenchService {
             },
         },
     };
+
 }

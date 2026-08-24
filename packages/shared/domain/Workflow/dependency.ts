@@ -44,6 +44,9 @@ export namespace Dependency {
             description: z.string().nullable(),
         })
         export type UpdateInfo = z.infer<typeof UpdateInfo>
+
+        export const UpdateMap = z.record(WorkflowId, UpdateInfo)
+        export type UpdateMap = z.infer<typeof UpdateMap>
     }
 
     export interface Draft {

@@ -74,6 +74,8 @@ export const Route = createFileRoute('/workflow/$workflowid')({
 
         ExecutionSDK.actions.clear();
 
+        WorkbenchSDK.actions.setClickedNodeId(null)
+
         WorkbenchSDK.actions.workflow.load(workflowId, abortController.signal)
             .catch(err => {
                 if (abortController.signal.aborted) return;

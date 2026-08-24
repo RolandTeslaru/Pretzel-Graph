@@ -17,7 +17,10 @@ export const TopRightPanel = () => {
         s.currentWorkflowPublications.length > 0,
         s.currentWorkflowPublications.some(p => p.is_active),
     ]);
-    const isLocked = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.locked ?? false);
+    const [isLocked, isPubliclyListed] = LibrarySDK.useStore(s => [
+        s.workflowMetas[workflowId]?.locked ?? false,
+        !!s.workflowMetas[workflowId]?.listing_id 
+    ]);
     const [isLockPending, setIsLockPending] = useState(false);
 
     const handleLockToggle = async () => {
@@ -62,6 +65,16 @@ export const TopRightPanel = () => {
                                 <SystemIcons.LockClosed strokeWidth={2} className='size-4'/> :
                                 <SystemIcons.LockOpen strokeWidth={2} className='size-4'/>
                         }
+                    </Button>
+                </Tipped>
+                <Tipped label={isPubliclyListed ? "Unlist": "List Publicly"}>
+                    <Button 
+                        variant="ghost" 
+                        size="icon-sm" 
+                        disabled={isLockPending}
+                        onClick={() => LibrarySDK.openListingManagerDialog(workflowId)} 
+                    >
+                        <SystemIcons.Globe strokeWidth={2} className={`size-4  ${isPubliclyListed && "text-blue-500"}`}/>
                     </Button>
                 </Tipped>
             </div>

@@ -8,6 +8,7 @@ import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import type { Tree as TreeDomain } from '@/components/Tree/domain';
 import type { FileSystemNodeData } from './actions';
+import { openListPublicWorkflowDialog, openUnlistPublicWorkflowDialog, openListingManagerDialog } from './ui/listing-dialogs';
 
 @SDK("Library")
 export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
@@ -30,6 +31,10 @@ export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
 
     public readonly selectors: LibrarySDK.Selectors = _createLibrarySelectors_(this)
     public readonly actions: LibrarySDK.Actions = _createLibraryActions_(this)
+
+    public readonly openListPublicWorkflowDialog = openListPublicWorkflowDialog
+    public readonly openUnlistPublicWorkflowDialog = openUnlistPublicWorkflowDialog
+    public readonly openListingManagerDialog = openListingManagerDialog
 }
 
 

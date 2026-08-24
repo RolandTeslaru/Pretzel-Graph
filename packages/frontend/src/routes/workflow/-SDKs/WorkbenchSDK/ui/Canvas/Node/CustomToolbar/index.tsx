@@ -109,34 +109,38 @@ const ProxyButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
         const dialogId = `proxy-config-${nodeId}`
 
         DialogSDK.actions.push(dialogId, props => (
-            <DialogSDK.Template {...props} className='w-[420px]'>
-                <div className='flex flex-col gap-4 p-4'>
-                    <div className='flex flex-col gap-2'>
-                        <div className='flex flex-row gap-1 items-center'>
-                            <SystemIcons.NetworkProxy className='size-4 mr-1 inline-block' />
-                            <Dialog.Title className='text-sm font-semibold'>Attach a Network Proxy</Dialog.Title>
+            <DialogSDK.SplitTemplate {...props}
+                className='h-[400px]'
+                sidebarRenderer={() => (
+                    <>
+                        <div className='flex flex-row gap-2'>
+                            <SystemIcons.NetworkProxy className='size-6' strokeWidth={2}/>
+                            <Dialog.Title className='text-sm font-semibold my-auto'>Network Proxy</Dialog.Title>
                         </div>
-                        <Dialog.Description className='text-xs text-muted-foreground'>
+                        <Dialog.Description className='text-xs text-muted-foreground pt-1'>
                             Route this node's outbound requests through a proxy.
                         </Dialog.Description>
-                    </div>
-
+                    </>
+                )}
+            >
+                <div className='flex flex-col gap-2 h-full pt-3'>
+                    <p className='text-xs font-medium text-muted-foreground '>Select a Network Proxy Credential</p>
                     <CredentialPicker credentialTemplate={proxyTemplate} nodeId={nodeId} showTitle={false} />
 
-                    <div className='flex flex-row justify-between'>
+                    <div className='flex flex-row justify-between mt-auto'>
                         <Button variant='ghost-destructive' size='sm' className='rounded-full'
                             onClick={() => setProxyInstance(null)}
                         >
                             Remove Proxy
                         </Button>
-                        <Button variant="ghost-primary" size='sm' className='rounded-full'
+                        <Button size='sm' className='rounded-full'
                             onClick={() => DialogSDK.actions.pop(dialogId)}
                         >
                             Done
                         </Button>
                     </div>
                 </div>
-            </DialogSDK.Template>
+            </DialogSDK.SplitTemplate>
         ))
     }
 

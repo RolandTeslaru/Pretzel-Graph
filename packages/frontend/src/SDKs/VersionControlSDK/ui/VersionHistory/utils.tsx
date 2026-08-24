@@ -1,6 +1,16 @@
 import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
 import type { VersionControl } from "@pretzel-graph/shared/domain";
 import { toast } from "sonner";
+import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
+
+const isListing = (publication: VersionControl.Publication.Meta) =>
+    Boolean(LibrarySDK.state.workflowMetas[publication.workflow_id]?.listing_id);
+
+const ListingNote = () => (
+    <div className="text-sm text-muted-foreground mt-2">
+        This workflow is public. With no active version it becomes private; make it public again once a version is active.
+    </div>
+);
 
 export function getPublicationLabel(publication: VersionControl.Publication.Meta): string {
     return publication.name?.trim() || `Version ${publication.id.slice(0, 8)}`;
@@ -37,6 +47,7 @@ export function openDeactivatePublicationDialog(
             <div className="text-sm text-muted-foreground mt-2">
                 The version is not deleted — you can reactivate it at any time.
             </div>
+            {isListing(publication) && <ListingNote />}
         </DialogSDK.AlertTemplate>
     ));
 }
@@ -68,6 +79,7 @@ export function openDeletePublicationDialog(
             <div className="text-sm text-muted-foreground">
                 This removes <span className="font-semibold text-destructive">{getPublicationLabel(publication)}</span> from version history.
             </div>
+            {publication.is_active && isListing(publication) && <ListingNote />}
         </DialogSDK.AlertTemplate>
     ));
 }

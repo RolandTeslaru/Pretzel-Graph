@@ -68,7 +68,7 @@ export const buttonVariants = cva(
           focus-visible:border-red-600/40
         `,
         warning: `
-          bg-amber-400/50 text-amber-700 hover:bg-amber-200 not-dark:hover:border-amber-400
+          bg-yellow-400/50 text-amber-900 hover:bg-amber-200 shadow-none not-dark:hover:border-amber-400
           dark:bg-amber-400/50 dark:text-yellow-100 dark:hover:bg-amber-400/80
           focus-visible:ring-amber-500/20 
           dark:focus-visible:ring-amber-500/40 focus-visible:border-amber-500/40

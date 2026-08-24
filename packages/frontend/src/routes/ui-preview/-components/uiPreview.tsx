@@ -1701,6 +1701,70 @@ function DialogExamples() {
                     )
                 }}
             >Open Alert Dialog</Button>
+            <Button variant="default"
+                onClick={() => {
+                    DialogSDK.actions.push('splitDialog', (props) =>
+                        <DialogSDK.SplitTemplate
+                            {...props}
+                            className="max-w-[600px]"
+                            sidebarRenderer={() => (
+                                <div className="p-4 flex flex-col gap-2">
+                                    <p className="text-md font-semibold text-foreground">Split Dialog</p>
+                                    <p className="text-xs text-muted-foreground">The sidebar half, drawn by the caller.</p>
+                                </div>
+                            )}
+                        >
+                            <Dialog.Title>Dialog Title</Dialog.Title>
+                            <Dialog.Description>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</Dialog.Description>
+                        </DialogSDK.SplitTemplate>
+                    )
+                }}
+            >Open Split Dialog</Button>
+            <Button variant="default"
+                onClick={() => {
+                    DialogSDK.actions.push('tabsDialog', (props) =>
+                        <DialogSDK.TabsTemplate
+                            {...props}
+                            className="w-[650px]"
+                            header={{ icon: SystemIcons.Cog, title: 'Tabs Dialog' }}
+                            defaultValue="general"
+                            items={[
+                                {
+                                    id: 'general',
+                                    label: 'General',
+                                    icon: SystemIcons.Settings,
+                                    panel: (
+                                        <div className="flex flex-col gap-3">
+                                            {Array.from({ length: 40 }, (_, i) => (
+                                                <p key={i} className="text-sm text-muted-foreground">
+                                                    {i + 1}. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                                    Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                                                </p>
+                                            ))}
+                                        </div>
+                                    ),
+                                },
+                                {
+                                    id: 'credentials',
+                                    label: 'Credentials',
+                                    icon: SystemIcons.Key,
+                                    panel: <p className="text-sm text-muted-foreground">The credentials panel.</p>,
+                                },
+                                {
+                                    id: 'danger',
+                                    label: 'Danger Zone',
+                                    icon: SystemIcons.Trash2,
+                                    tone: 'destructive',
+                                    panel: <p className="text-sm text-muted-foreground">The panel that ends things.</p>,
+                                },
+                            ]}
+                        >
+                            <Dialog.Title className="hidden">Tabs Dialog</Dialog.Title>
+                            <Dialog.Description className="hidden">A dialog with sidebar tabs</Dialog.Description>
+                        </DialogSDK.TabsTemplate>
+                    )
+                }}
+            >Open Tabs Dialog</Button>
         </Example>
     )
 }

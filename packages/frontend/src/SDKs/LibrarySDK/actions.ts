@@ -26,6 +26,9 @@ export type _LibrarySDKActions = {
         create: (payload: Library.API.Workflow.Create.Request) => Promise<Library.API.Workflow.Create.Response>;
         update: (payload: Library.API.Workflow.Update.Request) => Promise<Library.API.Workflow.Update.Response>;
         setLock: (id: Workflow.Id, locked: boolean) => Promise<Library.API.Workflow.Update.Response>;
+        listPublicWorkflow: (id: Workflow.Id) => Promise<Library.API.Workflow.ListPublic.Response>;
+        unlistPublicWorkflow: (id: Workflow.Id) => Promise<void>;
+        __removeListingId: (id: Workflow.Id) => void;
         delete: (id: Workflow.Id) => Promise<Library.API.Workflow.Remove.Response>;
         duplicate: (id: Workflow.Id) => Promise<Library.API.Workflow.Duplicate.Response>;
     };
@@ -184,6 +187,30 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
                 const data = await Library.API.Workflow.update(api, { id, locked });
                 setState((s) => { s.workflowMetas[data.id] = data; });
                 return data;
+            },
+
+            __removeListingId: (id) => {
+                setState((s) => {
+                    if (s.workflowMetas[id])
+                        s.workflowMetas[id].listing_id = null;
+                });
+            },
+
+            listPublicWorkflow: async (id) => {
+                const data = await Library.API.Workflow.listPublicWorkflow(api, { workflowId: id });
+                setState((s) => {
+                    if (s.workflowMetas[id])
+                        s.workflowMetas[id].listing_id = data.listingId;
+                });
+                return data;
+            },
+
+            unlistPublicWorkflow: async (id) => {
+                await Library.API.Workflow.unlistPublicWorkflow(api, { workflowId: id });
+                setState((s) => {
+                    if (s.workflowMetas[id])
+                        s.workflowMetas[id].listing_id = null;
+                });
             },
 
             delete: async (id) => {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Shelf } from '@pretzel-graph/shared/domain';
+import { Shelf, Workflow } from '@pretzel-graph/shared/domain';
 import { ALL_DRAWERS, SECTIONS } from '@pretzel-graph/shared/constants/drawers';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import * as fs from 'fs';
@@ -126,5 +126,52 @@ export class ShelfService {
         const { blueprint } = this.getBlueprint({ blueprintId });
 
         return { derivedBlueprint: Blueprint.derive(blueprint, fieldValues).blueprint };
+    }
+
+    // Every blueprint a workflow's nodes reference, plus the repairs for the ones that no longer resolve.
+    async collectWorkflowBlueprints(data: Workflow.Data): Promise<{ blueprints: Record<Blueprint.Id, Blueprint>; repairs: Workflow.Repair[] }> {
+        const blueprintIds = new Set<Blueprint.Id>();
+
+        for (const node of Object.values(data.nodes)) {
+            blueprintIds.add(node.blueprintId);
+            if (node.reconciledBlueprintId)
+                blueprintIds.add(node.reconciledBlueprintId);
+        }
+
+        const { blueprints, resolutionFailures } = await this.getBatchBlueprints({
+            blueprintIds: [...blueprintIds],
+        });
+        const repairs: Workflow.Repair[] = [];
+
+        for (const failure of resolutionFailures) {
+            for (const node of Object.values(data.nodes)) {
+                if (failure.code === "MISSING_BLUEPRINT") {
+                    // Dependency nodes may use a cosmetic blueprint id absent from the catalogue by design.
+                    if (node.dependencyRef || node.blueprintId !== failure.blueprintId)
+                        continue;
+
+                    repairs.push({
+                        code:        "MISSING_BLUEPRINT",
+                        nodeId:      node.id,
+                        blueprintId: failure.blueprintId,
+                        resolution:  "REMOVE_NODE",
+                    });
+                    continue;
+                }
+
+                if (node.reconciledBlueprintId !== failure.reconciledBlueprintId)
+                    continue;
+
+                repairs.push({
+                    code:                          "MISSING_BLUEPRINT_DERIVATIVE",
+                    nodeId:                        node.id,
+                    blueprintId:                   failure.blueprintId,
+                    previousReconciledBlueprintId: failure.reconciledBlueprintId,
+                    resolution:                    "RESET_TO_BASE",
+                });
+            }
+        }
+
+        return { blueprints, repairs };
     }
 }

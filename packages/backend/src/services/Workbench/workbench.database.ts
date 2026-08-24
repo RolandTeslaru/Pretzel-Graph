@@ -48,6 +48,7 @@ class WorkflowMethods {
         return DB.Workflow.toDomain(row);
     }
 
+
     @AllowedDatabaseRoles("user")
     async commit(
         trx: DB.UserTransaction,
@@ -70,19 +71,11 @@ class PublishedDependencyMethods {
         trx: DB.UserTransaction,
         workflowId: Workflow.Id,
     ): Promise<Workflow.Dependency.Publication> {
-        // RLS is the authority here: the scope exposes either an owned workflow
-        // or an active publication of a public workflow.
         const workflow = await trx
             .selectFrom('workflows')
             .select(['id', 'display_name', 'icon', 'accent'])
             .where('id', '=', workflowId)
-            .executeTakeFirst();
-
-        if (!workflow)
-            throw new SystemError(
-                SystemError.Code.NOT_FOUND,
-                'Workflow not found or not public',
-            );
+            .executeTakeFirstOrThrow();
 
         const row = await trx
             .selectFrom('version_control')
@@ -94,7 +87,7 @@ class PublishedDependencyMethods {
         if (!row)
             throw new SystemError(
                 SystemError.Code.NOT_FOUND,
-                'No active publication found for this public workflow',
+                'No active publication found for this workflow',
             );
 
         const publication = DB.VersionControl.toDomain(row);
@@ -108,12 +101,13 @@ class PublishedDependencyMethods {
         };
     }
 
+
     @AllowedDatabaseRoles("user")
-    @ZodReturn(z.record(Workflow.Id, Workflow.Dependency.Publication.UpdateInfo))
+    @ZodReturn(Workflow.Dependency.Publication.UpdateMap)
     async checkUpdates(
         trx: DB.UserTransaction,
         dependencies: Workbench.API.Dependency.Published.CheckUpdates.Request['dependencies'],
-    ): Promise<Record<Workflow.Id, Workflow.Dependency.Publication.UpdateInfo>> {
+    ): Promise<Workflow.Dependency.Publication.UpdateMap> {
         if (!dependencies.length)
             return {};
 
@@ -132,7 +126,7 @@ class PublishedDependencyMethods {
             .where('is_active', '=', true)
             .execute();
 
-        const updates: Record<Workflow.Id, Workflow.Dependency.Publication.UpdateInfo> = {};
+        const updates: Workflow.Dependency.Publication.UpdateMap = {};
 
         for (const row of rows) {
             if (storedByWorkflow.get(row.workflow_id) === row.id)

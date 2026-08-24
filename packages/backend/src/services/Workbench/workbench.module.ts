@@ -4,9 +4,10 @@ import { WorkbenchService } from './workbench.service';
 import { WorkbenchDatabase } from './workbench.database';
 import { VaultModule } from '../Vault/vault.module';
 import { ShelfModule } from '../Shelf/shelf.module';
+import { ListingModule } from '../Listing/listing.module';
 
 @Module({
-    imports: [VaultModule, ShelfModule],
+    imports: [VaultModule, ShelfModule, ListingModule],
     controllers: [WorkbenchController],
     providers: [WorkbenchService, WorkbenchDatabase],
 })

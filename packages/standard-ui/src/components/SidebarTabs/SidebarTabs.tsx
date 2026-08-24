@@ -45,7 +45,7 @@ export const SidebarTabs = ({
         >
             <div
                 style={surfaceStyle}
-                className={cn("p-0.5 py-2 w-50 shrink-0 border-y border-l rounded-l-2xl border-border/50 ", blockTransparency ? "bg-card" : "bg-card/60 backdrop-blur-md", sidebarClassName)}
+                className={cn("p-0.5 py-2 w-50 shrink-0 border-y border-l rounded-l-2xl border-border/50", blockTransparency ? "bg-card" : "bg-card/60 backdrop-blur-md", sidebarClassName)}
             >
                 {sidebarRenderer ? sidebarRenderer(context) : <>
                     {header && (

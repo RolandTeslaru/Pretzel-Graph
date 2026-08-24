@@ -93,7 +93,7 @@ export namespace Workbench {
                     export type Request = z.infer<typeof Request>
 
                     export const Response = z.object({
-                        updates: z.record(WorkflowNs.Id, WorkflowNs.Dependency.Publication.UpdateInfo),
+                        updates: WorkflowNs.Dependency.Publication.UpdateMap,
                     })
                     export type Response = z.infer<typeof Response>
                 }

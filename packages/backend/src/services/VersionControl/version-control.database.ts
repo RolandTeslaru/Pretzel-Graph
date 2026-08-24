@@ -85,6 +85,20 @@ export class VersionControlDatabase {
         return row ? DB.VersionControl.toMeta(row) : null;
     }
 
+    // Full row, workflow_data included.
+    @AllowedDatabaseRoles("user")
+    @ZodReturn(VersionControl.Publication.Schema.nullable())
+    async getActivePublicationForWorkflow(trx: DB.UserTransaction, workflowId: Workflow.Id): Promise<VersionControl.Publication | null> {
+        const row = await trx
+            .selectFrom('version_control')
+            .selectAll()
+            .where('workflow_id', '=', workflowId)
+            .where('is_active', '=', true)
+            .executeTakeFirst();
+
+        return row ? DB.VersionControl.toDomain(row) : null;
+    }
+
     @AllowedDatabaseRoles("user")
     @ZodReturn(VersionControl.Publication.Schema)
     async get(trx: DB.UserTransaction, publicationId: VersionControl.Publication.Id): Promise<VersionControl.Publication> {

@@ -14,6 +14,8 @@ namespace AlertDialogComponents {
     darkenBackground?: boolean
     blockTransparency?: boolean
     showTriangle?: boolean
+    // Skip the default surface (background / blur) entirely so the caller draws its own.
+    unstyled?: boolean
     theme?: "dark" | "light"
   }>
   export type Header = FC<React.HTMLAttributes<HTMLDivElement>>
@@ -45,6 +47,7 @@ const Overlay: AlertDialogComponents.Overlay = ({ className, ...props }) => (
 const Content: AlertDialogComponents.Content = ({
   darkenBackground = true,
   blockTransparency = false,
+  unstyled = false,
   theme,
   style,
   className,
@@ -56,16 +59,23 @@ const Content: AlertDialogComponents.Content = ({
     <AlertDialogPrimitive.Content
       data-slot="alert-dialog-content"
       className={cn(
-        `${theme || ""} fixed left-[50%] top-[50%] z-50 rounded-2xl
-         border border-border outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0
+        `${theme || ""} fixed left-[50%] top-[50%] z-50
+         outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0
          transition-[opacity,transform,filter] duration-400 ease-in-out
-         data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-70 
-         data-[state=open]:zoom-in-70 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 
-         data-[state=open]:slide-in-from-top-[48%]
-         shadow-2xl shadow-neutral-500/60 dark:shadow-black/60
          `,
+        // Unstyled animates transform only: keyframes touching opacity would blank descendant backdrop blurs.
+        unstyled
+          ? `data-[state=open]:animate-[dialog-zoom-in_150ms_ease-in-out]
+             data-[state=closed]:animate-[dialog-zoom-out_150ms_ease-in-out_both]`
+          : cn(
+              `data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-70
+               data-[state=open]:zoom-in-70 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2
+               data-[state=open]:slide-in-from-top-[48%]
+               `,
+              'rounded-2xl border border-border shadow-2xl shadow-neutral-500/60 dark:shadow-black/60',
+              blockTransparency ? 'bg-card! backdrop-blur-none!' : 'bg-card/80 dark:bg-card/80 backdrop-blur-sm',
+            ),
         className,
-        blockTransparency ? 'bg-card! backdrop-blur-none!' : 'bg-card/80 dark:bg-card/80 backdrop-blur-sm',
       )}
       style={{
         // boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.5)",
