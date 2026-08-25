@@ -1,6 +1,7 @@
 import axios from "axios";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import type { AuthSDKImpl } from "../AuthSDK/sdk";
+import { API_URL } from "@/config";
 
 /**
  * Some deployments exchange the session for a short-lived token scoped to this
@@ -33,13 +34,13 @@ async function mint(): Promise<string | null> {
         const { data } = await axios.post<{ token: string; expiresAt: number }>(
             EXCHANGE_PATH,
             {},
-            { baseURL: import.meta.env.VITE_API_URL, headers: { Authorization: `Bearer ${session}` } },
+            { baseURL: API_URL, headers: { Authorization: `Bearer ${session}` } },
         );
 
         // A proxy answering 200 with something else must not flip the mode.
         if (typeof data?.token !== "string" || typeof data?.expiresAt !== "number") {
             mode = "session";
-            return null;
+            return session;
         }
 
         mode = "scoped";
@@ -49,14 +50,11 @@ async function mint(): Promise<string | null> {
     }
     catch (error) {
         // No exchange endpoint means the session is the token here.
-        if (axios.isAxiosError(error) && error.response?.status === 404) {
+        if (axios.isAxiosError(error) && error.response?.status === 404)
             mode = "session";
-            return null;
-        }
 
-        // Anything else is transient or a denial: stay undecided and let the
-        // request carry the session, which the backend will judge.
-        return null;
+        // Undecided or decided against, the session is what the backend judges.
+        return session;
     }
 }
 

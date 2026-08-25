@@ -6,10 +6,10 @@ import { cookieStorage, PRETZEL_STORAGE_KEY } from "@pretzel-graph/standard-ui/u
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { Auth, Workspace } from "@pretzel-graph/shared/domain";
 import { _createAuthActions_ } from "./actions";
-import { SystemSDK } from "@pretzel-graph/standard-ui/SDKs/SystemSDK";
 import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
 import { AlertDialog } from "@pretzel-graph/standard-ui/foundations";
 import { router } from "@/main";
+import { AUTH_URL, SESSION_COOKIE_DOMAIN } from "@/config"
 
 const LOGOUT_DIALOG_ID = 'logout'
 
@@ -19,13 +19,13 @@ export class AuthSDKImpl extends BaseSDK<AuthSDK.State> {
 
   /** The auth server client. Everything that needs a token goes through here. */
   public readonly client = new GoTrueClient({
-    url: import.meta.env.VITE_AUTH_URL || "http://localhost:9999",
+    url: AUTH_URL || "http://localhost:9999",
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
     // Left unset the session stays on this host, as it always has.
     storageKey: PRETZEL_STORAGE_KEY,
-    storage: cookieStorage({ domain: import.meta.env.VITE_SESSION_COOKIE_DOMAIN }),
+    storage: cookieStorage({ domain: SESSION_COOKIE_DOMAIN }),
   })
 
   /** The current access token, or null when signed out. */
