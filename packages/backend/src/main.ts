@@ -10,6 +10,7 @@ import { WsAdapter } from '@nestjs/platform-ws';
 import path from 'path';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
 import { trustedProxyMiddleware } from './auth/trusted-proxy';
+import { frontendMiddleware } from './serve-frontend';
 
 // Compiled runs point NODES_ROOT at the built nodes; the default is the sources
 // ts-node reads in development.
@@ -28,6 +29,11 @@ async function bootstrap() {
     const trustedProxy = trustedProxyMiddleware();
     if (trustedProxy)
         app.use(trustedProxy);
+
+    // Before the API stack: assets and the app shell need none of it.
+    const frontend = frontendMiddleware();
+    if (frontend)
+        app.use(frontend);
 
     const PORT = process.env.PORT || 3001;
 

@@ -3,9 +3,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK/sdk'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
-
-// Optional. Everything pointing at it is left out entirely when it is unset.
-const CLOUD_URL = import.meta.env.VITE_CLOUD_URL
+import { CLOUD_URL } from '@/config'
 
 // The origin is configured; the path is not.
 export const WORKSPACES_URL = CLOUD_URL && `${CLOUD_URL.replace(/\/$/, '')}/workspaces`

@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import { getRequestToken, invalidateRequestToken, isScoped } from "./workspaceToken";
+import { API_URL } from "@/config";
 
 // The backend answers 503 with Retry-After while it is coming up. Without that
 // header nothing is on its way, so the answer is final.
@@ -24,7 +25,7 @@ const g = globalThis as unknown as { __api?: AxiosInstance };
 
 export const api: AxiosInstance = (g.__api ??= (() => {
     const instance = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
+        baseURL: API_URL,
     });
 
     instance.interceptors.request.use(async (config) => {
