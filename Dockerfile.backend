@@ -18,7 +18,8 @@ COPY packages ./packages
 # Regenerates the blueprint index before the backend build copies assets into dist.
 RUN npm run generate-indexes --workspace=packages/nodes \
  && npm run build --workspace=packages/backend \
- && npm run build --workspace=packages/nodes
+ && npm run build --workspace=packages/nodes \
+ && npx vite build --config packages/frontend/vite.config.ts packages/frontend
 
 FROM node:22-alpine AS runtime
 WORKDIR /app
@@ -36,7 +37,10 @@ RUN npm ci --omit=dev --workspace=packages/backend --workspace=packages/nodes --
 
 COPY --from=build /repo/packages/backend/dist ./packages/backend/dist
 COPY --from=build /repo/packages/nodes/dist   ./packages/nodes/dist
+COPY --from=build /repo/packages/frontend/dist ./packages/frontend/dist
 
+# The editor this backend serves, built from the same sources it was.
+ENV FRONTEND_ROOT=/app/packages/frontend/dist
 # The catalogue resolves node and blueprint modules under this directory.
 ENV NODES_ROOT=/app/packages/nodes/dist/nodes/src
 COPY docker/backend/entrypoint.sh ./entrypoint.sh
