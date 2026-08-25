@@ -1,23 +1,90 @@
-import { Injectable } from '@nestjs/common';
-import { Shelf, Workflow } from '@pretzel-graph/shared/domain';
+import { Injectable, Logger } from '@nestjs/common';
+import { Listing, Shelf, Workflow } from '@pretzel-graph/shared/domain';
 import { ALL_DRAWERS, SECTIONS } from '@pretzel-graph/shared/constants/drawers';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
+import { CloudService } from '../Cloud/cloud.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
-function loadIndex(): Shelf.Index {
-    const raw = fs.readFileSync(path.join(__dirname, '../../../assets/blueprint_index.json'), 'utf-8');
-    return JSON.parse(raw) as Shelf.Index;
+// Read once and held for the process; index changes arrive via a backend restart.
+let index: Shelf.Index | null = null;
+
+function getCoreIndex(): Shelf.Index {
+    index ??= JSON.parse(fs.readFileSync(path.join(__dirname, '../../../assets/blueprint_index.json'), 'utf-8')) as Shelf.Index;
+
+    return index;
 }
 
 @Injectable()
 export class ShelfService {
+
+    private readonly logger = new Logger(ShelfService.name);
+
+    private extendedIndex: Record<Blueprint.Id, Blueprint> | null = null;
+
+    constructor(private readonly cloud: CloudService) {}
+
+    // The extended shelf blueprints, fetched from the registry once and kept for the process.
+    async ensureExtendedShelfIndex(): Promise<Record<Blueprint.Id, Blueprint>> {
+        if (this.extendedIndex)
+            return this.extendedIndex;
+
+        if (!this.cloud.isConfigured)
+            return {};
+
+        let listings: Listing[];
+
+        try {
+            listings = await this.getPretzelOfficialListings();
+        } catch (error) {
+            this.logger.warn(`Could not fetch the extended shelf: ${(error as Error).message}`);
+            return {};
+        }
+
+        const base = getCoreIndex().blueprints['Core.SubWorkflow.Execute' as Blueprint.Id];
+        const blueprints: Record<Blueprint.Id, Blueprint> = {};
+
+        for (const listing of listings) {
+            const blueprint = this.toExtendedBlueprint(base, listing);
+
+            if (blueprint)
+                blueprints[blueprint.id] = blueprint;
+        }
+
+        this.extendedIndex = blueprints;
+
+        return blueprints;
+    }
+
+    private async getPretzelOfficialListings(): Promise<Listing[]> {
+        const response = await this.cloud.fetch('/api/extended-shelf', { method: 'GET' });
+
+        if (!response.ok)
+            throw new Error(`Extended shelf answered ${response.status}`);
+
+        return Listing.API.ExtendedShelf.Response.parse(await response.json()).workflows;
+    }
+
+    private toExtendedBlueprint(base: Blueprint, listing: Listing): Blueprint | null {
+        try {
+            return Workflow.toBlueprint(base, {
+                id:            (listing.blueprintId ?? listing.id) as Blueprint.Id,
+                meta:          listing.publicationMeta.workflow_meta,
+                data:          listing.workflowData,
+                dependencyRef: { workflowId: listing.id, mode: 'publication' },
+            });
+        } catch (error) {
+            this.logger.warn(`Skipped extended shelf listing ${listing.id}: ${(error as Error).message}`);
+            return null;
+        }
+    }
+
     getBlueprint(
         payload: Shelf.API.Blueprint.Get.Request
     ): { blueprint: Blueprint } {
-        const index = loadIndex();
+        const index = getCoreIndex();
         const { blueprintId } = payload;
-        const blueprint = index.blueprints[blueprintId];
+        const blueprint = index.blueprints[blueprintId] ?? this.extendedIndex?.[blueprintId];
 
         if (!blueprint)
             throw new Error(`Blueprint not found: ${blueprintId}`);
@@ -29,7 +96,7 @@ export class ShelfService {
     async getBatchBlueprints(
         payload: Shelf.API.Blueprint.GetBatch.Request
     ): Promise<Shelf.API.Blueprint.GetBatch.Response> {
-        const index = loadIndex();
+        const index = getCoreIndex();
         const { blueprintIds } = payload;
         const blueprints: Record<Blueprint.Id, Blueprint> = {};
         const failures = new Map<string, Blueprint.ResolutionFailure>();
@@ -43,7 +110,8 @@ export class ShelfService {
         };
 
         for (const id of blueprintIds) {
-            const blueprint = index.blueprints[id as Blueprint.Id];
+            const blueprint = index.blueprints[id as Blueprint.Id]
+                ?? (await this.ensureExtendedShelfIndex())[id as Blueprint.Id];
             if (blueprint) {
                 blueprints[id as Blueprint.Id] = blueprint;
                 continue;
@@ -96,13 +164,12 @@ export class ShelfService {
     }
 
 
-    getAllInSection(
+    async getAllInSection(
         payload: Shelf.API.Blueprint.GetAllInSection.Request
-    ): { blueprints: Record<Blueprint.Id, Blueprint> } {
-        const index = loadIndex();
+    ): Promise<{ blueprints: Record<Blueprint.Id, Blueprint> }> {
+        const index = getCoreIndex();
         const { section } = payload;
-        // @ts-expect-error
-        const drawerIds = SECTIONS[section] as Shelf.Drawer.Id[];
+        const drawerIds = SECTIONS[section];
         const blueprints: Record<Blueprint.Id, Blueprint> = {};
 
         drawerIds.forEach(drawerId => {
@@ -115,6 +182,9 @@ export class ShelfService {
                     blueprints[blueprintId as Blueprint.Id] = blueprint;
             });
         });
+
+        if (section === 'core_extended')
+            Object.assign(blueprints, await this.ensureExtendedShelfIndex());
 
         return { blueprints };
     }

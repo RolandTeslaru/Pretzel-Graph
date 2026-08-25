@@ -715,6 +715,6 @@ export const BUNDLE_DRAWERS = {
 export const ALL_DRAWERS = { ...CORE_DRAWERS, ...BUNDLE_DRAWERS } as const
 
 export const SECTIONS = {
-  core: Object.keys(CORE_DRAWERS) as Shelf.Drawer.Id[],
-  bundle: Object.keys(BUNDLE_DRAWERS) as Shelf.Drawer.Id[],
+  core_extended: Object.keys(CORE_DRAWERS) as Shelf.Drawer.Id[],
+  integrations: Object.keys(BUNDLE_DRAWERS) as Shelf.Drawer.Id[],
 } as const

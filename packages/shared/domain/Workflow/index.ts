@@ -9,7 +9,7 @@ import * as CacheMod from "./cache"
 import * as RepairMod from "./repair"
 import { WorkflowId, FolderId, ListingId } from "./ids"
 import { WORKFLOW_DATA_VERSION } from "./migrate"
-import { extractExposedInputs as _extractExposedInputs, extractExposedOutputs as _extractExposedOutputs } from "./resolvers"
+import { extractExposedInputs as _extractExposedInputs, extractExposedOutputs as _extractExposedOutputs, toBlueprint as _toBlueprint } from "./resolvers"
 
 export namespace Workflow {
     export const Id = WorkflowId
@@ -44,6 +44,9 @@ export namespace Workflow {
     // A subworkflow's exposed ports, read from its Expose*Port nodes. Impl in ./resolvers.
     export const extractExposedInputs  = _extractExposedInputs
     export const extractExposedOutputs = _extractExposedOutputs
+
+    // A workflow served as a node, assembled onto a base blueprint.
+    export const toBlueprint = _toBlueprint
 
     export const Schema = z.object({
         id:           WorkflowId,

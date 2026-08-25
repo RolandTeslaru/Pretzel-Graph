@@ -17,11 +17,10 @@ export class ShelfSDKImpl extends BaseSDK<ShelfSDK.State> {
     public readonly useStore: BaseSDK.Store<ShelfSDK.State> = create(
         immer<ShelfSDK.State>(() => ({
             sections: {
-                core: Shelf.Drawer.SECTIONS.core,
-                bundle: Shelf.Drawer.SECTIONS.bundle,
-                mcp: []
+                core_extended: Shelf.Drawer.SECTIONS.core_extended,
+                integrations: Shelf.Drawer.SECTIONS.integrations,
             },
-            selectedSection: "core",
+            selectedSection: "core_extended",
             drawers: Shelf.Drawer.ALL_DRAWERS,
             blueprints: {},
             filteredDrawers: {},
@@ -29,7 +28,7 @@ export class ShelfSDKImpl extends BaseSDK<ShelfSDK.State> {
             openedDrawers: new Set<Shelf.Drawer.Id>(),
             searchFilter: {
                 query: null,
-                selectionFilters: new Set<Shelf.Section>(["core"]),
+                selectionFilters: new Set<Shelf.Section>(["core_extended"]),
                 dataTypes: null
             },
             derivedBlueprintsCache: {}

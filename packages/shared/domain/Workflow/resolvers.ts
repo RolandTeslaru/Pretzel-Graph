@@ -111,3 +111,47 @@ export function resolveOutputs(
         return resolve([], extractExposedOutputs(dependency.workflow_data), node.polymorphicResolutions);
     return resolve(base, node.addedOutputs, node.polymorphicResolutions);
 }
+
+// A workflow served as a node: the base blueprint skinned with the workflow's display meta, exposed ports, and fields.
+export function toBlueprint(base: Foundations.Blueprint, args: {
+    id: Foundations.Blueprint.Id;
+    meta: Workflow.Meta;
+    data: Workflow.Data;
+    dependencyRef: NonNullable<Foundations.Blueprint["dependencyRef"]>;
+}): Foundations.Blueprint {
+    return {
+        ...base,
+        id: args.id,
+        ui: {
+            displayName: args.meta.display_name,
+            description: args.meta.description ?? undefined,
+            icon:        args.meta.icon ?? base.ui.icon,
+            accent:      args.meta.accent ?? base.ui.accent,
+            iconColor:   base.ui.iconColor,
+        },
+        fields:  mergeFieldsById(base.fields, args.data.fields ?? []),
+        inputs:  extractExposedInputs(args.data),
+        outputs: extractExposedOutputs(args.data),
+        flags: {
+            SHOW_DEPENDENCY_SELECTOR: false,
+        },
+        dependencyRef: args.dependencyRef,
+    };
+}
+
+// Base fields win; the workflow's own fields fill in behind them.
+function mergeFieldsById(
+    baseFields: readonly Foundations.Field[],
+    dependencyFields: readonly Foundations.Field[],
+): Foundations.Field[] {
+    const fieldsById = new Map<Foundations.Field.Id, Foundations.Field>();
+
+    for (const field of baseFields)
+        fieldsById.set(field.id, field);
+
+    for (const field of dependencyFields)
+        if (!fieldsById.has(field.id))
+            fieldsById.set(field.id, field);
+
+    return [...fieldsById.values()];
+}

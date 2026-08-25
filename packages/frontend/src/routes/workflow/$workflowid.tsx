@@ -46,12 +46,12 @@ export const Route = createFileRoute('/workflow/$workflowid')({
 
         QuerySDK.client.prefetchQuery({
             queryKey: ["core-blueprints"],
-            queryFn: () => ShelfSDK.actions.loadSection("core"),
+            queryFn: () => ShelfSDK.actions.loadSection("core_extended"),
             staleTime: Infinity,
         })
         QuerySDK.client.prefetchQuery({
             queryKey: ["bundle-blueprints"],
-            queryFn: () => ShelfSDK.actions.loadSection("bundle"),
+            queryFn: () => ShelfSDK.actions.loadSection("integrations"),
             staleTime: Infinity
         })
         QuerySDK.client.prefetchQuery({

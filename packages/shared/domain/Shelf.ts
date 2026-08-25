@@ -38,7 +38,7 @@ export namespace Shelf {
     }
     export type Index = z.infer<typeof Index.Schema>
 
-    export const Section = z.enum(["core", "mcp", "bundle"])
+    export const Section = z.enum(["core_extended", "integrations"])
     export type Section = z.infer<typeof Section>
 
     export namespace API {
