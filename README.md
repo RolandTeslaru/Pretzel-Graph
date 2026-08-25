@@ -44,8 +44,8 @@ recreate rows under the old account.
 docker compose --profile full up -d     # http://localhost:8080
 ```
 
-The frontend is served by nginx, which proxies the API and websocket, so the
-backend is not published. Pass `--profile full` when stopping it too —
+The backend serves the editor and the API on the same port, so there is one
+origin and nothing to proxy. Pass `--profile full` when stopping it too —
 `docker compose down` on its own leaves those containers running, and the
 network cannot be removed while they hold it:
 
