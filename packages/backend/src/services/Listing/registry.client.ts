@@ -1,20 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { Listing, SystemError, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
+import { CloudService } from '../Cloud/cloud.service';
 
-// The listing registry: open reads, token-bearing writes, reached from PRETZEL_CLOUD_URL.
+// The listing registry: open reads, token-bearing writes, reached through CloudService.
 @Injectable()
 export class ListingRegistry {
 
-    private readonly baseUrl    = process.env.PRETZEL_CLOUD_URL?.replace(/\/+$/, '') ?? null;
-    private readonly workspaceId = process.env.WORKSPACE_ID ?? null;
-    private readonly token       = process.env.PRETZEL_CLOUD_TOKEN ?? null;
+    constructor(private readonly cloud: CloudService) {}
 
     public get canRead(): boolean {
-        return this.baseUrl !== null;
+        return this.cloud.isConfigured;
     }
 
     public get canShare(): boolean {
-        return this.canRead && this.workspaceId !== null && this.token !== null;
+        return this.cloud.hasWorkspaceIdentity;
     }
 
 
@@ -37,20 +36,17 @@ export class ListingRegistry {
     }
 
     public async put(request: Listing.API.Put.Request): Promise<Listing.Id> {
-        const body = await this.write('PUT', `/api/workspaces/${this.workspaceId}/listings`, request);
+        const body = await this.write('PUT', `/api/workspaces/${this.cloud.workspaceId}/listings`, request);
 
         return Listing.API.Put.Response.parse(body).id;
     }
 
     public async delete(id: Listing.Id): Promise<void> {
-        await this.write('DELETE', `/api/workspaces/${this.workspaceId}/listings/${id}`);
+        await this.write('DELETE', `/api/workspaces/${this.cloud.workspaceId}/listings/${id}`);
     }
 
     private async read(path: string, opts: { allowNotFound?: boolean } = {}): Promise<unknown> {
-        if (!this.baseUrl)
-            throw new SystemError(SystemError.Code.NOT_FOUND, 'Listings are not available on this deployment');
-
-        const response = await this.fetch(`${this.baseUrl}${path}`, { method: 'GET' });
+        const response = await this.cloud.fetch(path, { method: 'GET' });
 
         if (response.status === 404 && opts.allowNotFound)
             return null;
@@ -65,12 +61,9 @@ export class ListingRegistry {
         if (!this.canShare)
             throw new SystemError(SystemError.Code.FORBIDDEN, 'This deployment cannot share workflows');
 
-        const response = await this.fetch(`${this.baseUrl}${path}`, {
+        const response = await this.cloud.fetch(path, {
             method,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Pretzel-Cloud-Token': this.token!,
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: payload === undefined ? undefined : JSON.stringify(payload),
         });
 
@@ -81,17 +74,5 @@ export class ListingRegistry {
         }
 
         return response.json();
-    }
-
-    private async fetch(url: string, init: RequestInit): Promise<Response> {
-        try {
-            return await fetch(url, { ...init, signal: AbortSignal.timeout(10_000) });
-        }
-        catch (error) {
-            throw new SystemError(
-                SystemError.Code.BAD_REQUEST,
-                `Listing registry unreachable: ${error instanceof Error ? error.message : String(error)}`,
-            );
-        }
     }
 }

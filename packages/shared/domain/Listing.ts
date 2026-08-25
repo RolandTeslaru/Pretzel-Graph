@@ -22,6 +22,8 @@ export namespace Listing {
         id:              Id,
         publicationMeta: VersionControl.Publication.Meta.Schema,
         get workflowData() { return Workflow.Data.Schema },
+        // Set by the registry operator on extended shelf entries only.
+        blueprintId:     z.string().nullable().optional(),
         createdAt:       z.coerce.date(),
         updatedAt:       z.coerce.date(),
     })
@@ -55,6 +57,13 @@ export namespace Listing {
         export namespace Updates {
             export const Response = z.object({
                 updates: z.record(Workflow.Id, VersionControl.Publication.Meta.Schema),
+            })
+            export type Response = z.infer<typeof Response>
+        }
+
+        export namespace ExtendedShelf {
+            export const Response = z.object({
+                workflows: z.array(Listing.Schema),
             })
             export type Response = z.infer<typeof Response>
         }

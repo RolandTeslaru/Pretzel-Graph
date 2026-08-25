@@ -9,11 +9,13 @@ import { ChatDatabase } from '../Chat/chat.database';
 import { VaultDatabase } from '../Vault/vault.database';
 import { Execution } from '@pretzel-graph/shared/domain';
 import { RealtimeModule } from '../Realtime/realtime.module';
+import { CloudModule } from '../Cloud/cloud.module';
 
 @Module({
     imports: [
         BullModule.registerQueue({ name: Execution.Queue.ID }),
         RealtimeModule,
+        CloudModule,
     ],
     controllers: [ExecutionController],
     providers: [ExecutionService, WorkerLifecycleService, ExecutionReconciler, ExecutionDatabase, ChatDatabase, VaultDatabase],

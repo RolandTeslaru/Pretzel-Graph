@@ -2,6 +2,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { Execution } from '@pretzel-graph/shared/domain';
+import { CloudService } from '../Cloud/cloud.service';
 
 /** Long enough that a burst of runs wakes once, short enough to retry a failure. */
 const REMEMBER_MS = 60_000;
@@ -31,6 +32,7 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
     constructor(
         @InjectQueue(Execution.Queue.ID)
         private readonly queue: Queue,
+        private readonly cloud: CloudService,
     ) {}
 
     /** A restart must not leave a worker running with nothing to do. */
@@ -44,13 +46,10 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
     /** Where the worker's start and stop routes live, or null when self-hosted. */
     private getLifecycleBase(): string | null {
-        const cloud = process.env.PRETZEL_CLOUD_URL?.replace(/\/+$/, '');
-        const workspaceId = process.env.WORKSPACE_ID;
-
-        if (!cloud || !workspaceId)
+        if (!this.cloud.hasWorkspaceIdentity)
             return null;
 
-        return `${cloud}/api/workspaces/${workspaceId}/worker`;
+        return `/api/workspaces/${this.cloud.workspaceId}/worker`;
     }
 
     /** Called before enqueueing, the only moment anything knows work is coming. */
@@ -142,11 +141,8 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
         }
     }
 
-    private async post(url: string): Promise<void> {
-        const response = await fetch(url, {
-            method:  'POST',
-            headers: { 'X-Pretzel-Cloud-Token': process.env.PRETZEL_CLOUD_TOKEN ?? '' },
-        });
+    private async post(path: string): Promise<void> {
+        const response = await this.cloud.fetch(path, { method: 'POST' });
 
         if (!response.ok)
             throw new Error(`${response.status} ${response.statusText}`);
