@@ -17,7 +17,14 @@ done
 node packages/backend/dist/backend/src/main.js &
 BACKEND=$!
 
-node packages/worker/dist/worker/src/server.js &
+# The worker runs workflow code, which can read its own environment. These are
+# withheld from it: everything else passes through, so a node can still be given
+# its own API keys.
+env -u DATABASE_URL \
+    -u EXECUTION_TOKEN_SIGNING_KEY \
+    -u PRETZEL_CLOUD_TOKEN \
+    -u TRUSTED_PROXY_TOKEN \
+    node packages/worker/dist/worker/src/server.js &
 WORKER=$!
 
 # Drain on shutdown: the worker closes its queue, the backend its pools.

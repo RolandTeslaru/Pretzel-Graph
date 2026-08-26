@@ -8,7 +8,7 @@ set -e
 # A password is what lets Redis accept its sibling: bound off loopback without
 # one, it refuses every non-local client (protected mode).
 if [ -n "$REDIS_PASSWORD" ]; then
-    redis-server --save '' --appendonly no --port 6379 --bind 0.0.0.0 --requirepass "$REDIS_PASSWORD" &
+    redis-server --save '' --appendonly no --port 6379 --bind 0.0.0.0 :: --requirepass "$REDIS_PASSWORD" &
 else
     redis-server --save '' --appendonly no --port 6379 --bind 127.0.0.1 &
 fi
