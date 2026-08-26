@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { Kysely, PostgresDialect, Transaction as KyselyTransaction } from 'kysely';
 import type { ColumnType, Generated } from 'kysely';
-import { Pool, types as pgTypes, type CustomTypesConfig } from 'pg';
+import { Pool, types as pgTypes, type CustomTypesConfig, type PoolConfig } from 'pg';
+import { parse as parseConnectionString } from 'pg-connection-string';
 import {
     Auth,
     ApiKey as ApiKeyD,
@@ -40,13 +41,21 @@ function requireEnv(name: string): string {
 }
 
 function connect(urlEnvVar: string): Kysely<DB.Tables> {
+    const parsed = parseConnectionString(requireEnv(urlEnvVar));
+
     return new Kysely<DB.Tables>({
         dialect: new PostgresDialect({
+            // Cast because the parser's types are wider than the pool's — but the
+            // object came from pg's own parser, so the values are ones it accepts.
             pool: new Pool({
-                connectionString: requireEnv(urlEnvVar),
+                ...parsed,
+                // A URL brackets an IPv6 host. The resolver needs the address
+                // itself, or it looks up a name with brackets in it and fails.
+                host: parsed.host?.replace(/^\[|\]$/g, ''),
+                port: parsed.port ? Number(parsed.port) : undefined,
                 max: 10,
                 types: keepTimestampsAsStrings,
-            }),
+            } as PoolConfig),
         }),
     });
 }
