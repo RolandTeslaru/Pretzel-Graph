@@ -18,7 +18,12 @@ until redis-cli -h 127.0.0.1 ${REDIS_PASSWORD:+-a "$REDIS_PASSWORD"} ping >/dev/
     sleep 0.2
 done
 
-node packages/backend/dist/backend/src/main.js &
+# With the built output mounted from a checkout, a rebuild on the host should
+# be enough — `--watch` restarts the process instead of waiting for a human.
+WATCH=""
+[ -n "$PRETZEL_DEV_WATCH" ] && WATCH="--watch"
+
+node $WATCH packages/backend/dist/backend/src/main.js &
 BACKEND=$!
 
 stop() {

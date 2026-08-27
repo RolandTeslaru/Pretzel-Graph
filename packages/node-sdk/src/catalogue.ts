@@ -5,6 +5,8 @@ import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { RuntimeNode } from "./node";
 import type { Loader } from "./builders/loaders";
 
+const SUBWORKFLOW_EXECUTE_BLUEPRINT_ID = "Core.SubWorkflow.Execute" as Blueprint.Id;
+
 export type NodeConstructor = {
     new(
         nodeId: Workflow.Node.Id,
@@ -118,15 +120,33 @@ class CatalogueServiceImpl {
         return blueprint;
     }
 
-    // Sync cache read for the hot path — the compiler warms the cache (loadBaseBlueprint/
-    // resolveBlueprint) during prepareNode, so execution-time lookups never hit the async import.
-    public getBlueprint(id: Blueprint.Id): Blueprint | undefined {
-        return this.blueprintCache.get(id);
+    // Pre-warms the cache for a workflow and every embedded dependency, so sync reads never miss.
+    // Dependency nodes cache the SubWorkflow Execute blueprint under their cosmetic id.
+    public async warmBlueprintCache(wfData: Workflow.Data): Promise<void> {
+        for (const wfNode of Object.values(wfData.nodes)) {
+            if (wfNode.dependencyRef) {
+                const dummyBlueprint = await this.loadBaseBlueprint(SUBWORKFLOW_EXECUTE_BLUEPRINT_ID);
+
+                if (dummyBlueprint)
+                    this.blueprintCache.set(wfNode.blueprintId, dummyBlueprint);
+
+                continue;
+            }
+
+            await this.resolveBlueprint(wfNode.blueprintId, wfData.staticValues[wfNode.id] ?? {});
+        }
+
+        for (const dependency of Object.values(wfData.dependencies?.published ?? {}))
+            await this.warmBlueprintCache(dependency.workflow_data);
+
+        for (const dependency of Object.values(wfData.dependencies?.draft ?? {}))
+            await this.warmBlueprintCache(dependency.workflow_data);
     }
 
-    // To be deleted
-    public registerBlueprint(id: Blueprint.Id, blueprint: Blueprint): void {
-        this.blueprintCache.set(id, blueprint);
+    // Sync cache read for the hot path — warmBlueprintCache runs before compilation, so
+    // execution-time lookups never hit the async import.
+    public getBlueprint(id: Blueprint.Id): Blueprint | undefined {
+        return this.blueprintCache.get(id);
     }
 
     public async getLoader(
@@ -175,15 +195,14 @@ class CatalogueServiceImpl {
             return { RuntimeNode, blueprint } 
         }
         
-        // If the node has a dpeendency, ignore the blueprint id which is proably fake and use the Subworkflow execution blueprint and runtime and use that
-        const executeId   = "Core.SubWorkflow.Execute" as Blueprint.Id;
-        const RuntimeNode = await this.getNodeConstructor(executeId); 
-        const blueprint   = await this.loadBaseBlueprint(executeId);
+        // A dependency node's blueprint id is cosmetic; it runs as a SubWorkflow Execute.
+        const RuntimeNode    = await this.getNodeConstructor(SUBWORKFLOW_EXECUTE_BLUEPRINT_ID);
+        const dummyBlueprint = await this.loadBaseBlueprint(SUBWORKFLOW_EXECUTE_BLUEPRINT_ID) as Blueprint;
 
-        if (!RuntimeNode || !blueprint)
+        if (!RuntimeNode || !dummyBlueprint)
             throw new Error(`Could not resolve node ${wfNode.id} with dependency ${depedency.workflow_id}. Core.SubWorkflow.Execute node not found in the catalogue`)
         
-        return { RuntimeNode, blueprint };
+        return { RuntimeNode, blueprint: dummyBlueprint };
     }
 }
 
