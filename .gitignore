@@ -11,3 +11,5 @@ conversations/
 TASKS.md
 FEATURES.md
 *.tsbuildinfo
+.DS_Store
+*.swp
