@@ -14,7 +14,12 @@ until redis-cli -h 127.0.0.1 ping >/dev/null 2>&1; do
     sleep 0.2
 done
 
-node packages/backend/dist/backend/src/main.js &
+# With the built output mounted from a checkout, a rebuild on the host should
+# be enough — `--watch` restarts the process instead of waiting for a human.
+WATCH=""
+[ -n "$PRETZEL_DEV_WATCH" ] && WATCH="--watch"
+
+node $WATCH packages/backend/dist/backend/src/main.js &
 BACKEND=$!
 
 # The worker runs workflow code, which can read its own environment. These are
@@ -24,7 +29,7 @@ env -u DATABASE_URL \
     -u EXECUTION_TOKEN_SIGNING_KEY \
     -u PRETZEL_CLOUD_TOKEN \
     -u TRUSTED_PROXY_TOKEN \
-    node packages/worker/dist/worker/src/server.js &
+    node $WATCH packages/worker/dist/worker/src/server.js &
 WORKER=$!
 
 # Drain on shutdown: the worker closes its queue, the backend its pools.

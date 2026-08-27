@@ -53,6 +53,8 @@ export class TurboGraph {
         enclosingNodeAPI?:   RuntimeNode.ExecutionContext["enclosingNodeAPI"],
     ): Promise<AggexEngine.Execution.Context> {
 
+        await CatalogueService.warmBlueprintCache(workflowData);
+
         const blueprints    = await this.loadAllBlueprints(workflowData);
         const workflowCache = Workflow.createCache(workflowData, blueprints);
 
