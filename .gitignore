@@ -10,3 +10,4 @@ tool-samples/
 conversations/
 TASKS.md
 FEATURES.md
+*.tsbuildinfo
