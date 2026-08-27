@@ -1,6 +1,6 @@
+import { useMemo, useState } from 'react'
 import { AssistantSDK } from '../../sdk'
-import { Input } from '@pretzel-graph/standard-ui/foundations/input'
-import { ContextMenu } from '@pretzel-graph/standard-ui/foundations'
+import { ContextMenu, SearchInput, Separator } from '@pretzel-graph/standard-ui/foundations'
 import type { Assistant } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
@@ -64,16 +64,37 @@ const AssistantList = () => {
     const assistants = AssistantSDK.useStore(s => s.assistants);
     const currentAssistantId = AssistantSDK.useStore(s => s.currentAssistantId);
 
+    const [query, setQuery] = useState('')
+
+    const matches = useMemo(() => {
+        const all = Object.values(assistants)
+
+        if (!query)
+            return all
+
+        return all.filter(assistant => assistant.name?.toLowerCase().includes(query))
+    }, [assistants, query])
+
     return (
-        <div className='flex flex-col h-full overflow-hidden'>
+        <div className='flex flex-col gap-2 h-full overflow-hidden'>
             {/* Search bar */}
-            <div className='p-2 border-b border-border/60 shrink-0'>
-                <Input placeholder="Search conversations..." className='rounded-xl' />
+            <div className='p-2 pb-0!'>
+                <SearchInput
+                    placeholder="Search conversations..."
+                    className='rounded-xl'
+                    onSearch={(value) => setQuery(value.trim().toLowerCase())}
+                />
             </div>
+
+            <Separator className={"w-[calc(100%-16px)]! mx-auto"} />
 
             {/* Scrollable list */}
             <div className='flex flex-col overflow-y-auto flex-1 py-1'>
-                {Object.values(assistants).map((assistant) => (
+                {matches.length === 0 ? (
+                    <p className='text-xs opacity-60 px-3 py-2'>
+                        {query ? 'No matches.' : 'No conversations yet.'}
+                    </p>
+                ) : matches.map((assistant) => (
                     <AssistantListItem key={assistant.id} assistant={assistant} isCurrent={assistant.id === currentAssistantId} />
                 ))}
             </div>

@@ -1,6 +1,6 @@
 import * as express from 'express';
 import type { RequestHandler } from 'express';
-import { readFileSync } from 'fs';
+import { readFileSync, statSync } from 'fs';
 import path from 'path';
 
 // Paths the API answers; everything else belongs to the app's own router.
@@ -47,7 +47,20 @@ export function frontendMiddleware(): RequestHandler | null {
     if (!root)
         return null;
 
-    const shell = buildShell(root);
+    // Rebuilt when index.html changes, so a rebuilt bundle is served without a restart.
+    let cached: { mtimeMs: number; html: string } = {
+        mtimeMs: statSync(path.join(root, 'index.html')).mtimeMs,
+        html:    buildShell(root),
+    };
+
+    const getShell = (): string => {
+        const { mtimeMs } = statSync(path.join(root, 'index.html'));
+
+        if (mtimeMs !== cached.mtimeMs)
+            cached = { mtimeMs, html: buildShell(root) };
+
+        return cached.html;
+    };
 
     const router = express.Router();
 
@@ -70,7 +83,7 @@ export function frontendMiddleware(): RequestHandler | null {
             return;
         }
 
-        res.type('html').set('Cache-Control', 'no-store').send(shell);
+        res.type('html').set('Cache-Control', 'no-store').send(getShell());
     });
 
     return router;
