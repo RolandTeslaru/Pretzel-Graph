@@ -8,6 +8,8 @@ export WORKER_SERVICE_INTERNAL_TOKEN="${WORKER_SERVICE_INTERNAL_TOKEN:-$(node -e
 
 /app/refuse-outbound-smtp.sh
 
+/app/refuse-private-network.sh
+
 redis-server --save '' --appendonly no --port 6379 --bind 127.0.0.1 &
 REDIS=$!
 
