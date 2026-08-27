@@ -6,6 +6,8 @@ set -e
 # leaves the container, so it is generated here when nothing supplies one.
 export WORKER_SERVICE_INTERNAL_TOKEN="${WORKER_SERVICE_INTERNAL_TOKEN:-$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")}"
 
+/app/refuse-outbound-smtp.sh
+
 redis-server --save '' --appendonly no --port 6379 --bind 127.0.0.1 &
 REDIS=$!
 
