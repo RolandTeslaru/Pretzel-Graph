@@ -52,15 +52,14 @@ export async function generateIndex() {
 
     console.log(`Successfully indexed ${Object.keys(blueprints).length} nodes in ${Object.keys(drawers).length} drawers`)
 
-    if (fs.existsSync(path.dirname(BACKEND_TARGET))) {
-        fs.writeFileSync(BACKEND_TARGET, JSON.stringify(index, null, 2));
-        console.log(`Wrote index to ${BACKEND_TARGET}`);
+    fs.mkdirSync(path.dirname(BACKEND_TARGET), { recursive: true });
+    fs.writeFileSync(BACKEND_TARGET, JSON.stringify(index, null, 2));
+    console.log(`Wrote index to ${BACKEND_TARGET}`);
 
-        if (fs.existsSync(BACKEND_SERVICE_FILE)) {
-            const time = new Date();
-            fs.utimesSync(BACKEND_SERVICE_FILE, time, time);
-            console.log(`Touched ${BACKEND_SERVICE_FILE} to trigger backend reload`);
-        }
+    if (fs.existsSync(BACKEND_SERVICE_FILE)) {
+        const time = new Date();
+        fs.utimesSync(BACKEND_SERVICE_FILE, time, time);
+        console.log(`Touched ${BACKEND_SERVICE_FILE} to trigger backend reload`);
     }
 }
 

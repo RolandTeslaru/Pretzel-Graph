@@ -13,3 +13,4 @@ FEATURES.md
 *.tsbuildinfo
 .DS_Store
 *.swp
+packages/backend/assets/blueprint_index.json

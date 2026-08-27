@@ -3,7 +3,9 @@
     "version": "0.0.1",
     "private": true,
     "scripts": {
+        "predev": "npm --prefix ../nodes run generate-indexes",
         "dev": "nodemon -w src -e ts,json --exec ts-node -r tsconfig-paths/register src/main.ts",
+        "prebuild": "npm --prefix ../nodes run generate-indexes",
         "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json && mkdir -p dist/backend/migrations dist/backend/assets && cp migrations/*.sql dist/backend/migrations/ && cp -R assets/. dist/backend/assets/",
         "start": "node dist/backend/src/main.js"
     },
