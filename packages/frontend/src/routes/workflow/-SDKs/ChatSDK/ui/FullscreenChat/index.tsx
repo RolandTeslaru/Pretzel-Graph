@@ -1,27 +1,25 @@
-import type { CSSProperties } from 'react'
-import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Dialog } from '@pretzel-graph/standard-ui/foundations'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import ConversationArea from '../ConversationArea'
 import ChatList from './ChatList'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { ChatSDK } from '../../sdk'
 
-const FullscreenChat = ({ blockTransparency, surfaceStyle }: { blockTransparency: boolean; surfaceStyle: CSSProperties }) => {
-    // In the background render solid; on top, frosted glass. `surfaceStyle` carries the stack
-    // brightness — applied per card here so each card's backdrop-blur isn't trapped by a filtered ancestor.
-    const surface = blockTransparency ? 'bg-card' : 'bg-card/90 backdrop-blur-lg'
+const FullscreenChat = (props: DialogSDK.TemplateProps) => (
+    <DialogSDK.SplitTemplate
+        {...props}
+        className='h-[90vh] w-[1050px]'
+        sidebarClassName='w-[250px] shrink-0 p-0! gap-0!'
+        contentClassName='relative p-0! gap-0!'
+        sidebarRenderer={() => <ChatList />}
+    >
+        <Dialog.Title className='hidden'>Conversation</Dialog.Title>
+        <Dialog.Description className='hidden'>Chat with this workflow</Dialog.Description>
 
-    return (
-        <div className="flex flex-row gap-10 h-[90vh]">
-            <div style={surfaceStyle} className={`${surface} border border-border/50 rounded-2xl shadow-sm shadow-black/10 w-[250px] p-0 overflow-hidden`}>
-                <ChatList />
-            </div>
-            <div style={surfaceStyle} className={`${surface} lg:w-[800px] border border-border/50 rounded-2xl shadow-sm shadow-black/10 overflow-hidden`}>
-                <Header/>
-                <ConversationArea />
-            </div>
-        </div>
-    )
-}
+        <Header />
+        <ConversationArea />
+    </DialogSDK.SplitTemplate>
+)
 
 export default FullscreenChat
 

@@ -1,6 +1,6 @@
+import { useMemo, useState } from 'react'
 import { ChatSDK } from '../../sdk'
-import { Input } from '@pretzel-graph/standard-ui/foundations/input'
-import { ContextMenu, Separator } from '@pretzel-graph/standard-ui/foundations'
+import { ContextMenu, SearchInput, Separator } from '@pretzel-graph/standard-ui/foundations'
 import type { Chat, Workflow } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
@@ -70,24 +70,43 @@ const ChatList = () => {
 
     const currentchatId = ChatSDK.useStore(s => s.currentChatId);
 
+    const [query, setQuery] = useState('')
+
     QuerySDK.useQuery(
         ['chats', workflowId],
         () => ChatSDK.actions.chat.listByWorkflow(workflowId),
         { staleTime: Infinity },
     )
 
+    const matches = useMemo(() => {
+        const all = Object.values(chats)
+
+        if (!query)
+            return all
+
+        return all.filter(chat => chat.name?.toLowerCase().includes(query))
+    }, [chats, query])
+
     return (
-        <div className='flex flex-col h-full overflow-hidden'>
+        <div className='flex flex-col gap-2 h-full overflow-hidden'>
             {/* Search bar */}
-            <div className='p-2'>
-                <Input placeholder="Search chats..." className='rounded-xl'/>
+            <div className='p-2 pb-0!'>
+                <SearchInput
+                    placeholder="Search chats..."
+                    className='rounded-xl'
+                    onSearch={(value) => setQuery(value.trim().toLowerCase())}
+                />
             </div>
 
-            <Separator className={"w-[calc(100%-16px)] mx-auto"} />
+            <Separator className={"w-[calc(100%-16px)]! mx-auto"} />
 
             {/* Scrollable list */}
             <div className='flex flex-col overflow-y-auto flex-1'>
-                {Object.values(chats).map((chat) => (
+                {matches.length === 0 ? (
+                    <p className='text-xs opacity-60 px-3 py-2'>
+                        {query ? 'No matches.' : 'No chats yet.'}
+                    </p>
+                ) : matches.map((chat) => (
                     <Item key={chat.id} chat={chat} isCurrent={chat.id === currentchatId} />
                 ))}
             </div>

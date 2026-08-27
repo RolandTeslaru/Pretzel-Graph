@@ -62,6 +62,8 @@ const Content: DialogComponents.Content = ({
   <Portal>
     {darkenBackground && <Overlay />}
     <DialogPrimitive.Content
+      // Nothing inside is auto-focused on open, so no control opens wearing a focus ring.
+      onOpenAutoFocus={(e) => e.preventDefault()}
       className={classNames(
         `${theme || ""} fixed top-[50%] left-[50%] z-50 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0
          transition-[transform] duration-400 ease-in-out

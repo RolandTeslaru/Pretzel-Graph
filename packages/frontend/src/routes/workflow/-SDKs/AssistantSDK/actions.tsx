@@ -80,9 +80,7 @@ export function createAssistantSDKActions(sdk: AssistantSDKImpl) {
             }),
             openFullscreen: () => {
                 DialogSDK.actions.push("fullscreen-assistant", (props) => (
-                    <DialogSDK.UnstyledTemplate {...props}>
-                        <FullscreenAssistant blockTransparency={props.blockTransparency} surfaceStyle={props.surfaceStyle} />
-                    </DialogSDK.UnstyledTemplate>
+                    <FullscreenAssistant {...props} />
                 ))
 
                 setTimeout(() => {
