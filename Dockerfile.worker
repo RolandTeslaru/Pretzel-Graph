@@ -36,7 +36,8 @@ COPY --from=build /repo/packages/nodes/dist  ./packages/nodes/dist
 # The catalogue resolves node and blueprint modules under this directory.
 ENV NODES_ROOT=/app/packages/nodes/dist/nodes/src
 
-COPY docker/refuse-outbound-smtp.sh ./refuse-outbound-smtp.sh
+COPY docker/refuse-outbound-smtp.sh    ./refuse-outbound-smtp.sh
+COPY docker/refuse-private-network.sh ./refuse-private-network.sh
 COPY docker/worker/entrypoint.sh    ./entrypoint.sh
 
 CMD ["./entrypoint.sh"]

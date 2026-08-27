@@ -44,7 +44,8 @@ COPY --from=build /repo/packages/backend/dist ./packages/backend/dist
 COPY --from=build /repo/packages/worker/dist  ./packages/worker/dist
 COPY --from=build /repo/packages/nodes/dist   ./packages/nodes/dist
 COPY --from=build /repo/packages/frontend/dist ./packages/frontend/dist
-COPY docker/refuse-outbound-smtp.sh ./refuse-outbound-smtp.sh
+COPY docker/refuse-outbound-smtp.sh    ./refuse-outbound-smtp.sh
+COPY docker/refuse-private-network.sh ./refuse-private-network.sh
 COPY docker/combined/entrypoint.sh ./entrypoint.sh
 
 # The editor this backend serves, built from the same sources it was.
