@@ -6,7 +6,7 @@ import { S2Hooks } from "./types";
 
 // S² Engine (Super Solenoid Engine from Neon Genesis Evangelion)
 
-// or Super Signal Engine ( sounds simmilar to super steps in Pregel)
+// or Super Signal Engine ( sounds similar to super steps in Pregel)
 
 export class S2Engine {
 
@@ -22,13 +22,13 @@ export class S2Engine {
         hooks: S2Hooks
     ): Promise<S2Engine.ExecutionResult> {
         if (this.ctx && !this.ctx.settled)
-            throw new S2EngineError("Engine is already running");
+            throw new S2EngineError("S2Engine is already running");
 
         return new Promise<S2Engine.ExecutionResult>((resolve, reject) => {
             const startVertex = graph.vertices.get("__START__" as Vertex.Id);
 
             if (!startVertex)
-                throw new S2EngineError("Engine ignited without a __START__ vertex");
+                throw new S2EngineError("S2Engine ignited without a __START__ vertex");
 
             this.ctx = {
                 graph,
@@ -241,7 +241,7 @@ export class S2Engine {
             sourceVertexId: Vertex.Id,
         ) => {
             if (this.ctx.settled)
-                throw new S2EngineError("Engine is not running");
+                throw new S2EngineError("S2Engine is not running");
 
             this.assertVertexExists(targetVertexId);
             this.assertVertexExists(sourceVertexId);
@@ -254,7 +254,7 @@ export class S2Engine {
             sourceVertexId: Vertex.Id,
         ) => {
             if (this.ctx.settled)
-                throw new S2EngineError("Engine is not running");
+                throw new S2EngineError("S2Engine is not running");
 
             this.assertVertexExists(targetVertexId);
             this.assertVertexExists(sourceVertexId);
@@ -265,7 +265,7 @@ export class S2Engine {
             vertexId: Vertex.Id,
         ) => {
             if (this.ctx.settled)
-                throw new S2EngineError("Engine is not running");
+                throw new S2EngineError("S2Engine is not running");
 
             this.assertVertexExists(vertexId);
 
@@ -275,7 +275,7 @@ export class S2Engine {
             vertexId: Vertex.Id,
         ) => {
             if (this.ctx.settled)
-                throw new S2EngineError("Engine is not running");
+                throw new S2EngineError("S2Engine is not running");
 
             this.assertVertexExists(vertexId);
 
