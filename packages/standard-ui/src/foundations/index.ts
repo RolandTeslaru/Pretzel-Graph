@@ -77,3 +77,5 @@ export * from "./calendar"
 export * from "./calendar-range"
 export * from "./calendar-date-time-range"
 export * from "./form"
+
+export { Frame, frameVariants } from "./frame"
